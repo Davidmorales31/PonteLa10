@@ -84,4 +84,6 @@ npm.cmd run lint
 npm.cmd run build
 ```
 
+GitHub Actions valida con Node.js 22 LTS.
+
 Si el cambio solo toca documentacion, `lint` y `build` no son obligatorios, pero el PR debe decirlo.

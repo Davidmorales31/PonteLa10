@@ -28,6 +28,8 @@ Checks requeridos:
 - `lint`
 - `build`
 
+El CI usa Node.js 22 LTS para reducir diferencias entre equipos locales y GitHub Actions.
+
 ## Secrets
 
 Guardar en GitHub Actions Secrets:
