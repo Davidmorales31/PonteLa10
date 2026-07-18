@@ -1,0 +1,26 @@
+name: Feature
+description: Proponer una mejora o funcionalidad
+title: "feat: "
+labels: ["feature"]
+body:
+  - type: textarea
+    id: objetivo
+    attributes:
+      label: Objetivo
+      description: Que problema resuelve o que oportunidad abre.
+    validations:
+      required: true
+  - type: textarea
+    id: alcance
+    attributes:
+      label: Alcance Inicial
+      description: Que deberia incluir la primera version.
+    validations:
+      required: true
+  - type: textarea
+    id: notas
+    attributes:
+      label: Notas
+      description: Riesgos, referencias o ideas relacionadas.
+    validations:
+      required: false

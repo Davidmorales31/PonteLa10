@@ -1,0 +1,24 @@
+{
+  "name": "pont3la10",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "lint": "eslint .",
+    "preview": "nuxt preview",
+    "typecheck": "nuxt typecheck"
+  },
+  "dependencies": {
+    "@nuxtjs/supabase": "^1.6.0",
+    "nuxt": "^3.17.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@nuxt/eslint": "^1.5.0",
+    "eslint": "^9.30.0",
+    "typescript": "^5.8.0",
+    "vue-tsc": "^2.2.10"
+  }
+}
