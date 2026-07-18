@@ -6,7 +6,7 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
-    "lint": "eslint .",
+    "lint": "nuxt prepare && eslint .",
     "preview": "nuxt preview",
     "typecheck": "nuxt typecheck"
   },
