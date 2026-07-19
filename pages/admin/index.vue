@@ -1,3 +1,16 @@
+<script setup lang="ts">
+definePageMeta({
+  middleware: 'autenticacion-editorial'
+})
+
+const { usuarioActual, cerrarSesion } = useAutenticacionEditorial()
+
+async function salirPanel() {
+  await cerrarSesion()
+  await navigateTo('/admin/login')
+}
+</script>
+
 <template>
   <section class="admin-dashboard">
     <div class="cabecera-pagina">
@@ -6,6 +19,10 @@
       <p>
         Desde aqui viviran los borradores, publicaciones, piezas sociales asociadas y modulos asistidos por IA.
       </p>
+      <div class="barra-admin-sesion">
+        <span>{{ usuarioActual?.email || 'Sesion editorial activa' }}</span>
+        <button class="boton-secundario" type="button" @click="salirPanel">Cerrar sesion</button>
+      </div>
     </div>
 
     <div class="dashboard-grid">

@@ -55,11 +55,13 @@ Cuando se toca codigo:
 
 ```bash
 npm.cmd run lint
+npm.cmd run test:unit
 ```
 
 Cuando se toca Nuxt, rutas, dependencias, build, Supabase o estructura:
 
 ```bash
+npm.cmd run typecheck
 npm.cmd run build
 ```
 
