@@ -49,6 +49,15 @@ input {
   font: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
 .sitio-editorial {
   min-height: 100vh;
 }
@@ -555,15 +564,156 @@ h3 {
   padding: 22px;
 }
 
-.auth-page {
+.auth-page-editorial {
   display: grid;
   min-height: calc(100vh - 220px);
-  place-items: center;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
 }
 
-.auth-panel {
-  width: min(460px, 100%);
-  padding: 28px;
+.panel-login-editorial {
+  position: relative;
+  display: grid;
+  min-height: 680px;
+  align-items: end;
+  overflow: hidden;
+  background: var(--navy);
+  color: #ffffff;
+}
+
+.panel-login-imagen {
+  position: absolute;
+  inset: 0;
+}
+
+.panel-login-imagen::after {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(8, 32, 74, 0.18), rgba(8, 32, 74, 0.9)),
+    linear-gradient(90deg, rgba(8, 32, 74, 0.78), rgba(8, 32, 74, 0.18));
+  content: "";
+}
+
+.panel-login-imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.panel-login-contenido {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 18px;
+  padding: 42px;
+}
+
+.panel-login-logo {
+  width: min(260px, 78%);
+}
+
+.etiqueta-login {
+  margin: 18px 0 0;
+  color: var(--yellow);
+  font-size: 0.76rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.panel-login-contenido h1 {
+  max-width: 640px;
+  color: #ffffff;
+  font-size: 2.76rem;
+}
+
+.panel-login-contenido p {
+  max-width: 620px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.68;
+}
+
+.metricas-login {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.metricas-login div {
+  min-height: 82px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.1);
+  padding: 14px;
+}
+
+.metricas-login dt {
+  color: var(--yellow);
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
+.metricas-login dd {
+  margin: 6px 0 0;
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.formulario-login-editorial {
+  display: grid;
+  align-content: center;
+  padding: 42px;
+}
+
+.encabezado-login {
+  max-width: 520px;
+}
+
+.encabezado-login h2 {
+  font-size: 2.12rem;
+}
+
+.encabezado-login p:not(.etiqueta-seccion) {
+  margin: 12px 0 0;
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.58;
+}
+
+.selector-login {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #f7f9fd;
+  padding: 6px;
+}
+
+.selector-login button {
+  min-height: 38px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 950;
+}
+
+.selector-login button.activo {
+  background: var(--navy);
+  color: #ffffff;
 }
 
 .auth-form {
@@ -590,6 +740,126 @@ h3 {
   border-color: var(--blue);
   box-shadow: 0 0 0 4px rgba(255, 216, 0, 0.34);
   outline: none;
+}
+
+.auth-form-editorial {
+  max-width: 520px;
+  gap: 16px;
+  margin-top: 22px;
+}
+
+.auth-form-editorial input {
+  width: 100%;
+  min-height: 48px;
+  background: #ffffff;
+}
+
+.campo-contrasena {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 74px;
+  gap: 8px;
+}
+
+.campo-contrasena button {
+  min-height: 48px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: var(--blue);
+  font-size: 0.8rem;
+  font-weight: 950;
+}
+
+.estado-login {
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(227, 6, 19, 0.28);
+  border-left: 5px solid var(--red);
+  border-radius: var(--radius);
+  background: #fff6f6;
+  padding: 12px 14px;
+  color: #8f1119;
+}
+
+.estado-login.correcto {
+  border-color: rgba(154, 205, 50, 0.42);
+  border-left-color: var(--green);
+  background: #f7ffed;
+  color: #345a10;
+}
+
+.estado-login strong {
+  font-size: 0.86rem;
+  font-weight: 950;
+}
+
+.estado-login span {
+  font-size: 0.84rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.boton-login-principal,
+.boton-google {
+  width: 100%;
+  min-height: 48px;
+}
+
+.boton-google {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #ffffff;
+  color: var(--navy);
+  font-weight: 950;
+}
+
+.boton-google span {
+  display: inline-grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--soft-blue);
+  color: var(--blue);
+  font-size: 0.9rem;
+}
+
+.acciones-login-secundarias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.acciones-login-secundarias button {
+  border: 0;
+  background: transparent;
+  color: var(--blue);
+  padding: 0;
+  font-size: 0.84rem;
+  font-weight: 950;
+}
+
+.barra-admin-sesion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.barra-admin-sesion span {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--navy);
+  padding: 10px 12px;
+  font-size: 0.84rem;
+  font-weight: 850;
 }
 
 .navegacion-movil {
@@ -619,6 +889,14 @@ h3 {
   .franja-especiales,
   .layout-listado {
     grid-template-columns: 1fr;
+  }
+
+  .auth-page-editorial {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-login-editorial {
+    min-height: 460px;
   }
 }
 
@@ -670,6 +948,23 @@ h3 {
     min-height: 0;
   }
 
+  .auth-page-editorial {
+    border-radius: 0;
+  }
+
+  .panel-login-contenido,
+  .formulario-login-editorial {
+    padding: 26px;
+  }
+
+  .panel-login-contenido h1 {
+    font-size: 2.18rem;
+  }
+
+  .metricas-login {
+    grid-template-columns: 1fr;
+  }
+
   .navegacion-movil {
     position: fixed;
     inset: auto 0 0;
@@ -712,7 +1007,16 @@ h3 {
   .historia-principal h1,
   .encabezado-seccion h2,
   .cabecera-pagina h1,
-  .detalle-articulo h1 {
+  .detalle-articulo h1,
+  .encabezado-login h2 {
     font-size: 1.86rem;
+  }
+
+  .selector-login {
+    grid-template-columns: 1fr;
+  }
+
+  .campo-contrasena {
+    grid-template-columns: 1fr;
   }
 }

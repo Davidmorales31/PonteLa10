@@ -32,6 +32,7 @@ Las reglas de idioma, camelCase y reutilizacion viven en `docs/CONVENCIONES_CODI
 - Estandares de desarrollo: `docs/ESTANDARES_DESARROLLO.md`.
 - Estandares de GitHub: `docs/ESTANDARES_GITHUB.md`.
 - Configuracion Supabase: `docs/CONFIGURACION_SUPABASE.md`.
+- HU Login Editorial: `docs/HU_LOGIN_EDITORIAL.md`.
 - Instrucciones persistentes para Codex: `AGENTS.md`.
 
 ## Scripts

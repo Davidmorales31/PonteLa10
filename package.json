@@ -8,17 +8,22 @@
     "generate": "nuxt generate",
     "lint": "nuxt prepare && eslint .",
     "preview": "nuxt preview",
+    "test": "npm run test:unit",
+    "test:unit": "vitest run",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
     "@nuxtjs/supabase": "^1.6.0",
+    "@supabase/supabase-js": "^2.110.7",
     "nuxt": "^3.17.0",
     "zod": "^3.25.0"
   },
   "devDependencies": {
     "@nuxt/eslint": "^1.5.0",
+    "@types/node": "^26.1.1",
     "eslint": "^9.30.0",
     "typescript": "^5.8.0",
+    "vitest": "^4.1.10",
     "vue-tsc": "^2.2.10"
   }
 }
