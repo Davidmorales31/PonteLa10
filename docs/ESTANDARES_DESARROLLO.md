@@ -42,6 +42,8 @@ Evitar componente cuando:
 ## Seguridad
 
 - No publicar claves ni tokens.
+- Usar `NUXT_PUBLIC_SUPABASE_URL` y `NUXT_PUBLIC_SUPABASE_KEY` para la clave publica de Supabase en Nuxt.
+- No usar nombres `NEXT_PUBLIC_*` porque este proyecto usa Nuxt, no Next.
 - Separar rutas publicas e internas.
 - Validar entradas con Zod o esquemas equivalentes.
 - Mantener RLS en tablas Supabase.
