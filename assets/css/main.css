@@ -947,6 +947,12 @@ h3 {
   color: var(--blue);
 }
 
+.boton-google .logo-google {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+}
+
 .acciones-login-secundarias {
   display: flex;
   flex-wrap: wrap;

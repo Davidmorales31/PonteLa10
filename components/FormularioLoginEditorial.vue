@@ -3,7 +3,6 @@ import {
   ArrowLeft,
   Eye,
   EyeOff,
-  Globe,
   KeyRound,
   Link,
   LoaderCircle,
@@ -254,7 +253,7 @@ async function entrarConGoogle() {
         :disabled="cargandoAuth || !autenticacionConfigurada"
         @click="entrarConGoogle"
       >
-        <Globe aria-hidden="true" />
+        <LogoGoogle />
         <span>Continuar con Google</span>
       </button>
     </form>
