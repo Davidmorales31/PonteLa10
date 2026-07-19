@@ -1,4 +1,6 @@
-const supabaseConfigured = Boolean(process.env.NUXT_PUBLIC_SUPABASE_URL && process.env.NUXT_PUBLIC_SUPABASE_KEY)
+const supabaseUrl = process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseKey = process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ''
+const supabaseConfigured = Boolean(supabaseUrl && supabaseKey)
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
@@ -8,6 +10,8 @@ export default defineNuxtConfig({
   ...(supabaseConfigured
     ? {
         supabase: {
+          url: supabaseUrl,
+          key: supabaseKey,
           redirectOptions: {
             login: '/admin/login',
             callback: '/confirm',
