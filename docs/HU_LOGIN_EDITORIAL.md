@@ -34,7 +34,7 @@ Como integrante autorizado del equipo Pont3la10, quiero entrar al panel interno 
 - Configurar plantillas de correo con marca Pont3la10.
 - Configurar Google como proveedor OAuth.
 - Agregar redirect URLs:
-  - `http://localhost:3000/admin/login`
+  - `http://localhost:3001/admin/login`
   - URL final de produccion cuando exista deploy.
 - Mantener RLS y roles como barrera real de datos internos.
 

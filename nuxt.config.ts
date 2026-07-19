@@ -26,7 +26,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     editorialAiApiKey: process.env.NUXT_EDITORIAL_AI_API_KEY || '',
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3001',
       supabaseUrl,
       supabaseKey
     }
