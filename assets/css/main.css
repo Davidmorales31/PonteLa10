@@ -100,6 +100,45 @@ button:disabled {
   color: var(--blue);
 }
 
+.acceso-usuario-cabecera {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: end;
+}
+
+.enlace-panel-admin {
+  color: var(--blue);
+  font-weight: 950;
+}
+
+.boton-icono-usuario {
+  display: inline-grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: #ffffff;
+  color: var(--navy);
+  box-shadow: 0 8px 22px rgba(8, 32, 74, 0.08);
+}
+
+.boton-icono-usuario:hover {
+  border-color: var(--yellow);
+  background: var(--soft-yellow);
+}
+
+.boton-icono-usuario svg {
+  width: 19px;
+  height: 19px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+}
+
 .marca-editorial {
   display: flex;
   min-height: 92px;
@@ -564,9 +603,19 @@ h3 {
   padding: 22px;
 }
 
+.pagina-login-limpia {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 16% 14%, rgba(255, 216, 0, 0.16), transparent 28%),
+    linear-gradient(135deg, #f7f9fd 0%, #ffffff 46%, #eef4ff 100%);
+  padding: clamp(16px, 3vw, 34px);
+}
+
 .auth-page-editorial {
   display: grid;
-  min-height: calc(100vh - 220px);
+  width: min(1180px, 100%);
+  min-height: calc(100vh - clamp(32px, 6vw, 68px));
+  margin: 0 auto;
   grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
   align-items: stretch;
   overflow: hidden;
@@ -977,7 +1026,7 @@ h3 {
     padding: 8px;
   }
 
-  .navegacion-movil a {
+.navegacion-movil a {
     display: grid;
     min-height: 48px;
     place-items: center;
@@ -985,6 +1034,25 @@ h3 {
     color: var(--muted);
     font-size: 0.76rem;
     font-weight: 950;
+  }
+
+  .acceso-usuario-movil {
+    display: grid;
+  }
+
+  .acceso-usuario-movil a,
+  .acceso-usuario-movil .boton-icono-usuario {
+    width: auto;
+    height: auto;
+    min-height: 48px;
+    border: 0;
+    border-radius: var(--radius);
+    box-shadow: none;
+  }
+
+  .acceso-usuario-movil .boton-icono-usuario svg {
+    width: 22px;
+    height: 22px;
   }
 
   .navegacion-movil a.router-link-active {
