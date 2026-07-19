@@ -1,4 +1,21 @@
 <script setup lang="ts">
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Globe,
+  KeyRound,
+  Link,
+  LoaderCircle,
+  LockKeyhole,
+  LogIn,
+  Mail,
+  MailCheck,
+  RotateCcw,
+  UserPlus,
+  UserRound
+} from '@lucide/vue'
+import type { Component } from 'vue'
 import type { ModoLoginEditorial, ResultadoOperacionAuth } from '~/types/autenticacion'
 
 const route = useRoute()
@@ -15,10 +32,10 @@ const {
   iniciarSesionGoogle
 } = useAutenticacionEditorial()
 
-const modosPrincipales: Array<{ modo: ModoLoginEditorial, etiqueta: string }> = [
-  { modo: 'ingreso', etiqueta: 'Entrar' },
-  { modo: 'registro', etiqueta: 'Crear acceso' },
-  { modo: 'enlace', etiqueta: 'Email link' }
+const modosPrincipales: Array<{ modo: ModoLoginEditorial, etiqueta: string, descripcion: string, icono: Component }> = [
+  { modo: 'ingreso', etiqueta: 'Entrar', descripcion: 'Correo y contrasena', icono: LogIn },
+  { modo: 'registro', etiqueta: 'Crear cuenta', descripcion: 'Nuevo perfil', icono: UserPlus },
+  { modo: 'enlace', etiqueta: 'Enlace', descripcion: 'Acceso por correo', icono: MailCheck }
 ]
 
 const correo = ref('')
@@ -31,14 +48,14 @@ const mensajeEstado = ref<ResultadoOperacionAuth | null>(null)
 const redireccionFinal = computed(() => {
   const redirigir = route.query.redirigir
 
-  return typeof redirigir === 'string' ? redirigir : '/admin'
+  return typeof redirigir === 'string' ? redirigir : '/'
 })
 
 const tituloFormulario = computed(() => {
   const titulos: Record<ModoLoginEditorial, string> = {
-    ingreso: 'Entrar al panel',
-    registro: 'Crear acceso editorial',
-    enlace: 'Entrar con correo',
+    ingreso: 'Entrar a Pont3la10',
+    registro: 'Crear tu cuenta',
+    enlace: 'Recibir enlace',
     recuperacion: 'Recuperar contrasena',
     actualizarContrasena: 'Nueva contrasena'
   }
@@ -48,11 +65,11 @@ const tituloFormulario = computed(() => {
 
 const detalleFormulario = computed(() => {
   const detalles: Record<ModoLoginEditorial, string> = {
-    ingreso: 'Correo del equipo, Google o enlace seguro.',
-    registro: 'La cuenta queda pendiente de permisos internos antes de editar contenido.',
-    enlace: 'Te enviaremos un enlace temporal para entrar sin contrasena.',
+    ingreso: 'Tu cuenta para seguir la jugada con una experiencia mas personal.',
+    registro: 'Crea un perfil y deja listo tu acceso para las funciones que vienen.',
+    enlace: 'Te enviamos un enlace temporal para entrar sin usar contrasena.',
     recuperacion: 'Recibiras un correo para iniciar el cambio de contrasena.',
-    actualizarContrasena: 'Define una clave fuerte para proteger tu acceso editorial.'
+    actualizarContrasena: 'Define una clave fuerte para proteger tu cuenta.'
   }
 
   return detalles[modoActual.value]
@@ -145,7 +162,7 @@ async function entrarConGoogle() {
 <template>
   <section class="formulario-login-editorial" aria-labelledby="titulo-login-editorial">
     <div class="encabezado-login">
-      <p class="etiqueta-seccion">Acceso interno</p>
+      <p class="etiqueta-seccion">Cuenta Pont3la10</p>
       <h2 id="titulo-login-editorial">{{ tituloFormulario }}</h2>
       <p>{{ detalleFormulario }}</p>
     </div>
@@ -156,34 +173,52 @@ async function entrarConGoogle() {
         :key="opcion.modo"
         type="button"
         :class="{ activo: modoActual === opcion.modo }"
+        :aria-selected="modoActual === opcion.modo"
+        role="tab"
+        :title="opcion.descripcion"
         @click="modoActual = opcion.modo"
       >
-        {{ opcion.etiqueta }}
+        <component :is="opcion.icono" aria-hidden="true" />
+        <span>{{ opcion.etiqueta }}</span>
       </button>
     </div>
 
     <form class="auth-form auth-form-editorial" @submit.prevent="enviarFormulario">
       <label v-if="requiereNombre">
         Nombre completo
-        <input v-model="nombreCompleto" type="text" placeholder="David Morales" autocomplete="name">
+        <span class="campo-login-con-icono">
+          <UserRound aria-hidden="true" />
+          <input v-model="nombreCompleto" type="text" placeholder="Tu nombre" autocomplete="name">
+        </span>
       </label>
 
       <label v-if="requiereCorreo">
         Correo
-        <input v-model="correo" type="email" placeholder="editor@pont3la10.com" autocomplete="email">
+        <span class="campo-login-con-icono">
+          <Mail aria-hidden="true" />
+          <input v-model="correo" type="email" placeholder="tu@email.com" autocomplete="email">
+        </span>
       </label>
 
       <label v-if="requiereContrasena">
         Contrasena
-        <span class="campo-contrasena">
+        <span class="campo-login-con-icono campo-contrasena">
+          <LockKeyhole aria-hidden="true" />
           <input
             v-model="contrasena"
             :type="mostrarContrasena ? 'text' : 'password'"
-            placeholder="Minimo 10 caracteres"
+            placeholder="Tu contrasena"
             :autocomplete="modoActual === 'ingreso' ? 'current-password' : 'new-password'"
           >
-          <button type="button" @click="mostrarContrasena = !mostrarContrasena">
-            {{ mostrarContrasena ? 'Ocultar' : 'Ver' }}
+          <button
+            class="boton-ver-contrasena"
+            type="button"
+            :aria-label="mostrarContrasena ? 'Ocultar contrasena' : 'Mostrar contrasena'"
+            :title="mostrarContrasena ? 'Ocultar contrasena' : 'Mostrar contrasena'"
+            @click="mostrarContrasena = !mostrarContrasena"
+          >
+            <EyeOff v-if="mostrarContrasena" aria-hidden="true" />
+            <Eye v-else aria-hidden="true" />
           </button>
         </span>
       </label>
@@ -198,8 +233,18 @@ async function entrarConGoogle() {
         <span>{{ mensajeEstado.detalle }}</span>
       </div>
 
-      <button class="boton-primario boton-login-principal" type="submit" :disabled="cargandoAuth || !autenticacionConfigurada">
-        {{ textoBotonPrincipal }}
+      <button
+        class="boton-primario boton-login-principal"
+        type="submit"
+        :disabled="cargandoAuth || !autenticacionConfigurada"
+      >
+        <LoaderCircle v-if="cargandoAuth" class="icono-cargando" aria-hidden="true" />
+        <KeyRound v-else-if="modoActual === 'actualizarContrasena'" aria-hidden="true" />
+        <Link v-else-if="modoActual === 'enlace'" aria-hidden="true" />
+        <RotateCcw v-else-if="modoActual === 'recuperacion'" aria-hidden="true" />
+        <UserPlus v-else-if="modoActual === 'registro'" aria-hidden="true" />
+        <LogIn v-else aria-hidden="true" />
+        <span>{{ textoBotonPrincipal }}</span>
       </button>
 
       <button
@@ -209,17 +254,19 @@ async function entrarConGoogle() {
         :disabled="cargandoAuth || !autenticacionConfigurada"
         @click="entrarConGoogle"
       >
-        <span>G</span>
-        Continuar con Google
+        <Globe aria-hidden="true" />
+        <span>Continuar con Google</span>
       </button>
     </form>
 
     <div class="acciones-login-secundarias">
       <button v-if="modoActual !== 'recuperacion'" type="button" @click="modoActual = 'recuperacion'">
-        Olvide mi contrasena
+        <RotateCcw aria-hidden="true" />
+        <span>Recuperar contrasena</span>
       </button>
       <button v-if="modoActual !== 'ingreso'" type="button" @click="modoActual = 'ingreso'">
-        Volver al inicio
+        <ArrowLeft aria-hidden="true" />
+        <span>Volver</span>
       </button>
     </div>
   </section>

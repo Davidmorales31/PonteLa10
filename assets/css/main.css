@@ -114,24 +114,29 @@ button:disabled {
 
 .boton-icono-usuario {
   display: inline-grid;
-  width: 38px;
-  height: 38px;
+  width: 30px;
+  height: 30px;
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 50%;
   background: #ffffff;
   color: var(--navy);
-  box-shadow: 0 8px 22px rgba(8, 32, 74, 0.08);
+  box-shadow: 0 8px 18px rgba(8, 32, 74, 0.06);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
 }
 
 .boton-icono-usuario:hover {
   border-color: var(--yellow);
   background: var(--soft-yellow);
+  transform: translateY(-1px);
 }
 
 .boton-icono-usuario svg {
-  width: 19px;
-  height: 19px;
+  width: 16px;
+  height: 16px;
   fill: none;
   stroke: currentColor;
   stroke-linecap: round;
@@ -604,19 +609,22 @@ h3 {
 }
 
 .pagina-login-limpia {
+  display: grid;
   min-height: 100vh;
+  align-items: center;
   background:
-    radial-gradient(circle at 16% 14%, rgba(255, 216, 0, 0.16), transparent 28%),
+    radial-gradient(circle at 14% 12%, rgba(255, 216, 0, 0.18), transparent 24%),
+    radial-gradient(circle at 86% 84%, rgba(23, 78, 166, 0.12), transparent 28%),
     linear-gradient(135deg, #f7f9fd 0%, #ffffff 46%, #eef4ff 100%);
-  padding: clamp(16px, 3vw, 34px);
+  padding: clamp(18px, 3vw, 34px);
 }
 
 .auth-page-editorial {
   display: grid;
-  width: min(1180px, 100%);
+  width: min(1120px, 100%);
   min-height: calc(100vh - clamp(32px, 6vw, 68px));
   margin: 0 auto;
-  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+  grid-template-columns: minmax(0, 1fr) minmax(350px, 0.82fr);
   align-items: stretch;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -628,7 +636,7 @@ h3 {
 .panel-login-editorial {
   position: relative;
   display: grid;
-  min-height: 680px;
+  min-height: 640px;
   align-items: end;
   overflow: hidden;
   background: var(--navy);
@@ -659,8 +667,8 @@ h3 {
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 18px;
-  padding: 42px;
+  gap: 16px;
+  padding: 38px;
 }
 
 .panel-login-logo {
@@ -668,7 +676,7 @@ h3 {
 }
 
 .etiqueta-login {
-  margin: 18px 0 0;
+  margin: 14px 0 0;
   color: var(--yellow);
   font-size: 0.76rem;
   font-weight: 950;
@@ -676,9 +684,9 @@ h3 {
 }
 
 .panel-login-contenido h1 {
-  max-width: 640px;
+  max-width: 560px;
   color: #ffffff;
-  font-size: 2.76rem;
+  font-size: 2.58rem;
 }
 
 .panel-login-contenido p {
@@ -694,15 +702,15 @@ h3 {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
-  margin: 14px 0 0;
+  margin: 10px 0 0;
 }
 
 .metricas-login div {
-  min-height: 82px;
+  min-height: 72px;
   border: 1px solid rgba(255, 255, 255, 0.26);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.1);
-  padding: 14px;
+  padding: 12px;
 }
 
 .metricas-login dt {
@@ -721,7 +729,7 @@ h3 {
 .formulario-login-editorial {
   display: grid;
   align-content: center;
-  padding: 42px;
+  padding: clamp(26px, 4vw, 42px);
 }
 
 .encabezado-login {
@@ -729,7 +737,7 @@ h3 {
 }
 
 .encabezado-login h2 {
-  font-size: 2.12rem;
+  font-size: 1.88rem;
 }
 
 .encabezado-login p:not(.etiqueta-seccion) {
@@ -742,22 +750,31 @@ h3 {
 .selector-login {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 6px;
-  margin-top: 24px;
+  gap: 4px;
+  margin-top: 22px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #f7f9fd;
-  padding: 6px;
+  padding: 5px;
 }
 
 .selector-login button {
-  min-height: 38px;
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
   border: 0;
   border-radius: 6px;
   background: transparent;
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 950;
+}
+
+.selector-login svg {
+  width: 15px;
+  height: 15px;
 }
 
 .selector-login button.activo {
@@ -793,30 +810,68 @@ h3 {
 
 .auth-form-editorial {
   max-width: 520px;
-  gap: 16px;
-  margin-top: 22px;
+  gap: 14px;
+  margin-top: 20px;
 }
 
-.auth-form-editorial input {
-  width: 100%;
-  min-height: 48px;
-  background: #ffffff;
-}
-
-.campo-contrasena {
+.campo-login-con-icono {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 74px;
+  grid-template-columns: 20px minmax(0, 1fr);
+  min-height: 44px;
+  align-items: center;
   gap: 8px;
-}
-
-.campo-contrasena button {
-  min-height: 48px;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #ffffff;
+  padding: 0 12px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background-color 160ms ease;
+}
+
+.campo-login-con-icono:focus-within {
+  border-color: var(--blue);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(255, 216, 0, 0.22);
+}
+
+.campo-login-con-icono > svg {
+  width: 17px;
+  height: 17px;
   color: var(--blue);
-  font-size: 0.8rem;
-  font-weight: 950;
+}
+
+.auth-form-editorial .campo-login-con-icono input {
+  width: 100%;
+  min-height: 42px;
+  border: 0;
+  background: transparent;
+  padding: 0;
+}
+
+.campo-contrasena {
+  grid-template-columns: 20px minmax(0, 1fr) 38px;
+}
+
+.boton-ver-contrasena {
+  display: inline-grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--blue);
+}
+
+.boton-ver-contrasena:hover {
+  background: var(--soft-blue);
+}
+
+.boton-ver-contrasena svg {
+  width: 17px;
+  height: 17px;
 }
 
 .estado-login {
@@ -851,14 +906,36 @@ h3 {
 .boton-login-principal,
 .boton-google {
   width: 100%;
-  min-height: 48px;
+  min-height: 44px;
 }
 
-.boton-google {
+.boton-login-principal,
+.boton-google,
+.acciones-login-secundarias button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
+}
+
+.boton-login-principal svg,
+.boton-google svg,
+.acciones-login-secundarias svg {
+  width: 17px;
+  height: 17px;
+}
+
+.icono-cargando {
+  animation: girar 900ms linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.boton-google {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: #ffffff;
@@ -866,31 +943,32 @@ h3 {
   font-weight: 950;
 }
 
-.boton-google span {
-  display: inline-grid;
-  width: 24px;
-  height: 24px;
-  place-items: center;
-  border-radius: 50%;
-  background: var(--soft-blue);
+.boton-google svg {
   color: var(--blue);
-  font-size: 0.9rem;
 }
 
 .acciones-login-secundarias {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: 18px;
 }
 
 .acciones-login-secundarias button {
-  border: 0;
-  background: transparent;
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  background: #ffffff;
   color: var(--blue);
-  padding: 0;
-  font-size: 0.84rem;
+  padding: 0 10px;
+  font-size: 0.8rem;
   font-weight: 950;
+}
+
+.acciones-login-secundarias button:hover {
+  border-color: var(--line);
+  background: var(--soft-blue);
 }
 
 .barra-admin-sesion {
@@ -1085,6 +1163,6 @@ h3 {
   }
 
   .campo-contrasena {
-    grid-template-columns: 1fr;
+    grid-template-columns: 20px minmax(0, 1fr) 38px;
   }
 }

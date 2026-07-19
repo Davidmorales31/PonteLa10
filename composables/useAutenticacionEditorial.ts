@@ -30,14 +30,14 @@ function obtenerUrlRetornoAuth(rutaDestino = '/admin'): string {
   const config = useRuntimeConfig()
   const origen = import.meta.client ? window.location.origin : String(config.public.siteUrl)
 
-  return `${origen}/admin/login?redirigir=${encodeURIComponent(rutaDestino)}`
+  return `${origen}/login?redirigir=${encodeURIComponent(rutaDestino)}`
 }
 
 function obtenerUrlCambioContrasena(): string {
   const config = useRuntimeConfig()
   const origen = import.meta.client ? window.location.origin : String(config.public.siteUrl)
 
-  return `${origen}/admin/login?modo=actualizarContrasena`
+  return `${origen}/login?modo=actualizarContrasena`
 }
 
 function manejarErrorAuth(error: AuthError | Error | null): ResultadoOperacionAuth {

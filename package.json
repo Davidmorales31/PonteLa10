@@ -13,6 +13,7 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
+    "@lucide/vue": "^1.25.0",
     "@nuxtjs/supabase": "^1.6.0",
     "@supabase/supabase-js": "^2.110.7",
     "nuxt": "^3.17.0",

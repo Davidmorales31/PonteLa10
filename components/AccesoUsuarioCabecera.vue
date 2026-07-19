@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { CircleUserRound } from '@lucide/vue'
+
 const props = withDefaults(defineProps<{
   variante?: 'cabecera' | 'movil'
 }>(), {
@@ -18,11 +20,8 @@ onMounted(async () => {
   <div class="acceso-usuario-cabecera" :class="`acceso-usuario-${props.variante}`">
     <template v-if="props.variante === 'movil'">
       <NuxtLink v-if="usuarioActual" to="/admin">Panel</NuxtLink>
-      <NuxtLink v-else class="boton-icono-usuario" to="/admin/login" aria-label="Iniciar sesion">
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M20 21a8 8 0 0 0-16 0" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
+      <NuxtLink v-else class="boton-icono-usuario" to="/login" aria-label="Iniciar sesion" title="Iniciar sesion">
+        <CircleUserRound aria-hidden="true" />
       </NuxtLink>
     </template>
 
@@ -37,14 +36,11 @@ onMounted(async () => {
       </NuxtLink>
       <NuxtLink
         class="boton-icono-usuario"
-        to="/admin/login"
+        to="/login"
         aria-label="Iniciar sesion"
         title="Iniciar sesion"
       >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M20 21a8 8 0 0 0-16 0" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
+        <CircleUserRound aria-hidden="true" />
       </NuxtLink>
     </template>
   </div>

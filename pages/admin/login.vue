@@ -2,13 +2,12 @@
 definePageMeta({
   layout: false
 })
+
+const route = useRoute()
+
+await navigateTo({ path: '/login', query: route.query })
 </script>
 
 <template>
-  <main class="pagina-login-limpia">
-    <section class="auth-page auth-page-editorial">
-      <PanelLoginEditorial />
-      <FormularioLoginEditorial />
-    </section>
-  </main>
+  <div />
 </template>
