@@ -4,17 +4,14 @@ import {
   Eye,
   EyeOff,
   KeyRound,
-  Link,
   LoaderCircle,
   LockKeyhole,
   LogIn,
   Mail,
-  MailCheck,
   RotateCcw,
   UserPlus,
   UserRound
 } from '@lucide/vue'
-import type { Component } from 'vue'
 import type { ModoLoginEditorial, ResultadoOperacionAuth } from '~/types/autenticacion'
 
 const route = useRoute()
@@ -25,17 +22,10 @@ const {
   obtenerSesionActual,
   iniciarSesionCorreo,
   registrarUsuarioCorreo,
-  enviarEnlaceMagico,
   recuperarContrasena,
   actualizarContrasena,
   iniciarSesionGoogle
 } = useAutenticacionEditorial()
-
-const modosPrincipales: Array<{ modo: ModoLoginEditorial, etiqueta: string, descripcion: string, icono: Component }> = [
-  { modo: 'ingreso', etiqueta: 'Entrar', descripcion: 'Correo y contrasena', icono: LogIn },
-  { modo: 'registro', etiqueta: 'Crear cuenta', descripcion: 'Nuevo perfil', icono: UserPlus },
-  { modo: 'enlace', etiqueta: 'Enlace', descripcion: 'Acceso por correo', icono: MailCheck }
-]
 
 const correo = ref('')
 const contrasena = ref('')
@@ -54,7 +44,6 @@ const tituloFormulario = computed(() => {
   const titulos: Record<ModoLoginEditorial, string> = {
     ingreso: 'Entrar a Pont3la10',
     registro: 'Crear tu cuenta',
-    enlace: 'Recibir enlace',
     recuperacion: 'Recuperar contrasena',
     actualizarContrasena: 'Nueva contrasena'
   }
@@ -64,10 +53,9 @@ const tituloFormulario = computed(() => {
 
 const detalleFormulario = computed(() => {
   const detalles: Record<ModoLoginEditorial, string> = {
-    ingreso: 'Tu cuenta para seguir la jugada con una experiencia mas personal.',
-    registro: 'Crea un perfil y deja listo tu acceso para las funciones que vienen.',
-    enlace: 'Te enviamos un enlace temporal para entrar sin usar contrasena.',
-    recuperacion: 'Recibiras un correo para iniciar el cambio de contrasena.',
+    ingreso: 'Ingresa con tu correo o continua con Google.',
+    registro: 'Crea tu cuenta para acceder a nuevas funciones.',
+    recuperacion: 'Recibiras un correo para cambiar tu contrasena.',
     actualizarContrasena: 'Define una clave fuerte para proteger tu cuenta.'
   }
 
@@ -78,7 +66,6 @@ const textoBotonPrincipal = computed(() => {
   const textos: Record<ModoLoginEditorial, string> = {
     ingreso: 'Iniciar sesion',
     registro: 'Crear cuenta',
-    enlace: 'Enviar enlace',
     recuperacion: 'Enviar recuperacion',
     actualizarContrasena: 'Guardar contrasena'
   }
@@ -142,10 +129,6 @@ async function ejecutarOperacionModo(): Promise<ResultadoOperacionAuth> {
     })
   }
 
-  if (modoActual.value === 'enlace') {
-    return enviarEnlaceMagico({ correo: correo.value })
-  }
-
   if (modoActual.value === 'recuperacion') {
     return recuperarContrasena({ correo: correo.value })
   }
@@ -161,25 +144,8 @@ async function entrarConGoogle() {
 <template>
   <section class="formulario-login-editorial" aria-labelledby="titulo-login-editorial">
     <div class="encabezado-login">
-      <p class="etiqueta-seccion">Cuenta Pont3la10</p>
       <h2 id="titulo-login-editorial">{{ tituloFormulario }}</h2>
       <p>{{ detalleFormulario }}</p>
-    </div>
-
-    <div class="selector-login" role="tablist" aria-label="Metodos de acceso">
-      <button
-        v-for="opcion in modosPrincipales"
-        :key="opcion.modo"
-        type="button"
-        :class="{ activo: modoActual === opcion.modo }"
-        :aria-selected="modoActual === opcion.modo"
-        role="tab"
-        :title="opcion.descripcion"
-        @click="modoActual = opcion.modo"
-      >
-        <component :is="opcion.icono" aria-hidden="true" />
-        <span>{{ opcion.etiqueta }}</span>
-      </button>
     </div>
 
     <form class="auth-form auth-form-editorial" @submit.prevent="enviarFormulario">
@@ -239,7 +205,6 @@ async function entrarConGoogle() {
       >
         <LoaderCircle v-if="cargandoAuth" class="icono-cargando" aria-hidden="true" />
         <KeyRound v-else-if="modoActual === 'actualizarContrasena'" aria-hidden="true" />
-        <Link v-else-if="modoActual === 'enlace'" aria-hidden="true" />
         <RotateCcw v-else-if="modoActual === 'recuperacion'" aria-hidden="true" />
         <UserPlus v-else-if="modoActual === 'registro'" aria-hidden="true" />
         <LogIn v-else aria-hidden="true" />
@@ -262,6 +227,10 @@ async function entrarConGoogle() {
       <button v-if="modoActual !== 'recuperacion'" type="button" @click="modoActual = 'recuperacion'">
         <RotateCcw aria-hidden="true" />
         <span>Recuperar contrasena</span>
+      </button>
+      <button v-if="modoActual !== 'registro'" type="button" @click="modoActual = 'registro'">
+        <UserPlus aria-hidden="true" />
+        <span>Registrarse</span>
       </button>
       <button v-if="modoActual !== 'ingreso'" type="button" @click="modoActual = 'ingreso'">
         <ArrowLeft aria-hidden="true" />

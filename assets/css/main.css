@@ -612,31 +612,28 @@ h3 {
   display: grid;
   min-height: 100vh;
   align-items: center;
-  background:
-    radial-gradient(circle at 14% 12%, rgba(255, 216, 0, 0.18), transparent 24%),
-    radial-gradient(circle at 86% 84%, rgba(23, 78, 166, 0.12), transparent 28%),
-    linear-gradient(135deg, #f7f9fd 0%, #ffffff 46%, #eef4ff 100%);
-  padding: clamp(18px, 3vw, 34px);
+  background: #ffffff;
+  padding: 0;
 }
 
 .auth-page-editorial {
   display: grid;
-  width: min(1120px, 100%);
-  min-height: calc(100vh - clamp(32px, 6vw, 68px));
+  width: 100vw;
+  min-height: 100vh;
   margin: 0 auto;
-  grid-template-columns: minmax(0, 1fr) minmax(350px, 0.82fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   align-items: stretch;
   overflow: hidden;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  border: 0;
+  border-radius: 0;
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow: none;
 }
 
 .panel-login-editorial {
   position: relative;
   display: grid;
-  min-height: 640px;
+  min-height: 100vh;
   align-items: end;
   overflow: hidden;
   background: var(--navy);
@@ -652,8 +649,8 @@ h3 {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(180deg, rgba(8, 32, 74, 0.18), rgba(8, 32, 74, 0.9)),
-    linear-gradient(90deg, rgba(8, 32, 74, 0.78), rgba(8, 32, 74, 0.18));
+    linear-gradient(180deg, rgba(8, 32, 74, 0) 46%, rgba(8, 32, 74, 0.54) 72%, rgba(8, 32, 74, 0.92) 100%),
+    linear-gradient(90deg, rgba(8, 32, 74, 0.24), rgba(8, 32, 74, 0.04));
   content: "";
 }
 
@@ -663,73 +660,56 @@ h3 {
   object-fit: cover;
 }
 
-.panel-login-contenido {
+.beneficio-login-carrusel {
   position: relative;
   z-index: 1;
   display: grid;
+  grid-template-columns: 5px minmax(0, 1fr);
   gap: 16px;
-  padding: 38px;
+  align-items: center;
+  min-height: 96px;
+  background: rgba(3, 18, 45, 0.72);
+  padding: 22px clamp(22px, 4vw, 48px);
 }
 
-.panel-login-logo {
-  width: min(260px, 78%);
+.beneficio-login-carrusel > span {
+  width: 5px;
+  height: 58px;
+  border-radius: 999px;
+  background: var(--yellow);
 }
 
-.etiqueta-login {
-  margin: 14px 0 0;
-  color: var(--yellow);
-  font-size: 0.76rem;
-  font-weight: 950;
-  text-transform: uppercase;
-}
-
-.panel-login-contenido h1 {
-  max-width: 560px;
-  color: #ffffff;
-  font-size: 2.58rem;
-}
-
-.panel-login-contenido p {
-  max-width: 620px;
+.beneficio-login-carrusel p {
   margin: 0;
-  color: rgba(255, 255, 255, 0.84);
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.68;
-}
-
-.metricas-login {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin: 10px 0 0;
-}
-
-.metricas-login div {
-  min-height: 72px;
-  border: 1px solid rgba(255, 255, 255, 0.26);
-  border-radius: var(--radius);
-  background: rgba(255, 255, 255, 0.1);
-  padding: 12px;
-}
-
-.metricas-login dt {
-  color: var(--yellow);
-  font-size: 0.8rem;
-  font-weight: 950;
-}
-
-.metricas-login dd {
-  margin: 6px 0 0;
   color: #ffffff;
-  font-size: 0.82rem;
+  font-size: clamp(1rem, 1.55vw, 1.28rem);
   font-weight: 850;
+  line-height: 1.38;
+}
+
+.beneficio-login-enter-active,
+.beneficio-login-leave-active {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.beneficio-login-enter-from {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.beneficio-login-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .formulario-login-editorial {
   display: grid;
   align-content: center;
-  padding: clamp(26px, 4vw, 42px);
+  justify-self: center;
+  width: min(430px, calc(100% - 56px));
+  padding: clamp(24px, 4vw, 48px);
 }
 
 .encabezado-login {
@@ -737,7 +717,7 @@ h3 {
 }
 
 .encabezado-login h2 {
-  font-size: 1.88rem;
+  font-size: 2rem;
 }
 
 .encabezado-login p:not(.etiqueta-seccion) {
@@ -745,41 +725,6 @@ h3 {
   color: var(--muted);
   font-weight: 700;
   line-height: 1.58;
-}
-
-.selector-login {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
-  margin-top: 22px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  background: #f7f9fd;
-  padding: 5px;
-}
-
-.selector-login button {
-  display: inline-flex;
-  min-height: 36px;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: var(--muted);
-  font-size: 0.75rem;
-  font-weight: 950;
-}
-
-.selector-login svg {
-  width: 15px;
-  height: 15px;
-}
-
-.selector-login button.activo {
-  background: var(--navy);
-  color: #ffffff;
 }
 
 .auth-form {
@@ -809,9 +754,9 @@ h3 {
 }
 
 .auth-form-editorial {
-  max-width: 520px;
+  max-width: 430px;
   gap: 14px;
-  margin-top: 20px;
+  margin-top: 22px;
 }
 
 .campo-login-con-icono {
@@ -956,25 +901,28 @@ h3 {
 .acciones-login-secundarias {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 18px;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 20px;
 }
 
 .acciones-login-secundarias button {
-  min-height: 34px;
+  min-height: 30px;
   border: 1px solid transparent;
-  border-radius: var(--radius);
-  background: #ffffff;
+  border-radius: 999px;
+  background: transparent;
   color: var(--blue);
-  padding: 0 10px;
+  padding: 0 2px;
   font-size: 0.8rem;
   font-weight: 950;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 4px;
 }
 
 .acciones-login-secundarias button:hover {
-  border-color: var(--line);
-  background: var(--soft-blue);
+  color: var(--navy);
+  text-decoration-color: var(--yellow);
 }
 
 .barra-admin-sesion {
@@ -1029,7 +977,7 @@ h3 {
   }
 
   .panel-login-editorial {
-    min-height: 460px;
+    min-height: 44vh;
   }
 }
 
@@ -1081,21 +1029,13 @@ h3 {
     min-height: 0;
   }
 
-  .auth-page-editorial {
-    border-radius: 0;
-  }
-
-  .panel-login-contenido,
+  .beneficio-login-carrusel,
   .formulario-login-editorial {
     padding: 26px;
   }
 
-  .panel-login-contenido h1 {
-    font-size: 2.18rem;
-  }
-
-  .metricas-login {
-    grid-template-columns: 1fr;
+  .formulario-login-editorial {
+    width: min(100%, calc(100% - 28px));
   }
 
   .navegacion-movil {
@@ -1162,10 +1102,6 @@ h3 {
   .detalle-articulo h1,
   .encabezado-login h2 {
     font-size: 1.86rem;
-  }
-
-  .selector-login {
-    grid-template-columns: 1fr;
   }
 
   .campo-contrasena {

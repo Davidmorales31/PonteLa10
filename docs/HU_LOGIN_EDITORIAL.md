@@ -2,13 +2,12 @@
 
 ## Objetivo
 
-Como usuario de Pont3la10, quiero iniciar sesion con correo, enlace temporal o Google, para usar funciones personalizadas sin bloquear la navegacion publica del sitio.
+Como usuario de Pont3la10, quiero iniciar sesion con correo o Google, para usar funciones personalizadas sin bloquear la navegacion publica del sitio.
 
 ## Alcance Implementado
 
 - Login con correo y contrasena usando Supabase Auth.
 - Registro de cuenta con confirmacion por correo.
-- Enlace magico por correo.
 - Recuperacion y cambio de contrasena.
 - Inicio con Google OAuth.
 - Cliente Supabase propio, opcional y seguro para no romper CI cuando falten variables.

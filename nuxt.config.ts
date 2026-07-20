@@ -4,6 +4,9 @@ const supabaseKey = process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.NEXT_PUB
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
+  experimental: {
+    appManifest: false
+  },
   modules: ['@nuxt/eslint'],
   css: ['~/assets/css/main.css'],
   app: {
