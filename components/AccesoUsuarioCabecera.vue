@@ -20,7 +20,7 @@ onMounted(async () => {
   <div class="acceso-usuario-cabecera" :class="`acceso-usuario-${props.variante}`">
     <template v-if="props.variante === 'movil'">
       <NuxtLink v-if="usuarioActual" to="/admin">Panel</NuxtLink>
-      <NuxtLink v-else class="boton-icono-usuario" to="/login" aria-label="Iniciar sesion" title="Iniciar sesion">
+      <NuxtLink v-else class="boton-icono-usuario" to="/login" aria-label="Iniciar sesión" title="Iniciar sesión">
         <CircleUserRound aria-hidden="true" />
       </NuxtLink>
     </template>
@@ -37,8 +37,8 @@ onMounted(async () => {
       <NuxtLink
         class="boton-icono-usuario"
         to="/login"
-        aria-label="Iniciar sesion"
-        title="Iniciar sesion"
+        aria-label="Iniciar sesión"
+        title="Iniciar sesión"
       >
         <CircleUserRound aria-hidden="true" />
       </NuxtLink>

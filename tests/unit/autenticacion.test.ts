@@ -23,7 +23,7 @@ describe('validaciones de autenticacion editorial', () => {
     })
 
     expect(resultado.success).toBe(false)
-    expect(obtenerPrimerErrorAuth(resultado)).toBe('Ingresa un correo valido.')
+    expect(obtenerPrimerErrorAuth(resultado)).toBe('Ingresa un correo válido.')
   })
 
   it('exige contrasena fuerte al crear acceso', () => {
@@ -34,7 +34,7 @@ describe('validaciones de autenticacion editorial', () => {
     })
 
     expect(resultado.success).toBe(false)
-    expect(obtenerPrimerErrorAuth(resultado)).toBe('La contrasena debe tener minimo 10 caracteres.')
+    expect(obtenerPrimerErrorAuth(resultado)).toBe('La contraseña debe tener mínimo 10 caracteres.')
   })
 
   it('acepta contrasena fuerte para actualizacion', () => {

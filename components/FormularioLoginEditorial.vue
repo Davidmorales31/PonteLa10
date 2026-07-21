@@ -44,8 +44,8 @@ const tituloFormulario = computed(() => {
   const titulos: Record<ModoLoginEditorial, string> = {
     ingreso: 'Entrar a Pont3la10',
     registro: 'Crear tu cuenta',
-    recuperacion: 'Recuperar contrasena',
-    actualizarContrasena: 'Nueva contrasena'
+    recuperacion: 'Recuperar contraseña',
+    actualizarContrasena: 'Nueva contraseña'
   }
 
   return titulos[modoActual.value]
@@ -53,9 +53,10 @@ const tituloFormulario = computed(() => {
 
 const detalleFormulario = computed(() => {
   const detalles: Record<ModoLoginEditorial, string> = {
-    ingreso: 'Ingresa con tu correo o continua con Google.',
+    ingreso:
+      'Ingresa con tu correo o continúa con Google. Tu cuenta te acompaña para guardar progreso, seguir especiales y vivir la jugada completa.',
     registro: 'Crea tu cuenta para acceder a nuevas funciones.',
-    recuperacion: 'Recibiras un correo para cambiar tu contrasena.',
+    recuperacion: 'Recibirás un correo para cambiar tu contraseña.',
     actualizarContrasena: 'Define una clave fuerte para proteger tu cuenta.'
   }
 
@@ -64,10 +65,10 @@ const detalleFormulario = computed(() => {
 
 const textoBotonPrincipal = computed(() => {
   const textos: Record<ModoLoginEditorial, string> = {
-    ingreso: 'Iniciar sesion',
+    ingreso: 'Iniciar sesión',
     registro: 'Crear cuenta',
-    recuperacion: 'Enviar recuperacion',
-    actualizarContrasena: 'Guardar contrasena'
+    recuperacion: 'Enviar recuperación',
+    actualizarContrasena: 'Guardar contraseña'
   }
 
   return cargandoAuth.value ? 'Procesando...' : textos[modoActual.value]
@@ -85,7 +86,7 @@ onMounted(async () => {
   if (!autenticacionConfigurada.value) {
     mensajeEstado.value = {
       correcto: false,
-      titulo: 'Falta configuracion',
+      titulo: 'Falta configuración',
       detalle: 'Configura NUXT_PUBLIC_SUPABASE_URL y NUXT_PUBLIC_SUPABASE_KEY para activar el acceso.'
     }
     return
@@ -144,6 +145,7 @@ async function entrarConGoogle() {
 <template>
   <section class="formulario-login-editorial" aria-labelledby="titulo-login-editorial">
     <div class="encabezado-login">
+      <p class="etiqueta-seccion">CUENTA PONT3LA10</p>
       <h2 id="titulo-login-editorial">{{ tituloFormulario }}</h2>
       <p>{{ detalleFormulario }}</p>
     </div>
@@ -166,20 +168,20 @@ async function entrarConGoogle() {
       </label>
 
       <label v-if="requiereContrasena">
-        Contrasena
+        Contraseña
         <span class="campo-login-con-icono campo-contrasena">
           <LockKeyhole aria-hidden="true" />
           <input
             v-model="contrasena"
             :type="mostrarContrasena ? 'text' : 'password'"
-            placeholder="Tu contrasena"
+            placeholder="Tu contraseña"
             :autocomplete="modoActual === 'ingreso' ? 'current-password' : 'new-password'"
           >
           <button
             class="boton-ver-contrasena"
             type="button"
-            :aria-label="mostrarContrasena ? 'Ocultar contrasena' : 'Mostrar contrasena'"
-            :title="mostrarContrasena ? 'Ocultar contrasena' : 'Mostrar contrasena'"
+            :aria-label="mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            :title="mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'"
             @click="mostrarContrasena = !mostrarContrasena"
           >
             <EyeOff v-if="mostrarContrasena" aria-hidden="true" />
@@ -224,14 +226,27 @@ async function entrarConGoogle() {
     </form>
 
     <div class="acciones-login-secundarias">
-      <button v-if="modoActual !== 'recuperacion'" type="button" @click="modoActual = 'recuperacion'">
+      <div v-if="modoActual === 'ingreso'" class="separador-login" aria-hidden="true">
+        <span />
+        <small>o</small>
+        <span />
+      </div>
+      <button
+        v-if="modoActual !== 'recuperacion'"
+        class="accion-login-recuperacion"
+        type="button"
+        @click="modoActual = 'recuperacion'"
+      >
         <RotateCcw aria-hidden="true" />
-        <span>Recuperar contrasena</span>
+        <span>¿Olvidaste tu contraseña?</span>
       </button>
-      <button v-if="modoActual !== 'registro'" type="button" @click="modoActual = 'registro'">
-        <UserPlus aria-hidden="true" />
-        <span>Registrarse</span>
-      </button>
+      <p v-if="modoActual !== 'registro'" class="accion-login-registro">
+        <span>¿No tienes cuenta?</span>
+        <button type="button" @click="modoActual = 'registro'">
+          <UserPlus aria-hidden="true" />
+          <span>Crear cuenta</span>
+        </button>
+      </p>
       <button v-if="modoActual !== 'ingreso'" type="button" @click="modoActual = 'ingreso'">
         <ArrowLeft aria-hidden="true" />
         <span>Volver</span>

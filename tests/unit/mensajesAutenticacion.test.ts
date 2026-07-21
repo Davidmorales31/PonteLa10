@@ -3,7 +3,7 @@ import { crearResultadoAuth, normalizarMensajeAuth } from '~/utils/auth/mensajes
 
 describe('mensajes de autenticacion editorial', () => {
   it('traduce credenciales invalidas sin filtrar mensajes tecnicos', () => {
-    expect(normalizarMensajeAuth('Invalid login credentials')).toBe('El correo o la contrasena no coinciden.')
+    expect(normalizarMensajeAuth('Invalid login credentials')).toBe('El correo o la contraseña no coinciden.')
   })
 
   it('mantiene un mensaje generico para errores desconocidos', () => {
