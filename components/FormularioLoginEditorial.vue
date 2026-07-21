@@ -153,29 +153,30 @@ async function entrarConGoogle() {
     <form class="auth-form auth-form-editorial" @submit.prevent="enviarFormulario">
       <label v-if="requiereNombre">
         Nombre completo
-        <span class="campo-login-con-icono">
+        <span class="campo-login-con-icono" :class="{ 'campo-con-valor': nombreCompleto }">
           <UserRound aria-hidden="true" />
-          <input v-model="nombreCompleto" type="text" placeholder="Tu nombre" autocomplete="name">
+          <input v-model="nombreCompleto" type="text" placeholder="Tu nombre" autocomplete="name" maxlength="120">
         </span>
       </label>
 
       <label v-if="requiereCorreo">
         Correo
-        <span class="campo-login-con-icono">
+        <span class="campo-login-con-icono" :class="{ 'campo-con-valor': correo }">
           <Mail aria-hidden="true" />
-          <input v-model="correo" type="email" placeholder="tu@email.com" autocomplete="email">
+          <input v-model="correo" type="email" placeholder="tu@email.com" autocomplete="email" maxlength="180">
         </span>
       </label>
 
       <label v-if="requiereContrasena">
         Contraseña
-        <span class="campo-login-con-icono campo-contrasena">
+        <span class="campo-login-con-icono campo-contrasena" :class="{ 'campo-con-valor': contrasena }">
           <LockKeyhole aria-hidden="true" />
           <input
             v-model="contrasena"
             :type="mostrarContrasena ? 'text' : 'password'"
             placeholder="Tu contraseña"
             :autocomplete="modoActual === 'ingreso' ? 'current-password' : 'new-password'"
+            maxlength="96"
           >
           <button
             class="boton-ver-contrasena"
