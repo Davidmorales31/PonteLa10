@@ -4,6 +4,9 @@ const supabaseKey = process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.NEXT_PUB
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
+  experimental: {
+    appManifest: false
+  },
   modules: ['@nuxt/eslint'],
   css: ['~/assets/css/main.css'],
   app: {
@@ -26,7 +29,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     editorialAiApiKey: process.env.NUXT_EDITORIAL_AI_API_KEY || '',
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3000',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3001',
       supabaseUrl,
       supabaseKey
     }

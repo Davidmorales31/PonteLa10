@@ -30,14 +30,14 @@ function obtenerUrlRetornoAuth(rutaDestino = '/admin'): string {
   const config = useRuntimeConfig()
   const origen = import.meta.client ? window.location.origin : String(config.public.siteUrl)
 
-  return `${origen}/admin/login?redirigir=${encodeURIComponent(rutaDestino)}`
+  return `${origen}/login?redirigir=${encodeURIComponent(rutaDestino)}`
 }
 
 function obtenerUrlCambioContrasena(): string {
   const config = useRuntimeConfig()
   const origen = import.meta.client ? window.location.origin : String(config.public.siteUrl)
 
-  return `${origen}/admin/login?modo=actualizarContrasena`
+  return `${origen}/login?modo=actualizarContrasena`
 }
 
 function manejarErrorAuth(error: AuthError | Error | null): ResultadoOperacionAuth {
@@ -81,7 +81,7 @@ export function useAutenticacionEditorial() {
     }
 
     if (!clienteSupabase) {
-      return crearResultadoAuth(false, 'Falta configuracion', 'Supabase Auth no esta configurado en este entorno.')
+      return crearResultadoAuth(false, 'Falta configuración', 'Supabase Auth no está configurado en este entorno.')
     }
 
     cargandoAuth.value = true
@@ -98,7 +98,7 @@ export function useAutenticacionEditorial() {
     usuarioActual.value = data.user
     sesionActual.value = data.session
 
-    return crearResultadoAuth(true, 'Sesion iniciada', 'Bienvenido al centro editorial de Pont3la10.')
+    return crearResultadoAuth(true, 'Sesión iniciada', 'Bienvenido a Pont3la10.')
   }
 
   async function registrarUsuarioCorreo(registro: RegistroEditorial): Promise<ResultadoOperacionAuth> {
@@ -109,7 +109,7 @@ export function useAutenticacionEditorial() {
     }
 
     if (!clienteSupabase) {
-      return crearResultadoAuth(false, 'Falta configuracion', 'Supabase Auth no esta configurado en este entorno.')
+      return crearResultadoAuth(false, 'Falta configuración', 'Supabase Auth no está configurado en este entorno.')
     }
 
     cargandoAuth.value = true
@@ -129,34 +129,7 @@ export function useAutenticacionEditorial() {
       return manejarErrorAuth(error)
     }
 
-    return crearResultadoAuth(true, 'Revisa tu correo', 'Te enviamos la confirmacion para activar tu cuenta editorial.')
-  }
-
-  async function enviarEnlaceMagico(solicitud: SolicitudCorreoAuth): Promise<ResultadoOperacionAuth> {
-    const validacion = esquemaSolicitudCorreoAuth.safeParse(solicitud)
-
-    if (!validacion.success) {
-      return crearResultadoAuth(false, 'Revisa el correo', obtenerPrimerErrorAuth(validacion))
-    }
-
-    if (!clienteSupabase) {
-      return crearResultadoAuth(false, 'Falta configuracion', 'Supabase Auth no esta configurado en este entorno.')
-    }
-
-    cargandoAuth.value = true
-    const { error } = await clienteSupabase.auth.signInWithOtp({
-      email: validacion.data.correo,
-      options: {
-        emailRedirectTo: obtenerUrlRetornoAuth('/admin')
-      }
-    })
-    cargandoAuth.value = false
-
-    if (error) {
-      return manejarErrorAuth(error)
-    }
-
-    return crearResultadoAuth(true, 'Enlace enviado', 'Revisa tu correo para entrar sin contrasena.')
+    return crearResultadoAuth(true, 'Revisa tu correo', 'Te enviamos la confirmación para activar tu cuenta.')
   }
 
   async function recuperarContrasena(solicitud: SolicitudCorreoAuth): Promise<ResultadoOperacionAuth> {
@@ -167,7 +140,7 @@ export function useAutenticacionEditorial() {
     }
 
     if (!clienteSupabase) {
-      return crearResultadoAuth(false, 'Falta configuracion', 'Supabase Auth no esta configurado en este entorno.')
+      return crearResultadoAuth(false, 'Falta configuración', 'Supabase Auth no está configurado en este entorno.')
     }
 
     cargandoAuth.value = true
@@ -180,18 +153,18 @@ export function useAutenticacionEditorial() {
       return manejarErrorAuth(error)
     }
 
-    return crearResultadoAuth(true, 'Correo enviado', 'Te enviamos el enlace para cambiar tu contrasena.')
+    return crearResultadoAuth(true, 'Correo enviado', 'Te enviamos el enlace para cambiar tu contraseña.')
   }
 
   async function actualizarContrasena(cambio: CambioContrasenaAuth): Promise<ResultadoOperacionAuth> {
     const validacion = esquemaCambioContrasenaAuth.safeParse(cambio)
 
     if (!validacion.success) {
-      return crearResultadoAuth(false, 'Revisa la contrasena', obtenerPrimerErrorAuth(validacion))
+      return crearResultadoAuth(false, 'Revisa la contraseña', obtenerPrimerErrorAuth(validacion))
     }
 
     if (!clienteSupabase) {
-      return crearResultadoAuth(false, 'Falta configuracion', 'Supabase Auth no esta configurado en este entorno.')
+      return crearResultadoAuth(false, 'Falta configuración', 'Supabase Auth no está configurado en este entorno.')
     }
 
     cargandoAuth.value = true
@@ -204,12 +177,12 @@ export function useAutenticacionEditorial() {
       return manejarErrorAuth(error)
     }
 
-    return crearResultadoAuth(true, 'Contrasena actualizada', 'Ya puedes entrar con tu nueva contrasena.')
+    return crearResultadoAuth(true, 'Contraseña actualizada', 'Ya puedes entrar con tu nueva contraseña.')
   }
 
   async function iniciarSesionGoogle(): Promise<ResultadoOperacionAuth> {
     if (!clienteSupabase) {
-      return crearResultadoAuth(false, 'Falta configuracion', 'Supabase Auth no esta configurado en este entorno.')
+      return crearResultadoAuth(false, 'Falta configuración', 'Supabase Auth no está configurado en este entorno.')
     }
 
     cargandoAuth.value = true
@@ -225,7 +198,7 @@ export function useAutenticacionEditorial() {
       return manejarErrorAuth(error)
     }
 
-    return crearResultadoAuth(true, 'Redirigiendo', 'Continua con Google para entrar al panel.')
+    return crearResultadoAuth(true, 'Redirigiendo', 'Continua con Google para entrar a Pont3la10.')
   }
 
   async function cerrarSesion(): Promise<void> {
@@ -245,7 +218,6 @@ export function useAutenticacionEditorial() {
     obtenerSesionActual,
     iniciarSesionCorreo,
     registrarUsuarioCorreo,
-    enviarEnlaceMagico,
     recuperarContrasena,
     actualizarContrasena,
     iniciarSesionGoogle,

@@ -6,12 +6,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const { autenticacionConfigurada, obtenerSesionActual } = useAutenticacionEditorial()
 
   if (!autenticacionConfigurada.value) {
-    return navigateTo('/admin/login?motivo=configuracion')
+    return navigateTo('/login?motivo=configuracion')
   }
 
   const sesion = await obtenerSesionActual()
 
   if (!sesion) {
-    return navigateTo(`/admin/login?redirigir=${encodeURIComponent(to.fullPath)}`)
+    return navigateTo(`/login?redirigir=${encodeURIComponent(to.fullPath)}`)
   }
 })

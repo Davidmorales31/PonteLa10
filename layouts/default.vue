@@ -8,7 +8,7 @@ import { categoriasPrincipales } from '~/data/editorial'
       <div class="franja-superior">
         <span>Viernes editorial</span>
         <strong>La jugada clara, sin humo.</strong>
-        <NuxtLink to="/admin">Panel interno</NuxtLink>
+        <AccesoUsuarioCabecera />
       </div>
 
       <div class="marca-editorial">
@@ -37,7 +37,7 @@ import { categoriasPrincipales } from '~/data/editorial'
       <NuxtLink to="/">Portada</NuxtLink>
       <NuxtLink to="/articulos">Noticias</NuxtLink>
       <NuxtLink to="/especiales">Especiales</NuxtLink>
-      <NuxtLink to="/admin">Panel</NuxtLink>
+      <AccesoUsuarioCabecera variante="movil" />
     </nav>
   </div>
 </template>

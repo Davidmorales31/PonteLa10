@@ -1,6 +1,6 @@
 import type { User } from '@supabase/supabase-js'
 
-export type ModoLoginEditorial = 'ingreso' | 'registro' | 'enlace' | 'recuperacion' | 'actualizarContrasena'
+export type ModoLoginEditorial = 'ingreso' | 'registro' | 'recuperacion' | 'actualizarContrasena'
 
 export type EstadoSolicitudAuth = 'idle' | 'cargando' | 'exito' | 'error'
 

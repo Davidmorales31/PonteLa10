@@ -1,4 +1,17 @@
 <script setup lang="ts">
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  KeyRound,
+  LoaderCircle,
+  LockKeyhole,
+  LogIn,
+  Mail,
+  RotateCcw,
+  UserPlus,
+  UserRound
+} from '@lucide/vue'
 import type { ModoLoginEditorial, ResultadoOperacionAuth } from '~/types/autenticacion'
 
 const route = useRoute()
@@ -9,17 +22,10 @@ const {
   obtenerSesionActual,
   iniciarSesionCorreo,
   registrarUsuarioCorreo,
-  enviarEnlaceMagico,
   recuperarContrasena,
   actualizarContrasena,
   iniciarSesionGoogle
 } = useAutenticacionEditorial()
-
-const modosPrincipales: Array<{ modo: ModoLoginEditorial, etiqueta: string }> = [
-  { modo: 'ingreso', etiqueta: 'Entrar' },
-  { modo: 'registro', etiqueta: 'Crear acceso' },
-  { modo: 'enlace', etiqueta: 'Email link' }
-]
 
 const correo = ref('')
 const contrasena = ref('')
@@ -31,16 +37,15 @@ const mensajeEstado = ref<ResultadoOperacionAuth | null>(null)
 const redireccionFinal = computed(() => {
   const redirigir = route.query.redirigir
 
-  return typeof redirigir === 'string' ? redirigir : '/admin'
+  return typeof redirigir === 'string' ? redirigir : '/'
 })
 
 const tituloFormulario = computed(() => {
   const titulos: Record<ModoLoginEditorial, string> = {
-    ingreso: 'Entrar al panel',
-    registro: 'Crear acceso editorial',
-    enlace: 'Entrar con correo',
-    recuperacion: 'Recuperar contrasena',
-    actualizarContrasena: 'Nueva contrasena'
+    ingreso: 'Entrar a Pont3la10',
+    registro: 'Crear tu cuenta',
+    recuperacion: 'Recuperar contraseña',
+    actualizarContrasena: 'Nueva contraseña'
   }
 
   return titulos[modoActual.value]
@@ -48,11 +53,11 @@ const tituloFormulario = computed(() => {
 
 const detalleFormulario = computed(() => {
   const detalles: Record<ModoLoginEditorial, string> = {
-    ingreso: 'Correo del equipo, Google o enlace seguro.',
-    registro: 'La cuenta queda pendiente de permisos internos antes de editar contenido.',
-    enlace: 'Te enviaremos un enlace temporal para entrar sin contrasena.',
-    recuperacion: 'Recibiras un correo para iniciar el cambio de contrasena.',
-    actualizarContrasena: 'Define una clave fuerte para proteger tu acceso editorial.'
+    ingreso:
+      'Ingresa con tu correo o continúa con Google. Tu cuenta te acompaña para guardar progreso, seguir especiales y vivir la jugada completa.',
+    registro: 'Crea tu cuenta para acceder a nuevas funciones.',
+    recuperacion: 'Recibirás un correo para cambiar tu contraseña.',
+    actualizarContrasena: 'Define una clave fuerte para proteger tu cuenta.'
   }
 
   return detalles[modoActual.value]
@@ -60,11 +65,10 @@ const detalleFormulario = computed(() => {
 
 const textoBotonPrincipal = computed(() => {
   const textos: Record<ModoLoginEditorial, string> = {
-    ingreso: 'Iniciar sesion',
+    ingreso: 'Iniciar sesión',
     registro: 'Crear cuenta',
-    enlace: 'Enviar enlace',
-    recuperacion: 'Enviar recuperacion',
-    actualizarContrasena: 'Guardar contrasena'
+    recuperacion: 'Enviar recuperación',
+    actualizarContrasena: 'Guardar contraseña'
   }
 
   return cargandoAuth.value ? 'Procesando...' : textos[modoActual.value]
@@ -82,7 +86,7 @@ onMounted(async () => {
   if (!autenticacionConfigurada.value) {
     mensajeEstado.value = {
       correcto: false,
-      titulo: 'Falta configuracion',
+      titulo: 'Falta configuración',
       detalle: 'Configura NUXT_PUBLIC_SUPABASE_URL y NUXT_PUBLIC_SUPABASE_KEY para activar el acceso.'
     }
     return
@@ -126,10 +130,6 @@ async function ejecutarOperacionModo(): Promise<ResultadoOperacionAuth> {
     })
   }
 
-  if (modoActual.value === 'enlace') {
-    return enviarEnlaceMagico({ correo: correo.value })
-  }
-
   if (modoActual.value === 'recuperacion') {
     return recuperarContrasena({ correo: correo.value })
   }
@@ -145,45 +145,48 @@ async function entrarConGoogle() {
 <template>
   <section class="formulario-login-editorial" aria-labelledby="titulo-login-editorial">
     <div class="encabezado-login">
-      <p class="etiqueta-seccion">Acceso interno</p>
+      <p class="etiqueta-seccion">CUENTA PONT3LA10</p>
       <h2 id="titulo-login-editorial">{{ tituloFormulario }}</h2>
       <p>{{ detalleFormulario }}</p>
-    </div>
-
-    <div class="selector-login" role="tablist" aria-label="Metodos de acceso">
-      <button
-        v-for="opcion in modosPrincipales"
-        :key="opcion.modo"
-        type="button"
-        :class="{ activo: modoActual === opcion.modo }"
-        @click="modoActual = opcion.modo"
-      >
-        {{ opcion.etiqueta }}
-      </button>
     </div>
 
     <form class="auth-form auth-form-editorial" @submit.prevent="enviarFormulario">
       <label v-if="requiereNombre">
         Nombre completo
-        <input v-model="nombreCompleto" type="text" placeholder="David Morales" autocomplete="name">
+        <span class="campo-login-con-icono" :class="{ 'campo-con-valor': nombreCompleto }">
+          <UserRound aria-hidden="true" />
+          <input v-model="nombreCompleto" type="text" placeholder="Tu nombre" autocomplete="name" maxlength="120">
+        </span>
       </label>
 
       <label v-if="requiereCorreo">
         Correo
-        <input v-model="correo" type="email" placeholder="editor@pont3la10.com" autocomplete="email">
+        <span class="campo-login-con-icono" :class="{ 'campo-con-valor': correo }">
+          <Mail aria-hidden="true" />
+          <input v-model="correo" type="email" placeholder="tu@email.com" autocomplete="email" maxlength="180">
+        </span>
       </label>
 
       <label v-if="requiereContrasena">
-        Contrasena
-        <span class="campo-contrasena">
+        Contraseña
+        <span class="campo-login-con-icono campo-contrasena" :class="{ 'campo-con-valor': contrasena }">
+          <LockKeyhole aria-hidden="true" />
           <input
             v-model="contrasena"
             :type="mostrarContrasena ? 'text' : 'password'"
-            placeholder="Minimo 10 caracteres"
+            placeholder="Tu contraseña"
             :autocomplete="modoActual === 'ingreso' ? 'current-password' : 'new-password'"
+            maxlength="96"
           >
-          <button type="button" @click="mostrarContrasena = !mostrarContrasena">
-            {{ mostrarContrasena ? 'Ocultar' : 'Ver' }}
+          <button
+            class="boton-ver-contrasena"
+            type="button"
+            :aria-label="mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            :title="mostrarContrasena ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+            @click="mostrarContrasena = !mostrarContrasena"
+          >
+            <EyeOff v-if="mostrarContrasena" aria-hidden="true" />
+            <Eye v-else aria-hidden="true" />
           </button>
         </span>
       </label>
@@ -198,8 +201,17 @@ async function entrarConGoogle() {
         <span>{{ mensajeEstado.detalle }}</span>
       </div>
 
-      <button class="boton-primario boton-login-principal" type="submit" :disabled="cargandoAuth || !autenticacionConfigurada">
-        {{ textoBotonPrincipal }}
+      <button
+        class="boton-primario boton-login-principal"
+        type="submit"
+        :disabled="cargandoAuth || !autenticacionConfigurada"
+      >
+        <LoaderCircle v-if="cargandoAuth" class="icono-cargando" aria-hidden="true" />
+        <KeyRound v-else-if="modoActual === 'actualizarContrasena'" aria-hidden="true" />
+        <RotateCcw v-else-if="modoActual === 'recuperacion'" aria-hidden="true" />
+        <UserPlus v-else-if="modoActual === 'registro'" aria-hidden="true" />
+        <LogIn v-else aria-hidden="true" />
+        <span>{{ textoBotonPrincipal }}</span>
       </button>
 
       <button
@@ -209,17 +221,36 @@ async function entrarConGoogle() {
         :disabled="cargandoAuth || !autenticacionConfigurada"
         @click="entrarConGoogle"
       >
-        <span>G</span>
-        Continuar con Google
+        <LogoGoogle />
+        <span>Continuar con Google</span>
       </button>
     </form>
 
     <div class="acciones-login-secundarias">
-      <button v-if="modoActual !== 'recuperacion'" type="button" @click="modoActual = 'recuperacion'">
-        Olvide mi contrasena
+      <div v-if="modoActual === 'ingreso'" class="separador-login" aria-hidden="true">
+        <span />
+        <small>o</small>
+        <span />
+      </div>
+      <button
+        v-if="modoActual !== 'recuperacion'"
+        class="accion-login-recuperacion"
+        type="button"
+        @click="modoActual = 'recuperacion'"
+      >
+        <RotateCcw aria-hidden="true" />
+        <span>¿Olvidaste tu contraseña?</span>
       </button>
+      <p v-if="modoActual !== 'registro'" class="accion-login-registro">
+        <span>¿No tienes cuenta?</span>
+        <button type="button" @click="modoActual = 'registro'">
+          <UserPlus aria-hidden="true" />
+          <span>Crear cuenta</span>
+        </button>
+      </p>
       <button v-if="modoActual !== 'ingreso'" type="button" @click="modoActual = 'ingreso'">
-        Volver al inicio
+        <ArrowLeft aria-hidden="true" />
+        <span>Volver</span>
       </button>
     </div>
   </section>

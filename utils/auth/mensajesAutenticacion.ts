@@ -1,10 +1,10 @@
 import type { ResultadoOperacionAuth } from '~/types/autenticacion'
 
 const mensajesAuth: Record<string, string> = {
-  'invalid login credentials': 'El correo o la contrasena no coinciden.',
+  'invalid login credentials': 'El correo o la contraseña no coinciden.',
   'email not confirmed': 'Confirma tu correo antes de entrar.',
   'user already registered': 'Este correo ya tiene una cuenta.',
-  'signup disabled': 'El registro esta cerrado. Pide acceso al equipo interno.',
+  'signup disabled': 'El registro está cerrado. Pide acceso al equipo interno.',
   'rate limit': 'Demasiados intentos. Espera un momento y vuelve a probar.'
 }
 

@@ -7,7 +7,7 @@ const { usuarioActual, cerrarSesion } = useAutenticacionEditorial()
 
 async function salirPanel() {
   await cerrarSesion()
-  await navigateTo('/admin/login')
+  await navigateTo('/login')
 }
 </script>
 

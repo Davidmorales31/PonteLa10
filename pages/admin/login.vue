@@ -1,12 +1,13 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: 'default'
+  layout: false
 })
+
+const route = useRoute()
+
+await navigateTo({ path: '/login', query: route.query })
 </script>
 
 <template>
-  <section class="auth-page auth-page-editorial">
-    <PanelLoginEditorial />
-    <FormularioLoginEditorial />
-  </section>
+  <div />
 </template>
