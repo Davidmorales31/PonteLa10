@@ -23,13 +23,20 @@ export default defineNuxtConfig({
         { property: 'og:site_name', content: 'Pont3la10' },
         { property: 'og:type', content: 'website' }
       ],
-      link: [{ rel: 'icon', type: 'image/png', href: '/brand/pont3la10_logo_05_app_icon_favicon.png' }]
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/brand/pont3la10_logo_05_app_icon_favicon.png' },
+        { rel: 'apple-touch-icon', href: '/brand/pont3la10_logo_05_app_icon_favicon.png' },
+        { rel: 'preconnect', href: 'https://r2.thesportsdb.com', crossorigin: 'anonymous' },
+        { rel: 'dns-prefetch', href: 'https://r2.thesportsdb.com' }
+      ]
     }
   },
   runtimeConfig: {
     editorialAiApiKey: process.env.NUXT_EDITORIAL_AI_API_KEY || '',
     apiSportsKey: process.env.NUXT_API_SPORTS_KEY || process.env.API_SPORTS_KEY || '',
     apiSportsBaseUrl: process.env.NUXT_API_SPORTS_BASE_URL || 'https://v3.football.api-sports.io',
+    theSportsDbApiKey: process.env.NUXT_THE_SPORTS_DB_API_KEY || '123',
+    theSportsDbBaseUrl: process.env.NUXT_THE_SPORTS_DB_BASE_URL || 'https://www.thesportsdb.com/api/v1/json',
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3001',
       supabaseUrl,

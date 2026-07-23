@@ -6,7 +6,14 @@ import type {
   PosicionClasificacion,
   RespuestaApiFootball
 } from '~/types/resultados'
+import { consultarDetalleAdicionalTheSportsDb, consultarEventoTheSportsDb } from '~/server/utils/clienteTheSportsDb'
 import { crearNombreCorto, mapearFixtureApiFootball } from '~/utils/resultadosDeportivos'
+import {
+  mapearAlineacionesTheSportsDb,
+  mapearEstadisticasTheSportsDb,
+  mapearEventoTheSportsDb,
+  mapearLineaTiempoTheSportsDb
+} from '~/utils/resultadosTheSportsDb'
 
 interface EventoApiFootball {
   time: { elapsed: number; extra?: number | null }
@@ -46,6 +53,13 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
   const configuracion = useRuntimeConfig()
   const apiSportsKey = String(configuracion.apiSportsKey || '')
 
+  if (/^tsdb-\d+$/.test(idPartido)) {
+    return consultarDetalleGratuito(idPartido.replace('tsdb-', ''), {
+      baseUrl: configuracion.theSportsDbBaseUrl,
+      apiKey: configuracion.theSportsDbApiKey
+    })
+  }
+
   if (!apiSportsKey) {
     throw createError({ statusCode: 503, statusMessage: 'El servicio de resultados no está configurado.' })
   }
@@ -55,12 +69,20 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
   }
 
   const headers = { 'x-apisports-key': apiSportsKey }
-  const fixtures = await consultarProveedor<FixtureApiFootball>(
+  const respuestaFixture = await $fetch<RespuestaApiFootball<FixtureApiFootball>>(
     `${configuracion.apiSportsBaseUrl}/fixtures`,
-    { id: idPartido },
-    headers
+    {
+      query: { id: idPartido },
+      headers,
+      timeout: 8_000,
+      retry: 1
+    }
   )
-  const fixture = fixtures[0]
+  const fixture = respuestaFixture.response[0]
+
+  if (respuestaFixture.errors && Object.keys(respuestaFixture.errors).length) {
+    throw createError({ statusCode: 502, statusMessage: 'El proveedor principal no respondió correctamente.' })
+  }
 
   if (!fixture) {
     throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })
@@ -89,6 +111,30 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
   maxAge: 300,
   getKey: evento => `detalle-partido-real-${getRouterParam(evento, 'id') || 'invalido'}`
 })
+
+async function consultarDetalleGratuito(
+  idPartido: string,
+  configuracion: { baseUrl: string; apiKey: string }
+): Promise<DetallePartidoResultado> {
+  const respuestaEvento = await consultarEventoTheSportsDb(configuracion, idPartido)
+  const evento = respuestaEvento.events?.[0]
+
+  if (!evento) {
+    throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })
+  }
+
+  const detalleAdicional = await consultarDetalleAdicionalTheSportsDb(configuracion, idPartido)
+
+  return {
+    partido: mapearEventoTheSportsDb(evento),
+    eventos: mapearLineaTiempoTheSportsDb(detalleAdicional.lineaTiempo.timeline || []),
+    estadisticas: mapearEstadisticasTheSportsDb(detalleAdicional.estadisticas.eventstats || []),
+    alineaciones: mapearAlineacionesTheSportsDb(detalleAdicional.alineaciones.lineup || []),
+    clasificacion: [],
+    actualizadoEn: new Date().toISOString(),
+    origen: 'the-sports-db'
+  }
+}
 
 async function consultarProveedor<T>(url: string, query: Record<string, string | number>, headers: Record<string, string>): Promise<T[]> {
   try {

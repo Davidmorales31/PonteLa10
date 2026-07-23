@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Activity, CircleDot, Star, Trophy } from '@lucide/vue'
 import type { DeporteResultado, EstadoPartido, RespuestaResultados } from '~/types/resultados'
+import { construirUrlAbsoluta } from '~/utils/seo'
 
 const { data: respuesta, status, error, refresh } = await useFetch<RespuestaResultados>('/api/resultados', {
   key: 'centro-resultados',
@@ -26,8 +27,29 @@ const partidosFiltrados = computed(() => (respuesta.value?.partidos || []).filte
 const partidoDestacado = computed(() => partidosFiltrados.value.find(partido => partido.destacado) || partidosFiltrados.value[0])
 const partidosSecundarios = computed(() => partidosFiltrados.value.filter(partido => partido.id !== partidoDestacado.value?.id))
 const cantidadEnVivo = computed(() => respuesta.value?.partidos.filter(partido => partido.estado === 'en-vivo').length || 0)
+const configuracion = useRuntimeConfig()
 
-useSeoMeta({ title: 'Resultados y marcadores | Pont3la10', description: 'Partidos en vivo, marcadores recientes y próximos encuentros.' })
+useSeoPont3la10(() => ({
+  titulo: 'Resultados de fútbol y marcadores | Pont3la10',
+  descripcion: 'Consulta marcadores de fútbol, partidos en vivo, resultados recientes y próximos encuentros con actualización automática.',
+  rutaCanonica: '/resultados',
+  datosEstructurados: {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'Resultados y marcadores de fútbol',
+    description: 'Partidos en vivo, resultados recientes y próximos encuentros.',
+    inLanguage: 'es-CO',
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: (respuesta.value?.partidos || []).map((partido, indice) => ({
+        '@type': 'ListItem',
+        position: indice + 1,
+        name: `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}`,
+        url: construirUrlAbsoluta(String(configuracion.public.siteUrl), `/resultados/${partido.id}`)
+      }))
+    }
+  }
+}))
 </script>
 
 <template>

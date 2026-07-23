@@ -428,7 +428,9 @@
 }
 
 .navegacion-pie-error button,
-.legal-pie-error button {
+.navegacion-pie-error a,
+.legal-pie-error button,
+.legal-pie-error a {
   width: max-content;
   border: 0;
   background: transparent;
@@ -439,7 +441,9 @@
 }
 
 .navegacion-pie-error button:hover,
-.legal-pie-error button:hover {
+.navegacion-pie-error a:hover,
+.legal-pie-error button:hover,
+.legal-pie-error a:hover {
   color: var(--blue);
 }
 

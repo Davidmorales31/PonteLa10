@@ -2,6 +2,12 @@
 definePageMeta({
   layout: false
 })
+
+useSeoPont3la10({
+  titulo: 'Iniciar sesión | Pont3la10',
+  descripcion: 'Accede a tu cuenta de Pont3la10.',
+  robots: 'noindex, nofollow'
+})
 </script>
 
 <template>

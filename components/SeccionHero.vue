@@ -8,8 +8,15 @@ defineProps<{
 
 <template>
   <section class="hero-landing" aria-labelledby="titulo-hero-landing">
-    <div class="hero-imagen" aria-hidden="true">
-      <img :src="datos.imagen" :alt="datos.descripcionImagen">
+    <div class="hero-imagen">
+      <img
+        :src="datos.imagen"
+        :alt="datos.descripcionImagen"
+        width="1024"
+        height="1536"
+        fetchpriority="high"
+        decoding="async"
+      >
     </div>
     <div class="contenedor-landing hero-contenido">
       <div class="hero-copy">

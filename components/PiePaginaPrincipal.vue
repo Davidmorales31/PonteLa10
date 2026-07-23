@@ -14,7 +14,14 @@ const redesSociales = [
   <footer id="pie-pagina" class="pie-pagina-landing">
     <div class="pie-pagina-contenido">
       <section class="marca-pie-pagina" aria-label="Pont3la10">
-        <img src="/brand/pont3la10_logo_login_blanco.png" alt="Pont3la10">
+        <img
+          src="/brand/pont3la10_logo_login_blanco.png"
+          alt="Pont3la10"
+          width="598"
+          height="115"
+          loading="lazy"
+          decoding="async"
+        >
         <p>{{ footerLanding.descripcion }}</p>
         <div class="redes-pie-pagina" aria-label="Redes sociales">
           <a

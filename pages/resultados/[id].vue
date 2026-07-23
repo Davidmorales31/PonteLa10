@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Bell, CalendarDays, MapPin, RefreshCw, Star } from '@lucide/vue'
 import type { DetallePartidoResultado, EquipoResultado, RespuestaMarcadorPartido } from '~/types/resultados'
+import { construirUrlAbsoluta, imagenSeoPredeterminada, robotsNoIndex } from '~/utils/seo'
 
 const ruta = useRoute()
 const pestanaActiva = ref<'resumen' | 'estadisticas' | 'alineaciones' | 'minuto'>('resumen')
@@ -22,6 +23,7 @@ const pestanas = [
 ] as const
 
 const siguiendoPartido = computed(() => detalle.value ? estaSiguiendo(detalle.value.partido.id) : false)
+const configuracion = useRuntimeConfig()
 
 const textoActualizacion = computed(() => {
   if (actualizandoMarcador.value) return 'Actualizando marcador'
@@ -67,12 +69,90 @@ function obtenerEquipoAlineacion(equipoId: string): EquipoResultado {
   return detalle.value?.partido.equipoVisitante || { id: equipoId, nombre: 'Equipo', nombreCorto: 'EQ' }
 }
 
-useSeoMeta({
-  title: () => detalle.value
-    ? `${detalle.value.partido.equipoLocal.nombre} vs ${detalle.value.partido.equipoVisitante.nombre} | Pont3la10`
-    : 'Detalle del partido | Pont3la10',
-  description: 'Marcador, estadísticas, eventos y alineaciones reales del partido.'
+useSeoPont3la10(() => {
+  const partido = detalle.value?.partido
+  const nombrePartido = partido
+    ? `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}`
+    : 'Detalle del partido'
+  const marcador = partido?.marcadorLocal !== undefined && partido.marcadorVisitante !== undefined
+    ? ` ${partido.marcadorLocal}-${partido.marcadorVisitante}`
+    : ''
+  const descripcion = partido
+    ? `${nombrePartido}${marcador}: marcador, resumen, estadísticas, eventos y alineaciones disponibles en Pont3la10.`
+    : 'Marcador, resumen, estadísticas, eventos y alineaciones disponibles del partido.'
+  const rutaCanonica = `/resultados/${String(ruta.params.id)}`
+  const urlCanonica = construirUrlAbsoluta(String(configuracion.public.siteUrl), rutaCanonica)
+
+  return {
+    titulo: `${nombrePartido}${marcador} | Pont3la10`,
+    descripcion,
+    rutaCanonica,
+    imagen: partido?.equipoLocal.logo || partido?.equipoVisitante.logo || imagenSeoPredeterminada,
+    robots: error.value ? robotsNoIndex : undefined,
+    datosEstructurados: partido
+      ? {
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                {
+                  '@type': 'ListItem',
+                  position: 1,
+                  name: 'Inicio',
+                  item: construirUrlAbsoluta(String(configuracion.public.siteUrl), '/')
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 2,
+                  name: 'Resultados',
+                  item: construirUrlAbsoluta(String(configuracion.public.siteUrl), '/resultados')
+                },
+                {
+                  '@type': 'ListItem',
+                  position: 3,
+                  name: nombrePartido,
+                  item: urlCanonica
+                }
+              ]
+            },
+            {
+              '@type': 'SportsEvent',
+              name: nombrePartido,
+              description: descripcion,
+              url: urlCanonica,
+              startDate: partido.fechaIso,
+              eventStatus: obtenerEstadoSchema(partido.estado),
+              sport: 'Fútbol',
+              homeTeam: {
+                '@type': 'SportsTeam',
+                name: partido.equipoLocal.nombre,
+                logo: partido.equipoLocal.logo
+              },
+              awayTeam: {
+                '@type': 'SportsTeam',
+                name: partido.equipoVisitante.nombre,
+                logo: partido.equipoVisitante.logo
+              },
+              location: partido.estadio
+                ? {
+                    '@type': 'Place',
+                    name: partido.estadio,
+                    address: partido.ciudad
+                  }
+                : undefined
+            }
+          ]
+        }
+      : undefined
+  }
 })
+
+function obtenerEstadoSchema(estado: DetallePartidoResultado['partido']['estado']): string {
+  if (estado === 'en-vivo') return 'https://schema.org/EventInProgress'
+  if (estado === 'finalizado') return 'https://schema.org/EventCompleted'
+  return 'https://schema.org/EventScheduled'
+}
 </script>
 
 <template>

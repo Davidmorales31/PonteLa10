@@ -13,11 +13,17 @@ import { articulosTechLanding, footerLanding } from '~/data/landing.mock'
 
 definePageMeta({ layout: false })
 
+useSeoPont3la10({
+  titulo: 'Página no encontrada | Pont3la10',
+  descripcion: 'La página que buscas no está disponible. Vuelve al inicio o explora las últimas noticias de Pont3la10.',
+  robots: 'noindex, follow'
+})
+
 if (import.meta.server) {
   const eventoSolicitud = useRequestEvent()
   if (eventoSolicitud) {
     setResponseStatus(eventoSolicitud, 404, 'Pagina no encontrada')
-    eventoSolicitud.node?.res?.setHeader('X-Robots-Tag', 'noindex, nofollow')
+    eventoSolicitud.node?.res?.setHeader('X-Robots-Tag', 'noindex, follow')
   }
 }
 
@@ -40,9 +46,6 @@ const redesSociales = [
   { nombre: 'TikTok', red: 'tiktok' as const, url: 'https://www.tiktok.com/' }
 ]
 
-function navegarDesdeError(ruta: string) {
-  return navigateTo(ruta)
-}
 </script>
 
 <template>
@@ -71,28 +74,27 @@ function navegarDesdeError(ruta: string) {
           </p>
 
           <div class="acciones-error">
-            <button type="button" class="boton-error boton-error-principal" @click="navegarDesdeError('/')">
+            <NuxtLink class="boton-error boton-error-principal" to="/">
               <Home aria-hidden="true" />
               Volver al inicio
-            </button>
-            <button type="button" class="boton-error boton-error-secundario" @click="navegarDesdeError('/articulos')">
+            </NuxtLink>
+            <NuxtLink class="boton-error boton-error-secundario" to="/articulos">
               <FileText aria-hidden="true" />
               Explorar noticias
-            </button>
+            </NuxtLink>
           </div>
 
           <aside class="ayuda-error" aria-label="Rutas recomendadas">
             <span>¿Necesitas ayuda? Explora por aquí</span>
             <div>
-              <button
+              <NuxtLink
                 v-for="enlace in enlacesAyuda"
                 :key="enlace.etiqueta"
-                type="button"
-                @click="navegarDesdeError(enlace.ruta)"
+                :to="enlace.ruta"
               >
                 <component :is="enlace.icono" aria-hidden="true" />
                 {{ enlace.etiqueta }}
-              </button>
+              </NuxtLink>
               <a href="mailto:hola@pont3la10.com">
                 <Mail aria-hidden="true" />
                 Contacto
@@ -105,6 +107,9 @@ function navegarDesdeError(ruta: string) {
           <img
             src="/editorial/pagina_404_jugador_estadio.png"
             alt="Jugador con el número diez frente a un estadio y un balón"
+            width="1536"
+            height="1024"
+            decoding="async"
           >
           <div class="velo-escena-error" aria-hidden="true" />
           <svg class="camino-error" viewBox="0 0 600 420" aria-hidden="true">
@@ -121,18 +126,17 @@ function navegarDesdeError(ruta: string) {
           <article class="recomendacion-error">
             <span>Quizá te interese</span>
             <div class="recomendacion-error-contenido">
-              <button
-                type="button"
+              <NuxtLink
                 class="imagen-recomendacion-error sprite-tech-primero"
+                :to="recomendacion.ruta"
                 :aria-label="`Leer ${recomendacion.titulo}`"
-                @click="navegarDesdeError(recomendacion.ruta)"
               />
               <div>
                 <small>Tech deportiva</small>
                 <h2>{{ recomendacion.titulo }}</h2>
-                <button type="button" class="enlace-recomendacion-error" @click="navegarDesdeError(recomendacion.ruta)">
+                <NuxtLink class="enlace-recomendacion-error" :to="recomendacion.ruta">
                   Leer más <ArrowRight aria-hidden="true" />
-                </button>
+                </NuxtLink>
               </div>
             </div>
           </article>
@@ -143,34 +147,39 @@ function navegarDesdeError(ruta: string) {
     <footer class="pie-error">
       <div class="pie-error-contenido">
         <section class="marca-pie-error" aria-label="Pont3la10">
-          <img src="/brand/pont3la10_logo_06_horizontal_sobre_blanco.png" alt="Pont3la10">
+          <img
+            src="/brand/pont3la10_logo_06_horizontal_sobre_blanco.png"
+            alt="Pont3la10"
+            width="900"
+            height="320"
+            loading="lazy"
+            decoding="async"
+          >
           <p>{{ footerLanding.descripcion }}<br>La nueva forma de vivir la pasión.</p>
         </section>
 
         <nav class="navegacion-pie-error" aria-label="Navegación del sitio">
           <strong>Navegación</strong>
           <div>
-            <button
+            <NuxtLink
               v-for="enlace in footerLanding.columnas[0]?.enlaces"
               :key="enlace.etiqueta"
-              type="button"
-              @click="navegarDesdeError(enlace.ruta)"
+              :to="enlace.ruta"
             >
               {{ enlace.etiqueta }}
-            </button>
+            </NuxtLink>
           </div>
         </nav>
 
         <nav class="legal-pie-error" aria-label="Información legal">
           <strong>Legal</strong>
-          <button
+          <NuxtLink
             v-for="enlace in enlacesLegales"
             :key="enlace.etiqueta"
-            type="button"
-            @click="navegarDesdeError(enlace.ruta)"
+            :to="enlace.ruta"
           >
             {{ enlace.etiqueta }}
-          </button>
+          </NuxtLink>
         </nav>
 
         <section class="redes-pie-error">

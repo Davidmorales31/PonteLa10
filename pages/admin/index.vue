@@ -5,6 +5,11 @@ definePageMeta({
   middleware: 'autenticacion-editorial'
 })
 
+useSeoMeta({
+  title: 'Panel editorial | Pont3la10',
+  robots: 'noindex, nofollow'
+})
+
 const { usuarioActual, cerrarSesion } = useAutenticacionEditorial()
 const tipoEsqueleto = ref<'franja' | 'listado' | 'detalle'>('listado')
 const simulandoCarga = ref(false)

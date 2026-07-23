@@ -4,27 +4,30 @@ import {
   convertirArticuloLandingAResumen,
   obtenerArticuloLandingPorSlug
 } from '~/utils/articulosLanding'
+import { robotsNoIndex } from '~/utils/seo'
 
 const ruta = useRoute()
-const slugActual = computed(() => String(ruta.params.slug))
-const articuloLanding = computed(() => obtenerArticuloLandingPorSlug(slugActual.value))
-const articulo = computed(() => {
-  if (articuloLanding.value) {
-    return convertirArticuloLandingAResumen(articuloLanding.value)
+const slugActual = String(ruta.params.slug)
+const articuloLanding = obtenerArticuloLandingPorSlug(slugActual)
+const articulo = articuloLanding
+  ? convertirArticuloLandingAResumen(articuloLanding)
+  : articulosRecientes.find(item => item.slug === slugActual)
+
+if (!articulo) {
+  if (import.meta.server) {
+    const eventoSolicitud = useRequestEvent()
+    eventoSolicitud?.node?.res?.setHeader('X-Robots-Tag', 'noindex, follow')
   }
 
-  return articulosRecientes.find(item => item.slug === slugActual.value) || articulosRecientes[0]
-})
+  throw createError({ statusCode: 404, statusMessage: 'Artículo no encontrado' })
+}
 
-useHead(() => ({
-  title: `${articulo.value.titulo} | Pont3la10`,
-  meta: [
-    { name: 'description', content: articulo.value.bajada },
-    { property: 'og:title', content: articulo.value.titulo },
-    { property: 'og:description', content: articulo.value.bajada },
-    { property: 'og:image', content: articulo.value.imagen },
-    { name: 'twitter:card', content: 'summary_large_image' }
-  ]
+useSeoPont3la10(() => ({
+  titulo: `${articulo.titulo} | Pont3la10`,
+  descripcion: articulo.bajada,
+  imagen: articulo.imagen,
+  tipoOpenGraph: 'article',
+  robots: robotsNoIndex
 }))
 </script>
 

@@ -7,6 +7,7 @@ import {
   obtenerAliasCategoria,
   obtenerEtiquetaCategoria
 } from '~/utils/articulosLanding'
+import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
 
 const rutaActual = useRoute()
 const articulosHome = articulosLanding.map(convertirArticuloLandingAResumen)
@@ -35,6 +36,48 @@ const tituloListado = computed(() => {
   }
 
   return 'Artículos'
+})
+const configuracion = useRuntimeConfig()
+const esBusquedaInterna = computed(() => Boolean(rutaActual.query.buscar))
+const rutaCanonica = computed(() => rutaActual.query.categoria && !esBusquedaInterna.value
+  ? `/articulos?categoria=${encodeURIComponent(String(rutaActual.query.categoria))}`
+  : '/articulos')
+
+useSeoPont3la10(() => {
+  const titulo = rutaActual.query.categoria && !esBusquedaInterna.value
+    ? `${tituloListado.value} | Pont3la10`
+    : 'Noticias y análisis deportivo | Pont3la10'
+  const descripcion = rutaActual.query.categoria && !esBusquedaInterna.value
+    ? `Noticias, análisis y actualidad de ${obtenerEtiquetaCategoria(String(rutaActual.query.categoria))} en Pont3la10.`
+    : 'Noticias y análisis de fútbol, tecnología deportiva, gaming y tendencias con contexto claro y criterio editorial.'
+
+  return {
+    titulo,
+    descripcion,
+    rutaCanonica: rutaCanonica.value,
+    robots: esBusquedaInterna.value ? robotsNoIndex : undefined,
+    datosEstructurados: esBusquedaInterna.value
+      ? undefined
+      : {
+          '@context': 'https://schema.org',
+          '@type': 'CollectionPage',
+          name: tituloListado.value,
+          description: descripcion,
+          inLanguage: 'es-CO',
+          mainEntity: {
+            '@type': 'ItemList',
+            itemListElement: articulosFiltrados.value.map((articulo, indice) => ({
+              '@type': 'ListItem',
+              position: indice + 1,
+              name: articulo.titulo,
+              url: construirUrlAbsoluta(
+                String(configuracion.public.siteUrl),
+                `/articulos/${articulo.slug}`
+              )
+            }))
+          }
+        }
+  }
 })
 </script>
 

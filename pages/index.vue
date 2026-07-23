@@ -15,13 +15,18 @@ const { data: resultados, status: estadoResultados } = await useFetch<RespuestaR
   lazy: true
 })
 
-useSeoMeta({
-  title: 'Pont3la10 | Deporte, tecnología y tendencias',
-  description: 'Noticias, análisis y especiales interactivos para vivir el deporte desde otra cancha.',
-  ogTitle: 'Pont3la10 | Deporte, tecnología y tendencias',
-  ogDescription: 'Noticias, análisis y especiales interactivos para vivir el deporte desde otra cancha.',
-  ogImage: '/editorial/login_pont3la10_estadio_sin_logo.png',
-  twitterCard: 'summary_large_image'
+useSeoPont3la10({
+  titulo: 'Pont3la10 | Noticias de deporte y tecnología',
+  descripcion: 'Noticias, análisis, resultados y especiales interactivos de fútbol, tecnología deportiva y gaming con la jugada clara.',
+  rutaCanonica: '/',
+  imagen: heroLanding.imagen,
+  datosEstructurados: {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Pont3la10',
+    description: 'Noticias, análisis, resultados y especiales interactivos de deporte y tecnología.',
+    inLanguage: 'es-CO'
+  }
 })
 </script>
 
@@ -32,7 +37,6 @@ useSeoMeta({
       v-else-if="resultados?.partidos.length"
       :partidos="resultados.partidos"
     />
-    <EstadoDatosResultados v-else class="estado-datos-home" :descripcion="resultados?.aviso" />
     <SeccionHero :datos="heroLanding" />
 
     <div class="contenedor-landing contenido-home-landing">

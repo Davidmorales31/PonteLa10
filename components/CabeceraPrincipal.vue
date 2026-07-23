@@ -60,7 +60,13 @@ async function buscarContenido() {
   <header class="cabecera-landing">
     <div class="cabecera-landing-contenido">
       <NuxtLink class="marca-cabecera-landing" to="/" aria-label="Pont3la10, ir al inicio">
-        <img src="/brand/pont3la10_logo_login_blanco.png" alt="Pont3la10">
+        <img
+          src="/brand/pont3la10_logo_login_blanco.png"
+          alt="Pont3la10"
+          width="598"
+          height="115"
+          decoding="async"
+        >
       </NuxtLink>
 
       <nav class="navegacion-landing-escritorio" aria-label="Navegación principal">
