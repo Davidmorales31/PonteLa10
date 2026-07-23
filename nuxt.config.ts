@@ -8,7 +8,7 @@ export default defineNuxtConfig({
     appManifest: false
   },
   modules: ['@nuxt/eslint'],
-  css: ['~/assets/css/main.css', '~/assets/css/landing.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/landing.css', '~/assets/css/resultados.css'],
   app: {
     head: {
       htmlAttrs: { lang: 'es-CO' },
@@ -28,6 +28,8 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     editorialAiApiKey: process.env.NUXT_EDITORIAL_AI_API_KEY || '',
+    apiSportsKey: process.env.NUXT_API_SPORTS_KEY || process.env.API_SPORTS_KEY || '',
+    apiSportsBaseUrl: process.env.NUXT_API_SPORTS_BASE_URL || 'https://v3.football.api-sports.io',
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3001',
       supabaseUrl,

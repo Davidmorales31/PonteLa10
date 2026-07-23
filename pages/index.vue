@@ -8,6 +8,12 @@ import {
   especialesLanding,
   heroLanding
 } from '~/data/landing.mock'
+import type { RespuestaResultados } from '~/types/resultados'
+
+const { data: resultados, status: estadoResultados } = await useFetch<RespuestaResultados>('/api/resultados', {
+  key: 'resultados-portada',
+  lazy: true
+})
 
 useSeoMeta({
   title: 'Pont3la10 | Deporte, tecnología y tendencias',
@@ -21,6 +27,12 @@ useSeoMeta({
 
 <template>
   <div class="pagina-inicio">
+    <EsqueletoResultados v-if="estadoResultados === 'pending'" tipo="franja" />
+    <FranjaMarcadores
+      v-else-if="resultados?.partidos.length"
+      :partidos="resultados.partidos"
+    />
+    <EstadoDatosResultados v-else class="estado-datos-home" :descripcion="resultados?.aviso" />
     <SeccionHero :datos="heroLanding" />
 
     <div class="contenedor-landing contenido-home-landing">
