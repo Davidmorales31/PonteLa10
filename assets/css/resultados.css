@@ -256,6 +256,9 @@
   font-weight: 800;
 }
 
+.filtros-estado button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+.filtros-estado button svg { width: 14px; height: 14px; }
+
 .filtros-deporte button.activo,
 .filtros-estado button.activo,
 .pestanas-detalle-partido button.activo {
@@ -368,12 +371,45 @@
 .panel-eventos li { display: grid; min-height: 58px; grid-template-columns: 52px 20px minmax(0, 1fr) auto; gap: 9px; align-items: center; border-left: 3px solid var(--yellow); border-bottom: 1px solid #edf0f5; padding: 7px 6px 7px 11px; }
 .panel-eventos li.evento-cambio { border-left-color: #21a653; }
 .panel-eventos li.evento-tarjeta-roja { border-left-color: #e30613; }
-.panel-eventos li > svg { width: 16px; }
 .panel-eventos time { color: var(--navy); font-weight: 850; }
 .panel-eventos li div { display: grid; gap: 3px; }
 .panel-eventos li strong { color: var(--navy); font-size: 0.76rem; }
-.panel-eventos li small { color: var(--muted); font-size: 0.62rem; }
+.panel-eventos li small { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 0.62rem; }
+.panel-eventos li small svg { width: 12px; height: 12px; flex: 0 0 auto; }
 .panel-eventos li b { border-radius: 6px; background: var(--yellow); padding: 6px 8px; color: var(--navy); font-size: 0.7rem; }
+
+.icono-evento-partido {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+  border-radius: 50%;
+  background: #f1f5fa;
+  color: var(--navy);
+}
+
+.icono-evento-partido svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.icono-evento-gol { background: #eef8ef; color: #16733b; }
+.icono-evento-cambio { background: var(--soft-blue); color: var(--blue); }
+.icono-evento-tarjeta-amarilla { border-radius: 6px; background: #fff8cf; color: #e0b600; }
+.icono-evento-tarjeta-roja { border-radius: 6px; background: #fff0f0; color: #d71920; }
+.icono-evento-tarjeta-amarilla svg,
+.icono-evento-tarjeta-roja svg { fill: currentColor; stroke: currentColor; }
+
+.panel-resumen-partido > header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.panel-resumen-partido > header p { display: flex; align-items: center; gap: 6px; margin: 0 0 6px; color: var(--blue); font-size: 0.64rem; font-weight: 900; text-transform: uppercase; }
+.panel-resumen-partido > header p svg { width: 14px; height: 14px; }
+.indicadores-resumen-partido { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--line); border-radius: 7px; overflow: hidden; }
+.indicadores-resumen-partido article { display: grid; min-height: 116px; place-items: center; align-content: center; gap: 5px; border-right: 1px solid var(--line); text-align: center; }
+.indicadores-resumen-partido article:last-child { border-right: 0; }
+.indicadores-resumen-partido svg { width: 21px; height: 21px; color: var(--blue); }
+.indicadores-resumen-partido strong { color: var(--navy); font-size: 1.35rem; }
+.indicadores-resumen-partido span { color: var(--muted); font-size: 0.66rem; font-weight: 750; }
+.ultima-jugada-resumen { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 12px; align-items: center; margin-top: 16px; border-left: 4px solid var(--yellow); background: #f8fafd; padding: 14px 16px; }
+.ultima-jugada-resumen > div { display: grid; gap: 3px; }
+.ultima-jugada-resumen span { color: var(--blue); font-size: 0.62rem; font-weight: 900; text-transform: uppercase; }
+.ultima-jugada-resumen strong { color: var(--navy); font-size: 0.86rem; }
+.ultima-jugada-resumen small { color: var(--muted); font-size: 0.68rem; }
 
 .grilla-alineaciones { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 16px; }
 .grilla-alineaciones article { border: 1px solid var(--line); border-radius: 6px; padding: 16px; }
@@ -433,10 +469,27 @@
 }
 
 .estado-datos-resultados strong { color: var(--navy); font-size: 1rem; }
+.estado-datos-resultados > img { width: min(220px, 62%); max-height: 150px; object-fit: contain; mix-blend-mode: multiply; }
 .estado-datos-resultados p { max-width: 520px; margin: 0; color: var(--muted); font-size: 0.78rem; line-height: 1.55; }
 .estado-datos-resultados button { display: inline-flex; min-height: 38px; align-items: center; gap: 7px; margin-top: 5px; border: 1px solid var(--navy); border-radius: 6px; background: #fff; padding: 0 14px; color: var(--navy); font-size: 0.72rem; font-weight: 900; }
 .estado-datos-resultados button svg { width: 15px; }
 .estado-datos-home { width: min(1500px, calc(100% - 40px)); min-height: 112px; margin: 12px auto; }
+.estado-datos-home > img { width: 112px; max-height: 74px; }
+
+.laboratorio-carga-admin { margin-top: 28px; border-top: 4px solid var(--navy); padding-top: 20px; }
+.laboratorio-carga-admin > header { display: flex; align-items: end; justify-content: space-between; gap: 24px; }
+.laboratorio-carga-admin > header > div { max-width: 720px; }
+.laboratorio-carga-admin h2 { font-size: 1.65rem; }
+.laboratorio-carga-admin > header p:not(.etiqueta-seccion) { color: var(--muted); font-weight: 650; line-height: 1.5; }
+.laboratorio-carga-admin .boton-primario { gap: 8px; }
+.laboratorio-carga-admin .boton-primario svg { width: 17px; height: 17px; }
+.selector-esqueleto-admin { display: inline-flex; margin-top: 18px; overflow: hidden; border: 1px solid var(--line); border-radius: 7px; background: #fff; }
+.selector-esqueleto-admin button { min-height: 40px; border: 0; border-right: 1px solid var(--line); background: #fff; padding: 0 18px; color: var(--navy); font-size: 0.72rem; font-weight: 850; text-transform: capitalize; }
+.selector-esqueleto-admin button:last-child { border-right: 0; }
+.selector-esqueleto-admin button.activo { background: var(--yellow); }
+.lienzo-esqueleto-admin { margin-top: 14px; overflow: hidden; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg); padding: 16px; }
+.lienzo-esqueleto-admin .esqueleto-resultados { width: 100%; padding: 0; }
+.lienzo-esqueleto-admin .estado-datos-resultados { min-height: 300px; }
 
 .esqueleto-resultados {
   width: min(1440px, calc(100% - 40px));
@@ -555,6 +608,12 @@
   .esqueleto-marcador-grande i { width: 56px; height: 56px; }
   .esqueleto-marcador-grande strong { width: 80px; height: 48px; }
   .estado-datos-home { width: calc(100% - 24px); }
+  .indicadores-resumen-partido { grid-template-columns: 1fr; }
+  .indicadores-resumen-partido article { min-height: 90px; border-right: 0; border-bottom: 1px solid var(--line); }
+  .indicadores-resumen-partido article:last-child { border-bottom: 0; }
+  .laboratorio-carga-admin > header { align-items: stretch; flex-direction: column; }
+  .selector-esqueleto-admin { display: flex; width: 100%; }
+  .selector-esqueleto-admin button { flex: 1; padding-inline: 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

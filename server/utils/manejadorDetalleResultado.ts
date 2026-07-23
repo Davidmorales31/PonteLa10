@@ -100,14 +100,45 @@ async function consultarProveedor<T>(url: string, query: Record<string, string |
 }
 
 function mapearEventos(eventos: EventoApiFootball[]): EventoPartido[] {
-  return eventos.map((evento, indice) => ({
-    id: `api-evento-${indice}`,
-    minuto: `${evento.time.elapsed}${evento.time.extra ? `+${evento.time.extra}` : ''}′`,
-    tipo: obtenerTipoEvento(evento.type, evento.detail),
-    equipoId: String(evento.team.id),
-    jugador: evento.player.name || 'Jugador',
-    detalle: evento.assist?.name ? `Asistencia: ${evento.assist.name}` : evento.detail
-  }))
+  return eventos.map((evento, indice) => {
+    const tipo = obtenerTipoEvento(evento.type, evento.detail)
+    const esCambio = tipo === 'cambio'
+
+    return {
+      id: `api-evento-${indice}`,
+      minuto: `${evento.time.elapsed}${evento.time.extra ? `+${evento.time.extra}` : ''}′`,
+      tipo,
+      equipoId: String(evento.team.id),
+      jugador: esCambio
+        ? evento.assist?.name || evento.player.name || 'Jugador'
+        : evento.player.name || 'Jugador',
+      detalle: obtenerDetalleEvento(evento, tipo)
+    }
+  })
+}
+
+function obtenerDetalleEvento(evento: EventoApiFootball, tipo: EventoPartido['tipo']): string {
+  if (tipo === 'gol') {
+    return evento.assist?.name ? `Asistencia: ${evento.assist.name}` : traducirDetalleEvento(evento.detail)
+  }
+
+  if (tipo === 'cambio') {
+    return evento.player.name ? `Entra · Sale: ${evento.player.name}` : 'Cambio'
+  }
+
+  return traducirDetalleEvento(evento.detail)
+}
+
+function traducirDetalleEvento(detalle: string): string {
+  const detalleNormalizado = detalle.toLocaleLowerCase('es')
+
+  if (detalleNormalizado.includes('yellow')) return 'Tarjeta amarilla'
+  if (detalleNormalizado.includes('red')) return 'Tarjeta roja'
+  if (detalleNormalizado.includes('penalty')) return 'Gol de penal'
+  if (detalleNormalizado.includes('own goal')) return 'Autogol'
+  if (detalleNormalizado.includes('normal goal')) return 'Gol'
+
+  return detalle || 'Evento del partido'
 }
 
 function mapearEstadisticas(equipos: EstadisticaEquipoApi[]) {

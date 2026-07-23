@@ -11,6 +11,7 @@ defineEmits<{ reintentar: [] }>()
 
 <template>
   <div class="estado-datos-resultados" role="status">
+    <img src="/editorial/estado_sin_datos_resultados.png" alt="Marcador deportivo temporalmente sin datos">
     <strong>{{ titulo }}</strong>
     <p>{{ descripcion }}</p>
     <button v-if="permitirReintento" type="button" @click="$emit('reintentar')"><RefreshCw aria-hidden="true" /> Reintentar</button>

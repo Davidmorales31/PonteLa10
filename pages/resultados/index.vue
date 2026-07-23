@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Activity, CircleDot, Trophy } from '@lucide/vue'
+import { Activity, CircleDot, Star, Trophy } from '@lucide/vue'
 import type { DeporteResultado, EstadoPartido, RespuestaResultados } from '~/types/resultados'
 
 const { data: respuesta, status, error, refresh } = await useFetch<RespuestaResultados>('/api/resultados', {
@@ -8,6 +8,8 @@ const { data: respuesta, status, error, refresh } = await useFetch<RespuestaResu
 })
 const deporteActivo = ref<DeporteResultado | 'todos'>('todos')
 const estadoActivo = ref<EstadoPartido | 'todos'>('todos')
+const soloSeguidos = ref(false)
+const { partidosSeguidos } = useSeguimientoPartidos()
 const deportes: Array<{ id: DeporteResultado | 'todos'; etiqueta: string }> = [
   { id: 'todos', etiqueta: 'Todos' }, { id: 'futbol', etiqueta: 'Fútbol' },
   { id: 'baloncesto', etiqueta: 'Baloncesto' }, { id: 'tenis', etiqueta: 'Tenis' }, { id: 'beisbol', etiqueta: 'Béisbol' }
@@ -19,6 +21,7 @@ const estados: Array<{ id: EstadoPartido | 'todos'; etiqueta: string }> = [
 const partidosFiltrados = computed(() => (respuesta.value?.partidos || []).filter(partido =>
   (deporteActivo.value === 'todos' || partido.deporte === deporteActivo.value)
   && (estadoActivo.value === 'todos' || partido.estado === estadoActivo.value)
+  && (!soloSeguidos.value || partidosSeguidos.value.includes(partido.id))
 ))
 const partidoDestacado = computed(() => partidosFiltrados.value.find(partido => partido.destacado) || partidosFiltrados.value[0])
 const partidosSecundarios = computed(() => partidosFiltrados.value.filter(partido => partido.id !== partidoDestacado.value?.id))
@@ -40,6 +43,7 @@ useSeoMeta({ title: 'Resultados y marcadores | Pont3la10', description: 'Partido
       </div>
       <div class="filtros-estado" role="group" aria-label="Filtrar por estado">
         <button v-for="estado in estados" :key="estado.id" type="button" :class="{ activo: estadoActivo === estado.id }" :aria-pressed="estadoActivo === estado.id" @click="estadoActivo = estado.id">{{ estado.etiqueta }}</button>
+        <button type="button" :class="{ activo: soloSeguidos }" :aria-pressed="soloSeguidos" @click="soloSeguidos = !soloSeguidos"><Star aria-hidden="true" /> Siguiendo</button>
       </div>
     </div>
 

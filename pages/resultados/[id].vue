@@ -4,9 +4,9 @@ import type { DetallePartidoResultado, EquipoResultado, RespuestaMarcadorPartido
 
 const ruta = useRoute()
 const pestanaActiva = ref<'resumen' | 'estadisticas' | 'alineaciones' | 'minuto'>('resumen')
-const siguiendoPartido = ref(false)
 const actualizandoMarcador = ref(false)
 const errorActualizacion = ref(false)
+const { estaSiguiendo, alternarSeguimiento, notificarCambioMarcador } = useSeguimientoPartidos()
 let identificadorIntervalo: ReturnType<typeof setInterval> | undefined
 
 const { data: detalle, status, error, refresh } = await useFetch<DetallePartidoResultado>(
@@ -20,6 +20,8 @@ const pestanas = [
   { id: 'alineaciones', etiqueta: 'Alineaciones' },
   { id: 'minuto', etiqueta: 'Minuto a minuto' }
 ] as const
+
+const siguiendoPartido = computed(() => detalle.value ? estaSiguiendo(detalle.value.partido.id) : false)
 
 const textoActualizacion = computed(() => {
   if (actualizandoMarcador.value) return 'Actualizando marcador'
@@ -45,12 +47,19 @@ async function actualizarMarcador() {
   errorActualizacion.value = false
   try {
     const respuesta = await $fetch<RespuestaMarcadorPartido>(`/api/resultados/${ruta.params.id}/marcador`)
+    const marcadorCambio = detalle.value.partido.marcadorLocal !== respuesta.partido.marcadorLocal
+      || detalle.value.partido.marcadorVisitante !== respuesta.partido.marcadorVisitante
     detalle.value = { ...detalle.value, partido: respuesta.partido, actualizadoEn: respuesta.actualizadoEn }
+    if (marcadorCambio) notificarCambioMarcador(respuesta.partido)
   } catch {
     errorActualizacion.value = true
   } finally {
     actualizandoMarcador.value = false
   }
+}
+
+async function alternarSeguimientoActual() {
+  if (detalle.value) await alternarSeguimiento(detalle.value.partido)
 }
 
 function obtenerEquipoAlineacion(equipoId: string): EquipoResultado {
@@ -95,7 +104,7 @@ useSeoMeta({
         </div>
       </header>
 
-      <PartidoDestacadoResultados :partido="detalle.partido" />
+      <PartidoDestacadoResultados :partido="detalle.partido" :mostrar-enlace="false" />
 
       <nav class="pestanas-detalle-partido" aria-label="Información del partido">
         <button
@@ -110,7 +119,9 @@ useSeoMeta({
 
       <div class="grilla-detalle-partido">
         <main class="contenido-principal-detalle">
-          <template v-if="pestanaActiva === 'resumen' || pestanaActiva === 'estadisticas'">
+          <PanelResumenPartido v-if="pestanaActiva === 'resumen'" :detalle="detalle" />
+
+          <template v-else-if="pestanaActiva === 'estadisticas'">
             <PanelEstadisticasPartido
               v-if="detalle.estadisticas.length"
               :estadisticas="detalle.estadisticas"
@@ -144,7 +155,7 @@ useSeoMeta({
           </section>
 
           <section class="acciones-seguimiento-partido">
-            <button type="button" :class="{ activo: siguiendoPartido }" @click="siguiendoPartido = !siguiendoPartido">
+            <button type="button" :class="{ activo: siguiendoPartido }" @click="alternarSeguimientoActual">
               <Star aria-hidden="true" /> {{ siguiendoPartido ? 'Siguiendo partido' : 'Seguir partido' }}
             </button>
             <span><Bell aria-hidden="true" /> Recibe alertas de goles y momentos clave.</span>
