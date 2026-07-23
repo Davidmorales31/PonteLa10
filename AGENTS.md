@@ -31,6 +31,16 @@ Estas reglas aplican siempre que Codex trabaje en Pont3la10.
 - Mantener Row Level Security en Supabase desde las primeras migraciones.
 - La IA puede asistir, pero las primeras fases requieren aprobacion humana antes de publicar.
 
+## SEO
+
+- Considerar el SEO en toda pagina, ruta o modulo publico desde su implementacion inicial.
+- Usar la infraestructura SEO compartida del proyecto para titulo, descripcion, canonical, Open Graph y Twitter Cards.
+- Mantener `robots.txt` y `sitemap.xml` sincronizados cuando cambien las rutas publicas.
+- Agregar datos estructurados solo cuando representen fielmente el contenido visible y los datos disponibles.
+- Entregar metadatos importantes desde SSR y conservar HTML semantico, enlaces internos rastreables, jerarquia de encabezados y textos alternativos utiles.
+- Marcar como `noindex` las rutas privadas, errores, busquedas internas y contenido mock o insuficiente para indexacion.
+- Tener en cuenta rendimiento, dimensiones de imagenes y estabilidad visual como parte del SEO tecnico.
+
 ## Flujo De Trabajo
 
 - Antes de editar, entender la estructura existente.

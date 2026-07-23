@@ -6,7 +6,17 @@ import type {
   PosicionClasificacion,
   RespuestaApiFootball
 } from '~/types/resultados'
+import {
+  consultarClasificacionApiBasketball,
+  consultarEstadisticasApiBasketball,
+  consultarPartidoApiBasketball
+} from '~/server/utils/clienteApiBasketball'
 import { consultarDetalleAdicionalTheSportsDb, consultarEventoTheSportsDb } from '~/server/utils/clienteTheSportsDb'
+import {
+  mapearClasificacionApiBasketball,
+  mapearEstadisticasApiBasketball,
+  mapearPartidoApiBasketball
+} from '~/utils/resultadosBasketball'
 import { crearNombreCorto, mapearFixtureApiFootball } from '~/utils/resultadosDeportivos'
 import {
   mapearAlineacionesTheSportsDb,
@@ -52,11 +62,19 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
   const idPartido = getRouterParam(evento, 'id') || ''
   const configuracion = useRuntimeConfig()
   const apiSportsKey = String(configuracion.apiSportsKey || '')
+  const coincidenciaTheSportsDb = idPartido.match(/^tsdb-(?:(futbol|baloncesto|tenis|beisbol)-)?(\d+)$/)
 
-  if (/^tsdb-\d+$/.test(idPartido)) {
-    return consultarDetalleGratuito(idPartido.replace('tsdb-', ''), {
+  if (coincidenciaTheSportsDb) {
+    return consultarDetalleGratuito(coincidenciaTheSportsDb[2]!, {
       baseUrl: configuracion.theSportsDbBaseUrl,
       apiKey: configuracion.theSportsDbApiKey
+    }, (coincidenciaTheSportsDb[1] || 'futbol') as DetallePartidoResultado['partido']['deporte'])
+  }
+
+  if (/^basket-\d+$/.test(idPartido)) {
+    return consultarDetalleBasketball(idPartido.replace('basket-', ''), {
+      baseUrl: String(configuracion.apiBasketballBaseUrl),
+      apiKey: String(configuracion.apiBasketballKey)
     })
   }
 
@@ -114,7 +132,8 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
 
 async function consultarDetalleGratuito(
   idPartido: string,
-  configuracion: { baseUrl: string; apiKey: string }
+  configuracion: { baseUrl: string; apiKey: string },
+  deporte: DetallePartidoResultado['partido']['deporte']
 ): Promise<DetallePartidoResultado> {
   const respuestaEvento = await consultarEventoTheSportsDb(configuracion, idPartido)
   const evento = respuestaEvento.events?.[0]
@@ -126,13 +145,42 @@ async function consultarDetalleGratuito(
   const detalleAdicional = await consultarDetalleAdicionalTheSportsDb(configuracion, idPartido)
 
   return {
-    partido: mapearEventoTheSportsDb(evento),
+    partido: mapearEventoTheSportsDb(evento, deporte),
     eventos: mapearLineaTiempoTheSportsDb(detalleAdicional.lineaTiempo.timeline || []),
     estadisticas: mapearEstadisticasTheSportsDb(detalleAdicional.estadisticas.eventstats || []),
     alineaciones: mapearAlineacionesTheSportsDb(detalleAdicional.alineaciones.lineup || []),
     clasificacion: [],
     actualizadoEn: new Date().toISOString(),
     origen: 'the-sports-db'
+  }
+}
+
+async function consultarDetalleBasketball(
+  idPartido: string,
+  configuracion: { baseUrl: string; apiKey: string }
+): Promise<DetallePartidoResultado> {
+  if (!configuracion.apiKey) {
+    throw createError({ statusCode: 503, statusMessage: 'API-Basketball no está configurada.' })
+  }
+
+  const partido = await consultarPartidoApiBasketball(configuracion, idPartido)
+  if (!partido) {
+    throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })
+  }
+
+  const [estadisticas, clasificacion] = await Promise.all([
+    consultarEstadisticasApiBasketball(configuracion, idPartido),
+    consultarClasificacionApiBasketball(configuracion, partido.league.id, partido.league.season)
+  ])
+
+  return {
+    partido: mapearPartidoApiBasketball(partido),
+    eventos: [],
+    estadisticas: mapearEstadisticasApiBasketball(partido, estadisticas),
+    alineaciones: [],
+    clasificacion: mapearClasificacionApiBasketball(clasificacion),
+    actualizadoEn: new Date().toISOString(),
+    origen: 'api-basketball'
   }
 }
 

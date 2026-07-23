@@ -242,9 +242,12 @@
   scrollbar-width: none;
 }
 
-.filtros-deporte button,
+.filtros-deporte a,
 .filtros-estado button,
 .pestanas-detalle-partido button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 44px;
   flex: 0 0 auto;
   border: 0;
@@ -254,12 +257,13 @@
   color: #485873;
   font-size: 0.78rem;
   font-weight: 800;
+  text-decoration: none;
 }
 
 .filtros-estado button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .filtros-estado button svg { width: 14px; height: 14px; }
 
-.filtros-deporte button.activo,
+.filtros-deporte a.activo,
 .filtros-estado button.activo,
 .pestanas-detalle-partido button.activo {
   background: var(--yellow);
@@ -584,7 +588,7 @@
   .cabecera-resultados h1,
   .cabecera-detalle-partido h1 { font-size: 1.85rem; }
   .contador-en-vivo { min-height: 34px; padding-inline: 13px; }
-  .filtros-deporte button,
+  .filtros-deporte a,
   .filtros-estado button,
   .pestanas-detalle-partido button { min-height: 40px; padding: 0 14px; }
   .marcador-destacado { min-height: 190px; grid-template-columns: 1fr 0.8fr 1fr; gap: 8px; padding: 22px 10px; }

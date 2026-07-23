@@ -1,6 +1,6 @@
 export type DeporteResultado = 'futbol' | 'baloncesto' | 'tenis' | 'beisbol'
 export type EstadoPartido = 'en-vivo' | 'finalizado' | 'programado'
-export type OrigenResultados = 'api-sports' | 'the-sports-db'
+export type OrigenResultados = 'api-sports' | 'api-basketball' | 'the-sports-db' | 'mixto'
 
 export interface EquipoResultado {
   id: string
@@ -16,7 +16,7 @@ export interface PartidoResultado {
   competencia: string
   paisCompetencia?: string
   jornada?: string
-  temporada?: number
+  temporada?: number | string
   fechaIso: string
   estado: EstadoPartido
   minuto?: number

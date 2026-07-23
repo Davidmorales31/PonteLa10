@@ -12,9 +12,10 @@ interface ConfiguracionTheSportsDb {
 
 export async function consultarEventosDiaTheSportsDb(
   configuracion: ConfiguracionTheSportsDb,
-  fecha: string
+  fecha: string,
+  deporte = 'Soccer'
 ): Promise<RespuestaEventosTheSportsDb> {
-  return consultarTheSportsDb(configuracion, 'eventsday.php', { d: fecha, s: 'Soccer' })
+  return consultarTheSportsDb(configuracion, 'eventsday.php', { d: fecha, s: deporte })
 }
 
 export async function consultarEventoTheSportsDb(

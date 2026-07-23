@@ -1,6 +1,7 @@
 export interface EventoTheSportsDb {
   idEvent: string
   idAPIfootball?: string | null
+  strSport?: string | null
   strTimestamp?: string | null
   dateEvent?: string | null
   strTime?: string | null

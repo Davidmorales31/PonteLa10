@@ -14,6 +14,10 @@ export default defineEventHandler((evento) => {
     { ruta: '/', frecuencia: 'daily', prioridad: '1.0' },
     { ruta: '/articulos', frecuencia: 'daily', prioridad: '0.9' },
     { ruta: '/resultados', frecuencia: 'daily', prioridad: '0.9' },
+    { ruta: '/resultados/futbol', frecuencia: 'daily', prioridad: '0.8' },
+    { ruta: '/resultados/baloncesto', frecuencia: 'daily', prioridad: '0.8' },
+    { ruta: '/resultados/tenis', frecuencia: 'daily', prioridad: '0.7' },
+    { ruta: '/resultados/beisbol', frecuencia: 'daily', prioridad: '0.7' },
     { ruta: '/especiales', frecuencia: 'weekly', prioridad: '0.8' }
   ]
 

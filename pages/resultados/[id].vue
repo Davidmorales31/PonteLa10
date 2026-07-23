@@ -15,12 +15,32 @@ const { data: detalle, status, error, refresh } = await useFetch<DetallePartidoR
   { key: `detalle-resultado-${String(ruta.params.id)}`, lazy: true }
 )
 
-const pestanas = [
-  { id: 'resumen', etiqueta: 'Resumen' },
-  { id: 'estadisticas', etiqueta: 'Estadísticas' },
-  { id: 'alineaciones', etiqueta: 'Alineaciones' },
-  { id: 'minuto', etiqueta: 'Minuto a minuto' }
-] as const
+const pestanas = computed(() => {
+  const opciones: Array<{
+    id: 'resumen' | 'estadisticas' | 'alineaciones' | 'minuto'
+    etiqueta: string
+  }> = [{ id: 'resumen', etiqueta: 'Resumen' }]
+
+  if (detalle.value?.partido.deporte === 'futbol') {
+    return [
+      ...opciones,
+      { id: 'estadisticas' as const, etiqueta: 'Estadísticas' },
+      { id: 'alineaciones' as const, etiqueta: 'Alineaciones' },
+      { id: 'minuto' as const, etiqueta: 'Minuto a minuto' }
+    ]
+  }
+
+  if (detalle.value?.estadisticas.length) {
+    opciones.push({
+      id: 'estadisticas',
+      etiqueta: detalle.value.partido.deporte === 'baloncesto' ? 'Cuartos y estadísticas' : 'Estadísticas'
+    })
+  }
+  if (detalle.value?.alineaciones.length) opciones.push({ id: 'alineaciones', etiqueta: 'Alineaciones' })
+  if (detalle.value?.eventos.length) opciones.push({ id: 'minuto', etiqueta: 'Minuto a minuto' })
+
+  return opciones
+})
 
 const siguiendoPartido = computed(() => detalle.value ? estaSiguiendo(detalle.value.partido.id) : false)
 const configuracion = useRuntimeConfig()
@@ -123,7 +143,7 @@ useSeoPont3la10(() => {
               url: urlCanonica,
               startDate: partido.fechaIso,
               eventStatus: obtenerEstadoSchema(partido.estado),
-              sport: 'Fútbol',
+              sport: obtenerNombreDeporte(partido.deporte),
               homeTeam: {
                 '@type': 'SportsTeam',
                 name: partido.equipoLocal.nombre,
@@ -153,6 +173,16 @@ function obtenerEstadoSchema(estado: DetallePartidoResultado['partido']['estado'
   if (estado === 'finalizado') return 'https://schema.org/EventCompleted'
   return 'https://schema.org/EventScheduled'
 }
+
+function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['deporte']): string {
+  const nombres: Record<DetallePartidoResultado['partido']['deporte'], string> = {
+    futbol: 'Fútbol',
+    baloncesto: 'Baloncesto',
+    tenis: 'Tenis',
+    beisbol: 'Béisbol'
+  }
+  return nombres[deporte]
+}
 </script>
 
 <template>
@@ -172,7 +202,10 @@ function obtenerEstadoSchema(estado: DetallePartidoResultado['partido']['estado'
           <div class="metadatos-partido">
             <span><CalendarDays aria-hidden="true" /> {{ new Intl.DateTimeFormat('es-CO', { dateStyle: 'long' }).format(new Date(detalle.partido.fechaIso)) }}</span>
             <span>{{ detalle.partido.competencia }}</span>
-            <span v-if="detalle.partido.estadio"><MapPin aria-hidden="true" /> {{ detalle.partido.estadio }}, {{ detalle.partido.ciudad }}</span>
+            <span v-if="detalle.partido.estadio || detalle.partido.ciudad">
+              <MapPin aria-hidden="true" />
+              {{ [detalle.partido.estadio, detalle.partido.ciudad].filter(Boolean).join(', ') }}
+            </span>
           </div>
         </div>
         <div class="estado-detalle-en-vivo">
@@ -242,7 +275,10 @@ function obtenerEstadoSchema(estado: DetallePartidoResultado['partido']['estado'
           </section>
         </main>
 
-        <aside class="contenido-lateral-detalle">
+        <aside
+          v-if="detalle.eventos.length || detalle.clasificacion.length"
+          class="contenido-lateral-detalle"
+        >
           <template v-if="pestanaActiva !== 'minuto'">
             <LineaTiempoPartido v-if="detalle.eventos.length" :eventos="detalle.eventos" />
             <EstadoDatosResultados v-else descripcion="No hay eventos disponibles para este partido." />

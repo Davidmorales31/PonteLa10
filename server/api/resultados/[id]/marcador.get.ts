@@ -1,5 +1,7 @@
 import type { FixtureApiFootball, RespuestaApiFootball, RespuestaMarcadorPartido } from '~/types/resultados'
+import { consultarPartidoApiBasketball } from '~/server/utils/clienteApiBasketball'
 import { consultarEventoTheSportsDb } from '~/server/utils/clienteTheSportsDb'
+import { mapearPartidoApiBasketball } from '~/utils/resultadosBasketball'
 import { mapearFixtureApiFootball } from '~/utils/resultadosDeportivos'
 import { mapearEventoTheSportsDb } from '~/utils/resultadosTheSportsDb'
 
@@ -7,12 +9,13 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaMarcado
   const idPartido = getRouterParam(evento, 'id') || ''
   const configuracion = useRuntimeConfig()
   const apiSportsKey = String(configuracion.apiSportsKey || '')
+  const coincidenciaTheSportsDb = idPartido.match(/^tsdb-(?:(futbol|baloncesto|tenis|beisbol)-)?(\d+)$/)
 
-  if (/^tsdb-\d+$/.test(idPartido)) {
+  if (coincidenciaTheSportsDb) {
     const respuesta = await consultarEventoTheSportsDb({
       baseUrl: configuracion.theSportsDbBaseUrl,
       apiKey: configuracion.theSportsDbApiKey
-    }, idPartido.replace('tsdb-', ''))
+    }, coincidenciaTheSportsDb[2]!)
     const eventoGratuito = respuesta.events?.[0]
 
     if (!eventoGratuito) {
@@ -20,9 +23,33 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaMarcado
     }
 
     return {
-      partido: mapearEventoTheSportsDb(eventoGratuito),
+      partido: mapearEventoTheSportsDb(
+        eventoGratuito,
+        (coincidenciaTheSportsDb[1] || 'futbol') as RespuestaMarcadorPartido['partido']['deporte']
+      ),
       actualizadoEn: new Date().toISOString(),
       origen: 'the-sports-db'
+    }
+  }
+
+  if (/^basket-\d+$/.test(idPartido)) {
+    const apiBasketballKey = String(configuracion.apiBasketballKey || '')
+    if (!apiBasketballKey) {
+      throw createError({ statusCode: 503, statusMessage: 'API-Basketball no está configurada.' })
+    }
+
+    const partido = await consultarPartidoApiBasketball({
+      baseUrl: String(configuracion.apiBasketballBaseUrl),
+      apiKey: apiBasketballKey
+    }, idPartido.replace('basket-', ''))
+    if (!partido) {
+      throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })
+    }
+
+    return {
+      partido: mapearPartidoApiBasketball(partido),
+      actualizadoEn: new Date().toISOString(),
+      origen: 'api-basketball'
     }
   }
 

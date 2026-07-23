@@ -1,5 +1,6 @@
 import type {
   AlineacionPartido,
+  DeporteResultado,
   EstadoPartido,
   EstadisticaPartido,
   EventoPartido,
@@ -13,19 +14,29 @@ import type {
 } from '~/types/theSportsDb'
 import { crearNombreCorto } from '~/utils/resultadosDeportivos'
 
-const estadosEnVivo = new Set(['1H', '2H', 'HT', 'ET', 'LIVE', 'IN PLAY', 'IN_PROGRESS'])
-const estadosFinalizados = new Set(['FT', 'AET', 'PEN', 'AP', 'FINAL', 'MATCH FINISHED'])
+const estadosEnVivo = new Set([
+  '1H', '2H', 'HT', 'ET', 'LIVE', 'IN PLAY', 'IN_PROGRESS',
+  'Q1', 'Q2', 'Q3', 'Q4', 'OT', 'BT'
+])
+const estadosFinalizados = new Set([
+  'FT', 'AET', 'PEN', 'AP', 'FINAL', 'MATCH FINISHED', 'AOT', 'AWD'
+])
 
-export function mapearEventoTheSportsDb(evento: EventoTheSportsDb): PartidoResultado {
+export function mapearEventoTheSportsDb(
+  evento: EventoTheSportsDb,
+  deportePredeterminado: DeporteResultado = 'futbol'
+): PartidoResultado {
   const estado = obtenerEstadoTheSportsDb(evento.strStatus, evento.strProgress)
   const fechaIso = obtenerFechaIsoTheSportsDb(evento)
+  const deporte = obtenerDeporteTheSportsDb(evento.strSport) || deportePredeterminado
+  const prefijo = deporte === 'futbol' ? 'tsdb' : `tsdb-${deporte}`
 
   return {
-    id: `tsdb-${evento.idEvent}`,
-    deporte: 'futbol',
-    competencia: evento.strLeague || 'Competencia de fútbol',
+    id: `${prefijo}-${evento.idEvent}`,
+    deporte,
+    competencia: evento.strLeague || `Competencia de ${obtenerEtiquetaDeporte(deporte)}`,
     paisCompetencia: evento.strCountry || undefined,
-    jornada: evento.intRound ? `Jornada ${evento.intRound}` : undefined,
+    jornada: obtenerJornada(evento.intRound),
     temporada: convertirNumero(evento.strSeason),
     fechaIso,
     estado,
@@ -100,6 +111,27 @@ export function mapearAlineacionesTheSportsDb(jugadores: JugadorAlineacionTheSpo
   }))
 }
 
+function obtenerDeporteTheSportsDb(deporte?: string | null): DeporteResultado | undefined {
+  const deporteNormalizado = deporte?.trim().toLocaleLowerCase('es') || ''
+  const equivalencias: Record<string, DeporteResultado> = {
+    soccer: 'futbol',
+    basketball: 'baloncesto',
+    tennis: 'tenis',
+    baseball: 'beisbol'
+  }
+  return equivalencias[deporteNormalizado]
+}
+
+function obtenerEtiquetaDeporte(deporte: DeporteResultado): string {
+  const etiquetas: Record<DeporteResultado, string> = {
+    futbol: 'fútbol',
+    baloncesto: 'baloncesto',
+    tenis: 'tenis',
+    beisbol: 'béisbol'
+  }
+  return etiquetas[deporte]
+}
+
 function obtenerEstadoTheSportsDb(estado?: string | null, progreso?: string | null): EstadoPartido {
   const estadoNormalizado = estado?.trim().toLocaleUpperCase('es') || ''
   const progresoNormalizado = progreso?.trim().toLocaleUpperCase('es') || ''
@@ -113,6 +145,11 @@ function obtenerFechaIsoTheSportsDb(evento: EventoTheSportsDb): string {
   const fecha = evento.strTimestamp || `${evento.dateEvent || '1970-01-01'}T${evento.strTime || '00:00:00'}`
   const fechaConZona = /(?:Z|[+-]\d{2}:\d{2})$/i.test(fecha) ? fecha : `${fecha}Z`
   return Number.isNaN(Date.parse(fechaConZona)) ? new Date(0).toISOString() : new Date(fechaConZona).toISOString()
+}
+
+function obtenerJornada(valor?: string | number | null): string | undefined {
+  const jornada = convertirNumero(valor)
+  return jornada && jornada > 0 ? `Jornada ${jornada}` : undefined
 }
 
 function obtenerTipoEvento(evento: EventoLineaTiempoTheSportsDb): EventoPartido['tipo'] {

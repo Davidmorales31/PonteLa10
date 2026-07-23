@@ -35,6 +35,8 @@ export default defineNuxtConfig({
     editorialAiApiKey: process.env.NUXT_EDITORIAL_AI_API_KEY || '',
     apiSportsKey: process.env.NUXT_API_SPORTS_KEY || process.env.API_SPORTS_KEY || '',
     apiSportsBaseUrl: process.env.NUXT_API_SPORTS_BASE_URL || 'https://v3.football.api-sports.io',
+    apiBasketballKey: process.env.NUXT_API_BASKETBALL_KEY || '',
+    apiBasketballBaseUrl: process.env.NUXT_API_BASKETBALL_BASE_URL || 'https://v1.basketball.api-sports.io',
     theSportsDbApiKey: process.env.NUXT_THE_SPORTS_DB_API_KEY || '123',
     theSportsDbBaseUrl: process.env.NUXT_THE_SPORTS_DB_BASE_URL || 'https://www.thesportsdb.com/api/v1/json',
     public: {
