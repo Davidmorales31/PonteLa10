@@ -57,6 +57,9 @@ const partidosSecundarios = computed(() => (
 const cantidadEnVivo = computed(() => (
   respuesta.value?.partidos.filter(partido => partido.estado === 'en-vivo').length || 0
 ))
+const cantidadSeguidosDisponibles = computed(() => (
+  respuesta.value?.partidos.filter(partido => partidosSeguidos.value.includes(partido.id)).length || 0
+))
 const tituloResultados = computed(() => (
   propiedades.deporte === 'todos'
     ? 'Resultados y marcadores'
@@ -116,7 +119,9 @@ const etiquetaOrigen = computed(() => {
           :aria-pressed="soloSeguidos"
           @click="soloSeguidos = !soloSeguidos"
         >
-          <Star aria-hidden="true" /> Siguiendo
+          <Star aria-hidden="true" />
+          Siguiendo
+          <span class="contador-filtro-seguidos">{{ cantidadSeguidosDisponibles }}</span>
         </button>
       </div>
     </div>
@@ -127,6 +132,11 @@ const etiquetaOrigen = computed(() => {
       descripcion="No fue posible consultar los proveedores deportivos. Intenta nuevamente."
       :permitir-reintento="true"
       @reintentar="refresh"
+    />
+    <EstadoDatosResultados
+      v-else-if="soloSeguidos && !partidoDestacado"
+      titulo="No hay partidos seguidos en esta lista"
+      descripcion="Los encuentros que sigas desde su detalle aparecerán aquí cuando estén disponibles en la jornada."
     />
     <EstadoDatosResultados
       v-else-if="!partidoDestacado"
@@ -168,7 +178,6 @@ const etiquetaOrigen = computed(() => {
           <p>
             {{ respuesta.aviso || `Marcadores actualizados automáticamente desde ${etiquetaOrigen}.` }}
           </p>
-          <button type="button" @click="refresh()">Actualizar</button>
         </section>
       </aside>
     </div>

@@ -262,6 +262,17 @@
 
 .filtros-estado button { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .filtros-estado button svg { width: 14px; height: 14px; }
+.contador-filtro-seguidos {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(8, 32, 74, 0.1);
+  padding: 0 5px;
+  font-size: 0.65rem;
+}
+.filtros-estado button.activo .contador-filtro-seguidos { background: var(--navy); color: #fff; }
 
 .filtros-deporte a.activo,
 .filtros-estado button.activo,
@@ -350,8 +361,7 @@
 
 .aviso-fuente-resultados { border-left: 4px solid var(--yellow); }
 .aviso-fuente-resultados > strong { color: var(--navy); font-size: 0.82rem; }
-.aviso-fuente-resultados p { margin: 8px 0 14px; color: var(--muted); font-size: 0.73rem; line-height: 1.5; }
-.aviso-fuente-resultados button { min-height: 36px; border: 1px solid var(--navy); border-radius: 6px; background: #fff; padding: 0 14px; color: var(--navy); font-size: 0.72rem; font-weight: 900; }
+.aviso-fuente-resultados p { margin: 8px 0 0; color: var(--muted); font-size: 0.73rem; line-height: 1.5; }
 
 .cabecera-detalle-partido { align-items: end; }
 .metadatos-partido { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 11px; color: var(--muted); font-size: 0.72rem; font-weight: 700; }

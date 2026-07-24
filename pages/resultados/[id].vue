@@ -69,10 +69,9 @@ async function actualizarMarcador() {
   errorActualizacion.value = false
   try {
     const respuesta = await $fetch<RespuestaMarcadorPartido>(`/api/resultados/${ruta.params.id}/marcador`)
-    const marcadorCambio = detalle.value.partido.marcadorLocal !== respuesta.partido.marcadorLocal
-      || detalle.value.partido.marcadorVisitante !== respuesta.partido.marcadorVisitante
+    const partidoAnterior = detalle.value.partido
     detalle.value = { ...detalle.value, partido: respuesta.partido, actualizadoEn: respuesta.actualizadoEn }
-    if (marcadorCambio) notificarCambioMarcador(respuesta.partido)
+    notificarCambioMarcador(partidoAnterior, respuesta.partido)
   } catch {
     errorActualizacion.value = true
   } finally {
@@ -271,7 +270,12 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
             <button type="button" :class="{ activo: siguiendoPartido }" @click="alternarSeguimientoActual">
               <Star aria-hidden="true" /> {{ siguiendoPartido ? 'Siguiendo partido' : 'Seguir partido' }}
             </button>
-            <span><Bell aria-hidden="true" /> Recibe alertas de goles y momentos clave.</span>
+            <span>
+              <Bell aria-hidden="true" />
+              {{ siguiendoPartido
+                ? 'Alertas activas mientras mantengas este partido abierto.'
+                : 'Sigue el partido para recibir cambios del marcador en esta pantalla.' }}
+            </span>
           </section>
         </main>
 

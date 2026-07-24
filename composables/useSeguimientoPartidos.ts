@@ -1,4 +1,9 @@
 import type { PartidoResultado } from '~/types/resultados'
+import {
+  alternarIdPartido,
+  cambioMarcador,
+  crearContenidoNotificacionMarcador
+} from '~/utils/seguimientoPartidos'
 
 const claveAlmacenamiento = 'pont3la10:partidos-seguidos'
 
@@ -11,7 +16,10 @@ export function useSeguimientoPartidos() {
 
     try {
       const guardados = localStorage.getItem(claveAlmacenamiento)
-      partidosSeguidos.value = guardados ? JSON.parse(guardados) : []
+      const idsGuardados: unknown = guardados ? JSON.parse(guardados) : []
+      partidosSeguidos.value = Array.isArray(idsGuardados)
+        ? [...new Set(idsGuardados.filter((id): id is string => typeof id === 'string'))]
+        : []
     } catch {
       partidosSeguidos.value = []
     }
@@ -30,25 +38,29 @@ export function useSeguimientoPartidos() {
 
   async function alternarSeguimiento(partido: PartidoResultado): Promise<boolean> {
     const siguiendo = estaSiguiendo(partido.id)
-    partidosSeguidos.value = siguiendo
-      ? partidosSeguidos.value.filter(id => id !== partido.id)
-      : [...partidosSeguidos.value, partido.id]
+    partidosSeguidos.value = alternarIdPartido(partidosSeguidos.value, partido.id)
 
     if (!siguiendo && import.meta.client && 'Notification' in window && Notification.permission === 'default') {
-      await Notification.requestPermission()
+      try {
+        await Notification.requestPermission()
+      } catch {
+        // El seguimiento local sigue funcionando aunque el navegador bloquee el permiso.
+      }
     }
 
     return !siguiendo
   }
 
-  function notificarCambioMarcador(partido: PartidoResultado) {
-    if (!import.meta.client || !estaSiguiendo(partido.id) || !('Notification' in window)) return
+  function notificarCambioMarcador(partidoAnterior: PartidoResultado, partidoActual: PartidoResultado) {
+    if (!cambioMarcador(partidoAnterior, partidoActual)) return
+    if (!import.meta.client || !estaSiguiendo(partidoActual.id) || !('Notification' in window)) return
     if (Notification.permission !== 'granted') return
 
-    new Notification(`${partido.equipoLocal.nombre} ${partido.marcadorLocal ?? '-'} - ${partido.marcadorVisitante ?? '-'} ${partido.equipoVisitante.nombre}`, {
-      body: partido.minuto ? `Marcador actualizado en el minuto ${partido.minuto}.` : 'El marcador acaba de cambiar.',
+    const contenido = crearContenidoNotificacionMarcador(partidoAnterior, partidoActual)
+    new Notification(contenido.titulo, {
+      body: contenido.cuerpo,
       icon: '/brand/pont3la10_logo_05_app_icon_favicon.png',
-      tag: `partido-${partido.id}`
+      tag: `partido-${partidoActual.id}`
     })
   }
 
