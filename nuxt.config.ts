@@ -8,7 +8,12 @@ export default defineNuxtConfig({
     appManifest: false
   },
   modules: ['@nuxt/eslint'],
-  css: ['~/assets/css/main.css', '~/assets/css/landing.css', '~/assets/css/resultados.css'],
+  css: [
+    '~/assets/css/main.css',
+    '~/assets/css/landing.css',
+    '~/assets/css/resultados.css',
+    '~/assets/css/admin.css'
+  ],
   app: {
     head: {
       htmlAttrs: { lang: 'es-CO' },

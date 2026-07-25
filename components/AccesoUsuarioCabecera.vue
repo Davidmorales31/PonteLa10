@@ -8,18 +8,23 @@ const props = withDefaults(defineProps<{
 })
 
 const { autenticacionConfigurada, usuarioActual, obtenerSesionActual } = useAutenticacionEditorial()
+const { contextoEditorial, cargarContextoEditorial } = useContextoEditorial()
 
-onMounted(async () => {
-  if (autenticacionConfigurada.value) {
+if (autenticacionConfigurada.value) {
+  if (!usuarioActual.value && import.meta.client) {
     await obtenerSesionActual()
   }
-})
+
+  if (usuarioActual.value) {
+    await cargarContextoEditorial()
+  }
+}
 </script>
 
 <template>
   <div class="acceso-usuario-cabecera" :class="`acceso-usuario-${props.variante}`">
     <template v-if="props.variante === 'movil'">
-      <NuxtLink v-if="usuarioActual" to="/admin">Panel</NuxtLink>
+      <NuxtLink v-if="contextoEditorial" to="/admin">Panel</NuxtLink>
       <NuxtLink v-else class="boton-icono-usuario" to="/login" aria-label="Iniciar sesión" title="Iniciar sesión">
         <CircleUserRound aria-hidden="true" />
       </NuxtLink>
@@ -27,7 +32,7 @@ onMounted(async () => {
 
     <template v-else>
       <NuxtLink
-        v-if="usuarioActual"
+        v-if="contextoEditorial"
         class="enlace-panel-admin"
         to="/admin"
         aria-label="Abrir panel interno"

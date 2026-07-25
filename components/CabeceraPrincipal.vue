@@ -7,17 +7,22 @@ const menuAbierto = ref(false)
 const busquedaAbierta = ref(false)
 const terminoBusqueda = ref('')
 const { autenticacionConfigurada, usuarioActual, obtenerSesionActual } = useAutenticacionEditorial()
+const { contextoEditorial, cargarContextoEditorial } = useContextoEditorial()
 
 const accionCuenta = computed(() => ({
-  etiqueta: usuarioActual.value ? 'Panel' : 'Entrar',
-  ruta: usuarioActual.value ? '/admin' : '/login'
+  etiqueta: contextoEditorial.value ? 'Panel' : 'Entrar',
+  ruta: contextoEditorial.value ? '/admin' : '/login'
 }))
 
-onMounted(async () => {
-  if (autenticacionConfigurada.value) {
+if (autenticacionConfigurada.value) {
+  if (!usuarioActual.value && import.meta.client) {
     await obtenerSesionActual()
   }
-})
+
+  if (usuarioActual.value) {
+    await cargarContextoEditorial()
+  }
+}
 
 watch(() => rutaActual.fullPath, () => {
   menuAbierto.value = false

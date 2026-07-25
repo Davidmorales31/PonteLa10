@@ -1,11 +1,21 @@
 export default defineEventHandler((evento) => {
-  const ruta = getRequestPath(evento)
+  const ruta = getRequestURL(evento).pathname
+  const esRutaPrivada = ruta === '/login'
+    || ruta === '/acceso-denegado'
+    || ruta.startsWith('/admin')
 
-  if (ruta === '/login' || ruta.startsWith('/admin')) {
-    evento.node?.res?.setHeader('X-Robots-Tag', 'noindex, nofollow')
+  if (esRutaPrivada) {
+    setResponseHeaders(evento, {
+      'X-Robots-Tag': 'noindex, nofollow',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'Referrer-Policy': 'strict-origin-when-cross-origin',
+      'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+      'Content-Security-Policy': "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+    })
   }
 
-  if (ruta.startsWith('/admin')) {
-    evento.node?.res?.setHeader('Cache-Control', 'private, no-store')
+  if (ruta === '/acceso-denegado' || ruta.startsWith('/admin')) {
+    setResponseHeader(evento, 'Cache-Control', 'private, no-store')
   }
 })

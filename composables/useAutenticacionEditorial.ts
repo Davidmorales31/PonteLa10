@@ -15,6 +15,7 @@ import {
   obtenerPrimerErrorAuth
 } from '~/utils/validation/autenticacion'
 import { crearResultadoAuth, normalizarMensajeAuth } from '~/utils/auth/mensajesAutenticacion'
+import { normalizarRedireccionInterna } from '~/utils/auth/redirecciones'
 
 interface NuxtAppConSupabase {
   $clienteSupabase?: SupabaseClient | null
@@ -26,11 +27,12 @@ function obtenerClienteSupabase(): SupabaseClient | null {
   return aplicacion.$clienteSupabase || null
 }
 
-function obtenerUrlRetornoAuth(rutaDestino = '/admin'): string {
+function obtenerUrlRetornoAuth(rutaDestino = '/'): string {
   const config = useRuntimeConfig()
   const origen = import.meta.client ? window.location.origin : String(config.public.siteUrl)
+  const rutaSegura = normalizarRedireccionInterna(rutaDestino)
 
-  return `${origen}/login?redirigir=${encodeURIComponent(rutaDestino)}`
+  return `${origen}/login?redirigir=${encodeURIComponent(rutaSegura)}`
 }
 
 function obtenerUrlCambioContrasena(): string {
@@ -120,7 +122,7 @@ export function useAutenticacionEditorial() {
         data: {
           nombreCompleto: validacion.data.nombreCompleto
         },
-        emailRedirectTo: obtenerUrlRetornoAuth('/admin')
+        emailRedirectTo: obtenerUrlRetornoAuth('/')
       }
     })
     cargandoAuth.value = false
@@ -189,7 +191,7 @@ export function useAutenticacionEditorial() {
     const { error } = await clienteSupabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: obtenerUrlRetornoAuth('/admin')
+        redirectTo: obtenerUrlRetornoAuth('/')
       }
     })
     cargandoAuth.value = false

@@ -13,6 +13,7 @@ import {
   UserRound
 } from '@lucide/vue'
 import type { ModoLoginEditorial, ResultadoOperacionAuth } from '~/types/autenticacion'
+import { normalizarRedireccionInterna } from '~/utils/auth/redirecciones'
 
 const route = useRoute()
 
@@ -35,9 +36,7 @@ const modoActual = ref<ModoLoginEditorial>(obtenerModoInicial())
 const mensajeEstado = ref<ResultadoOperacionAuth | null>(null)
 
 const redireccionFinal = computed(() => {
-  const redirigir = route.query.redirigir
-
-  return typeof redirigir === 'string' ? redirigir : '/'
+  return normalizarRedireccionInterna(route.query.redirigir)
 })
 
 const tituloFormulario = computed(() => {

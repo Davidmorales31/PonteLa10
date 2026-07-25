@@ -30,6 +30,13 @@ Estas reglas aplican siempre que Codex trabaje en Pont3la10.
 - No exponer claves privadas en cliente, logs, commits ni documentacion.
 - Mantener Row Level Security en Supabase desde las primeras migraciones.
 - La IA puede asistir, pero las primeras fases requieren aprobacion humana antes de publicar.
+- Una sesion publica no concede acceso editorial: exigir rol activo y permiso explicito.
+- Autorizar cada endpoint privado en servidor y respaldar la misma regla con RLS.
+- No dispersar comparaciones de roles por componentes; usar capacidades centralizadas.
+- Exigir MFA para publicar, programar, gestionar equipo y otras acciones sensibles.
+- Registrar en auditoria cambios de roles, estados editoriales y acciones criticas.
+- Nunca usar `service_role` en el navegador ni como atajo para una operacion de usuario.
+- No mostrar navegacion hacia modulos internos que aun no tengan ruta y funcionalidad reales.
 
 ## SEO
 
