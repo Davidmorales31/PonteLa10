@@ -1,12 +1,15 @@
+import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
+import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
 import { construirUrlAbsoluta, escaparXml } from '~/utils/seo'
 
 interface EntradaSitemap {
   ruta: string
   frecuencia: 'daily' | 'weekly' | 'monthly'
   prioridad: string
+  ultimaModificacion?: string
 }
 
-export default defineEventHandler((evento) => {
+export default defineEventHandler(async (evento) => {
   const configuracion = useRuntimeConfig()
   const urlSitio = String(configuracion.public.siteUrl)
 
@@ -21,9 +24,29 @@ export default defineEventHandler((evento) => {
     { ruta: '/especiales', frecuencia: 'weekly', prioridad: '0.8' }
   ]
 
+  try {
+    const clienteSupabase = obtenerClienteSupabaseEditorial(evento)
+    const publicaciones = await listarArticulosPublicosEditoriales(
+      clienteSupabase,
+      50
+    )
+
+    entradas.push(...publicaciones.map(publicacion => ({
+      ruta: `/articulos/${publicacion.slug}`,
+      frecuencia: 'weekly' as const,
+      prioridad: '0.8',
+      ultimaModificacion: publicacion.publicadoEn
+    })))
+  } catch {
+    // El sitemap base sigue disponible durante una degradación de Supabase.
+  }
+
   const urls = entradas.map(entrada => [
     '  <url>',
     `    <loc>${escaparXml(construirUrlAbsoluta(urlSitio, entrada.ruta))}</loc>`,
+    ...(entrada.ultimaModificacion
+      ? [`    <lastmod>${escaparXml(entrada.ultimaModificacion)}</lastmod>`]
+      : []),
     `    <changefreq>${entrada.frecuencia}</changefreq>`,
     `    <priority>${entrada.prioridad}</priority>`,
     '  </url>'

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   Activity,
+  ClipboardCheck,
   ExternalLink,
   Files,
   Images,
@@ -45,6 +46,12 @@ const entradasPanel: EntradaPanel[] = [
     ruta: '/admin/contenidos',
     icono: Files,
     permiso: 'contenido.verBorradores'
+  },
+  {
+    etiqueta: 'Revisión',
+    ruta: '/admin/revision',
+    icono: ClipboardCheck,
+    permiso: 'contenido.revisar'
   },
   {
     etiqueta: 'Multimedia',

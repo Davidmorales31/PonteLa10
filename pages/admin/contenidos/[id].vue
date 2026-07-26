@@ -18,13 +18,17 @@ import {
 } from '@lucide/vue'
 import EditorBloquesContenido from '~/components/admin/EditorBloquesContenido.vue'
 import ModalSubirMedio from '~/components/admin/ModalSubirMedio.vue'
+import PanelFlujoEditorial from '~/components/admin/PanelFlujoEditorial.vue'
 import SelectorPortadaEditorial from '~/components/admin/SelectorPortadaEditorial.vue'
 import VistaPreviaArticulo from '~/components/admin/VistaPreviaArticulo.vue'
 import type {
   ArticuloDetalleEditorial,
   BloqueEditorEditorial,
   CargaEditorArticuloEditorial,
+  ComentarioRevisionEditorial,
   DatosEditorArticulo,
+  EntradaTransicionEditorial,
+  FlujoArticuloEditorial,
   ResultadoGuardadoEditorial,
   VersionArticuloEditorial
 } from '~/types/contenidoEditorial'
@@ -55,7 +59,7 @@ useSeoMeta({
 const route = useRoute()
 const articuloId = computed(() => String(route.params.id || ''))
 const { ejecutarConBloqueo } = useBloqueoInterfaz()
-const { tienePermiso } = useContextoEditorial()
+const { contextoEditorial, tienePermiso } = useContextoEditorial()
 
 const {
   data: cargaEditor,
@@ -73,6 +77,9 @@ const versiones = ref<VersionArticuloEditorial[]>(
   cargaEditor.value?.versiones || []
 )
 const taxonomias = computed(() => cargaEditor.value?.taxonomias || null)
+const flujo = ref<FlujoArticuloEditorial | null>(
+  cargaEditor.value?.flujo || null
+)
 const portadaSeleccionada = ref<MedioEditorial | null>(
   cargaEditor.value?.articulo.portada || null
 )
@@ -81,6 +88,7 @@ watch(cargaEditor, (carga) => {
   if (!carga) return
   articulo.value = carga.articulo
   versiones.value = carga.versiones
+  flujo.value = carga.flujo
   portadaSeleccionada.value = carga.articulo.portada
 })
 
@@ -90,6 +98,7 @@ async function recargarArticulo() {
   if (cargaEditor.value) {
     articulo.value = cargaEditor.value.articulo
     versiones.value = cargaEditor.value.versiones
+    flujo.value = cargaEditor.value.flujo
   }
 }
 
@@ -421,6 +430,61 @@ async function descartarAutoguardado() {
       }
     }
   )
+}
+
+async function realizarTransicion(entrada: EntradaTransicionEditorial) {
+  if (cambiosPendientes.value) {
+    errorGuardado.value = 'Guarda los cambios pendientes antes de cambiar el estado.'
+    return
+  }
+
+  errorGuardado.value = ''
+  guardando.value = true
+
+  await ejecutarConBloqueo(
+    `transicion-editorial:${articuloId.value}`,
+    'Actualizando flujo editorial',
+    async () => {
+      try {
+        await $fetch(`/api/admin/contenidos/${articuloId.value}/transicion`, {
+          method: 'POST',
+          body: entrada
+        })
+        formulario.value = null
+        await recargarArticulo()
+        if (articulo.value) inicializarEditor(articulo.value)
+        mensajeEstado.value = 'Estado editorial actualizado'
+      } catch (errorPeticion: unknown) {
+        errorGuardado.value = obtenerMensajePeticion(errorPeticion)
+      } finally {
+        guardando.value = false
+      }
+    }
+  )
+}
+
+async function agregarComentarioRevision(mensaje: string) {
+  errorGuardado.value = ''
+
+  try {
+    const comentario = await $fetch<ComentarioRevisionEditorial>(
+      `/api/admin/contenidos/${articuloId.value}/comentarios`,
+      {
+        method: 'POST',
+        body: { mensaje }
+      }
+    )
+
+    if (flujo.value) {
+      flujo.value = {
+        ...flujo.value,
+        comentarios: [comentario, ...flujo.value.comentarios]
+      }
+    }
+    mensajeEstado.value = 'Comentario agregado'
+  } catch (errorPeticion: unknown) {
+    errorGuardado.value = obtenerMensajePeticion(errorPeticion)
+  }
 }
 
 async function recargarTrasConflicto() {
@@ -815,6 +879,16 @@ onBeforeUnmount(() => {
               <p>{{ formulario.seo.descripcion || formulario.resumen }}</p>
             </div>
           </section>
+
+          <PanelFlujoEditorial
+            v-if="flujo"
+            :flujo="flujo"
+            :version-bloqueo="versionBloqueo"
+            :bloqueado="guardando || cambiosPendientes"
+            :nivel-aal="contextoEditorial?.nivelAal || undefined"
+            @transicionar="realizarTransicion"
+            @comentar="agregarComentarioRevision"
+          />
 
           <section class="panel-configuracion-editor">
             <h2>Nota de versión</h2>

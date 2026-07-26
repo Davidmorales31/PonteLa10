@@ -1,10 +1,12 @@
 import { z } from 'zod'
 import type {
+  AccionFlujoEditorial,
   EstadoContenidoEditorial,
   OrigenContenidoEditorial,
   TipoContenidoEditorial,
   TipoTaxonomiaEditorial
 } from '~/types/contenidoEditorial'
+import type { PermisoEditorial } from '~/types/editorial'
 
 export const estadosContenidoEditorial: EstadoContenidoEditorial[] = [
   'draft',
@@ -209,6 +211,168 @@ export const esquemaAutoguardadoArticulo = z.object({
 })
 
 export const esquemaIdEditorial = z.string().uuid()
+
+export const esquemaTransicionEditorial = z.object({
+  estadoObjetivo: z.enum(estadosContenidoEditorial as [
+    EstadoContenidoEditorial,
+    ...EstadoContenidoEditorial[]
+  ]),
+  versionBloqueo: z.number().int().positive(),
+  nota: z.string().trim().max(1000).optional().default(''),
+  programadoPara: z.string().datetime({ offset: true }).nullable().optional().default(null)
+}).superRefine((entrada, contexto) => {
+  if (entrada.estadoObjetivo === 'changes_requested' && entrada.nota.length < 10) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['nota'],
+      message: 'Explica los cambios solicitados con al menos 10 caracteres.'
+    })
+  }
+
+  if (entrada.estadoObjetivo === 'scheduled' && !entrada.programadoPara) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['programadoPara'],
+      message: 'Selecciona la fecha y hora de publicación.'
+    })
+  }
+})
+
+export const esquemaComentarioRevision = z.object({
+  mensaje: z.string().trim().min(3).max(1000)
+})
+
+const definicionesAccionesFlujo: Record<
+  string,
+  AccionFlujoEditorial & { permiso: PermisoEditorial }
+> = {
+  enviarRevision: {
+    id: 'enviarRevision',
+    estadoObjetivo: 'review',
+    etiqueta: 'Enviar a revisión',
+    descripcion: 'Bloquea la edición mientras el equipo revisa el contenido.',
+    requiereNota: false,
+    requiereProgramacion: false,
+    requiereMfa: false,
+    permiso: 'contenido.enviarRevision'
+  },
+  solicitarCambios: {
+    id: 'solicitarCambios',
+    estadoObjetivo: 'changes_requested',
+    etiqueta: 'Solicitar cambios',
+    descripcion: 'Devuelve el contenido al autor con observaciones obligatorias.',
+    requiereNota: true,
+    requiereProgramacion: false,
+    requiereMfa: false,
+    permiso: 'contenido.revisar'
+  },
+  aprobar: {
+    id: 'aprobar',
+    estadoObjetivo: 'approved',
+    etiqueta: 'Aprobar',
+    descripcion: 'Confirma que el contenido está listo para programarse o publicarse.',
+    requiereNota: false,
+    requiereProgramacion: false,
+    requiereMfa: false,
+    permiso: 'contenido.aprobar'
+  },
+  programar: {
+    id: 'programar',
+    estadoObjetivo: 'scheduled',
+    etiqueta: 'Programar',
+    descripcion: 'Define una fecha futura de publicación.',
+    requiereNota: false,
+    requiereProgramacion: true,
+    requiereMfa: true,
+    permiso: 'contenido.programar'
+  },
+  publicar: {
+    id: 'publicar',
+    estadoObjetivo: 'published',
+    etiqueta: 'Publicar ahora',
+    descripcion: 'Hace visible la versión aprobada en el sitio público.',
+    requiereNota: false,
+    requiereProgramacion: false,
+    requiereMfa: true,
+    permiso: 'contenido.publicar'
+  },
+  cancelarProgramacion: {
+    id: 'cancelarProgramacion',
+    estadoObjetivo: 'approved',
+    etiqueta: 'Cancelar programación',
+    descripcion: 'Regresa el contenido al estado aprobado.',
+    requiereNota: false,
+    requiereProgramacion: false,
+    requiereMfa: false,
+    permiso: 'contenido.aprobar'
+  },
+  crearRevision: {
+    id: 'crearRevision',
+    estadoObjetivo: 'draft',
+    etiqueta: 'Crear nueva revisión',
+    descripcion: 'Abre una copia editable sin retirar la versión pública.',
+    requiereNota: false,
+    requiereProgramacion: false,
+    requiereMfa: false,
+    permiso: 'contenido.editarTodos'
+  },
+  archivar: {
+    id: 'archivar',
+    estadoObjetivo: 'archived',
+    etiqueta: 'Archivar',
+    descripcion: 'Retira el contenido del flujo y de la vista pública.',
+    requiereNota: true,
+    requiereProgramacion: false,
+    requiereMfa: false,
+    permiso: 'contenido.archivar'
+  },
+  reabrir: {
+    id: 'reabrir',
+    estadoObjetivo: 'draft',
+    etiqueta: 'Reabrir borrador',
+    descripcion: 'Devuelve el contenido archivado a edición.',
+    requiereNota: false,
+    requiereProgramacion: false,
+    requiereMfa: false,
+    permiso: 'contenido.editarTodos'
+  }
+}
+
+const accionesPorEstado: Record<EstadoContenidoEditorial, string[]> = {
+  draft: ['enviarRevision', 'archivar'],
+  review: ['solicitarCambios', 'aprobar', 'archivar'],
+  changes_requested: ['enviarRevision', 'archivar'],
+  approved: ['solicitarCambios', 'programar', 'publicar', 'archivar'],
+  scheduled: ['solicitarCambios', 'cancelarProgramacion', 'publicar', 'archivar'],
+  published: ['crearRevision', 'archivar'],
+  archived: ['reabrir']
+}
+
+export function obtenerAccionesFlujoEditorial(
+  estado: EstadoContenidoEditorial,
+  permisos: readonly PermisoEditorial[]
+): AccionFlujoEditorial[] {
+  return accionesPorEstado[estado]
+    .map(id => definicionesAccionesFlujo[id])
+    .filter(definicion => permisos.includes(definicion.permiso))
+    .map(({ permiso: _permiso, ...accion }) => accion)
+}
+
+export function obtenerPermisoTransicionEditorial(
+  estadoObjetivo: EstadoContenidoEditorial,
+  estadoActual: EstadoContenidoEditorial
+): PermisoEditorial {
+  if (estadoObjetivo === 'review') return 'contenido.enviarRevision'
+  if (estadoObjetivo === 'changes_requested') return 'contenido.revisar'
+  if (estadoObjetivo === 'approved') return 'contenido.aprobar'
+  if (estadoObjetivo === 'scheduled') return 'contenido.programar'
+  if (estadoObjetivo === 'published') return 'contenido.publicar'
+  if (estadoObjetivo === 'archived') return 'contenido.archivar'
+  if (estadoObjetivo === 'draft' && ['published', 'archived'].includes(estadoActual)) {
+    return 'contenido.editarTodos'
+  }
+  return 'contenido.verBorradores'
+}
 
 export function crearSlugEditorial(valor: string): string {
   const slug = valor

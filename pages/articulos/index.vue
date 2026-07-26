@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { articulosRecientes, tendenciasEditoriales } from '~/data/editorial'
+import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
+import type { ArticuloResumen } from '~/types/editorial'
 import {
   articulosLanding,
   convertirArticuloLandingAResumen,
@@ -11,15 +13,43 @@ import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
 
 const rutaActual = useRoute()
 const articulosHome = articulosLanding.map(convertirArticuloLandingAResumen)
-const articulosDisponibles = [...articulosHome, ...articulosRecientes].filter(
-  (articulo, indice, articulos) => articulos.findIndex(item => item.slug === articulo.slug) === indice
+const { data: publicacionesReales } = await useFetch<ResumenArticuloPublico[]>(
+  '/api/articulos',
+  {
+    default: () => [],
+    ignoreResponseError: true
+  }
 )
+
+const articulosPublicados = computed<ArticuloResumen[]>(() =>
+  (publicacionesReales.value || []).map(articulo => ({
+    slug: articulo.slug,
+    titulo: articulo.titulo,
+    bajada: articulo.resumen,
+    categoria: articulo.categoria,
+    autor: articulo.autorNombre,
+    publicadoHace: new Intl.DateTimeFormat('es-CO', {
+      dateStyle: 'medium'
+    }).format(new Date(articulo.publicadoEn)),
+    lecturaMinutos: 4,
+    imagen: articulo.imagen || '/editorial/login_pont3la10_estadio_sin_logo.png'
+  }))
+)
+
+const articulosDisponibles = computed(() => [
+  ...articulosPublicados.value,
+  ...articulosHome,
+  ...articulosRecientes
+].filter(
+  (articulo, indice, articulos) =>
+    articulos.findIndex(item => item.slug === articulo.slug) === indice
+))
 
 const terminoBusqueda = computed(() => normalizarTextoBusqueda(String(rutaActual.query.buscar || '')))
 const categoriaBusqueda = computed(() => normalizarTextoBusqueda(String(rutaActual.query.categoria || '')))
 const aliasCategoriaBusqueda = computed(() => obtenerAliasCategoria(categoriaBusqueda.value))
 
-const articulosFiltrados = computed(() => articulosDisponibles.filter((articulo) => {
+const articulosFiltrados = computed(() => articulosDisponibles.value.filter((articulo) => {
   const contenido = normalizarTextoBusqueda(`${articulo.titulo} ${articulo.bajada} ${articulo.categoria}`)
   const coincideTermino = !terminoBusqueda.value || contenido.includes(terminoBusqueda.value)
   const coincideCategoria = !categoriaBusqueda.value || aliasCategoriaBusqueda.value.some(alias => contenido.includes(alias))

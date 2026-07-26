@@ -3,6 +3,7 @@ import { exigirPermisoEditorial } from '~/server/utils/autorizacionEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import {
   listarVersionesArticuloEditorial,
+  obtenerFlujoArticuloEditorial,
   obtenerArticuloEditorial,
   obtenerTaxonomiasEditoriales
 } from '~/server/utils/repositorioContenidoEditorial'
@@ -32,10 +33,16 @@ export default defineEventHandler(async (evento): Promise<CargaEditorArticuloEdi
     obtenerTaxonomiasEditoriales(clienteSupabase),
     listarVersionesArticuloEditorial(clienteSupabase, articuloId)
   ])
+  const flujo = await obtenerFlujoArticuloEditorial(
+    clienteSupabase,
+    articulo,
+    contexto.permisos
+  )
 
   return {
     articulo,
     taxonomias,
-    versiones
+    versiones,
+    flujo
   }
 })

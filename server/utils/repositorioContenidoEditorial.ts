@@ -6,24 +6,34 @@ import {
 import type {
   ArticuloDetalleEditorial,
   ArticuloBandejaEditorial,
+  ArticuloPublicoEditorial,
   AutoguardadoArticuloEditorial,
   BorradorCreadoEditorial,
   CategoriaEditorial,
+  ColaRevisionEditorial,
+  ComentarioRevisionEditorial,
+  EntradaTransicionEditorial,
   EtiquetaInternaEditorial,
+  FlujoArticuloEditorial,
   RespuestaBandejaEditorial,
+  ResumenArticuloPublico,
+  ResultadoTransicionEditorial,
   ResultadoGuardadoEditorial,
   TaxonomiasEditoriales,
   TemaEditorial,
   VersionArticuloEditorial
 } from '~/types/contenidoEditorial'
+import type { PermisoEditorial } from '~/types/editorial'
 import {
   crearSlugEditorial,
   crearSufijoSlug,
   documentoEditorialVacio,
+  esquemaComentarioRevision,
   esquemaAutoguardadoArticulo,
   type esquemaCrearBorrador,
   type esquemaCrearTaxonomia,
   esquemaDatosEditorArticulo,
+  obtenerAccionesFlujoEditorial,
   type esquemaFiltrosBandeja,
   type esquemaGuardarArticulo
 } from '~/utils/editorial/contenido'
@@ -57,6 +67,7 @@ interface FilaArticulo {
   updated_at: string
   created_at: string
   lock_version: number
+  scheduled_at?: string | null
   categories: FilaCategoria | FilaCategoria[] | null
 }
 
@@ -99,6 +110,11 @@ interface FilaArticuloDetalle extends FilaArticulo {
   source_name: string | null
   source_author: string | null
   credits: string | null
+  reviewed_at: string | null
+  approved_at: string | null
+  scheduled_at: string | null
+  published_at: string | null
+  published_version_id: string | null
   article_tags: FilaRelacionTema[]
   article_labels: FilaRelacionEtiqueta[]
   media_files: FilaMedioEditorial | FilaMedioEditorial[] | null
@@ -119,6 +135,53 @@ interface FilaVersionArticulo {
   created_by: string | null
   created_at: string
   snapshot: Record<string, unknown>
+}
+
+interface FilaComentarioRevision {
+  id: string
+  comment_type: ComentarioRevisionEditorial['tipo']
+  body: string
+  author_id: string
+  created_at: string
+}
+
+interface FilaArticuloPublicoRpc {
+  id: string
+  versionId: string
+  slug: string
+  titulo: string
+  resumen: string
+  tipo: ArticuloPublicoEditorial['tipo']
+  documento: unknown
+  seoTitulo: string
+  seoDescripcion: string
+  textoSocial: string
+  publicadoEn: string
+  autorNombre: string
+  categoria: ArticuloPublicoEditorial['categoria']
+  portada: null | {
+    bucket: string
+    path: string
+    textoAlternativo: string
+    pieDeFoto: string
+    credito: string
+    ancho: number | null
+    alto: number | null
+  }
+  fuente: ArticuloPublicoEditorial['fuente']
+}
+
+interface FilaResumenArticuloPublicoRpc {
+  id: string
+  slug: string
+  titulo: string
+  resumen: string
+  tipo: ResumenArticuloPublico['tipo']
+  publicadoEn: string
+  autorNombre: string
+  categoria: string
+  imagenBucket: string
+  imagenPath: string
 }
 
 function mapearCategoria(fila: FilaCategoria): CategoriaEditorial {
@@ -314,6 +377,11 @@ export async function obtenerArticuloEditorial(
       source_name,
       source_author,
       credits,
+      reviewed_at,
+      approved_at,
+      scheduled_at,
+      published_at,
+      published_version_id,
       cover_media_id,
       categories (
         id,
@@ -422,6 +490,11 @@ export async function obtenerArticuloEditorial(
     autorNombre,
     actualizadoEn: fila.updated_at,
     creadoEn: fila.created_at,
+    revisadoEn: fila.reviewed_at,
+    aprobadoEn: fila.approved_at,
+    programadoPara: fila.scheduled_at,
+    publicadoEn: fila.published_at,
+    tieneVersionPublica: Boolean(fila.published_version_id),
     puedeEditar,
     portada: filaPortada
       ? mapearMedioEditorial(clienteSupabase, filaPortada)
@@ -608,6 +681,322 @@ export async function listarVersionesArticuloEditorial(
     creadoEn: fila.created_at,
     titulo: String(fila.snapshot.title || 'Contenido sin título')
   }))
+}
+
+export async function listarComentariosRevisionEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string
+): Promise<ComentarioRevisionEditorial[]> {
+  const { data, error } = await clienteSupabase
+    .from('article_review_comments')
+    .select('id, comment_type, body, author_id, created_at')
+    .eq('article_id', articuloId)
+    .order('created_at', { ascending: false })
+    .limit(50)
+
+  if (error) {
+    throw crearErrorRepositorio('No se pudo cargar la conversación editorial.')
+  }
+
+  const filas = (data || []) as FilaComentarioRevision[]
+  const autores = [...new Set(filas.map(fila => fila.author_id))]
+  const nombresAutores = new Map<string, string>()
+
+  if (autores.length) {
+    const { data: perfiles } = await clienteSupabase
+      .from('user_profiles')
+      .select('id, display_name')
+      .in('id', autores)
+
+    for (const perfil of (perfiles || []) as FilaPerfil[]) {
+      nombresAutores.set(perfil.id, perfil.display_name)
+    }
+  }
+
+  return filas.map(fila => ({
+    id: fila.id,
+    tipo: fila.comment_type,
+    mensaje: fila.body,
+    autorId: fila.author_id,
+    autorNombre: nombresAutores.get(fila.author_id) || 'Equipo Pont3la10',
+    creadoEn: fila.created_at
+  }))
+}
+
+export async function obtenerFlujoArticuloEditorial(
+  clienteSupabase: SupabaseClient,
+  articulo: ArticuloDetalleEditorial,
+  permisos: readonly PermisoEditorial[]
+): Promise<FlujoArticuloEditorial> {
+  return {
+    estado: articulo.estado,
+    acciones: obtenerAccionesFlujoEditorial(articulo.estado, permisos),
+    comentarios: await listarComentariosRevisionEditorial(clienteSupabase, articulo.id),
+    programadoPara: articulo.programadoPara,
+    publicadoEn: articulo.publicadoEn,
+    tieneVersionPublica: articulo.tieneVersionPublica
+  }
+}
+
+export async function transicionarArticuloEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  entrada: EntradaTransicionEditorial
+): Promise<ResultadoTransicionEditorial> {
+  const { data, error } = await clienteSupabase.rpc('transition_editorial_article', {
+    target_article_id: articuloId,
+    expected_lock_version: entrada.versionBloqueo,
+    target_status: entrada.estadoObjetivo,
+    transition_note: entrada.nota,
+    target_scheduled_at: entrada.programadoPara
+  })
+
+  if (error) {
+    const mensaje = error.message || ''
+
+    if (mensaje.includes('cambió en otra sesión')) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: 'El contenido cambió en otra sesión. Recarga antes de continuar.',
+        data: { codigo: 'VERSION_EDITORIAL_EN_CONFLICTO' }
+      })
+    }
+
+    if (
+      mensaje.includes('permiso')
+      || mensaje.includes('MFA')
+      || mensaje.includes('sesión')
+    ) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: mensaje,
+        data: { codigo: 'TRANSICION_EDITORIAL_NO_AUTORIZADA' }
+      })
+    }
+
+    if (
+      mensaje.includes('necesita')
+      || mensaje.includes('Selecciona')
+      || mensaje.includes('Explica')
+      || mensaje.includes('programación')
+      || mensaje.includes('transición editorial')
+    ) {
+      throw createError({
+        statusCode: 422,
+        statusMessage: mensaje,
+        data: { codigo: 'TRANSICION_EDITORIAL_INVALIDA' }
+      })
+    }
+
+    throw crearErrorRepositorio('No se pudo completar la transición editorial.')
+  }
+
+  return data as ResultadoTransicionEditorial
+}
+
+export async function crearComentarioRevisionEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  autorId: string,
+  mensaje: string
+): Promise<ComentarioRevisionEditorial> {
+  const entrada = esquemaComentarioRevision.parse({ mensaje })
+  const { data, error } = await clienteSupabase
+    .from('article_review_comments')
+    .insert({
+      article_id: articuloId,
+      author_id: autorId,
+      comment_type: 'comment',
+      body: entrada.mensaje
+    })
+    .select('id, comment_type, body, author_id, created_at')
+    .single()
+
+  if (error || !data) {
+    throw crearErrorRepositorio('No se pudo agregar el comentario editorial.')
+  }
+
+  return {
+    id: String(data.id),
+    tipo: data.comment_type as ComentarioRevisionEditorial['tipo'],
+    mensaje: String(data.body),
+    autorId: String(data.author_id),
+    autorNombre: await obtenerNombreAutor(clienteSupabase, String(data.author_id)),
+    creadoEn: String(data.created_at)
+  }
+}
+
+export async function obtenerColaRevisionEditorial(
+  clienteSupabase: SupabaseClient
+): Promise<ColaRevisionEditorial> {
+  const { data, error } = await clienteSupabase
+    .from('articles')
+    .select(`
+      id,
+      slug,
+      title,
+      summary,
+      status,
+      content_type,
+      source_origin,
+      author_id,
+      updated_at,
+      created_at,
+      lock_version,
+      scheduled_at,
+      categories (
+        id,
+        slug,
+        name,
+        description,
+        is_active,
+        display_order
+      )
+    `)
+    .in('status', ['review', 'approved', 'scheduled'])
+    .order('updated_at', { ascending: false })
+    .limit(120)
+
+  if (error) {
+    throw crearErrorRepositorio('No se pudo cargar la bandeja de revisión.')
+  }
+
+  const filas = (data || []) as unknown as FilaArticulo[]
+  const idsAutores = [...new Set(
+    filas.flatMap(fila => fila.author_id ? [fila.author_id] : [])
+  )]
+  const nombresAutores = new Map<string, string>()
+
+  if (idsAutores.length) {
+    const { data: perfiles } = await clienteSupabase
+      .from('user_profiles')
+      .select('id, display_name')
+      .in('id', idsAutores)
+
+    for (const perfil of (perfiles || []) as FilaPerfil[]) {
+      nombresAutores.set(perfil.id, perfil.display_name)
+    }
+  }
+
+  const contenidos = filas.map(fila => ({
+    id: fila.id,
+    slug: fila.slug,
+    titulo: fila.title,
+    resumen: fila.summary,
+    estado: fila.status,
+    tipo: fila.content_type,
+    origen: fila.source_origin,
+    categoria: obtenerCategoriaRelacion(fila.categories),
+    autorId: fila.author_id,
+    autorNombre: fila.author_id
+      ? nombresAutores.get(fila.author_id) || 'Equipo Pont3la10'
+      : 'Sin autor',
+    actualizadoEn: fila.updated_at,
+    creadoEn: fila.created_at,
+    versionBloqueo: fila.lock_version,
+    programadoPara: fila.scheduled_at || null
+  }))
+
+  return {
+    enRevision: contenidos.filter(item => item.estado === 'review'),
+    aprobados: contenidos.filter(item => item.estado === 'approved'),
+    programados: contenidos.filter(item => item.estado === 'scheduled')
+  }
+}
+
+function obtenerUrlPublicaMedio(
+  clienteSupabase: SupabaseClient,
+  bucket: string,
+  path: string
+): string {
+  return clienteSupabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
+}
+
+export async function obtenerArticuloPublicoEditorial(
+  clienteSupabase: SupabaseClient,
+  slug: string
+): Promise<ArticuloPublicoEditorial | null> {
+  const { data, error } = await clienteSupabase.rpc(
+    'get_public_editorial_article',
+    { requested_slug: slug }
+  )
+
+  if (error) {
+    throw crearErrorRepositorio('No se pudo cargar la publicación.')
+  }
+
+  if (!data) return null
+
+  const fila = data as unknown as FilaArticuloPublicoRpc
+  const documento = esquemaDatosEditorArticulo.shape.documento.safeParse(fila.documento)
+
+  if (!documento.success) {
+    throw crearErrorRepositorio('La versión pública no tiene un documento válido.')
+  }
+
+  return {
+    id: fila.id,
+    versionId: fila.versionId,
+    slug: fila.slug,
+    titulo: fila.titulo,
+    resumen: fila.resumen,
+    tipo: fila.tipo,
+    documento: documento.data,
+    seoTitulo: fila.seoTitulo,
+    seoDescripcion: fila.seoDescripcion,
+    textoSocial: fila.textoSocial,
+    publicadoEn: fila.publicadoEn,
+    autorNombre: fila.autorNombre,
+    categoria: fila.categoria,
+    portada: fila.portada
+      ? {
+          url: obtenerUrlPublicaMedio(
+            clienteSupabase,
+            fila.portada.bucket,
+            fila.portada.path
+          ),
+          textoAlternativo: fila.portada.textoAlternativo,
+          pieDeFoto: fila.portada.pieDeFoto,
+          credito: fila.portada.credito,
+          ancho: fila.portada.ancho,
+          alto: fila.portada.alto
+        }
+      : null,
+    fuente: fila.fuente
+  }
+}
+
+export async function listarArticulosPublicosEditoriales(
+  clienteSupabase: SupabaseClient,
+  limite = 20,
+  desplazamiento = 0
+): Promise<ResumenArticuloPublico[]> {
+  const { data, error } = await clienteSupabase.rpc(
+    'list_public_editorial_articles',
+    {
+      result_limit: limite,
+      result_offset: desplazamiento
+    }
+  )
+
+  if (error) {
+    throw crearErrorRepositorio('No se pudieron cargar las publicaciones.')
+  }
+
+  return ((data || []) as unknown as FilaResumenArticuloPublicoRpc[])
+    .map(fila => ({
+      id: fila.id,
+      slug: fila.slug,
+      titulo: fila.titulo,
+      resumen: fila.resumen,
+      tipo: fila.tipo,
+      publicadoEn: fila.publicadoEn,
+      autorNombre: fila.autorNombre,
+      categoria: fila.categoria,
+      imagen: fila.imagenBucket && fila.imagenPath
+        ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
+        : ''
+    }))
 }
 
 async function validarCategoria(

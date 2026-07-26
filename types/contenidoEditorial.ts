@@ -193,6 +193,11 @@ export interface ArticuloDetalleEditorial extends DatosEditorArticulo {
   autorNombre: string
   actualizadoEn: string
   creadoEn: string
+  revisadoEn: string | null
+  aprobadoEn: string | null
+  programadoPara: string | null
+  publicadoEn: string | null
+  tieneVersionPublica: boolean
   puedeEditar: boolean
   portada: MedioEditorial | null
   autoguardado: AutoguardadoArticuloEditorial | null
@@ -220,4 +225,112 @@ export interface CargaEditorArticuloEditorial {
   articulo: ArticuloDetalleEditorial
   taxonomias: TaxonomiasEditoriales
   versiones: VersionArticuloEditorial[]
+  flujo: FlujoArticuloEditorial
+}
+
+export type IdAccionFlujoEditorial =
+  | 'enviarRevision'
+  | 'solicitarCambios'
+  | 'aprobar'
+  | 'programar'
+  | 'publicar'
+  | 'cancelarProgramacion'
+  | 'crearRevision'
+  | 'archivar'
+  | 'reabrir'
+
+export interface AccionFlujoEditorial {
+  id: IdAccionFlujoEditorial
+  estadoObjetivo: EstadoContenidoEditorial
+  etiqueta: string
+  descripcion: string
+  requiereNota: boolean
+  requiereProgramacion: boolean
+  requiereMfa: boolean
+}
+
+export interface ComentarioRevisionEditorial {
+  id: string
+  tipo: 'comment' | 'changes_requested' | 'approval' | 'transition'
+  mensaje: string
+  autorId: string
+  autorNombre: string
+  creadoEn: string
+}
+
+export interface FlujoArticuloEditorial {
+  estado: EstadoContenidoEditorial
+  acciones: AccionFlujoEditorial[]
+  comentarios: ComentarioRevisionEditorial[]
+  programadoPara: string | null
+  publicadoEn: string | null
+  tieneVersionPublica: boolean
+}
+
+export interface ResultadoTransicionEditorial {
+  id: string
+  estado: EstadoContenidoEditorial
+  versionBloqueo: number
+  programadoPara: string | null
+  publicadoEn: string | null
+  actualizadoEn: string
+}
+
+export interface EntradaTransicionEditorial {
+  estadoObjetivo: EstadoContenidoEditorial
+  versionBloqueo: number
+  nota: string
+  programadoPara: string | null
+}
+
+export interface ElementoColaRevisionEditorial extends ArticuloBandejaEditorial {
+  programadoPara: string | null
+}
+
+export interface ColaRevisionEditorial {
+  enRevision: ElementoColaRevisionEditorial[]
+  aprobados: ElementoColaRevisionEditorial[]
+  programados: ElementoColaRevisionEditorial[]
+}
+
+export interface PortadaArticuloPublico {
+  url: string
+  textoAlternativo: string
+  pieDeFoto: string
+  credito: string
+  ancho: number | null
+  alto: number | null
+}
+
+export interface ArticuloPublicoEditorial {
+  id: string
+  versionId: string
+  slug: string
+  titulo: string
+  resumen: string
+  tipo: TipoContenidoEditorial
+  documento: DocumentoEditorial
+  seoTitulo: string
+  seoDescripcion: string
+  textoSocial: string
+  publicadoEn: string
+  autorNombre: string
+  categoria: {
+    slug: string
+    nombre: string
+  } | null
+  portada: PortadaArticuloPublico | null
+  fuente: FuenteArticuloEditorial
+}
+
+export interface ResumenArticuloPublico {
+  id: string
+  slug: string
+  titulo: string
+  resumen: string
+  tipo: TipoContenidoEditorial
+  publicadoEn: string
+  autorNombre: string
+  categoria: string
+  imagen: string
 }
