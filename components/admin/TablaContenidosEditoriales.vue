@@ -45,7 +45,12 @@ function formatearFecha(fecha: string): string {
                 <FileText aria-hidden="true" />
               </span>
               <div>
-                <strong>{{ contenido.titulo }}</strong>
+                <NuxtLink
+                  class="enlace-titulo-contenido"
+                  :to="`/admin/contenidos/${contenido.id}`"
+                >
+                  <strong>{{ contenido.titulo }}</strong>
+                </NuxtLink>
                 <span>
                   {{ etiquetasTipoContenido[contenido.tipo] }}
                   <i aria-hidden="true" />

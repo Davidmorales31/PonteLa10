@@ -11,13 +11,17 @@ interface ErrorPeticionEditorial {
 }
 
 export function useContextoEditorial() {
+  const duracionCacheContexto = 60_000
   const contextoEditorial = useState<ContextoEditorial | null>('editorial:contexto', () => null)
+  const contextoCargadoEn = useState('editorial:contextoCargadoEn', () => 0)
   const cargandoContextoEditorial = useState('editorial:cargandoContexto', () => false)
   const errorContextoEditorial = useState<string | null>('editorial:errorContexto', () => null)
   const codigoErrorContexto = useState<string | null>('editorial:codigoErrorContexto', () => null)
 
   async function cargarContextoEditorial(forzar = false): Promise<ContextoEditorial | null> {
-    if (contextoEditorial.value && !forzar) {
+    const cacheVigente = Date.now() - contextoCargadoEn.value < duracionCacheContexto
+
+    if (contextoEditorial.value && !forzar && cacheVigente) {
       return contextoEditorial.value
     }
 
@@ -28,6 +32,7 @@ export function useContextoEditorial() {
     try {
       const solicitar = useRequestFetch()
       contextoEditorial.value = await solicitar<ContextoEditorial>('/api/admin/contexto')
+      contextoCargadoEn.value = Date.now()
       return contextoEditorial.value
     } catch (error) {
       const errorPeticion = error as ErrorPeticionEditorial
@@ -50,12 +55,14 @@ export function useContextoEditorial() {
 
   function limpiarContextoEditorial() {
     contextoEditorial.value = null
+    contextoCargadoEn.value = 0
     errorContextoEditorial.value = null
     codigoErrorContexto.value = null
   }
 
   return {
     contextoEditorial,
+    contextoCargadoEn,
     cargandoContextoEditorial,
     errorContextoEditorial,
     codigoErrorContexto,

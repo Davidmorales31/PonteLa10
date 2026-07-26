@@ -9,7 +9,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo('/login?motivo=configuracion')
   }
 
-  const contexto = await cargarContextoEditorial(true)
+  const contexto = await cargarContextoEditorial()
 
   if (!contexto && codigoErrorContexto.value === 'SESION_REQUERIDA') {
     return navigateTo(`/login?redirigir=${encodeURIComponent(to.fullPath)}`)

@@ -62,17 +62,29 @@ export async function obtenerContextoEditorialServidor(
   const clienteSupabase = obtenerClienteSupabaseEditorial(evento)
   const usuario = await obtenerUsuarioVerificado(evento)
 
-  const { data: filasRoles, error: errorRoles } = await clienteSupabase
-    .from('user_roles')
-    .select('role')
-    .eq('user_id', usuario.id)
-    .eq('is_active', true)
+  const [
+    respuestaRoles,
+    respuestaPerfil,
+    respuestaNivelAutenticacion
+  ] = await Promise.all([
+    clienteSupabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', usuario.id)
+      .eq('is_active', true),
+    clienteSupabase
+      .from('user_profiles')
+      .select('display_name')
+      .eq('id', usuario.id)
+      .maybeSingle(),
+    clienteSupabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  ])
 
-  if (errorRoles) {
-    throw crearErrorConsulta(errorRoles.message)
+  if (respuestaRoles.error) {
+    throw crearErrorConsulta(respuestaRoles.error.message)
   }
 
-  const roles = (filasRoles || []).map(fila => (fila as FilaRol).role)
+  const roles = (respuestaRoles.data || []).map(fila => (fila as FilaRol).role)
 
   if (!roles.length) {
     throw createError({
@@ -103,29 +115,17 @@ export async function obtenerContextoEditorialServidor(
     })
   }
 
-  const [
-    { data: perfil },
-    { data: nivelAutenticacion }
-  ] = await Promise.all([
-    clienteSupabase
-      .from('user_profiles')
-      .select('display_name')
-      .eq('id', usuario.id)
-      .maybeSingle(),
-    clienteSupabase.auth.mfa.getAuthenticatorAssuranceLevel()
-  ])
-
   return {
     usuario: {
       id: usuario.id,
       correo: usuario.email || '',
-      nombre: (perfil as FilaPerfil | null)?.display_name
+      nombre: (respuestaPerfil.data as FilaPerfil | null)?.display_name
         || String(usuario.user_metadata?.nombreCompleto || usuario.email || 'Equipo Pont3la10')
     },
     roles,
     permisos,
-    nivelAal: (nivelAutenticacion?.currentLevel || null) as NivelAal,
-    siguienteNivelAal: (nivelAutenticacion?.nextLevel || null) as NivelAal,
+    nivelAal: (respuestaNivelAutenticacion.data?.currentLevel || null) as NivelAal,
+    siguienteNivelAal: (respuestaNivelAutenticacion.data?.nextLevel || null) as NivelAal,
     requiereMfa: requiereMfaEditorial(roles, permisos)
   }
 }
@@ -150,6 +150,24 @@ export async function exigirPermisoEditorial(
       statusCode: 403,
       statusMessage: 'Esta acción requiere verificación en dos pasos.',
       data: { codigo: 'MFA_REQUERIDO' }
+    })
+  }
+
+  return contexto
+}
+
+export async function exigirEdicionEditorial(
+  evento: H3Event
+): Promise<ContextoEditorial> {
+  const contexto = await obtenerContextoEditorialServidor(evento)
+  const puedeEditar = contexto.permisos.includes('contenido.editarTodos')
+    || contexto.permisos.includes('contenido.editarPropio')
+
+  if (!puedeEditar) {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'No tienes permiso para editar contenidos.',
+      data: { codigo: 'EDICION_EDITORIAL_REQUERIDA' }
     })
   }
 
