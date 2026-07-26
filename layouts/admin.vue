@@ -3,6 +3,7 @@ import {
   Activity,
   ExternalLink,
   Files,
+  Images,
   LayoutDashboard,
   LockKeyhole,
   LogOut,
@@ -44,6 +45,12 @@ const entradasPanel: EntradaPanel[] = [
     ruta: '/admin/contenidos',
     icono: Files,
     permiso: 'contenido.verBorradores'
+  },
+  {
+    etiqueta: 'Multimedia',
+    ruta: '/admin/media',
+    icono: Images,
+    permiso: 'media.ver'
   },
   {
     etiqueta: 'Taxonomías',

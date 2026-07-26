@@ -4,6 +4,7 @@ import type {
   BloqueEditorEditorial,
   DatosEditorArticulo
 } from '~/types/contenidoEditorial'
+import type { MedioEditorial } from '~/types/mediaEditorial'
 import {
   convertirBloquesADocumento,
   estimarMinutosLectura
@@ -14,6 +15,7 @@ const props = defineProps<{
   datos: DatosEditorArticulo
   bloques: BloqueEditorEditorial[]
   nombreCategoria: string
+  portada?: MedioEditorial | null
 }>()
 
 const minutosLectura = computed(() => estimarMinutosLectura(
@@ -44,6 +46,19 @@ function elementosLista(texto: string): string[] {
         <span><Clock3 aria-hidden="true" /> {{ minutosLectura }} min de lectura</span>
       </div>
     </header>
+
+    <figure v-if="portada" class="portada-previa-articulo">
+      <img
+        :src="portada.urlPublica"
+        :alt="portada.esDecorativa ? '' : portada.textoAlternativo"
+        width="1200"
+        height="675"
+      >
+      <figcaption v-if="portada.pieDeFoto || portada.credito">
+        <span>{{ portada.pieDeFoto }}</span>
+        <small v-if="portada.credito">Crédito: {{ portada.credito }}</small>
+      </figcaption>
+    </figure>
 
     <div class="cuerpo-previa-articulo">
       <template v-for="bloque in bloques" :key="bloque.id">

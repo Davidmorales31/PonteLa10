@@ -1,3 +1,5 @@
+import type { MedioEditorial } from '~/types/mediaEditorial'
+
 export type EstadoContenidoEditorial =
   | 'draft'
   | 'review'
@@ -168,6 +170,7 @@ export interface DatosEditorArticulo {
   resumen: string
   tipo: TipoContenidoEditorial
   categoriaId: string | null
+  portadaId: string | null
   temaIds: string[]
   etiquetaIds: string[]
   documento: DocumentoEditorial
@@ -191,6 +194,7 @@ export interface ArticuloDetalleEditorial extends DatosEditorArticulo {
   actualizadoEn: string
   creadoEn: string
   puedeEditar: boolean
+  portada: MedioEditorial | null
   autoguardado: AutoguardadoArticuloEditorial | null
 }
 

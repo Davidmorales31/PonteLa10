@@ -6,6 +6,8 @@ import {
   Clock3,
   Eye,
   FileClock,
+  Image,
+  ImagePlus,
   Link2,
   RefreshCw,
   RotateCcw,
@@ -15,6 +17,8 @@ import {
   X
 } from '@lucide/vue'
 import EditorBloquesContenido from '~/components/admin/EditorBloquesContenido.vue'
+import ModalSubirMedio from '~/components/admin/ModalSubirMedio.vue'
+import SelectorPortadaEditorial from '~/components/admin/SelectorPortadaEditorial.vue'
 import VistaPreviaArticulo from '~/components/admin/VistaPreviaArticulo.vue'
 import type {
   ArticuloDetalleEditorial,
@@ -24,6 +28,7 @@ import type {
   ResultadoGuardadoEditorial,
   VersionArticuloEditorial
 } from '~/types/contenidoEditorial'
+import type { MedioEditorial } from '~/types/mediaEditorial'
 import {
   crearSlugEditorial,
   esquemaDatosEditorArticulo,
@@ -50,6 +55,7 @@ useSeoMeta({
 const route = useRoute()
 const articuloId = computed(() => String(route.params.id || ''))
 const { ejecutarConBloqueo } = useBloqueoInterfaz()
+const { tienePermiso } = useContextoEditorial()
 
 const {
   data: cargaEditor,
@@ -67,11 +73,15 @@ const versiones = ref<VersionArticuloEditorial[]>(
   cargaEditor.value?.versiones || []
 )
 const taxonomias = computed(() => cargaEditor.value?.taxonomias || null)
+const portadaSeleccionada = ref<MedioEditorial | null>(
+  cargaEditor.value?.articulo.portada || null
+)
 
 watch(cargaEditor, (carga) => {
   if (!carga) return
   articulo.value = carga.articulo
   versiones.value = carga.versiones
+  portadaSeleccionada.value = carga.articulo.portada
 })
 
 async function recargarArticulo() {
@@ -98,6 +108,8 @@ const cambiosPendientes = ref(false)
 const guardando = ref(false)
 const autoguardando = ref(false)
 const vistaPreviaAbierta = ref(false)
+const selectorPortadaAbierto = ref(false)
+const modalSubidaMedioAbierto = ref(false)
 const mensajeEstado = ref('')
 const errorGuardado = ref('')
 const conflictoVersion = ref(false)
@@ -161,6 +173,7 @@ function extraerDatosDetalle(
     resumen: detalle.resumen,
     tipo: detalle.tipo,
     categoriaId: detalle.categoriaId,
+    portadaId: detalle.portadaId,
     temaIds: [...detalle.temaIds],
     etiquetaIds: [...detalle.etiquetaIds],
     documento: detalle.documento,
@@ -173,6 +186,7 @@ function inicializarEditor(detalle: ArticuloDetalleEditorial) {
   const datosBase = extraerDatosDetalle(detalle)
   inicializando.value = true
   aplicarDatos(datosBase)
+  portadaSeleccionada.value = detalle.portada
   versionBloqueo.value = detalle.versionBloqueo
   referenciaGuardada.value = serializarDatos(datosBase)
   cambiosPendientes.value = false
@@ -340,16 +354,57 @@ function actualizarEtiqueta(id: string, activo: boolean) {
   )
 }
 
-function recuperarAutoguardado() {
+async function recuperarAutoguardado() {
   const articuloActual = articulo.value
   const autoguardado = articuloActual?.autoguardado
   if (!articuloActual || !autoguardado) return
 
   aplicarDatos(autoguardado.datos)
+  await cargarPortada(autoguardado.datos.portadaId)
   articulo.value = { ...articuloActual, autoguardado: null }
   cambiosPendientes.value = true
   mensajeEstado.value = 'Autoguardado recuperado'
   programarAutoguardado()
+}
+
+async function cargarPortada(portadaId: string | null) {
+  if (!portadaId) {
+    portadaSeleccionada.value = null
+    return
+  }
+
+  if (portadaSeleccionada.value?.id === portadaId) return
+
+  try {
+    portadaSeleccionada.value = await $fetch<MedioEditorial>(
+      `/api/admin/media/${portadaId}`
+    )
+  } catch {
+    portadaSeleccionada.value = null
+  }
+}
+
+function seleccionarPortada(medio: MedioEditorial) {
+  if (!formulario.value) return
+  formulario.value.portadaId = medio.id
+  portadaSeleccionada.value = medio
+  selectorPortadaAbierto.value = false
+}
+
+function quitarPortada() {
+  if (!formulario.value) return
+  formulario.value.portadaId = null
+  portadaSeleccionada.value = null
+}
+
+function abrirSubidaDesdeSelector() {
+  selectorPortadaAbierto.value = false
+  modalSubidaMedioAbierto.value = true
+}
+
+function usarMedioSubido(medio: MedioEditorial) {
+  modalSubidaMedioAbierto.value = false
+  seleccionarPortada(medio)
 }
 
 async function descartarAutoguardado() {
@@ -628,6 +683,55 @@ onBeforeUnmount(() => {
             </div>
           </section>
 
+          <section class="panel-configuracion-editor panel-portada-editor">
+            <header>
+              <h2>Portada</h2>
+              <Image aria-hidden="true" />
+            </header>
+
+            <figure v-if="portadaSeleccionada">
+              <img
+                :src="portadaSeleccionada.urlPublica"
+                :alt="portadaSeleccionada.esDecorativa
+                  ? ''
+                  : portadaSeleccionada.textoAlternativo"
+                width="640"
+                height="360"
+              >
+              <figcaption>
+                <strong>{{ portadaSeleccionada.titulo }}</strong>
+                <span>
+                  {{ portadaSeleccionada.ancho }} × {{ portadaSeleccionada.alto }}
+                </span>
+              </figcaption>
+            </figure>
+
+            <div v-else class="portada-vacia-editor">
+              <ImagePlus aria-hidden="true" />
+              <span>Elige una imagen para representar la historia.</span>
+            </div>
+
+            <div class="acciones-portada-editor">
+              <button
+                class="boton-editorial-secundario"
+                type="button"
+                :disabled="!puedeEditar"
+                @click="selectorPortadaAbierto = true"
+              >
+                <ImagePlus aria-hidden="true" />
+                {{ portadaSeleccionada ? 'Cambiar' : 'Elegir portada' }}
+              </button>
+              <button
+                v-if="portadaSeleccionada"
+                type="button"
+                :disabled="!puedeEditar"
+                @click="quitarPortada"
+              >
+                Quitar
+              </button>
+            </div>
+          </section>
+
           <section class="panel-configuracion-editor">
             <h2>Temas</h2>
             <div v-if="taxonomias?.temas.length" class="opciones-taxonomia-editor">
@@ -741,6 +845,21 @@ onBeforeUnmount(() => {
         </aside>
       </div>
 
+      <SelectorPortadaEditorial
+        v-if="selectorPortadaAbierto"
+        :seleccionado-id="formulario.portadaId"
+        :puede-subir="tienePermiso('media.subir')"
+        @cerrar="selectorPortadaAbierto = false"
+        @seleccionar="seleccionarPortada"
+        @solicitar-subida="abrirSubidaDesdeSelector"
+      />
+
+      <ModalSubirMedio
+        v-if="modalSubidaMedioAbierto"
+        @cerrar="modalSubidaMedioAbierto = false"
+        @subido="usarMedioSubido"
+      />
+
       <div
         v-if="vistaPreviaAbierta && datosActuales"
         class="fondo-modal-editorial fondo-vista-previa"
@@ -771,6 +890,7 @@ onBeforeUnmount(() => {
             :datos="datosActuales"
             :bloques="bloques"
             :nombre-categoria="categoriaActual?.nombre || ''"
+            :portada="portadaSeleccionada"
           />
         </section>
       </div>

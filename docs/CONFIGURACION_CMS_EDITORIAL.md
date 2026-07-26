@@ -25,10 +25,10 @@ supabase/migrations/0002_api_permissions.sql
 supabase/migrations/0003_cms_editorial_foundation.sql
 supabase/migrations/0004_editorial_content_model.sql
 supabase/migrations/0005_editorial_draft_editor.sql
+supabase/migrations/0006_editorial_media_library.sql
 ```
 
-En un proyecto que ya tenga `0001`, `0002` y `0003`, ejecutar únicamente
-`0004` y `0005`.
+En un proyecto que ya tenga hasta `0005`, ejecutar únicamente `0006`.
 
 Con Supabase CLI vinculada:
 

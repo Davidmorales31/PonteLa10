@@ -17,6 +17,7 @@ const datosValidos = {
   resumen: 'Claves y protagonistas antes del próximo partido.',
   tipo: 'noticia' as const,
   categoriaId: null,
+  portadaId: null,
   temaIds: [],
   etiquetaIds: [],
   documento: {

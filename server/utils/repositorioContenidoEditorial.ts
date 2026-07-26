@@ -1,4 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import {
+  mapearMedioEditorial,
+  type FilaMedioEditorial
+} from '~/server/utils/repositorioMediaEditorial'
 import type {
   ArticuloDetalleEditorial,
   ArticuloBandejaEditorial,
@@ -86,6 +90,7 @@ interface FilaRelacionEtiqueta {
 }
 
 interface FilaArticuloDetalle extends FilaArticulo {
+  cover_media_id: string | null
   body_json: unknown
   seo_title: string | null
   seo_description: string | null
@@ -96,6 +101,7 @@ interface FilaArticuloDetalle extends FilaArticulo {
   credits: string | null
   article_tags: FilaRelacionTema[]
   article_labels: FilaRelacionEtiqueta[]
+  media_files: FilaMedioEditorial | FilaMedioEditorial[] | null
 }
 
 interface FilaAutoguardado {
@@ -308,6 +314,7 @@ export async function obtenerArticuloEditorial(
       source_name,
       source_author,
       credits,
+      cover_media_id,
       categories (
         id,
         slug,
@@ -321,6 +328,26 @@ export async function obtenerArticuloEditorial(
       ),
       article_labels (
         label_id
+      ),
+      media_files (
+        id,
+        bucket,
+        path,
+        original_name,
+        title,
+        alt,
+        is_decorative,
+        caption,
+        credit,
+        source_url,
+        mime_type,
+        size_bytes,
+        width,
+        height,
+        file_hash,
+        created_by,
+        created_at,
+        updated_at
       )
     `)
     .eq('id', articuloId)
@@ -360,6 +387,9 @@ export async function obtenerArticuloEditorial(
 
   const puedeEditar = permisos.editarTodos
     || (permisos.editarPropio && fila.author_id === usuarioId)
+  const filaPortada = Array.isArray(fila.media_files)
+    ? fila.media_files[0]
+    : fila.media_files
 
   return {
     id: fila.id,
@@ -368,6 +398,7 @@ export async function obtenerArticuloEditorial(
     resumen: fila.summary,
     tipo: fila.content_type,
     categoriaId: obtenerCategoriaRelacion(fila.categories)?.id || null,
+    portadaId: fila.cover_media_id,
     temaIds: (fila.article_tags || []).map(relacion => relacion.tag_id),
     etiquetaIds: (fila.article_labels || []).map(relacion => relacion.label_id),
     documento: documentoValidado.success
@@ -392,6 +423,9 @@ export async function obtenerArticuloEditorial(
     actualizadoEn: fila.updated_at,
     creadoEn: fila.created_at,
     puedeEditar,
+    portada: filaPortada
+      ? mapearMedioEditorial(clienteSupabase, filaPortada)
+      : null,
     autoguardado: mapearAutoguardado(
       respuestaAutoguardado.data as FilaAutoguardado | null
     )
@@ -412,6 +446,7 @@ export async function guardarArticuloEditorial(
     next_body: extraerTextoDocumento(entrada.documento),
     next_body_json: entrada.documento,
     next_category_id: entrada.categoriaId,
+    next_cover_media_id: entrada.portadaId,
     next_content_type: entrada.tipo,
     next_source_url: entrada.fuente.url,
     next_source_name: entrada.fuente.nombre,
@@ -464,7 +499,11 @@ export async function guardarArticuloEditorial(
       throw createError({
         statusCode: 422,
         statusMessage: mensaje,
-        data: { codigo: 'TAXONOMIA_EDITORIAL_INVALIDA' }
+        data: {
+          codigo: mensaje.includes('portada')
+            ? 'PORTADA_EDITORIAL_INVALIDA'
+            : 'TAXONOMIA_EDITORIAL_INVALIDA'
+        }
       })
     }
 

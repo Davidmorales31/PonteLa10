@@ -19,6 +19,7 @@
     "@supabase/supabase-js": "^2.110.7",
     "h3": "1.15.11",
     "nuxt": "^3.17.0",
+    "sharp": "^0.35.3",
     "zod": "^3.25.0"
   },
   "devDependencies": {

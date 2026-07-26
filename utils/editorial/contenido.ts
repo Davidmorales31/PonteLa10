@@ -173,6 +173,7 @@ export const esquemaDatosEditorArticulo = z.object({
     ...TipoContenidoEditorial[]
   ]),
   categoriaId: z.string().uuid().nullable(),
+  portadaId: z.string().uuid().nullable().default(null),
   temaIds: esquemaIdsTaxonomia,
   etiquetaIds: esquemaIdsTaxonomia,
   documento: esquemaDocumentoEditorial,
