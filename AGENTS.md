@@ -48,6 +48,18 @@ Estas reglas aplican siempre que Codex trabaje en Pont3la10.
 - Marcar como `noindex` las rutas privadas, errores, busquedas internas y contenido mock o insuficiente para indexacion.
 - Tener en cuenta rendimiento, dimensiones de imagenes y estabilidad visual como parte del SEO tecnico.
 
+## Criterio Editorial
+
+- Una noticia puede tratar tecnologia, cultura digital, entretenimiento, tendencias u otros temas definidos por la linea editorial sin forzar una relacion con el deporte.
+- No insertar menciones a Pont3la10 dentro del cuerpo solo para intentar posicionar la marca. La marca debe estar en la autoria, el publisher, la cabecera y los metadatos; mencionarla en el texto unicamente cuando aporte contexto real.
+- Priorizar contenido util, original y centrado en el lector. No deformar un tema ni agregar parrafos artificiales para cumplir palabras clave.
+- Verificar fecha, fuente y contexto antes de cubrir una tendencia. Separar claramente hechos comprobados, explicaciones tecnicas e inferencias editoriales.
+- Permitir y fomentar enlaces internos cuando ayuden a ampliar el tema. Deben apuntar a contenido publico, existente y relacionado, con texto ancla breve y descriptivo.
+- No enlazar desde una noticia publica hacia borradores, rutas privadas, contenido inexistente ni enlaces internos genericos como "haz clic aqui".
+- Las imagenes editoriales generadas deben responder al tema real de la noticia. No tienen que usar ambiente deportivo, estadio, jugadores ni la paleta de Pont3la10 cuando el contenido no lo requiera.
+- Evitar logos, marcas, atletas o interfaces de terceros innecesarios en imagenes generadas. Cuando se necesite representar una plataforma, usar una interfaz social generica que comunique la idea sin copiar su identidad.
+- Registrar el origen y los creditos de cada imagen. Si una imagen fue generada con asistencia de IA, conservar esa informacion en la trazabilidad editorial.
+
 ## Flujo De Trabajo
 
 - Antes de editar, entender la estructura existente.
