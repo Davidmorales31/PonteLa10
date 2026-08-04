@@ -13,8 +13,10 @@ import type {
   ColaRevisionEditorial,
   ComentarioRevisionEditorial,
   EntradaTransicionEditorial,
+  EnlaceArticuloInternoEditorial,
   EtiquetaInternaEditorial,
   FlujoArticuloEditorial,
+  NodoBloqueEditorial,
   RespuestaBandejaEditorial,
   ResumenArticuloPublico,
   ResultadoTransicionEditorial,
@@ -184,6 +186,16 @@ interface FilaResumenArticuloPublicoRpc {
   imagenPath: string
 }
 
+interface FilaEnlaceArticuloInternoRpc {
+  articuloId: string
+  slug: string
+  titulo: string
+  resumen: string
+  categoria: string
+  imagenBucket: string
+  imagenPath: string
+}
+
 function mapearCategoria(fila: FilaCategoria): CategoriaEditorial {
   return {
     id: fila.id,
@@ -208,6 +220,50 @@ function crearErrorRepositorio(mensaje: string) {
     statusMessage: mensaje,
     data: { codigo: 'REPOSITORIO_EDITORIAL_NO_DISPONIBLE' }
   })
+}
+
+async function validarEnlacesInternosEditoriales(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  documento: EntradaGuardarArticulo['documento']
+): Promise<void> {
+  const idsRelacionados = documento.content
+    .filter(bloque => bloque.type === 'articuloRelacionado')
+    .map(bloque => bloque.attrs.articuloId)
+
+  if (!idsRelacionados.length) return
+
+  if (idsRelacionados.includes(articuloId)) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Una noticia no puede enlazarse a sí misma.',
+      data: { codigo: 'ENLACE_EDITORIAL_CIRCULAR' }
+    })
+  }
+
+  const { data, error } = await clienteSupabase
+    .from('articles')
+    .select('id, status, published_version_id')
+    .in('id', idsRelacionados)
+
+  if (error) {
+    throw crearErrorRepositorio('No se pudieron validar las noticias relacionadas.')
+  }
+
+  const idsDisponibles = new Set((data || [])
+    .filter(articulo => (
+      articulo.published_version_id
+      && articulo.status !== 'archived'
+    ))
+    .map(articulo => articulo.id))
+
+  if (idsRelacionados.some(id => !idsDisponibles.has(id))) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Una de las noticias relacionadas ya no está publicada.',
+      data: { codigo: 'ENLACE_EDITORIAL_NO_DISPONIBLE' }
+    })
+  }
 }
 
 export async function listarContenidosEditoriales(
@@ -510,6 +566,12 @@ export async function guardarArticuloEditorial(
   articuloId: string,
   entrada: EntradaGuardarArticulo
 ): Promise<ResultadoGuardadoEditorial> {
+  await validarEnlacesInternosEditoriales(
+    clienteSupabase,
+    articuloId,
+    entrada.documento
+  )
+
   const { data, error } = await clienteSupabase.rpc('save_editorial_article', {
     target_article_id: articuloId,
     expected_lock_version: entrada.versionBloqueo,
@@ -912,6 +974,53 @@ function obtenerUrlPublicaMedio(
   return clienteSupabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
 }
 
+async function resolverEnlacesInternosPublicos(
+  clienteSupabase: SupabaseClient,
+  documento: ArticuloPublicoEditorial['documento']
+): Promise<ArticuloPublicoEditorial['documento']> {
+  const ids = documento.content
+    .filter(bloque => bloque.type === 'articuloRelacionado')
+    .map(bloque => bloque.attrs.articuloId)
+
+  if (!ids.length) return documento
+
+  const { data, error } = await clienteSupabase.rpc(
+    'resolve_public_editorial_links',
+    { requested_ids: ids }
+  )
+
+  if (error) {
+    throw crearErrorRepositorio('No se pudieron resolver los enlaces internos.')
+  }
+
+  const enlaces = new Map<string, EnlaceArticuloInternoEditorial>(
+    ((data || []) as unknown as FilaEnlaceArticuloInternoRpc[]).map(fila => [
+      fila.articuloId,
+      {
+        articuloId: fila.articuloId,
+        slug: fila.slug,
+        titulo: fila.titulo,
+        resumen: fila.resumen,
+        categoria: fila.categoria,
+        imagen: fila.imagenBucket && fila.imagenPath
+          ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
+          : ''
+      }
+    ])
+  )
+
+  return {
+    ...documento,
+    content: documento.content.flatMap<NodoBloqueEditorial>((bloque) => {
+      if (bloque.type !== 'articuloRelacionado') return [bloque]
+      const enlaceVigente = enlaces.get(bloque.attrs.articuloId)
+      return enlaceVigente
+        ? [{ type: 'articuloRelacionado' as const, attrs: enlaceVigente }]
+        : []
+    })
+  }
+}
+
 export async function obtenerArticuloPublicoEditorial(
   clienteSupabase: SupabaseClient,
   slug: string
@@ -934,6 +1043,11 @@ export async function obtenerArticuloPublicoEditorial(
     throw crearErrorRepositorio('La versión pública no tiene un documento válido.')
   }
 
+  const documentoPublico = await resolverEnlacesInternosPublicos(
+    clienteSupabase,
+    documento.data
+  )
+
   return {
     id: fila.id,
     versionId: fila.versionId,
@@ -941,7 +1055,7 @@ export async function obtenerArticuloPublicoEditorial(
     titulo: fila.titulo,
     resumen: fila.resumen,
     tipo: fila.tipo,
-    documento: documento.data,
+    documento: documentoPublico,
     seoTitulo: fila.seoTitulo,
     seoDescripcion: fila.seoDescripcion,
     textoSocial: fila.textoSocial,

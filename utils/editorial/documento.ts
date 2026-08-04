@@ -1,6 +1,7 @@
 import type {
   BloqueEditorEditorial,
   DocumentoEditorial,
+  EnlaceArticuloInternoEditorial,
   NodoBloqueEditorial,
   NodoElementoListaEditorial,
   TipoBloqueEditorEditorial
@@ -11,12 +12,14 @@ const separadorLista = '\n'
 export function crearBloqueEditorEditorial(
   tipo: TipoBloqueEditorEditorial = 'parrafo',
   texto = '',
-  id?: string
+  id?: string,
+  articuloRelacionado: EnlaceArticuloInternoEditorial | null = null
 ): BloqueEditorEditorial {
   return {
     id: id || crypto.randomUUID(),
     tipo,
-    texto
+    texto,
+    articuloRelacionado
   }
 }
 
@@ -24,7 +27,16 @@ function crearNodoTexto(texto: string) {
   return texto ? [{ type: 'text' as const, text: texto }] : []
 }
 
-function crearNodoBloque(bloque: BloqueEditorEditorial): NodoBloqueEditorial {
+function crearNodoBloque(bloque: BloqueEditorEditorial): NodoBloqueEditorial | null {
+  if (bloque.tipo === 'articuloRelacionado') {
+    return bloque.articuloRelacionado
+      ? {
+          type: 'articuloRelacionado',
+          attrs: bloque.articuloRelacionado
+        }
+      : null
+  }
+
   if (bloque.tipo === 'encabezado2' || bloque.tipo === 'encabezado3') {
     return {
       type: 'heading',
@@ -74,11 +86,17 @@ export function convertirBloquesADocumento(
 ): DocumentoEditorial {
   return {
     type: 'doc',
-    content: bloques.map(crearNodoBloque)
+    content: bloques
+      .map(crearNodoBloque)
+      .filter((nodo): nodo is NodoBloqueEditorial => nodo !== null)
   }
 }
 
 function textoNodo(nodo: NodoBloqueEditorial): string {
+  if (nodo.type === 'articuloRelacionado') {
+    return nodo.attrs.titulo
+  }
+
   if (nodo.type === 'bulletList' || nodo.type === 'orderedList') {
     return nodo.content
       .map(elemento => elemento.content
@@ -101,6 +119,8 @@ function textoNodo(nodo: NodoBloqueEditorial): string {
 }
 
 function tipoNodo(nodo: NodoBloqueEditorial): TipoBloqueEditorEditorial {
+  if (nodo.type === 'articuloRelacionado') return 'articuloRelacionado'
+
   if (nodo.type === 'heading') {
     return nodo.attrs.level === 2 ? 'encabezado2' : 'encabezado3'
   }
@@ -117,7 +137,8 @@ export function convertirDocumentoABloques(
   const bloques = documento.content.map((nodo, indice) => crearBloqueEditorEditorial(
     tipoNodo(nodo),
     textoNodo(nodo),
-    `bloque-${indice + 1}`
+    `bloque-${indice + 1}`,
+    nodo.type === 'articuloRelacionado' ? nodo.attrs : null
   ))
 
   return bloques.length

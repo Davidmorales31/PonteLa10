@@ -4,6 +4,7 @@ import {
   ChevronUp,
   GripVertical,
   Heading2,
+  Link2,
   List,
   ListOrdered,
   Pilcrow,
@@ -11,6 +12,7 @@ import {
   Quote,
   Trash2
 } from '@lucide/vue'
+import SelectorArticuloRelacionado from '~/components/admin/SelectorArticuloRelacionado.vue'
 import type {
   BloqueEditorEditorial,
   TipoBloqueEditorEditorial
@@ -19,6 +21,7 @@ import { crearBloqueEditorEditorial } from '~/utils/editorial/documento'
 
 const props = defineProps<{
   modelValue: BloqueEditorEditorial[]
+  articuloIdActual?: string
   deshabilitado?: boolean
 }>()
 
@@ -35,7 +38,8 @@ const tiposBloque: Array<{
   { tipo: 'encabezado3', etiqueta: 'Título H3' },
   { tipo: 'cita', etiqueta: 'Cita' },
   { tipo: 'lista', etiqueta: 'Lista' },
-  { tipo: 'listaNumerada', etiqueta: 'Lista numerada' }
+  { tipo: 'listaNumerada', etiqueta: 'Lista numerada' },
+  { tipo: 'articuloRelacionado', etiqueta: 'Noticia relacionada' }
 ]
 
 function actualizarBloque(
@@ -52,6 +56,13 @@ function agregarBloque(tipo: TipoBloqueEditorEditorial) {
     ...props.modelValue,
     crearBloqueEditorEditorial(tipo)
   ])
+}
+
+function cambiarTipoBloque(bloqueId: string, tipo: TipoBloqueEditorEditorial) {
+  actualizarBloque(bloqueId, {
+    tipo,
+    articuloRelacionado: tipo === 'articuloRelacionado' ? null : undefined
+  })
 }
 
 function moverBloque(indice: number, direccion: -1 | 1) {
@@ -137,6 +148,15 @@ function filasBloque(tipo: TipoBloqueEditorEditorial): number {
         >
           <ListOrdered aria-hidden="true" />
         </button>
+        <button
+          type="button"
+          title="Agregar noticia relacionada"
+          aria-label="Agregar noticia relacionada"
+          :disabled="deshabilitado"
+          @click="agregarBloque('articuloRelacionado')"
+        >
+          <Link2 aria-hidden="true" />
+        </button>
       </div>
     </header>
 
@@ -155,9 +175,9 @@ function filasBloque(tipo: TipoBloqueEditorEditorial): number {
             :id="`tipo-${bloque.id}`"
             :value="bloque.tipo"
             :disabled="deshabilitado"
-            @change="actualizarBloque(
+            @change="cambiarTipoBloque(
               bloque.id,
-              { tipo: ($event.target as HTMLSelectElement).value as TipoBloqueEditorEditorial }
+              ($event.target as HTMLSelectElement).value as TipoBloqueEditorEditorial
             )"
           >
             <option
@@ -200,10 +220,22 @@ function filasBloque(tipo: TipoBloqueEditorEditorial): number {
           </div>
         </div>
 
-        <label :for="`contenido-${bloque.id}`" class="sr-only">
+        <SelectorArticuloRelacionado
+          v-if="bloque.tipo === 'articuloRelacionado'"
+          :model-value="bloque.articuloRelacionado"
+          :articulo-id-actual="articuloIdActual"
+          :deshabilitado="deshabilitado"
+          @update:model-value="actualizarBloque(
+            bloque.id,
+            { articuloRelacionado: $event }
+          )"
+        />
+
+        <label v-else :for="`contenido-${bloque.id}`" class="sr-only">
           Contenido del bloque {{ indice + 1 }}
         </label>
         <textarea
+          v-if="bloque.tipo !== 'articuloRelacionado'"
           :id="`contenido-${bloque.id}`"
           :value="bloque.texto"
           :rows="filasBloque(bloque.tipo)"

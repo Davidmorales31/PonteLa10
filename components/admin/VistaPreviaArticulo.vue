@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Clock3, ExternalLink } from '@lucide/vue'
+import TarjetaEnlaceInterno from '~/components/editorial/TarjetaEnlaceInterno.vue'
 import type {
   BloqueEditorEditorial,
   DatosEditorArticulo
@@ -62,7 +63,12 @@ function elementosLista(texto: string): string[] {
 
     <div class="cuerpo-previa-articulo">
       <template v-for="bloque in bloques" :key="bloque.id">
-        <h2 v-if="bloque.tipo === 'encabezado2'">
+        <TarjetaEnlaceInterno
+          v-if="bloque.tipo === 'articuloRelacionado' && bloque.articuloRelacionado"
+          :articulo="bloque.articuloRelacionado"
+          :navegable="false"
+        />
+        <h2 v-else-if="bloque.tipo === 'encabezado2'">
           {{ bloque.texto || 'Encabezado de sección' }}
         </h2>
         <h3 v-else-if="bloque.tipo === 'encabezado3'">

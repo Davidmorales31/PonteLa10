@@ -1581,6 +1581,225 @@ h3 {
   margin: 0;
 }
 
+.tarjeta-enlace-interno {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 18px;
+  margin: 30px 0;
+  border: 1px solid #dfe5ee;
+  border-left: 5px solid #ffd800;
+  border-radius: 6px;
+  background: #ffffff;
+  color: inherit;
+  padding: 12px;
+  text-decoration: none;
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+a.tarjeta-enlace-interno:hover {
+  border-color: #174ea6;
+  border-left-color: #ffd800;
+  background: #f8fbff;
+}
+
+.imagen-enlace-interno {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 4px;
+  background: #edf2f8;
+  color: #718099;
+}
+
+.imagen-enlace-interno img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagen-enlace-interno svg {
+  width: 27px;
+}
+
+.contenido-enlace-interno {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+}
+
+.contenido-enlace-interno small {
+  color: #174ea6;
+  font-size: 0.66rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.contenido-enlace-interno strong {
+  color: #08204a;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+.contenido-enlace-interno > span {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #606b7d;
+  font-size: 0.76rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.tarjeta-enlace-interno > svg {
+  width: 20px;
+  color: #174ea6;
+}
+
+.barra-compartir-articulo {
+  display: flex;
+  max-width: 760px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin: 22px auto 0;
+  border-top: 1px solid #e5e7eb;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 11px 0;
+}
+
+.barra-compartir-articulo strong {
+  color: #475467;
+  font-size: 0.72rem;
+}
+
+.barra-compartir-articulo > div {
+  display: flex;
+  gap: 7px;
+}
+
+.barra-compartir-articulo button {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border: 1px solid #dce3ec;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #08204a;
+  cursor: pointer;
+}
+
+.barra-compartir-articulo button:hover,
+.barra-compartir-articulo button:focus-visible {
+  border-color: #174ea6;
+  background: #edf4ff;
+  color: #174ea6;
+}
+
+.barra-compartir-articulo svg {
+  width: 17px;
+  height: 17px;
+}
+
+.barra-compartir-inferior {
+  margin-top: 40px;
+  border: 0;
+  border-radius: 6px;
+  background: #08204a;
+  padding: 16px 18px;
+}
+
+.barra-compartir-inferior strong {
+  color: #ffffff;
+}
+
+.seccion-articulos-relacionados {
+  margin-top: 56px;
+  border-top: 1px solid #dfe5ee;
+  padding-top: 30px;
+}
+
+.seccion-articulos-relacionados > header {
+  margin-bottom: 18px;
+}
+
+.seccion-articulos-relacionados h2 {
+  margin: 5px 0 0;
+  color: #08204a;
+  font-size: 1.6rem;
+  letter-spacing: 0;
+}
+
+.rejilla-articulos-relacionados {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.rejilla-articulos-relacionados > a {
+  display: grid;
+  min-width: 0;
+  gap: 9px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.imagen-articulo-recomendado {
+  display: grid;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 5px;
+  background: #eaf0f7;
+  color: #718099;
+}
+
+.imagen-articulo-recomendado img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 180ms ease;
+}
+
+.rejilla-articulos-relacionados > a:hover img {
+  transform: scale(1.025);
+}
+
+.imagen-articulo-recomendado svg {
+  width: 30px;
+}
+
+.rejilla-articulos-relacionados small {
+  color: #174ea6;
+  font-size: 0.64rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.rejilla-articulos-relacionados strong {
+  color: #08204a;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.leer-articulo-recomendado {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  color: #174ea6;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.leer-articulo-recomendado svg {
+  width: 15px;
+}
+
 @media (max-width: 700px) {
   .cabecera-articulo-publicado h1 {
     font-size: 2.25rem;
@@ -1588,5 +1807,34 @@ h3 {
 
   .portada-articulo-publicado figcaption {
     display: grid;
+  }
+
+  .tarjeta-enlace-interno {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .tarjeta-enlace-interno > svg,
+  .contenido-enlace-interno > span {
+    display: none;
+  }
+
+  .contenido-enlace-interno strong {
+    font-size: 0.82rem;
+  }
+
+  .barra-compartir-articulo {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .barra-compartir-articulo > div {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .rejilla-articulos-relacionados {
+    grid-template-columns: 1fr;
+    gap: 22px;
   }
 }

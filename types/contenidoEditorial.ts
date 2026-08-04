@@ -126,11 +126,26 @@ export interface NodoListaEditorial {
   content: NodoElementoListaEditorial[]
 }
 
+export interface EnlaceArticuloInternoEditorial {
+  articuloId: string
+  slug: string
+  titulo: string
+  resumen: string
+  categoria: string
+  imagen: string
+}
+
+export interface NodoArticuloRelacionadoEditorial {
+  type: 'articuloRelacionado'
+  attrs: EnlaceArticuloInternoEditorial
+}
+
 export type NodoBloqueEditorial =
   | NodoParrafoEditorial
   | NodoEncabezadoEditorial
   | NodoCitaEditorial
   | NodoListaEditorial
+  | NodoArticuloRelacionadoEditorial
 
 export interface DocumentoEditorial {
   type: 'doc'
@@ -144,11 +159,13 @@ export type TipoBloqueEditorEditorial =
   | 'cita'
   | 'lista'
   | 'listaNumerada'
+  | 'articuloRelacionado'
 
 export interface BloqueEditorEditorial {
   id: string
   tipo: TipoBloqueEditorEditorial
   texto: string
+  articuloRelacionado?: EnlaceArticuloInternoEditorial | null
 }
 
 export interface FuenteArticuloEditorial {

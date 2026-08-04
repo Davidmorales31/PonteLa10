@@ -70,6 +70,53 @@ describe('editor de artículos', () => {
     expect(estimarMinutosLectura(documento)).toBe(1)
   })
 
+  it('conserva las referencias internas como bloques estructurados', () => {
+    const articuloRelacionado = {
+      articuloId: '127758f0-f1ec-4bd4-a4d1-683ca6c4d6e2',
+      slug: 'una-historia-publicada',
+      titulo: 'Una historia publicada para seguir leyendo',
+      resumen: 'Contexto adicional relacionado con la publicación actual.',
+      categoria: 'Tendencias',
+      imagen: 'https://example.com/portada.jpg'
+    }
+    const documento = convertirBloquesADocumento([{
+      id: 'relacionado',
+      tipo: 'articuloRelacionado',
+      texto: '',
+      articuloRelacionado
+    }])
+
+    expect(documento.content[0]).toEqual({
+      type: 'articuloRelacionado',
+      attrs: articuloRelacionado
+    })
+    expect(convertirDocumentoABloques(documento)[0]?.articuloRelacionado)
+      .toEqual(articuloRelacionado)
+  })
+
+  it('impide repetir una noticia relacionada en el mismo documento', () => {
+    const enlace = {
+      type: 'articuloRelacionado' as const,
+      attrs: {
+        articuloId: '127758f0-f1ec-4bd4-a4d1-683ca6c4d6e2',
+        slug: 'una-historia-publicada',
+        titulo: 'Una historia publicada para seguir leyendo',
+        resumen: 'Contexto adicional.',
+        categoria: 'Tendencias',
+        imagen: ''
+      }
+    }
+
+    expect(esquemaGuardarArticulo.safeParse({
+      ...datosValidos,
+      versionBloqueo: 2,
+      documento: {
+        type: 'doc',
+        content: [enlace, enlace]
+      }
+    }).success).toBe(false)
+  })
+
   it('genera identificadores estables para hidratar el editor', () => {
     const documentoVacio = {
       type: 'doc' as const,
@@ -130,6 +177,20 @@ describe('editor de artículos', () => {
     expect(migracion).toContain('expected_lock_version')
     expect(migracion).toContain('public.can_edit_article(target_article_id)')
     expect(migracion).toContain('article_autosaves')
+    expect(migracion).not.toContain('service_role')
+  })
+
+  it('resuelve enlaces públicos sin exponer borradores', () => {
+    const rutaMigracion = new URL(
+      '../../supabase/migrations/0008_editorial_internal_links.sql',
+      import.meta.url
+    )
+    const migracion = readFileSync(rutaMigracion, 'utf8')
+
+    expect(migracion).toContain('resolve_public_editorial_links')
+    expect(migracion).toContain('published_version_id')
+    expect(migracion).toContain("status::text <> 'archived'")
+    expect(migracion).toContain('requested_ids[1:8]')
     expect(migracion).not.toContain('service_role')
   })
 })

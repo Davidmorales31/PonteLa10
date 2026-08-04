@@ -635,6 +635,7 @@ onBeforeUnmount(() => {
 
           <EditorBloquesContenido
             v-model="bloques"
+            :articulo-id-actual="articuloId"
             :deshabilitado="!puedeEditar"
           />
 

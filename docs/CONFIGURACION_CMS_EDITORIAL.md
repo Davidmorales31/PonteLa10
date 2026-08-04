@@ -27,9 +27,10 @@ supabase/migrations/0004_editorial_content_model.sql
 supabase/migrations/0005_editorial_draft_editor.sql
 supabase/migrations/0006_editorial_media_library.sql
 supabase/migrations/0007_editorial_workflow_publication.sql
+supabase/migrations/0008_editorial_internal_links.sql
 ```
 
-En un proyecto que ya tenga hasta `0006`, ejecutar únicamente `0007`.
+En un proyecto que ya tenga hasta `0007`, ejecutar únicamente `0008`.
 
 Con Supabase CLI vinculada:
 

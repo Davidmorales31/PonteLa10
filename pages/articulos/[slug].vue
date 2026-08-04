@@ -1,12 +1,18 @@
 <script setup lang="ts">
+import BarraCompartirArticulo from '~/components/editorial/BarraCompartirArticulo.vue'
 import ContenidoArticuloPublico from '~/components/editorial/ContenidoArticuloPublico.vue'
+import SeccionArticulosRelacionados from '~/components/editorial/SeccionArticulosRelacionados.vue'
 import { articulosRecientes } from '~/data/editorial'
-import type { ArticuloPublicoEditorial } from '~/types/contenidoEditorial'
+import type {
+  ArticuloPublicoEditorial,
+  ResumenArticuloPublico
+} from '~/types/contenidoEditorial'
 import {
   convertirArticuloLandingAResumen,
   obtenerArticuloLandingPorSlug
 } from '~/utils/articulosLanding'
 import { robotsIndexables, robotsNoIndex } from '~/utils/seo'
+import { seleccionarArticulosRelacionados } from '~/utils/editorial/distribucion'
 
 const ruta = useRoute()
 const slugActual = computed(() => String(ruta.params.slug || ''))
@@ -25,6 +31,25 @@ const articuloMock = computed(() => articuloLanding.value
   ? convertirArticuloLandingAResumen(articuloLanding.value)
   : articulosRecientes.find(item => item.slug === slugActual.value)
 )
+
+const { data: publicacionesDisponibles } = await useFetch<ResumenArticuloPublico[]>(
+  '/api/articulos',
+  {
+    key: 'articulos-relacionados-publicos',
+    query: { limite: 20 },
+    default: () => []
+  }
+)
+
+const articulosRelacionados = computed(() => {
+  if (!articuloPublicado.value) return []
+
+  return seleccionarArticulosRelacionados(
+    publicacionesDisponibles.value,
+    articuloPublicado.value.id,
+    articuloPublicado.value.categoria?.nombre || 'Actualidad'
+  )
+})
 
 if (!articuloPublicado.value && !articuloMock.value) {
   if (import.meta.server) {
@@ -109,6 +134,12 @@ function formatearFecha(fecha: string): string {
       </p>
     </header>
 
+    <BarraCompartirArticulo
+      :titulo="articuloPublicado.titulo"
+      :texto="articuloPublicado.textoSocial || articuloPublicado.resumen"
+      :url="urlCanonica"
+    />
+
     <figure v-if="articuloPublicado.portada" class="portada-articulo-publicado">
       <img
         class="imagen-detalle"
@@ -146,6 +177,15 @@ function formatearFecha(fecha: string): string {
         {{ articuloPublicado.fuente.creditos }}
       </p>
     </footer>
+
+    <BarraCompartirArticulo
+      variante="inferior"
+      :titulo="articuloPublicado.titulo"
+      :texto="articuloPublicado.textoSocial || articuloPublicado.resumen"
+      :url="urlCanonica"
+    />
+
+    <SeccionArticulosRelacionados :articulos="articulosRelacionados" />
   </article>
 
   <article v-else-if="articuloMock" class="detalle-articulo">

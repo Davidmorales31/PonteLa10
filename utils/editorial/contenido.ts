@@ -140,18 +140,58 @@ const esquemaLista = z.object({
   content: z.array(esquemaElementoLista).max(50)
 })
 
+export const esquemaEnlaceArticuloInterno = z.object({
+  articuloId: z.string().uuid(),
+  slug: z.string()
+    .trim()
+    .min(3)
+    .max(120)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  titulo: z.string().trim().min(8).max(160),
+  resumen: z.string().trim().max(320),
+  categoria: z.string().trim().min(2).max(80),
+  imagen: z.union([z.literal(''), z.string().url().max(2048)])
+})
+
+const esquemaArticuloRelacionado = z.object({
+  type: z.literal('articuloRelacionado'),
+  attrs: esquemaEnlaceArticuloInterno
+})
+
 export const esquemaDocumentoEditorial = z.object({
   type: z.literal('doc'),
   content: z.array(z.union([
     esquemaParrafo,
     esquemaEncabezado,
     esquemaCita,
-    esquemaLista
+    esquemaLista,
+    esquemaArticuloRelacionado
   ])).max(80)
 }).refine(
   documento => JSON.stringify(documento).length <= 140000,
   'El cuerpo supera el tamaño permitido.'
-)
+).superRefine((documento, contexto) => {
+  const relacionados = documento.content.filter(
+    bloque => bloque.type === 'articuloRelacionado'
+  )
+
+  if (relacionados.length > 8) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['content'],
+      message: 'Puedes incluir hasta 8 noticias relacionadas.'
+    })
+  }
+
+  const ids = relacionados.map(bloque => bloque.attrs.articuloId)
+  if (new Set(ids).size !== ids.length) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['content'],
+      message: 'No repitas la misma noticia relacionada.'
+    })
+  }
+})
 
 const esquemaIdsTaxonomia = z.array(z.string().uuid())
   .max(12)

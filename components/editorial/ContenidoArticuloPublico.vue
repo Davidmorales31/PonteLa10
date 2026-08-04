@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TarjetaEnlaceInterno from '~/components/editorial/TarjetaEnlaceInterno.vue'
 import type { DocumentoEditorial } from '~/types/contenidoEditorial'
 
 defineProps<{
@@ -13,7 +14,11 @@ function textoNodo(texto?: string): string {
 <template>
   <div class="cuerpo-articulo cuerpo-articulo-publicado">
     <template v-for="(bloque, indice) in documento.content" :key="indice">
-      <p v-if="bloque.type === 'paragraph'">
+      <TarjetaEnlaceInterno
+        v-if="bloque.type === 'articuloRelacionado'"
+        :articulo="bloque.attrs"
+      />
+      <p v-else-if="bloque.type === 'paragraph'">
         {{ textoNodo(bloque.content[0]?.text) }}
       </p>
       <h2 v-else-if="bloque.type === 'heading' && bloque.attrs.level === 2">
