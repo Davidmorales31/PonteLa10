@@ -9,6 +9,7 @@ import {
   LogIn,
   Mail,
   RotateCcw,
+  ShieldCheck,
   UserPlus,
   UserRound
 } from '@lucide/vue'
@@ -25,13 +26,24 @@ const {
   registrarUsuarioCorreo,
   recuperarContrasena,
   actualizarContrasena,
-  iniciarSesionGoogle
+  iniciarSesionGoogle,
+  cerrarSesion
 } = useAutenticacionEditorial()
+
+const {
+  cargandoMfa,
+  errorMfa,
+  obtenerEstadoSesionMfa,
+  verificarSesionMfa
+} = useMfaEditorial()
 
 const correo = ref('')
 const contrasena = ref('')
 const nombreCompleto = ref('')
 const mostrarContrasena = ref(false)
+const codigoMfa = ref('')
+const factorMfaId = ref<string | null>(null)
+const accionMfaPendiente = ref<'ingreso' | 'actualizarContrasena' | null>(null)
 const modoActual = ref<ModoLoginEditorial>(obtenerModoInicial())
 const mensajeEstado = ref<ResultadoOperacionAuth | null>(null)
 
@@ -40,6 +52,8 @@ const redireccionFinal = computed(() => {
 })
 
 const tituloFormulario = computed(() => {
+  if (accionMfaPendiente.value) return 'Confirma que eres tú'
+
   const titulos: Record<ModoLoginEditorial, string> = {
     ingreso: 'Entrar a Pont3la10',
     registro: 'Crear tu cuenta',
@@ -51,6 +65,10 @@ const tituloFormulario = computed(() => {
 })
 
 const detalleFormulario = computed(() => {
+  if (accionMfaPendiente.value) {
+    return 'Ingresa el código de seis dígitos de tu aplicación de autenticación para continuar de forma segura.'
+  }
+
   const detalles: Record<ModoLoginEditorial, string> = {
     ingreso:
       'Ingresa con tu correo o continúa con Google. Tu cuenta te acompaña para guardar progreso, seguir especiales y vivir la jugada completa.',
@@ -63,6 +81,9 @@ const detalleFormulario = computed(() => {
 })
 
 const textoBotonPrincipal = computed(() => {
+  if (cargandoAuth.value || cargandoMfa.value) return 'Procesando...'
+  if (accionMfaPendiente.value) return 'Verificar identidad'
+
   const textos: Record<ModoLoginEditorial, string> = {
     ingreso: 'Iniciar sesión',
     registro: 'Crear cuenta',
@@ -70,15 +91,25 @@ const textoBotonPrincipal = computed(() => {
     actualizarContrasena: 'Guardar contraseña'
   }
 
-  return cargandoAuth.value ? 'Procesando...' : textos[modoActual.value]
+  return textos[modoActual.value]
 })
 
-const requiereCorreo = computed(() => modoActual.value !== 'actualizarContrasena')
-const requiereNombre = computed(() => modoActual.value === 'registro')
-const requiereContrasena = computed(() => ['ingreso', 'registro', 'actualizarContrasena'].includes(modoActual.value))
+const verificandoMfa = computed(() => accionMfaPendiente.value !== null)
+const cargandoFormulario = computed(() => cargandoAuth.value || cargandoMfa.value)
+const requiereCorreo = computed(() => (
+  !verificandoMfa.value && modoActual.value !== 'actualizarContrasena'
+))
+const requiereNombre = computed(() => !verificandoMfa.value && modoActual.value === 'registro')
+const requiereContrasena = computed(() => (
+  !verificandoMfa.value
+  && ['ingreso', 'registro', 'actualizarContrasena'].includes(modoActual.value)
+))
 
 watch(modoActual, () => {
   mensajeEstado.value = null
+  codigoMfa.value = ''
+  factorMfaId.value = null
+  accionMfaPendiente.value = null
 })
 
 onMounted(async () => {
@@ -93,8 +124,23 @@ onMounted(async () => {
 
   const sesion = await obtenerSesionActual()
 
-  if (sesion && modoActual.value !== 'actualizarContrasena') {
-    await navigateTo(redireccionFinal.value)
+  if (modoActual.value === 'actualizarContrasena') {
+    if (!sesion) {
+      mensajeEstado.value = {
+        correcto: false,
+        titulo: 'Enlace no válido',
+        detalle: 'Solicita un nuevo correo de recuperación para cambiar tu contraseña.'
+      }
+      return
+    }
+
+    await prepararVerificacionMfa('actualizarContrasena')
+    return
+  }
+
+  if (sesion) {
+    const requiereMfa = await prepararVerificacionMfa('ingreso')
+    if (!requiereMfa) await navigateTo(redireccionFinal.value)
   }
 })
 
@@ -103,17 +149,101 @@ function obtenerModoInicial(): ModoLoginEditorial {
 }
 
 async function enviarFormulario() {
+  if (accionMfaPendiente.value) {
+    await confirmarMfaFormulario()
+    return
+  }
+
   const resultado = await ejecutarOperacionModo()
   mensajeEstado.value = resultado
 
   if (resultado.correcto && modoActual.value === 'ingreso') {
-    await navigateTo(redireccionFinal.value)
+    const requiereMfa = await prepararVerificacionMfa('ingreso')
+    if (!requiereMfa) await navigateTo(redireccionFinal.value)
   }
 
   if (resultado.correcto && modoActual.value === 'actualizarContrasena') {
+    await cerrarSesion()
     modoActual.value = 'ingreso'
     contrasena.value = ''
   }
+}
+
+async function prepararVerificacionMfa(
+  accion: 'ingreso' | 'actualizarContrasena'
+): Promise<boolean> {
+  const estado = await obtenerEstadoSesionMfa()
+
+  if (!estado) {
+    mensajeEstado.value = {
+      correcto: false,
+      titulo: 'No pudimos verificar la sesión',
+      detalle: errorMfa.value || 'Intenta nuevamente.'
+    }
+    return false
+  }
+
+  if (!estado.requiereVerificacion) return false
+
+  if (!estado.factorId) {
+    mensajeEstado.value = {
+      correcto: false,
+      titulo: 'Factor MFA no disponible',
+      detalle: 'La cuenta exige verificación adicional, pero no encontramos un factor TOTP activo.'
+    }
+    return true
+  }
+
+  factorMfaId.value = estado.factorId
+  accionMfaPendiente.value = accion
+  codigoMfa.value = ''
+  mensajeEstado.value = {
+    correcto: true,
+    titulo: 'Primer paso completado',
+    detalle: 'Ahora confirma el código de tu aplicación de autenticación.'
+  }
+  return true
+}
+
+async function confirmarMfaFormulario() {
+  if (!factorMfaId.value || !accionMfaPendiente.value) return
+
+  const accion = accionMfaPendiente.value
+  const correcto = await verificarSesionMfa(factorMfaId.value, codigoMfa.value)
+
+  if (!correcto) {
+    mensajeEstado.value = {
+      correcto: false,
+      titulo: 'Código no válido',
+      detalle: errorMfa.value || 'Revisa el código e intenta de nuevo.'
+    }
+    return
+  }
+
+  await obtenerSesionActual()
+  accionMfaPendiente.value = null
+  factorMfaId.value = null
+  codigoMfa.value = ''
+
+  if (accion === 'ingreso') {
+    await navigateTo(redireccionFinal.value)
+    return
+  }
+
+  mensajeEstado.value = {
+    correcto: true,
+    titulo: 'Identidad verificada',
+    detalle: 'Ahora define tu nueva contraseña.'
+  }
+}
+
+async function cancelarVerificacionMfa() {
+  await cerrarSesion()
+  accionMfaPendiente.value = null
+  factorMfaId.value = null
+  codigoMfa.value = ''
+  contrasena.value = ''
+  modoActual.value = 'ingreso'
 }
 
 async function ejecutarOperacionModo(): Promise<ResultadoOperacionAuth> {
@@ -190,6 +320,23 @@ async function entrarConGoogle() {
         </span>
       </label>
 
+      <label v-if="verificandoMfa">
+        Código de autenticación
+        <span class="campo-login-con-icono" :class="{ 'campo-con-valor': codigoMfa }">
+          <ShieldCheck aria-hidden="true" />
+          <input
+            v-model="codigoMfa"
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            placeholder="000000"
+            autocomplete="one-time-code"
+            maxlength="6"
+            autofocus
+          >
+        </span>
+      </label>
+
       <div
         v-if="mensajeEstado"
         class="estado-login"
@@ -203,9 +350,10 @@ async function entrarConGoogle() {
       <button
         class="boton-primario boton-login-principal"
         type="submit"
-        :disabled="cargandoAuth || !autenticacionConfigurada"
+        :disabled="cargandoFormulario || !autenticacionConfigurada"
       >
-        <LoaderCircle v-if="cargandoAuth" class="icono-cargando" aria-hidden="true" />
+        <LoaderCircle v-if="cargandoFormulario" class="icono-cargando" aria-hidden="true" />
+        <ShieldCheck v-else-if="verificandoMfa" aria-hidden="true" />
         <KeyRound v-else-if="modoActual === 'actualizarContrasena'" aria-hidden="true" />
         <RotateCcw v-else-if="modoActual === 'recuperacion'" aria-hidden="true" />
         <UserPlus v-else-if="modoActual === 'registro'" aria-hidden="true" />
@@ -214,10 +362,10 @@ async function entrarConGoogle() {
       </button>
 
       <button
-        v-if="modoActual === 'ingreso'"
+        v-if="modoActual === 'ingreso' && !verificandoMfa"
         class="boton-google"
         type="button"
-        :disabled="cargandoAuth || !autenticacionConfigurada"
+        :disabled="cargandoFormulario || !autenticacionConfigurada"
         @click="entrarConGoogle"
       >
         <LogoGoogle />
@@ -225,7 +373,7 @@ async function entrarConGoogle() {
       </button>
     </form>
 
-    <div class="acciones-login-secundarias">
+    <div v-if="!verificandoMfa" class="acciones-login-secundarias">
       <div v-if="modoActual === 'ingreso'" class="separador-login" aria-hidden="true">
         <span />
         <small>o</small>
@@ -250,6 +398,13 @@ async function entrarConGoogle() {
       <button v-if="modoActual !== 'ingreso'" type="button" @click="modoActual = 'ingreso'">
         <ArrowLeft aria-hidden="true" />
         <span>Volver</span>
+      </button>
+    </div>
+
+    <div v-else class="acciones-login-secundarias">
+      <button type="button" :disabled="cargandoFormulario" @click="cancelarVerificacionMfa">
+        <ArrowLeft aria-hidden="true" />
+        <span>Cancelar y volver</span>
       </button>
     </div>
   </section>

@@ -7,6 +7,13 @@ interface InscripcionMfa {
   secreto: string
 }
 
+interface EstadoSesionMfa {
+  requiereVerificacion: boolean
+  factorId: string | null
+  nivelActual: string | null
+  nivelSiguiente: string | null
+}
+
 export function useMfaEditorial() {
   const { $clienteSupabase } = useNuxtApp()
   const factoresMfa = ref<Factor[]>([])
@@ -20,6 +27,44 @@ export function useMfaEditorial() {
       factor.factor_type === 'totp' && factor.status === 'verified'
     ) || null
   )
+
+  async function obtenerEstadoSesionMfa(): Promise<EstadoSesionMfa | null> {
+    if (!$clienteSupabase) {
+      errorMfa.value = 'La autenticación no está configurada.'
+      return null
+    }
+
+    cargandoMfa.value = true
+    errorMfa.value = null
+
+    const [respuestaNivel, respuestaFactores] = await Promise.all([
+      $clienteSupabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+      $clienteSupabase.auth.mfa.listFactors()
+    ])
+
+    cargandoMfa.value = false
+
+    if (respuestaNivel.error || respuestaFactores.error) {
+      errorMfa.value = normalizarMensajeAuth(
+        respuestaNivel.error?.message || respuestaFactores.error?.message
+      )
+      return null
+    }
+
+    factoresMfa.value = respuestaFactores.data.all
+    const factor = respuestaFactores.data.all.find(item => (
+      item.factor_type === 'totp' && item.status === 'verified'
+    ))
+    const requiereVerificacion = respuestaNivel.data.currentLevel === 'aal1'
+      && respuestaNivel.data.nextLevel === 'aal2'
+
+    return {
+      requiereVerificacion,
+      factorId: factor?.id || null,
+      nivelActual: respuestaNivel.data.currentLevel,
+      nivelSiguiente: respuestaNivel.data.nextLevel
+    }
+  }
 
   async function listarFactoresMfa() {
     if (!$clienteSupabase) {
@@ -185,6 +230,7 @@ export function useMfaEditorial() {
     cargandoMfa,
     mensajeMfa,
     errorMfa,
+    obtenerEstadoSesionMfa,
     listarFactoresMfa,
     iniciarInscripcionMfa,
     confirmarInscripcionMfa,

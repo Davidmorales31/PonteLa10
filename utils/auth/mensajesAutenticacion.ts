@@ -5,7 +5,11 @@ const mensajesAuth: Record<string, string> = {
   'email not confirmed': 'Confirma tu correo antes de entrar.',
   'user already registered': 'Este correo ya tiene una cuenta.',
   'signup disabled': 'El registro está cerrado. Pide acceso al equipo interno.',
-  'rate limit': 'Demasiados intentos. Espera un momento y vuelve a probar.'
+  'rate limit': 'Demasiados intentos. Espera un momento y vuelve a probar.',
+  'insufficient_aal': 'Confirma el código de tu aplicación de autenticación para continuar.',
+  'aal2 session is required': 'Confirma el código de tu aplicación de autenticación para continuar.',
+  'mfa challenge expired': 'El código venció. Genera uno nuevo e intenta otra vez.',
+  'invalid totp': 'El código de autenticación no es válido.'
 }
 
 export function crearResultadoAuth(

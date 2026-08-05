@@ -12,6 +12,14 @@ describe('mensajes de autenticacion editorial', () => {
     )
   })
 
+  it('explica cuando Supabase exige elevar la sesión a AAL2', () => {
+    expect(normalizarMensajeAuth(
+      'AAL2 session is required to update email or password when MFA is enabled.'
+    )).toBe(
+      'Confirma el código de tu aplicación de autenticación para continuar.'
+    )
+  })
+
   it('crea resultados consistentes para la UI', () => {
     expect(crearResultadoAuth(true, 'Listo', 'Operacion completada')).toEqual({
       correcto: true,
