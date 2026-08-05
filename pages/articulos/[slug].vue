@@ -11,7 +11,11 @@ import {
   convertirArticuloLandingAResumen,
   obtenerArticuloLandingPorSlug
 } from '~/utils/articulosLanding'
-import { robotsIndexables, robotsNoIndex } from '~/utils/seo'
+import {
+  construirTituloMetaConMarca,
+  robotsIndexables,
+  robotsNoIndex
+} from '~/utils/seo'
 import { seleccionarArticulosRelacionados } from '~/utils/editorial/distribucion'
 
 const ruta = useRoute()
@@ -68,6 +72,7 @@ const tituloSeo = computed(() => articuloPublicado.value
   ? articuloPublicado.value.seoTitulo || articuloPublicado.value.titulo
   : articuloMock.value!.titulo
 )
+const tituloMeta = computed(() => construirTituloMetaConMarca(tituloSeo.value))
 const descripcionSeo = computed(() => articuloPublicado.value
   ? articuloPublicado.value.seoDescripcion || articuloPublicado.value.resumen
   : articuloMock.value!.bajada
@@ -75,37 +80,95 @@ const descripcionSeo = computed(() => articuloPublicado.value
 const imagenSeo = computed(() => articuloPublicado.value?.portada?.url
   || articuloMock.value?.imagen
 )
+const imagenAltSeo = computed(() => articuloPublicado.value?.portada?.textoAlternativo
+  || articuloPublicado.value?.titulo
+  || articuloMock.value?.titulo
+  || 'Pont3la10'
+)
+const autorEstructurado = computed(() => {
+  const nombre = articuloPublicado.value?.autorNombre || 'Equipo Pont3la10'
+  return {
+    '@type': nombre === 'Equipo Pont3la10' ? 'Organization' : 'Person',
+    name: nombre
+  }
+})
 
 useSeoPont3la10(() => ({
-  titulo: `${tituloSeo.value} | Pont3la10`,
+  titulo: tituloMeta.value,
   descripcion: descripcionSeo.value,
   rutaCanonica: `/articulos/${slugActual.value}`,
   imagen: imagenSeo.value,
+  imagenAlt: imagenAltSeo.value,
+  imagenAncho: articuloPublicado.value?.portada?.ancho,
+  imagenAlto: articuloPublicado.value?.portada?.alto,
   tipoOpenGraph: 'article',
+  fechaPublicacion: articuloPublicado.value?.publicadoEn,
+  seccion: articuloPublicado.value?.categoria?.nombre,
   robots: articuloPublicado.value ? robotsIndexables : robotsNoIndex,
   datosEstructurados: articuloPublicado.value
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'NewsArticle',
-        headline: articuloPublicado.value.titulo,
-        description: articuloPublicado.value.resumen,
-        image: articuloPublicado.value.portada?.url,
-        datePublished: articuloPublicado.value.publicadoEn,
-        dateModified: articuloPublicado.value.publicadoEn,
-        mainEntityOfPage: urlCanonica.value,
-        author: {
-          '@type': 'Person',
-          name: articuloPublicado.value.autorNombre
-        },
-        publisher: {
-          '@type': 'Organization',
-          name: 'Pont3la10',
-          logo: {
-            '@type': 'ImageObject',
-            url: `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/brand/pont3la10_logo_05_app_icon_favicon.png`
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'NewsArticle',
+          '@id': `${urlCanonica.value}#articulo`,
+          url: urlCanonica.value,
+          headline: articuloPublicado.value.titulo,
+          description: descripcionSeo.value,
+          image: articuloPublicado.value.portada
+            ? {
+                '@type': 'ImageObject',
+                url: articuloPublicado.value.portada.url,
+                width: articuloPublicado.value.portada.ancho || undefined,
+                height: articuloPublicado.value.portada.alto || undefined,
+                caption: articuloPublicado.value.portada.pieDeFoto || undefined
+              }
+            : undefined,
+          thumbnailUrl: articuloPublicado.value.portada?.url,
+          datePublished: articuloPublicado.value.publicadoEn,
+          dateModified: articuloPublicado.value.publicadoEn,
+          articleSection: articuloPublicado.value.categoria?.nombre,
+          inLanguage: 'es-CO',
+          isAccessibleForFree: true,
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': urlCanonica.value
+          },
+          author: autorEstructurado.value,
+          publisher: {
+            '@type': 'Organization',
+            '@id': `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/#organizacion`,
+            name: 'Pont3la10',
+            logo: {
+              '@type': 'ImageObject',
+              url: `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/brand/pont3la10_logo_06_horizontal_sobre_blanco.png`
+            }
           }
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            {
+              '@type': 'ListItem',
+              position: 1,
+              name: 'Inicio',
+              item: String(configuracion.public.siteUrl).replace(/\/+$/, '')
+            },
+            {
+              '@type': 'ListItem',
+              position: 2,
+              name: 'Noticias',
+              item: `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/articulos`
+            },
+            {
+              '@type': 'ListItem',
+              position: 3,
+              name: articuloPublicado.value.titulo,
+              item: urlCanonica.value
+            }
+          ]
         }
-      }
+      ]
     : undefined
 }))
 

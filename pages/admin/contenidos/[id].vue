@@ -21,6 +21,7 @@ import ModalSubirMedio from '~/components/admin/ModalSubirMedio.vue'
 import PanelFlujoEditorial from '~/components/admin/PanelFlujoEditorial.vue'
 import SelectorPortadaEditorial from '~/components/admin/SelectorPortadaEditorial.vue'
 import VistaPreviaArticulo from '~/components/admin/VistaPreviaArticulo.vue'
+import VistaPreviaTarjetaSocial from '~/components/admin/VistaPreviaTarjetaSocial.vue'
 import type {
   ArticuloDetalleEditorial,
   BloqueEditorEditorial,
@@ -879,6 +880,13 @@ onBeforeUnmount(() => {
               <strong>{{ formulario.seo.titulo || formulario.titulo }}</strong>
               <p>{{ formulario.seo.descripcion || formulario.resumen }}</p>
             </div>
+
+            <VistaPreviaTarjetaSocial
+              :titulo="formulario.seo.titulo || formulario.titulo"
+              :descripcion="formulario.seo.descripcion || formulario.resumen"
+              :slug="formulario.slug"
+              :portada="portadaSeleccionada"
+            />
           </section>
 
           <PanelFlujoEditorial

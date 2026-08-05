@@ -2712,6 +2712,237 @@
   -webkit-line-clamp: 3;
 }
 
+.control-tarjeta-social {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid #e5e9f0;
+  padding-top: 16px;
+}
+
+.control-tarjeta-social > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.control-tarjeta-social > header > div {
+  min-width: 0;
+}
+
+.control-tarjeta-social > header span {
+  color: #687386;
+  font-size: 0.59rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.control-tarjeta-social > header h3 {
+  margin: 2px 0 0;
+  color: #071b3f;
+  font-size: 0.82rem;
+}
+
+.control-tarjeta-social > header > strong {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 5px;
+  border-radius: 14px;
+  padding: 0 9px;
+  font-size: 0.61rem;
+  white-space: nowrap;
+}
+
+.control-tarjeta-social > header > strong svg {
+  width: 13px;
+  height: 13px;
+}
+
+.estado-tarjeta-lista {
+  background: #eaf8ef;
+  color: #13753a;
+}
+
+.estado-tarjeta-error {
+  background: #fff2e8;
+  color: #a7470b;
+}
+
+.estado-tarjeta-advertencia {
+  background: #fff8dd;
+  color: #7a5515;
+}
+
+.selector-red-tarjeta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid #dce3ed;
+  border-radius: 6px;
+  background: #f6f8fb;
+}
+
+.selector-red-tarjeta button {
+  display: flex;
+  min-width: 0;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-left: 1px solid #dce3ed;
+  background: transparent;
+  color: #647085;
+  padding: 0 7px;
+  cursor: pointer;
+  font-size: 0.61rem;
+  font-weight: 800;
+}
+
+.selector-red-tarjeta button:first-child {
+  border-left: 0;
+}
+
+.selector-red-tarjeta button:hover {
+  background: #eef4ff;
+  color: #174ea6;
+}
+
+.selector-red-tarjeta button.activo {
+  background: #08204a;
+  color: #ffffff;
+}
+
+.selector-red-tarjeta button svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+}
+
+.tarjeta-social-editor {
+  overflow: hidden;
+  border: 1px solid #d9e0ea;
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.imagen-tarjeta-social {
+  min-width: 0;
+  background: #e8edf5;
+}
+
+.imagen-tarjeta-social > img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.91 / 1;
+  object-fit: cover;
+}
+
+.imagen-tarjeta-vacia {
+  display: grid;
+  aspect-ratio: 1.91 / 1;
+  place-content: center;
+  place-items: center;
+  gap: 7px;
+  color: #7c8798;
+}
+
+.imagen-tarjeta-vacia svg {
+  width: 25px;
+  height: 25px;
+}
+
+.imagen-tarjeta-vacia span {
+  font-size: 0.64rem;
+  font-weight: 750;
+}
+
+.contenido-tarjeta-social {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 11px 12px 12px;
+}
+
+.contenido-tarjeta-social > span {
+  overflow: hidden;
+  color: #70798a;
+  font-size: 0.56rem;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.contenido-tarjeta-social > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #0a1833;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.contenido-tarjeta-social > p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: #667085;
+  font-size: 0.61rem;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.tarjeta-social-x {
+  border-color: #cfd6df;
+}
+
+.tarjeta-social-whatsapp {
+  display: grid;
+  grid-template-columns: minmax(96px, 34%) minmax(0, 1fr);
+  border-color: #cddfd5;
+  background: #f7fbf8;
+}
+
+.tarjeta-social-whatsapp .imagen-tarjeta-social > img,
+.tarjeta-social-whatsapp .imagen-tarjeta-vacia {
+  height: 100%;
+  aspect-ratio: auto;
+}
+
+.observaciones-tarjeta-social {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.observaciones-tarjeta-social li,
+.tarjeta-social-correcta {
+  display: grid;
+  grid-template-columns: 15px minmax(0, 1fr);
+  align-items: start;
+  gap: 7px;
+  margin: 0;
+  color: #7a5515;
+  font-size: 0.61rem;
+  line-height: 1.4;
+}
+
+.observaciones-tarjeta-social svg,
+.tarjeta-social-correcta svg {
+  width: 14px;
+  height: 14px;
+  margin-top: 1px;
+}
+
+.tarjeta-social-correcta {
+  color: #13753a;
+}
+
 .historial-versiones-editor ol {
   display: grid;
   gap: 0;
