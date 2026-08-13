@@ -31,6 +31,36 @@ un historial verificable sin habilitar todavía la publicación.
 - Historial de versiones con nota de cambio.
 - Control optimista mediante `lock_version`.
 
+## Experiencia Por Etapas
+
+El editor conserva un único modelo reactivo y la misma persistencia, pero
+organiza su interfaz en cuatro etapas navegables:
+
+1. `Contenido`: titular, resumen, cuerpo estructurado y fuentes.
+2. `Presentación`: tipo, sección, slug, portada, temas y etiquetas internas.
+3. `SEO y redes`: metadatos para buscadores y tarjetas sociales.
+4. `Revisión`: flujo editorial, conversación, nota de versión e historial.
+
+La etapa activa se conserva en el parámetro `paso` de la URL. Cambiar de etapa
+no guarda, descarta ni transforma datos; el autoguardado y el guardado manual
+continúan trabajando sobre el documento completo. Los indicadores de avance se
+calculan a partir de requisitos reales y orientan sin bloquear la navegación.
+
+Las decisiones del flujo permanecen visibles desde cualquier etapa en una barra
+de estado que explica la secuencia `Preparación → Revisión → Aprobación →
+Publicación`. Aprobar y publicar son acciones distintas. Cuando una decisión
+requiere MFA, la interfaz enlaza a la verificación y devuelve al mismo artículo.
+
+## Eliminación definitiva
+
+- Solo `propietario` y `administrador` reciben `contenido.eliminar`.
+- La operación exige una sesión AAL2 y escribir el título completo.
+- El botón está disponible en la bandeja, la cola de revisión y el editor.
+- La eliminación retira el artículo público y elimina por cascada versiones,
+  comentarios, autoguardados, taxonomías asociadas y publicaciones sociales.
+- Las imágenes permanecen en la biblioteca porque pueden ser reutilizadas.
+- RLS y la función `delete_editorial_article` replican la autorización.
+
 ## Arquitectura
 
 ### Documento
@@ -83,6 +113,7 @@ primero, la API responde con conflicto y exige recargar.
 | `PUT` | `/api/admin/contenidos/:id/autoguardado` | Guardar snapshot temporal |
 | `DELETE` | `/api/admin/contenidos/:id/autoguardado` | Descartar snapshot |
 | `GET` | `/api/admin/contenidos/:id/versiones` | Consultar historial |
+| `DELETE` | `/api/admin/contenidos/:id` | Eliminar definitivamente con permiso, MFA y confirmación |
 
 Todos los endpoints validan sesión, rol, permiso, identificadores y payload en
 servidor. RLS replica la autorización sobre las tablas.
@@ -119,13 +150,13 @@ servidor. RLS replica la autorización sobre las tablas.
 - Guardar manualmente incrementa `lock_version` y crea una versión.
 - Una versión desactualizada no sobrescribe cambios de otra sesión.
 - La vista previa refleja el contenido sin publicar.
+- Las etapas pueden recorrerse sin perder cambios ni reiniciar el editor.
+- Cada etapa informa su avance a partir de requisitos editoriales comprobables.
 - La interfaz no genera desbordamiento horizontal en móvil.
 - `lint`, `typecheck`, pruebas unitarias y build finalizan correctamente.
 
 ## Fuera de alcance
 
-- Publicación y programación.
-- Flujo de revisión y aprobación.
 - Restauración de versiones históricas.
 - Biblioteca de medios y portada.
 - Ingesta desde TikTok, YouTube o automatizaciones.

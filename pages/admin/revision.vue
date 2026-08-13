@@ -5,8 +5,10 @@ import {
   CalendarClock,
   ClipboardCheck,
   Clock3,
-  Inbox
+  Inbox,
+  Trash2
 } from '@lucide/vue'
+import ModalEliminarContenido from '~/components/admin/ModalEliminarContenido.vue'
 import type {
   ColaRevisionEditorial,
   ElementoColaRevisionEditorial
@@ -27,6 +29,11 @@ useSeoMeta({
 const { data: cola, status, error, refresh } = await useFetch<ColaRevisionEditorial>(
   '/api/admin/revision'
 )
+const route = useRoute()
+const { contextoEditorial, tienePermiso } = useContextoEditorial()
+const articuloEliminar = ref<ElementoColaRevisionEditorial | null>(null)
+const mensajeEstado = ref('')
+const retornoRevision = computed(() => route.fullPath)
 
 const secciones = computed(() => [
   {
@@ -62,6 +69,12 @@ function formatearFecha(fecha: string): string {
 function fechaPrioritaria(item: ElementoColaRevisionEditorial): string {
   return item.programadoPara || item.actualizadoEn
 }
+
+async function contenidoEliminado() {
+  articuloEliminar.value = null
+  mensajeEstado.value = 'El contenido se eliminó definitivamente.'
+  await refresh()
+}
 </script>
 
 <template>
@@ -73,6 +86,10 @@ function fechaPrioritaria(item: ElementoColaRevisionEditorial): string {
         <p>Revisa, aprueba y organiza lo que está próximo a publicarse.</p>
       </div>
     </header>
+
+    <p v-if="mensajeEstado" class="aviso-exito-editorial" role="status">
+      {{ mensajeEstado }}
+    </p>
 
     <div v-if="status === 'pending'" class="esqueleto-cola-revision" aria-label="Cargando revisión">
       <span v-for="indice in 9" :key="indice" />
@@ -116,12 +133,23 @@ function fechaPrioritaria(item: ElementoColaRevisionEditorial): string {
                 <Clock3 aria-hidden="true" />
                 {{ formatearFecha(fechaPrioritaria(item)) }}
               </span>
-              <NuxtLink
-                :to="`/admin/contenidos/${item.id}`"
-                :aria-label="`Abrir ${item.titulo}`"
-              >
-                <ArrowRight aria-hidden="true" />
-              </NuxtLink>
+              <div class="acciones-item-revision">
+                <button
+                  v-if="tienePermiso('contenido.eliminar')"
+                  type="button"
+                  title="Eliminar contenido"
+                  :aria-label="`Eliminar ${item.titulo}`"
+                  @click="articuloEliminar = item"
+                >
+                  <Trash2 aria-hidden="true" />
+                </button>
+                <NuxtLink
+                  :to="`/admin/contenidos/${item.id}`"
+                  :aria-label="`Abrir ${item.titulo}`"
+                >
+                  <ArrowRight aria-hidden="true" />
+                </NuxtLink>
+              </div>
             </div>
           </article>
         </div>
@@ -132,5 +160,14 @@ function fechaPrioritaria(item: ElementoColaRevisionEditorial): string {
         </div>
       </section>
     </div>
+
+    <ModalEliminarContenido
+      v-if="articuloEliminar"
+      :articulo="articuloEliminar"
+      :nivel-aal="contextoEditorial?.nivelAal || undefined"
+      :retorno="retornoRevision"
+      @cerrar="articuloEliminar = null"
+      @eliminado="contenidoEliminado"
+    />
   </div>
 </template>

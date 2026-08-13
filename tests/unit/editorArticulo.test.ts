@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
   esquemaAutoguardadoArticulo,
+  esquemaEliminarArticulo,
   esquemaGuardarArticulo
 } from '~/utils/editorial/contenido'
 import {
@@ -10,6 +11,7 @@ import {
   estimarMinutosLectura,
   extraerTextoDocumento
 } from '~/utils/editorial/documento'
+import { evaluarCompletitudEditor } from '~/utils/editorial/progresoEditor'
 
 const datosValidos = {
   titulo: 'Colombia prepara una nueva jornada internacional',
@@ -165,6 +167,47 @@ describe('editor de artículos', () => {
     }).success).toBe(false)
   })
 
+  it('calcula el avance del editor por requisitos reales de cada etapa', () => {
+    const completitud = evaluarCompletitudEditor({
+      datos: {
+        ...datosValidos,
+        categoriaId: '127758f0-f1ec-4bd4-a4d1-683ca6c4d6e2',
+        portadaId: '127758f0-f1ec-4bd4-a4d1-683ca6c4d6e2'
+      },
+      bloques: convertirDocumentoABloques(datosValidos.documento),
+      tienePortada: true,
+      estado: 'review'
+    })
+
+    expect(completitud).toEqual({
+      contenido: true,
+      presentacion: true,
+      seo: true,
+      revision: true
+    })
+  })
+
+  it('mantiene pendientes las etapas incompletas sin bloquear la navegación', () => {
+    const completitud = evaluarCompletitudEditor({
+      datos: {
+        ...datosValidos,
+        resumen: '',
+        slug: 'Slug inválido',
+        seo: { titulo: '', descripcion: '', textoSocial: '' }
+      },
+      bloques: [],
+      tienePortada: false,
+      estado: 'draft'
+    })
+
+    expect(completitud).toEqual({
+      contenido: false,
+      presentacion: false,
+      seo: false,
+      revision: false
+    })
+  })
+
   it('mantiene el guardado atómico bajo RLS y sin service role', () => {
     const rutaMigracion = new URL(
       '../../supabase/migrations/0005_editorial_draft_editor.sql',
@@ -177,6 +220,28 @@ describe('editor de artículos', () => {
     expect(migracion).toContain('expected_lock_version')
     expect(migracion).toContain('public.can_edit_article(target_article_id)')
     expect(migracion).toContain('article_autosaves')
+    expect(migracion).not.toContain('service_role')
+  })
+
+  it('protege la eliminación definitiva con confirmación, permiso y MFA', () => {
+    expect(esquemaEliminarArticulo.safeParse({
+      confirmacion: 'Una noticia completa para eliminar'
+    }).success).toBe(true)
+    expect(esquemaEliminarArticulo.safeParse({
+      confirmacion: 'corto'
+    }).success).toBe(false)
+
+    const rutaMigracion = new URL(
+      '../../supabase/migrations/0009_editorial_quick_actions_and_deletion.sql',
+      import.meta.url
+    )
+    const migracion = readFileSync(rutaMigracion, 'utf8')
+
+    expect(migracion).toContain("'contenido.eliminar'")
+    expect(migracion).toContain('public.delete_editorial_article')
+    expect(migracion).toContain('public.has_aal2()')
+    expect(migracion).toContain('on public.articles for delete')
+    expect(migracion).toContain('security invoker')
     expect(migracion).not.toContain('service_role')
   })
 

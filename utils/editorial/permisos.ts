@@ -12,6 +12,7 @@ export const permisosEditoriales: PermisoEditorial[] = [
   'contenido.programar',
   'contenido.publicar',
   'contenido.archivar',
+  'contenido.eliminar',
   'media.ver',
   'media.subir',
   'media.editar',

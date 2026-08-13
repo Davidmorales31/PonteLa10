@@ -30,6 +30,9 @@ describe('seguridad editorial', () => {
     expect(permisosPorRol.editor).not.toContain('contenido.publicar')
     expect(permisosPorRol.autor).not.toContain('equipo.gestionar')
     expect(permisosPorRol.colaborador).not.toContain('contenido.aprobar')
+    expect(permisosPorRol.propietario).toContain('contenido.eliminar')
+    expect(permisosPorRol.administrador).toContain('contenido.eliminar')
+    expect(permisosPorRol.editorJefe).not.toContain('contenido.eliminar')
   })
 
   it('exige MFA para roles sensibles o capacidad de publicar', () => {
@@ -44,18 +47,25 @@ describe('seguridad editorial', () => {
   })
 
   it('mantiene sincronizados permisos y roles con la migración de Supabase', () => {
-    const rutaMigracion = new URL(
+    const rutaMigracionFundacion = new URL(
       '../../supabase/migrations/0003_cms_editorial_foundation.sql',
       import.meta.url
     )
-    const migracion = readFileSync(rutaMigracion, 'utf8')
+    const rutaMigracionEliminacion = new URL(
+      '../../supabase/migrations/0009_editorial_quick_actions_and_deletion.sql',
+      import.meta.url
+    )
+    const migraciones = [
+      readFileSync(rutaMigracionFundacion, 'utf8'),
+      readFileSync(rutaMigracionEliminacion, 'utf8')
+    ].join('\n')
 
     permisosEditoriales.forEach((permiso) => {
-      expect(migracion).toContain(`'${permiso}'`)
+      expect(migraciones).toContain(`'${permiso}'`)
     })
 
     rolesEditoriales.forEach((rol) => {
-      expect(migracion).toContain(`'${rol}'`)
+      expect(migraciones).toContain(`'${rol}'`)
     })
   })
 })

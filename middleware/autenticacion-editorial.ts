@@ -30,6 +30,12 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const esRutaSeguridad = to.path === '/admin/seguridad'
 
   if (contexto.requiereMfa && contexto.nivelAal !== 'aal2' && !esRutaSeguridad) {
-    return navigateTo('/admin/seguridad?motivo=mfa')
+    return navigateTo({
+      path: '/admin/seguridad',
+      query: {
+        motivo: 'mfa',
+        retorno: to.fullPath
+      }
+    })
   }
 })

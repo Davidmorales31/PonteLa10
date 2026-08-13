@@ -3,37 +3,31 @@ import {
   Archive,
   BadgeCheck,
   CalendarClock,
-  Clock3,
   MessageSquare,
   PencilLine,
   Rocket,
   Send,
   ShieldCheck,
-  Undo2,
-  X
+  Undo2
 } from '@lucide/vue'
 import type {
   AccionFlujoEditorial,
-  EntradaTransicionEditorial,
-  FlujoArticuloEditorial
+  FlujoArticuloEditorial,
+  IdAccionFlujoEditorial
 } from '~/types/contenidoEditorial'
 import { etiquetasEstadoContenido } from '~/utils/editorial/contenido'
 
-const props = defineProps<{
+defineProps<{
   flujo: FlujoArticuloEditorial
-  versionBloqueo: number
   bloqueado?: boolean
-  nivelAal?: 'aal1' | 'aal2'
+  motivosBloqueo?: Partial<Record<IdAccionFlujoEditorial, string>>
 }>()
 
 const emit = defineEmits<{
-  transicionar: [entrada: EntradaTransicionEditorial]
   comentar: [mensaje: string]
+  seleccionarAccion: [accion: AccionFlujoEditorial]
 }>()
 
-const accionSeleccionada = ref<AccionFlujoEditorial | null>(null)
-const nota = ref('')
-const programadoPara = ref('')
 const comentario = ref('')
 
 const iconosAcciones = {
@@ -46,55 +40,6 @@ const iconosAcciones = {
   crearRevision: PencilLine,
   archivar: Archive,
   reabrir: PencilLine
-}
-
-const fechaMinimaProgramacion = computed(() => {
-  const fecha = new Date(Date.now() + 5 * 60 * 1000)
-  fecha.setSeconds(0, 0)
-  return fecha.toISOString().slice(0, 16)
-})
-
-const accionRequiereMfaSinVerificar = computed(() =>
-  accionSeleccionada.value?.requiereMfa && props.nivelAal !== 'aal2'
-)
-
-const formularioValido = computed(() => {
-  const accion = accionSeleccionada.value
-  if (!accion) return false
-  if (accion.requiereNota && nota.value.trim().length < 3) return false
-  if (accion.estadoObjetivo === 'changes_requested' && nota.value.trim().length < 10) {
-    return false
-  }
-  if (accion.requiereProgramacion && !programadoPara.value) return false
-  return !accionRequiereMfaSinVerificar.value
-})
-
-function abrirAccion(accion: AccionFlujoEditorial) {
-  accionSeleccionada.value = accion
-  nota.value = ''
-  programadoPara.value = props.flujo.programadoPara
-    ? new Date(props.flujo.programadoPara).toISOString().slice(0, 16)
-    : ''
-}
-
-function cerrarAccion() {
-  accionSeleccionada.value = null
-  nota.value = ''
-  programadoPara.value = ''
-}
-
-function confirmarAccion() {
-  if (!accionSeleccionada.value || !formularioValido.value) return
-
-  emit('transicionar', {
-    estadoObjetivo: accionSeleccionada.value.estadoObjetivo,
-    versionBloqueo: props.versionBloqueo,
-    nota: nota.value.trim(),
-    programadoPara: accionSeleccionada.value.requiereProgramacion
-      ? new Date(programadoPara.value).toISOString()
-      : null
-  })
-  cerrarAccion()
 }
 
 function enviarComentario() {
@@ -142,8 +87,9 @@ function formatearFecha(fecha: string): string {
         v-for="accion in flujo.acciones"
         :key="accion.id"
         type="button"
-        :disabled="bloqueado"
-        @click="abrirAccion(accion)"
+        :disabled="bloqueado || Boolean(motivosBloqueo?.[accion.id])"
+        :title="motivosBloqueo?.[accion.id] || accion.descripcion"
+        @click="emit('seleccionarAccion', accion)"
       >
         <component :is="iconosAcciones[accion.id]" aria-hidden="true" />
         <span>
@@ -152,6 +98,10 @@ function formatearFecha(fecha: string): string {
         </span>
       </button>
     </div>
+
+    <p v-if="bloqueado" class="aviso-acciones-flujo-bloqueadas" role="status">
+      Guarda los cambios pendientes para habilitar estas decisiones.
+    </p>
 
     <p v-else class="texto-secundario-editor">
       No hay acciones disponibles para tu rol en este estado.
@@ -194,88 +144,5 @@ function formatearFecha(fecha: string): string {
       </form>
     </div>
 
-    <div
-      v-if="accionSeleccionada"
-      class="fondo-modal-editorial"
-      role="presentation"
-      @mousedown.self="cerrarAccion"
-    >
-      <section
-        class="modal-editorial modal-transicion-editorial"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="titulo-transicion-editorial"
-      >
-        <header class="cabecera-modal-editorial">
-          <div>
-            <p class="etiqueta-panel">Flujo editorial</p>
-            <h2 id="titulo-transicion-editorial">
-              {{ accionSeleccionada.etiqueta }}
-            </h2>
-            <span>{{ accionSeleccionada.descripcion }}</span>
-          </div>
-          <button
-            type="button"
-            title="Cerrar"
-            aria-label="Cerrar transición editorial"
-            @click="cerrarAccion"
-          >
-            <X aria-hidden="true" />
-          </button>
-        </header>
-
-        <form class="formulario-transicion-editorial" @submit.prevent="confirmarAccion">
-          <label v-if="accionSeleccionada.requiereProgramacion">
-            Fecha y hora de publicación
-            <input
-              v-model="programadoPara"
-              type="datetime-local"
-              :min="fechaMinimaProgramacion"
-              required
-            >
-          </label>
-
-          <label>
-            Nota editorial
-            <textarea
-              v-model="nota"
-              rows="4"
-              maxlength="1000"
-              :required="accionSeleccionada.requiereNota"
-              :placeholder="accionSeleccionada.requiereNota
-                ? 'Explica el motivo de esta decisión'
-                : 'Contexto opcional para el historial'"
-            />
-          </label>
-
-          <p v-if="accionRequiereMfaSinVerificar" class="aviso-error-editorial">
-            Esta acción requiere una sesión verificada con MFA.
-          </p>
-
-          <footer class="acciones-modal-editorial">
-            <button
-              class="boton-editorial-secundario"
-              type="button"
-              @click="cerrarAccion"
-            >
-              Cancelar
-            </button>
-            <button
-              class="boton-editorial-principal"
-              type="submit"
-              :disabled="!formularioValido"
-            >
-              <Clock3 v-if="accionSeleccionada.requiereProgramacion" aria-hidden="true" />
-              <component
-                :is="iconosAcciones[accionSeleccionada.id]"
-                v-else
-                aria-hidden="true"
-              />
-              Confirmar
-            </button>
-          </footer>
-        </form>
-      </section>
-    </div>
   </section>
 </template>

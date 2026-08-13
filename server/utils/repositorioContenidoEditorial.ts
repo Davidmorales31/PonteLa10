@@ -20,6 +20,7 @@ import type {
   RespuestaBandejaEditorial,
   ResumenArticuloPublico,
   ResultadoTransicionEditorial,
+  ResultadoEliminacionArticuloEditorial,
   ResultadoGuardadoEditorial,
   TaxonomiasEditoriales,
   TemaEditorial,
@@ -854,6 +855,63 @@ export async function transicionarArticuloEditorial(
   }
 
   return data as ResultadoTransicionEditorial
+}
+
+export async function eliminarArticuloEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  confirmacion: string
+): Promise<ResultadoEliminacionArticuloEditorial> {
+  const { data, error } = await clienteSupabase.rpc('delete_editorial_article', {
+    target_article_id: articuloId,
+    confirmation_title: confirmacion
+  })
+
+  if (error) {
+    const mensaje = error.message || ''
+
+    if (mensaje.includes('no existe')) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'El contenido no existe.',
+        data: { codigo: 'CONTENIDO_EDITORIAL_NO_ENCONTRADO' }
+      })
+    }
+
+    if (
+      mensaje.includes('permiso')
+      || mensaje.includes('MFA')
+      || mensaje.includes('sesión')
+    ) {
+      throw createError({
+        statusCode: 403,
+        statusMessage: mensaje,
+        data: { codigo: 'ELIMINACION_EDITORIAL_NO_AUTORIZADA' }
+      })
+    }
+
+    if (mensaje.includes('confirmación')) {
+      throw createError({
+        statusCode: 422,
+        statusMessage: 'El título de confirmación no coincide.',
+        data: { codigo: 'CONFIRMACION_ELIMINACION_INVALIDA' }
+      })
+    }
+
+    throw crearErrorRepositorio('No se pudo eliminar el contenido editorial.')
+  }
+
+  const resultado = data as {
+    id: string
+    titulo: string
+    portadaId: string | null
+  } | null
+
+  if (!resultado) {
+    throw crearErrorRepositorio('La eliminación no devolvió un resultado válido.')
+  }
+
+  return resultado
 }
 
 export async function crearComentarioRevisionEditorial(

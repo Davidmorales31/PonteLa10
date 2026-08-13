@@ -2,6 +2,7 @@
 import {
   CalendarClock,
   FileText,
+  Trash2,
   UserRound
 } from '@lucide/vue'
 import type { ArticuloBandejaEditorial } from '~/types/contenidoEditorial'
@@ -13,6 +14,11 @@ import {
 
 defineProps<{
   contenidos: ArticuloBandejaEditorial[]
+  puedeEliminar?: boolean
+}>()
+
+const emit = defineEmits<{
+  eliminar: [contenido: ArticuloBandejaEditorial]
 }>()
 
 function formatearFecha(fecha: string): string {
@@ -35,6 +41,7 @@ function formatearFecha(fecha: string): string {
           <th>Sección</th>
           <th>Autor</th>
           <th>Actualizado</th>
+          <th><span class="sr-only">Acciones</span></th>
         </tr>
       </thead>
       <tbody>
@@ -83,6 +90,17 @@ function formatearFecha(fecha: string): string {
               <CalendarClock aria-hidden="true" />
               {{ formatearFecha(contenido.actualizadoEn) }}
             </span>
+          </td>
+          <td data-label="Acciones" class="acciones-fila-contenido">
+            <button
+              v-if="puedeEliminar"
+              type="button"
+              title="Eliminar contenido"
+              :aria-label="`Eliminar ${contenido.titulo}`"
+              @click="emit('eliminar', contenido)"
+            >
+              <Trash2 aria-hidden="true" />
+            </button>
           </td>
         </tr>
       </tbody>

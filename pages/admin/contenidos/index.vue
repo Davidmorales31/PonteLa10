@@ -9,9 +9,11 @@ import {
   SlidersHorizontal
 } from '@lucide/vue'
 import ModalCrearBorrador from '~/components/admin/ModalCrearBorrador.vue'
+import ModalEliminarContenido from '~/components/admin/ModalEliminarContenido.vue'
 import TablaContenidosEditoriales from '~/components/admin/TablaContenidosEditoriales.vue'
 import type {
   BorradorCreadoEditorial,
+  ArticuloBandejaEditorial,
   EstadoContenidoEditorial,
   OrigenContenidoEditorial,
   RespuestaBandejaEditorial,
@@ -38,7 +40,8 @@ useSeoMeta({
   robots: 'noindex, nofollow'
 })
 
-const { tienePermiso } = useContextoEditorial()
+const route = useRoute()
+const { contextoEditorial, tienePermiso } = useContextoEditorial()
 const busqueda = ref('')
 const busquedaAplicada = ref('')
 const estado = ref<EstadoContenidoEditorial | ''>('')
@@ -50,6 +53,12 @@ const modalAbierto = ref(false)
 const guardando = ref(false)
 const errorCreacion = ref('')
 const mensajeExito = ref('')
+const articuloEliminar = ref<ArticuloBandejaEditorial | null>(null)
+const retornoBandeja = computed(() => route.fullPath)
+
+if (route.query.eliminado === '1') {
+  mensajeExito.value = 'El contenido se eliminó definitivamente.'
+}
 
 const consulta = computed(() => ({
   buscar: busquedaAplicada.value || undefined,
@@ -149,6 +158,12 @@ async function crearBorrador(entrada: {
   } finally {
     guardando.value = false
   }
+}
+
+async function contenidoEliminado() {
+  articuloEliminar.value = null
+  mensajeExito.value = 'El contenido se eliminó definitivamente.'
+  await refresh()
 }
 </script>
 
@@ -266,7 +281,11 @@ async function crearBorrador(entrada: {
       </div>
 
       <template v-else>
-        <TablaContenidosEditoriales :contenidos="contenidos" />
+        <TablaContenidosEditoriales
+          :contenidos="contenidos"
+          :puede-eliminar="tienePermiso('contenido.eliminar')"
+          @eliminar="articuloEliminar = $event"
+        />
         <footer class="paginacion-editorial">
           <span>
             {{ paginacion.total }} contenidos
@@ -303,6 +322,15 @@ async function crearBorrador(entrada: {
       :error="errorCreacion"
       @cerrar="modalAbierto = false"
       @crear="crearBorrador"
+    />
+
+    <ModalEliminarContenido
+      v-if="articuloEliminar"
+      :articulo="articuloEliminar"
+      :nivel-aal="contextoEditorial?.nivelAal || undefined"
+      :retorno="retornoBandeja"
+      @cerrar="articuloEliminar = null"
+      @eliminado="contenidoEliminado"
     />
   </div>
 </template>

@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Check,
   ChevronLeft,
+  ChevronRight,
   Clock3,
   Eye,
   FileClock,
@@ -14,15 +15,21 @@ import {
   Save,
   Search,
   ShieldCheck,
+  Trash2,
   X
 } from '@lucide/vue'
+import BarraAccionesFlujoEditorial from '~/components/admin/BarraAccionesFlujoEditorial.vue'
+import BarraEtapasEditor from '~/components/admin/BarraEtapasEditor.vue'
 import EditorBloquesContenido from '~/components/admin/EditorBloquesContenido.vue'
+import ModalAccionFlujoEditorial from '~/components/admin/ModalAccionFlujoEditorial.vue'
+import ModalEliminarContenido from '~/components/admin/ModalEliminarContenido.vue'
 import ModalSubirMedio from '~/components/admin/ModalSubirMedio.vue'
 import PanelFlujoEditorial from '~/components/admin/PanelFlujoEditorial.vue'
 import SelectorPortadaEditorial from '~/components/admin/SelectorPortadaEditorial.vue'
 import VistaPreviaArticulo from '~/components/admin/VistaPreviaArticulo.vue'
 import VistaPreviaTarjetaSocial from '~/components/admin/VistaPreviaTarjetaSocial.vue'
 import type {
+  AccionFlujoEditorial,
   ArticuloDetalleEditorial,
   BloqueEditorEditorial,
   CargaEditorArticuloEditorial,
@@ -30,6 +37,8 @@ import type {
   DatosEditorArticulo,
   EntradaTransicionEditorial,
   FlujoArticuloEditorial,
+  IdPasoEditorEditorial,
+  PasoEditorEditorial,
   ResultadoGuardadoEditorial,
   VersionArticuloEditorial
 } from '~/types/contenidoEditorial'
@@ -45,6 +54,7 @@ import {
   contarPalabrasDocumento,
   estimarMinutosLectura
 } from '~/utils/editorial/documento'
+import { evaluarCompletitudEditor } from '~/utils/editorial/progresoEditor'
 
 definePageMeta({
   layout: 'admin',
@@ -58,6 +68,7 @@ useSeoMeta({
 })
 
 const route = useRoute()
+const router = useRouter()
 const articuloId = computed(() => String(route.params.id || ''))
 const { ejecutarConBloqueo } = useBloqueoInterfaz()
 const { contextoEditorial, tienePermiso } = useContextoEditorial()
@@ -120,12 +131,29 @@ const autoguardando = ref(false)
 const vistaPreviaAbierta = ref(false)
 const selectorPortadaAbierto = ref(false)
 const modalSubidaMedioAbierto = ref(false)
+const modalEliminarAbierto = ref(false)
+const accionFlujoSeleccionada = ref<AccionFlujoEditorial | null>(null)
 const mensajeEstado = ref('')
 const errorGuardado = ref('')
 const conflictoVersion = ref(false)
 const notaCambio = ref('')
 const ultimoAutoguardado = ref('')
 let temporizadorAutoguardado: ReturnType<typeof setTimeout> | null = null
+
+const idsPasosEditor: IdPasoEditorEditorial[] = [
+  'contenido',
+  'presentacion',
+  'seo',
+  'revision'
+]
+
+function esPasoEditor(valor: unknown): valor is IdPasoEditorEditorial {
+  return idsPasosEditor.includes(String(valor) as IdPasoEditorEditorial)
+}
+
+const pasoActual = ref<IdPasoEditorEditorial>(
+  esPasoEditor(route.query.paso) ? route.query.paso : 'contenido'
+)
 
 const documentoActual = computed(() => convertirBloquesADocumento(bloques.value))
 
@@ -149,6 +177,83 @@ const categoriaActual = computed(() => taxonomias.value?.categorias
 const totalPalabras = computed(() => contarPalabrasDocumento(documentoActual.value))
 const minutosLectura = computed(() => estimarMinutosLectura(documentoActual.value))
 const puedeEditar = computed(() => Boolean(articulo.value?.puedeEditar))
+const pasosEditor = computed<PasoEditorEditorial[]>(() => {
+  const completitud = evaluarCompletitudEditor({
+    datos: formulario.value,
+    bloques: bloques.value,
+    tienePortada: Boolean(portadaSeleccionada.value),
+    estado: articulo.value?.estado || 'draft'
+  })
+
+  return [
+    {
+      id: 'contenido',
+      etiqueta: 'Contenido',
+      descripcion: 'Enfoque y estructura',
+      completo: completitud.contenido
+    },
+    {
+      id: 'presentacion',
+      etiqueta: 'Presentación',
+      descripcion: 'Portada y clasificación',
+      completo: completitud.presentacion
+    },
+    {
+      id: 'seo',
+      etiqueta: 'SEO y redes',
+      descripcion: 'Búsqueda y distribución',
+      completo: completitud.seo
+    },
+    {
+      id: 'revision',
+      etiqueta: 'Revisión',
+      descripcion: 'Control y publicación',
+      completo: completitud.revision
+    }
+  ]
+})
+const indicePasoActual = computed(() => Math.max(
+  0,
+  idsPasosEditor.indexOf(pasoActual.value)
+))
+const configuracionPasoActual = computed(() => pasosEditor.value[indicePasoActual.value])
+const retornoEditor = computed(() => route.fullPath)
+const motivosBloqueoFlujo = computed(() => {
+  const motivos: Partial<Record<AccionFlujoEditorial['id'], string>> = {}
+  const faltantes: string[] = []
+
+  if (!portadaSeleccionada.value) faltantes.push('una portada')
+  if ((formulario.value?.seo.descripcion.trim().length || 0) < 40) {
+    faltantes.push('una descripción SEO de al menos 40 caracteres')
+  }
+
+  if (faltantes.length) {
+    const motivo = `Antes de aprobar faltan ${faltantes.join(' y ')}. Solicita cambios para habilitar la edición.`
+    motivos.aprobar = motivo
+    motivos.programar = motivo
+    motivos.publicar = motivo
+  }
+
+  return motivos
+})
+const contenidoCabeceraPaso = computed(() => ({
+  contenido: {
+    titulo: 'Construye la noticia',
+    descripcion: 'Define el enfoque editorial, desarrolla el cuerpo y documenta sus fuentes.'
+  },
+  presentacion: {
+    titulo: 'Organiza la publicación',
+    descripcion: 'Selecciona cómo se presenta, clasifica y reconoce visualmente la historia.'
+  },
+  seo: {
+    titulo: 'Prepara su distribución',
+    descripcion: 'Ajusta su aparición en buscadores y revisa las tarjetas para redes sociales.'
+  },
+  revision: {
+    titulo: 'Revisa y decide',
+    descripcion: 'Comprueba el estado guardado, conversa con el equipo y ejecuta el flujo editorial.'
+  }
+})[pasoActual.value])
 const hayAutoguardadoRecuperable = computed(() => {
   const autoguardado = articulo.value?.autoguardado
 
@@ -158,6 +263,36 @@ const hayAutoguardadoRecuperable = computed(() => {
     && new Date(autoguardado.actualizadoEn) > new Date(articulo.value?.actualizadoEn || 0)
   )
 })
+
+watch(() => route.query.paso, (paso) => {
+  if (esPasoEditor(paso)) pasoActual.value = paso
+})
+
+async function irAPasoEditor(paso: IdPasoEditorEditorial) {
+  if (pasoActual.value === paso) return
+  pasoActual.value = paso
+  await router.replace({
+    query: {
+      ...route.query,
+      paso
+    }
+  })
+  await nextTick()
+  document.querySelector('.barra-etapas-editor')?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  })
+}
+
+function irAlPasoAnterior() {
+  const anterior = idsPasosEditor[indicePasoActual.value - 1]
+  if (anterior) irAPasoEditor(anterior)
+}
+
+function irAlPasoSiguiente() {
+  const siguiente = idsPasosEditor[indicePasoActual.value + 1]
+  if (siguiente) irAPasoEditor(siguiente)
+}
 
 function serializarDatos(datos: DatosEditorArticulo): string {
   return JSON.stringify(datos)
@@ -454,6 +589,7 @@ async function realizarTransicion(entrada: EntradaTransicionEditorial) {
         formulario.value = null
         await recargarArticulo()
         if (articulo.value) inicializarEditor(articulo.value)
+        accionFlujoSeleccionada.value = null
         mensajeEstado.value = 'Estado editorial actualizado'
       } catch (errorPeticion: unknown) {
         errorGuardado.value = obtenerMensajePeticion(errorPeticion)
@@ -462,6 +598,19 @@ async function realizarTransicion(entrada: EntradaTransicionEditorial) {
       }
     }
   )
+}
+
+function abrirAccionFlujo(accion: AccionFlujoEditorial) {
+  accionFlujoSeleccionada.value = accion
+}
+
+async function confirmarAccionFlujo(entrada: EntradaTransicionEditorial) {
+  await realizarTransicion(entrada)
+}
+
+async function contenidoEliminado() {
+  modalEliminarAbierto.value = false
+  await navigateTo('/admin/contenidos?eliminado=1')
 }
 
 async function agregarComentarioRevision(mensaje: string) {
@@ -559,6 +708,16 @@ onBeforeUnmount(() => {
 
         <div class="acciones-principales-editor">
           <button
+            v-if="tienePermiso('contenido.eliminar')"
+            class="boton-icono-editorial accion-eliminar-editor"
+            type="button"
+            title="Eliminar contenido"
+            aria-label="Eliminar contenido"
+            @click="modalEliminarAbierto = true"
+          >
+            <Trash2 aria-hidden="true" />
+          </button>
+          <button
             class="boton-editorial-secundario"
             type="button"
             @click="vistaPreviaAbierta = true"
@@ -608,8 +767,34 @@ onBeforeUnmount(() => {
         {{ errorGuardado }}
       </p>
 
-      <div class="rejilla-editor-contenido">
-        <main class="columna-principal-editor">
+      <BarraEtapasEditor
+        :pasos="pasosEditor"
+        :paso-actual="pasoActual"
+        @seleccionar="irAPasoEditor"
+      />
+
+      <BarraAccionesFlujoEditorial
+        v-if="flujo"
+        :flujo="flujo"
+        :bloqueado="guardando || cambiosPendientes"
+        :motivos-bloqueo="motivosBloqueoFlujo"
+        @seleccionar="abrirAccionFlujo"
+      />
+
+      <header class="cabecera-etapa-editor">
+        <div>
+          <span>Etapa {{ indicePasoActual + 1 }} de {{ pasosEditor.length }}</span>
+          <h1>{{ contenidoCabeceraPaso.titulo }}</h1>
+          <p>{{ contenidoCabeceraPaso.descripcion }}</p>
+        </div>
+        <strong :class="{ completo: configuracionPasoActual?.completo }">
+          <Check v-if="configuracionPasoActual?.completo" aria-hidden="true" />
+          {{ configuracionPasoActual?.completo ? 'Etapa completa' : 'En progreso' }}
+        </strong>
+      </header>
+
+      <div class="rejilla-editor-contenido" :data-paso="pasoActual">
+        <main v-show="pasoActual === 'contenido'" class="columna-principal-editor">
           <section class="encabezado-documento-editor">
             <label for="titulo-articulo">Título</label>
             <textarea
@@ -695,7 +880,10 @@ onBeforeUnmount(() => {
         </main>
 
         <aside class="columna-lateral-editor">
-          <section class="panel-configuracion-editor">
+          <section
+            v-show="pasoActual === 'presentacion'"
+            class="panel-configuracion-editor panel-publicacion-editor"
+          >
             <h2>Publicación</h2>
             <label>
               Tipo
@@ -749,7 +937,10 @@ onBeforeUnmount(() => {
             </div>
           </section>
 
-          <section class="panel-configuracion-editor panel-portada-editor">
+          <section
+            v-show="pasoActual === 'presentacion'"
+            class="panel-configuracion-editor panel-portada-editor"
+          >
             <header>
               <h2>Portada</h2>
               <Image aria-hidden="true" />
@@ -798,7 +989,10 @@ onBeforeUnmount(() => {
             </div>
           </section>
 
-          <section class="panel-configuracion-editor">
+          <section
+            v-show="pasoActual === 'presentacion'"
+            class="panel-configuracion-editor panel-taxonomias-editor"
+          >
             <h2>Temas</h2>
             <div v-if="taxonomias?.temas.length" class="opciones-taxonomia-editor">
               <label v-for="tema in taxonomias.temas" :key="tema.id">
@@ -837,7 +1031,10 @@ onBeforeUnmount(() => {
             </div>
           </section>
 
-          <section class="panel-configuracion-editor panel-seo-editor">
+          <section
+            v-show="pasoActual === 'seo'"
+            class="panel-configuracion-editor panel-seo-editor"
+          >
             <header>
               <h2>SEO y distribución</h2>
               <Search aria-hidden="true" />
@@ -891,15 +1088,18 @@ onBeforeUnmount(() => {
 
           <PanelFlujoEditorial
             v-if="flujo"
+            v-show="pasoActual === 'revision'"
             :flujo="flujo"
-            :version-bloqueo="versionBloqueo"
             :bloqueado="guardando || cambiosPendientes"
-            :nivel-aal="contextoEditorial?.nivelAal || undefined"
-            @transicionar="realizarTransicion"
+            :motivos-bloqueo="motivosBloqueoFlujo"
+            @seleccionar-accion="abrirAccionFlujo"
             @comentar="agregarComentarioRevision"
           />
 
-          <section class="panel-configuracion-editor">
+          <section
+            v-show="pasoActual === 'revision'"
+            class="panel-configuracion-editor panel-nota-version-editor"
+          >
             <h2>Nota de versión</h2>
             <textarea
               v-model="notaCambio"
@@ -910,7 +1110,10 @@ onBeforeUnmount(() => {
             />
           </section>
 
-          <section class="panel-configuracion-editor historial-versiones-editor">
+          <section
+            v-show="pasoActual === 'revision'"
+            class="panel-configuracion-editor historial-versiones-editor"
+          >
             <header>
               <h2>Historial</h2>
               <FileClock aria-hidden="true" />
@@ -928,6 +1131,40 @@ onBeforeUnmount(() => {
         </aside>
       </div>
 
+      <footer class="navegacion-inferior-etapas">
+        <button
+          class="boton-editorial-secundario"
+          type="button"
+          :disabled="indicePasoActual === 0"
+          @click="irAlPasoAnterior"
+        >
+          <ChevronLeft aria-hidden="true" />
+          Anterior
+        </button>
+        <div>
+          <span>{{ indicePasoActual + 1 }} / {{ pasosEditor.length }}</span>
+          <strong>{{ configuracionPasoActual?.etiqueta }}</strong>
+        </div>
+        <button
+          v-if="indicePasoActual < pasosEditor.length - 1"
+          class="boton-editorial-principal"
+          type="button"
+          @click="irAlPasoSiguiente"
+        >
+          Siguiente
+          <ChevronRight aria-hidden="true" />
+        </button>
+        <button
+          v-else
+          class="boton-editorial-secundario"
+          type="button"
+          @click="vistaPreviaAbierta = true"
+        >
+          <Eye aria-hidden="true" />
+          Vista previa
+        </button>
+      </footer>
+
       <SelectorPortadaEditorial
         v-if="selectorPortadaAbierto"
         :seleccionado-id="formulario.portadaId"
@@ -941,6 +1178,26 @@ onBeforeUnmount(() => {
         v-if="modalSubidaMedioAbierto"
         @cerrar="modalSubidaMedioAbierto = false"
         @subido="usarMedioSubido"
+      />
+
+      <ModalAccionFlujoEditorial
+        v-if="accionFlujoSeleccionada && flujo"
+        :accion="accionFlujoSeleccionada"
+        :version-bloqueo="versionBloqueo"
+        :programado-para="flujo.programadoPara"
+        :nivel-aal="contextoEditorial?.nivelAal || undefined"
+        :retorno="retornoEditor"
+        @cerrar="accionFlujoSeleccionada = null"
+        @confirmar="confirmarAccionFlujo"
+      />
+
+      <ModalEliminarContenido
+        v-if="modalEliminarAbierto"
+        :articulo="articulo"
+        :nivel-aal="contextoEditorial?.nivelAal || undefined"
+        :retorno="retornoEditor"
+        @cerrar="modalEliminarAbierto = false"
+        @eliminado="contenidoEliminado"
       />
 
       <div

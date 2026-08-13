@@ -54,6 +54,13 @@ const requierePasoMfa = computed(() =>
 
 await listarFactoresMfa()
 
+function obtenerRetornoSeguro(): string {
+  const retorno = String(route.query.retorno || '')
+  return retorno.startsWith('/admin') && !retorno.startsWith('//')
+    ? retorno
+    : '/admin'
+}
+
 async function confirmarCodigo() {
   const correcto = inscripcionMfa.value
     ? await confirmarInscripcionMfa(codigoMfa.value)
@@ -67,7 +74,7 @@ async function confirmarCodigo() {
   await cargarContextoEditorial(true)
 
   if (route.query.motivo === 'mfa') {
-    await navigateTo('/admin')
+    await navigateTo(obtenerRetornoSeguro())
   }
 }
 

@@ -252,6 +252,10 @@ export const esquemaAutoguardadoArticulo = z.object({
 
 export const esquemaIdEditorial = z.string().uuid()
 
+export const esquemaEliminarArticulo = z.object({
+  confirmacion: z.string().trim().min(8).max(160)
+})
+
 export const esquemaTransicionEditorial = z.object({
   estadoObjetivo: z.enum(estadosContenidoEditorial as [
     EstadoContenidoEditorial,

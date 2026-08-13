@@ -26,6 +26,19 @@ export type OrigenContenidoEditorial =
 
 export type TipoTaxonomiaEditorial = 'categoria' | 'tema' | 'etiqueta'
 
+export type IdPasoEditorEditorial =
+  | 'contenido'
+  | 'presentacion'
+  | 'seo'
+  | 'revision'
+
+export interface PasoEditorEditorial {
+  id: IdPasoEditorEditorial
+  etiqueta: string
+  descripcion: string
+  completo: boolean
+}
+
 export interface CategoriaEditorial {
   id: string
   slug: string
@@ -225,6 +238,12 @@ export interface ResultadoGuardadoEditorial {
   slug: string
   versionBloqueo: number
   actualizadoEn: string
+}
+
+export interface ResultadoEliminacionArticuloEditorial {
+  id: string
+  titulo: string
+  portadaId: string | null
 }
 
 export interface VersionArticuloEditorial {
