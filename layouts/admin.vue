@@ -9,6 +9,7 @@ import {
   LockKeyhole,
   LogOut,
   Menu,
+  RadioTower,
   ShieldCheck,
   Tags,
   X
@@ -46,6 +47,12 @@ const entradasPanel: EntradaPanel[] = [
     ruta: '/admin/contenidos',
     icono: Files,
     permiso: 'contenido.verBorradores'
+  },
+  {
+    etiqueta: 'Ingestas',
+    ruta: '/admin/ingestas',
+    icono: RadioTower,
+    permiso: 'ingestas.ver'
   },
   {
     etiqueta: 'Revisión',
