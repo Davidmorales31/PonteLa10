@@ -50,6 +50,7 @@ const guardando = ref(false)
 const cancelandoId = ref('')
 const errorAccion = ref('')
 const mensajeExito = ref('')
+const procesandoId = ref('')
 
 const consulta = computed(() => ({
   buscar: busquedaAplicada.value || undefined,
@@ -168,6 +169,28 @@ async function cancelarIngesta(ingesta: IngestaEditorial) {
         )
       } finally {
         cancelandoId.value = ''
+      }
+    }
+  )
+}
+
+async function procesarIngesta(ingesta: IngestaEditorial) {
+  procesandoId.value = ingesta.id
+  errorAccion.value = ''
+  mensajeExito.value = ''
+  await ejecutarConBloqueo(
+    `procesar-ingesta-${ingesta.id}`,
+    'Procesando video de TikTok',
+    async () => {
+      try {
+        const borrador = await $fetch<{ titulo: string }>('/api/admin/ingestas/' + ingesta.id + '/procesar', { method: 'POST' })
+        mensajeExito.value = `Borrador "${borrador.titulo}" creado para revisión.`
+        await refresh()
+      } catch (errorPeticion) {
+        errorAccion.value = obtenerMensajeError(errorPeticion, 'No se pudo procesar el TikTok.')
+        await refresh()
+      } finally {
+        procesandoId.value = ''
       }
     }
   )
@@ -297,6 +320,7 @@ async function cancelarIngesta(ingesta: IngestaEditorial) {
           :puede-gestionar="tienePermiso('ingestas.gestionar')"
           :cancelando-id="cancelandoId"
           @cancelar="cancelarIngesta"
+          @procesar="procesarIngesta"
         />
 
         <footer class="paginacion-editorial">

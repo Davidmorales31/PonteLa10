@@ -4,6 +4,7 @@ import {
   type CookieOptions
 } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { setCookie } from 'h3'
 import type { UsuarioEditorial } from '~/types/autenticacion'
 
 export default defineNuxtPlugin(async () => {

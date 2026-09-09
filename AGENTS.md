@@ -7,6 +7,7 @@ Estas reglas aplican siempre que Codex trabaje en Pont3la10.
 - La carpeta principal del proyecto es `C:\PONTE LA 10`.
 - No trabajar en la copia anterior ubicada en OneDrive.
 - Antes de tocar codigo, revisar el contexto local y respetar cambios existentes.
+- Al retomar desde otra cuenta o conversacion, leer `docs/CONTINUIDAD_PROYECTO.md` y contrastar su estado con Git y la base de datos antes de actuar.
 
 ## Idioma Y Nombres
 

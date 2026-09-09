@@ -1251,6 +1251,60 @@ export async function crearBorradorEditorial(
   })
 }
 
+export async function crearBorradorDesdeIngestaEditorial(
+  clienteSupabase: SupabaseClient,
+  entrada: EntradaBorrador & {
+    documento: Record<string, unknown>
+    fuente: { url: string, nombre: string, autor: string, creditos: string }
+  },
+  autorId: string
+): Promise<BorradorCreadoEditorial> {
+  await validarCategoria(clienteSupabase, entrada.categoriaId)
+  const slugBase = crearSlugEditorial(entrada.titulo)
+  const datosArticulo = {
+    title: entrada.titulo,
+    summary: entrada.resumen,
+    body: entrada.resumen,
+    body_json: entrada.documento,
+    status: 'draft',
+    category_id: entrada.categoriaId,
+    author_id: autorId,
+    content_type: entrada.tipo,
+    source_origin: 'ingesta',
+    source_url: entrada.fuente.url,
+    source_name: entrada.fuente.nombre,
+    source_author: entrada.fuente.autor,
+    credits: entrada.fuente.creditos,
+    last_saved_by: autorId
+  }
+
+  for (let intento = 0; intento < 3; intento += 1) {
+    const slug = intento === 0 ? slugBase : `${slugBase}-${crearSufijoSlug()}`
+    const { data, error } = await clienteSupabase
+      .from('articles')
+      .insert({ ...datosArticulo, slug })
+      .select('id, slug, title, status, created_at')
+      .single()
+
+    if (!error && data) {
+      return {
+        id: String(data.id),
+        slug: String(data.slug),
+        titulo: String(data.title),
+        estado: data.status as BorradorCreadoEditorial['estado'],
+        creadoEn: String(data.created_at)
+      }
+    }
+    if (error?.code !== '23505') throw crearErrorRepositorio('No se pudo crear el borrador de la ingesta.')
+  }
+
+  throw createError({
+    statusCode: 409,
+    statusMessage: 'No se pudo generar un slug único para el contenido.',
+    data: { codigo: 'SLUG_INGESTA_EN_CONFLICTO' }
+  })
+}
+
 export async function obtenerTaxonomiasEditoriales(
   clienteSupabase: SupabaseClient
 ): Promise<TaxonomiasEditoriales> {

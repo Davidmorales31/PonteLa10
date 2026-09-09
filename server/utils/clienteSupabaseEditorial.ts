@@ -4,7 +4,7 @@ import {
   type CookieOptions
 } from '@supabase/ssr'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { H3Event } from 'h3'
+import { setCookie, type H3Event } from 'h3'
 
 interface ContextoServidorConSupabase {
   clienteSupabaseEditorial?: SupabaseClient

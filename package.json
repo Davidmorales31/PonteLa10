@@ -17,6 +17,7 @@
     "@nuxtjs/supabase": "^1.6.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.110.7",
+    "cheerio": "^1.1.2",
     "h3": "1.15.11",
     "nuxt": "^3.17.0",
     "sharp": "^0.35.3",

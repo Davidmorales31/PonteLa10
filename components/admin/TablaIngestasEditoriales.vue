@@ -11,6 +11,7 @@ import {
   MessageCircle,
   Music2,
   Play,
+  Sparkles,
   TimerReset,
 } from '@lucide/vue'
 import type {
@@ -30,6 +31,7 @@ defineProps<{
 
 const emit = defineEmits<{
   cancelar: [ingesta: IngestaEditorial]
+  procesar: [ingesta: IngestaEditorial]
 }>()
 
 const formatoFecha = new Intl.DateTimeFormat('es-CO', {
@@ -118,6 +120,16 @@ function puedeCancelar(ingesta: IngestaEditorial): boolean {
             </div>
           </td>
           <td data-label="Acciones">
+            <button
+              v-if="puedeGestionar && ingesta.plataforma === 'tiktok' && ['pending', 'processing', 'failed'].includes(ingesta.estado)"
+              class="boton-icono-editorial"
+              type="button"
+              :title="ingesta.estado === 'processing' ? 'Reintentar TikTok bloqueado' : 'Procesar TikTok'"
+              :aria-label="ingesta.estado === 'processing' ? 'Reintentar TikTok bloqueado' : 'Procesar TikTok'"
+              @click="emit('procesar', ingesta)"
+            >
+              <Sparkles aria-hidden="true" />
+            </button>
             <NuxtLink
               v-if="ingesta.articuloId"
               class="boton-icono-editorial"
