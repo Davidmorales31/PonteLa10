@@ -26,9 +26,13 @@ Reglas recomendadas:
 Checks requeridos:
 
 - `lint`
+- `test`
+- `typecheck`
 - `build`
 
 El CI usa Node.js 22 LTS para reducir diferencias entre equipos locales y GitHub Actions.
+La matriz local y la definición de terminado se mantienen únicamente en
+`docs/agents/VALIDACIONES.md`.
 
 ## Secrets
 

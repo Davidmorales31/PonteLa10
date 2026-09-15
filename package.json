@@ -9,7 +9,7 @@
     "lint": "nuxt prepare && eslint .",
     "preview": "nuxt preview",
     "test": "npm run test:unit",
-    "test:unit": "vitest run",
+    "test:unit": "nuxt prepare && vitest run",
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {

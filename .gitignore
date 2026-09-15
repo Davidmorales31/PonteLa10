@@ -10,4 +10,5 @@ coverage
 .DS_Store
 *.log
 .codex-dev-server.*.log
-.codex-dev-server.*.log
+.memento/
+.memento-multiagent/

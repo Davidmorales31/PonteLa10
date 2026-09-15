@@ -1,36 +1,38 @@
-## Resumen
+## Resumen y referencia
 
-- 
+- Cambio:
+- Motivo:
+- Issue o HU:
 
-## Tipo De Cambio
+## Tipo de cambio
 
-- [ ] `feat`: nueva funcionalidad
-- [ ] `fix`: correccion
-- [ ] `ui`: interfaz o experiencia
-- [ ] `docs`: documentacion
-- [ ] `refactor`: mejora interna
-- [ ] `test`: pruebas
-- [ ] `chore`: mantenimiento
-- [ ] `security`: seguridad
+- [ ] `feat`
+- [ ] `fix`
+- [ ] `ui`
+- [ ] `docs`
+- [ ] `refactor`
+- [ ] `test`
+- [ ] `chore`
+- [ ] `security`
 
-## Validacion
+## Validación
 
 - [ ] `npm.cmd run lint`
+- [ ] Pruebas relacionadas:
+- [ ] `npm.cmd run test:unit`
+- [ ] `npm.cmd run typecheck`
 - [ ] `npm.cmd run build`
-- [ ] No aplica porque:
+- [ ] Validación manual si cambia UI; adjunto capturas o descripción responsive.
+- [ ] Cualquier validación omitida se explica según `docs/agents/VALIDACIONES.md`.
 
-## UI
+## Datos, seguridad y documentación
 
-- [ ] No cambia UI
-- [ ] Cambia UI e incluye capturas o descripcion visual
+- [ ] No agrega secretos, tokens, datos personales ni archivos locales.
+- [ ] Migraciones: no aplica, o están identificadas y revisadas en orden.
+- [ ] Seguridad/RLS: no aplica, o revisé autorización de servidor, grants, RLS y MFA.
+- [ ] No se usa `service_role` en cliente ni para evitar autorización de usuario.
+- [ ] Documentación, `docs/agents/ESTADO_ACTUAL.md` y handoff están actualizados.
 
-## Seguridad
+## Riesgos y pendientes
 
-- [ ] No agrega secretos
-- [ ] No expone datos internos
-- [ ] Respeta separacion publico/panel interno
-- [ ] Revisa permisos/RLS si toca datos
-
-## Notas
-
-- 
+-
