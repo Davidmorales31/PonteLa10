@@ -4,12 +4,13 @@ Verificación de solo lectura realizada el 2026-09-15.
 
 ## Estado observado
 
-- Rama predeterminada remota: `main`, commit `24340c0`.
-- PR abierto: Fase 0, borrador `#4`.
-- Último CI: ejecución `34996033049`, con `lint`, `test`, `typecheck` y `build` aprobados.
+- Rama predeterminada remota: `main`, con la Fase 0 fusionada en `cd5044e`.
+- PR `#4`: fusionado. PR `#5`: integración documental de Memento.
+- CI del PR `#5`: ejecución `35011902990`, con `lint`, `test`, `typecheck` y `build` aprobados.
 - Ruleset `main` (id `19154369`): activo y limitado a `refs/heads/main`.
-- Exige PR, una aprobación, conversaciones resueltas, rama actualizada y los
-  cuatro checks de CI; bloquea borrado y actualizaciones no fast-forward.
+- Exige PR, conversaciones resueltas, rama actualizada y los cuatro checks de
+  CI; bloquea borrado y actualizaciones no fast-forward. Requiere cero
+  aprobaciones porque el repositorio tiene un único mantenedor activo.
 
 ## Configuración aplicada
 
@@ -26,5 +27,5 @@ Revisar antes de borrar; esta lista no autoriza eliminación:
 - `codex/supabase-configuracion-inicial` (`185f06e`)
 
 `codex/enlaces-internos-compartir` contiene trabajo local que no forma parte de
-este PR; no clasificarla como obsoleta. `codex/fase-0-gobernanza` es la rama del
-PR activo y tampoco debe eliminarse.
+estos PR; no clasificarla como obsoleta. `codex/fase-0-gobernanza` ya fue
+fusionada; revisar su historial antes de eliminarla.

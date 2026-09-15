@@ -9,7 +9,7 @@
   deep-recall, dashboard HTTP 200 limitado a `127.0.0.1` y `git diff --check`.
 - **Fallos:** `memento-multiagent` no existe en PyPI; CP-1252 rompe la salida
   Unicode del núcleo. Se usaron commits oficiales y `PYTHONUTF8=1`.
-- **Pendientes:** publicar el cambio documental y confirmar CI remoto.
-- **Siguiente acción exacta:** abrir un PR separado para la integración de Memento.
+- **Pendientes:** ninguno para la integración local de Memento.
+- **Siguiente acción exacta:** revisar y acotar por separado el trabajo local de HU-ED-07.
 - **Commit base:** `cd5044e`
-- **Commit final:** se registrará al cerrar la Fase 0.
+- **Commit final:** integración documentada mediante PR `#5`.

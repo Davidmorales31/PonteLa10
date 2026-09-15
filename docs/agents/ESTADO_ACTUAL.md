@@ -3,7 +3,7 @@
 - **Actualizado:** 2026-09-15
 - **Commit base:** `cd5044e` (`origin/main`)
 - **Estado general:** Fase 0 fusionada, CI y ruleset activos; producto no certificado para producción.
-- **Árbol de trabajo:** rama limpia para integrar Memento; el trabajo local de HU-ED-07 no forma parte de este cambio.
+- **Árbol de trabajo:** el trabajo local de HU-ED-07 permanece separado de la Fase 0 y de Memento.
 
 ## Terminado en el repositorio
 
@@ -41,8 +41,8 @@
 
 ## Siguiente paso recomendado
 
-Validar y publicar la integración opcional de Memento. Después, revisar por
-separado el trabajo local de HU-ED-07; no continuar funcionalidad sin aprobación.
+Revisar por separado el trabajo local de HU-ED-07 y definir un alcance verificable
+antes de continuarlo; no mezclarlo con mantenimiento de agentes.
 
 ## Última validación conocida
 
