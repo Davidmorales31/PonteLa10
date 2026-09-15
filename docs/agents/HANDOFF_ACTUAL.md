@@ -1,16 +1,15 @@
 # Handoff actual — Fase 0
 
-- **Objetivo:** estabilizar gobernanza, contexto, validaciones, CI y memoria opcional.
-- **Completado:** contexto único, router, matriz, CI, roadmap, política de memoria
-  y diagnóstico GitHub; corrección de Vitest validada sin `.nuxt` previo.
-- **Archivos modificados:** documentación, CI y scripts de validación de la Fase 0; HU-ED-07 está excluida.
-- **Decisiones:** Memento es opcional; no instalar sin `pipx`; no alterar producto.
-- **Validaciones ejecutadas:** `npm ci`, lint, 15 archivos/83 pruebas, typecheck y build en la rama limpia.
-- **Fallos:** el primer CI del PR detectó un lockfile incompleto para npm 10;
-  se regeneró con npm 10.9.4. Memento no está disponible en `PATH`.
-- **Pendientes:** instalar/registrar Memento cuando exista `pipx`; obtener revisión
-  y fusionar el PR de Fase 0.
-- **Siguiente acción exacta:** revisar el PR borrador `#4`; los cuatro checks ya
-  están verdes y el ruleset de `main` está activo.
-- **Commit base:** `24340c0`
+- **Objetivo:** completar la integración local y opcional de Memento.
+- **Completado:** Python/pipx verificados; núcleo y capa multiagente instalados;
+  memoria inicializada fuera de Git; Codex registrado como `pont3la10-codex`.
+- **Archivos modificados:** instrucciones y documentación de agentes; HU-ED-07 excluida.
+- **Decisiones:** instalación aislada con pipx, solo local, sin sync ni servidor remoto.
+- **Validaciones ejecutadas:** doctor, status, remember, decide, recall,
+  deep-recall, dashboard HTTP 200 limitado a `127.0.0.1` y `git diff --check`.
+- **Fallos:** `memento-multiagent` no existe en PyPI; CP-1252 rompe la salida
+  Unicode del núcleo. Se usaron commits oficiales y `PYTHONUTF8=1`.
+- **Pendientes:** publicar el cambio documental y confirmar CI remoto.
+- **Siguiente acción exacta:** abrir un PR separado para la integración de Memento.
+- **Commit base:** `cd5044e`
 - **Commit final:** se registrará al cerrar la Fase 0.

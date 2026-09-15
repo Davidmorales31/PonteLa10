@@ -37,14 +37,27 @@ código y pruebas prevalecen sobre resúmenes desactualizados.
 ## Contexto, memoria y continuidad
 
 - Aplicar `docs/agents/MEMORIA.md`; Memento nunca sustituye estado, Git o código.
-- Si `memento-multiagent` está disponible, antes de trabajo no trivial ejecutar
-  un recall específico del dominio y usar como máximo 3–5 resultados útiles.
-- Usar deep recall solo para historia o decisiones no resueltas; ignorar y marcar
-  contexto obsoleto o duplicado.
-- Tras trabajo sustancial, recordar únicamente decisiones, restricciones,
-  descubrimientos, riesgos, fallos costosos o handoffs compactos.
 - Si Memento no está disponible, continuar normalmente. Instalación, registro y
   privacidad se documentan en `docs/agents/CONFIGURACION_MEMENTO.md`.
+
+### Shared Agent Memory
+
+Usar la memoria MEMENTO compartida mediante `memento-multiagent`:
+
+- Antes de trabajo no trivial, ejecutar `memento-multiagent recall "<consulta>"
+  --agent pont3la10-codex` y conservar como máximo 3–5 resultados útiles.
+- Usar `memento-multiagent deep-recall "<consulta>" --agent pont3la10-codex`
+  solo para decisiones, procedimientos o historia que el recall normal no resuelva.
+- Antes de cerrar trabajo sustancial, guardar hechos, decisiones, rutas, comandos
+  y seguimientos concisos con las categorías autorizadas en `MEMORIA.md`.
+- Usar `memento-multiagent remember "<hecho>" --agent pont3la10-codex
+  --category <categoria> --keywords "<palabras>"` para hechos compactos.
+- Usar `memento-multiagent decide "<tema>" "<decisión>" --agent
+  pont3la10-codex --rationale "<motivo>"` para decisiones.
+- Pedir autorización antes de editar la wiki, sincronizar, cambiar skills
+  globales, borrar memoria o modificar instrucciones de otro agente.
+- Nunca guardar claves, tokens, cookies, contraseñas, `.env`, datos privados ni
+  conversaciones completas. Marcar contexto obsoleto, duplicado o riesgoso.
 
 ## Agentes secundarios
 
