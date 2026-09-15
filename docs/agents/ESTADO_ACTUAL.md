@@ -1,9 +1,9 @@
 # Estado actual de Pont3la10
 
 - **Actualizado:** 2026-09-15
-- **Commit base:** `24340c0` (`origin/main`)
-- **Estado general:** Fase 0 implementada y validada localmente; producto no certificado para producción.
-- **Árbol de trabajo:** rama limpia y separada para la Fase 0; el trabajo local de HU-ED-07 no forma parte de este cambio.
+- **Commit base:** `cd5044e` (`origin/main`)
+- **Estado general:** Fase 0 fusionada, CI y ruleset activos; producto no certificado para producción.
+- **Árbol de trabajo:** el trabajo local de HU-ED-07 permanece separado de la Fase 0 y de Memento.
 
 ## Terminado en el repositorio
 
@@ -14,6 +14,7 @@
 - Resultados deportivos para fútbol, baloncesto, béisbol y tenis.
 - Bandeja segura para registrar y gestionar ingestas editoriales.
 - 10 migraciones versionadas, desde `0001` hasta `0010`.
+- Memento local opcional instalado, con Codex registrado y datos fuera de Git.
 
 ## Parcial o activo
 
@@ -23,13 +24,13 @@
 
 ## Bloqueos
 
-- `python`, `pipx` y `memento-multiagent` no están disponibles en `PATH`.
 - No se verificó qué migraciones están aplicadas en el Supabase remoto.
 - No hay prueba real confirmada de TikTok a `evidence_ready`.
 
 ## Deuda técnica confirmada
 
-- El CI remoto más reciente falla en `test` por ejecutar Vitest sin preparar Nuxt.
+- Memento es un MVP externo instalado desde commits oficiales porque
+  `memento-multiagent` no está publicado en PyPI.
 - CI instala dependencias en cuatro jobs; se conserva para mantener checks independientes.
 - `npm audit` reporta 14 vulnerabilidades en dependencias (5 moderadas, 8 altas
   y 1 crítica); requieren revisión separada, sin aplicar arreglos automáticos.
@@ -40,13 +41,15 @@
 
 ## Siguiente paso recomendado
 
-Revisar y fusionar el PR independiente de Fase 0. Después, revisar por separado
-el trabajo local de HU-ED-07; no continuar funcionalidad sin aprobación.
+Revisar por separado el trabajo local de HU-ED-07 y definir un alcance verificable
+antes de continuarlo; no mezclarlo con mantenimiento de agentes.
 
 ## Última validación conocida
 
 El 2026-09-15 pasaron en la rama limpia `npm ci`, lint, 15 archivos/83 pruebas,
 typecheck y build. El build emitió una advertencia de dependencia obsoleta.
+También pasaron doctor, status, remember, decide, recall, deep-recall y la prueba
+HTTP local del dashboard; no quedó ningún servidor activo.
 
 ## Documentos posiblemente desactualizados
 

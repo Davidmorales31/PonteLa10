@@ -25,6 +25,25 @@ un diario ni un destino para logs completos.
   `npm ci` con esa misma versión antes de publicar.
 - **Estado:** superado por Fase 0; confirmar los cuatro jobs remotos.
 
+## 2026-09-15 — Instalación de Memento desde PyPI
+
+- **Problema:** `pipx install memento-multiagent` no encontró una distribución.
+- **Intento:** instalar el nombre publicado en el README oficial.
+- **Resultado:** PyPI respondió que no existe una versión compatible disponible.
+- **Causa confirmada:** el proyecto no estaba publicado en PyPI.
+- **Alternativa recomendada:** instalar con pipx desde un commit verificado del
+  repositorio oficial y conservar el SHA en la documentación.
+- **Estado:** superado.
+
+## 2026-09-15 — Salida Unicode de Memento en Windows
+
+- **Problema:** `memento init`, `status` y la ayuda fallaron al imprimir símbolos.
+- **Intento:** ejecutar el CLI bajo la codificación CP-1252 de la terminal.
+- **Resultado:** `UnicodeEncodeError`, aunque la inicialización alcanzó a crear SQLite.
+- **Causa confirmada:** el CLI imprime caracteres no representables en CP-1252.
+- **Alternativa recomendada:** ejecutar Python en modo UTF-8 mediante `PYTHONUTF8=1`.
+- **Estado:** superado localmente; pendiente de corrección upstream.
+
 ## Plantilla
 
 - **Fecha:** AAAA-MM-DD
