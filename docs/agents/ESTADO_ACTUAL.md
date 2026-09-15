@@ -26,7 +26,6 @@
 - `python`, `pipx` y `memento-multiagent` no están disponibles en `PATH`.
 - No se verificó qué migraciones están aplicadas en el Supabase remoto.
 - No hay prueba real confirmada de TikTok a `evidence_ready`.
-- El ruleset de `main` está desactivado.
 
 ## Deuda técnica confirmada
 
@@ -41,8 +40,8 @@
 
 ## Siguiente paso recomendado
 
-Publicar y validar la Fase 0 en un PR independiente. Después, revisar por
-separado el trabajo local de HU-ED-07; no continuar funcionalidad sin aprobación.
+Revisar y fusionar el PR independiente de Fase 0. Después, revisar por separado
+el trabajo local de HU-ED-07; no continuar funcionalidad sin aprobación.
 
 ## Última validación conocida
 

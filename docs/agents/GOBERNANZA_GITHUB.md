@@ -5,20 +5,16 @@ Verificación de solo lectura realizada el 2026-09-15.
 ## Estado observado
 
 - Rama predeterminada remota: `main`, commit `24340c0`.
-- PR abiertos: ninguno.
-- Último CI: ejecución `33892822019`, fallida en `test`; los otros jobs pasaron.
-- Ruleset `main` (id `19154369`): existe, pero `enforcement` está `disabled`.
-- Exige PR, una aprobación, bloqueo de borrado/force-push y `lint`/`build`;
-  no incluye `test`/`typecheck` y sus condiciones no limitan una rama.
-- La API pública reporta `main` como no protegida.
+- PR abierto: Fase 0, borrador `#4`.
+- Último CI: ejecución `34996033049`, con `lint`, `test`, `typecheck` y `build` aprobados.
+- Ruleset `main` (id `19154369`): activo y limitado a `refs/heads/main`.
+- Exige PR, una aprobación, conversaciones resueltas, rama actualizada y los
+  cuatro checks de CI; bloquea borrado y actualizaciones no fast-forward.
 
-## Configuración recomendada, no aplicada
+## Configuración aplicada
 
-1. Limitar el ruleset a `refs/heads/main` y activarlo.
-2. Exigir PR, una aprobación, conversaciones resueltas y rama actualizada.
-3. Bloquear borrados y actualizaciones no fast-forward.
-4. Exigir `lint`, `test`, `typecheck` y `build` cuando el CI corregido los publique.
-5. Mantener secret scanning y Dependabot alerts según disponibilidad.
+El 2026-09-15 se activó el ruleset después de que los cuatro checks pasaran en
+el PR. Secret scanning y Dependabot alerts no se modificaron.
 
 ## Ramas posiblemente obsoletas
 
@@ -30,5 +26,5 @@ Revisar antes de borrar; esta lista no autoriza eliminación:
 - `codex/supabase-configuracion-inicial` (`185f06e`)
 
 `codex/enlaces-internos-compartir` contiene trabajo local que no forma parte de
-este PR; no clasificarla como obsoleta. No se cambió ninguna regla remota durante
-esta verificación.
+este PR; no clasificarla como obsoleta. `codex/fase-0-gobernanza` es la rama del
+PR activo y tampoco debe eliminarse.

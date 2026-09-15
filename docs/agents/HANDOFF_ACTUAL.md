@@ -8,9 +8,9 @@
 - **Validaciones ejecutadas:** `npm ci`, lint, 15 archivos/83 pruebas, typecheck y build en la rama limpia.
 - **Fallos:** el primer CI del PR detectó un lockfile incompleto para npm 10;
   se regeneró con npm 10.9.4. Memento no está disponible en `PATH`.
-- **Pendientes:** instalar/registrar Memento cuando exista `pipx`; ejecutar CI
-  remoto y activar el ruleset autorizado solo cuando los cuatro checks estén verdes.
-- **Siguiente acción exacta:** publicar el PR de Fase 0, observar `lint`, `test`,
-  `typecheck` y `build`, y después aplicar la gobernanza autorizada.
+- **Pendientes:** instalar/registrar Memento cuando exista `pipx`; obtener revisión
+  y fusionar el PR de Fase 0.
+- **Siguiente acción exacta:** revisar el PR borrador `#4`; los cuatro checks ya
+  están verdes y el ruleset de `main` está activo.
 - **Commit base:** `24340c0`
 - **Commit final:** se registrará al cerrar la Fase 0.
