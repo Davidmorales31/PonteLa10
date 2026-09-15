@@ -72,18 +72,12 @@ Cada PR debe incluir:
 - Resumen de cambios.
 - Motivo o contexto.
 - Capturas si cambia UI.
-- Validaciones ejecutadas.
+- Validaciones ejecutadas según `docs/agents/VALIDACIONES.md`.
 - Riesgos o pendientes conocidos.
+- Referencia a Issue o HU.
 
 ## Validacion Local
 
-Antes de abrir PR:
-
-```bash
-npm.cmd run lint
-npm.cmd run build
-```
-
-GitHub Actions valida con Node.js 22 LTS.
-
-Si el cambio solo toca documentacion, `lint` y `build` no son obligatorios, pero el PR debe decirlo.
+La única matriz oficial y la definición de terminado viven en
+`docs/agents/VALIDACIONES.md`. GitHub Actions usa Node.js 22 LTS y publica
+checks separados de lint, pruebas, typecheck y build.

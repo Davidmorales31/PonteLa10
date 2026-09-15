@@ -1,76 +1,64 @@
-# Instrucciones Persistentes Para Codex
+# Instrucciones permanentes para agentes
 
-Estas reglas aplican siempre que Codex trabaje en Pont3la10.
+## Proyecto
 
-## Proyecto Activo
+- Trabajar exclusivamente en `C:\PONTE LA 10`; no usar la copia de OneDrive.
+- Comunicarse y nombrar el dominio en español: camelCase para código propio y
+  PascalCase descriptivo para componentes Vue. Conservar nombres externos.
+- No desarrollar funcionalidades fuera del objetivo activo.
 
-- La carpeta principal del proyecto es `C:\PONTE LA 10`.
-- No trabajar en la copia anterior ubicada en OneDrive.
-- Antes de tocar codigo, revisar el contexto local y respetar cambios existentes.
+## Inicio obligatorio
 
-## Idioma Y Nombres
+1. Leer `AGENTS.md`.
+2. Leer `docs/agents/ESTADO_ACTUAL.md`.
+3. Leer `docs/agents/MAPA_CONTEXTO.md`.
+4. Seleccionar solo los documentos del dominio actual.
+5. Revisar el código directamente relacionado.
+6. Implementar un cambio acotado.
+7. Validar según `docs/agents/VALIDACIONES.md`.
+8. Actualizar `ESTADO_ACTUAL.md` y un handoff si el trabajo fue sustancial.
 
-- Programar el dominio del proyecto en espanol.
-- Usar `camelCase` para variables, funciones, propiedades y utilitarios.
-- Usar componentes Vue en PascalCase descriptivo en espanol, por ejemplo `TarjetaArticulo`.
-- Mantener textos visibles en espanol con tono Pont3la10.
-- Conservar nombres tecnicos externos cuando sean APIs, paquetes, comandos o convenciones del framework.
+No leer todas las HU o toda la documentación por defecto. Git, migraciones,
+código y pruebas prevalecen sobre resúmenes desactualizados.
 
-## Arquitectura
+## Seguridad y cambios existentes
 
-- Priorizar componentes globales autoimportados por Nuxt.
-- Priorizar funciones reutilizables en `utils/` o composables cuando una regla se repite.
-- Mantener separados los dominios: editorial, redes internas, autenticacion, media, SEO e interactivos.
-- El generador de redes es una herramienta interna del panel editorial, no una pagina publica.
-- Supabase debe quedar preparado, pero no debe romper localmente si faltan variables de entorno.
+- Inspeccionar Git antes de editar. Preservar cambios ajenos y no borrar,
+  revertir, mover, commitear o publicar trabajo sin autorización.
+- No exponer secretos, tokens, cookies, claves privadas, contenido de `.env`,
+  datos personales ni logs sensibles.
+- Validar entradas en servidor. Autorizar endpoints privados y respaldarlos con
+  RLS; nunca usar `service_role` en el navegador ni como atajo de usuario.
+- Mantener capacidades centralizadas, MFA y auditoría en acciones sensibles.
+- La IA asiste; toda publicación requiere aprobación humana.
+- Supabase y herramientas opcionales no deben romper la ejecución local cuando
+  falten variables o programas.
 
-## Seguridad
+## Contexto, memoria y continuidad
 
-- Validar entradas con esquemas antes de persistir o publicar.
-- No exponer claves privadas en cliente, logs, commits ni documentacion.
-- Mantener Row Level Security en Supabase desde las primeras migraciones.
-- La IA puede asistir, pero las primeras fases requieren aprobacion humana antes de publicar.
-- Una sesion publica no concede acceso editorial: exigir rol activo y permiso explicito.
-- Autorizar cada endpoint privado en servidor y respaldar la misma regla con RLS.
-- No dispersar comparaciones de roles por componentes; usar capacidades centralizadas.
-- Exigir MFA para publicar, programar, gestionar equipo y otras acciones sensibles.
-- Registrar en auditoria cambios de roles, estados editoriales y acciones criticas.
-- Nunca usar `service_role` en el navegador ni como atajo para una operacion de usuario.
-- No mostrar navegacion hacia modulos internos que aun no tengan ruta y funcionalidad reales.
+- Aplicar `docs/agents/MEMORIA.md`; Memento nunca sustituye estado, Git o código.
+- Si `memento-multiagent` está disponible, antes de trabajo no trivial ejecutar
+  un recall específico del dominio y usar como máximo 3–5 resultados útiles.
+- Usar deep recall solo para historia o decisiones no resueltas; ignorar y marcar
+  contexto obsoleto o duplicado.
+- Tras trabajo sustancial, recordar únicamente decisiones, restricciones,
+  descubrimientos, riesgos, fallos costosos o handoffs compactos.
+- Si Memento no está disponible, continuar normalmente. Instalación, registro y
+  privacidad se documentan en `docs/agents/CONFIGURACION_MEMENTO.md`.
 
-## SEO
+## Agentes secundarios
 
-- Considerar el SEO en toda pagina, ruta o modulo publico desde su implementacion inicial.
-- Usar la infraestructura SEO compartida del proyecto para titulo, descripcion, canonical, Open Graph y Twitter Cards.
-- Mantener `robots.txt` y `sitemap.xml` sincronizados cuando cambien las rutas publicas.
-- Agregar datos estructurados solo cuando representen fielmente el contenido visible y los datos disponibles.
-- Entregar metadatos importantes desde SSR y conservar HTML semantico, enlaces internos rastreables, jerarquia de encabezados y textos alternativos utiles.
-- Marcar como `noindex` las rutas privadas, errores, busquedas internas y contenido mock o insuficiente para indexacion.
-- Tener en cuenta rendimiento, dimensiones de imagenes y estabilidad visual como parte del SEO tecnico.
+- No crear subagentes para cambios pequeños.
+- Usar investigador solo ante información externa o diagnóstico aislado.
+- Usar revisor para seguridad, migraciones, autenticación o cambios grandes.
+- Delegar solo subtareas independientes con archivos claramente separados.
+- Nunca enviar todo el repositorio a todos los agentes.
+- El implementador recibe objetivo, restricciones, archivos candidatos y criterios.
+- El revisor recibe principalmente diff, riesgos y criterios de aceptación.
 
-## Criterio Editorial
+## Cierre
 
-- Una noticia puede tratar tecnologia, cultura digital, entretenimiento, tendencias u otros temas definidos por la linea editorial sin forzar una relacion con el deporte.
-- No insertar menciones a Pont3la10 dentro del cuerpo solo para intentar posicionar la marca. La marca debe estar en la autoria, el publisher, la cabecera y los metadatos; mencionarla en el texto unicamente cuando aporte contexto real.
-- Priorizar contenido util, original y centrado en el lector. No deformar un tema ni agregar parrafos artificiales para cumplir palabras clave.
-- Verificar fecha, fuente y contexto antes de cubrir una tendencia. Separar claramente hechos comprobados, explicaciones tecnicas e inferencias editoriales.
-- Permitir y fomentar enlaces internos cuando ayuden a ampliar el tema. Deben apuntar a contenido publico, existente y relacionado, con texto ancla breve y descriptivo.
-- No enlazar desde una noticia publica hacia borradores, rutas privadas, contenido inexistente ni enlaces internos genericos como "haz clic aqui".
-- Las imagenes editoriales generadas deben responder al tema real de la noticia. No tienen que usar ambiente deportivo, estadio, jugadores ni la paleta de Pont3la10 cuando el contenido no lo requiera.
-- Evitar logos, marcas, atletas o interfaces de terceros innecesarios en imagenes generadas. Cuando se necesite representar una plataforma, usar una interfaz social generica que comunique la idea sin copiar su identidad.
-- Registrar el origen y los creditos de cada imagen. Si una imagen fue generada con asistencia de IA, conservar esa informacion en la trazabilidad editorial.
-
-## Flujo De Trabajo
-
-- Antes de editar, entender la estructura existente.
-- Usar `apply_patch` para cambios manuales.
-- Mantener cambios pequenos y relacionados con la tarea.
-- No revertir cambios ajenos sin instruccion explicita.
-- Si se toca codigo, correr `npm.cmd run lint`.
-- Si se toca estructura, rutas, build, Nuxt, Supabase o dependencias, correr tambien `npm.cmd run build`.
-
-## Git
-
-- Usar Conventional Commits en espanol.
-- No commitear `node_modules`, `.nuxt`, `.output`, `.env` ni logs locales.
-- Preferir PRs pequenos, revisables y con checklist completo.
+- Validar únicamente mediante la matriz oficial y reportar cualquier omisión.
+- Actualizar el estado factual y, para trabajo sustancial, partir de
+  `docs/agents/plantillas/HANDOFF.md`.
+- Entregar: estado, cambios, validaciones con resultado, riesgos y siguiente acción.

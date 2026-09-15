@@ -51,27 +51,11 @@ Evitar componente cuando:
 
 ## Validacion
 
-Cuando se toca codigo:
-
-```bash
-npm.cmd run lint
-npm.cmd run test:unit
-```
-
-Cuando se toca Nuxt, rutas, dependencias, build, Supabase o estructura:
-
-```bash
-npm.cmd run typecheck
-npm.cmd run build
-```
+Consultar exclusivamente `docs/agents/VALIDACIONES.md`. Este documento no
+mantiene una segunda matriz de comandos.
 
 ## Definicion De Terminado
 
-Un cambio se considera listo cuando:
-
-- Cumple el objetivo.
-- No rompe rutas existentes.
-- Respeta identidad visual y convenciones.
-- Tiene validacion local o explica por que no aplica.
-- No deja procesos innecesarios corriendo.
-- No introduce secretos ni archivos generados al repo.
+La definición oficial de terminado está en `docs/agents/VALIDACIONES.md`.
+Además, el cambio debe cumplir su objetivo, respetar estas convenciones y no
+introducir secretos, artefactos locales ni procesos innecesarios.

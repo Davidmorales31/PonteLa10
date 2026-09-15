@@ -10,13 +10,12 @@ Pont3la10 es una plataforma deportiva digital enfocada en contenido, tecnologia,
 - Diseno mobile-first con identidad visual Pont3la10.
 - Flujo editorial con aprobacion humana antes de publicar contenido asistido por IA.
 
-## Primeras metas
+## Estado
 
-1. Publicar landing y blog base.
-2. Crear panel editorial minimo.
-3. Conectar Supabase Auth y tablas editoriales.
-4. Integrar generador interno de piezas sociales por publicacion.
-5. Construir el primer modulo interactivo.
+El repositorio contiene sitio público, resultados deportivos, autenticación
+editorial, CMS, multimedia, revisión/publicación, enlaces internos e ingestas
+experimentales. El estado factual y los límites vigentes se mantienen en
+`docs/agents/ESTADO_ACTUAL.md`; el roadmap distingue terminado, parcial y pendiente.
 
 ## Seguridad
 
@@ -34,6 +33,8 @@ Las reglas de idioma, camelCase y reutilizacion viven en `docs/CONVENCIONES_CODI
 - Configuracion Supabase: `docs/CONFIGURACION_SUPABASE.md`.
 - HU Login Editorial: `docs/HU_LOGIN_EDITORIAL.md`.
 - Instrucciones persistentes para Codex: `AGENTS.md`.
+- Mapa de contexto para agentes: `docs/agents/MAPA_CONTEXTO.md`.
+- Matriz única de validaciones: `docs/agents/VALIDACIONES.md`.
 
 ## Scripts
 
