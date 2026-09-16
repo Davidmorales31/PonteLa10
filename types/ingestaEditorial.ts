@@ -16,9 +16,19 @@ export type EstadoIngestaEditorial =
   | 'pending'
   | 'queued'
   | 'processing'
+  | 'evidence_ready'
   | 'draft_created'
   | 'failed'
   | 'cancelled'
+
+export type EtapaIngestaEditorial =
+  | 'validating_source'
+  | 'reading_metadata'
+  | 'downloading_audio'
+  | 'transcribing'
+  | 'translating'
+  | 'persisting_evidence'
+  | 'completed'
 
 export interface ReglasIngestaEditorial {
   tipoContenido: TipoContenidoEditorial | 'auto'
@@ -50,6 +60,14 @@ export interface IngestaEditorial {
   solicitanteId: string
   solicitanteNombre: string
   articuloId: string | null
+  etapaProcesamiento: EtapaIngestaEditorial | null
+  progresoPorcentaje: number
+  intentoActualId: string | null
+  leaseHasta: string | null
+  ultimaActividadEn: string | null
+  idiomaFuente: 'es' | 'en' | null
+  recuperable: boolean
+  versionResultado: number
   intentos: number
   codigoError: string
   mensajeError: string
@@ -76,4 +94,15 @@ export interface ResultadoCancelacionIngestaEditorial {
   id: string
   estado: EstadoIngestaEditorial
   actualizadoEn: string
+}
+
+export interface ResultadoReencolarIngestaEditorial {
+  id: string
+  estado: EstadoIngestaEditorial
+  encoladoEn: string
+}
+
+export interface ResultadoEliminacionIngestaEditorial {
+  id: string
+  eliminadoEn: string
 }

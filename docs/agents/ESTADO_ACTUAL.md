@@ -1,9 +1,9 @@
 # Estado actual de Pont3la10
 
-- **Actualizado:** 2026-09-15
-- **Commit base:** `cd5044e` (`origin/main`)
-- **Estado general:** Fase 0 fusionada, CI y ruleset activos; producto no certificado para producción.
-- **Árbol de trabajo:** el trabajo local de HU-ED-07 permanece separado de la Fase 0 y de Memento.
+- **Actualizado:** 2026-09-16
+- **Commit base:** `ff28d4c` (`origin/main`)
+- **Estado general:** Fase 0 y la integración local de Memento están fusionadas; HU-ED-07 quedó aislada en una rama local basada en ese `main`. El producto no está certificado para producción.
+- **Árbol de trabajo:** `C:\PONTE LA 10 HU-ED-07`, rama `codex/hu-ed-07-aislada`. La copia de origen no se alteró.
 
 ## Terminado en el repositorio
 
@@ -13,19 +13,27 @@
 - Artículos públicos, enlaces internos, tarjetas sociales, sitemap y robots.
 - Resultados deportivos para fútbol, baloncesto, béisbol y tenis.
 - Bandeja segura para registrar y gestionar ingestas editoriales.
-- 10 migraciones versionadas, desde `0001` hasta `0010`.
+- 10 migraciones versionadas en `main`, desde `0001` hasta `0010`.
 - Memento local opcional instalado, con Codex registrado y datos fuera de Git.
 
 ## Parcial o activo
 
-- **HU-ED-07:** la bandeja y la cola base están versionadas. La extracción,
-  transcripción, traducción, evidencia y ejecución durable siguen pendientes.
+- **HU-ED-07:** se trasladaron a esta rama local la propuesta de cola durable,
+  extracción, transcripción, traducción y evidencia. La prueba local alcanzó
+  `evidence_ready`; las migraciones `0013` y `0014` ya están aplicadas en
+  Supabase remoto, pero falta la certificación funcional completa.
+- **Limpieza de fallos de ingesta:** implementada localmente con la migración
+  `0014`, RPC protegida por permiso y MFA, confirmación explícita y alerta
+  global. Solo admite ingestas `failed` sin evidencia ni borrador; se aplicó y
+  verificó en Supabase remoto el 2026-09-16.
 - La portada usa datos mock en parte; una pantalla o mock no certifica una función.
 
 ## Bloqueos
 
-- No se verificó qué migraciones están aplicadas en el Supabase remoto.
-- No hay prueba real confirmada de TikTok a `evidence_ready`.
+- El 2026-09-16 se verificó en el panel remoto: `0013_ingesta_worker_durable`
+  está aplicada (versión `20260911224135`) y `0014_eliminar_ingestas_fallidas`
+  se aplicó como versión `20260916110000`. La RPC, permiso, roles y `EXECUTE`
+  para `authenticated` fueron verificados en remoto.
 
 ## Deuda técnica confirmada
 
@@ -41,15 +49,16 @@
 
 ## Siguiente paso recomendado
 
-Revisar por separado el trabajo local de HU-ED-07 y definir un alcance verificable
-antes de continuarlo; no mezclarlo con mantenimiento de agentes.
+Probar desde `/admin/ingestas` la eliminación de una ingesta fallida de prueba,
+con MFA y la confirmación `ELIMINAR`, antes de crear un commit o PR.
 
 ## Última validación conocida
 
-El 2026-09-15 pasaron en la rama limpia `npm ci`, lint, 15 archivos/83 pruebas,
-typecheck y build. El build emitió una advertencia de dependencia obsoleta.
+El 2026-09-16 pasaron en la rama limpia lint, typecheck, 15 archivos/86 pruebas
+y build. El build emitió una advertencia de dependencia obsoleta.
 También pasaron doctor, status, remember, decide, recall, deep-recall y la prueba
-HTTP local del dashboard; no quedó ningún servidor activo.
+HTTP local del dashboard. El servidor de desarrollo actual está levantado en
+`http://127.0.0.1:3001`.
 
 ## Documentos posiblemente desactualizados
 

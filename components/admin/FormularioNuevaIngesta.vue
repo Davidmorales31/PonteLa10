@@ -70,7 +70,7 @@ function registrar() {
         <div>
           <p class="etiqueta-panel">Nueva solicitud</p>
           <h2 id="titulo-nueva-ingesta">Registrar una fuente</h2>
-          <p>Pega el enlace y deja preparado el enfoque que deberá seguir el procesamiento.</p>
+          <p>Pega el enlace y deja preparado el enfoque para extraer evidencia verificable.</p>
         </div>
       </div>
       <button
@@ -164,21 +164,21 @@ function registrar() {
           <input v-model="formulario.reglas.generarSeo" type="checkbox">
           <span>
             <strong>Propuesta SEO</strong>
-            <small>Preparará título, descripción y texto social.</small>
+            <small>Queda como intención editorial para la etapa de redacción.</small>
           </span>
         </label>
         <label>
           <input v-model="formulario.reglas.conservarVideo" type="checkbox">
           <span>
             <strong>Conservar video</strong>
-            <small>Intentará incluir el recurso original cuando sea viable.</small>
+            <small>HU-ED-07 solo conserva metadatos, transcripción y traducción.</small>
           </span>
         </label>
       </fieldset>
 
       <p class="nota-seguridad-ingesta">
         <ShieldCheck aria-hidden="true" />
-        Registrar una fuente no la publica. El resultado siempre llegará como borrador.
+        Registrar una fuente no la publica. Esta fase deja evidencia lista para revisión.
       </p>
 
       <p v-if="error" class="error-formulario-editorial" role="alert">{{ error }}</p>

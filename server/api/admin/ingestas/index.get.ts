@@ -8,7 +8,11 @@ import { esquemaFiltrosIngestasEditoriales } from '~/utils/editorial/ingestas'
 export default defineEventHandler(async (
   evento
 ): Promise<RespuestaBandejaIngestasEditoriales> => {
-  await exigirPermisoEditorial(evento, 'ingestas.ver')
+  try {
+    await exigirPermisoEditorial(evento, 'ingestas.ver')
+  } catch {
+    await exigirPermisoEditorial(evento, 'ingestas.registrar')
+  }
   const filtros = validarEntradaEditorial(
     esquemaFiltrosIngestasEditoriales,
     getQuery(evento)

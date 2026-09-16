@@ -11,6 +11,7 @@ export const estadosIngestaEditorial: EstadoIngestaEditorial[] = [
   'pending',
   'queued',
   'processing',
+  'evidence_ready',
   'draft_created',
   'failed',
   'cancelled'
@@ -29,6 +30,7 @@ export const etiquetasEstadoIngesta: Record<EstadoIngestaEditorial, string> = {
   pending: 'Pendiente',
   queued: 'En cola',
   processing: 'Procesando',
+  evidence_ready: 'Evidencia lista',
   draft_created: 'Borrador creado',
   failed: 'Requiere atención',
   cancelled: 'Cancelada'
@@ -210,7 +212,11 @@ export const esquemaFiltrosIngestasEditoriales = z.object({
 })
 
 export const esquemaAccionIngestaEditorial = z.object({
-  accion: z.literal('cancelar')
+  accion: z.enum(['cancelar', 'reencolar'])
+})
+
+export const esquemaConfirmacionEliminacionIngesta = z.object({
+  confirmacion: z.literal('ELIMINAR')
 })
 
 export const esquemaIdIngestaEditorial = z.string().uuid()

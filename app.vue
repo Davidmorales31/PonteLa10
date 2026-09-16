@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import BloqueoInterfazGlobal from '~/components/BloqueoInterfazGlobal.vue'
+import AlertasEditorialesGlobales from '~/components/AlertasEditorialesGlobales.vue'
 import { construirUrlAbsoluta, normalizarUrlSitio, serializarJsonLd } from '~/utils/seo'
 
 const configuracion = useRuntimeConfig()
@@ -46,6 +47,7 @@ useHead({
 <template>
   <NuxtLoadingIndicator color="#ffd800" :height="3" :throttle="120" />
   <BloqueoInterfazGlobal />
+  <AlertasEditorialesGlobales />
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>

@@ -7,10 +7,13 @@ import {
   ExternalLink,
   FileCheck2,
   Globe2,
+  Languages,
   LoaderCircle,
   MessageCircle,
   Music2,
   Play,
+  RotateCcw,
+  Trash2,
   TimerReset,
 } from '@lucide/vue'
 import type {
@@ -25,11 +28,14 @@ import {
 defineProps<{
   ingestas: IngestaEditorial[]
   puedeGestionar: boolean
+  puedeEliminar: boolean
   cancelandoId: string
 }>()
 
 const emit = defineEmits<{
   cancelar: [ingesta: IngestaEditorial]
+  reencolar: [ingesta: IngestaEditorial]
+  eliminar: [ingesta: IngestaEditorial]
 }>()
 
 const formatoFecha = new Intl.DateTimeFormat('es-CO', {
@@ -48,6 +54,14 @@ const iconosPlataforma: Record<PlataformaIngestaEditorial, typeof Globe2> = {
 
 function puedeCancelar(ingesta: IngestaEditorial): boolean {
   return ['pending', 'queued'].includes(ingesta.estado)
+}
+
+function puedeReencolar(ingesta: IngestaEditorial): boolean {
+  return ingesta.estado === 'failed' && ingesta.recuperable
+}
+
+function esEliminable(ingesta: IngestaEditorial): boolean {
+  return ingesta.estado === 'failed' && !ingesta.articuloId && ingesta.versionResultado === 0
 }
 </script>
 
@@ -91,12 +105,21 @@ function puedeCancelar(ingesta: IngestaEditorial): boolean {
                 class="icono-girando"
                 aria-hidden="true"
               />
-              <FileCheck2 v-else-if="ingesta.estado === 'draft_created'" aria-hidden="true" />
+              <FileCheck2
+                v-else-if="['draft_created', 'evidence_ready'].includes(ingesta.estado)"
+                aria-hidden="true"
+              />
               <CircleAlert v-else-if="ingesta.estado === 'failed'" aria-hidden="true" />
               <Ban v-else-if="ingesta.estado === 'cancelled'" aria-hidden="true" />
               <TimerReset v-else aria-hidden="true" />
               {{ etiquetasEstadoIngesta[ingesta.estado] }}
             </span>
+            <small v-if="ingesta.estado === 'processing'" class="detalle-error-ingesta">
+              {{ ingesta.etapaProcesamiento || 'processing' }} · {{ ingesta.progresoPorcentaje }}%
+            </small>
+            <small v-else-if="ingesta.estado === 'evidence_ready'" class="detalle-error-ingesta">
+              Original {{ ingesta.idiomaFuente?.toUpperCase() || 'por revisar' }} · versión {{ ingesta.versionResultado }}
+            </small>
             <small v-if="ingesta.mensajeError" class="detalle-error-ingesta">
               {{ ingesta.mensajeError }}
             </small>
@@ -107,6 +130,10 @@ function puedeCancelar(ingesta: IngestaEditorial): boolean {
               <span v-if="ingesta.reglas.exigirCreditos">Créditos</span>
               <span v-if="ingesta.reglas.generarSeo">SEO</span>
               <span v-if="ingesta.reglas.conservarVideo">Video</span>
+              <span v-if="ingesta.idiomaFuente">
+                <Languages aria-hidden="true" />
+                {{ ingesta.idiomaFuente.toUpperCase() }}
+              </span>
             </div>
           </td>
           <td data-label="Registro">
@@ -118,6 +145,26 @@ function puedeCancelar(ingesta: IngestaEditorial): boolean {
             </div>
           </td>
           <td data-label="Acciones">
+            <button
+              v-if="puedeEliminar && esEliminable(ingesta)"
+              class="boton-icono-editorial boton-icono-editorial--peligro"
+              type="button"
+              title="Eliminar ingesta fallida"
+              aria-label="Eliminar ingesta fallida"
+              @click="emit('eliminar', ingesta)"
+            >
+              <Trash2 aria-hidden="true" />
+            </button>
+            <button
+              v-if="puedeGestionar && puedeReencolar(ingesta)"
+              class="boton-icono-editorial"
+              type="button"
+              title="Reencolar evidencia"
+              aria-label="Reencolar evidencia"
+              @click="emit('reencolar', ingesta)"
+            >
+              <RotateCcw aria-hidden="true" />
+            </button>
             <NuxtLink
               v-if="ingesta.articuloId"
               class="boton-icono-editorial"

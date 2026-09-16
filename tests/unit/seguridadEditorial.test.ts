@@ -17,10 +17,11 @@ describe('seguridad editorial', () => {
     expect(normalizarRedireccionInterna('/admin/seguridad')).toBe('/admin/seguridad')
   })
 
-  it('otorga acceso base al panel a todos los roles editoriales', () => {
-    rolesEditoriales.forEach((rol) => {
+  it('otorga acceso base al panel a todos los roles editoriales humanos', () => {
+    rolesEditoriales.filter(rol => rol !== 'workerIngesta').forEach((rol) => {
       expect(permisosPorRol[rol]).toContain('panel.acceder')
     })
+    expect(permisosPorRol.workerIngesta).not.toContain('panel.acceder')
   })
 
   it('reserva publicación y gestión del equipo para los roles definidos', () => {
@@ -32,6 +33,8 @@ describe('seguridad editorial', () => {
     expect(permisosPorRol.colaborador).not.toContain('contenido.aprobar')
     expect(permisosPorRol.propietario).toContain('contenido.eliminar')
     expect(permisosPorRol.administrador).toContain('contenido.eliminar')
+    expect(permisosPorRol.propietario).toContain('ingestas.eliminar')
+    expect(permisosPorRol.administrador).toContain('ingestas.eliminar')
     expect(permisosPorRol.editorJefe).not.toContain('contenido.eliminar')
   })
 
@@ -55,9 +58,19 @@ describe('seguridad editorial', () => {
       '../../supabase/migrations/0009_editorial_quick_actions_and_deletion.sql',
       import.meta.url
     )
+    const rutaMigracionIngestaDurable = new URL(
+      '../../supabase/migrations/0013_ingesta_worker_durable.sql',
+      import.meta.url
+    )
+    const rutaMigracionEliminarIngestas = new URL(
+      '../../supabase/migrations/0014_eliminar_ingestas_fallidas.sql',
+      import.meta.url
+    )
     const migraciones = [
       readFileSync(rutaMigracionFundacion, 'utf8'),
-      readFileSync(rutaMigracionEliminacion, 'utf8')
+      readFileSync(rutaMigracionEliminacion, 'utf8'),
+      readFileSync(rutaMigracionIngestaDurable, 'utf8'),
+      readFileSync(rutaMigracionEliminarIngestas, 'utf8')
     ].join('\n')
 
     permisosEditoriales.forEach((permiso) => {

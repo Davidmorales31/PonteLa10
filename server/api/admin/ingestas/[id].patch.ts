@@ -1,7 +1,14 @@
-import type { ResultadoCancelacionIngestaEditorial } from '~/types/ingestaEditorial'
+import { randomUUID } from 'node:crypto'
+import type {
+  ResultadoCancelacionIngestaEditorial,
+  ResultadoReencolarIngestaEditorial
+} from '~/types/ingestaEditorial'
 import { exigirPermisoEditorial } from '~/server/utils/autorizacionEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
-import { cancelarIngestaEditorial } from '~/server/utils/repositorioIngestasEditoriales'
+import {
+  cancelarIngestaEditorial,
+  reencolarIngestaEditorial
+} from '~/server/utils/repositorioIngestasEditoriales'
 import { validarEntradaEditorial } from '~/server/utils/validacionEditorial'
 import {
   esquemaAccionIngestaEditorial,
@@ -10,14 +17,22 @@ import {
 
 export default defineEventHandler(async (
   evento
-): Promise<ResultadoCancelacionIngestaEditorial> => {
+): Promise<ResultadoCancelacionIngestaEditorial | ResultadoReencolarIngestaEditorial> => {
   await exigirPermisoEditorial(evento, 'ingestas.gestionar')
   const ingestaId = validarEntradaEditorial(
     esquemaIdIngestaEditorial,
     getRouterParam(evento, 'id')
   )
-  validarEntradaEditorial(esquemaAccionIngestaEditorial, await readBody(evento))
+  const entrada = validarEntradaEditorial(esquemaAccionIngestaEditorial, await readBody(evento))
   const clienteSupabase = obtenerClienteSupabaseEditorial(evento)
+
+  if (entrada.accion === 'reencolar') {
+    return reencolarIngestaEditorial(
+      clienteSupabase,
+      ingestaId,
+      randomUUID()
+    )
+  }
 
   return cancelarIngestaEditorial(clienteSupabase, ingestaId)
 })

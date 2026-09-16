@@ -20,7 +20,12 @@ export const permisosEditoriales: PermisoEditorial[] = [
   'taxonomia.ver',
   'taxonomia.gestionar',
   'ingestas.ver',
+  'ingestas.registrar',
   'ingestas.gestionar',
+  'ingestas.eliminar',
+  'ingestas.worker.reclamar',
+  'ingestas.worker.reportar',
+  'ingestas.worker.finalizar',
   'equipo.ver',
   'equipo.gestionar',
   'configuracion.ver',
@@ -34,7 +39,8 @@ export const rolesEditoriales: RolEditorial[] = [
   'editorJefe',
   'editor',
   'autor',
-  'colaborador'
+  'colaborador',
+  'workerIngesta'
 ]
 
 export const rolesConMfaObligatorio: RolEditorial[] = [
@@ -49,7 +55,8 @@ export const etiquetasRolesEditoriales: Record<RolEditorial, string> = {
   editorJefe: 'Editor jefe',
   editor: 'Editor',
   autor: 'Autor',
-  colaborador: 'Colaborador'
+  colaborador: 'Colaborador',
+  workerIngesta: 'Worker de ingesta'
 }
 
 export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> = {
@@ -72,7 +79,8 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'media.editar',
     'taxonomia.ver',
     'taxonomia.gestionar',
-    'ingestas.ver'
+    'ingestas.ver',
+    'ingestas.registrar'
   ],
   editor: [
     'panel.acceder',
@@ -86,7 +94,8 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'media.subir',
     'media.editar',
     'taxonomia.ver',
-    'ingestas.ver'
+    'ingestas.ver',
+    'ingestas.registrar'
   ],
   autor: [
     'panel.acceder',
@@ -96,7 +105,8 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'contenido.enviarRevision',
     'media.ver',
     'media.subir',
-    'taxonomia.ver'
+    'taxonomia.ver',
+    'ingestas.registrar'
   ],
   colaborador: [
     'panel.acceder',
@@ -106,7 +116,13 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'contenido.enviarRevision',
     'media.ver',
     'media.subir',
-    'taxonomia.ver'
+    'taxonomia.ver',
+    'ingestas.registrar'
+  ],
+  workerIngesta: [
+    'ingestas.worker.reclamar',
+    'ingestas.worker.reportar',
+    'ingestas.worker.finalizar'
   ]
 }
 
