@@ -66,11 +66,16 @@ describe('seguridad editorial', () => {
       '../../supabase/migrations/0014_eliminar_ingestas_fallidas.sql',
       import.meta.url
     )
+    const rutaMigracionRedaccionIa = new URL(
+      '../../supabase/migrations/20260916192944_editorial_ai_drafting.sql',
+      import.meta.url
+    )
     const migraciones = [
       readFileSync(rutaMigracionFundacion, 'utf8'),
       readFileSync(rutaMigracionEliminacion, 'utf8'),
       readFileSync(rutaMigracionIngestaDurable, 'utf8'),
-      readFileSync(rutaMigracionEliminarIngestas, 'utf8')
+      readFileSync(rutaMigracionEliminarIngestas, 'utf8'),
+      readFileSync(rutaMigracionRedaccionIa, 'utf8')
     ].join('\n')
 
     permisosEditoriales.forEach((permiso) => {

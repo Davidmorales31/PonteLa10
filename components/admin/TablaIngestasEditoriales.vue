@@ -6,6 +6,7 @@ import {
   CircleAlert,
   ExternalLink,
   FileCheck2,
+  FilePenLine,
   Globe2,
   Languages,
   LoaderCircle,
@@ -29,6 +30,7 @@ defineProps<{
   ingestas: IngestaEditorial[]
   puedeGestionar: boolean
   puedeEliminar: boolean
+  puedeRedactar: boolean
   cancelandoId: string
 }>()
 
@@ -36,6 +38,7 @@ const emit = defineEmits<{
   cancelar: [ingesta: IngestaEditorial]
   reencolar: [ingesta: IngestaEditorial]
   eliminar: [ingesta: IngestaEditorial]
+  redactar: [ingesta: IngestaEditorial]
 }>()
 
 const formatoFecha = new Intl.DateTimeFormat('es-CO', {
@@ -174,6 +177,18 @@ function esEliminable(ingesta: IngestaEditorial): boolean {
             >
               <FileCheck2 aria-hidden="true" />
             </NuxtLink>
+            <button
+              v-else-if="puedeRedactar && ingesta.estado === 'evidence_ready'"
+              class="boton-icono-editorial"
+              type="button"
+              title="Generar borrador"
+              aria-label="Generar borrador con evidencia"
+              :disabled="cancelandoId === ingesta.id"
+              @click="emit('redactar', ingesta)"
+            >
+              <LoaderCircle v-if="cancelandoId === ingesta.id" class="icono-girando" aria-hidden="true" />
+              <FilePenLine v-else aria-hidden="true" />
+            </button>
             <button
               v-else-if="puedeGestionar && puedeCancelar(ingesta)"
               class="boton-icono-editorial boton-cancelar-ingesta"

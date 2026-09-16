@@ -52,6 +52,7 @@ const formularioAbierto = ref(false)
 const guardando = ref(false)
 const cancelandoId = ref('')
 const reencolandoId = ref('')
+const redactandoId = ref('')
 const ingestaAEliminar = ref<IngestaEditorial | null>(null)
 const errorAccion = ref('')
 const mensajeExito = ref('')
@@ -212,6 +213,21 @@ async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial
   })
   await refresh()
 }
+
+async function generarBorrador(ingesta: IngestaEditorial) {
+  redactandoId.value = ingesta.id
+  errorAccion.value = ''
+  mensajeExito.value = ''
+  try {
+    const resultado = await $fetch<{ id: string, yaExistia: boolean }>(`/api/admin/ingestas/${ingesta.id}/borrador`, { method: 'POST', body: {} })
+    mensajeExito.value = resultado.yaExistia ? 'El borrador ya existía; puedes abrirlo desde la bandeja.' : 'Borrador generado y listo para revisión humana.'
+    await refresh()
+  } catch (errorPeticion) {
+    errorAccion.value = obtenerMensajeError(errorPeticion, 'No se pudo generar el borrador.')
+  } finally {
+    redactandoId.value = ''
+  }
+}
 </script>
 
 <template>
@@ -254,7 +270,7 @@ async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial
         <FileInput aria-hidden="true" />
         <span><strong>{{ paginacion.total }}</strong> solicitudes registradas</span>
       </div>
-      <p>Esta fase termina en evidencia lista; la redacción del borrador queda para la siguiente historia.</p>
+      <p>La evidencia lista puede convertirse en un borrador trazable; toda publicación conserva aprobación humana.</p>
     </section>
 
     <section class="barra-filtros-editoriales" aria-label="Filtros de ingestas">
@@ -336,10 +352,12 @@ async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial
           :ingestas="ingestas"
           :puede-gestionar="tienePermiso('ingestas.gestionar')"
           :puede-eliminar="tienePermiso('ingestas.eliminar')"
-          :cancelando-id="cancelandoId || reencolandoId"
+          :puede-redactar="tienePermiso('ingestas.redactar')"
+          :cancelando-id="cancelandoId || reencolandoId || redactandoId"
           @cancelar="cancelarIngesta"
           @reencolar="reencolarIngesta"
           @eliminar="ingestaAEliminar = $event"
+          @redactar="generarBorrador"
         />
 
         <footer class="paginacion-editorial">

@@ -2,8 +2,8 @@
 
 - **Actualizado:** 2026-09-16
 - **Commit base:** `ff28d4c` (`origin/main`)
-- **Estado general:** Fase 0 y la integración local de Memento están fusionadas; HU-ED-07 quedó aislada en una rama local basada en ese `main`. El producto no está certificado para producción.
-- **Árbol de trabajo:** `C:\PONTE LA 10 HU-ED-07`, rama `codex/hu-ed-07-aislada`. La copia de origen no se alteró.
+- **Estado general:** HU-ED-07 está fusionada en `main`. HU-ED-08 está implementada y su migración fue aplicada y verificada en Supabase; falta la prueba funcional autenticada y el cierre Git.
+- **Árbol de trabajo:** `C:\PONTE LA 10 HU-ED-08`, rama `codex/hu-ed-08`, basada en `origin/main` `6499b7e`. Las otras copias se preservan.
 
 ## Terminado en el repositorio
 
@@ -17,6 +17,8 @@
 - Memento local opcional instalado, con Codex registrado y datos fuera de Git.
 
 ## Parcial o activo
+
+- **HU-ED-08:** propuesta IA de borrador desde evidencia lista, con proveedor DeepSeek solo servidor, contrato Zod, reserva idempotente previa al proveedor, trazabilidad, RLS, RPC atómico y botón en la bandeja. La migración `20260916192944_editorial_ai_drafting.sql` se aplicó en Supabase y se verificó: tabla, RLS, 3 RPC, 5 roles y registro de historial.
 
 - **HU-ED-07:** se trasladaron a esta rama local la propuesta de cola durable,
   extracción, transcripción, traducción y evidencia. La prueba local alcanzó

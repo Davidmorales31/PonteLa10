@@ -1,0 +1,35 @@
+import { createHash } from 'node:crypto'
+import { esquemaPropuestaBorradorIa, versionContratoRedaccionIa } from '~/utils/editorial/redaccionIa'
+import type { EntradaRedaccionIa, ProveedorRedaccionIa, ResultadoRedaccionIa } from './contratosRedaccion'
+import { instruccionesRedaccionV1 } from './instrucciones/redaccion-v1'
+
+interface RespuestaDeepSeek { choices?: Array<{ message?: { content?: string } }>, usage?: { prompt_tokens?: number, completion_tokens?: number, reasoning_tokens?: number }, model?: string }
+
+export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
+  return {
+    async redactarBorrador(entrada: EntradaRedaccionIa): Promise<ResultadoRedaccionIa> {
+      const configuracion = useRuntimeConfig()
+      const apiKey = String(configuracion.editorialAiApiKey || '')
+      const modelo = String(configuracion.editorialAiModel || '')
+      if (!apiKey || !modelo) throw createError({ statusCode: 503, statusMessage: 'La redacción IA no está configurada.', data: { codigo: 'IA_REDACCION_NO_CONFIGURADA' } })
+      const inicio = Date.now()
+      const respuesta = await $fetch<RespuestaDeepSeek>('/chat/completions', {
+        baseURL: String(configuracion.editorialAiBaseUrl || 'https://api.deepseek.com'), method: 'POST', timeout: 60000,
+        headers: { Authorization: `Bearer ${apiKey}` },
+        body: { model: modelo, response_format: { type: 'json_object' }, max_tokens: 4096, stream: false,
+          messages: [{ role: 'system', content: instruccionesRedaccionV1 }, { role: 'user', content: JSON.stringify({ versionContrato: versionContratoRedaccionIa, operacion: 'redactar_borrador', ...entrada }) }] }
+      })
+      const contenido = respuesta.choices?.[0]?.message?.content
+      if (!contenido) throw createError({ statusCode: 502, statusMessage: 'El proveedor no devolvió una propuesta.', data: { codigo: 'IA_REDACCION_SIN_CONTENIDO' } })
+      let json: unknown
+      try { json = JSON.parse(contenido) } catch { throw createError({ statusCode: 502, statusMessage: 'El proveedor devolvió una propuesta inválida.', data: { codigo: 'IA_REDACCION_INVALIDA' } }) }
+      const propuesta = esquemaPropuestaBorradorIa.safeParse(json)
+      if (!propuesta.success) throw createError({ statusCode: 502, statusMessage: 'La propuesta no cumple el contrato editorial.', data: { codigo: 'IA_REDACCION_CONTRATO_INVALIDO' } })
+      return { propuesta: propuesta.data, proveedor: 'deepseek', modelo: respuesta.model || modelo, consumo: { tokensEntrada: respuesta.usage?.prompt_tokens ?? null, tokensSalida: respuesta.usage?.completion_tokens ?? null, tokensRazonamiento: respuesta.usage?.reasoning_tokens ?? null, costoUsd: null, versionTarifa: null, duracionMs: Date.now() - inicio } }
+    }
+  }
+}
+
+export function hashPromptRedaccion(entrada: EntradaRedaccionIa): string {
+  return createHash('sha256').update(JSON.stringify(entrada)).digest('hex')
+}

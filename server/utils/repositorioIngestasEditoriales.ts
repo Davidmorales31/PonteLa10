@@ -7,8 +7,12 @@ import type {
   RespuestaBandejaIngestasEditoriales,
   ResultadoCancelacionIngestaEditorial,
   ResultadoEliminacionIngestaEditorial,
-  ResultadoReencolarIngestaEditorial
+  ResultadoReencolarIngestaEditorial,
+  ResultadoBorradorDesdeIngesta
 } from '~/types/ingestaEditorial'
+import { esquemaEvidenciaIngestaEditorial } from '~/utils/editorial/evidenciaIngesta'
+import type { ResultadoRedaccionIa } from '~/server/utils/ai/contratosRedaccion'
+import type { PropuestaBorradorIa } from '~/utils/editorial/redaccionIa'
 import {
   normalizarUrlFuenteEditorial,
   type esquemaCrearIngestaEditorial,
@@ -439,4 +443,63 @@ export async function eliminarIngestaFallidaEditorial(
   if (!resultado) throw crearErrorRepositorio('La eliminación no devolvió un resultado válido.')
 
   return { id: resultado.id, eliminadoEn: resultado.eliminadoEn }
+}
+
+interface FilaIngestaParaRedaccion {
+  id: string
+  status: string
+  result_version: number
+  article_id: string | null
+  title_hint: string | null
+  editorial_instructions: string | null
+  source_url: string
+  category_id: string | null
+  rules_snapshot: IngestaEditorial['reglas'] | null
+  processing_result: unknown
+}
+
+export async function obtenerIngestaParaRedaccion(clienteSupabase: SupabaseClient, ingestaId: string): Promise<FilaIngestaParaRedaccion> {
+  const { data, error } = await clienteSupabase.from('editorial_ingestions')
+    .select('id, status, result_version, article_id, title_hint, editorial_instructions, source_url, category_id, rules_snapshot, processing_result')
+    .eq('id', ingestaId).maybeSingle()
+  if (error) throw crearErrorRepositorio('No se pudo cargar la evidencia de la ingesta.')
+  if (!data) throw createError({ statusCode: 404, statusMessage: 'La ingesta no existe.', data: { codigo: 'INGESTA_NO_ENCONTRADA' } })
+  return data as FilaIngestaParaRedaccion
+}
+
+export function obtenerEvidenciaRedactable(fila: FilaIngestaParaRedaccion) {
+  if (fila.status !== 'evidence_ready' || fila.result_version !== 1) throw createError({ statusCode: 409, statusMessage: 'La ingesta todavía no tiene evidencia lista.' })
+  const evidencia = esquemaEvidenciaIngestaEditorial.safeParse(fila.processing_result)
+  if (!evidencia.success) throw createError({ statusCode: 409, statusMessage: 'La evidencia almacenada no es válida para redactar.' })
+  const traducciones = new Map((evidencia.data.traduccion?.segmentos || []).map(segmento => [segmento.segmentoId, segmento.texto]))
+  return { creditos: evidencia.data.metadatos.creditos, segmentos: evidencia.data.original.segmentos.map(segmento => ({ id: segmento.id, inicioSegundos: segmento.inicioSegundos, finSegundos: segmento.finSegundos, texto: traducciones.get(segmento.id) || segmento.texto })) }
+}
+
+export async function reservarBorradorDesdeIngesta(clienteSupabase: SupabaseClient, ingestaId: string, requestId: string, promptHash: string) {
+  const { data, error } = await clienteSupabase.rpc('reserve_editorial_ai_draft', { p_ingestion_id: ingestaId, p_request_id: requestId, p_prompt_hash: promptHash })
+  if (error) throw createError({ statusCode: error.code === '42501' ? 403 : 409, statusMessage: error.message || 'No se pudo reservar la generación.' })
+  return data as { estado: 'reserved' | 'running' | 'completed', articleId?: string }
+}
+
+export async function registrarFalloBorradorDesdeIngesta(clienteSupabase: SupabaseClient, ingestaId: string, requestId: string, codigo: string, duracionMs: number) {
+  await clienteSupabase.rpc('fail_editorial_ai_draft', { p_ingestion_id: ingestaId, p_request_id: requestId, p_error_code: codigo, p_duration_ms: duracionMs })
+}
+
+export async function crearBorradorDesdeIngesta(clienteSupabase: SupabaseClient, ingestaId: string, requestId: string, propuesta: PropuestaBorradorIa, redaccion: ResultadoRedaccionIa, promptHash: string): Promise<ResultadoBorradorDesdeIngesta> {
+  const { data, error } = await clienteSupabase.rpc('create_draft_from_editorial_ingestion', {
+    p_ingestion_id: ingestaId, p_request_id: requestId, p_provider: redaccion.proveedor, p_model: redaccion.modelo,
+    p_instruction_version: 'redaccion-v1', p_prompt_hash: promptHash, p_proposal: propuesta,
+    p_input_tokens: redaccion.consumo.tokensEntrada, p_output_tokens: redaccion.consumo.tokensSalida,
+    p_reasoning_tokens: redaccion.consumo.tokensRazonamiento, p_cost_usd: redaccion.consumo.costoUsd,
+    p_pricing_version: redaccion.consumo.versionTarifa, p_duration_ms: redaccion.consumo.duracionMs
+  })
+  if (error) {
+    const mensaje = error.message || ''
+    if (mensaje.includes('evidencia') || mensaje.includes('propuesta')) throw createError({ statusCode: 409, statusMessage: mensaje })
+    if (mensaje.includes('permiso') || mensaje.includes('sesión')) throw createError({ statusCode: 403, statusMessage: mensaje })
+    throw crearErrorRepositorio('No se pudo crear el borrador desde la ingesta.')
+  }
+  const resultado = data as { id?: string, slug?: string, yaExistia?: boolean } | null
+  if (!resultado?.id) throw crearErrorRepositorio('La creación del borrador no devolvió un resultado válido.')
+  return { id: resultado.id, slug: resultado.slug || '', yaExistia: Boolean(resultado.yaExistia) }
 }

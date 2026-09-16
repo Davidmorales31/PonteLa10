@@ -8,6 +8,7 @@ import {
   esquemaEvidenciaIngestaEditorial,
   versionContratoEvidenciaIngesta
 } from '~/utils/editorial/evidenciaIngesta'
+import { esquemaPropuestaBorradorIa } from '~/utils/editorial/redaccionIa'
 
 describe('ingestas editoriales', () => {
   it('normaliza la URL, elimina rastreo y detecta la plataforma', () => {
@@ -152,5 +153,19 @@ describe('ingestas editoriales', () => {
       limpieza: { completada: true, archivosTemporalesRestantes: 0 },
       advertencias: []
     })).toThrow()
+  })
+
+  it('mantiene la propuesta de IA dentro del contrato editorial y con segmentos trazables', () => {
+    const propuesta = esquemaPropuestaBorradorIa.safeParse({
+      versionContrato: 1,
+      titulo: 'Una noticia respaldada por la evidencia disponible',
+      resumen: 'Resumen editorial de la información disponible.',
+      tipo: 'noticia', documento: { type: 'doc', content: [] },
+      seo: { titulo: '', descripcion: '', textoSocial: '' }, categoriaId: null, temaIds: [],
+      fuente: { url: 'https://ejemplo.com/fuente', nombre: 'Fuente', autor: '', creditos: 'Crédito de la fuente' },
+      segmentosFundamento: [{ id: 0, inicioSegundos: 0, finSegundos: 3, texto: 'Dato verificable.' }],
+      afirmacionesPorCorroborar: [], advertencias: []
+    })
+    expect(propuesta.success).toBe(true)
   })
 })

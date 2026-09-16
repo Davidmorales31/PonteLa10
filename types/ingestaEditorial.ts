@@ -106,3 +106,9 @@ export interface ResultadoEliminacionIngestaEditorial {
   id: string
   eliminadoEn: string
 }
+
+export interface ResultadoBorradorDesdeIngesta {
+  id: string
+  slug: string
+  yaExistia: boolean
+}
