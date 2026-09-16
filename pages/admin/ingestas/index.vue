@@ -10,6 +10,7 @@ import {
   SlidersHorizontal
 } from '@lucide/vue'
 import FormularioNuevaIngesta from '~/components/admin/FormularioNuevaIngesta.vue'
+import ModalEliminarIngesta from '~/components/admin/ModalEliminarIngesta.vue'
 import TablaIngestasEditoriales from '~/components/admin/TablaIngestasEditoriales.vue'
 import type { TaxonomiasEditoriales } from '~/types/contenidoEditorial'
 import type {
@@ -17,6 +18,7 @@ import type {
   EstadoIngestaEditorial,
   IngestaEditorial,
   IngestaEditorialCreada,
+  ResultadoEliminacionIngestaEditorial,
   PlataformaIngestaEditorial,
   RespuestaBandejaIngestasEditoriales
 } from '~/types/ingestaEditorial'
@@ -38,8 +40,9 @@ useSeoMeta({
   robots: 'noindex, nofollow'
 })
 
-const { tienePermiso } = useContextoEditorial()
+const { tienePermiso, contextoEditorial } = useContextoEditorial()
 const { ejecutarConBloqueo } = useBloqueoInterfaz()
+const { mostrarAlerta } = useAlertasEditoriales()
 const busqueda = ref('')
 const busquedaAplicada = ref('')
 const estado = ref<EstadoIngestaEditorial | ''>('')
@@ -48,6 +51,8 @@ const pagina = ref(1)
 const formularioAbierto = ref(false)
 const guardando = ref(false)
 const cancelandoId = ref('')
+const reencolandoId = ref('')
+const ingestaAEliminar = ref<IngestaEditorial | null>(null)
 const errorAccion = ref('')
 const mensajeExito = ref('')
 
@@ -172,6 +177,41 @@ async function cancelarIngesta(ingesta: IngestaEditorial) {
     }
   )
 }
+
+async function reencolarIngesta(ingesta: IngestaEditorial) {
+  reencolandoId.value = ingesta.id
+  errorAccion.value = ''
+  mensajeExito.value = ''
+  await ejecutarConBloqueo(
+    `reencolar-ingesta-${ingesta.id}`,
+    'Reencolando evidencia editorial',
+    async () => {
+      try {
+        await $fetch('/api/admin/ingestas/' + ingesta.id, {
+          method: 'PATCH',
+          body: { accion: 'reencolar' }
+        })
+        mensajeExito.value = 'La ingesta volvió a la cola de evidencias.'
+        await refresh()
+      } catch (errorPeticion) {
+        errorAccion.value = obtenerMensajeError(errorPeticion, 'No se pudo reencolar la ingesta.')
+        await refresh()
+      } finally {
+        reencolandoId.value = ''
+      }
+    }
+  )
+}
+
+async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial) {
+  ingestaAEliminar.value = null
+  mostrarAlerta({
+    tipo: 'exito',
+    titulo: 'Ingesta eliminada',
+    mensaje: 'La solicitud fallida y su historial técnico fueron eliminados definitivamente.'
+  })
+  await refresh()
+}
 </script>
 
 <template>
@@ -180,10 +220,10 @@ async function cancelarIngesta(ingesta: IngestaEditorial) {
       <div>
         <p class="etiqueta-panel">Entrada de historias</p>
         <h1>Ingestas editoriales</h1>
-        <p>Centraliza enlaces que luego podrán convertirse en borradores verificables y editables.</p>
+        <p>Centraliza enlaces para extraer metadatos, transcripción y traducción antes de redactar.</p>
       </div>
       <button
-        v-if="tienePermiso('ingestas.gestionar') && !formularioAbierto"
+        v-if="tienePermiso('ingestas.registrar') && !formularioAbierto"
         class="boton-editorial-principal"
         type="button"
         @click="formularioAbierto = true"
@@ -214,7 +254,7 @@ async function cancelarIngesta(ingesta: IngestaEditorial) {
         <FileInput aria-hidden="true" />
         <span><strong>{{ paginacion.total }}</strong> solicitudes registradas</span>
       </div>
-      <p>Esta fase registra y organiza fuentes. El procesamiento automático se habilitará en la siguiente fase.</p>
+      <p>Esta fase termina en evidencia lista; la redacción del borrador queda para la siguiente historia.</p>
     </section>
 
     <section class="barra-filtros-editoriales" aria-label="Filtros de ingestas">
@@ -281,7 +321,7 @@ async function cancelarIngesta(ingesta: IngestaEditorial) {
           }}
         </p>
         <button
-          v-if="!hayFiltros && tienePermiso('ingestas.gestionar')"
+          v-if="!hayFiltros && tienePermiso('ingestas.registrar')"
           class="boton-editorial-principal"
           type="button"
           @click="formularioAbierto = true"
@@ -295,8 +335,11 @@ async function cancelarIngesta(ingesta: IngestaEditorial) {
         <TablaIngestasEditoriales
           :ingestas="ingestas"
           :puede-gestionar="tienePermiso('ingestas.gestionar')"
-          :cancelando-id="cancelandoId"
+          :puede-eliminar="tienePermiso('ingestas.eliminar')"
+          :cancelando-id="cancelandoId || reencolandoId"
           @cancelar="cancelarIngesta"
+          @reencolar="reencolarIngesta"
+          @eliminar="ingestaAEliminar = $event"
         />
 
         <footer class="paginacion-editorial">
@@ -325,5 +368,14 @@ async function cancelarIngesta(ingesta: IngestaEditorial) {
         </footer>
       </template>
     </section>
+
+    <ModalEliminarIngesta
+      v-if="ingestaAEliminar"
+      :ingesta="ingestaAEliminar"
+      :nivel-aal="contextoEditorial?.nivelAal"
+      retorno="/admin/ingestas"
+      @cerrar="ingestaAEliminar = null"
+      @eliminada="ingestaEliminada"
+    />
   </div>
 </template>

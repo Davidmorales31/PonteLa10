@@ -6,7 +6,7 @@ import { validarEntradaEditorial } from '~/server/utils/validacionEditorial'
 import { esquemaCrearIngestaEditorial } from '~/utils/editorial/ingestas'
 
 export default defineEventHandler(async (evento): Promise<IngestaEditorialCreada> => {
-  const contexto = await exigirPermisoEditorial(evento, 'ingestas.gestionar')
+  const contexto = await exigirPermisoEditorial(evento, 'ingestas.registrar')
   const entrada = validarEntradaEditorial(
     esquemaCrearIngestaEditorial,
     await readBody(evento)

@@ -12,3 +12,6 @@ coverage
 .codex-dev-server.*.log
 .memento/
 .memento-multiagent/
+.venv/
+__pycache__/
+supabase/.temp/

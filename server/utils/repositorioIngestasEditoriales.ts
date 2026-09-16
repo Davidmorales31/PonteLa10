@@ -5,7 +5,9 @@ import type {
   IngestaEditorial,
   IngestaEditorialCreada,
   RespuestaBandejaIngestasEditoriales,
-  ResultadoCancelacionIngestaEditorial
+  ResultadoCancelacionIngestaEditorial,
+  ResultadoEliminacionIngestaEditorial,
+  ResultadoReencolarIngestaEditorial
 } from '~/types/ingestaEditorial'
 import {
   normalizarUrlFuenteEditorial,
@@ -43,6 +45,14 @@ interface FilaIngesta {
   category_id: string | null
   requested_by: string
   article_id: string | null
+  processing_stage: IngestaEditorial['etapaProcesamiento'] | null
+  progress_percent: number | null
+  current_attempt_id: string | null
+  lease_expires_at: string | null
+  heartbeat_at: string | null
+  source_language: 'es' | 'en' | null
+  retryable: boolean | null
+  result_version: number | null
   attempts: number
   error_code: string | null
   error_message: string | null
@@ -122,6 +132,14 @@ function mapearIngesta(
     solicitanteId: fila.requested_by,
     solicitanteNombre: nombres.get(fila.requested_by) || 'Equipo Pont3la10',
     articuloId: fila.article_id,
+    etapaProcesamiento: fila.processing_stage,
+    progresoPorcentaje: fila.progress_percent || 0,
+    intentoActualId: fila.current_attempt_id,
+    leaseHasta: fila.lease_expires_at,
+    ultimaActividadEn: fila.heartbeat_at,
+    idiomaFuente: fila.source_language,
+    recuperable: Boolean(fila.retryable),
+    versionResultado: fila.result_version || 0,
     intentos: fila.attempts,
     codigoError: fila.error_code || '',
     mensajeError: fila.error_message || '',
@@ -153,6 +171,14 @@ export async function listarIngestasEditoriales(
       category_id,
       requested_by,
       article_id,
+      processing_stage,
+      progress_percent,
+      current_attempt_id,
+      lease_expires_at,
+      heartbeat_at,
+      source_language,
+      retryable,
+      result_version,
       attempts,
       error_code,
       error_message,
@@ -240,39 +266,51 @@ export async function crearIngestaEditorial(
   await validarCategoria(clienteSupabase, entrada.categoriaId)
   const fuente = normalizarUrlFuenteEditorial(entrada.urlFuente)
   const { data, error } = await clienteSupabase
-    .from('editorial_ingestions')
-    .insert({
-      source_url: entrada.urlFuente,
-      normalized_url: fuente.urlNormalizada,
-      source_host: fuente.hostFuente,
-      source_platform: fuente.plataforma,
-      status: 'pending',
-      title_hint: entrada.tituloSugerido || null,
-      editorial_instructions: entrada.instrucciones || null,
-      rules_snapshot: entrada.reglas,
-      category_id: entrada.categoriaId,
-      requested_by: solicitanteId
+    .rpc('register_editorial_ingestion', {
+      p_payload: {
+        sourceUrl: entrada.urlFuente,
+        normalizedUrl: fuente.urlNormalizada,
+        sourceHost: fuente.hostFuente,
+        sourcePlatform: fuente.plataforma,
+        titleHint: entrada.tituloSugerido || '',
+        editorialInstructions: entrada.instrucciones || '',
+        rulesSnapshot: {
+          ...entrada.reglas,
+          conservarVideo: false
+        },
+        categoryId: entrada.categoriaId,
+        requestedBy: solicitanteId
+      }
     })
-    .select('id, source_platform, status, normalized_url, created_at')
-    .single()
 
-  if (error?.code === '23505') {
+  if (
+    error?.code === '23505'
+    || data?.error?.codigo === 'ACTIVE_URL_CONFLICT'
+  ) {
     throw createError({
       statusCode: 409,
       statusMessage: 'Esta fuente ya tiene una solicitud activa.',
       data: { codigo: 'INGESTA_DUPLICADA' }
     })
   }
-  if (error || !data) {
+  if (error || !data?.ok) {
     throw crearErrorRepositorio('No se pudo registrar la fuente.')
   }
 
+  const resultado = data.resultado as {
+    id: string
+    plataforma: IngestaEditorialCreada['plataforma']
+    estado: IngestaEditorialCreada['estado']
+    urlNormalizada: string
+    creadoEn: string
+  }
+
   return {
-    id: String(data.id),
-    plataforma: data.source_platform as IngestaEditorialCreada['plataforma'],
-    estado: data.status as IngestaEditorialCreada['estado'],
-    urlNormalizada: String(data.normalized_url),
-    creadoEn: String(data.created_at)
+    id: String(resultado.id),
+    plataforma: resultado.plataforma,
+    estado: resultado.estado,
+    urlNormalizada: String(resultado.urlNormalizada),
+    creadoEn: String(resultado.creadoEn)
   }
 }
 
@@ -326,4 +364,79 @@ export async function cancelarIngestaEditorial(
     estado: resultado.estado,
     actualizadoEn: resultado.actualizadoEn
   }
+}
+
+export async function reencolarIngestaEditorial(
+  clienteSupabase: SupabaseClient,
+  ingestaId: string,
+  requestId: string
+): Promise<ResultadoReencolarIngestaEditorial> {
+  const { data, error } = await clienteSupabase.rpc(
+    'requeue_editorial_ingestion',
+    {
+      p_ingestion_id: ingestaId,
+      p_request_id: requestId
+    }
+  )
+
+  if (error) {
+    throw crearErrorRepositorio('No se pudo reencolar la ingesta.')
+  }
+
+  if (data?.error?.codigo === 'RESULT_ALREADY_EXISTS') {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'La evidencia ya esta lista y no necesita reprocesarse.',
+      data: { codigo: 'EVIDENCIA_INGESTA_EXISTENTE' }
+    })
+  }
+
+  if (data?.error) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: data.error.mensaje || 'La ingesta no se puede reencolar.',
+      data: { codigo: data.error.codigo || 'INGESTA_NO_REENCOLABLE' }
+    })
+  }
+
+  const resultado = data?.resultado as {
+    ingestaId: string
+    estado: ResultadoReencolarIngestaEditorial['estado']
+    encoladoEn: string
+  } | null
+
+  if (!resultado) throw crearErrorRepositorio('El reintento no devolvió un resultado válido.')
+
+  return {
+    id: resultado.ingestaId,
+    estado: resultado.estado,
+    encoladoEn: resultado.encoladoEn
+  }
+}
+
+export async function eliminarIngestaFallidaEditorial(
+  clienteSupabase: SupabaseClient,
+  ingestaId: string,
+  confirmacion: string
+): Promise<ResultadoEliminacionIngestaEditorial> {
+  const { data, error } = await clienteSupabase.rpc(
+    'delete_failed_editorial_ingestion',
+    { p_ingestion_id: ingestaId, p_confirmation: confirmacion }
+  )
+
+  if (error) {
+    const mensaje = error.message || ''
+    if (mensaje.includes('MFA') || mensaje.includes('permiso') || mensaje.includes('sesion')) {
+      throw createError({ statusCode: 403, statusMessage: mensaje })
+    }
+    if (mensaje.includes('solo puede eliminarse') || mensaje.includes('no existe')) {
+      throw createError({ statusCode: 409, statusMessage: mensaje })
+    }
+    throw crearErrorRepositorio('No se pudo eliminar la ingesta fallida.')
+  }
+
+  const resultado = data as { id: string, eliminadoEn: string } | null
+  if (!resultado) throw crearErrorRepositorio('La eliminación no devolvió un resultado válido.')
+
+  return { id: resultado.id, eliminadoEn: resultado.eliminadoEn }
 }

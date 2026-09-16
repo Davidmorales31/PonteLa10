@@ -10,7 +10,8 @@
     "preview": "nuxt preview",
     "test": "npm run test:unit",
     "test:unit": "nuxt prepare && vitest run",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "worker:ingestas": "node --env-file=.env workers/procesar_ingestas_durable.mjs"
   },
   "dependencies": {
     "@lucide/vue": "^1.25.0",

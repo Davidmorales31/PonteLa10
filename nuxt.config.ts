@@ -37,7 +37,12 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
+    tiktokPythonPath: process.env.NUXT_TIKTOK_PYTHON_PATH || '',
+    tiktokWorkerPath: process.env.NUXT_TIKTOK_WORKER_PATH || 'workers/transcribir_tiktok.py',
+    tiktokWhisperModel: process.env.NUXT_TIKTOK_WHISPER_MODEL || 'base',
     editorialAiApiKey: process.env.NUXT_EDITORIAL_AI_API_KEY || '',
+    editorialAiBaseUrl: process.env.NUXT_EDITORIAL_AI_BASE_URL || 'https://api.deepseek.com',
+    editorialAiModel: process.env.NUXT_EDITORIAL_AI_MODEL || '',
     apiSportsKey: process.env.NUXT_API_SPORTS_KEY || process.env.API_SPORTS_KEY || '',
     apiSportsBaseUrl: process.env.NUXT_API_SPORTS_BASE_URL || 'https://v3.football.api-sports.io',
     apiBasketballKey: process.env.NUXT_API_BASKETBALL_KEY || '',

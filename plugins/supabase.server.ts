@@ -3,6 +3,7 @@ import {
   parseCookieHeader,
   type CookieOptions
 } from '@supabase/ssr'
+import { setCookie } from 'h3'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { UsuarioEditorial } from '~/types/autenticacion'
 

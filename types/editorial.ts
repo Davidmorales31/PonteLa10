@@ -30,6 +30,7 @@ export type RolEditorial =
   | 'editor'
   | 'autor'
   | 'colaborador'
+  | 'workerIngesta'
 
 export type PermisoEditorial =
   | 'panel.acceder'
@@ -51,7 +52,12 @@ export type PermisoEditorial =
   | 'taxonomia.ver'
   | 'taxonomia.gestionar'
   | 'ingestas.ver'
+  | 'ingestas.registrar'
   | 'ingestas.gestionar'
+  | 'ingestas.eliminar'
+  | 'ingestas.worker.reclamar'
+  | 'ingestas.worker.reportar'
+  | 'ingestas.worker.finalizar'
   | 'equipo.ver'
   | 'equipo.gestionar'
   | 'configuracion.ver'
