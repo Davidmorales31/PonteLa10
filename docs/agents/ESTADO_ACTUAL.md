@@ -54,6 +54,11 @@
   descripción SEO; título, resumen, categoría, cuerpo, fuente, permisos y MFA
   continúan siendo obligatorios. El contenido `37722690-209f-4c7e-a0e7-049325d517e7`
   pasó de `review` a `approved` como comprobación funcional.
+- **Sitio público (2026-09-17):** la migración
+  `20260917214050_restringir_consultas_publicas_a_publicados.sql` quedó
+  aplicada en Supabase. Inicio, listado y detalle ya no usan artículos mock;
+  las RPC públicas y los enlaces internos resuelven exclusivamente artículos
+  con estado `published`.
 
 ## Bloqueos
 

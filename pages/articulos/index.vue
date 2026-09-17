@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { articulosRecientes, tendenciasEditoriales } from '~/data/editorial'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { ArticuloResumen } from '~/types/editorial'
 import {
-  articulosLanding,
-  convertirArticuloLandingAResumen,
   normalizarTextoBusqueda,
   obtenerAliasCategoria,
   obtenerEtiquetaCategoria
@@ -12,7 +9,6 @@ import {
 import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
 
 const rutaActual = useRoute()
-const articulosHome = articulosLanding.map(convertirArticuloLandingAResumen)
 const { data: publicacionesReales } = await useFetch<ResumenArticuloPublico[]>(
   '/api/articulos',
   {
@@ -36,14 +32,7 @@ const articulosPublicados = computed<ArticuloResumen[]>(() =>
   }))
 )
 
-const articulosDisponibles = computed(() => [
-  ...articulosPublicados.value,
-  ...articulosHome,
-  ...articulosRecientes
-].filter(
-  (articulo, indice, articulos) =>
-    articulos.findIndex(item => item.slug === articulo.slug) === indice
-))
+const articulosDisponibles = computed(() => articulosPublicados.value)
 
 const terminoBusqueda = computed(() => normalizarTextoBusqueda(String(rutaActual.query.buscar || '')))
 const categoriaBusqueda = computed(() => normalizarTextoBusqueda(String(rutaActual.query.categoria || '')))
@@ -123,11 +112,10 @@ useSeoPont3la10(() => {
       <div class="lista-articulos">
         <TarjetaArticulo v-for="articulo in articulosFiltrados" :key="articulo.slug" :articulo="articulo" />
       </div>
-      <BloqueTendencias :tendencias="tendenciasEditoriales" />
     </div>
     <div v-else class="estado-vacio-articulos">
-      <h2>No encontramos esa jugada</h2>
-      <p>Prueba con otra palabra o vuelve a todas las noticias.</p>
+      <h2>{{ publicacionesReales?.length ? 'No encontramos esa jugada' : 'Aún no hay noticias publicadas' }}</h2>
+      <p>{{ publicacionesReales?.length ? 'Prueba con otra palabra o vuelve a todas las noticias.' : 'Las historias aparecerán aquí cuando el equipo editorial las publique.' }}</p>
       <NuxtLink class="boton-primario" to="/articulos">Ver todas las noticias</NuxtLink>
     </div>
   </section>

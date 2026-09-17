@@ -254,7 +254,7 @@ async function validarEnlacesInternosEditoriales(
   const idsDisponibles = new Set((data || [])
     .filter(articulo => (
       articulo.published_version_id
-      && articulo.status !== 'archived'
+      && articulo.status === 'published'
     ))
     .map(articulo => articulo.id))
 

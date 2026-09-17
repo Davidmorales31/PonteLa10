@@ -9,7 +9,7 @@ import {
   Star,
   Trophy
 } from '@lucide/vue'
-import { articulosTechLanding, footerLanding } from '~/data/landing.mock'
+import { footerLanding } from '~/data/landing.mock'
 
 definePageMeta({ layout: false })
 
@@ -28,7 +28,6 @@ if (import.meta.server) {
 }
 
 const codigoError = '404'
-const recomendacion = articulosTechLanding[0]
 const enlacesAyuda = [
   { etiqueta: 'Últimas jugadas', ruta: '/articulos', icono: Clock3 },
   { etiqueta: 'Especiales', ruta: '/especiales', icono: Star },
@@ -124,18 +123,13 @@ const redesSociales = [
           </div>
 
           <article class="recomendacion-error">
-            <span>Quizá te interese</span>
+            <span>Noticias</span>
             <div class="recomendacion-error-contenido">
-              <NuxtLink
-                class="imagen-recomendacion-error sprite-tech-primero"
-                :to="recomendacion.ruta"
-                :aria-label="`Leer ${recomendacion.titulo}`"
-              />
               <div>
-                <small>Tech deportiva</small>
-                <h2>{{ recomendacion.titulo }}</h2>
-                <NuxtLink class="enlace-recomendacion-error" :to="recomendacion.ruta">
-                  Leer más <ArrowRight aria-hidden="true" />
+                <small>Pont3la10</small>
+                <h2>Explora las publicaciones disponibles</h2>
+                <NuxtLink class="enlace-recomendacion-error" to="/articulos">
+                  Ver noticias <ArrowRight aria-hidden="true" />
                 </NuxtLink>
               </div>
             </div>
