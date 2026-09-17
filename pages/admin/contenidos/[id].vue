@@ -138,7 +138,6 @@ const errorGuardado = ref('')
 const conflictoVersion = ref(false)
 const notaCambio = ref('')
 const ultimoAutoguardado = ref('')
-let temporizadorAutoguardado: ReturnType<typeof setTimeout> | null = null
 
 const idsPasosEditor: IdPasoEditorEditorial[] = [
   'contenido',
@@ -362,10 +361,8 @@ watch(articulo, (detalle) => {
 }, { immediate: true })
 
 function programarAutoguardado() {
-  if (!import.meta.client || !puedeEditar.value || !cambiosPendientes.value) return
-
-  if (temporizadorAutoguardado) clearTimeout(temporizadorAutoguardado)
-  temporizadorAutoguardado = setTimeout(realizarAutoguardado, 2500)
+  // El borrador se guarda explícitamente: no se crean copias temporales que
+  // puedan competir con la generación automática ni con el flujo editorial.
 }
 
 watch([formulario, bloques], () => {
@@ -378,34 +375,6 @@ watch([formulario, bloques], () => {
   programarAutoguardado()
 }, { deep: true })
 
-async function realizarAutoguardado() {
-  if (
-    !datosActuales.value
-    || !cambiosPendientes.value
-    || guardando.value
-    || autoguardando.value
-  ) return
-
-  autoguardando.value = true
-
-  try {
-    const respuesta = await $fetch<{ actualizadoEn: string }>(
-      `/api/admin/contenidos/${articuloId.value}/autoguardado`,
-      {
-        method: 'PUT',
-        body: {
-          versionBase: versionBloqueo.value,
-          datos: datosActuales.value
-        }
-      }
-    )
-    ultimoAutoguardado.value = respuesta.actualizadoEn
-  } catch {
-    errorGuardado.value = 'No se pudo completar el autoguardado.'
-  } finally {
-    autoguardando.value = false
-  }
-}
 
 function obtenerMensajePeticion(errorPeticion: unknown): string {
   const errorConDatos = errorPeticion as {
@@ -481,6 +450,9 @@ async function guardarCambios() {
         }
 
         await recargarVersiones()
+        await $fetch(`/api/admin/contenidos/${articuloId.value}/autoguardado`, {
+          method: 'DELETE'
+        }).catch(() => undefined)
       } catch (errorPeticion: unknown) {
         errorGuardado.value = obtenerMensajePeticion(errorPeticion)
       } finally {
