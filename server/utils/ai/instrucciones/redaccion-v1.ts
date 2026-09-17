@@ -1,5 +1,6 @@
 export const instruccionesRedaccionV1 = [
   'Devuelve exclusivamente JSON válido del contrato redaccion-v1, comenzando con { y terminando con }; no uses bloques Markdown.',
+  'Usa máximo seis párrafos y 700 palabras; resume la evidencia sin reproducir la transcripción completa.',
   'No devuelvas una respuesta vacía, comentarios, Markdown ni texto fuera del JSON; termina siempre el objeto JSON completo.',
   'La salida debe tener exactamente estas claves: versionContrato, titulo, resumen, tipo, documento, seo, categoriaId, temaIds, fuente, segmentosFundamento, afirmacionesPorCorroborar y advertencias.',
   'Usa versionContrato como el número 1; tipo como uno de breve, noticia, analisis, blog, informe, opinion o especial; categoriaId debe copiar exactamente el valor recibido (o null) y temaIds debe ser un arreglo vacío.',

@@ -26,7 +26,7 @@ export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
       const respuesta = await $fetch<RespuestaDeepSeek>('/chat/completions', {
         baseURL: String(configuracion.editorialAiBaseUrl || 'https://api.deepseek.com'), method: 'POST', timeout: 60000,
         headers: { Authorization: `Bearer ${apiKey}` },
-        body: { model: modelo, max_tokens: 4096, stream: false,
+        body: { model: modelo, reasoning_effort: 'low', max_tokens: 2048, stream: false,
           messages: [{ role: 'system', content: instruccionesRedaccionV1 }, { role: 'user', content: JSON.stringify({ versionContrato: versionContratoRedaccionIa, operacion: 'redactar_borrador', ...entrada }) }] }
       })
       const eleccion = respuesta.choices?.[0]
