@@ -3,7 +3,7 @@ import { esquemaPropuestaBorradorIa, versionContratoRedaccionIa } from '~/utils/
 import type { EntradaRedaccionIa, ProveedorRedaccionIa, ResultadoRedaccionIa } from './contratosRedaccion'
 import { instruccionesRedaccionV1 } from './instrucciones/redaccion-v1'
 
-interface RespuestaDeepSeek { choices?: Array<{ message?: { content?: string } }>, usage?: { prompt_tokens?: number, completion_tokens?: number, reasoning_tokens?: number }, model?: string }
+interface RespuestaDeepSeek { choices?: Array<{ finish_reason?: string, message?: { content?: string | null } }>, usage?: { prompt_tokens?: number, completion_tokens?: number, reasoning_tokens?: number }, model?: string }
 
 export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
   return {
@@ -19,8 +19,12 @@ export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
         body: { model: modelo, response_format: { type: 'json_object' }, max_tokens: 4096, stream: false,
           messages: [{ role: 'system', content: instruccionesRedaccionV1 }, { role: 'user', content: JSON.stringify({ versionContrato: versionContratoRedaccionIa, operacion: 'redactar_borrador', ...entrada }) }] }
       })
-      const contenido = respuesta.choices?.[0]?.message?.content
-      if (!contenido) throw createError({ statusCode: 502, statusMessage: 'El proveedor no devolvió una propuesta.', data: { codigo: 'IA_REDACCION_SIN_CONTENIDO' } })
+      const eleccion = respuesta.choices?.[0]
+      const contenido = typeof eleccion?.message?.content === 'string'
+        ? eleccion.message.content.trim()
+        : ''
+      if (!contenido) throw createError({ statusCode: 502, statusMessage: 'DeepSeek respondió sin contenido. La ingesta quedó protegida: no se reintentó ni se cobró una segunda generación.', data: { codigo: 'IA_REDACCION_SIN_CONTENIDO' } })
+      if (eleccion?.finish_reason === 'length') throw createError({ statusCode: 502, statusMessage: 'DeepSeek truncó la propuesta antes de terminar. La ingesta quedó protegida: no se reintentó automáticamente.', data: { codigo: 'IA_REDACCION_TRUNCADA' } })
       let json: unknown
       try { json = JSON.parse(contenido) } catch { throw createError({ statusCode: 502, statusMessage: 'El proveedor devolvió una propuesta inválida.', data: { codigo: 'IA_REDACCION_INVALIDA' } }) }
       const propuesta = esquemaPropuestaBorradorIa.safeParse(json)

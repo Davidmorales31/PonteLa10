@@ -52,7 +52,6 @@ const formularioAbierto = ref(false)
 const guardando = ref(false)
 const cancelandoId = ref('')
 const reencolandoId = ref('')
-const redactandoId = ref('')
 const ingestaAEliminar = ref<IngestaEditorial | null>(null)
 const errorAccion = ref('')
 const mensajeExito = ref('')
@@ -92,6 +91,14 @@ const hayFiltros = computed(() => Boolean(
 
 watch([estado, plataforma], () => {
   pagina.value = 1
+})
+
+watch(errorAccion, mensaje => {
+  if (mensaje) mostrarAlerta({ tipo: 'error', titulo: 'Acción editorial no completada', mensaje })
+})
+
+watch(mensajeExito, mensaje => {
+  if (mensaje) mostrarAlerta({ tipo: 'exito', titulo: 'Acción editorial completada', mensaje })
 })
 
 function aplicarBusqueda() {
@@ -209,24 +216,9 @@ async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial
   mostrarAlerta({
     tipo: 'exito',
     titulo: 'Ingesta eliminada',
-    mensaje: 'La solicitud fallida y su historial técnico fueron eliminados definitivamente.'
+    mensaje: 'La ingesta, su historial técnico y cualquier borrador automático asociado fueron eliminados definitivamente.'
   })
   await refresh()
-}
-
-async function generarBorrador(ingesta: IngestaEditorial) {
-  redactandoId.value = ingesta.id
-  errorAccion.value = ''
-  mensajeExito.value = ''
-  try {
-    const resultado = await $fetch<{ id: string, yaExistia: boolean }>(`/api/admin/ingestas/${ingesta.id}/borrador`, { method: 'POST', body: {} })
-    mensajeExito.value = resultado.yaExistia ? 'El borrador ya existía; puedes abrirlo desde la bandeja.' : 'Borrador generado y listo para revisión humana.'
-    await refresh()
-  } catch (errorPeticion) {
-    errorAccion.value = obtenerMensajeError(errorPeticion, 'No se pudo generar el borrador.')
-  } finally {
-    redactandoId.value = ''
-  }
 }
 </script>
 
@@ -352,12 +344,10 @@ async function generarBorrador(ingesta: IngestaEditorial) {
           :ingestas="ingestas"
           :puede-gestionar="tienePermiso('ingestas.gestionar')"
           :puede-eliminar="tienePermiso('ingestas.eliminar')"
-          :puede-redactar="tienePermiso('ingestas.redactar')"
-          :cancelando-id="cancelandoId || reencolandoId || redactandoId"
+          :cancelando-id="cancelandoId || reencolandoId"
           @cancelar="cancelarIngesta"
           @reencolar="reencolarIngesta"
           @eliminar="ingestaAEliminar = $event"
-          @redactar="generarBorrador"
         />
 
         <footer class="paginacion-editorial">

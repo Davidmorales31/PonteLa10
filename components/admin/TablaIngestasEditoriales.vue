@@ -6,7 +6,6 @@ import {
   CircleAlert,
   ExternalLink,
   FileCheck2,
-  FilePenLine,
   Globe2,
   Languages,
   LoaderCircle,
@@ -30,7 +29,6 @@ defineProps<{
   ingestas: IngestaEditorial[]
   puedeGestionar: boolean
   puedeEliminar: boolean
-  puedeRedactar: boolean
   cancelandoId: string
 }>()
 
@@ -38,7 +36,6 @@ const emit = defineEmits<{
   cancelar: [ingesta: IngestaEditorial]
   reencolar: [ingesta: IngestaEditorial]
   eliminar: [ingesta: IngestaEditorial]
-  redactar: [ingesta: IngestaEditorial]
 }>()
 
 const formatoFecha = new Intl.DateTimeFormat('es-CO', {
@@ -63,9 +60,6 @@ function puedeReencolar(ingesta: IngestaEditorial): boolean {
   return ingesta.estado === 'failed' && ingesta.recuperable
 }
 
-function esEliminable(ingesta: IngestaEditorial): boolean {
-  return ingesta.estado === 'failed' && !ingesta.articuloId && ingesta.versionResultado === 0
-}
 </script>
 
 <template>
@@ -149,11 +143,11 @@ function esEliminable(ingesta: IngestaEditorial): boolean {
           </td>
           <td data-label="Acciones">
             <button
-              v-if="puedeEliminar && esEliminable(ingesta)"
+              v-if="puedeEliminar"
               class="boton-icono-editorial boton-icono-editorial--peligro"
               type="button"
-              title="Eliminar ingesta fallida"
-              aria-label="Eliminar ingesta fallida"
+              title="Eliminar ingesta"
+              aria-label="Eliminar ingesta"
               @click="emit('eliminar', ingesta)"
             >
               <Trash2 aria-hidden="true" />
@@ -177,18 +171,6 @@ function esEliminable(ingesta: IngestaEditorial): boolean {
             >
               <FileCheck2 aria-hidden="true" />
             </NuxtLink>
-            <button
-              v-else-if="puedeRedactar && ingesta.estado === 'evidence_ready'"
-              class="boton-icono-editorial"
-              type="button"
-              title="Generar borrador"
-              aria-label="Generar borrador con evidencia"
-              :disabled="cancelandoId === ingesta.id"
-              @click="emit('redactar', ingesta)"
-            >
-              <LoaderCircle v-if="cancelandoId === ingesta.id" class="icono-girando" aria-hidden="true" />
-              <FilePenLine v-else aria-hidden="true" />
-            </button>
             <button
               v-else-if="puedeGestionar && puedeCancelar(ingesta)"
               class="boton-icono-editorial boton-cancelar-ingesta"

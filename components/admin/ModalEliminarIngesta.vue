@@ -3,7 +3,7 @@ import { AlertTriangle, ShieldCheck, Trash2, X } from '@lucide/vue'
 import type { IngestaEditorial, ResultadoEliminacionIngestaEditorial } from '~/types/ingestaEditorial'
 
 const props = defineProps<{
-  ingesta: Pick<IngestaEditorial, 'id' | 'hostFuente' | 'tituloSugerido'>
+  ingesta: Pick<IngestaEditorial, 'id' | 'hostFuente' | 'tituloSugerido' | 'estado' | 'articuloId'>
   nivelAal?: 'aal1' | 'aal2' | null
   retorno: string
 }>()
@@ -18,8 +18,10 @@ const { mostrarAlerta } = useAlertasEditoriales()
 const confirmacion = ref('')
 const eliminando = ref(false)
 const sesionVerificada = computed(() => props.nivelAal === 'aal2')
+const estaProcesando = computed(() => props.ingesta.estado === 'processing')
+const tieneBorradorAutomatico = computed(() => props.ingesta.estado === 'draft_created' && Boolean(props.ingesta.articuloId))
 const puedeEliminar = computed(() => (
-  confirmacion.value === 'ELIMINAR' && sesionVerificada.value && !eliminando.value
+  confirmacion.value === 'ELIMINAR' && sesionVerificada.value && !eliminando.value && !estaProcesando.value
 ))
 const identificador = computed(() => props.ingesta.tituloSugerido || props.ingesta.hostFuente)
 const rutaVerificacion = computed(() => ({
@@ -72,7 +74,7 @@ async function eliminarIngesta() {
       <header class="cabecera-modal-editorial">
         <div>
           <p class="etiqueta-panel etiqueta-peligro">Acción irreversible</p>
-          <h2 id="titulo-eliminar-ingesta">Eliminar ingesta fallida</h2>
+          <h2 id="titulo-eliminar-ingesta">Eliminar ingesta</h2>
           <span>{{ identificador }}</span>
         </div>
         <button type="button" title="Cerrar" aria-label="Cerrar eliminación" @click="emit('cerrar')">
@@ -85,7 +87,9 @@ async function eliminarIngesta() {
           <AlertTriangle aria-hidden="true" />
           <div>
             <strong>Esta eliminación es definitiva</strong>
-            <p>Se borrará la solicitud fallida y su historial técnico. No se pueden eliminar ingestas procesándose, con evidencia lista o con borrador.</p>
+            <p v-if="estaProcesando">Esta ingesta está usando un worker. Espera a que termine para evitar cortar el proceso o consumir una llamada innecesaria.</p>
+            <p v-else-if="tieneBorradorAutomatico">Se borrarán la ingesta, su historial técnico y el borrador automático asociado. No afecta artículos publicados.</p>
+            <p v-else>Se borrarán la ingesta y su historial técnico, incluso si tiene evidencia lista. No afecta artículos publicados.</p>
           </div>
         </aside>
 

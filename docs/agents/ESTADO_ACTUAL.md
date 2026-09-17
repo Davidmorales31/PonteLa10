@@ -1,9 +1,9 @@
 # Estado actual de Pont3la10
 
-- **Actualizado:** 2026-09-16
+- **Actualizado:** 2026-09-17
 - **Commit base:** `ff28d4c` (`origin/main`)
-- **Estado general:** HU-ED-07 está fusionada en `main`. HU-ED-08 está implementada y su migración fue aplicada y verificada en Supabase; falta la prueba funcional autenticada y el cierre Git.
-- **Árbol de trabajo:** `C:\PONTE LA 10 HU-ED-08`, rama `codex/hu-ed-08`, basada en `origin/main` `6499b7e`. Las otras copias se preservan.
+- **Estado general:** HU-ED-07 y HU-ED-08 operan desde `C:\PONTE LA 10`. La ingesta durable genera el borrador automáticamente y no existen disparadores manuales de IA en la bandeja.
+- **Árbol de trabajo:** `C:\PONTE LA 10`. Los respaldos locales están ignorados por Nuxt para no duplicar el escaneo del proyecto.
 
 ## Terminado en el repositorio
 
@@ -18,24 +18,24 @@
 
 ## Parcial o activo
 
-- **HU-ED-08:** propuesta IA de borrador desde evidencia lista, con proveedor DeepSeek solo servidor, contrato Zod, reserva idempotente previa al proveedor, trazabilidad, RLS, RPC atómico y botón en la bandeja. La migración `20260916192944_editorial_ai_drafting.sql` se aplicó en Supabase y se verificó: tabla, RLS, 3 RPC, 5 roles y registro de historial.
+- **HU-ED-08:** propuesta IA de borrador desde evidencia lista, con proveedor DeepSeek solo servidor, contrato Zod, reserva idempotente previa al proveedor, trazabilidad y RPC atómico. La generación es automática tras la evidencia y se bloqueó el endpoint manual para impedir cobros duplicados. DeepSeek vacío o truncado se registra sin reintento automático.
 
 - **HU-ED-07:** se trasladaron a esta rama local la propuesta de cola durable,
   extracción, transcripción, traducción y evidencia. La prueba local alcanzó
   `evidence_ready`; las migraciones `0013` y `0014` ya están aplicadas en
   Supabase remoto, pero falta la certificación funcional completa.
-- **Limpieza de fallos de ingesta:** implementada localmente con la migración
-  `0014`, RPC protegida por permiso y MFA, confirmación explícita y alerta
-  global. Solo admite ingestas `failed` sin evidencia ni borrador; se aplicó y
-  verificó en Supabase remoto el 2026-09-16.
+- **Eliminación de ingestas:** el botón aparece a usuarios autorizados para todos
+  los estados. La RPC `delete_editorial_ingestion` exige permiso, MFA y
+  confirmación; elimina evidencia, historial y borrador automático. Protege
+  procesos activos y contenido en revisión o publicado. La migración
+  `20260917090000_eliminacion_total_ingestas.sql` se aplicó y su RPC se verificó
+  en Supabase el 2026-09-17.
 - La portada usa datos mock en parte; una pantalla o mock no certifica una función.
 
 ## Bloqueos
 
-- El 2026-09-16 se verificó en el panel remoto: `0013_ingesta_worker_durable`
-  está aplicada (versión `20260911224135`) y `0014_eliminar_ingestas_fallidas`
-  se aplicó como versión `20260916110000`. La RPC, permiso, roles y `EXECUTE`
-  para `authenticated` fueron verificados en remoto.
+- La prueba funcional final de DeepSeek requiere una fuente real con transcripción
+  sustancial; no lanzar reintentos manuales porque cada uno puede cobrar al proveedor.
 
 ## Deuda técnica confirmada
 
@@ -51,15 +51,15 @@
 
 ## Siguiente paso recomendado
 
-Probar desde `/admin/ingestas` la eliminación de una ingesta fallida de prueba,
-con MFA y la confirmación `ELIMINAR`, antes de crear un commit o PR.
+Registrar una fuente real desde `/admin/ingestas` y esperar la generación
+automática. Si DeepSeek retorna vacío o un contrato inválido, revisar el código
+de error en la bandeja sin reencolar ni llamar manualmente a la IA.
 
 ## Última validación conocida
 
-El 2026-09-16 pasaron en la rama limpia lint, typecheck, 15 archivos/86 pruebas
-y build. El build emitió una advertencia de dependencia obsoleta.
-También pasaron doctor, status, remember, decide, recall, deep-recall y la prueba
-HTTP local del dashboard. El servidor de desarrollo actual está levantado en
+El 2026-09-17 pasaron `tests/unit/ingestasEditoriales.test.ts` (13 pruebas),
+`npm.cmd run typecheck`, lint de los archivos cambiados, `git diff --check` y la
+verificación remota segura de la RPC. El servidor de desarrollo está en
 `http://127.0.0.1:3001`.
 
 ## Documentos posiblemente desactualizados

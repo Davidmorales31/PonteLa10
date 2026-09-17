@@ -10,7 +10,6 @@ import type {
   ResultadoReencolarIngestaEditorial,
   ResultadoBorradorDesdeIngesta
 } from '~/types/ingestaEditorial'
-import { esquemaEvidenciaIngestaEditorial } from '~/utils/editorial/evidenciaIngesta'
 import type { ResultadoRedaccionIa } from '~/server/utils/ai/contratosRedaccion'
 import type { PropuestaBorradorIa } from '~/utils/editorial/redaccionIa'
 import {
@@ -418,13 +417,13 @@ export async function reencolarIngestaEditorial(
   }
 }
 
-export async function eliminarIngestaFallidaEditorial(
+export async function eliminarIngestaEditorial(
   clienteSupabase: SupabaseClient,
   ingestaId: string,
   confirmacion: string
 ): Promise<ResultadoEliminacionIngestaEditorial> {
   const { data, error } = await clienteSupabase.rpc(
-    'delete_failed_editorial_ingestion',
+    'delete_editorial_ingestion',
     { p_ingestion_id: ingestaId, p_confirmation: confirmacion }
   )
 
@@ -433,10 +432,10 @@ export async function eliminarIngestaFallidaEditorial(
     if (mensaje.includes('MFA') || mensaje.includes('permiso') || mensaje.includes('sesion')) {
       throw createError({ statusCode: 403, statusMessage: mensaje })
     }
-    if (mensaje.includes('solo puede eliminarse') || mensaje.includes('no existe')) {
+    if (mensaje.includes('procesándose') || mensaje.includes('publicado') || mensaje.includes('no existe')) {
       throw createError({ statusCode: 409, statusMessage: mensaje })
     }
-    throw crearErrorRepositorio('No se pudo eliminar la ingesta fallida.')
+    throw crearErrorRepositorio('No se pudo eliminar la ingesta.')
   }
 
   const resultado = data as { id: string, eliminadoEn: string } | null
@@ -469,10 +468,42 @@ export async function obtenerIngestaParaRedaccion(clienteSupabase: SupabaseClien
 
 export function obtenerEvidenciaRedactable(fila: FilaIngestaParaRedaccion) {
   if (fila.status !== 'evidence_ready' || fila.result_version !== 1) throw createError({ statusCode: 409, statusMessage: 'La ingesta todavía no tiene evidencia lista.' })
-  const evidencia = esquemaEvidenciaIngestaEditorial.safeParse(fila.processing_result)
-  if (!evidencia.success) throw createError({ statusCode: 409, statusMessage: 'La evidencia almacenada no es válida para redactar.' })
-  const traducciones = new Map((evidencia.data.traduccion?.segmentos || []).map(segmento => [segmento.segmentoId, segmento.texto]))
-  return { creditos: evidencia.data.metadatos.creditos, segmentos: evidencia.data.original.segmentos.map(segmento => ({ id: segmento.id, inicioSegundos: segmento.inicioSegundos, finSegundos: segmento.finSegundos, texto: traducciones.get(segmento.id) || segmento.texto })) }
+  const evidencia = fila.processing_result as {
+    metadatos?: { creditos?: unknown }
+    original?: { segmentos?: unknown }
+    traduccion?: { segmentos?: unknown } | null
+  }
+  const originales = Array.isArray(evidencia?.original?.segmentos)
+    ? evidencia.original.segmentos
+    : []
+  const traducciones = new Map(
+    Array.isArray(evidencia?.traduccion?.segmentos)
+      ? evidencia.traduccion.segmentos.flatMap((segmento: unknown) => {
+        const valor = segmento as { segmentoId?: unknown, texto?: unknown }
+        return typeof valor.segmentoId === 'number' && typeof valor.texto === 'string'
+          ? [[valor.segmentoId, valor.texto] as const]
+          : []
+      })
+      : []
+  )
+  const segmentos = originales.flatMap((segmento: unknown) => {
+    const valor = segmento as { id?: unknown, inicioSegundos?: unknown, finSegundos?: unknown, texto?: unknown }
+    return typeof valor.id === 'number'
+      && typeof valor.inicioSegundos === 'number'
+      && typeof valor.finSegundos === 'number'
+      && valor.finSegundos > valor.inicioSegundos
+      && typeof valor.texto === 'string'
+      && valor.texto.trim()
+      ? [{ id: valor.id, inicioSegundos: valor.inicioSegundos, finSegundos: valor.finSegundos, texto: traducciones.get(valor.id) || valor.texto }]
+      : []
+  })
+  if (!segmentos.length) throw createError({ statusCode: 409, statusMessage: 'La evidencia no contiene segmentos utilizables para redactar.' })
+  return {
+    creditos: typeof evidencia?.metadatos?.creditos === 'string' && evidencia.metadatos.creditos.trim()
+      ? evidencia.metadatos.creditos
+      : 'Fuente original de la ingesta editorial',
+    segmentos
+  }
 }
 
 export async function reservarBorradorDesdeIngesta(clienteSupabase: SupabaseClient, ingestaId: string, requestId: string, promptHash: string) {
