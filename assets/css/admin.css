@@ -3582,6 +3582,28 @@
   font-weight: 800;
 }
 
+.aviso-recomendacion-editorial,
+.aviso-editor-solo-lectura {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 12px 0 0;
+  border-left: 4px solid #d39e00;
+  background: #fff9e6;
+  color: #664b00;
+  padding: 11px 14px;
+  font-size: 0.74rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.aviso-recomendacion-editorial svg,
+.aviso-editor-solo-lectura svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
 .resumen-cola-ingestas {
   display: flex;
   min-height: 66px;
