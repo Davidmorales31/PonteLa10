@@ -52,6 +52,7 @@ const formularioAbierto = ref(false)
 const guardando = ref(false)
 const cancelandoId = ref('')
 const reencolandoId = ref('')
+const reintentandoBorradorId = ref('')
 const ingestaAEliminar = ref<IngestaEditorial | null>(null)
 const errorAccion = ref('')
 const mensajeExito = ref('')
@@ -220,6 +221,23 @@ async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial
   })
   await refresh()
 }
+
+async function reintentarBorrador(ingesta: IngestaEditorial) {
+  if (!confirm('Esto hará una nueva llamada a la IA usando la evidencia ya guardada. ¿Reintentar borrador?')) return
+  reintentandoBorradorId.value = ingesta.id
+  errorAccion.value = ''
+  mensajeExito.value = ''
+  try {
+    const resultado = await $fetch<{ id: string, yaExistia: boolean }>(`/api/admin/ingestas/${ingesta.id}/borrador`, { method: 'POST', body: { regenerar: true } })
+    mensajeExito.value = resultado.yaExistia ? 'El borrador ya existía.' : 'Borrador reintentado y listo para revisión humana.'
+    await refresh()
+  } catch (errorPeticion) {
+    errorAccion.value = obtenerMensajeError(errorPeticion, 'No se pudo reintentar el borrador.')
+    await refresh()
+  } finally {
+    reintentandoBorradorId.value = ''
+  }
+}
 </script>
 
 <template>
@@ -344,10 +362,12 @@ async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial
           :ingestas="ingestas"
           :puede-gestionar="tienePermiso('ingestas.gestionar')"
           :puede-eliminar="tienePermiso('ingestas.eliminar')"
-          :cancelando-id="cancelandoId || reencolandoId"
+          :puede-redactar="tienePermiso('ingestas.redactar')"
+          :cancelando-id="cancelandoId || reencolandoId || reintentandoBorradorId"
           @cancelar="cancelarIngesta"
           @reencolar="reencolarIngesta"
           @eliminar="ingestaAEliminar = $event"
+          @reintentar-borrador="reintentarBorrador"
         />
 
         <footer class="paginacion-editorial">

@@ -18,12 +18,12 @@
 
 ## Parcial o activo
 
-- **HU-ED-08:** propuesta IA de borrador desde evidencia lista, con proveedor DeepSeek solo servidor, contrato Zod, reserva idempotente previa al proveedor, trazabilidad y RPC atómico. La generación es automática tras la evidencia y se bloqueó el endpoint manual para impedir cobros duplicados. DeepSeek vacío o truncado se registra sin reintento automático.
-  El worker usa salida de texto con JSON extraído de forma tolerante, en lugar de
-  `response_format: json_object`, porque ese modo puede devolver contenido vacío.
-  El reintento técnico `--redactar-ingesta <uuid>` reutiliza evidencia lista sin
-  retranscribir; limita la salida a seis párrafos y usa razonamiento bajo para
-  evitar propuestas truncadas.
+- **HU-ED-08:** propuesta IA de borrador desde evidencia lista, con proveedor DeepSeek solo servidor, contrato Zod, reserva idempotente previa al proveedor, trazabilidad y RPC atómico. La generación es automática tras la evidencia. Cuando falla, un usuario con `ingestas.redactar` y `contenido.crear` dispone de **Reintentar borrador** en la bandeja: confirma el gasto, reutiliza la evidencia y bloquea duplicados mientras existe una reserva activa.
+  El worker y el endpoint usan salida de texto con JSON extraído de forma tolerante,
+  en lugar de `response_format: json_object`, porque ese modo puede devolver
+  contenido vacío. Para la redacción se desactiva el razonamiento de DeepSeek y
+  se reserva el límite de salida para el JSON final; la normalización reconstruye
+  únicamente campos trazables de la evidencia antes de validarlos con Zod.
 
 - **HU-ED-07:** se trasladaron a esta rama local la propuesta de cola durable,
   extracción, transcripción, traducción y evidencia. La prueba local alcanzó
@@ -39,8 +39,9 @@
 
 ## Bloqueos
 
-- La prueba funcional final de DeepSeek requiere una fuente real con transcripción
-  sustancial; no lanzar reintentos manuales porque cada uno puede cobrar al proveedor.
+- La última prueba real con `deepseek-flash` devolvió `content` vacío aun con
+  razonamiento bajo. El adaptador quedó corregido a `reasoning_effort: none`; falta
+  un reintento explícitamente autorizado para certificar el resultado final.
 
 ## Deuda técnica confirmada
 
@@ -57,15 +58,15 @@
 ## Siguiente paso recomendado
 
 Registrar una fuente real desde `/admin/ingestas` y esperar la generación
-automática. Si DeepSeek retorna vacío o un contrato inválido, revisar el código
-de error en la bandeja sin reencolar ni llamar manualmente a la IA.
+automática. Si la IA falla, revisar el código de error y usar **Reintentar
+borrador** solo con autorización explícita del responsable editorial.
 
 ## Última validación conocida
 
-El 2026-09-17 pasaron `tests/unit/ingestasEditoriales.test.ts` (13 pruebas),
-`npm.cmd run typecheck`, lint de los archivos cambiados, `git diff --check` y la
-verificación remota segura de la RPC. El servidor de desarrollo está en
-`http://127.0.0.1:3001`.
+El 2026-09-17 pasaron lint de archivos cambiados, `npm.cmd run test:unit` (15
+archivos, 87 pruebas), `npm.cmd run typecheck` y `git diff --check`. La interfaz
+local verificó botón, confirmación, bloqueo durante la llamada y alerta global
+ante fallo. El servidor de desarrollo está en `http://127.0.0.1:3001`.
 
 ## Documentos posiblemente desactualizados
 
