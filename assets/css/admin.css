@@ -5857,13 +5857,16 @@
 
 @media (max-width: 720px) {
   .barra-etapas-editor ol {
-    min-width: 650px;
+    min-width: 0;
   }
 
   .barra-etapas-editor button {
-    min-height: 74px;
-    grid-template-columns: 32px minmax(0, 1fr);
-    padding: 10px;
+    min-height: 70px;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    text-align: center;
   }
 
   .icono-paso-editor {
@@ -5873,6 +5876,20 @@
 
   .texto-paso-editor > span {
     display: none;
+  }
+
+  .texto-paso-editor {
+    justify-items: center;
+  }
+
+  .texto-paso-editor small {
+    display: none;
+  }
+
+  .texto-paso-editor strong {
+    font-size: 0.63rem;
+    line-height: 1.15;
+    white-space: normal;
   }
 
   .cabecera-etapa-editor {

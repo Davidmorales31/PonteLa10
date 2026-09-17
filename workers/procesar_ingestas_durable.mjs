@@ -92,9 +92,9 @@ function normalizarPropuestaRedaccion(propuesta, entrada) {
     categoriaId: entrada.categoriaId,
     temaIds: [],
     seo: {
-      titulo: limitado(propuesta.seo?.titulo, 70),
-      descripcion: limitado(propuesta.seo?.descripcion, 170),
-      textoSocial: limitado(propuesta.seo?.textoSocial, 280)
+      titulo: limitado(propuesta.seo?.titulo, 70) || limitado(tituloBase, 70),
+      descripcion: limitado(propuesta.seo?.descripcion, 170) || limitado(resumenBase, 170),
+      textoSocial: limitado(propuesta.seo?.textoSocial, 280) || limitado(`${tituloBase}. ${resumenBase}`, 280)
     },
     fuente: {
       nombre: limitado(propuesta.fuente?.nombre, 160) || 'Fuente original',

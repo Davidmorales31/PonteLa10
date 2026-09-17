@@ -177,6 +177,17 @@ const categoriaActual = computed(() => taxonomias.value?.categorias
 const totalPalabras = computed(() => contarPalabrasDocumento(documentoActual.value))
 const minutosLectura = computed(() => estimarMinutosLectura(documentoActual.value))
 const puedeEditar = computed(() => Boolean(articulo.value?.puedeEditar))
+const hayCambiosQueBloqueanFlujo = computed(() => puedeEditar.value && cambiosPendientes.value)
+const guiaEstadoEditorial = computed(() => {
+  if (!articulo.value) return ''
+  if (articulo.value.estado === 'review') {
+    return 'Estás en revisión: puedes aprobar sin guardar. Si necesitas corregir el texto, solicita cambios para volver a editar.'
+  }
+  if (articulo.value.estado === 'approved') {
+    return 'El contenido ya está aprobado. El siguiente paso es programarlo o publicarlo.'
+  }
+  return 'Completa las etapas en orden. El sistema conserva las decisiones editoriales separadas de los cambios del borrador.'
+})
 const pasosEditor = computed<PasoEditorEditorial[]>(() => {
   const completitud = evaluarCompletitudEditor({
     datos: formulario.value,
@@ -309,6 +320,16 @@ function aplicarDatos(datos: DatosEditorArticulo) {
   bloques.value = convertirDocumentoABloques(datos.documento)
 }
 
+function aplicarSugerenciasPredeterminadas() {
+  if (!puedeEditar.value || articulo.value?.autoguardado || !formulario.value) return
+  const datos = formulario.value
+  if (!datos.seo.titulo.trim()) datos.seo.titulo = datos.titulo.slice(0, 70)
+  if (!datos.seo.descripcion.trim()) datos.seo.descripcion = datos.resumen.slice(0, 170)
+  if (!datos.seo.textoSocial.trim()) {
+    datos.seo.textoSocial = `${datos.titulo}. ${datos.resumen}`.slice(0, 300)
+  }
+}
+
 function extraerDatosDetalle(
   detalle: ArticuloDetalleEditorial
 ): DatosEditorArticulo {
@@ -338,6 +359,7 @@ function inicializarEditor(detalle: ArticuloDetalleEditorial) {
   conflictoVersion.value = false
   nextTick(() => {
     inicializando.value = false
+    aplicarSugerenciasPredeterminadas()
   })
 }
 
@@ -503,6 +525,10 @@ async function recuperarAutoguardado() {
   const articuloActual = articulo.value
   const autoguardado = articuloActual?.autoguardado
   if (!articuloActual || !autoguardado) return
+  if (!puedeEditar.value) {
+    errorGuardado.value = 'El contenido está en revisión y no admite cambios. Solicita cambios si necesitas editarlo.'
+    return
+  }
 
   aplicarDatos(autoguardado.datos)
   await cargarPortada(autoguardado.datos.portadaId)
@@ -569,7 +595,7 @@ async function descartarAutoguardado() {
 }
 
 async function realizarTransicion(entrada: EntradaTransicionEditorial) {
-  if (cambiosPendientes.value) {
+  if (hayCambiosQueBloqueanFlujo.value) {
     errorGuardado.value = 'Guarda los cambios pendientes antes de cambiar el estado.'
     return
   }
@@ -702,7 +728,7 @@ onBeforeUnmount(() => {
           <span v-if="guardando"><RefreshCw class="icono-girando" /> Guardando</span>
           <span v-else-if="autoguardando"><Clock3 /> Autoguardando</span>
           <span v-else-if="mensajeEstado"><Check /> {{ mensajeEstado }}</span>
-          <span v-else-if="cambiosPendientes"><Clock3 /> Cambios pendientes</span>
+          <span v-else-if="hayCambiosQueBloqueanFlujo"><Clock3 /> Cambios pendientes</span>
           <span v-else><ShieldCheck /> Todo guardado</span>
         </div>
 
@@ -767,6 +793,11 @@ onBeforeUnmount(() => {
         {{ errorGuardado }}
       </p>
 
+      <p v-if="!puedeEditar" class="aviso-editor-solo-lectura" role="status">
+        <ShieldCheck aria-hidden="true" />
+        {{ guiaEstadoEditorial }}
+      </p>
+
       <BarraEtapasEditor
         :pasos="pasosEditor"
         :paso-actual="pasoActual"
@@ -776,7 +807,7 @@ onBeforeUnmount(() => {
       <BarraAccionesFlujoEditorial
         v-if="flujo"
         :flujo="flujo"
-        :bloqueado="guardando || cambiosPendientes"
+        :bloqueado="guardando || hayCambiosQueBloqueanFlujo"
         :motivos-bloqueo="motivosBloqueoFlujo"
         @seleccionar="abrirAccionFlujo"
       />
@@ -1090,7 +1121,8 @@ onBeforeUnmount(() => {
             v-if="flujo"
             v-show="pasoActual === 'revision'"
             :flujo="flujo"
-            :bloqueado="guardando || cambiosPendientes"
+            :bloqueado="guardando || hayCambiosQueBloqueanFlujo"
+            :mostrar-acciones="false"
             :motivos-bloqueo="motivosBloqueoFlujo"
             @seleccionar-accion="abrirAccionFlujo"
             @comentar="agregarComentarioRevision"

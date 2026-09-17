@@ -20,6 +20,7 @@ import { etiquetasEstadoContenido } from '~/utils/editorial/contenido'
 defineProps<{
   flujo: FlujoArticuloEditorial
   bloqueado?: boolean
+  mostrarAcciones?: boolean
   motivosBloqueo?: Partial<Record<IdAccionFlujoEditorial, string>>
 }>()
 
@@ -82,7 +83,7 @@ function formatearFecha(fecha: string): string {
       Publicación: {{ formatearFecha(flujo.programadoPara) }}
     </p>
 
-    <div v-if="flujo.acciones.length" class="acciones-flujo-editorial">
+    <div v-if="mostrarAcciones !== false && flujo.acciones.length" class="acciones-flujo-editorial">
       <button
         v-for="accion in flujo.acciones"
         :key="accion.id"
@@ -99,11 +100,11 @@ function formatearFecha(fecha: string): string {
       </button>
     </div>
 
-    <p v-if="bloqueado" class="aviso-acciones-flujo-bloqueadas" role="status">
+    <p v-if="mostrarAcciones !== false && bloqueado" class="aviso-acciones-flujo-bloqueadas" role="status">
       Guarda los cambios pendientes para habilitar estas decisiones.
     </p>
 
-    <p v-else class="texto-secundario-editor">
+    <p v-else-if="mostrarAcciones !== false" class="texto-secundario-editor">
       No hay acciones disponibles para tu rol en este estado.
     </p>
 

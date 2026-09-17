@@ -45,13 +45,22 @@ function normalizarPropuestaProveedor(propuesta: unknown, entrada: EntradaRedacc
   const lista = (valor: unknown) => Array.isArray(valor)
     ? valor.map(item => limitar(item, 500)).filter(Boolean).slice(0, 30)
     : []
+  const titulo = limitar(origen.titulo || origen.title, 160)
+    || limitar(entrada.tituloSugerido, 160)
+    || limitar(`Resumen de la fuente: ${cuerpo}`, 160)
+  const resumen = limitar(origen.resumen || origen.summary || origen.descripcion, 320)
+    || limitar(cuerpo, 320)
   return {
     versionContrato: 1,
-    titulo: limitar(origen.titulo || origen.title, 160) || limitar(entrada.tituloSugerido, 160) || limitar(`Resumen de la fuente: ${cuerpo}`, 160),
-    resumen: limitar(origen.resumen || origen.summary || origen.descripcion, 320) || limitar(cuerpo, 320),
+    titulo,
+    resumen,
     tipo: typeof origen.tipo === 'string' && ['breve', 'noticia', 'analisis', 'blog', 'informe', 'opinion', 'especial'].includes(origen.tipo) ? origen.tipo : entrada.tipoSugerido,
     documento: { type: 'doc', content: contenido },
-    seo: { titulo: limitar(seo.titulo, 70), descripcion: limitar(seo.descripcion, 170), textoSocial: limitar(seo.textoSocial, 280) },
+    seo: {
+      titulo: limitar(seo.titulo, 70) || limitar(titulo, 70),
+      descripcion: limitar(seo.descripcion, 170) || limitar(resumen, 170),
+      textoSocial: limitar(seo.textoSocial, 280) || limitar(`${titulo}. ${resumen}`, 280)
+    },
     categoriaId: entrada.categoriaId,
     temaIds: [],
     fuente: { url: entrada.urlFuente, nombre: limitar(fuente.nombre, 160) || 'Fuente original', autor: limitar(fuente.autor, 160), creditos: limitar(entrada.creditos, 500) },

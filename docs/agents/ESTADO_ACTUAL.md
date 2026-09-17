@@ -40,6 +40,12 @@
   `20260917090000_eliminacion_total_ingestas.sql` se aplicó y su RPC se verificó
   en Supabase el 2026-09-17.
 - La portada usa datos mock en parte; una pantalla o mock no certifica una función.
+- **Flujo del editor:** una revisión ya no queda bloqueada por un autoguardado
+  local que no se puede persistir en ese estado. Las decisiones se habilitan si
+  no hay cambios editables pendientes; el editor explica cuándo aprobar y cuándo
+  solicitar cambios. Los nuevos borradores completan SEO desde título y resumen
+  cuando el proveedor lo omite, y la navegación compacta de etapas evita el
+  desborde visual en pantallas estrechas.
 
 ## Bloqueos
 
