@@ -49,22 +49,60 @@ function validarPropuestaRedaccion(propuesta, entrada) {
 
 function normalizarPropuestaRedaccion(propuesta, entrada) {
   if (!propuesta || typeof propuesta !== 'object') return propuesta
+  const texto = valor => typeof valor === 'string' ? valor.replace(/\s+/g, ' ').trim() : ''
+  const limitado = (valor, maximo) => texto(valor).slice(0, maximo)
+  const recolectarTexto = valor => {
+    if (typeof valor === 'string') return valor
+    if (Array.isArray(valor)) return valor.map(recolectarTexto).join('\n')
+    if (!valor || typeof valor !== 'object') return ''
+    if (typeof valor.text === 'string') return valor.text
+    return recolectarTexto(valor.content)
+  }
+  const textoEvidencia = entrada.segmentos.map(segmento => texto(segmento.texto)).filter(Boolean).join('\n')
+  const textoDocumento = texto(recolectarTexto(propuesta.documento || propuesta.cuerpo || propuesta.contenido)) || textoEvidencia
+  const bloques = textoDocumento
+    .split(/\n{1,}|(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ])/u)
+    .map(fragmento => limitado(fragmento, 4500))
+    .filter(Boolean)
+    .slice(0, 80)
+    .map(fragmento => ({ type: 'paragraph', content: [{ type: 'text', text: fragmento }] }))
+  const tituloBase = limitado(propuesta.titulo || propuesta.title, 160)
+    || limitado(entrada.tituloSugerido, 160)
+    || limitado(`Resumen de la fuente: ${textoDocumento}`, 160)
+  const resumenBase = limitado(propuesta.resumen || propuesta.summary || propuesta.descripcion, 320)
+    || limitado(textoDocumento, 320)
+  const segmentosDisponibles = new Map(entrada.segmentos.map(segmento => [segmento.id, segmento]))
+  const idsFundamento = Array.isArray(propuesta.segmentosFundamento)
+    ? propuesta.segmentosFundamento.map(segmento => segmento?.id).filter(id => segmentosDisponibles.has(id))
+    : []
+  const segmentosFundamento = (idsFundamento.length ? idsFundamento : [entrada.segmentos[0]?.id])
+    .map(id => segmentosDisponibles.get(id))
+    .filter(Boolean)
+  const listaTexto = valor => Array.isArray(valor)
+    ? valor.map(item => limitado(item, 500)).filter(Boolean).slice(0, 30)
+    : []
   return {
-    ...propuesta,
     versionContrato: 1,
-    tipo: propuesta.tipo || entrada.tipoSugerido,
+    titulo: tituloBase,
+    resumen: resumenBase,
+    tipo: ['breve', 'noticia', 'analisis', 'blog', 'informe', 'opinion', 'especial'].includes(propuesta.tipo) ? propuesta.tipo : entrada.tipoSugerido,
+    documento: { type: 'doc', content: bloques },
     categoriaId: entrada.categoriaId,
-    temaIds: Array.isArray(propuesta.temaIds) ? propuesta.temaIds : [],
-    seo: { titulo: '', descripcion: '', textoSocial: '', ...(propuesta.seo || {}) },
-    fuente: {
-      nombre: 'Fuente original', autor: '',
-      ...(propuesta.fuente || {}), url: entrada.urlFuente, creditos: entrada.creditos
+    temaIds: [],
+    seo: {
+      titulo: limitado(propuesta.seo?.titulo, 70),
+      descripcion: limitado(propuesta.seo?.descripcion, 170),
+      textoSocial: limitado(propuesta.seo?.textoSocial, 280)
     },
-    segmentosFundamento: Array.isArray(propuesta.segmentosFundamento) && propuesta.segmentosFundamento.length
-      ? propuesta.segmentosFundamento
-      : [entrada.segmentos[0]],
-    afirmacionesPorCorroborar: Array.isArray(propuesta.afirmacionesPorCorroborar) ? propuesta.afirmacionesPorCorroborar : [],
-    advertencias: Array.isArray(propuesta.advertencias) ? propuesta.advertencias : []
+    fuente: {
+      nombre: limitado(propuesta.fuente?.nombre, 160) || 'Fuente original',
+      autor: limitado(propuesta.fuente?.autor, 160),
+      url: entrada.urlFuente,
+      creditos: limitado(entrada.creditos, 500)
+    },
+    segmentosFundamento,
+    afirmacionesPorCorroborar: listaTexto(propuesta.afirmacionesPorCorroborar),
+    advertencias: listaTexto(propuesta.advertencias)
   }
 }
 
