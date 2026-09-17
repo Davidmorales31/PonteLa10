@@ -229,8 +229,7 @@ const indicePasoActual = computed(() => Math.max(
 ))
 const configuracionPasoActual = computed(() => pasosEditor.value[indicePasoActual.value])
 const retornoEditor = computed(() => route.fullPath)
-const motivosBloqueoFlujo = computed(() => {
-  const motivos: Partial<Record<AccionFlujoEditorial['id'], string>> = {}
+const recomendacionesFlujo = computed(() => {
   const faltantes: string[] = []
 
   if (!portadaSeleccionada.value) faltantes.push('una portada')
@@ -238,14 +237,9 @@ const motivosBloqueoFlujo = computed(() => {
     faltantes.push('una descripción SEO de al menos 40 caracteres')
   }
 
-  if (faltantes.length) {
-    const motivo = `Antes de aprobar faltan ${faltantes.join(' y ')}. Solicita cambios para habilitar la edición.`
-    motivos.aprobar = motivo
-    motivos.programar = motivo
-    motivos.publicar = motivo
-  }
-
-  return motivos
+  return faltantes.length
+    ? `Recomendación antes de publicar: añade ${faltantes.join(' y ')}.`
+    : ''
 })
 const contenidoCabeceraPaso = computed(() => ({
   contenido: {
@@ -798,6 +792,11 @@ onBeforeUnmount(() => {
         {{ guiaEstadoEditorial }}
       </p>
 
+      <p v-if="recomendacionesFlujo" class="aviso-recomendacion-editorial" role="status">
+        <AlertTriangle aria-hidden="true" />
+        {{ recomendacionesFlujo }} Puedes continuar si ya tomaste esa decisión editorial.
+      </p>
+
       <BarraEtapasEditor
         :pasos="pasosEditor"
         :paso-actual="pasoActual"
@@ -808,7 +807,6 @@ onBeforeUnmount(() => {
         v-if="flujo"
         :flujo="flujo"
         :bloqueado="guardando || hayCambiosQueBloqueanFlujo"
-        :motivos-bloqueo="motivosBloqueoFlujo"
         @seleccionar="abrirAccionFlujo"
       />
 
@@ -1123,7 +1121,6 @@ onBeforeUnmount(() => {
             :flujo="flujo"
             :bloqueado="guardando || hayCambiosQueBloqueanFlujo"
             :mostrar-acciones="false"
-            :motivos-bloqueo="motivosBloqueoFlujo"
             @seleccionar-accion="abrirAccionFlujo"
             @comentar="agregarComentarioRevision"
           />
