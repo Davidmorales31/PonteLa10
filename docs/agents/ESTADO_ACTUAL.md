@@ -19,6 +19,8 @@
 ## Parcial o activo
 
 - **HU-ED-08:** propuesta IA de borrador desde evidencia lista, con proveedor DeepSeek solo servidor, contrato Zod, reserva idempotente previa al proveedor, trazabilidad y RPC atómico. La generación es automática tras la evidencia y se bloqueó el endpoint manual para impedir cobros duplicados. DeepSeek vacío o truncado se registra sin reintento automático.
+  El worker usa salida de texto con JSON extraído de forma tolerante, en lugar de
+  `response_format: json_object`, porque ese modo puede devolver contenido vacío.
 
 - **HU-ED-07:** se trasladaron a esta rama local la propuesta de cola durable,
   extracción, transcripción, traducción y evidencia. La prueba local alcanzó

@@ -5,6 +5,16 @@ import { instruccionesRedaccionV1 } from './instrucciones/redaccion-v1'
 
 interface RespuestaDeepSeek { choices?: Array<{ finish_reason?: string, message?: { content?: string | null } }>, usage?: { prompt_tokens?: number, completion_tokens?: number, reasoning_tokens?: number }, model?: string }
 
+function extraerJsonProveedor(contenido: string): unknown {
+  const limpio = contenido
+    .replace(/^```(?:json)?\s*/i, '')
+    .replace(/\s*```$/, '')
+  const inicio = limpio.indexOf('{')
+  const fin = limpio.lastIndexOf('}')
+  if (inicio < 0 || fin <= inicio) throw new Error('JSON_NO_ENCONTRADO')
+  return JSON.parse(limpio.slice(inicio, fin + 1))
+}
+
 export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
   return {
     async redactarBorrador(entrada: EntradaRedaccionIa): Promise<ResultadoRedaccionIa> {
@@ -16,7 +26,7 @@ export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
       const respuesta = await $fetch<RespuestaDeepSeek>('/chat/completions', {
         baseURL: String(configuracion.editorialAiBaseUrl || 'https://api.deepseek.com'), method: 'POST', timeout: 60000,
         headers: { Authorization: `Bearer ${apiKey}` },
-        body: { model: modelo, response_format: { type: 'json_object' }, max_tokens: 4096, stream: false,
+        body: { model: modelo, max_tokens: 4096, stream: false,
           messages: [{ role: 'system', content: instruccionesRedaccionV1 }, { role: 'user', content: JSON.stringify({ versionContrato: versionContratoRedaccionIa, operacion: 'redactar_borrador', ...entrada }) }] }
       })
       const eleccion = respuesta.choices?.[0]
@@ -26,7 +36,7 @@ export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
       if (!contenido) throw createError({ statusCode: 502, statusMessage: 'DeepSeek respondió sin contenido. La ingesta quedó protegida: no se reintentó ni se cobró una segunda generación.', data: { codigo: 'IA_REDACCION_SIN_CONTENIDO' } })
       if (eleccion?.finish_reason === 'length') throw createError({ statusCode: 502, statusMessage: 'DeepSeek truncó la propuesta antes de terminar. La ingesta quedó protegida: no se reintentó automáticamente.', data: { codigo: 'IA_REDACCION_TRUNCADA' } })
       let json: unknown
-      try { json = JSON.parse(contenido) } catch { throw createError({ statusCode: 502, statusMessage: 'El proveedor devolvió una propuesta inválida.', data: { codigo: 'IA_REDACCION_INVALIDA' } }) }
+      try { json = extraerJsonProveedor(contenido) } catch { throw createError({ statusCode: 502, statusMessage: 'El proveedor devolvió una propuesta inválida.', data: { codigo: 'IA_REDACCION_INVALIDA' } }) }
       const propuesta = esquemaPropuestaBorradorIa.safeParse(json)
       if (!propuesta.success) throw createError({ statusCode: 502, statusMessage: 'La propuesta no cumple el contrato editorial.', data: { codigo: 'IA_REDACCION_CONTRATO_INVALIDO' } })
       return { propuesta: propuesta.data, proveedor: 'deepseek', modelo: respuesta.model || modelo, consumo: { tokensEntrada: respuesta.usage?.prompt_tokens ?? null, tokensSalida: respuesta.usage?.completion_tokens ?? null, tokensRazonamiento: respuesta.usage?.reasoning_tokens ?? null, costoUsd: null, versionTarifa: null, duracionMs: Date.now() - inicio } }
