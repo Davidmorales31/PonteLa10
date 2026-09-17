@@ -103,3 +103,25 @@
   validaciones. El siguiente paso requiere autorización: revisar el diff
   completo y crear el commit de HU-ED-07; después, decidir PR o mantener la
   rama local.
+
+## Actualización de cierre — 2026-09-17
+
+- **Objetivo:** corregir el bloqueo de aprobación que persistía en Supabase
+  aunque el editor mostraba portada y SEO como recomendaciones.
+- **Completado:** se creó y aplicó
+  `20260917213028_permitir_publicacion_sin_metadatos_opcionales.sql`. La
+  función `validate_article_status_transition` conserva permisos, MFA,
+  transiciones y contenido mínimo; deja de exigir portada o una descripción
+  SEO de 40 caracteres para aprobar, programar o publicar.
+- **Verificación remota:** una consulta a la definición desplegada confirmó
+  `portada_opcional = true` y `seo_opcional = true`. La transición funcional
+  del artículo `37722690-209f-4c7e-a0e7-049325d517e7` terminó en `approved`,
+  versión 4. No se publicó el artículo.
+- **Cambios locales:** se versionó la misma migración; el repositorio también
+  traduce errores futuros que empiecen por `Completa` a un 422 legible.
+- **Validaciones:** `git diff --check`, lint, typecheck y 15 archivos/87
+  pruebas unitarias pasaron. Falta `build` porque el servidor de desarrollo
+  local sigue activo y tomaría su lock.
+- **Siguiente acción exacta:** si el responsable quiere hacer visible esta
+  historia, usar **Publicar ahora** y confirmar la publicación explícitamente
+  en ese momento.

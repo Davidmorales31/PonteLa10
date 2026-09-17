@@ -45,7 +45,15 @@
   no hay cambios editables pendientes; el editor explica cuándo aprobar y cuándo
   solicitar cambios. Los nuevos borradores completan SEO desde título y resumen
   cuando el proveedor lo omite, y la navegación compacta de etapas evita el
-  desborde visual en pantallas estrechas.
+  desborde visual en pantallas estrechas. Portada y descripción SEO son
+  recomendaciones visibles: no bloquean la aprobación, programación ni
+  publicación de una persona autorizada.
+- **Alineación de producción (2026-09-17):** la migración
+  `20260917213028_permitir_publicacion_sin_metadatos_opcionales.sql` quedó
+  aplicada en Supabase. Se verificó que el disparador ya no exige portada ni
+  descripción SEO; título, resumen, categoría, cuerpo, fuente, permisos y MFA
+  continúan siendo obligatorios. El contenido `37722690-209f-4c7e-a0e7-049325d517e7`
+  pasó de `review` a `approved` como comprobación funcional.
 
 ## Bloqueos
 

@@ -841,6 +841,7 @@ export async function transicionarArticuloEditorial(
       mensaje.includes('necesita')
       || mensaje.includes('Selecciona')
       || mensaje.includes('Explica')
+      || mensaje.includes('Completa')
       || mensaje.includes('programación')
       || mensaje.includes('transición editorial')
     ) {
