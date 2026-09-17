@@ -4,6 +4,7 @@ import {
   AtSign,
   Camera,
   CircleAlert,
+  Eye,
   ExternalLink,
   FileCheck2,
   FilePenLine,
@@ -173,6 +174,15 @@ function puedeReencolar(ingesta: IngestaEditorial): boolean {
               aria-label="Abrir borrador creado"
             >
               <FileCheck2 aria-hidden="true" />
+            </NuxtLink>
+            <NuxtLink
+              v-if="ingesta.articuloId"
+              class="boton-icono-editorial"
+              :to="`/admin/contenidos/${ingesta.articuloId}?paso=revision`"
+              title="Ver contenido y revisión"
+              aria-label="Ver contenido creado en revisión"
+            >
+              <Eye aria-hidden="true" />
             </NuxtLink>
             <button
               v-else-if="puedeRedactar && ingesta.estado === 'evidence_ready'"
