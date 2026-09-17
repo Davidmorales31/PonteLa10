@@ -24,6 +24,10 @@
   contenido vacío. Para la redacción se desactiva el razonamiento de DeepSeek y
   se reserva el límite de salida para el JSON final; la normalización reconstruye
   únicamente campos trazables de la evidencia antes de validarlos con Zod.
+  La migración `20260917101500_recuperar_reservas_ia_interrumpidas.sql` está
+  aplicada en Supabase: una reserva `running` de más de dos minutos se marca como
+  interrumpida cuando se solicita el siguiente reintento, así nunca bloquea la
+  ingesta de forma permanente.
 
 - **HU-ED-07:** se trasladaron a esta rama local la propuesta de cola durable,
   extracción, transcripción, traducción y evidencia. La prueba local alcanzó
@@ -41,7 +45,9 @@
 
 - La última prueba real con `deepseek-flash` devolvió `content` vacío aun con
   razonamiento bajo. El adaptador quedó corregido a `reasoning_effort: none`; falta
-  un reintento explícitamente autorizado para certificar el resultado final.
+  un reintento explícitamente autorizado para certificar el resultado final. La
+  reserva que quedó activa por esa falla será recuperada por `0015` antes de ese
+  próximo intento.
 
 ## Deuda técnica confirmada
 
@@ -63,10 +69,12 @@ borrador** solo con autorización explícita del responsable editorial.
 
 ## Última validación conocida
 
-El 2026-09-17 pasaron lint de archivos cambiados, `npm.cmd run test:unit` (15
-archivos, 87 pruebas), `npm.cmd run typecheck` y `git diff --check`. La interfaz
-local verificó botón, confirmación, bloqueo durante la llamada y alerta global
-ante fallo. El servidor de desarrollo está en `http://127.0.0.1:3001`.
+El 2026-09-17 pasaron lint de archivos cambiados,
+`tests/unit/ingestasEditoriales.test.ts` (13 pruebas), `npm.cmd run typecheck`
+y `git diff --check`. La interfaz local verificó botón, confirmación y bloqueo
+durante la llamada; los errores de acciones ahora se muestran solo con la alerta
+global. La migración `0015` devolvió éxito en Supabase. El servidor de desarrollo
+está en `http://127.0.0.1:3001`.
 
 ## Documentos posiblemente desactualizados
 

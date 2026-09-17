@@ -513,7 +513,13 @@ export async function reservarBorradorDesdeIngesta(clienteSupabase: SupabaseClie
 }
 
 export async function registrarFalloBorradorDesdeIngesta(clienteSupabase: SupabaseClient, ingestaId: string, requestId: string, codigo: string, duracionMs: number) {
-  await clienteSupabase.rpc('fail_editorial_ai_draft', { p_ingestion_id: ingestaId, p_request_id: requestId, p_error_code: codigo, p_duration_ms: duracionMs })
+  const { error } = await clienteSupabase.rpc('fail_editorial_ai_draft', {
+    p_ingestion_id: ingestaId,
+    p_request_id: requestId,
+    p_error_code: codigo,
+    p_duration_ms: duracionMs
+  })
+  if (error) throw crearErrorRepositorio('No se pudo cerrar la reserva fallida de IA.')
 }
 
 export async function crearBorradorDesdeIngesta(clienteSupabase: SupabaseClient, ingestaId: string, requestId: string, propuesta: PropuestaBorradorIa, redaccion: ResultadoRedaccionIa, promptHash: string): Promise<ResultadoBorradorDesdeIngesta> {

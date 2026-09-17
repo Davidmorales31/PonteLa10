@@ -271,10 +271,6 @@ async function reintentarBorrador(ingesta: IngestaEditorial) {
     <p v-if="mensajeExito" class="aviso-exito-editorial" role="status">
       {{ mensajeExito }}
     </p>
-    <p v-if="errorAccion && !formularioAbierto" class="aviso-error-editorial" role="alert">
-      {{ errorAccion }}
-    </p>
-
     <section class="resumen-cola-ingestas" aria-label="Estado de la cola">
       <div>
         <FileInput aria-hidden="true" />
