@@ -382,16 +382,14 @@ async function procesarAsignacion(cliente, asignacion) {
 }
 
 async function recuperarEvidenciaPendiente(cliente) {
-  const { data, error } = await cliente
-    .from('editorial_ingestions')
-    .select('id, processing_result')
-    .eq('status', 'evidence_ready')
-    .is('article_id', null)
-    .order('finished_at', { ascending: true })
-    .limit(1)
-
-  if (error) throw new Error(`No se pudo consultar evidencia pendiente: ${error.message}`)
-  const ingesta = data?.[0]
+  // Esta RPC devuelve su asignación directamente. A diferencia de las RPC de
+  // cola, no usa el recibo durable { ok, resultado }, porque solo reclama una
+  // evidencia ya finalizada y no modifica su estado.
+  const { data: resultadoReserva, error } = await cliente.rpc('claim_next_editorial_evidence_for_draft')
+  if (error) throw new Error(`No se pudo reclamar evidencia pendiente: ${error.message}`)
+  const ingesta = resultadoReserva?.tipo === 'asignado'
+    ? { id: resultadoReserva.ingestaId, processing_result: resultadoReserva.evidencia }
+    : null
   if (!ingesta || evidenciasRecuperadas.has(ingesta.id)) return false
 
   const resultado = await redactarBorradorAutomatico(cliente, ingesta.id, ingesta.processing_result)
