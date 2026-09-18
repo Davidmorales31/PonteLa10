@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 
 const espera = milisegundos => new Promise(resolve => setTimeout(resolve, milisegundos))
 const unaVez = process.argv.includes('--once')
+const soloCola = process.argv.includes('--solo-cola')
 const indiceReintentoBorrador = process.argv.indexOf('--redactar-ingesta')
 const ingestaParaRedactar = indiceReintentoBorrador >= 0 ? process.argv[indiceReintentoBorrador + 1] : ''
 const instancia = randomUUID()
@@ -425,7 +426,7 @@ async function iniciar() {
         p_request_id: randomUUID()
       })
       if (asignacion.tipo === 'asignado') await procesarAsignacion(cliente, asignacion)
-      else if (await recuperarEvidenciaPendiente(cliente)) continue
+      else if (!soloCola && await recuperarEvidenciaPendiente(cliente)) continue
       else {
         console.log(`Cola ${asignacion.tipo || 'sin estado'}; esperando ${asignacion.esperarMs || 0} ms.`)
         if (!unaVez) await espera(asignacion.esperarMs || 5000)
