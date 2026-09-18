@@ -7,6 +7,7 @@ const unaVez = process.argv.includes('--once')
 const indiceReintentoBorrador = process.argv.indexOf('--redactar-ingesta')
 const ingestaParaRedactar = indiceReintentoBorrador >= 0 ? process.argv[indiceReintentoBorrador + 1] : ''
 const instancia = randomUUID()
+const evidenciasRecuperadas = new Set()
 
 function crearErrorProcesamiento(codigo, mensaje, opciones = {}) {
   const error = new Error(mensaje)
@@ -379,6 +380,25 @@ async function procesarAsignacion(cliente, asignacion) {
   }
 }
 
+async function recuperarEvidenciaPendiente(cliente) {
+  const { data, error } = await cliente
+    .from('editorial_ingestions')
+    .select('id, processing_result')
+    .eq('status', 'evidence_ready')
+    .is('article_id', null)
+    .order('finished_at', { ascending: true })
+    .limit(1)
+
+  if (error) throw new Error(`No se pudo consultar evidencia pendiente: ${error.message}`)
+  const ingesta = data?.[0]
+  if (!ingesta || evidenciasRecuperadas.has(ingesta.id)) return false
+
+  evidenciasRecuperadas.add(ingesta.id)
+  await redactarBorradorAutomatico(cliente, ingesta.id, ingesta.processing_result)
+  console.log(`Borrador automático recuperado: ${ingesta.id}`)
+  return true
+}
+
 async function iniciar() {
   const cliente = crearClienteWorker()
   await autenticar(cliente)
@@ -398,6 +418,7 @@ async function iniciar() {
         p_request_id: randomUUID()
       })
       if (asignacion.tipo === 'asignado') await procesarAsignacion(cliente, asignacion)
+      else if (await recuperarEvidenciaPendiente(cliente)) continue
       else {
         console.log(`Cola ${asignacion.tipo || 'sin estado'}; esperando ${asignacion.esperarMs || 0} ms.`)
         if (!unaVez) await espera(asignacion.esperarMs || 5000)
