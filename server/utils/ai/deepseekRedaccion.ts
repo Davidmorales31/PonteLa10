@@ -84,7 +84,7 @@ export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
         // La redacción es una transformación estructurada: el modo de razonamiento
         // puede consumir todo el límite antes de emitir `content`. Lo desactivamos
         // para reservar la salida al JSON que valida el contrato editorial.
-        body: { model: modelo, reasoning_effort: 'none', max_tokens: 3072, stream: false,
+        body: { model: modelo, reasoning_effort: 'none', max_tokens: 4096, stream: false,
           messages: [{ role: 'system', content: instruccionesRedaccionV1 }, { role: 'user', content: JSON.stringify({ versionContrato: versionContratoRedaccionIa, operacion: 'redactar_borrador', ...entrada }) }] }
       })
       const eleccion = respuesta.choices?.[0]
