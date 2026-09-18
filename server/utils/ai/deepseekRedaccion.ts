@@ -5,6 +5,16 @@ import { instruccionesRedaccionV1 } from './instrucciones/redaccion-v1'
 
 interface RespuestaDeepSeek { choices?: Array<{ finish_reason?: string, message?: { content?: string | null } }>, usage?: { prompt_tokens?: number, completion_tokens?: number, reasoning_tokens?: number }, model?: string }
 
+function prepararEntradaParaProveedor(entrada: EntradaRedaccionIa): EntradaRedaccionIa {
+  return {
+    ...entrada,
+    segmentos: entrada.segmentos.slice(0, 3).map(segmento => ({
+      ...segmento,
+      texto: segmento.texto.slice(0, 1600)
+    }))
+  }
+}
+
 function extraerJsonProveedor(contenido: string): unknown {
   const limpio = contenido
     .replace(/^```(?:json)?\s*/i, '')
@@ -85,7 +95,7 @@ export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
         // puede consumir todo el límite antes de emitir `content`. Lo desactivamos
         // para reservar la salida al JSON que valida el contrato editorial.
         body: { model: modelo, reasoning_effort: 'none', max_tokens: 4096, stream: false,
-          messages: [{ role: 'system', content: instruccionesRedaccionV1 }, { role: 'user', content: JSON.stringify({ versionContrato: versionContratoRedaccionIa, operacion: 'redactar_borrador', ...entrada }) }] }
+          messages: [{ role: 'system', content: instruccionesRedaccionV1 }, { role: 'user', content: JSON.stringify({ versionContrato: versionContratoRedaccionIa, operacion: 'redactar_borrador', ...prepararEntradaParaProveedor(entrada) }) }] }
       })
       const eleccion = respuesta.choices?.[0]
       const contenido = typeof eleccion?.message?.content === 'string'
