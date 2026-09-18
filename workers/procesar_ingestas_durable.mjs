@@ -206,6 +206,7 @@ function ejecutarPython(asignacion, alProgreso) {
     let pendiente = ''
     let stderr = ''
     let terminal = null
+    let etapaReportada = 'reading_metadata'
     const limite = setTimeout(() => proceso.kill(), 14 * 60 * 1000)
 
     proceso.stdout.setEncoding('utf8')
@@ -222,7 +223,10 @@ function ejecutarPython(asignacion, alProgreso) {
           if (evento.ingestaId !== asignacion.ingestaId || evento.intentoId !== asignacion.intentoId) {
             throw new Error('El transcriptor devolvió una identidad de intento inválida.')
           }
-          if (evento.tipo === 'progreso') alProgreso(evento)
+          if (evento.tipo === 'progreso') {
+            etapaReportada = evento.etapa || etapaReportada
+            alProgreso(evento)
+          }
           if (evento.tipo === 'resultado' || evento.tipo === 'error') terminal = evento
         } catch (error) {
           proceso.kill()
@@ -235,11 +239,12 @@ function ejecutarPython(asignacion, alProgreso) {
     proceso.on('close', codigo => {
       clearTimeout(limite)
       if (codigo !== 0 || !terminal || terminal.tipo === 'error') {
-        reject(new Error(
+        reject(crearErrorProcesamiento(
+          terminal?.error?.codigo || 'TRANSCRIPTION_FAILED',
           terminal?.error?.mensaje
-          || terminal?.error?.codigo
           || stderr
-          || 'La transcripción no terminó correctamente.'
+          || 'La transcripción no terminó correctamente.',
+          { etapa: etapaReportada }
         ))
         return
       }
@@ -254,6 +259,22 @@ function ejecutarPython(asignacion, alProgreso) {
       modelo: process.env.NUXT_TIKTOK_WHISPER_MODEL || 'base'
     }))
   })
+}
+
+async function transcribirConReintentoAutomatico(asignacion, alProgreso) {
+  for (let intento = 0; intento < 2; intento += 1) {
+    try {
+      return await ejecutarPython(asignacion, alProgreso)
+    } catch (error) {
+      const esFalloTemporalTikTok = error instanceof Error && error.codigo === 'TRANSCRIPTION_FAILED'
+      if (!esFalloTemporalTikTok || intento === 1) throw error
+
+      console.warn(`Transcripción temporalmente fallida; reintentando una vez: ${asignacion.ingestaId}`)
+      await espera(5000)
+    }
+  }
+
+  throw crearErrorProcesamiento('TRANSCRIPTION_FAILED', 'La transcripción no terminó correctamente.')
 }
 
 async function traducir(resultado) {
@@ -307,7 +328,7 @@ async function procesarAsignacion(cliente, asignacion) {
   await heartbeat()
   const renovador = setInterval(() => { heartbeat().catch(() => {}) }, 45000)
   try {
-    const resultado = await ejecutarPython(asignacion, evento => {
+    const resultado = await transcribirConReintentoAutomatico(asignacion, evento => {
       etapa = evento.etapa
       porcentaje = Math.min(99, Math.max(1, evento.progresoPorcentaje || porcentaje))
     })
