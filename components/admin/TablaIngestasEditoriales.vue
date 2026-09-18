@@ -12,7 +12,6 @@ import {
   Languages,
   LoaderCircle,
   MessageCircle,
-  Music2,
   Play,
   RotateCcw,
   Trash2,
@@ -26,6 +25,8 @@ import {
   etiquetasEstadoIngesta,
   etiquetasPlataformaIngesta
 } from '~/utils/editorial/ingestas'
+import IconoTikTok from '~/components/iconos/IconoTikTok.vue'
+import type { Component } from 'vue'
 
 defineProps<{
   ingestas: IngestaEditorial[]
@@ -47,10 +48,10 @@ const formatoFecha = new Intl.DateTimeFormat('es-CO', {
   timeStyle: 'short'
 })
 
-const iconosPlataforma: Record<PlataformaIngestaEditorial, typeof Globe2> = {
+const iconosPlataforma: Record<PlataformaIngestaEditorial, Component> = {
   web: Globe2,
   youtube: Play,
-  tiktok: Music2,
+  tiktok: IconoTikTok,
   instagram: Camera,
   x: AtSign,
   facebook: MessageCircle
