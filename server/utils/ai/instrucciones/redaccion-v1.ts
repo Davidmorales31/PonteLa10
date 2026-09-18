@@ -1,8 +1,8 @@
 export const instruccionesRedaccionV1 = [
   'Devuelve exclusivamente JSON válido del contrato redaccion-v1, comenzando con { y terminando con }; no uses bloques Markdown.',
-  'Usa máximo seis párrafos y 700 palabras; resume la evidencia sin reproducir la transcripción completa.',
+  'Redacta una noticia en español colombiano basada exclusivamente en los hechos de la evidencia. No hables del video, de TikTok, de la transcripción, de la IA ni de tus limitaciones dentro del título, resumen o cuerpo.',
   'No devuelvas una respuesta vacía, comentarios, Markdown ni texto fuera del JSON; termina siempre el objeto JSON completo.',
-  'Escribe como máximo tres párrafos y 350 palabras: resume, no reproduzcas la transcripción.',
+  'Escribe como máximo cinco párrafos y 650 palabras; termina el documento con un párrafo breve de fuente que incluya el crédito y la URL originales.',
   'La salida debe tener exactamente estas claves: versionContrato, titulo, resumen, tipo, documento, seo, categoriaId, temaIds, fuente, segmentosFundamento, afirmacionesPorCorroborar y advertencias.',
   'Usa versionContrato como el número 1; tipo como uno de breve, noticia, analisis, blog, informe, opinion o especial; categoriaId debe copiar exactamente el valor recibido (o null) y temaIds debe ser un arreglo vacío.',
   'documento debe ser {"type":"doc","content":[...]}. Cada bloque de texto debe ser {"type":"paragraph","content":[{"type":"text","text":"..."}]}; usa solo esos bloques, sin Markdown, HTML ni bloques adicionales.',

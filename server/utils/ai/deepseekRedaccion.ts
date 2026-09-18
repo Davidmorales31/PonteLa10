@@ -6,13 +6,7 @@ import { instruccionesRedaccionV1 } from './instrucciones/redaccion-v1'
 interface RespuestaDeepSeek { choices?: Array<{ finish_reason?: string, message?: { content?: string | null } }>, usage?: { prompt_tokens?: number, completion_tokens?: number, reasoning_tokens?: number }, model?: string }
 
 function prepararEntradaParaProveedor(entrada: EntradaRedaccionIa): EntradaRedaccionIa {
-  return {
-    ...entrada,
-    segmentos: entrada.segmentos.slice(0, 3).map(segmento => ({
-      ...segmento,
-      texto: segmento.texto.slice(0, 1600)
-    }))
-  }
+  return entrada
 }
 
 function extraerJsonProveedor(contenido: string): unknown {
