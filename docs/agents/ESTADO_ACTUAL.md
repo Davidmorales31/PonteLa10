@@ -1,8 +1,8 @@
 # Estado actual de Pont3la10
 
-- **Actualizado:** 2026-09-17
-- **Commit base:** `ff28d4c` (`origin/main`)
-- **Estado general:** HU-ED-07 y HU-ED-08 operan desde `C:\PONTE LA 10`. La ingesta durable genera el borrador automáticamente y no existen disparadores manuales de IA en la bandeja.
+- **Actualizado:** 2026-09-18
+- **Commit base:** `3b2ec84` (`codex/hu-ed-08`)
+- **Estado general:** HU-ED-07 y HU-ED-08 operan desde `C:\PONTE LA 10`. La ingesta durable genera el borrador automáticamente; la bandeja se actualiza en tiempo real y anuncia con una alerta global cuando el borrador queda listo.
 - **Árbol de trabajo:** `C:\PONTE LA 10`. Los respaldos locales están ignorados por Nuxt para no duplicar el escaneo del proyecto.
 
 ## Terminado en el repositorio
@@ -28,6 +28,11 @@
   aplicada en Supabase: una reserva `running` de más de dos minutos se marca como
   interrumpida cuando se solicita el siguiente reintento, así nunca bloquea la
   ingesta de forma permanente.
+  El worker recupera evidencia pendiente por RPC, limita a tres segmentos de
+  contexto y solicita solamente IDs de fundamento al proveedor, evitando que
+  una transcripción extensa trunque el JSON. La prueba real del 2026-09-18
+  creó el borrador `755e4b0f-e319-4209-af6f-d9ae5e04e1db` desde la ingesta
+  `447aee2a-d1a5-4793-8f6c-f87b0055fae6`.
 
 - **HU-ED-07:** se trasladaron a esta rama local la propuesta de cola durable,
   extracción, transcripción, traducción y evidencia. La prueba local alcanzó
