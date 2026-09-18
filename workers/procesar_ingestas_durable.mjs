@@ -133,7 +133,7 @@ async function redactarBorradorAutomatico(cliente, ingestaId, resultado) {
   const reservaInicial = await cliente.rpc('reserve_editorial_ai_draft', { p_ingestion_id: ingestaId, p_request_id: requestId, p_prompt_hash: createHash('sha256').update(ingestaId).digest('hex') })
   if (reservaInicial.error) throw crearErrorProcesamiento('DRAFT_RESERVATION_FAILED', 'No se pudo reservar la redacción automática.', { etapa: 'persisting_evidence' })
   const reserva = reservaInicial.data
-  if (reserva?.estado === 'completed' || reserva?.estado === 'running') return
+  if (reserva?.estado === 'completed' || reserva?.estado === 'running') return reserva.estado
   const entrada = construirEntradaRedaccion(resultado, reserva?.entrada || {})
   const promptHash = createHash('sha256').update(JSON.stringify(entrada)).digest('hex')
   const clave = exigirEntorno('NUXT_EDITORIAL_AI_API_KEY')
@@ -164,6 +164,7 @@ async function redactarBorradorAutomatico(cliente, ingestaId, resultado) {
       p_input_tokens: cuerpo.usage?.prompt_tokens ?? null, p_output_tokens: cuerpo.usage?.completion_tokens ?? null, p_reasoning_tokens: cuerpo.usage?.reasoning_tokens ?? null, p_cost_usd: null, p_pricing_version: null, p_duration_ms: Date.now() - inicio
     })
     if (error) throw crearErrorProcesamiento('DRAFT_FINALIZATION_FAILED', 'No se pudo guardar el borrador automático.', { etapa: 'persisting_evidence' })
+    return 'created'
   } catch (error) {
     await cliente.rpc('fail_editorial_ai_draft', { p_ingestion_id: ingestaId, p_request_id: requestId, p_error_code: error.codigo || 'IA_REDACCION_FALLIDA', p_duration_ms: Date.now() - inicio })
     throw error
@@ -393,8 +394,9 @@ async function recuperarEvidenciaPendiente(cliente) {
   const ingesta = data?.[0]
   if (!ingesta || evidenciasRecuperadas.has(ingesta.id)) return false
 
+  const resultado = await redactarBorradorAutomatico(cliente, ingesta.id, ingesta.processing_result)
+  if (resultado === 'running') return false
   evidenciasRecuperadas.add(ingesta.id)
-  await redactarBorradorAutomatico(cliente, ingesta.id, ingesta.processing_result)
   console.log(`Borrador automático recuperado: ${ingesta.id}`)
   return true
 }
