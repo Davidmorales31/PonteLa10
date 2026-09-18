@@ -92,13 +92,30 @@ const hayFiltros = computed(() => Boolean(
 ))
 
 let canalIngestas: ReturnType<NonNullable<typeof $clienteSupabase>['channel']> | null = null
+const borradoresNotificados = new Set<string>()
 onMounted(() => {
   if (!$clienteSupabase) return
   canalIngestas = $clienteSupabase
     .channel('ingestas-editoriales-en-vivo')
     .on('postgres_changes', {
       event: '*', schema: 'public', table: 'editorial_ingestions'
-    }, () => refresh())
+    }, evento => {
+      const ingestaActualizada = evento.new as { id?: string, status?: string, article_id?: string }
+      if (
+        ingestaActualizada.status === 'draft_created'
+        && ingestaActualizada.id
+        && ingestaActualizada.article_id
+        && !borradoresNotificados.has(ingestaActualizada.id)
+      ) {
+        borradoresNotificados.add(ingestaActualizada.id)
+        mostrarAlerta({
+          tipo: 'exito',
+          titulo: 'Borrador creado',
+          mensaje: 'La evidencia terminó de procesarse y el borrador ya está listo para tu revisión.'
+        })
+      }
+      void refresh()
+    })
     .subscribe()
 })
 onBeforeUnmount(() => {
