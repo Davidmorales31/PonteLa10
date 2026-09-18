@@ -3749,6 +3749,18 @@
   flex: 0 0 auto;
 }
 
+.progreso-ingesta {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  color: #526075;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+.progreso-ingesta > div { display: flex; justify-content: space-between; gap: 8px; text-transform: capitalize; }
+.progreso-ingesta > span { display: block; height: 7px; overflow: hidden; border-radius: 999px; background: #dce6f4; }
+.progreso-ingesta i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #174ea6, #ffd800); transition: width 500ms ease; }
+
 .estado-ingesta {
   display: inline-flex;
   min-height: 26px;

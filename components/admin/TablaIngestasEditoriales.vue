@@ -115,9 +115,10 @@ function puedeReencolar(ingesta: IngestaEditorial): boolean {
               <TimerReset v-else aria-hidden="true" />
               {{ etiquetasEstadoIngesta[ingesta.estado] }}
             </span>
-            <small v-if="ingesta.estado === 'processing'" class="detalle-error-ingesta">
-              {{ ingesta.etapaProcesamiento || 'processing' }} · {{ ingesta.progresoPorcentaje }}%
-            </small>
+            <div v-if="ingesta.estado === 'processing'" class="progreso-ingesta" :aria-label="`Progreso: ${ingesta.progresoPorcentaje}%`">
+              <div><span>{{ ingesta.etapaProcesamiento || 'Procesando' }}</span><strong>{{ ingesta.progresoPorcentaje }}%</strong></div>
+              <span><i :style="{ width: `${ingesta.progresoPorcentaje}%` }" /></span>
+            </div>
             <small v-else-if="ingesta.estado === 'evidence_ready'" class="detalle-error-ingesta">
               Original {{ ingesta.idiomaFuente?.toUpperCase() || 'por revisar' }} · versión {{ ingesta.versionResultado }}
             </small>

@@ -41,6 +41,7 @@ useSeoMeta({
 })
 
 const { tienePermiso, contextoEditorial } = useContextoEditorial()
+const { $clienteSupabase } = useNuxtApp()
 const { ejecutarConBloqueo } = useBloqueoInterfaz()
 const { mostrarAlerta } = useAlertasEditoriales()
 const busqueda = ref('')
@@ -89,6 +90,20 @@ const paginacion = computed(() => respuesta.value?.paginacion || {
 const hayFiltros = computed(() => Boolean(
   busquedaAplicada.value || estado.value || plataforma.value
 ))
+
+let canalIngestas: ReturnType<NonNullable<typeof $clienteSupabase>['channel']> | null = null
+onMounted(() => {
+  if (!$clienteSupabase) return
+  canalIngestas = $clienteSupabase
+    .channel('ingestas-editoriales-en-vivo')
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'editorial_ingestions'
+    }, () => refresh())
+    .subscribe()
+})
+onBeforeUnmount(() => {
+  if (canalIngestas && $clienteSupabase) $clienteSupabase.removeChannel(canalIngestas)
+})
 
 watch([estado, plataforma], () => {
   pagina.value = 1
