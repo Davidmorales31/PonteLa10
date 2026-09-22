@@ -218,3 +218,7 @@
   presentes en el árbol, las mejoras de visibilidad y calidad de IA, la
   limpieza del sitio público y la ocultación temporal de Google. Los respaldos
   locales y `pontela10.zip` se excluyen expresamente del commit.
+- **Validación de cierre:** `npm run lint`, las 85 pruebas unitarias, typecheck,
+  comprobación de sintaxis del worker, `git diff --check` y `npm run build`
+  finalizaron correctamente. La demo local volvió a responder `200` en
+  `http://127.0.0.1:3001/login` y no entrega el texto del botón de Google.
