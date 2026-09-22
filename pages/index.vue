@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import {
-  categoriasLanding,
-  cuentaCtaLanding,
-  especialesLanding,
-  heroLanding
-} from '~/data/landing.mock'
+  categoriasSitio,
+  heroSitio
+} from '~/data/sitioPublico'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { ArticuloResumen } from '~/types/editorial'
 import type { RespuestaResultados } from '~/types/resultados'
@@ -40,7 +38,7 @@ useSeoPont3la10({
   titulo: 'Pont3la10 | Noticias de deporte y tecnología',
   descripcion: 'Noticias, análisis, resultados y especiales interactivos de fútbol, tecnología deportiva y gaming con la jugada clara.',
   rutaCanonica: '/',
-  imagen: heroLanding.imagen,
+  imagen: heroSitio.imagen,
   datosEstructurados: {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -58,7 +56,7 @@ useSeoPont3la10({
       v-else-if="resultados?.partidos.length"
       :partidos="resultados.partidos"
     />
-    <SeccionHero :datos="heroLanding" />
+    <SeccionHero :datos="heroSitio" />
 
     <div class="contenedor-landing contenido-home-landing">
       <section v-if="articuloDestacado" class="seccion-landing seccion-jugada-dia" aria-labelledby="titulo-jugada-dia">
@@ -98,12 +96,8 @@ useSeoPont3la10({
 
       <section class="seccion-landing" aria-labelledby="titulo-categorias-landing">
         <EncabezadoSeccion id-titulo="titulo-categorias-landing" titulo="Explora por cancha" />
-        <GrillaCategoriasLanding :categorias="categoriasLanding" />
+        <GrillaCategoriasLanding :categorias="categoriasSitio" />
       </section>
-
-      <SeccionEspecialesLanding :especiales="especialesLanding" />
-
-      <SeccionCuentaCta :datos="cuentaCtaLanding" />
     </div>
   </div>
 </template>

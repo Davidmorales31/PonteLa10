@@ -35,6 +35,11 @@ interface FilaPerfil {
   display_name: string
 }
 
+interface FilaGeneracionBorrador {
+  ingestion_id: string
+  status: NonNullable<IngestaEditorial['estadoRedaccion']>
+}
+
 interface FilaIngesta {
   id: string
   source_url: string
@@ -48,6 +53,8 @@ interface FilaIngesta {
   category_id: string | null
   requested_by: string
   article_id: string | null
+  prepared_for_review_at: string | null
+  preparation_error_code: string | null
   processing_stage: IngestaEditorial['etapaProcesamiento'] | null
   progress_percent: number | null
   current_attempt_id: string | null
@@ -113,7 +120,8 @@ async function obtenerNombresSolicitantes(
 
 function mapearIngesta(
   fila: FilaIngesta,
-  nombres: Map<string, string>
+  nombres: Map<string, string>,
+  estadosRedaccion: Map<string, IngestaEditorial['estadoRedaccion']>
 ): IngestaEditorial {
   return {
     id: fila.id,
@@ -135,6 +143,9 @@ function mapearIngesta(
     solicitanteId: fila.requested_by,
     solicitanteNombre: nombres.get(fila.requested_by) || 'Equipo Pont3la10',
     articuloId: fila.article_id,
+    preparadaParaRevisionEn: fila.prepared_for_review_at,
+    codigoPreparacion: fila.preparation_error_code || '',
+    estadoRedaccion: estadosRedaccion.get(fila.id) || null,
     etapaProcesamiento: fila.processing_stage,
     progresoPorcentaje: fila.progress_percent || 0,
     intentoActualId: fila.current_attempt_id,
@@ -174,6 +185,8 @@ export async function listarIngestasEditoriales(
       category_id,
       requested_by,
       article_id,
+      prepared_for_review_at,
+      preparation_error_code,
       processing_stage,
       progress_percent,
       current_attempt_id,
@@ -223,10 +236,24 @@ export async function listarIngestasEditoriales(
   const filas = (data || []) as unknown as FilaIngesta[]
   const idsSolicitantes = [...new Set(filas.map(fila => fila.requested_by))]
   const nombres = await obtenerNombresSolicitantes(clienteSupabase, idsSolicitantes)
+  const { data: generaciones, error: errorGeneraciones } = filas.length
+    ? await clienteSupabase
+      .from('editorial_ai_generations')
+      .select('ingestion_id, status')
+      .in('ingestion_id', filas.map(fila => fila.id))
+      .order('created_at', { ascending: false })
+    : { data: [], error: null }
+  if (errorGeneraciones) {
+    throw crearErrorRepositorio('No se pudo cargar el estado de redacción de las ingestas.')
+  }
+  const estadosRedaccion = new Map<string, IngestaEditorial['estadoRedaccion']>()
+  for (const generacion of (generaciones || []) as FilaGeneracionBorrador[]) {
+    if (!estadosRedaccion.has(generacion.ingestion_id)) estadosRedaccion.set(generacion.ingestion_id, generacion.status)
+  }
   const total = count || 0
 
   return {
-    ingestas: filas.map(fila => mapearIngesta(fila, nombres)),
+    ingestas: filas.map(fila => mapearIngesta(fila, nombres, estadosRedaccion)),
     paginacion: {
       pagina: filtros.pagina,
       limite: filtros.limite,

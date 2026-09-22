@@ -405,7 +405,6 @@ async function guardarCambios() {
     return
   }
 
-  if (temporizadorAutoguardado) clearTimeout(temporizadorAutoguardado)
   guardando.value = true
   errorGuardado.value = ''
   conflictoVersion.value = false
@@ -650,9 +649,6 @@ function formatearFecha(fecha: string): string {
     .replace(/[\u00a0\u202f]/g, ' ')
 }
 
-onBeforeUnmount(() => {
-  if (temporizadorAutoguardado) clearTimeout(temporizadorAutoguardado)
-})
 </script>
 
 <template>

@@ -125,3 +125,96 @@
 - **Siguiente acción exacta:** si el responsable quiere hacer visible esta
   historia, usar **Publicar ahora** y confirmar la publicación explícitamente
   en ese momento.
+
+## Handoff parcial — 2026-09-19 (HU-ED-09)
+
+- **Implementación local:** se añadió la migración
+  `20260918192005_hu_ed_09_preparacion_editorial_automatica.sql` y se actualizó
+  el worker. DeepSeek recibe únicamente un catálogo cerrado de IDs de secciones,
+  temas y artículos publicados; la preparación valida todo en PostgreSQL,
+  registra temas y hasta tres enlaces internos derivados desde artículos
+  publicados, y pasa solo de `draft` a `review`.
+- **Seguridad:** el worker recibe el permiso exclusivo
+  `ingestas.worker.prepararRevision`, no permisos de aprobar, programar ni
+  publicar. La excepción del trigger exige worker exclusivo, el permiso nuevo,
+  origen `ingesta`, transición `draft → review` y una marca de sesión establecida
+  solo dentro de la RPC. Aprobación y publicación conservan permisos humanos y
+  MFA.
+- **Estado remoto:** la migración se ejecutó el 2026-09-19 en el SQL Editor del
+  proyecto `ykjithahavncswlfgsqa`. Una consulta de solo lectura confirmó que las
+  tres RPC y las columnas `prepared_for_review_at` y
+  `preparation_error_code` existen. El CLI continúa sin token; la aplicación se
+  hizo mediante el panel autenticado.
+- **Validación local:** `node --check`, suite unitaria (15 archivos, 87 pruebas)
+  y `git diff --check` pasaron. Lint y typecheck se iniciaron sin errores de
+  salida; falta certificar build y ejecutar la migración en Supabase antes de
+  afirmar que el flujo está disponible.
+
+## Handoff — 2026-09-21 (TikToks largos)
+
+- **Cambio:** se retiró el rechazo fijo de 180 segundos del transcriptor, del
+  contrato Zod y del procesador legado. Se conservan duración positiva, 2.000
+  segmentos máximos, limpieza y el timeout de 14 minutos del proceso.
+- **Base remota:** se aplicó
+  `20260922025410_quitar_limite_duracion_tiktok.sql` en el SQL Editor de
+  Supabase. La función privada conserva sus permisos y guardas; únicamente
+  elimina el tope de duración y exige que la duración sea JSON numérico.
+- **Verificación:** Supabase devolvió `true` para un payload válido de 181
+  segundos. Lint, 87 pruebas unitarias, typecheck y `git diff --check` pasaron;
+  el build generó `.output/server/index.mjs` tras detener temporalmente la demo
+  y la aplicación fue levantada otra vez en `http://127.0.0.1:3001`.
+- **Siguiente prueba:** reencolar la ingesta larga o registrar otra. Puede
+  tardar más y fallar de forma segura si supera el timeout del worker; todavía
+  no se certifica extremo a extremo una fuente larga.
+
+## Handoff — 2026-09-21 (calidad y visibilidad de redacción)
+
+- **Cambio local:** la bandeja ahora cruza cada ingesta visible con la última
+  traza permitida de `editorial_ai_generations`. Una reserva `running` aparece
+  como **Generando borrador con IA**, no permite disparar un reintento duplicado
+  y usa un refresco de cuatro segundos si Realtime no entrega el cambio final.
+- **Contrato DeepSeek:** se amplió la guía a 7–10 párrafos y 850–1.200 palabras
+  cuando la evidencia lo respalde; exige jerarquía periodística y curiosidad
+  legítima. Se retiró `Fuente:` del cuerpo y el normalizador descarta ese párrafo
+  si el proveedor lo devuelve; la fuente estructurada sigue alimentando la UI.
+  El límite de salida pasó de 4096 a 6144 tokens para que el JSON largo no se
+  corte.
+- **Límite explícito:** la implementación actual llama solo a Chat Completions
+  de DeepSeek con transcripción y catálogo interno. No investiga la web, no
+  consulta fuentes externas y no genera imágenes. Añadir cualquiera de esas
+  capacidades exige un proveedor/API específico y no se debe fingir que ya
+  existe.
+- **Validación:** ESLint de archivos modificados, `node --check` del worker,
+  `tests/unit/ingestasEditoriales.test.ts` (13), suite completa (15 archivos,
+  87 pruebas), typecheck y `git diff --check` pasaron. El build no se repitió:
+  Nuxt detectó el servidor de desarrollo activo en el mismo directorio y evitó
+  tomar su lock; el artefacto de build previo permanece.
+
+## Handoff — 2026-09-21 (sitio público sin simulaciones)
+
+- **Cambio:** se retiró todo contenido público que afirmaba actividad o
+  funcionalidad inexistente: métricas, noticias y tarjetas quemadas, especiales
+  simulados, newsletter que no suscribía y perfiles sociales genéricos. Se
+  eliminaron los archivos de datos ficticios y el inicio/listado se apoya en
+  artículos publicados desde el CMS.
+- **Resultado visible:** la portada conserva identidad, búsqueda, resultados,
+  categorías y artículos reales. La página de especiales comunica que aún no
+  hay publicaciones en vez de prometer módulos inexistentes; el footer contiene
+  únicamente rutas internas reales.
+- **Verificación:** el DOM local de `/` confirmó que no aparecen contadores,
+  cards ficticias, newsletter ni enlaces sociales de relleno. ESLint puntual,
+  `tests/unit/landing.test.ts` (2), suite completa (15 archivos, 85 pruebas),
+  typecheck y `git diff --check` pasaron. Build pendiente por el lock legítimo
+  del servidor Nuxt local activo.
+
+## Handoff — 2026-09-21 (corte para producción)
+
+- **Acceso Google:** se retiró temporalmente de `FormularioLoginEditorial` el
+  botón de OAuth y su icono. No se eliminaron usuarios, sesiones ni la
+  configuración de Supabase; la función queda disponible internamente para una
+  futura reactivación deliberada. La referencia a Google Authenticator en MFA
+  no corresponde a OAuth y se conserva.
+- **Alcance del corte:** incluye los ajustes de HU-ED-07, HU-ED-08 y HU-ED-09
+  presentes en el árbol, las mejoras de visibilidad y calidad de IA, la
+  limpieza del sitio público y la ocultación temporal de Google. Los respaldos
+  locales y `pontela10.zip` se excluyen expresamente del commit.

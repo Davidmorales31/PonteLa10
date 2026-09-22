@@ -63,7 +63,7 @@ export const esquemaMetadatosFuenteTikTok = z.object({
   titulo: z.string().trim().max(500).nullable(),
   autor: z.string().trim().max(160).nullable(),
   creditos: z.string().trim().min(1).max(500),
-  duracionSegundos: numeroTiempo.gt(0).max(180),
+  duracionSegundos: numeroTiempo.gt(0),
   consultadoEn: fechaUtc
 }).strict()
 

@@ -6,10 +6,8 @@ import {
   Home,
   Mail,
   MapPin,
-  Star,
   Trophy
 } from '@lucide/vue'
-import { footerLanding } from '~/data/landing.mock'
 
 definePageMeta({ layout: false })
 
@@ -30,19 +28,7 @@ if (import.meta.server) {
 const codigoError = '404'
 const enlacesAyuda = [
   { etiqueta: 'Últimas jugadas', ruta: '/articulos', icono: Clock3 },
-  { etiqueta: 'Especiales', ruta: '/especiales', icono: Star },
   { etiqueta: 'Fútbol colombiano', ruta: '/articulos?categoria=futbol-colombiano', icono: Trophy }
-]
-const enlacesLegales = [
-  { etiqueta: 'Términos y condiciones', ruta: '/articulos' },
-  { etiqueta: 'Política de privacidad', ruta: '/articulos' },
-  { etiqueta: 'Política de cookies', ruta: '/articulos' }
-]
-const redesSociales = [
-  { nombre: 'X', red: 'x' as const, url: 'https://x.com/' },
-  { nombre: 'Instagram', red: 'instagram' as const, url: 'https://www.instagram.com/' },
-  { nombre: 'YouTube', red: 'youtube' as const, url: 'https://www.youtube.com/' },
-  { nombre: 'TikTok', red: 'tiktok' as const, url: 'https://www.tiktok.com/' }
 ]
 
 </script>
@@ -138,63 +124,7 @@ const redesSociales = [
       </div>
     </main>
 
-    <footer class="pie-error">
-      <div class="pie-error-contenido">
-        <section class="marca-pie-error" aria-label="Pont3la10">
-          <img
-            src="/brand/pont3la10_logo_06_horizontal_sobre_blanco.png"
-            alt="Pont3la10"
-            width="900"
-            height="320"
-            loading="lazy"
-            decoding="async"
-          >
-          <p>{{ footerLanding.descripcion }}<br>La nueva forma de vivir la pasión.</p>
-        </section>
-
-        <nav class="navegacion-pie-error" aria-label="Navegación del sitio">
-          <strong>Navegación</strong>
-          <div>
-            <NuxtLink
-              v-for="enlace in footerLanding.columnas[0]?.enlaces"
-              :key="enlace.etiqueta"
-              :to="enlace.ruta"
-            >
-              {{ enlace.etiqueta }}
-            </NuxtLink>
-          </div>
-        </nav>
-
-        <nav class="legal-pie-error" aria-label="Información legal">
-          <strong>Legal</strong>
-          <NuxtLink
-            v-for="enlace in enlacesLegales"
-            :key="enlace.etiqueta"
-            :to="enlace.ruta"
-          >
-            {{ enlace.etiqueta }}
-          </NuxtLink>
-        </nav>
-
-        <section class="redes-pie-error">
-          <strong>Síguenos</strong>
-          <div>
-            <a
-              v-for="red in redesSociales"
-              :key="red.nombre"
-              :href="red.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              :aria-label="`Pont3la10 en ${red.nombre}`"
-              :title="red.nombre"
-            >
-              <IconoRedSocial :red="red.red" />
-            </a>
-          </div>
-        </section>
-      </div>
-      <small>© {{ new Date().getFullYear() }} Pont3la10. Todos los derechos reservados.</small>
-    </footer>
+    <PiePaginaPrincipal />
   </div>
 </template>
 

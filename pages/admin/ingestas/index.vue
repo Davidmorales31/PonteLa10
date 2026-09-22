@@ -90,6 +90,9 @@ const paginacion = computed(() => respuesta.value?.paginacion || {
 const hayFiltros = computed(() => Boolean(
   busquedaAplicada.value || estado.value || plataforma.value
 ))
+const hayBorradorEnGeneracion = computed(() => ingestas.value.some(
+  ingesta => ingesta.estadoRedaccion === 'running'
+))
 
 let canalIngestas: ReturnType<NonNullable<typeof $clienteSupabase>['channel']> | null = null
 const borradoresNotificados = new Set<string>()
@@ -100,11 +103,18 @@ onMounted(() => {
     .on('postgres_changes', {
       event: '*', schema: 'public', table: 'editorial_ingestions'
     }, evento => {
-      const ingestaActualizada = evento.new as { id?: string, status?: string, article_id?: string }
+      const ingestaActualizada = evento.new as {
+        id?: string
+        status?: string
+        article_id?: string
+        prepared_for_review_at?: string | null
+        preparation_error_code?: string | null
+      }
       if (
         ingestaActualizada.status === 'draft_created'
         && ingestaActualizada.id
         && ingestaActualizada.article_id
+        && ingestaActualizada.prepared_for_review_at
         && !borradoresNotificados.has(ingestaActualizada.id)
       ) {
         borradoresNotificados.add(ingestaActualizada.id)
@@ -114,12 +124,29 @@ onMounted(() => {
           mensaje: 'La evidencia terminó de procesarse y el borrador ya está listo para tu revisión.'
         })
       }
+      if (ingestaActualizada.preparation_error_code && ingestaActualizada.id) {
+        mostrarAlerta({
+          tipo: 'advertencia',
+          titulo: 'Borrador pendiente de preparación',
+          mensaje: 'El borrador existe, pero necesita una revisión editorial antes de enviarlo a aprobación.'
+        })
+      }
       void refresh()
     })
     .subscribe()
 })
 onBeforeUnmount(() => {
   if (canalIngestas && $clienteSupabase) $clienteSupabase.removeChannel(canalIngestas)
+})
+
+let intervaloRespaldoBorradores: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  intervaloRespaldoBorradores = setInterval(() => {
+    if (hayBorradorEnGeneracion.value) void refresh()
+  }, 4000)
+})
+onBeforeUnmount(() => {
+  if (intervaloRespaldoBorradores) clearInterval(intervaloRespaldoBorradores)
 })
 
 watch([estado, plataforma], () => {

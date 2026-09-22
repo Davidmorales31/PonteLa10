@@ -32,7 +32,11 @@ function normalizarPropuestaProveedor(propuesta: unknown, entrada: EntradaRedacc
     return typeof nodo.text === 'string' ? nodo.text : recolectar(nodo.content)
   }
   const evidencia = entrada.segmentos.map(segmento => texto(segmento.texto)).filter(Boolean).join('\n')
-  const cuerpo = limitar(recolectar(origen.documento || origen.cuerpo || origen.contenido), 60_000) || evidencia
+  const cuerpoSinFuente = recolectar(origen.documento || origen.cuerpo || origen.contenido)
+    .split(/\n{1,}/u)
+    .filter(parrafo => !/^\s*fuente\s*:/iu.test(parrafo))
+    .join('\n')
+  const cuerpo = limitar(cuerpoSinFuente, 60_000) || evidencia
   const contenido = cuerpo.split(/\n{1,}|(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ])/u)
     .map(fragmento => limitar(fragmento, 4500)).filter(Boolean).slice(0, 80)
     .map(fragmento => ({ type: 'paragraph' as const, content: [{ type: 'text' as const, text: fragmento }] }))
@@ -88,7 +92,7 @@ export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
         // La redacción es una transformación estructurada: el modo de razonamiento
         // puede consumir todo el límite antes de emitir `content`. Lo desactivamos
         // para reservar la salida al JSON que valida el contrato editorial.
-        body: { model: modelo, reasoning_effort: 'none', max_tokens: 4096, stream: false,
+        body: { model: modelo, reasoning_effort: 'none', max_tokens: 6144, stream: false,
           messages: [{ role: 'system', content: instruccionesRedaccionV1 }, { role: 'user', content: JSON.stringify({ versionContrato: versionContratoRedaccionIa, operacion: 'redactar_borrador', ...prepararEntradaParaProveedor(entrada) }) }] }
       })
       const eleccion = respuesta.choices?.[0]

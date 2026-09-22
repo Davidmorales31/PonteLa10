@@ -105,7 +105,7 @@ describe('ingestas editoriales', () => {
         titulo: 'Demo',
         autor: 'Autor',
         creditos: 'Video original: Autor',
-        duracionSegundos: 12,
+        duracionSegundos: 181,
         consultadoEn: '2026-09-10T16:00:05Z'
       },
       original: {
@@ -124,6 +124,7 @@ describe('ingestas editoriales', () => {
     })
 
     expect(evidencia.original.idioma).toBe('es')
+    expect(evidencia.metadatos.duracionSegundos).toBe(181)
   })
 
   it('exige traducción cuando el original está en inglés', () => {

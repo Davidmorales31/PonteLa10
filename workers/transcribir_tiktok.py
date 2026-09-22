@@ -86,8 +86,6 @@ def ejecutar(entrada: dict) -> dict:
         duracion = info.get("duration")
         if not isinstance(duracion, (int, float)) or duracion <= 0:
             raise RuntimeError("No se pudo confirmar la duración del video.")
-        if duracion > 180:
-            raise RuntimeError("El video supera los 180 segundos permitidos.")
 
         emitir_progreso(entrada, 2, "downloading_audio", 30)
         audio = next(carpeta.glob("audio.*"), None)

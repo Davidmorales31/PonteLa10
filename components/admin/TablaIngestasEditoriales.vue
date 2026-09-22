@@ -103,7 +103,7 @@ function puedeReencolar(ingesta: IngestaEditorial): boolean {
           <td data-label="Estado">
             <span class="estado-ingesta" :data-estado="ingesta.estado">
               <LoaderCircle
-                v-if="ingesta.estado === 'processing'"
+                v-if="ingesta.estado === 'processing' || ingesta.estadoRedaccion === 'running'"
                 class="icono-girando"
                 aria-hidden="true"
               />
@@ -114,12 +114,15 @@ function puedeReencolar(ingesta: IngestaEditorial): boolean {
               <CircleAlert v-else-if="ingesta.estado === 'failed'" aria-hidden="true" />
               <Ban v-else-if="ingesta.estado === 'cancelled'" aria-hidden="true" />
               <TimerReset v-else aria-hidden="true" />
-              {{ etiquetasEstadoIngesta[ingesta.estado] }}
+              {{ ingesta.estadoRedaccion === 'running' ? 'Generando borrador con IA' : etiquetasEstadoIngesta[ingesta.estado] }}
             </span>
             <div v-if="ingesta.estado === 'processing'" class="progreso-ingesta" :aria-label="`Progreso: ${ingesta.progresoPorcentaje}%`">
               <div><span>{{ ingesta.etapaProcesamiento || 'Procesando' }}</span><strong>{{ ingesta.progresoPorcentaje }}%</strong></div>
               <span><i :style="{ width: `${ingesta.progresoPorcentaje}%` }" /></span>
             </div>
+            <small v-else-if="ingesta.estadoRedaccion === 'running'" class="detalle-error-ingesta">
+              La evidencia ya está lista. DeepSeek está redactando y la bandeja se actualizará sola.
+            </small>
             <small v-else-if="ingesta.estado === 'evidence_ready'" class="detalle-error-ingesta">
               Original {{ ingesta.idiomaFuente?.toUpperCase() || 'por revisar' }} · versión {{ ingesta.versionResultado }}
             </small>
@@ -187,7 +190,7 @@ function puedeReencolar(ingesta: IngestaEditorial): boolean {
               <Eye aria-hidden="true" />
             </NuxtLink>
             <button
-              v-else-if="puedeRedactar && ingesta.estado === 'evidence_ready'"
+              v-else-if="puedeRedactar && ingesta.estado === 'evidence_ready' && ingesta.estadoRedaccion !== 'running'"
               class="boton-icono-editorial"
               type="button"
               title="Reintentar borrador"

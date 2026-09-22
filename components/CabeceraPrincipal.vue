@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Menu, Search, X } from '@lucide/vue'
-import { navegacionLanding } from '~/data/landing.mock'
+import { navegacionSitio } from '~/data/sitioPublico'
 
 const rutaActual = useRoute()
 const menuAbierto = ref(false)
@@ -76,7 +76,7 @@ async function buscarContenido() {
 
       <nav class="navegacion-landing-escritorio" aria-label="Navegación principal">
         <NuxtLink
-          v-for="item in navegacionLanding"
+          v-for="item in navegacionSitio"
           :key="item.etiqueta"
           :to="item.ruta"
           :class="{ activo: esRutaActiva(item.ruta, item.exacta) }"
@@ -138,7 +138,7 @@ async function buscarContenido() {
 
     <nav v-if="menuAbierto" id="menu-principal-movil" class="navegacion-landing-movil" aria-label="Menú móvil">
       <NuxtLink
-        v-for="item in navegacionLanding"
+        v-for="item in navegacionSitio"
         :key="item.etiqueta"
         :to="item.ruta"
         :class="{ activo: esRutaActiva(item.ruta, item.exacta) }"

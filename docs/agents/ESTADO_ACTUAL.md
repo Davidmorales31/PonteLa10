@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-- **Actualizado:** 2026-09-18
+- **Actualizado:** 2026-09-21
 - **Commit base:** `3b2ec84` (`codex/hu-ed-08`)
 - **Estado general:** HU-ED-07 y HU-ED-08 operan desde `C:\PONTE LA 10`. La ingesta durable genera el borrador automáticamente; la bandeja se actualiza en tiempo real y anuncia con una alerta global cuando el borrador queda listo.
 - **Árbol de trabajo:** `C:\PONTE LA 10`. Los respaldos locales están ignorados por Nuxt para no duplicar el escaneo del proyecto.
@@ -18,7 +18,28 @@
 
 ## Parcial o activo
 
+- **HU-ED-09 (preparación editorial automática):** implementación local y SQL
+  aplicado en Supabase el 2026-09-19.
+  El worker obtiene un catálogo cerrado de secciones, temas y artículos ya
+  publicados; DeepSeek solo puede devolver IDs de ese catálogo. Una RPC
+  exclusiva del trabajador valida esos IDs, añade hasta tres enlaces internos,
+  guarda los temas y pasa únicamente `draft` a `review`. No concede permisos de
+  aprobar, programar ni publicar. La migración
+  `20260918192005_hu_ed_09_preparacion_editorial_automatica.sql` quedó
+  aplicada y se verificaron sus tres RPC y las dos nuevas columnas. Falta hacer
+  una ingesta nueva de extremo a extremo con el worker local para certificar el
+  comportamiento visual. Si la preparación no se puede completar, el borrador
+  se conserva y la bandeja muestra una alerta de intervención editorial en lugar
+  de anunciarlo como listo para revisión.
+
 - **HU-ED-08:** propuesta IA de borrador desde evidencia lista, con proveedor DeepSeek solo servidor, contrato Zod, reserva idempotente previa al proveedor, trazabilidad y RPC atómico. La generación es automática tras la evidencia. Cuando falla, un usuario con `ingestas.redactar` y `contenido.crear` dispone de **Reintentar borrador** en la bandeja: confirma el gasto, reutiliza la evidencia y bloquea duplicados mientras existe una reserva activa.
+  La bandeja consulta la última traza autorizada de `editorial_ai_generations`: mientras
+  está `running` muestra **Generando borrador con IA**, oculta el reintento y refresca
+  cada cuatro segundos como respaldo a Realtime. El contrato actual pide 7–10 párrafos
+  y 850–1.200 palabras cuando la evidencia lo soporte, con titular atractivo sin inventar;
+  la fuente queda en su campo estructurado y no se inserta como párrafo en el cuerpo.
+  DeepSeek recibe la evidencia y un catálogo interno, no un servicio de navegación web:
+  no hay investigación ni fuentes externas verificadas implementadas todavía.
   El worker y el endpoint usan salida de texto con JSON extraído de forma tolerante,
   en lugar de `response_format: json_object`, porque ese modo puede devolver
   contenido vacío. Para la redacción se desactiva el razonamiento de DeepSeek y
@@ -37,14 +58,27 @@
 - **HU-ED-07:** se trasladaron a esta rama local la propuesta de cola durable,
   extracción, transcripción, traducción y evidencia. La prueba local alcanzó
   `evidence_ready`; las migraciones `0013` y `0014` ya están aplicadas en
-  Supabase remoto, pero falta la certificación funcional completa.
+  Supabase remoto, pero falta la certificación funcional completa. Desde el
+  2026-09-21 no hay un límite fijo de duración de TikTok: se mantienen la
+  validación de duración positiva, máximo de 2.000 segmentos, limpieza, límite
+  de recursos y timeout del worker. La migración
+  `20260922025410_quitar_limite_duracion_tiktok.sql` quedó aplicada y una
+  validación SQL confirmó que una evidencia de 181 segundos es aceptada.
 - **Eliminación de ingestas:** el botón aparece a usuarios autorizados para todos
   los estados. La RPC `delete_editorial_ingestion` exige permiso, MFA y
   confirmación; elimina evidencia, historial y borrador automático. Protege
   procesos activos y contenido en revisión o publicado. La migración
   `20260917090000_eliminacion_total_ingestas.sql` se aplicó y su RPC se verificó
   en Supabase el 2026-09-17.
-- La portada usa datos mock en parte; una pantalla o mock no certifica una función.
+- **Sitio público sin contenido simulado (2026-09-21):** el inicio, listado y
+  detalle consumen artículos publicados reales. Se retiraron métricas,
+  titulares, especiales, newsletter y enlaces sociales que no correspondían a
+  funciones o cuentas reales. La portada conserva solo marca, navegación y
+  categorías; si no hay publicaciones, muestra un estado vacío honesto.
+- **Acceso editorial (2026-09-21):** se ocultó temporalmente el botón de inicio
+  de sesión con Google. El acceso por correo y contraseña permanece disponible;
+  no se modificaron cuentas, sesiones ni la configuración remota de OAuth para
+  poder reactivarlo sin migraciones cuando haga falta.
 - **Flujo del editor:** una revisión ya no queda bloqueada por un autoguardado
   local que no se puede persistir en ese estado. Las decisiones se habilitan si
   no hay cambios editables pendientes; el editor explica cuándo aprobar y cuándo
@@ -72,6 +106,11 @@
   un reintento explícitamente autorizado para certificar el resultado final. La
   reserva que quedó activa por esa falla será recuperada por `0015` antes de ese
   próximo intento.
+
+No hay bloqueos para consolidar los cambios locales validados en la rama de
+producción. La certificación extremo a extremo de una nueva ingesta y de la
+preparación editorial automática sigue siendo una prueba funcional pendiente,
+no un impedimento para este corte.
 
 ## Deuda técnica confirmada
 

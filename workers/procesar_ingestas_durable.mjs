@@ -27,7 +27,7 @@ function tieneTranscripcionSustancial(resultado) {
   return palabras.length >= 3 && caracteres >= 15
 }
 
-function construirEntradaRedaccion(resultado, configuracion) {
+function construirEntradaRedaccion(resultado, configuracion, catalogoEditorial = {}) {
   const traducciones = new Map((resultado.traduccion?.segmentos || []).map(segmento => [segmento.segmentoId, segmento.texto]))
   return {
     tituloSugerido: configuracion.tituloSugerido || resultado.metadatos?.titulo || '',
@@ -35,6 +35,7 @@ function construirEntradaRedaccion(resultado, configuracion) {
     urlFuente: configuracion.urlFuente,
     creditos: resultado.metadatos.creditos,
     categoriaId: configuracion.categoriaId || null,
+    catalogoEditorial,
     tipoSugerido: 'noticia',
     segmentos: resultado.original.segmentos.map(segmento => ({ ...segmento, texto: traducciones.get(segmento.id) || segmento.texto }))
   }
@@ -46,7 +47,13 @@ function validarPropuestaRedaccion(propuesta, entrada) {
   if (!['breve', 'noticia', 'analisis', 'blog', 'informe', 'opinion', 'especial'].includes(propuesta.tipo)) return false
   if (!propuesta.documento || propuesta.documento.type !== 'doc' || !Array.isArray(propuesta.documento.content) || propuesta.documento.content.length < 1 || propuesta.documento.content.length > 80) return false
   if (!propuesta.seo || !propuesta.fuente || propuesta.fuente.url !== entrada.urlFuente || propuesta.fuente.creditos !== entrada.creditos) return false
-  if (propuesta.categoriaId !== entrada.categoriaId || !Array.isArray(propuesta.temaIds) || !Array.isArray(propuesta.segmentosFundamento) || propuesta.segmentosFundamento.length < 1) return false
+  const categorias = new Set((entrada.catalogoEditorial?.categorias || []).map(categoria => categoria.id))
+  const temas = new Set((entrada.catalogoEditorial?.temas || []).map(tema => tema.id))
+  const relacionados = new Set((entrada.catalogoEditorial?.articulosPublicados || []).map(articulo => articulo.id))
+  if (propuesta.categoriaId !== entrada.categoriaId && !categorias.has(propuesta.categoriaId)) return false
+  if (!Array.isArray(propuesta.temaIds) || !propuesta.temaIds.every(id => temas.has(id))) return false
+  if (!Array.isArray(propuesta.relacionadosIds) || !propuesta.relacionadosIds.every(id => relacionados.has(id))) return false
+  if (!Array.isArray(propuesta.segmentosFundamento) || propuesta.segmentosFundamento.length < 1) return false
   const ids = new Set(entrada.segmentos.map(segmento => segmento.id))
   return propuesta.segmentosFundamento.every(segmento => ids.has(segmento.id))
 }
@@ -63,7 +70,11 @@ function normalizarPropuestaRedaccion(propuesta, entrada) {
     return recolectarTexto(valor.content)
   }
   const textoEvidencia = entrada.segmentos.map(segmento => texto(segmento.texto)).filter(Boolean).join('\n')
-  const textoDocumento = texto(recolectarTexto(propuesta.documento || propuesta.cuerpo || propuesta.contenido)) || textoEvidencia
+  const textoDocumentoSinFuente = recolectarTexto(propuesta.documento || propuesta.cuerpo || propuesta.contenido)
+    .split(/\n{1,}/u)
+    .filter(parrafo => !/^\s*fuente\s*:/iu.test(parrafo))
+    .join('\n')
+  const textoDocumento = texto(textoDocumentoSinFuente) || textoEvidencia
   const bloques = textoDocumento
     .split(/\n{1,}|(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ])/u)
     .map(fragmento => limitado(fragmento, 4500))
@@ -91,8 +102,15 @@ function normalizarPropuestaRedaccion(propuesta, entrada) {
     resumen: resumenBase,
     tipo: ['breve', 'noticia', 'analisis', 'blog', 'informe', 'opinion', 'especial'].includes(propuesta.tipo) ? propuesta.tipo : entrada.tipoSugerido,
     documento: { type: 'doc', content: bloques },
-    categoriaId: entrada.categoriaId,
-    temaIds: [],
+    categoriaId: (entrada.catalogoEditorial?.categorias || []).some(categoria => categoria.id === propuesta.categoriaId)
+      ? propuesta.categoriaId
+      : entrada.categoriaId,
+    temaIds: Array.isArray(propuesta.temaIds)
+      ? [...new Set(propuesta.temaIds.filter(id => (entrada.catalogoEditorial?.temas || []).some(tema => tema.id === id)))].slice(0, 12)
+      : [],
+    relacionadosIds: Array.isArray(propuesta.relacionadosIds)
+      ? [...new Set(propuesta.relacionadosIds.filter(id => (entrada.catalogoEditorial?.articulosPublicados || []).some(articulo => articulo.id === id)))].slice(0, 3)
+      : [],
     seo: {
       titulo: limitado(propuesta.seo?.titulo, 70) || limitado(tituloBase, 70),
       descripcion: limitado(propuesta.seo?.descripcion, 170) || limitado(resumenBase, 170),
@@ -142,7 +160,13 @@ async function redactarBorradorAutomatico(cliente, ingestaId, resultado) {
   if (reservaInicial.error) throw crearErrorProcesamiento('DRAFT_RESERVATION_FAILED', 'No se pudo reservar la redacción automática.', { etapa: 'persisting_evidence' })
   const reserva = reservaInicial.data
   if (reserva?.estado === 'completed' || reserva?.estado === 'running') return reserva.estado
-  const entrada = construirEntradaRedaccion(resultado, reserva?.entrada || {})
+  const catalogoRespuesta = await cliente.rpc('get_automatic_editorial_preparation_catalog', {
+    p_ingestion_id: ingestaId
+  })
+  if (catalogoRespuesta.error || !catalogoRespuesta.data) {
+    throw crearErrorProcesamiento('EDITORIAL_CATALOG_UNAVAILABLE', 'No se pudo preparar el catálogo editorial.', { etapa: 'persisting_evidence' })
+  }
+  const entrada = construirEntradaRedaccion(resultado, reserva?.entrada || {}, catalogoRespuesta.data)
   const entradaProveedor = prepararEntradaParaProveedor(entrada)
   const promptHash = createHash('sha256').update(JSON.stringify(entrada)).digest('hex')
   const clave = exigirEntorno('NUXT_EDITORIAL_AI_API_KEY')
@@ -154,9 +178,9 @@ async function redactarBorradorAutomatico(cliente, ingestaId, resultado) {
       method: 'POST', headers: { Authorization: `Bearer ${clave}`, 'Content-Type': 'application/json' },
       // La redacción exige una respuesta JSON final; sin razonamiento se evita
       // agotar la salida antes de que DeepSeek complete message.content.
-      body: JSON.stringify({ model: modelo, reasoning_effort: 'none', max_tokens: 4096, stream: false,
+      body: JSON.stringify({ model: modelo, reasoning_effort: 'none', max_tokens: 6144, stream: false,
         messages: [
-          { role: 'system', content: 'Responde con un único objeto JSON completo, comenzando con { y terminando con }. No uses modo JSON del proveedor ni bloques Markdown. Redacta una noticia en español colombiano basada exclusivamente en los hechos del transcript: no hables del video, de TikTok, de la transcripción, de la IA, ni de tus limitaciones dentro del título, resumen o cuerpo. Si faltan datos materiales, enuméralos solo en afirmacionesPorCorroborar y advertencias; no conviertas la noticia en una disculpa. Usa máximo cinco párrafos y 650 palabras. Termina el documento con un párrafo breve que diga Fuente: seguido del crédito y la URL originales. Claves exactas: versionContrato numero 1, titulo, resumen, tipo, documento, seo, categoriaId, temaIds, fuente, segmentosFundamento, afirmacionesPorCorroborar, advertencias. documento={type:"doc",content:[{type:"paragraph",content:[{type:"text",text:"..."}]}]}. Copia exactamente categoriaId, fuente.url y fuente.creditos. En segmentosFundamento devuelve únicamente objetos {"id":"..."}; no copies su texto. No inventes hechos ni fuentes.' },
+          { role: 'system', content: 'Responde con un único objeto JSON completo, comenzando con { y terminando con }. No uses modo JSON del proveedor ni bloques Markdown. Redacta una noticia en español colombiano basada exclusivamente en los hechos del transcript: no hables del video, de TikTok, de la transcripción, de la IA, ni de tus limitaciones dentro del título, resumen o cuerpo. Si faltan datos materiales, enuméralos solo en afirmacionesPorCorroborar y advertencias; no conviertas la noticia en una disculpa. Escribe una noticia desarrollada de 7 a 10 párrafos y entre 850 y 1.200 palabras cuando la evidencia lo permita; no rellenes ni inventes para alcanzar esa extensión. El título debe ser específico, atractivo y generar curiosidad legítima sin sensacionalismo ni afirmaciones no sustentadas. Abre con el hecho de mayor interés y explica por qué importa; desarrolla contexto, cronología, protagonistas y consecuencias solo si la evidencia los sostiene. No incluyas una sección, párrafo ni línea de Fuente: dentro del documento: la fuente se entrega únicamente en el objeto fuente para que la interfaz la muestre por separado. Claves exactas: versionContrato numero 1, titulo, resumen, tipo, documento, seo, categoriaId, temaIds, relacionadosIds, fuente, segmentosFundamento, afirmacionesPorCorroborar, advertencias. documento={type:"doc",content:[{type:"paragraph",content:[{type:"text",text:"..."}]}]}. Para categoriaId, temaIds y relacionadosIds usa únicamente IDs presentes en catalogoEditorial; si no hay coincidencia de tema o artículo, devuelve []. Elige categoriaId por la mayor afinidad semántica; si no tienes certeza, copia la categoriaId recibida o devuelve null. Copia fuente.url y fuente.creditos. En segmentosFundamento devuelve únicamente objetos {"id":"..."}; no copies su texto. No inventes hechos ni fuentes, temas ni enlaces.' },
           { role: 'user', content: JSON.stringify({ operacion: 'redactar_borrador', ...entradaProveedor }) }
         ] })
     })
@@ -168,12 +192,34 @@ async function redactarBorradorAutomatico(cliente, ingestaId, resultado) {
     }
     const propuesta = normalizarPropuestaRedaccion(extraerJsonProveedor(eleccion?.message?.content), entrada)
     if (!validarPropuestaRedaccion(propuesta, entrada)) throw crearErrorProcesamiento('IA_REDACCION_CONTRATO_INVALIDO', 'La propuesta no cumple el contrato editorial.', { etapa: 'persisting_evidence', reintentable: false })
-    const { error } = await cliente.rpc('create_draft_from_editorial_ingestion', {
-      p_ingestion_id: ingestaId, p_request_id: requestId, p_provider: 'deepseek', p_model: cuerpo.model || modelo, p_instruction_version: 'redaccion-v1', p_prompt_hash: promptHash, p_proposal: propuesta,
+    // La RPC de creación conserva la categoría que llegó en la ingesta. La
+    // clasificación IA se valida y aplica después, de forma atómica, en la
+    // RPC exclusiva de preparación para revisión.
+    const propuestaBorrador = { ...propuesta, categoriaId: entrada.categoriaId, temaIds: [] }
+    const { data: borradorCreado, error } = await cliente.rpc('create_draft_from_editorial_ingestion', {
+      p_ingestion_id: ingestaId, p_request_id: requestId, p_provider: 'deepseek', p_model: cuerpo.model || modelo, p_instruction_version: 'redaccion-v1', p_prompt_hash: promptHash, p_proposal: propuestaBorrador,
       p_input_tokens: cuerpo.usage?.prompt_tokens ?? null, p_output_tokens: cuerpo.usage?.completion_tokens ?? null, p_reasoning_tokens: cuerpo.usage?.reasoning_tokens ?? null, p_cost_usd: null, p_pricing_version: null, p_duration_ms: Date.now() - inicio
     })
     if (error) throw crearErrorProcesamiento('DRAFT_FINALIZATION_FAILED', 'No se pudo guardar el borrador automático.', { etapa: 'persisting_evidence' })
-    return 'created'
+    if (!borradorCreado?.id) throw crearErrorProcesamiento('DRAFT_FINALIZATION_FAILED', 'El borrador automático no devolvió una identidad válida.', { etapa: 'persisting_evidence' })
+    const preparacion = await cliente.rpc('prepare_editorial_article_from_ingestion', {
+      p_ingestion_id: ingestaId,
+      p_article_id: borradorCreado.id,
+      p_expected_lock_version: 1,
+      p_category_id: propuesta.categoriaId,
+      p_tag_ids: propuesta.temaIds,
+      p_related_article_ids: propuesta.relacionadosIds
+    })
+    if (preparacion.error || preparacion.data?.estado !== 'review') {
+      await cliente.rpc('report_editorial_preparation_failure', {
+        p_ingestion_id: ingestaId,
+        p_article_id: borradorCreado.id,
+        p_error_code: preparacion.error?.code || 'EDITORIAL_PREPARATION_FAILED'
+      })
+      console.warn(`Borrador creado pendiente de preparación editorial: ${ingestaId}`)
+      return 'needs_editorial_attention'
+    }
+    return 'prepared_for_review'
   } catch (error) {
     await cliente.rpc('fail_editorial_ai_draft', { p_ingestion_id: ingestaId, p_request_id: requestId, p_error_code: error.codigo || 'IA_REDACCION_FALLIDA', p_duration_ms: Date.now() - inicio })
     throw error

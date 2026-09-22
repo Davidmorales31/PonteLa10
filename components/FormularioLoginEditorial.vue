@@ -26,7 +26,6 @@ const {
   registrarUsuarioCorreo,
   recuperarContrasena,
   actualizarContrasena,
-  iniciarSesionGoogle,
   cerrarSesion
 } = useAutenticacionEditorial()
 
@@ -71,7 +70,7 @@ const detalleFormulario = computed(() => {
 
   const detalles: Record<ModoLoginEditorial, string> = {
     ingreso:
-      'Ingresa con tu correo o continúa con Google. Tu cuenta te acompaña para guardar progreso, seguir especiales y vivir la jugada completa.',
+      'Ingresa con tu correo y contraseña para continuar.',
     registro: 'Crea tu cuenta para acceder a nuevas funciones.',
     recuperacion: 'Recibirás un correo para cambiar tu contraseña.',
     actualizarContrasena: 'Define una clave fuerte para proteger tu cuenta.'
@@ -266,9 +265,6 @@ async function ejecutarOperacionModo(): Promise<ResultadoOperacionAuth> {
   return actualizarContrasena({ contrasena: contrasena.value })
 }
 
-async function entrarConGoogle() {
-  mensajeEstado.value = await iniciarSesionGoogle()
-}
 </script>
 
 <template>
@@ -361,16 +357,6 @@ async function entrarConGoogle() {
         <span>{{ textoBotonPrincipal }}</span>
       </button>
 
-      <button
-        v-if="modoActual === 'ingreso' && !verificandoMfa"
-        class="boton-google"
-        type="button"
-        :disabled="cargandoFormulario || !autenticacionConfigurada"
-        @click="entrarConGoogle"
-      >
-        <LogoGoogle />
-        <span>Continuar con Google</span>
-      </button>
     </form>
 
     <div v-if="!verificandoMfa" class="acciones-login-secundarias">

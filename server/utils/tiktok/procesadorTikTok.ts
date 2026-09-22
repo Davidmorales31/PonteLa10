@@ -136,7 +136,6 @@ export async function procesarTikTok(
     dispositivo: 'cpu',
     precision: 'int8',
     limites: {
-      duracionMaximaSegundos: 180,
       descargaMaximaBytes: 52428800,
       temporalMaximoBytes: 209715200,
       tiempoTotalSegundos: 600,
