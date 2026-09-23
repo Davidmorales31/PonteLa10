@@ -1,5 +1,52 @@
 # Handoff actual — HU-ED-07 aislada
 
+## Actualización operativa — 2026-09-23
+
+- La ingesta `4099be05-69b0-493f-b341-90f6f1372f04` llegó a transcribir, pero
+  el primer reintento evidenció un segundo límite: la función SQL y el contrato
+  Zod también restringían `source_language` a `es`/`en`. Se aplicó y verificó
+  `20260923031000_permitir_traduccion_de_cualquier_idioma.sql`: conserva códigos
+  ISO, exige traducción DeepSeek para todo idioma distinto de `es` y mantiene
+  las demás validaciones de evidencia. La misma fila se reencoló, detectó `ca`,
+  pasó a evidencia lista y creó el borrador
+  `88ad178b-a089-49b4-9836-4a2b9aca2ea2`. Además, el extractor JSON del worker
+  ahora toma el primer objeto balanceado de DeepSeek (y también se aplicó al
+  proveedor del servidor), evitando que texto residual posterior invalide una
+  respuesta correcta.
+
+- Se activó en Supabase el cron `pont3la10-publicar-programadas` (`* * * * *`)
+  que llama a `public.publish_due_editorial_articles()`. Antes existía la
+  transición a `scheduled`, pero no un disparador automático. La consulta de
+  catálogo confirmó una fila activa. La migración usa `pg_cron` en
+  `pg_catalog`; fue revisada para idempotencia, concurrencia y no exposición de
+  RPC adicional.
+- Las tarjetas públicas omiten la imagen cuando un artículo no tiene portada,
+  el estado activo de la navegación ya no deja Noticias y una categoría activos
+  al mismo tiempo, y el footer muestra la propiedad de Labs Pont3la10.
+
+- Se detectó y corrigió el bloqueo de demo de TikTok: el Python configurado no
+  tenía `imageio_ffmpeg`; se instalaron todas las dependencias declaradas en
+  `workers/requirements-tiktok.txt`. El worker incorpora ahora un preflight de
+  imports antes de reclamar trabajo, por lo que falla al inicio si vuelve a
+  faltar una dependencia. La validación de imports, autenticación y cola vacía
+  fue correcta; `tests/unit/ingestasEditoriales.test.ts` pasó (14 pruebas) y
+  el lint del worker más `git diff --check` pasaron.
+
+- Se implementó el atajo **Cambiar portada rápida** para evitar forzar el
+  estado `changes_requested` cuando solo se sustituye la imagen.
+- La migración `20260923020009_portada_rapida_sin_cambiar_estado.sql` fue
+  aplicada en Supabase y la función
+  `public.update_editorial_article_cover_fast(uuid,integer,uuid)` fue
+  verificada por consulta de catálogo.
+- Conserva el estado y controla concurrencia con `lock_version`. Autoriza
+  `review` con revisión, `approved` con aprobación, y `scheduled`/`published`
+  con el permiso respectivo más AAL2. Para publicados refresca el snapshot
+  público. El endpoint es
+  `PUT /api/admin/contenidos/:id/portada-rapida`.
+- El servidor local se inició en `http://127.0.0.1:3001`. Queda pendiente la
+  comprobación visual autenticada del botón; no se modificó ningún artículo
+  real durante la verificación.
+
 - **Objetivo:** aislar y auditar el desarrollo local de HU-ED-07 sin perder el
   trabajo de origen.
 - **Completado:** creada la worktree `C:\PONTE LA 10 HU-ED-07` en
@@ -222,3 +269,70 @@
   comprobación de sintaxis del worker, `git diff --check` y `npm run build`
   finalizaron correctamente. La demo local volvió a responder `200` en
   `http://127.0.0.1:3001/login` y no entrega el texto del botón de Google.
+
+## Handoff — 2026-09-22 (edición y calidad de redacción)
+
+- **Causa corregida:** `puedeEditar` se calculaba solo por rol. En revisión,
+  la UI podía permitir seleccionar portada y luego pedir un guardado que la RPC
+  rechaza correctamente. Ahora la API y el cliente condicionan esa capacidad a
+  `draft` o `changes_requested`; desde revisión se aprueba directamente o se
+  usa **Solicitar cambios** antes de editar. Una carrera de estado actualiza el
+  editor y explica la acción segura.
+- **Redacción:** el normalizador dejaba de conservar saltos y partía por cada
+  oración. Ahora conserva los párrafos del proveedor, agrupa únicamente los
+  demasiado cortos y descarta líneas de fuente, créditos, video original y URLs
+  de TikTok. El contrato DeepSeek exige párrafos desarrollados y prohíbe esas
+  atribuciones dentro del documento.
+- **Validación:** pruebas focalizadas (27), suite completa (15 archivos, 87
+  pruebas), lint, typecheck, `node --check` del worker, `git diff --check` y
+  build de producción pasaron. La demo local volvió a responder 200 en el
+  puerto 3001.
+# Handoff actual
+
+## Trabajo local sin commit
+
+- Se añadió la selección exclusiva de noticia destacada de portada, el endpoint
+  protegido y el consumo público de la selección.
+- Se añadió el modo opcional **Aplicar estos cambios con IA** dentro de
+  `Solicitar cambios`; pasa primero a `changes_requested`, aplica una única
+  propuesta y conserva el control humano para enviar de nuevo a revisión y
+  aprobar.
+- La migración `20260922122414_noticia_destacada_y_reescritura_ia.sql` quedó
+  aplicada en Supabase el 2026-09-22. La consola confirmó
+  `editorial_home_feature`, `editorial_ai_article_rewrites`,
+  `set_editorial_home_feature(uuid)` y
+  `get_public_editorial_home_feature()`. Falta probar el checkbox con MFA y
+  una solicitud real de cambios con IA desde la interfaz.
+
+## Validación
+
+- `npm.cmd run typecheck`: pasó.
+- `npm.cmd run test:unit`: pasó antes de este corte (15 archivos, 87 pruebas).
+- `npm.cmd run lint`: pasó antes de este corte.
+- `npm.cmd run build` con `NUXT_IGNORE_LOCK=1`: cliente construido; el proceso
+  de build no se dejó finalizar de forma observable tras la fase SSR mientras
+  el demo local seguía activo. Repetir al detener o aislar el servidor si se
+  requiere certificación final.
+# Handoff actual
+
+## Publicación programada y taxonomías — 2026-09-23
+
+- Se verificó en Supabase que `pont3la10-publicar-programadas` está activo y
+  ejecuta `publish_due_editorial_articles()` cada minuto con ejecuciones
+  exitosas.
+- La noticia `88ad178b-a089-49b4-9836-4a2b9aca2ea2` no estaba atrasada: tiene
+  `scheduled_at = 2026-09-24 03:27:00+00`, equivalente a 22:27 del 23 en
+  Colombia. No se publicó manualmente.
+- Se corrigió `components/admin/ModalAccionFlujoEditorial.vue`: el control
+  `datetime-local` ahora recibe la hora local mediante
+  `utils/editorial/fechaProgramacion.ts`, no un ISO UTC. Prueba unitaria
+  `tests/unit/fechaProgramacion.test.ts` aprobada; lint de los archivos y
+  `git diff --check` también aprobaron.
+- HU-ED-09 todavía usa catálogo cerrado. La creación automática de taxonomías
+  se habilitó el 2026-09-23 exclusivamente para hasta tres temas públicos. La
+  migración `20260923100000_temas_publicos_automaticos.sql` crea una sobrecarga
+  de siete argumentos de `prepare_editorial_article_from_ingestion`: valida al
+  worker y la generación completada, deduplica por slug con bloqueo transaccional
+  y prepara artículo+temas en una única transacción. Está aplicada y verificada
+  en Supabase mediante su firma y el permiso `ingestas.worker.crearTemas` de
+  `workerIngesta`. No crea categorías ni etiquetas internas.

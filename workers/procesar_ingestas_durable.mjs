@@ -62,24 +62,49 @@ function normalizarPropuestaRedaccion(propuesta, entrada) {
   if (!propuesta || typeof propuesta !== 'object') return propuesta
   const texto = valor => typeof valor === 'string' ? valor.replace(/\s+/g, ' ').trim() : ''
   const limitado = (valor, maximo) => texto(valor).slice(0, maximo)
+  const textoConParrafos = valor => typeof valor === 'string'
+    ? valor.replace(/[^\S\r\n]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim()
+    : ''
+  const limitadoConParrafos = (valor, maximo) => textoConParrafos(valor).slice(0, maximo)
   const recolectarTexto = valor => {
     if (typeof valor === 'string') return valor
-    if (Array.isArray(valor)) return valor.map(recolectarTexto).join('\n')
+    if (Array.isArray(valor)) return valor.map(recolectarTexto).join('\n\n')
     if (!valor || typeof valor !== 'object') return ''
     if (typeof valor.text === 'string') return valor.text
     return recolectarTexto(valor.content)
   }
+  const esAtribucionDeFuente = parrafo => {
+    const contenido = texto(parrafo)
+    if (/^(?:fuente(?:\s+original)?|cr[eé]ditos?|video\s+original|origen)\s*[:—-]/iu.test(contenido)) return true
+    const hostFuente = new URL(entrada.urlFuente).hostname.replace(/^www\./, '')
+    return contenido.includes(hostFuente)
+      && (/(?:https?:\/\/|www\.)/iu.test(contenido)
+        || /(?:fuente|cr[eé]ditos?|video\s+original)/iu.test(contenido))
+  }
+  const consolidarParrafos = fragmentos => {
+    const minimoPalabras = 55
+    return fragmentos.reduce((resultado, fragmento) => {
+      const anterior = resultado.at(-1)
+      const palabrasAnterior = anterior?.match(/[\p{L}\p{N}]+/gu)?.length || 0
+      if (anterior && palabrasAnterior < minimoPalabras) {
+        resultado[resultado.length - 1] = `${anterior} ${fragmento}`.trim()
+      } else {
+        resultado.push(fragmento)
+      }
+      return resultado
+    }, [])
+  }
   const textoEvidencia = entrada.segmentos.map(segmento => texto(segmento.texto)).filter(Boolean).join('\n')
   const textoDocumentoSinFuente = recolectarTexto(propuesta.documento || propuesta.cuerpo || propuesta.contenido)
     .split(/\n{1,}/u)
-    .filter(parrafo => !/^\s*fuente\s*:/iu.test(parrafo))
-    .join('\n')
-  const textoDocumento = texto(textoDocumentoSinFuente) || textoEvidencia
-  const bloques = textoDocumento
-    .split(/\n{1,}|(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ])/u)
+    .filter(parrafo => !esAtribucionDeFuente(parrafo))
+    .join('\n\n')
+  const textoDocumento = limitadoConParrafos(textoDocumentoSinFuente, 60_000) || textoEvidencia
+  const bloques = consolidarParrafos(textoDocumento
+    .split(/\n{2,}/u)
     .map(fragmento => limitado(fragmento, 4500))
     .filter(Boolean)
-    .slice(0, 80)
+    .slice(0, 80))
     .map(fragmento => ({ type: 'paragraph', content: [{ type: 'text', text: fragmento }] }))
   const tituloBase = limitado(propuesta.titulo || propuesta.title, 160)
     || limitado(entrada.tituloSugerido, 160)
@@ -96,6 +121,21 @@ function normalizarPropuestaRedaccion(propuesta, entrada) {
   const listaTexto = valor => Array.isArray(valor)
     ? valor.map(item => limitado(item, 500)).filter(Boolean).slice(0, 30)
     : []
+  const normalizarNombreTema = valor => texto(valor)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/gu, '')
+    .toLocaleLowerCase('es-CO')
+  const temasExistentes = new Set((entrada.catalogoEditorial?.temas || [])
+    .map(tema => normalizarNombreTema(tema.nombre)))
+  const temasNuevos = Array.isArray(propuesta.temasNuevos)
+    ? propuesta.temasNuevos.reduce((resultado, candidato) => {
+      const nombre = limitado(candidato?.nombre, 80)
+      const clave = normalizarNombreTema(nombre)
+      if (nombre.length < 2 || temasExistentes.has(clave) || resultado.some(tema => normalizarNombreTema(tema.nombre) === clave)) return resultado
+      resultado.push({ nombre, descripcion: limitado(candidato?.descripcion, 240) })
+      return resultado
+    }, []).slice(0, 3)
+    : []
   return {
     versionContrato: 1,
     titulo: tituloBase,
@@ -106,8 +146,9 @@ function normalizarPropuestaRedaccion(propuesta, entrada) {
       ? propuesta.categoriaId
       : entrada.categoriaId,
     temaIds: Array.isArray(propuesta.temaIds)
-      ? [...new Set(propuesta.temaIds.filter(id => (entrada.catalogoEditorial?.temas || []).some(tema => tema.id === id)))].slice(0, 12)
+      ? [...new Set(propuesta.temaIds.filter(id => (entrada.catalogoEditorial?.temas || []).some(tema => tema.id === id)))].slice(0, 12 - temasNuevos.length)
       : [],
+    temasNuevos,
     relacionadosIds: Array.isArray(propuesta.relacionadosIds)
       ? [...new Set(propuesta.relacionadosIds.filter(id => (entrada.catalogoEditorial?.articulosPublicados || []).some(articulo => articulo.id === id)))].slice(0, 3)
       : [],
@@ -143,12 +184,40 @@ function extraerJsonProveedor(contenido) {
     .replace(/^```(?:json)?\s*/i, '')
     .replace(/\s*```$/, '')
   const inicio = limpio.indexOf('{')
-  const fin = limpio.lastIndexOf('}')
-  if (inicio < 0 || fin <= inicio) {
+  if (inicio < 0) {
     throw crearErrorProcesamiento('IA_REDACCION_INVALIDA', 'DeepSeek no devolvió un objeto JSON utilizable.', { etapa: 'persisting_evidence', reintentable: false })
   }
+
+  // No usamos lastIndexOf: algunos modelos añaden una frase o un segundo objeto
+  // después del JSON. Extraemos el primer objeto balanceado respetando strings
+  // y escapes, sin reparar ni inventar contenido del proveedor.
+  let profundidad = 0
+  let dentroDeCadena = false
+  let escapado = false
+  let candidato = ''
+  for (let indice = inicio; indice < limpio.length; indice += 1) {
+    const caracter = limpio[indice]
+    if (dentroDeCadena) {
+      if (escapado) escapado = false
+      else if (caracter === '\\') escapado = true
+      else if (caracter === '"') dentroDeCadena = false
+      continue
+    }
+    if (caracter === '"') dentroDeCadena = true
+    else if (caracter === '{') profundidad += 1
+    else if (caracter === '}') {
+      profundidad -= 1
+      if (profundidad === 0) {
+        candidato = limpio.slice(inicio, indice + 1)
+        break
+      }
+    }
+  }
+  if (!candidato) {
+    throw crearErrorProcesamiento('IA_REDACCION_INVALIDA', 'DeepSeek no completó el objeto JSON.', { etapa: 'persisting_evidence', reintentable: false })
+  }
   try {
-    return JSON.parse(limpio.slice(inicio, fin + 1))
+    return JSON.parse(candidato)
   } catch {
     throw crearErrorProcesamiento('IA_REDACCION_INVALIDA', 'DeepSeek devolvió JSON inválido.', { etapa: 'persisting_evidence', reintentable: false })
   }
@@ -180,7 +249,7 @@ async function redactarBorradorAutomatico(cliente, ingestaId, resultado) {
       // agotar la salida antes de que DeepSeek complete message.content.
       body: JSON.stringify({ model: modelo, reasoning_effort: 'none', max_tokens: 6144, stream: false,
         messages: [
-          { role: 'system', content: 'Responde con un único objeto JSON completo, comenzando con { y terminando con }. No uses modo JSON del proveedor ni bloques Markdown. Redacta una noticia en español colombiano basada exclusivamente en los hechos del transcript: no hables del video, de TikTok, de la transcripción, de la IA, ni de tus limitaciones dentro del título, resumen o cuerpo. Si faltan datos materiales, enuméralos solo en afirmacionesPorCorroborar y advertencias; no conviertas la noticia en una disculpa. Escribe una noticia desarrollada de 7 a 10 párrafos y entre 850 y 1.200 palabras cuando la evidencia lo permita; no rellenes ni inventes para alcanzar esa extensión. El título debe ser específico, atractivo y generar curiosidad legítima sin sensacionalismo ni afirmaciones no sustentadas. Abre con el hecho de mayor interés y explica por qué importa; desarrolla contexto, cronología, protagonistas y consecuencias solo si la evidencia los sostiene. No incluyas una sección, párrafo ni línea de Fuente: dentro del documento: la fuente se entrega únicamente en el objeto fuente para que la interfaz la muestre por separado. Claves exactas: versionContrato numero 1, titulo, resumen, tipo, documento, seo, categoriaId, temaIds, relacionadosIds, fuente, segmentosFundamento, afirmacionesPorCorroborar, advertencias. documento={type:"doc",content:[{type:"paragraph",content:[{type:"text",text:"..."}]}]}. Para categoriaId, temaIds y relacionadosIds usa únicamente IDs presentes en catalogoEditorial; si no hay coincidencia de tema o artículo, devuelve []. Elige categoriaId por la mayor afinidad semántica; si no tienes certeza, copia la categoriaId recibida o devuelve null. Copia fuente.url y fuente.creditos. En segmentosFundamento devuelve únicamente objetos {"id":"..."}; no copies su texto. No inventes hechos ni fuentes, temas ni enlaces.' },
+          { role: 'system', content: 'Responde con un único objeto JSON completo, comenzando con { y terminando con }. No uses modo JSON del proveedor ni bloques Markdown. Redacta una noticia en español colombiano basada exclusivamente en los hechos del transcript: no hables del video, de TikTok, de la transcripción, de la IA, ni de tus limitaciones dentro del título, resumen o cuerpo. Si faltan datos materiales, enuméralos solo en afirmacionesPorCorroborar y advertencias; no conviertas la noticia en una disculpa. Escribe una noticia desarrollada de 7 a 10 párrafos y entre 850 y 1.200 palabras cuando la evidencia lo permita; no rellenes ni inventes para alcanzar esa extensión. Cada párrafo debe desarrollar una idea completa y tener normalmente entre 70 y 140 palabras: nunca separes cada oración en un párrafo. El título debe ser específico, atractivo y generar curiosidad legítima sin sensacionalismo ni afirmaciones no sustentadas. Abre con el hecho de mayor interés y explica por qué importa; desarrolla contexto, cronología, protagonistas y consecuencias solo si la evidencia los sostiene. No incluyas dentro del documento una sección, párrafo ni línea de fuente, créditos, video original, URL de TikTok ni atribución de plataforma: la fuente se entrega únicamente en el objeto fuente para que la interfaz la muestre por separado. Claves exactas: versionContrato numero 1, titulo, resumen, tipo, documento, seo, categoriaId, temaIds, temasNuevos, relacionadosIds, fuente, segmentosFundamento, afirmacionesPorCorroborar, advertencias. documento={type:"doc",content:[{type:"paragraph",content:[{type:"text",text:"..."}]}]}. Para categoriaId, temaIds y relacionadosIds usa únicamente IDs presentes en catalogoEditorial; si no hay coincidencia de tema o artículo, devuelve []. temasNuevos puede contener como máximo tres objetos {"nombre":"...","descripcion":"..."}, únicamente si ninguno de los temas existentes describe bien el asunto. No propongas secciones, etiquetas internas, personas, frases genéricas ni temas sin relación directa; deja [] si no hace falta crear uno. Elige categoriaId por la mayor afinidad semántica; si no tienes certeza, copia la categoriaId recibida o devuelve null. Copia fuente.url y fuente.creditos. En segmentosFundamento devuelve únicamente objetos {"id":"..."}; no copies su texto. No inventes hechos ni fuentes, temas ni enlaces.' },
           { role: 'user', content: JSON.stringify({ operacion: 'redactar_borrador', ...entradaProveedor }) }
         ] })
     })
@@ -208,7 +277,8 @@ async function redactarBorradorAutomatico(cliente, ingestaId, resultado) {
       p_expected_lock_version: 1,
       p_category_id: propuesta.categoriaId,
       p_tag_ids: propuesta.temaIds,
-      p_related_article_ids: propuesta.relacionadosIds
+      p_related_article_ids: propuesta.relacionadosIds,
+      p_new_topics: propuesta.temasNuevos
     })
     if (preparacion.error || preparacion.data?.estado !== 'review') {
       await cliente.rpc('report_editorial_preparation_failure', {
@@ -238,6 +308,31 @@ function crearClienteWorker() {
   return createClient(url, clave, { auth: { persistSession: false, autoRefreshToken: false } })
 }
 
+function obtenerPythonWorker() {
+  return process.env.NUXT_TIKTOK_PYTHON_PATH || (
+    process.platform === 'win32' ? '.venv\\Scripts\\python.exe' : '.venv/bin/python'
+  )
+}
+
+async function verificarDependenciasPython() {
+  const python = obtenerPythonWorker()
+  await new Promise((resolve, reject) => {
+    const proceso = spawn(
+      python,
+      ['-c', 'import imageio_ffmpeg, yt_dlp; from faster_whisper import WhisperModel'],
+      { stdio: ['ignore', 'ignore', 'pipe'], windowsHide: true }
+    )
+    let stderr = ''
+    proceso.stderr.setEncoding('utf8')
+    proceso.stderr.on('data', fragmento => { stderr = (stderr + fragmento).slice(-1000) })
+    proceso.on('error', () => reject(new Error('No se pudo iniciar el Python configurado para el worker de TikTok.')))
+    proceso.on('close', codigo => {
+      if (codigo === 0) return resolve()
+      reject(new Error(`Faltan dependencias del worker de TikTok. Ejecuta "python -m pip install -r workers/requirements-tiktok.txt". ${stderr}`.trim()))
+    })
+  })
+}
+
 async function autenticar(cliente) {
   const { error } = await cliente.auth.signInWithPassword({
     email: exigirEntorno('PONT3LA10_WORKER_EMAIL'),
@@ -255,9 +350,7 @@ async function rpc(cliente, nombre, parametros) {
 
 function ejecutarPython(asignacion, alProgreso) {
   return new Promise((resolve, reject) => {
-    const python = process.env.NUXT_TIKTOK_PYTHON_PATH || (
-      process.platform === 'win32' ? '.venv\\Scripts\\python.exe' : '.venv/bin/python'
-    )
+    const python = obtenerPythonWorker()
     const script = process.env.NUXT_TIKTOK_WORKER_PATH || 'workers/transcribir_tiktok.py'
     const proceso = spawn(python, [script], { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true })
     let pendiente = ''
@@ -464,6 +557,8 @@ async function recuperarEvidenciaPendiente(cliente) {
 async function iniciar() {
   const cliente = crearClienteWorker()
   await autenticar(cliente)
+  await verificarDependenciasPython()
+  console.log('Worker listo: Supabase y dependencias de TikTok verificadas.')
   if (ingestaParaRedactar) {
     const { data: evidencia, error } = await cliente.rpc('get_editorial_ingestion_evidence_for_worker', {
       p_ingestion_id: ingestaParaRedactar

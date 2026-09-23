@@ -4,6 +4,7 @@ import {
   esquemaCrearIngestaEditorial,
   normalizarUrlFuenteEditorial
 } from '~/utils/editorial/ingestas'
+import { normalizarPropuestaProveedor } from '~/server/utils/ai/deepseekRedaccion'
 import {
   esquemaEvidenciaIngestaEditorial,
   versionContratoEvidenciaIngesta
@@ -11,6 +12,41 @@ import {
 import { esquemaPropuestaBorradorIa } from '~/utils/editorial/redaccionIa'
 
 describe('ingestas editoriales', () => {
+  it('retira atribuciones de TikTok del cuerpo y conserva párrafos desarrollados', () => {
+    const entrada = {
+      ingestaId: 'f0098a0f-33b8-4509-921d-f68f132f165e',
+      tituloSugerido: '',
+      instrucciones: '',
+      urlFuente: 'https://www.tiktok.com/@autor/video/7000000000000000000',
+      creditos: 'Video original: autor',
+      categoriaId: null,
+      tipoSugerido: 'noticia',
+      segmentos: [{ id: 0, inicioSegundos: 0, finSegundos: 4, texto: 'Dato verificable.' }]
+    }
+    const propuesta = normalizarPropuestaProveedor({
+      titulo: 'Una historia respaldada por la evidencia disponible',
+      resumen: 'Resumen editorial de la información disponible.',
+      tipo: 'noticia',
+      documento: {
+        type: 'doc',
+        content: [
+          { type: 'paragraph', content: [{ type: 'text', text: 'Este primer fragmento desarrolla los hechos disponibles con el contexto necesario para que la audiencia entienda la historia.' }] },
+          { type: 'paragraph', content: [{ type: 'text', text: 'El segundo fragmento aporta consecuencias y mantiene una lectura continua sin separar cada oración de forma artificial.' }] },
+          { type: 'paragraph', content: [{ type: 'text', text: 'Fuente: Video original: autor - https://www.tiktok.com/@autor/video/7000000000000000000' }] }
+        ]
+      },
+      seo: {}, fuente: {}, segmentosFundamento: [{ id: 0 }
+      ], afirmacionesPorCorroborar: [], advertencias: []
+    }, entrada) as { documento: { content: Array<{ content: Array<{ text: string }> }> } }
+
+    const parrafos = propuesta.documento.content.map(bloque => bloque.content[0]?.text || '')
+    expect(parrafos.join(' ')).not.toContain('tiktok.com')
+    expect(parrafos.join(' ')).not.toContain('Video original')
+    expect(parrafos).toHaveLength(1)
+    expect(parrafos[0]).toContain('primer fragmento')
+    expect(parrafos[0]).toContain('segundo fragmento')
+  })
+
   it('normaliza la URL, elimina rastreo y detecta la plataforma', () => {
     const fuente = normalizarUrlFuenteEditorial(
       'http://www.tiktok.com/@autor/video/123/?utm_source=red&lang=es#comentarios'
@@ -95,6 +131,23 @@ describe('ingestas editoriales', () => {
     expect(migracion).not.toContain('grant delete on public.editorial_ingestions')
   })
 
+  it('limita temas automáticos al worker, los deduplica y deja auditoría', () => {
+    const rutaMigracion = new URL(
+      '../../supabase/migrations/20260923100000_temas_publicos_automaticos.sql',
+      import.meta.url
+    )
+    const migracion = readFileSync(rutaMigracion, 'utf8')
+
+    expect(migracion).toContain("private.ensure_ingestion_worker('ingestas.worker.crearTemas')")
+    expect(migracion).toContain('jsonb_array_length(p_new_topics) > 3')
+    expect(migracion).toContain('where slug = v_slug or lower(name) = lower(v_name)')
+    expect(migracion).toContain("'ingesta.temas_automaticos_creados'")
+    expect(migracion).toContain('pg_advisory_xact_lock')
+    expect(migracion).toContain('prepare_editorial_article_from_ingestion')
+    expect(migracion).not.toContain('insert into public.categories')
+    expect(migracion).not.toContain('insert into public.editorial_labels')
+  })
+
   it('valida evidencia final en español sin crear borrador', () => {
     const evidencia = esquemaEvidenciaIngestaEditorial.parse({
       versionContrato: versionContratoEvidenciaIngesta,
@@ -127,7 +180,7 @@ describe('ingestas editoriales', () => {
     expect(evidencia.metadatos.duracionSegundos).toBe(181)
   })
 
-  it('exige traducción cuando el original está en inglés', () => {
+  it('admite el idioma detectado y exige traducción cuando no está en español', () => {
     expect(() => esquemaEvidenciaIngestaEditorial.parse({
       versionContrato: versionContratoEvidenciaIngesta,
       metadatos: {
@@ -141,7 +194,7 @@ describe('ingestas editoriales', () => {
         consultadoEn: '2026-09-10T16:00:05Z'
       },
       original: {
-        idioma: 'en',
+        idioma: 'fr',
         modelo: 'base',
         motor: 'faster-whisper',
         versionMotor: 'runtime',

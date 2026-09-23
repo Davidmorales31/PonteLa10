@@ -28,7 +28,7 @@ const articulosPublicados = computed<ArticuloResumen[]>(() =>
       dateStyle: 'medium'
     }).format(new Date(articulo.publicadoEn)),
     lecturaMinutos: 4,
-    imagen: articulo.imagen || '/editorial/login_pont3la10_estadio_sin_logo.png'
+    imagen: articulo.imagen
   }))
 )
 

@@ -10,7 +10,7 @@ defineProps<{
 
 <template>
   <article :class="['tarjeta-articulo', variante === 'compacta' && 'tarjeta-articulo-compacta']">
-    <NuxtLink class="tarjeta-articulo-imagen" :to="obtenerRutaArticulo(articulo.slug)">
+    <NuxtLink v-if="articulo.imagen" class="tarjeta-articulo-imagen" :to="obtenerRutaArticulo(articulo.slug)">
       <img :src="articulo.imagen" :alt="articulo.titulo" loading="lazy">
     </NuxtLink>
     <div class="tarjeta-articulo-cuerpo">

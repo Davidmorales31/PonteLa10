@@ -60,7 +60,7 @@ interface FilaIngesta {
   current_attempt_id: string | null
   lease_expires_at: string | null
   heartbeat_at: string | null
-  source_language: 'es' | 'en' | null
+  source_language: string | null
   retryable: boolean | null
   result_version: number | null
   attempts: number

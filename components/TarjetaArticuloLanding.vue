@@ -11,7 +11,7 @@ const guardado = ref(false)
 
 <template>
   <article class="tarjeta-articulo-landing">
-    <NuxtLink :to="articulo.ruta" class="imagen-tarjeta-articulo-landing">
+    <NuxtLink v-if="articulo.imagen" :to="articulo.ruta" class="imagen-tarjeta-articulo-landing">
       <img
         :src="articulo.imagen"
         :alt="articulo.descripcionImagen"

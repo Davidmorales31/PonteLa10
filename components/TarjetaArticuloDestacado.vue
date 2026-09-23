@@ -9,7 +9,7 @@ defineProps<{
 
 <template>
   <article class="articulo-destacado-landing">
-    <NuxtLink :to="articulo.ruta" class="imagen-articulo-destacado">
+    <NuxtLink v-if="articulo.imagen" :to="articulo.ruta" class="imagen-articulo-destacado">
       <img
         :src="articulo.imagen"
         :alt="articulo.descripcionImagen"

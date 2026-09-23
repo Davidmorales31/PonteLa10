@@ -17,7 +17,11 @@ const anioActual = new Date().getFullYear()
           decoding="async"
         >
         <p>{{ pieSitio.descripcion }}</p>
-        <small>© {{ anioActual }} Pont3la10. Todos los derechos reservados.</small>
+        <small>
+          © {{ anioActual }} Pont3la10. Todos los derechos reservados.
+          Producto propiedad de
+          <a href="https://labs.pont3la10.com" target="_blank" rel="noopener noreferrer">labs.pont3la10.com</a>.
+        </small>
       </section>
 
       <nav

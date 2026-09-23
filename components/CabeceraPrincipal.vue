@@ -30,11 +30,19 @@ watch(() => rutaActual.fullPath, () => {
 })
 
 function esRutaActiva(ruta: string, exacta = false): boolean {
+  const [rutaBase, consulta] = ruta.split('?')
   if (exacta) {
-    return rutaActual.path === ruta
+    return rutaActual.path === rutaBase
   }
 
-  return rutaActual.fullPath === ruta || rutaActual.path === ruta
+  if (!consulta) {
+    return rutaActual.path === rutaBase && !rutaActual.query.categoria
+  }
+
+  return rutaActual.path === rutaBase
+    && [...new URLSearchParams(consulta).entries()].every(([clave, valor]) =>
+      String(rutaActual.query[clave] || '') === valor
+    )
 }
 
 function alternarBusqueda() {

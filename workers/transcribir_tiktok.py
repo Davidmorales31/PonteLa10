@@ -116,9 +116,10 @@ def ejecutar(entrada: dict) -> dict:
         if not resultado:
             raise RuntimeError("El video no produjo una transcripción utilizable.")
 
-        idioma = informacion.language
-        if idioma not in ("es", "en"):
-            raise RuntimeError("El idioma detectado no está soportado para esta ingesta.")
+        # La redacción editorial es en español, pero la fuente puede venir en
+        # cualquier idioma. El worker de Node traducirá al español cuando haga
+        # falta; rechazarla aquí desperdicia una transcripción válida.
+        idioma = informacion.language or "und"
 
         return {
             "metadatos": {

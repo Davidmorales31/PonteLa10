@@ -129,6 +129,12 @@ function puedeReencolar(ingesta: IngestaEditorial): boolean {
             <small v-if="ingesta.mensajeError" class="detalle-error-ingesta">
               {{ ingesta.mensajeError }}
             </small>
+            <small
+              v-if="puedeGestionar && puedeReencolar(ingesta)"
+              class="detalle-error-ingesta"
+            >
+              La corrección ya está lista: puedes reencolarla sin crear otra ingesta.
+            </small>
           </td>
           <td data-label="Reglas">
             <div class="resumen-reglas-ingesta">
@@ -163,13 +169,16 @@ function puedeReencolar(ingesta: IngestaEditorial): boolean {
             </button>
             <button
               v-if="puedeGestionar && puedeReencolar(ingesta)"
-              class="boton-icono-editorial"
+              class="boton-editorial-secundario boton-reencolar-ingesta"
               type="button"
-              title="Reencolar evidencia"
-              aria-label="Reencolar evidencia"
+              title="Reintentar esta ingesta desde la evidencia"
+              aria-label="Reintentar esta ingesta desde la evidencia"
+              :disabled="cancelandoId === ingesta.id"
               @click="emit('reencolar', ingesta)"
             >
-              <RotateCcw aria-hidden="true" />
+              <LoaderCircle v-if="cancelandoId === ingesta.id" class="icono-girando" aria-hidden="true" />
+              <RotateCcw v-else aria-hidden="true" />
+              {{ cancelandoId === ingesta.id ? 'Reencolando' : 'Reintentar' }}
             </button>
             <NuxtLink
               v-if="ingesta.articuloId"

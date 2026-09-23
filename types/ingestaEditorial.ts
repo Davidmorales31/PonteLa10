@@ -74,7 +74,7 @@ export interface IngestaEditorial {
   intentoActualId: string | null
   leaseHasta: string | null
   ultimaActividadEn: string | null
-  idiomaFuente: 'es' | 'en' | null
+  idiomaFuente: string | null
   recuperable: boolean
   versionResultado: number
   intentos: number
