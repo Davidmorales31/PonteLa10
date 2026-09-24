@@ -7,7 +7,9 @@ export interface AlertaEditorial {
   mensaje: string
 }
 
-const temporizadores = new Map<string, ReturnType<typeof setTimeout>>()
+// La cola vive solo en el navegador. `window.setTimeout` devuelve `number`,
+// a diferencia del temporizador de Node que el typecheck de CI también carga.
+const temporizadores = new Map<string, number>()
 
 export function useAlertasEditoriales() {
   const alertas = useState<AlertaEditorial[]>('editorial:alertas', () => [])
