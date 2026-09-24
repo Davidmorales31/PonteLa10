@@ -1,18 +1,25 @@
 <script setup lang="ts">
-import { Menu, Search, X } from '@lucide/vue'
-import { navegacionSitio } from '~/data/sitioPublico'
+import { ChevronDown, Menu, Moon, Search, Sun, X } from '@lucide/vue'
+import { navegacionMasSitio, navegacionSitio } from '~/data/sitioPublico'
 
 const rutaActual = useRoute()
 const menuAbierto = ref(false)
 const busquedaAbierta = ref(false)
 const terminoBusqueda = ref('')
+const menuMas = ref<HTMLDetailsElement | null>(null)
+const { modoBlancoActivo, etiquetaAlternarTema, alternarTema } = useTemaPublico()
 const { autenticacionConfigurada, usuarioActual, obtenerSesionActual } = useAutenticacionEditorial()
 const { contextoEditorial, cargarContextoEditorial } = useContextoEditorial()
+const logoCabecera = computed(() => modoBlancoActivo.value
+  ? '/brand/pont3la10_logo_06_horizontal_sobre_blanco.png'
+  : '/brand/pont3la10_logo_login_blanco.png'
+)
 
-const accionCuenta = computed(() => ({
-  etiqueta: contextoEditorial.value ? 'Panel' : 'Entrar',
-  ruta: contextoEditorial.value ? '/admin' : '/login'
-}))
+const accionCuenta = computed(() => {
+  if (contextoEditorial.value) return { etiqueta: 'Panel editorial', ruta: '/admin' }
+  if (usuarioActual.value) return { etiqueta: 'Mi cuenta', ruta: '/cuenta' }
+  return { etiqueta: 'Entrar', ruta: '/login' }
+})
 
 if (autenticacionConfigurada.value) {
   if (!usuarioActual.value && import.meta.client) {
@@ -27,6 +34,7 @@ if (autenticacionConfigurada.value) {
 watch(() => rutaActual.fullPath, () => {
   menuAbierto.value = false
   busquedaAbierta.value = false
+  if (menuMas.value) menuMas.value.open = false
 })
 
 function esRutaActiva(ruta: string, exacta = false): boolean {
@@ -74,7 +82,7 @@ async function buscarContenido() {
     <div class="cabecera-landing-contenido">
       <NuxtLink class="marca-cabecera-landing" to="/" aria-label="Pont3la10, ir al inicio">
         <img
-          src="/brand/pont3la10_logo_login_blanco.png"
+          :src="logoCabecera"
           alt="Pont3la10"
           width="598"
           height="115"
@@ -91,9 +99,31 @@ async function buscarContenido() {
         >
           {{ item.etiqueta }}
         </NuxtLink>
+        <details ref="menuMas" class="menu-mas-landing">
+          <summary :class="{ activo: navegacionMasSitio.some(item => esRutaActiva(item.ruta, item.exacta)) }">
+            Más
+            <ChevronDown aria-hidden="true" />
+          </summary>
+          <div class="menu-mas-desplegable">
+            <NuxtLink v-for="item in navegacionMasSitio" :key="item.etiqueta" :to="item.ruta">
+              {{ item.etiqueta }}
+            </NuxtLink>
+          </div>
+        </details>
       </nav>
 
       <div class="acciones-cabecera-landing">
+        <button
+          class="boton-icono-cabecera boton-tema-publico"
+          type="button"
+          :aria-pressed="modoBlancoActivo"
+          :title="etiquetaAlternarTema"
+          @click="alternarTema"
+        >
+          <Sun v-if="modoBlancoActivo" aria-hidden="true" />
+          <Moon v-else aria-hidden="true" />
+          <span class="solo-lectores-pantalla">{{ etiquetaAlternarTema }}</span>
+        </button>
         <button
           class="boton-icono-cabecera"
           type="button"
@@ -128,7 +158,7 @@ async function buscarContenido() {
       role="search"
       @submit.prevent="buscarContenido"
     >
-      <label for="termino-busqueda">¿Qué jugada estás buscando?</label>
+      <label for="termino-busqueda">Buscar noticias</label>
       <div>
         <input
           id="termino-busqueda"
@@ -147,6 +177,15 @@ async function buscarContenido() {
     <nav v-if="menuAbierto" id="menu-principal-movil" class="navegacion-landing-movil" aria-label="Menú móvil">
       <NuxtLink
         v-for="item in navegacionSitio"
+        :key="item.etiqueta"
+        :to="item.ruta"
+        :class="{ activo: esRutaActiva(item.ruta, item.exacta) }"
+      >
+        {{ item.etiqueta }}
+      </NuxtLink>
+      <p class="titulo-seccion-menu-movil">Más</p>
+      <NuxtLink
+        v-for="item in navegacionMasSitio"
         :key="item.etiqueta"
         :to="item.ruta"
         :class="{ activo: esRutaActiva(item.ruta, item.exacta) }"

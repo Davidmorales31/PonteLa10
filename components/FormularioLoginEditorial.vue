@@ -144,6 +144,7 @@ onMounted(async () => {
 })
 
 function obtenerModoInicial(): ModoLoginEditorial {
+  if (route.query.modo === 'registro') return 'registro'
   return route.query.modo === 'actualizarContrasena' ? 'actualizarContrasena' : 'ingreso'
 }
 

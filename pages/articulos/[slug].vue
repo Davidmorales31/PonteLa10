@@ -169,7 +169,11 @@ function formatearFecha(fecha: string): string {
 <template>
   <article v-if="articuloPublicado" class="detalle-articulo detalle-articulo-publicado">
     <header class="cabecera-articulo-publicado">
-      <NuxtLink class="enlace-fuerte" to="/articulos">Volver a artículos</NuxtLink>
+      <p class="miga-articulo">
+        <NuxtLink to="/">Inicio</NuxtLink>
+        <span aria-hidden="true">/</span>
+        <NuxtLink to="/articulos">{{ articuloPublicado.categoria?.nombre || 'Noticias' }}</NuxtLink>
+      </p>
       <p class="etiqueta-seccion">
         {{ articuloPublicado.categoria?.nombre || 'Actualidad' }}
       </p>

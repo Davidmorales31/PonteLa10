@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronRight, Radio } from '@lucide/vue'
+import { ArrowRight, Radio } from '@lucide/vue'
 import type { PartidoResultado } from '~/types/resultados'
 
 const propiedades = defineProps<{ partidos: PartidoResultado[] }>()
@@ -16,7 +16,10 @@ const cantidadEnVivo = computed(() => propiedades.partidos.filter(partido => par
           <span v-else class="senal-resultados">Últimos resultados</span>
           <h2 id="titulo-marcadores-home">Marcadores</h2>
         </div>
-        <NuxtLink to="/resultados">Todos <ChevronRight aria-hidden="true" /></NuxtLink>
+        <NuxtLink to="/resultados">
+          Ver todos
+          <span class="icono-enlace-marcadores"><ArrowRight aria-hidden="true" /></span>
+        </NuxtLink>
       </div>
       <div class="carril-marcadores" tabindex="0" aria-label="Partidos destacados">
         <TarjetaMarcadorCompacto v-for="partido in partidosVisibles" :key="partido.id" :partido="partido" />

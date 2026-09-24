@@ -36,6 +36,12 @@ const anioActual = new Date().getFullYear()
         </NuxtLink>
       </nav>
 
+      <section class="patrocinio-pie-pagina" aria-label="Publicidad y alianzas">
+        <p>ANÚNCIATE CON NOSOTROS</p>
+        <strong>¿Quieres anunciarte en Pont3la10?</strong>
+        <a href="mailto:contact@pont3la10.com">contact@pont3la10.com</a>
+      </section>
+
     </div>
   </footer>
 </template>

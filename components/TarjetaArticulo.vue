@@ -2,16 +2,18 @@
 import type { ArticuloResumen } from '~/types/editorial'
 import { obtenerRutaArticulo } from '~/utils/rutasEditoriales'
 
-defineProps<{
+const props = defineProps<{
   articulo: ArticuloResumen
   variante?: 'compacta' | 'normal'
 }>()
+const imagenFallida = ref('')
+const tieneImagen = computed(() => Boolean(props.articulo.imagen?.trim()) && imagenFallida.value !== props.articulo.imagen)
 </script>
 
 <template>
-  <article :class="['tarjeta-articulo', variante === 'compacta' && 'tarjeta-articulo-compacta']">
-    <NuxtLink v-if="articulo.imagen" class="tarjeta-articulo-imagen" :to="obtenerRutaArticulo(articulo.slug)">
-      <img :src="articulo.imagen" :alt="articulo.titulo" loading="lazy">
+  <article :class="['tarjeta-articulo', variante === 'compacta' && 'tarjeta-articulo-compacta', { 'sin-portada': !tieneImagen }]">
+    <NuxtLink v-if="tieneImagen" class="tarjeta-articulo-imagen" :to="obtenerRutaArticulo(articulo.slug)">
+      <img :src="articulo.imagen" :alt="articulo.titulo" loading="lazy" @error="imagenFallida = articulo.imagen">
     </NuxtLink>
     <div class="tarjeta-articulo-cuerpo">
       <p class="etiqueta-seccion">{{ articulo.categoria }}</p>
@@ -23,3 +25,7 @@ defineProps<{
     </div>
   </article>
 </template>
+
+<style scoped>
+.tarjeta-articulo.sin-portada { grid-template-columns: minmax(0, 1fr); }
+</style>

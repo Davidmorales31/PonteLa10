@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { categoriasSitio, heroSitio, navegacionSitio } from '../../data/sitioPublico'
+import { categoriasSitio, navegacionMasSitio, navegacionSitio } from '../../data/sitioPublico'
 import {
   normalizarTextoBusqueda,
   obtenerAliasCategoria,
@@ -10,8 +10,7 @@ describe('configuración de la landing', () => {
   it('usa rutas internas para las acciones principales', () => {
     const rutas = [
       ...navegacionSitio.map(item => item.ruta),
-      heroSitio.accionPrincipal.ruta,
-      heroSitio.accionSecundaria.ruta,
+      ...navegacionMasSitio.map(item => item.ruta),
       ...categoriasSitio.map(categoria => categoria.ruta)
     ]
 

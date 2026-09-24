@@ -42,6 +42,7 @@ const { data: respuesta, status, error, refresh } = await useFetch<RespuestaResu
 })
 const estadoActivo = ref<EstadoPartido | 'todos'>('todos')
 const soloSeguidos = ref(false)
+const ahoraResultados = ref<number | null>(null)
 const { partidosSeguidos } = useSeguimientoPartidos()
 
 const partidosFiltrados = computed(() => (respuesta.value?.partidos || []).filter(partido =>
@@ -65,19 +66,21 @@ const tituloResultados = computed(() => (
     ? 'Resultados y marcadores'
     : `Resultados de ${nombresDeporte[propiedades.deporte]}`
 ))
-const etiquetaOrigen = computed(() => {
-  const etiquetas: Record<RespuestaResultados['origen'], string> = {
-    'api-sports': 'API-Football',
-    'api-basketball': 'API-Basketball',
-    'the-sports-db': 'TheSportsDB',
-    mixto: 'proveedores deportivos'
-  }
-  return respuesta.value ? etiquetas[respuesta.value.origen] : 'proveedor deportivo'
+const actualizadoHace = computed(() => {
+  if (!respuesta.value?.actualizadoEn || !ahoraResultados.value) return 'Actualizado recientemente'
+  const diferenciaMinutos = Math.max(0, Math.round((ahoraResultados.value - new Date(respuesta.value.actualizadoEn).getTime()) / 60000))
+  if (diferenciaMinutos < 1) return 'Actualizado hace unos segundos'
+  if (diferenciaMinutos === 1) return 'Actualizado hace 1 minuto'
+  return `Actualizado hace ${diferenciaMinutos} minutos`
+})
+
+onMounted(() => {
+  ahoraResultados.value = Date.now()
 })
 </script>
 
 <template>
-  <div class="pagina-resultados">
+  <div class="pagina-resultados pagina-publica-medio">
     <header class="cabecera-resultados">
       <div>
         <p><CircleDot aria-hidden="true" /> Resultados en vivo</p>
@@ -151,7 +154,7 @@ const etiquetaOrigen = computed(() => {
           <div class="titulo-panel-resultados">
             <div>
               <Trophy aria-hidden="true" />
-              <h2 id="titulo-partidos-resultados">Partidos destacados</h2>
+              <h2 id="titulo-partidos-resultados">Partidos</h2>
             </div>
             <span>{{ partidosSecundarios.length }} encuentros</span>
           </div>
@@ -176,7 +179,7 @@ const etiquetaOrigen = computed(() => {
         <section class="panel-resultados aviso-fuente-resultados">
           <strong>Datos actualizados</strong>
           <p>
-            {{ respuesta.aviso || `Marcadores actualizados automáticamente desde ${etiquetaOrigen}.` }}
+            {{ respuesta.aviso || actualizadoHace }}
           </p>
         </section>
       </aside>

@@ -32,8 +32,70 @@
   portada ausente con la imagen de estadio; omiten por completo el bloque de
   imagen. La navegación marca únicamente la categoría actual y el pie identifica
   el producto como propiedad de `labs.pont3la10.com`.
+- **UI/UX pública (2026-09-23, rama `codex/ui-ux-publico`, sin integrar):** la
+  home reemplaza el hero institucional por una portada editorial tomada del CMS
+  (noticia destacada o la más reciente), conserva la franja de marcadores y usa
+  una lista con horas para las últimas noticias. La navegación principal incluye
+  Resultados y Especiales; Tech, Gaming, Tendencias y Opinión pasan al menú Más.
+  Se añadió un house ad accesible e identificado de Pont3la10 Labs, filtros
+  rápidos en Noticias, estados honestos para Especiales, breadcrumb de artículo,
+  CTA comercial en el pie, registro directo con `?modo=registro`, cuenta pública
+  separada y enlaces navegables en Tendencias. No se alteró CMS, Supabase ni el
+  worker. Validaciones: lint, 89 pruebas unitarias, typecheck, build de Nuxt con
+  `NUXT_IGNORE_LOCK=1` y revisión manual local. Falta revisión visual final del
+  responsable y autorización para commit/integración a `main`.
 
 ## Terminado en el repositorio
+
+- **Ajuste visual por referencia (2026-09-23, local):** home navy con acentos
+  amarillos, apertura principal + tres secundarias, últimas junto al anuncio real
+  `public/publicidad/pont3la10-labs.png`, resultados reutilizados y categorías
+  compactas. `NoticiaPortada` y tarjetas de listado eliminan la imagen y su columna
+  si está ausente o falla; el anuncio tiene alternativa textual si falla su imagen.
+  Verificado en navegador a 1440 y 390 px, sin desborde horizontal móvil, anuncio
+  real cargado. ESLint y 89 pruebas pasan. Corrección al reporte anterior:
+  `npm run typecheck` NO está verde; descubre copias en `_RESPALDOS_POR_ELIMINAR`
+  y un tipo incompatible de temporizador en `useAlertasEditoriales.ts:23`.
+  No se modificaron estos archivos ajenos al ajuste visual.
+
+- **Extensión visual a pestañas públicas (2026-09-24, local):** se añadió
+  `useTemaPublico` para alternar modo azul y modo blanco clásico desde la cabecera,
+  persistido en `localStorage` y aplicado al `body` sin acumular clases. La estética
+  navy/amarilla de la home se extendió a Noticias, Resultados, Especiales y categorías
+  públicas. `/articulos` fue rehecha como pantalla editorial tipo referencia: franja
+  de marcadores, chips de categorías, noticia principal real, bloque de tendencias,
+  grilla de últimas noticias, boletín y selección editorial, siempre desde artículos
+  publicados y sin inventar contenido ni reservar espacios para imágenes ausentes.
+  Verificado en navegador local: `/articulos`, categorías principales, `/resultados`
+  y `/especiales` cargan 200, sin overflow desktop; móvil queda en una columna con
+  filtros/carril horizontal. Lint, prueba focal de landing, build aislado y
+  `git diff --check` pasan. `typecheck` falla por la deuda ya documentada:
+  respaldos dentro de `_RESPALDOS_POR_ELIMINAR/...` y
+  `composables/useAlertasEditoriales.ts:23`; no se observó fallo nuevo del cambio
+  visual.
+
+- **Resultados en modo azul (2026-09-24, local):** las tarjetas compactas de
+  partidos y los estados de datos vacíos/error ya reciben la misma superficie
+  navy, bordes y tipografía clara en cualquier pantalla que los reutilice
+  (portada, listados y detalle), no solo en Inicio. El modo blanco conserva su
+  variante clara. Se verificó en `/resultados` tanto con partidos como con el
+  filtro vacío de "Siguiendo".
+
+- **Pulido de Noticias y detalle deportivo (2026-09-24, local):** los filtros
+  de Noticias ahora usan iconos de interfaz en lugar de abreviaturas, reducen
+  su altura y conservan rutas reales. Una tendencia sin portada cambia a dos
+  columnas, por lo que no reserva un hueco de imagen. El tema azul también cubre
+  skeletons de Resultados, panel de eventos, minuto, marcador, iconos de gol,
+  cambio y tarjeta, última jugada e indicadores: ya no quedan superficies
+  blancas en el historial del partido. Verificado en Noticias de fútbol y en
+  un detalle de partido con eventos reales.
+
+- **Worker local de ingestas (2026-09-24):** se comprobó que no había ningún
+  proceso `procesar_ingestas_durable.mjs` activo, lo que explica un registro
+  que conservaba el estado `processing` al 45 %. Se volvió a iniciar con
+  `npm.cmd run worker:ingestas`; superó autenticación y preflight de Supabase,
+  yt-dlp y Whisper. La cola conserva dos fallos reencolables y el proceso
+  durable se encargará de liberar una asignación expirada según su lease.
 
 - Base Nuxt 3, identidad visual, sitio público y panel administrativo.
 - Autenticación pública opcional y acceso editorial protegido, recuperación y MFA.
@@ -213,6 +275,15 @@ y `git diff --check`. La interfaz local verificó botón, confirmación y bloque
 durante la llamada; los errores de acciones ahora se muestran solo con la alerta
 global. La migración `0015` devolvió éxito en Supabase. El servidor de desarrollo
 está en `http://127.0.0.1:3001`.
+
+**Pulido público y reintentos (2026-09-24):** la franja de marcadores ya
+hereda el fondo completo del modo azul en Noticias y el modo blanco fuerza sus
+superficies claras incluso cuando el componente se reutiliza fuera de Inicio.
+Los enlaces de la franja y el menú “Más” usan iconos Lucide consistentes. Se
+validaron visualmente ambos temas, `lint`, las 2 pruebas de `landing` y
+`git diff --check`. Con sesión editorial de propietario se reencolaron las dos
+ingestas fallidas: la primera avanzó a `Procesando` (1 %) y la segunda quedó en
+cola con el worker local activo.
 
 ## Documentos posiblemente desactualizados
 
