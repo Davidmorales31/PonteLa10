@@ -3582,6 +3582,28 @@
   font-weight: 800;
 }
 
+.aviso-recomendacion-editorial,
+.aviso-editor-solo-lectura {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin: 12px 0 0;
+  border-left: 4px solid #d39e00;
+  background: #fff9e6;
+  color: #664b00;
+  padding: 11px 14px;
+  font-size: 0.74rem;
+  font-weight: 750;
+  line-height: 1.45;
+}
+
+.aviso-recomendacion-editorial svg,
+.aviso-editor-solo-lectura svg {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
 .resumen-cola-ingestas {
   display: flex;
   min-height: 66px;
@@ -3726,6 +3748,18 @@
   height: 12px;
   flex: 0 0 auto;
 }
+
+.progreso-ingesta {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+  color: #526075;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+.progreso-ingesta > div { display: flex; justify-content: space-between; gap: 8px; text-transform: capitalize; }
+.progreso-ingesta > span { display: block; height: 7px; overflow: hidden; border-radius: 999px; background: #dce6f4; }
+.progreso-ingesta i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #174ea6, #ffd800); transition: width 500ms ease; }
 
 .estado-ingesta {
   display: inline-flex;
@@ -5857,13 +5891,16 @@
 
 @media (max-width: 720px) {
   .barra-etapas-editor ol {
-    min-width: 650px;
+    min-width: 0;
   }
 
   .barra-etapas-editor button {
-    min-height: 74px;
-    grid-template-columns: 32px minmax(0, 1fr);
-    padding: 10px;
+    min-height: 70px;
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 4px;
+    padding: 8px 4px;
+    text-align: center;
   }
 
   .icono-paso-editor {
@@ -5873,6 +5910,20 @@
 
   .texto-paso-editor > span {
     display: none;
+  }
+
+  .texto-paso-editor {
+    justify-items: center;
+  }
+
+  .texto-paso-editor small {
+    display: none;
+  }
+
+  .texto-paso-editor strong {
+    font-size: 0.63rem;
+    line-height: 1.15;
+    white-space: normal;
   }
 
   .cabecera-etapa-editor {

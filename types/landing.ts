@@ -49,8 +49,6 @@ export interface HeroLanding {
   accionSecundaria: AccionLanding
   imagen: string
   descripcionImagen: string
-  estadisticas: EstadisticaHeroLanding[]
-  tarjetasFlotantes: TarjetaFlotanteLanding[]
 }
 
 export interface ArticuloLanding {
@@ -115,5 +113,4 @@ export interface ColumnaFooterLanding {
 export interface FooterLanding {
   descripcion: string
   columnas: ColumnaFooterLanding[]
-  textoNewsletter: string
 }

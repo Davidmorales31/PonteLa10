@@ -30,6 +30,12 @@ export type EtapaIngestaEditorial =
   | 'persisting_evidence'
   | 'completed'
 
+export type EstadoRedaccionIngestaEditorial =
+  | 'running'
+  | 'completed'
+  | 'failed'
+  | null
+
 export interface ReglasIngestaEditorial {
   tipoContenido: TipoContenidoEditorial | 'auto'
   conservarVideo: boolean
@@ -60,12 +66,15 @@ export interface IngestaEditorial {
   solicitanteId: string
   solicitanteNombre: string
   articuloId: string | null
+  preparadaParaRevisionEn: string | null
+  codigoPreparacion: string
+  estadoRedaccion: EstadoRedaccionIngestaEditorial
   etapaProcesamiento: EtapaIngestaEditorial | null
   progresoPorcentaje: number
   intentoActualId: string | null
   leaseHasta: string | null
   ultimaActividadEn: string | null
-  idiomaFuente: 'es' | 'en' | null
+  idiomaFuente: string | null
   recuperable: boolean
   versionResultado: number
   intentos: number
@@ -105,4 +114,10 @@ export interface ResultadoReencolarIngestaEditorial {
 export interface ResultadoEliminacionIngestaEditorial {
   id: string
   eliminadoEn: string
+}
+
+export interface ResultadoBorradorDesdeIngesta {
+  id: string
+  slug: string
+  yaExistia: boolean
 }

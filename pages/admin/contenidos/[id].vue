@@ -45,6 +45,7 @@ import type {
 import type { MedioEditorial } from '~/types/mediaEditorial'
 import {
   crearSlugEditorial,
+  esEstadoEditableContenido,
   esquemaDatosEditorArticulo,
   etiquetasEstadoContenido
 } from '~/utils/editorial/contenido'
@@ -138,7 +139,6 @@ const errorGuardado = ref('')
 const conflictoVersion = ref(false)
 const notaCambio = ref('')
 const ultimoAutoguardado = ref('')
-let temporizadorAutoguardado: ReturnType<typeof setTimeout> | null = null
 
 const idsPasosEditor: IdPasoEditorEditorial[] = [
   'contenido',
@@ -176,7 +176,45 @@ const categoriaActual = computed(() => taxonomias.value?.categorias
 
 const totalPalabras = computed(() => contarPalabrasDocumento(documentoActual.value))
 const minutosLectura = computed(() => estimarMinutosLectura(documentoActual.value))
-const puedeEditar = computed(() => Boolean(articulo.value?.puedeEditar))
+// La API ya entrega este dato condicionado por permisos y estado. Se comprueba
+// también aquí para que una respuesta antigua nunca habilite controles de
+// edición cuando el contenido ya está en revisión.
+const puedeEditar = computed(() => {
+  const detalle = articulo.value
+  return Boolean(
+    detalle?.puedeEditar
+    && esEstadoEditableContenido(detalle.estado)
+  )
+})
+const hayCambiosQueBloqueanFlujo = computed(() => puedeEditar.value && cambiosPendientes.value)
+const puedeGestionarDestacada = computed(() =>
+  articulo.value?.estado === 'published'
+  && articulo.value.funcionDestacadaDisponible
+  && tienePermiso('contenido.publicar')
+)
+const puedeCambiarPortadaRapida = computed(() => {
+  const estado = articulo.value?.estado
+  const nivelAal = contextoEditorial.value?.nivelAal
+  if (estado === 'review') return tienePermiso('contenido.revisar')
+  if (estado === 'approved') return tienePermiso('contenido.aprobar')
+  if (estado === 'scheduled') {
+    return tienePermiso('contenido.programar') && nivelAal === 'aal2'
+  }
+  if (estado === 'published') {
+    return tienePermiso('contenido.publicar') && nivelAal === 'aal2'
+  }
+  return false
+})
+const guiaEstadoEditorial = computed(() => {
+  if (!articulo.value) return ''
+  if (articulo.value.estado === 'review') {
+    return 'Está en revisión: puedes aprobarlo directamente. Puedes cambiar solo la portada sin salir de revisión; para ajustar texto o etiquetas, usa “Solicitar cambios” y el editor se reabrirá.'
+  }
+  if (articulo.value.estado === 'approved') {
+    return 'El contenido ya está aprobado. El siguiente paso es programarlo o publicarlo.'
+  }
+  return 'Completa las etapas en orden. El sistema conserva las decisiones editoriales separadas de los cambios del borrador.'
+})
 const pasosEditor = computed<PasoEditorEditorial[]>(() => {
   const completitud = evaluarCompletitudEditor({
     datos: formulario.value,
@@ -218,8 +256,7 @@ const indicePasoActual = computed(() => Math.max(
 ))
 const configuracionPasoActual = computed(() => pasosEditor.value[indicePasoActual.value])
 const retornoEditor = computed(() => route.fullPath)
-const motivosBloqueoFlujo = computed(() => {
-  const motivos: Partial<Record<AccionFlujoEditorial['id'], string>> = {}
+const recomendacionesFlujo = computed(() => {
   const faltantes: string[] = []
 
   if (!portadaSeleccionada.value) faltantes.push('una portada')
@@ -227,14 +264,9 @@ const motivosBloqueoFlujo = computed(() => {
     faltantes.push('una descripción SEO de al menos 40 caracteres')
   }
 
-  if (faltantes.length) {
-    const motivo = `Antes de aprobar faltan ${faltantes.join(' y ')}. Solicita cambios para habilitar la edición.`
-    motivos.aprobar = motivo
-    motivos.programar = motivo
-    motivos.publicar = motivo
-  }
-
-  return motivos
+  return faltantes.length
+    ? `Recomendación antes de publicar: añade ${faltantes.join(' y ')}.`
+    : ''
 })
 const contenidoCabeceraPaso = computed(() => ({
   contenido: {
@@ -309,6 +341,16 @@ function aplicarDatos(datos: DatosEditorArticulo) {
   bloques.value = convertirDocumentoABloques(datos.documento)
 }
 
+function aplicarSugerenciasPredeterminadas() {
+  if (!puedeEditar.value || articulo.value?.autoguardado || !formulario.value) return
+  const datos = formulario.value
+  if (!datos.seo.titulo.trim()) datos.seo.titulo = datos.titulo.slice(0, 70)
+  if (!datos.seo.descripcion.trim()) datos.seo.descripcion = datos.resumen.slice(0, 170)
+  if (!datos.seo.textoSocial.trim()) {
+    datos.seo.textoSocial = `${datos.titulo}. ${datos.resumen}`.slice(0, 300)
+  }
+}
+
 function extraerDatosDetalle(
   detalle: ArticuloDetalleEditorial
 ): DatosEditorArticulo {
@@ -338,6 +380,7 @@ function inicializarEditor(detalle: ArticuloDetalleEditorial) {
   conflictoVersion.value = false
   nextTick(() => {
     inicializando.value = false
+    aplicarSugerenciasPredeterminadas()
   })
 }
 
@@ -346,10 +389,8 @@ watch(articulo, (detalle) => {
 }, { immediate: true })
 
 function programarAutoguardado() {
-  if (!import.meta.client || !puedeEditar.value || !cambiosPendientes.value) return
-
-  if (temporizadorAutoguardado) clearTimeout(temporizadorAutoguardado)
-  temporizadorAutoguardado = setTimeout(realizarAutoguardado, 2500)
+  // El borrador se guarda explícitamente: no se crean copias temporales que
+  // puedan competir con la generación automática ni con el flujo editorial.
 }
 
 watch([formulario, bloques], () => {
@@ -362,34 +403,6 @@ watch([formulario, bloques], () => {
   programarAutoguardado()
 }, { deep: true })
 
-async function realizarAutoguardado() {
-  if (
-    !datosActuales.value
-    || !cambiosPendientes.value
-    || guardando.value
-    || autoguardando.value
-  ) return
-
-  autoguardando.value = true
-
-  try {
-    const respuesta = await $fetch<{ actualizadoEn: string }>(
-      `/api/admin/contenidos/${articuloId.value}/autoguardado`,
-      {
-        method: 'PUT',
-        body: {
-          versionBase: versionBloqueo.value,
-          datos: datosActuales.value
-        }
-      }
-    )
-    ultimoAutoguardado.value = respuesta.actualizadoEn
-  } catch {
-    errorGuardado.value = 'No se pudo completar el autoguardado.'
-  } finally {
-    autoguardando.value = false
-  }
-}
 
 function obtenerMensajePeticion(errorPeticion: unknown): string {
   const errorConDatos = errorPeticion as {
@@ -409,6 +422,17 @@ function obtenerMensajePeticion(errorPeticion: unknown): string {
     || 'No se pudo guardar el contenido.'
 }
 
+function esErrorEstadoNoEditable(errorPeticion: unknown): boolean {
+  const errorConDatos = errorPeticion as {
+    data?: { codigo?: string, statusMessage?: string }
+    statusMessage?: string
+  }
+
+  return errorConDatos.data?.codigo === 'ESTADO_EDITORIAL_NO_EDITABLE'
+    || (errorConDatos.data?.statusMessage || errorConDatos.statusMessage || '')
+      .includes('no se puede editar')
+}
+
 async function guardarCambios() {
   if (!datosActuales.value || !puedeEditar.value) return
 
@@ -420,7 +444,6 @@ async function guardarCambios() {
     return
   }
 
-  if (temporizadorAutoguardado) clearTimeout(temporizadorAutoguardado)
   guardando.value = true
   errorGuardado.value = ''
   conflictoVersion.value = false
@@ -465,7 +488,18 @@ async function guardarCambios() {
         }
 
         await recargarVersiones()
+        await $fetch(`/api/admin/contenidos/${articuloId.value}/autoguardado`, {
+          method: 'DELETE'
+        }).catch(() => undefined)
       } catch (errorPeticion: unknown) {
+        if (esErrorEstadoNoEditable(errorPeticion)) {
+          await recargarArticulo()
+          if (articulo.value) inicializarEditor(articulo.value)
+          errorGuardado.value = articulo.value?.estado === 'review'
+            ? 'El contenido ya está en revisión. Se actualizó la pantalla: puedes aprobarlo o usar “Solicitar cambios” si aún necesitas ajustar algo.'
+            : 'El estado cambió mientras guardabas. La pantalla se actualizó antes de permitir otra acción.'
+          return
+        }
         errorGuardado.value = obtenerMensajePeticion(errorPeticion)
       } finally {
         guardando.value = false
@@ -503,6 +537,10 @@ async function recuperarAutoguardado() {
   const articuloActual = articulo.value
   const autoguardado = articuloActual?.autoguardado
   if (!articuloActual || !autoguardado) return
+  if (!puedeEditar.value) {
+    errorGuardado.value = 'El contenido está en revisión y no admite cambios. Solicita cambios si necesitas editarlo.'
+    return
+  }
 
   aplicarDatos(autoguardado.datos)
   await cargarPortada(autoguardado.datos.portadaId)
@@ -531,9 +569,40 @@ async function cargarPortada(portadaId: string | null) {
 
 function seleccionarPortada(medio: MedioEditorial) {
   if (!formulario.value) return
+  if (!puedeEditar.value) {
+    actualizarPortadaRapida(medio)
+    return
+  }
   formulario.value.portadaId = medio.id
   portadaSeleccionada.value = medio
   selectorPortadaAbierto.value = false
+}
+
+async function actualizarPortadaRapida(medio: MedioEditorial) {
+  if (!articulo.value || !puedeCambiarPortadaRapida.value) return
+  selectorPortadaAbierto.value = false
+  errorGuardado.value = ''
+
+  await ejecutarConBloqueo(
+    `portada-rapida:${articuloId.value}`,
+    'Actualizando portada',
+    async () => {
+      try {
+        await $fetch(`/api/admin/contenidos/${articuloId.value}/portada-rapida`, {
+          method: 'PUT',
+          body: {
+            versionBloqueo: articulo.value?.versionBloqueo,
+            portadaId: medio.id
+          }
+        })
+        await recargarArticulo()
+        if (articulo.value) inicializarEditor(articulo.value)
+        mensajeEstado.value = 'Portada actualizada sin cambiar el estado editorial.'
+      } catch (errorPeticion: unknown) {
+        errorGuardado.value = obtenerMensajePeticion(errorPeticion)
+      }
+    }
+  )
 }
 
 function quitarPortada() {
@@ -568,14 +637,15 @@ async function descartarAutoguardado() {
   )
 }
 
-async function realizarTransicion(entrada: EntradaTransicionEditorial) {
-  if (cambiosPendientes.value) {
+async function realizarTransicion(entrada: EntradaTransicionEditorial): Promise<boolean> {
+  if (hayCambiosQueBloqueanFlujo.value) {
     errorGuardado.value = 'Guarda los cambios pendientes antes de cambiar el estado.'
-    return
+    return false
   }
 
   errorGuardado.value = ''
   guardando.value = true
+  let completada = false
 
   await ejecutarConBloqueo(
     `transicion-editorial:${articuloId.value}`,
@@ -591,10 +661,37 @@ async function realizarTransicion(entrada: EntradaTransicionEditorial) {
         if (articulo.value) inicializarEditor(articulo.value)
         accionFlujoSeleccionada.value = null
         mensajeEstado.value = 'Estado editorial actualizado'
+        completada = true
       } catch (errorPeticion: unknown) {
         errorGuardado.value = obtenerMensajePeticion(errorPeticion)
       } finally {
         guardando.value = false
+      }
+    }
+  )
+
+  return completada
+}
+
+async function actualizarNoticiaDestacada(activa: boolean) {
+  if (!puedeGestionarDestacada.value) return
+
+  errorGuardado.value = ''
+  await ejecutarConBloqueo(
+    `destacar-articulo:${articuloId.value}`,
+    activa ? 'Destacando noticia en portada' : 'Retirando noticia destacada',
+    async () => {
+      try {
+        await $fetch(`/api/admin/contenidos/${articuloId.value}/destacada`, {
+          method: 'PUT',
+          body: { activa }
+        })
+        await recargarArticulo()
+        mensajeEstado.value = activa
+          ? 'La noticia quedó destacada en la portada.'
+          : 'La noticia dejó de estar destacada en la portada.'
+      } catch (errorPeticion: unknown) {
+        errorGuardado.value = obtenerMensajePeticion(errorPeticion)
       }
     }
   )
@@ -605,7 +702,30 @@ function abrirAccionFlujo(accion: AccionFlujoEditorial) {
 }
 
 async function confirmarAccionFlujo(entrada: EntradaTransicionEditorial) {
-  await realizarTransicion(entrada)
+  const transicionCompletada = await realizarTransicion(entrada)
+  if (!transicionCompletada || !entrada.aplicarConIa || !articulo.value) return
+
+  await ejecutarConBloqueo(
+    `reescritura-ia:${articuloId.value}`,
+    'Aplicando cambios solicitados con IA',
+    async () => {
+      try {
+        await $fetch(`/api/admin/contenidos/${articuloId.value}/reescritura-ia`, {
+          method: 'POST',
+          body: {
+            versionBloqueo: articulo.value?.versionBloqueo,
+            instruccion: entrada.nota
+          }
+        })
+        formulario.value = null
+        await recargarArticulo()
+        if (articulo.value) inicializarEditor(articulo.value)
+        mensajeEstado.value = 'La IA aplicó los cambios. Revísalos antes de enviar nuevamente a revisión.'
+      } catch (errorPeticion: unknown) {
+        errorGuardado.value = obtenerMensajePeticion(errorPeticion)
+      }
+    }
+  )
 }
 
 async function contenidoEliminado() {
@@ -658,9 +778,6 @@ function formatearFecha(fecha: string): string {
     .replace(/[\u00a0\u202f]/g, ' ')
 }
 
-onBeforeUnmount(() => {
-  if (temporizadorAutoguardado) clearTimeout(temporizadorAutoguardado)
-})
 </script>
 
 <template>
@@ -702,7 +819,7 @@ onBeforeUnmount(() => {
           <span v-if="guardando"><RefreshCw class="icono-girando" /> Guardando</span>
           <span v-else-if="autoguardando"><Clock3 /> Autoguardando</span>
           <span v-else-if="mensajeEstado"><Check /> {{ mensajeEstado }}</span>
-          <span v-else-if="cambiosPendientes"><Clock3 /> Cambios pendientes</span>
+          <span v-else-if="hayCambiosQueBloqueanFlujo"><Clock3 /> Cambios pendientes</span>
           <span v-else><ShieldCheck /> Todo guardado</span>
         </div>
 
@@ -767,6 +884,16 @@ onBeforeUnmount(() => {
         {{ errorGuardado }}
       </p>
 
+      <p v-if="!puedeEditar" class="aviso-editor-solo-lectura" role="status">
+        <ShieldCheck aria-hidden="true" />
+        {{ guiaEstadoEditorial }}
+      </p>
+
+      <p v-if="recomendacionesFlujo" class="aviso-recomendacion-editorial" role="status">
+        <AlertTriangle aria-hidden="true" />
+        {{ recomendacionesFlujo }} Puedes continuar si ya tomaste esa decisión editorial.
+      </p>
+
       <BarraEtapasEditor
         :pasos="pasosEditor"
         :paso-actual="pasoActual"
@@ -776,8 +903,7 @@ onBeforeUnmount(() => {
       <BarraAccionesFlujoEditorial
         v-if="flujo"
         :flujo="flujo"
-        :bloqueado="guardando || cambiosPendientes"
-        :motivos-bloqueo="motivosBloqueoFlujo"
+        :bloqueado="guardando || hayCambiosQueBloqueanFlujo"
         @seleccionar="abrirAccionFlujo"
       />
 
@@ -972,12 +1098,15 @@ onBeforeUnmount(() => {
               <button
                 class="boton-editorial-secundario"
                 type="button"
-                :disabled="!puedeEditar"
+                :disabled="!puedeEditar && !puedeCambiarPortadaRapida"
                 @click="selectorPortadaAbierto = true"
               >
                 <ImagePlus aria-hidden="true" />
                 {{ portadaSeleccionada ? 'Cambiar' : 'Elegir portada' }}
               </button>
+              <p v-if="!puedeEditar && puedeCambiarPortadaRapida" class="texto-secundario-editor">
+                Cambio rápido: actualiza solo la portada y conserva el estado actual.
+              </p>
               <button
                 v-if="portadaSeleccionada"
                 type="button"
@@ -1029,6 +1158,31 @@ onBeforeUnmount(() => {
                 <span>{{ etiqueta.nombre }}</span>
               </label>
             </div>
+
+            <section
+              v-if="puedeGestionarDestacada"
+              class="configuracion-destacada-portada"
+            >
+              <h2>Portada</h2>
+              <label>
+                <input
+                  type="checkbox"
+                  :checked="articulo?.destacadaEnPortada"
+                  @change="actualizarNoticiaDestacada(($event.target as HTMLInputElement).checked)"
+                >
+                <span>Noticia destacada del día</span>
+              </label>
+              <p>
+                Solo puede haber una. Al seleccionar esta, reemplaza la anterior
+                y aparece como “La jugada del día” en la portada.
+              </p>
+            </section>
+            <p
+              v-else-if="articulo?.estado !== 'published'"
+              class="texto-secundario-editor"
+            >
+              La destacada de portada se habilita cuando la noticia ya está publicada.
+            </p>
           </section>
 
           <section
@@ -1090,8 +1244,8 @@ onBeforeUnmount(() => {
             v-if="flujo"
             v-show="pasoActual === 'revision'"
             :flujo="flujo"
-            :bloqueado="guardando || cambiosPendientes"
-            :motivos-bloqueo="motivosBloqueoFlujo"
+            :bloqueado="guardando || hayCambiosQueBloqueanFlujo"
+            :mostrar-acciones="false"
             @seleccionar-accion="abrirAccionFlujo"
             @comentar="agregarComentarioRevision"
           />

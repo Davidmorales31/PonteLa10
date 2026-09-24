@@ -14,6 +14,7 @@ import type {
   AccionFlujoEditorial,
   EntradaTransicionEditorial
 } from '~/types/contenidoEditorial'
+import { fechaParaCampoLocal } from '~/utils/editorial/fechaProgramacion'
 
 const props = defineProps<{
   accion: AccionFlujoEditorial
@@ -29,9 +30,10 @@ const emit = defineEmits<{
 }>()
 
 const nota = ref('')
+const aplicarConIa = ref(false)
 const fechaProgramacion = ref(
   props.programadoPara
-    ? new Date(props.programadoPara).toISOString().slice(0, 16)
+    ? fechaParaCampoLocal(new Date(props.programadoPara))
     : ''
 )
 
@@ -50,7 +52,7 @@ const iconosAcciones = {
 const fechaMinimaProgramacion = computed(() => {
   const fecha = new Date(Date.now() + 5 * 60 * 1000)
   fecha.setSeconds(0, 0)
-  return fecha.toISOString().slice(0, 16)
+  return fechaParaCampoLocal(fecha)
 })
 
 const requiereVerificacion = computed(() =>
@@ -84,7 +86,9 @@ function confirmar() {
     nota: nota.value.trim(),
     programadoPara: props.accion.requiereProgramacion
       ? new Date(fechaProgramacion.value).toISOString()
-      : null
+      : null,
+    aplicarConIa: props.accion.estadoObjetivo === 'changes_requested'
+      && aplicarConIa.value
   })
 }
 </script>
@@ -139,6 +143,17 @@ function confirmar() {
               ? 'Explica el motivo de esta decisión'
               : 'Contexto opcional para el historial'"
           />
+        </label>
+
+        <label
+          v-if="accion.estadoObjetivo === 'changes_requested'"
+          class="opcion-ia-cambios-editorial"
+        >
+          <input v-model="aplicarConIa" type="checkbox">
+          <span>
+            Aplicar estos cambios con IA
+            <small>DeepSeek editará el borrador una vez. Después podrás revisarlo y aprobarlo tú.</small>
+          </span>
         </label>
 
         <aside v-if="requiereVerificacion" class="aviso-mfa-accion-editorial">

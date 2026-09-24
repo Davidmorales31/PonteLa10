@@ -51,6 +51,17 @@ export const etiquetasEstadoContenido: Record<EstadoContenidoEditorial, string> 
   archived: 'Archivado'
 }
 
+/**
+ * Los permisos determinan quién puede editar; el estado determina cuándo es
+ * válido hacerlo. Durante revisión y después de aprobar, cualquier ajuste debe
+ * volver primero a cambios solicitados o a una nueva revisión.
+ */
+export function esEstadoEditableContenido(
+  estado: EstadoContenidoEditorial
+): boolean {
+  return estado === 'draft' || estado === 'changes_requested'
+}
+
 export const etiquetasTipoContenido: Record<TipoContenidoEditorial, string> = {
   breve: 'Breve',
   noticia: 'Noticia',
@@ -284,6 +295,11 @@ export const esquemaTransicionEditorial = z.object({
 
 export const esquemaComentarioRevision = z.object({
   mensaje: z.string().trim().min(3).max(1000)
+})
+
+export const esquemaReescrituraIaEditorial = z.object({
+  versionBloqueo: z.number().int().positive(),
+  instruccion: z.string().trim().min(10).max(2000)
 })
 
 const definicionesAccionesFlujo: Record<

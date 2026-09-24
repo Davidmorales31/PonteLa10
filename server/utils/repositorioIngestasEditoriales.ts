@@ -7,8 +7,11 @@ import type {
   RespuestaBandejaIngestasEditoriales,
   ResultadoCancelacionIngestaEditorial,
   ResultadoEliminacionIngestaEditorial,
-  ResultadoReencolarIngestaEditorial
+  ResultadoReencolarIngestaEditorial,
+  ResultadoBorradorDesdeIngesta
 } from '~/types/ingestaEditorial'
+import type { ResultadoRedaccionIa } from '~/server/utils/ai/contratosRedaccion'
+import type { PropuestaBorradorIa } from '~/utils/editorial/redaccionIa'
 import {
   normalizarUrlFuenteEditorial,
   type esquemaCrearIngestaEditorial,
@@ -32,6 +35,11 @@ interface FilaPerfil {
   display_name: string
 }
 
+interface FilaGeneracionBorrador {
+  ingestion_id: string
+  status: NonNullable<IngestaEditorial['estadoRedaccion']>
+}
+
 interface FilaIngesta {
   id: string
   source_url: string
@@ -45,12 +53,14 @@ interface FilaIngesta {
   category_id: string | null
   requested_by: string
   article_id: string | null
+  prepared_for_review_at: string | null
+  preparation_error_code: string | null
   processing_stage: IngestaEditorial['etapaProcesamiento'] | null
   progress_percent: number | null
   current_attempt_id: string | null
   lease_expires_at: string | null
   heartbeat_at: string | null
-  source_language: 'es' | 'en' | null
+  source_language: string | null
   retryable: boolean | null
   result_version: number | null
   attempts: number
@@ -110,7 +120,8 @@ async function obtenerNombresSolicitantes(
 
 function mapearIngesta(
   fila: FilaIngesta,
-  nombres: Map<string, string>
+  nombres: Map<string, string>,
+  estadosRedaccion: Map<string, IngestaEditorial['estadoRedaccion']>
 ): IngestaEditorial {
   return {
     id: fila.id,
@@ -132,6 +143,9 @@ function mapearIngesta(
     solicitanteId: fila.requested_by,
     solicitanteNombre: nombres.get(fila.requested_by) || 'Equipo Pont3la10',
     articuloId: fila.article_id,
+    preparadaParaRevisionEn: fila.prepared_for_review_at,
+    codigoPreparacion: fila.preparation_error_code || '',
+    estadoRedaccion: estadosRedaccion.get(fila.id) || null,
     etapaProcesamiento: fila.processing_stage,
     progresoPorcentaje: fila.progress_percent || 0,
     intentoActualId: fila.current_attempt_id,
@@ -171,6 +185,8 @@ export async function listarIngestasEditoriales(
       category_id,
       requested_by,
       article_id,
+      prepared_for_review_at,
+      preparation_error_code,
       processing_stage,
       progress_percent,
       current_attempt_id,
@@ -220,10 +236,24 @@ export async function listarIngestasEditoriales(
   const filas = (data || []) as unknown as FilaIngesta[]
   const idsSolicitantes = [...new Set(filas.map(fila => fila.requested_by))]
   const nombres = await obtenerNombresSolicitantes(clienteSupabase, idsSolicitantes)
+  const { data: generaciones, error: errorGeneraciones } = filas.length
+    ? await clienteSupabase
+      .from('editorial_ai_generations')
+      .select('ingestion_id, status')
+      .in('ingestion_id', filas.map(fila => fila.id))
+      .order('created_at', { ascending: false })
+    : { data: [], error: null }
+  if (errorGeneraciones) {
+    throw crearErrorRepositorio('No se pudo cargar el estado de redacción de las ingestas.')
+  }
+  const estadosRedaccion = new Map<string, IngestaEditorial['estadoRedaccion']>()
+  for (const generacion of (generaciones || []) as FilaGeneracionBorrador[]) {
+    if (!estadosRedaccion.has(generacion.ingestion_id)) estadosRedaccion.set(generacion.ingestion_id, generacion.status)
+  }
   const total = count || 0
 
   return {
-    ingestas: filas.map(fila => mapearIngesta(fila, nombres)),
+    ingestas: filas.map(fila => mapearIngesta(fila, nombres, estadosRedaccion)),
     paginacion: {
       pagina: filtros.pagina,
       limite: filtros.limite,
@@ -414,13 +444,13 @@ export async function reencolarIngestaEditorial(
   }
 }
 
-export async function eliminarIngestaFallidaEditorial(
+export async function eliminarIngestaEditorial(
   clienteSupabase: SupabaseClient,
   ingestaId: string,
   confirmacion: string
 ): Promise<ResultadoEliminacionIngestaEditorial> {
   const { data, error } = await clienteSupabase.rpc(
-    'delete_failed_editorial_ingestion',
+    'delete_editorial_ingestion',
     { p_ingestion_id: ingestaId, p_confirmation: confirmacion }
   )
 
@@ -429,14 +459,111 @@ export async function eliminarIngestaFallidaEditorial(
     if (mensaje.includes('MFA') || mensaje.includes('permiso') || mensaje.includes('sesion')) {
       throw createError({ statusCode: 403, statusMessage: mensaje })
     }
-    if (mensaje.includes('solo puede eliminarse') || mensaje.includes('no existe')) {
+    if (mensaje.includes('procesándose') || mensaje.includes('publicado') || mensaje.includes('no existe')) {
       throw createError({ statusCode: 409, statusMessage: mensaje })
     }
-    throw crearErrorRepositorio('No se pudo eliminar la ingesta fallida.')
+    throw crearErrorRepositorio('No se pudo eliminar la ingesta.')
   }
 
   const resultado = data as { id: string, eliminadoEn: string } | null
   if (!resultado) throw crearErrorRepositorio('La eliminación no devolvió un resultado válido.')
 
   return { id: resultado.id, eliminadoEn: resultado.eliminadoEn }
+}
+
+interface FilaIngestaParaRedaccion {
+  id: string
+  status: string
+  result_version: number
+  article_id: string | null
+  title_hint: string | null
+  editorial_instructions: string | null
+  source_url: string
+  category_id: string | null
+  rules_snapshot: IngestaEditorial['reglas'] | null
+  processing_result: unknown
+}
+
+export async function obtenerIngestaParaRedaccion(clienteSupabase: SupabaseClient, ingestaId: string): Promise<FilaIngestaParaRedaccion> {
+  const { data, error } = await clienteSupabase.from('editorial_ingestions')
+    .select('id, status, result_version, article_id, title_hint, editorial_instructions, source_url, category_id, rules_snapshot, processing_result')
+    .eq('id', ingestaId).maybeSingle()
+  if (error) throw crearErrorRepositorio('No se pudo cargar la evidencia de la ingesta.')
+  if (!data) throw createError({ statusCode: 404, statusMessage: 'La ingesta no existe.', data: { codigo: 'INGESTA_NO_ENCONTRADA' } })
+  return data as FilaIngestaParaRedaccion
+}
+
+export function obtenerEvidenciaRedactable(fila: FilaIngestaParaRedaccion) {
+  if (fila.status !== 'evidence_ready' || fila.result_version !== 1) throw createError({ statusCode: 409, statusMessage: 'La ingesta todavía no tiene evidencia lista.' })
+  const evidencia = fila.processing_result as {
+    metadatos?: { creditos?: unknown }
+    original?: { segmentos?: unknown }
+    traduccion?: { segmentos?: unknown } | null
+  }
+  const originales = Array.isArray(evidencia?.original?.segmentos)
+    ? evidencia.original.segmentos
+    : []
+  const traducciones = new Map(
+    Array.isArray(evidencia?.traduccion?.segmentos)
+      ? evidencia.traduccion.segmentos.flatMap((segmento: unknown) => {
+        const valor = segmento as { segmentoId?: unknown, texto?: unknown }
+        return typeof valor.segmentoId === 'number' && typeof valor.texto === 'string'
+          ? [[valor.segmentoId, valor.texto] as const]
+          : []
+      })
+      : []
+  )
+  const segmentos = originales.flatMap((segmento: unknown) => {
+    const valor = segmento as { id?: unknown, inicioSegundos?: unknown, finSegundos?: unknown, texto?: unknown }
+    return typeof valor.id === 'number'
+      && typeof valor.inicioSegundos === 'number'
+      && typeof valor.finSegundos === 'number'
+      && valor.finSegundos > valor.inicioSegundos
+      && typeof valor.texto === 'string'
+      && valor.texto.trim()
+      ? [{ id: valor.id, inicioSegundos: valor.inicioSegundos, finSegundos: valor.finSegundos, texto: traducciones.get(valor.id) || valor.texto }]
+      : []
+  })
+  if (!segmentos.length) throw createError({ statusCode: 409, statusMessage: 'La evidencia no contiene segmentos utilizables para redactar.' })
+  return {
+    creditos: typeof evidencia?.metadatos?.creditos === 'string' && evidencia.metadatos.creditos.trim()
+      ? evidencia.metadatos.creditos
+      : 'Fuente original de la ingesta editorial',
+    segmentos
+  }
+}
+
+export async function reservarBorradorDesdeIngesta(clienteSupabase: SupabaseClient, ingestaId: string, requestId: string, promptHash: string) {
+  const { data, error } = await clienteSupabase.rpc('reserve_editorial_ai_draft', { p_ingestion_id: ingestaId, p_request_id: requestId, p_prompt_hash: promptHash })
+  if (error) throw createError({ statusCode: error.code === '42501' ? 403 : 409, statusMessage: error.message || 'No se pudo reservar la generación.' })
+  return data as { estado: 'reserved' | 'running' | 'completed', articleId?: string }
+}
+
+export async function registrarFalloBorradorDesdeIngesta(clienteSupabase: SupabaseClient, ingestaId: string, requestId: string, codigo: string, duracionMs: number) {
+  const { error } = await clienteSupabase.rpc('fail_editorial_ai_draft', {
+    p_ingestion_id: ingestaId,
+    p_request_id: requestId,
+    p_error_code: codigo,
+    p_duration_ms: duracionMs
+  })
+  if (error) throw crearErrorRepositorio('No se pudo cerrar la reserva fallida de IA.')
+}
+
+export async function crearBorradorDesdeIngesta(clienteSupabase: SupabaseClient, ingestaId: string, requestId: string, propuesta: PropuestaBorradorIa, redaccion: ResultadoRedaccionIa, promptHash: string): Promise<ResultadoBorradorDesdeIngesta> {
+  const { data, error } = await clienteSupabase.rpc('create_draft_from_editorial_ingestion', {
+    p_ingestion_id: ingestaId, p_request_id: requestId, p_provider: redaccion.proveedor, p_model: redaccion.modelo,
+    p_instruction_version: 'redaccion-v1', p_prompt_hash: promptHash, p_proposal: propuesta,
+    p_input_tokens: redaccion.consumo.tokensEntrada, p_output_tokens: redaccion.consumo.tokensSalida,
+    p_reasoning_tokens: redaccion.consumo.tokensRazonamiento, p_cost_usd: redaccion.consumo.costoUsd,
+    p_pricing_version: redaccion.consumo.versionTarifa, p_duration_ms: redaccion.consumo.duracionMs
+  })
+  if (error) {
+    const mensaje = error.message || ''
+    if (mensaje.includes('evidencia') || mensaje.includes('propuesta')) throw createError({ statusCode: 409, statusMessage: mensaje })
+    if (mensaje.includes('permiso') || mensaje.includes('sesión')) throw createError({ statusCode: 403, statusMessage: mensaje })
+    throw crearErrorRepositorio('No se pudo crear el borrador desde la ingesta.')
+  }
+  const resultado = data as { id?: string, slug?: string, yaExistia?: boolean } | null
+  if (!resultado?.id) throw crearErrorRepositorio('La creación del borrador no devolvió un resultado válido.')
+  return { id: resultado.id, slug: resultado.slug || '', yaExistia: Boolean(resultado.yaExistia) }
 }

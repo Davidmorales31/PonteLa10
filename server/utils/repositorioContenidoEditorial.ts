@@ -12,6 +12,7 @@ import type {
   CategoriaEditorial,
   ColaRevisionEditorial,
   ComentarioRevisionEditorial,
+  DatosEditorArticulo,
   EntradaTransicionEditorial,
   EnlaceArticuloInternoEditorial,
   EtiquetaInternaEditorial,
@@ -31,6 +32,7 @@ import {
   crearSlugEditorial,
   crearSufijoSlug,
   documentoEditorialVacio,
+  esEstadoEditableContenido,
   esquemaComentarioRevision,
   esquemaAutoguardadoArticulo,
   type esquemaCrearBorrador,
@@ -121,6 +123,10 @@ interface FilaArticuloDetalle extends FilaArticulo {
   article_tags: FilaRelacionTema[]
   article_labels: FilaRelacionEtiqueta[]
   media_files: FilaMedioEditorial | FilaMedioEditorial[] | null
+}
+
+interface FilaNoticiaDestacada {
+  id?: string
 }
 
 interface FilaAutoguardado {
@@ -254,7 +260,7 @@ async function validarEnlacesInternosEditoriales(
   const idsDisponibles = new Set((data || [])
     .filter(articulo => (
       articulo.published_version_id
-      && articulo.status !== 'archived'
+      && articulo.status === 'published'
     ))
     .map(articulo => articulo.id))
 
@@ -495,7 +501,8 @@ export async function obtenerArticuloEditorial(
     .safeParse(fila.body_json)
   const [
     respuestaAutoguardado,
-    autorNombre
+    autorNombre,
+    respuestaDestacada
   ] = await Promise.all([
     clienteSupabase
       .from('article_autosaves')
@@ -503,15 +510,18 @@ export async function obtenerArticuloEditorial(
       .eq('article_id', articuloId)
       .eq('user_id', usuarioId)
       .maybeSingle(),
-    obtenerNombreAutor(clienteSupabase, fila.author_id)
+    obtenerNombreAutor(clienteSupabase, fila.author_id),
+    clienteSupabase.rpc('get_public_editorial_home_feature')
   ])
 
   if (respuestaAutoguardado.error) {
     throw crearErrorRepositorio('No se pudo recuperar el autoguardado.')
   }
 
-  const puedeEditar = permisos.editarTodos
+  const tienePermisoEdicion = permisos.editarTodos
     || (permisos.editarPropio && fila.author_id === usuarioId)
+  const puedeEditar = tienePermisoEdicion
+    && esEstadoEditableContenido(fila.status)
   const filaPortada = Array.isArray(fila.media_files)
     ? fila.media_files[0]
     : fila.media_files
@@ -552,6 +562,12 @@ export async function obtenerArticuloEditorial(
     programadoPara: fila.scheduled_at,
     publicadoEn: fila.published_at,
     tieneVersionPublica: Boolean(fila.published_version_id),
+    funcionDestacadaDisponible: !respuestaDestacada.error,
+    // La marca es una mejora de portada: mientras la migración aún no esté
+    // aplicada, el editor existente debe seguir cargando y el control no se
+    // presenta como activo.
+    destacadaEnPortada: !respuestaDestacada.error
+      && (respuestaDestacada.data as FilaNoticiaDestacada | null)?.id === fila.id,
     puedeEditar,
     portada: filaPortada
       ? mapearMedioEditorial(clienteSupabase, filaPortada)
@@ -560,6 +576,142 @@ export async function obtenerArticuloEditorial(
       respuestaAutoguardado.data as FilaAutoguardado | null
     )
   }
+}
+
+export async function actualizarNoticiaDestacadaEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  activa: boolean
+): Promise<{ activa: boolean }> {
+  const { error } = activa
+    ? await clienteSupabase.rpc('set_editorial_home_feature', {
+      target_article_id: articuloId
+    })
+    : await clienteSupabase.rpc('clear_editorial_home_feature', {
+      target_article_id: articuloId
+    })
+
+  if (error) {
+    const mensaje = error.message || ''
+    if (mensaje.includes('MFA') || mensaje.includes('permiso') || mensaje.includes('sesión')) {
+      throw createError({ statusCode: 403, statusMessage: mensaje, data: { codigo: 'DESTACADA_EDITORIAL_NO_AUTORIZADA' } })
+    }
+    if (mensaje.includes('publicada')) {
+      throw createError({ statusCode: 422, statusMessage: mensaje, data: { codigo: 'DESTACADA_EDITORIAL_INVALIDA' } })
+    }
+    throw crearErrorRepositorio('No se pudo actualizar la noticia destacada.')
+  }
+
+  return { activa }
+}
+
+export async function actualizarPortadaRapidaEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  versionBloqueo: number,
+  portadaId: string
+): Promise<ResultadoGuardadoEditorial> {
+  const { data, error } = await clienteSupabase.rpc(
+    'update_editorial_article_cover_fast',
+    {
+      target_article_id: articuloId,
+      expected_lock_version: versionBloqueo,
+      next_cover_media_id: portadaId
+    }
+  )
+
+  if (error) {
+    const mensaje = error.message || ''
+    if (mensaje.includes('cambió en otra sesión')) {
+      throw createError({ statusCode: 409, statusMessage: mensaje, data: { codigo: 'VERSION_EDITORIAL_EN_CONFLICTO' } })
+    }
+    if (mensaje.includes('permiso') || mensaje.includes('MFA') || mensaje.includes('sesión')) {
+      throw createError({ statusCode: 403, statusMessage: mensaje, data: { codigo: 'PORTADA_RAPIDA_NO_AUTORIZADA' } })
+    }
+    if (mensaje.includes('portada') || mensaje.includes('disponible')) {
+      throw createError({ statusCode: 422, statusMessage: mensaje, data: { codigo: 'PORTADA_RAPIDA_INVALIDA' } })
+    }
+    throw crearErrorRepositorio('No se pudo actualizar la portada.')
+  }
+
+  const resultado = data as { id: string, lockVersion: number, updatedAt: string } | null
+  if (!resultado) throw crearErrorRepositorio('La portada no devolvió una versión válida.')
+  return {
+    id: resultado.id,
+    slug: '',
+    versionBloqueo: resultado.lockVersion,
+    actualizadoEn: resultado.updatedAt
+  }
+}
+
+export async function reservarReescrituraIaEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  requestId: string,
+  instruccion: string,
+  hash: string,
+  versionBloqueo: number
+): Promise<'reserved' | 'running'> {
+  const { data, error } = await clienteSupabase.rpc(
+    'reserve_editorial_ai_article_rewrite',
+    {
+      p_article_id: articuloId,
+      p_request_id: requestId,
+      p_instruction: instruccion,
+      p_prompt_hash: hash,
+      p_expected_lock_version: versionBloqueo
+    }
+  )
+
+  if (error) {
+    const mensaje = error.message || ''
+    if (mensaje.includes('permiso')) {
+      throw createError({ statusCode: 403, statusMessage: mensaje, data: { codigo: 'REESCRITURA_IA_NO_AUTORIZADA' } })
+    }
+    if (mensaje.includes('disponible')) {
+      throw createError({ statusCode: 409, statusMessage: 'El contenido cambió en otra sesión. Recarga antes de aplicar cambios con IA.', data: { codigo: 'VERSION_EDITORIAL_EN_CONFLICTO' } })
+    }
+    throw crearErrorRepositorio('No se pudo reservar la reescritura con IA.')
+  }
+
+  return (data as { estado?: string } | null)?.estado === 'running'
+    ? 'running'
+    : 'reserved'
+}
+
+export async function finalizarReescrituraIaEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  requestId: string,
+  proveedor: string,
+  modelo: string,
+  duracionMs: number,
+  propuesta: DatosEditorArticulo
+): Promise<void> {
+  const { error } = await clienteSupabase.rpc('finish_editorial_ai_article_rewrite', {
+    p_article_id: articuloId,
+    p_request_id: requestId,
+    p_provider: proveedor,
+    p_model: modelo,
+    p_duration_ms: duracionMs,
+    p_proposal: propuesta
+  })
+  if (error) throw crearErrorRepositorio('Los cambios se guardaron, pero no se pudo cerrar su trazabilidad IA.')
+}
+
+export async function registrarFalloReescrituraIaEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  requestId: string,
+  codigo: string,
+  duracionMs: number
+): Promise<void> {
+  await clienteSupabase.rpc('fail_editorial_ai_article_rewrite', {
+    p_article_id: articuloId,
+    p_request_id: requestId,
+    p_error_code: codigo,
+    p_duration_ms: duracionMs
+  })
 }
 
 export async function guardarArticuloEditorial(
@@ -841,6 +993,7 @@ export async function transicionarArticuloEditorial(
       mensaje.includes('necesita')
       || mensaje.includes('Selecciona')
       || mensaje.includes('Explica')
+      || mensaje.includes('Completa')
       || mensaje.includes('programación')
       || mensaje.includes('transición editorial')
     ) {
@@ -1169,6 +1322,33 @@ export async function listarArticulosPublicosEditoriales(
         ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
         : ''
     }))
+}
+
+export async function obtenerNoticiaDestacadaPublica(
+  clienteSupabase: SupabaseClient
+): Promise<ResumenArticuloPublico | null> {
+  const { data, error } = await clienteSupabase.rpc('get_public_editorial_home_feature')
+
+  if (error) {
+    throw crearErrorRepositorio('No se pudo cargar la noticia destacada.')
+  }
+
+  if (!data) return null
+
+  const fila = data as FilaResumenArticuloPublicoRpc
+  return {
+    id: fila.id,
+    slug: fila.slug,
+    titulo: fila.titulo,
+    resumen: fila.resumen,
+    tipo: fila.tipo,
+    publicadoEn: fila.publicadoEn,
+    autorNombre: fila.autorNombre,
+    categoria: fila.categoria,
+    imagen: fila.imagenBucket && fila.imagenPath
+      ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
+      : ''
+  }
 }
 
 async function validarCategoria(

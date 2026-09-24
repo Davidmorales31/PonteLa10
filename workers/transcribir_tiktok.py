@@ -86,8 +86,6 @@ def ejecutar(entrada: dict) -> dict:
         duracion = info.get("duration")
         if not isinstance(duracion, (int, float)) or duracion <= 0:
             raise RuntimeError("No se pudo confirmar la duración del video.")
-        if duracion > 180:
-            raise RuntimeError("El video supera los 180 segundos permitidos.")
 
         emitir_progreso(entrada, 2, "downloading_audio", 30)
         audio = next(carpeta.glob("audio.*"), None)
@@ -118,9 +116,10 @@ def ejecutar(entrada: dict) -> dict:
         if not resultado:
             raise RuntimeError("El video no produjo una transcripción utilizable.")
 
-        idioma = informacion.language
-        if idioma not in ("es", "en"):
-            raise RuntimeError("El idioma detectado no está soportado para esta ingesta.")
+        # La redacción editorial es en español, pero la fuente puede venir en
+        # cualquier idioma. El worker de Node traducirá al español cuando haga
+        # falta; rechazarla aquí desperdicia una transcripción válida.
+        idioma = informacion.language or "und"
 
         return {
             "metadatos": {

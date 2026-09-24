@@ -12,5 +12,5 @@ tabla y abrir solo el dominio afectado; no cargar todas las HU ni toda la docume
 | SEO | `docs/HU_ENLACES_INTERNOS_DISTRIBUCION.md` | composable/utilitario SEO, middleware privado, robots, sitemap, páginas públicas y pruebas |
 | Resultados deportivos | `docs/ARQUITECTURA_INICIAL.md` | `pages/resultados/`, componentes, utilitarios, seguimiento, APIs/clientes y pruebas deportivas |
 | Supabase | guías de configuración Supabase/CMS y `VALIDACIONES.md` | `supabase/migrations/`, plugins, cliente de servidor y tipos Supabase |
-| UI pública | `docs/ARQUITECTURA_INICIAL.md`, HU de enlaces/distribución | home, artículos, especiales, componentes públicos, layout, CSS y `data/landing.mock.ts` |
+| UI pública | `docs/ARQUITECTURA_INICIAL.md`, HU de enlaces/distribución | home, artículos, especiales, componentes públicos, layout, CSS y `data/sitioPublico.ts` |
 | CI y herramientas | contribución, estándares, `VALIDACIONES.md`, Memento y gobernanza GitHub | `package.json`, lockfile, configuraciones TS/Vitest/ESLint, `.github/`, `.gitignore` |

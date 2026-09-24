@@ -23,8 +23,9 @@ variables de producción, migraciones remotas ni pruebas manuales recientes.
 
 ## Parcialmente terminado
 
-- **Home pública:** experiencia base disponible, pero parte del contenido usa
-  `data/landing.mock.ts`.
+- **Home pública:** muestra únicamente artículos publicados por el CMS; los
+  elementos editoriales estáticos viven en `data/sitioPublico.ts` y no incluyen
+  noticias, métricas ni funciones simuladas.
 - **HU-ED-07, ingesta TikTok:** la bandeja y la base de cola están versionadas
   en `0010` (`24340c0`), con UI, API y pruebas unitarias. La extracción,
   transcripción, traducción, evidencia y ejecución durable no están en esta rama;

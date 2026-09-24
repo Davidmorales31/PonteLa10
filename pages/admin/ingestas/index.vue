@@ -41,6 +41,7 @@ useSeoMeta({
 })
 
 const { tienePermiso, contextoEditorial } = useContextoEditorial()
+const { $clienteSupabase } = useNuxtApp()
 const { ejecutarConBloqueo } = useBloqueoInterfaz()
 const { mostrarAlerta } = useAlertasEditoriales()
 const busqueda = ref('')
@@ -52,6 +53,7 @@ const formularioAbierto = ref(false)
 const guardando = ref(false)
 const cancelandoId = ref('')
 const reencolandoId = ref('')
+const reintentandoBorradorId = ref('')
 const ingestaAEliminar = ref<IngestaEditorial | null>(null)
 const errorAccion = ref('')
 const mensajeExito = ref('')
@@ -88,9 +90,75 @@ const paginacion = computed(() => respuesta.value?.paginacion || {
 const hayFiltros = computed(() => Boolean(
   busquedaAplicada.value || estado.value || plataforma.value
 ))
+const hayBorradorEnGeneracion = computed(() => ingestas.value.some(
+  ingesta => ingesta.estadoRedaccion === 'running'
+))
+
+let canalIngestas: ReturnType<NonNullable<typeof $clienteSupabase>['channel']> | null = null
+const borradoresNotificados = new Set<string>()
+onMounted(() => {
+  if (!$clienteSupabase) return
+  canalIngestas = $clienteSupabase
+    .channel('ingestas-editoriales-en-vivo')
+    .on('postgres_changes', {
+      event: '*', schema: 'public', table: 'editorial_ingestions'
+    }, evento => {
+      const ingestaActualizada = evento.new as {
+        id?: string
+        status?: string
+        article_id?: string
+        prepared_for_review_at?: string | null
+        preparation_error_code?: string | null
+      }
+      if (
+        ingestaActualizada.status === 'draft_created'
+        && ingestaActualizada.id
+        && ingestaActualizada.article_id
+        && ingestaActualizada.prepared_for_review_at
+        && !borradoresNotificados.has(ingestaActualizada.id)
+      ) {
+        borradoresNotificados.add(ingestaActualizada.id)
+        mostrarAlerta({
+          tipo: 'exito',
+          titulo: 'Borrador creado',
+          mensaje: 'La evidencia terminó de procesarse y el borrador ya está listo para tu revisión.'
+        })
+      }
+      if (ingestaActualizada.preparation_error_code && ingestaActualizada.id) {
+        mostrarAlerta({
+          tipo: 'advertencia',
+          titulo: 'Borrador pendiente de preparación',
+          mensaje: 'El borrador existe, pero necesita una revisión editorial antes de enviarlo a aprobación.'
+        })
+      }
+      void refresh()
+    })
+    .subscribe()
+})
+onBeforeUnmount(() => {
+  if (canalIngestas && $clienteSupabase) $clienteSupabase.removeChannel(canalIngestas)
+})
+
+let intervaloRespaldoBorradores: ReturnType<typeof setInterval> | null = null
+onMounted(() => {
+  intervaloRespaldoBorradores = setInterval(() => {
+    if (hayBorradorEnGeneracion.value) void refresh()
+  }, 4000)
+})
+onBeforeUnmount(() => {
+  if (intervaloRespaldoBorradores) clearInterval(intervaloRespaldoBorradores)
+})
 
 watch([estado, plataforma], () => {
   pagina.value = 1
+})
+
+watch(errorAccion, mensaje => {
+  if (mensaje) mostrarAlerta({ tipo: 'error', titulo: 'Acción editorial no completada', mensaje })
+})
+
+watch(mensajeExito, mensaje => {
+  if (mensaje) mostrarAlerta({ tipo: 'exito', titulo: 'Acción editorial completada', mensaje })
 })
 
 function aplicarBusqueda() {
@@ -208,9 +276,26 @@ async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial
   mostrarAlerta({
     tipo: 'exito',
     titulo: 'Ingesta eliminada',
-    mensaje: 'La solicitud fallida y su historial técnico fueron eliminados definitivamente.'
+    mensaje: 'La ingesta, su historial técnico y cualquier borrador automático asociado fueron eliminados definitivamente.'
   })
   await refresh()
+}
+
+async function reintentarBorrador(ingesta: IngestaEditorial) {
+  if (!confirm('Esto hará una nueva llamada a la IA usando la evidencia ya guardada. ¿Reintentar borrador?')) return
+  reintentandoBorradorId.value = ingesta.id
+  errorAccion.value = ''
+  mensajeExito.value = ''
+  try {
+    const resultado = await $fetch<{ id: string, yaExistia: boolean }>(`/api/admin/ingestas/${ingesta.id}/borrador`, { method: 'POST', body: { regenerar: true } })
+    mensajeExito.value = resultado.yaExistia ? 'El borrador ya existía.' : 'Borrador reintentado y listo para revisión humana.'
+    await refresh()
+  } catch (errorPeticion) {
+    errorAccion.value = obtenerMensajeError(errorPeticion, 'No se pudo reintentar el borrador.')
+    await refresh()
+  } finally {
+    reintentandoBorradorId.value = ''
+  }
 }
 </script>
 
@@ -245,16 +330,12 @@ async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial
     <p v-if="mensajeExito" class="aviso-exito-editorial" role="status">
       {{ mensajeExito }}
     </p>
-    <p v-if="errorAccion && !formularioAbierto" class="aviso-error-editorial" role="alert">
-      {{ errorAccion }}
-    </p>
-
     <section class="resumen-cola-ingestas" aria-label="Estado de la cola">
       <div>
         <FileInput aria-hidden="true" />
         <span><strong>{{ paginacion.total }}</strong> solicitudes registradas</span>
       </div>
-      <p>Esta fase termina en evidencia lista; la redacción del borrador queda para la siguiente historia.</p>
+      <p>La evidencia lista puede convertirse en un borrador trazable; toda publicación conserva aprobación humana.</p>
     </section>
 
     <section class="barra-filtros-editoriales" aria-label="Filtros de ingestas">
@@ -336,10 +417,12 @@ async function ingestaEliminada(_resultado: ResultadoEliminacionIngestaEditorial
           :ingestas="ingestas"
           :puede-gestionar="tienePermiso('ingestas.gestionar')"
           :puede-eliminar="tienePermiso('ingestas.eliminar')"
-          :cancelando-id="cancelandoId || reencolandoId"
+          :puede-redactar="tienePermiso('ingestas.redactar')"
+          :cancelando-id="cancelandoId || reencolandoId || reintentandoBorradorId"
           @cancelar="cancelarIngesta"
           @reencolar="reencolarIngesta"
           @eliminar="ingestaAEliminar = $event"
+          @reintentar-borrador="reintentarBorrador"
         />
 
         <footer class="paginacion-editorial">

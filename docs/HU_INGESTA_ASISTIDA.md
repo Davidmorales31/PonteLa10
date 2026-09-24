@@ -36,7 +36,8 @@ HU; redacción se documenta como frontera futura. Ver `PLAN_HU_ED_07.md`,
 ## Reglas de negocio
 
 - **RN01:** solo se procesan enlaces públicos de TikTok.
-- **RN02:** la duración máxima es de tres minutos.
+- **RN02:** no hay un límite fijo de duración; el worker conserva sus límites
+  de recursos, limpieza y tiempo de ejecución para proteger el equipo local.
 - **RN03:** la ingesta comienza automáticamente después de registrarse.
 - **RN04:** solo se procesa una ingesta a la vez en el equipo local.
 - **RN05:** no puede existir más de una ingesta activa para la misma URL normalizada.
@@ -73,9 +74,10 @@ HU; redacción se documenta como frontera futura. Ver `PLAN_HU_ED_07.md`,
 
 ### CA04 — Duración excedida
 
-- **DADO** un video mayor de tres minutos
+- **DADO** un video público de más de tres minutos
 - **CUANDO** se conoce su duración
-- **ENTONCES** el procesamiento se detiene, no se crea un artículo y se muestra un error comprensible.
+- **ENTONCES** el procesamiento continúa sujeto a los límites técnicos del
+  worker; no se rechaza solo por su duración.
 
 ### CA05 — Duplicado
 

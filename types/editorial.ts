@@ -55,6 +55,7 @@ export type PermisoEditorial =
   | 'ingestas.registrar'
   | 'ingestas.gestionar'
   | 'ingestas.eliminar'
+  | 'ingestas.redactar'
   | 'ingestas.worker.reclamar'
   | 'ingestas.worker.reportar'
   | 'ingestas.worker.finalizar'

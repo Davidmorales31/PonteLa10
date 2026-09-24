@@ -17,7 +17,11 @@ defineProps<{
         <span>{{ tendencia.posicion }}</span>
         <div>
           <p>{{ tendencia.categoria }}</p>
-          <h3>{{ tendencia.titulo }}</h3>
+          <h3>
+            <NuxtLink :to="{ path: '/articulos', query: { buscar: tendencia.titulo } }">
+              {{ tendencia.titulo }}
+            </NuxtLink>
+          </h3>
         </div>
       </li>
     </ol>

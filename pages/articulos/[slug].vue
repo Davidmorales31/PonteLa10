@@ -2,15 +2,10 @@
 import BarraCompartirArticulo from '~/components/editorial/BarraCompartirArticulo.vue'
 import ContenidoArticuloPublico from '~/components/editorial/ContenidoArticuloPublico.vue'
 import SeccionArticulosRelacionados from '~/components/editorial/SeccionArticulosRelacionados.vue'
-import { articulosRecientes } from '~/data/editorial'
 import type {
   ArticuloPublicoEditorial,
   ResumenArticuloPublico
 } from '~/types/contenidoEditorial'
-import {
-  convertirArticuloLandingAResumen,
-  obtenerArticuloLandingPorSlug
-} from '~/utils/articulosLanding'
 import {
   construirTituloMetaConMarca,
   robotsIndexables,
@@ -26,14 +21,6 @@ const { data: articuloPublicado } = await useFetch<ArticuloPublicoEditorial>(
     key: `articulo-publico-${slugActual.value}`,
     ignoreResponseError: true
   }
-)
-
-const articuloLanding = computed(() =>
-  obtenerArticuloLandingPorSlug(slugActual.value)
-)
-const articuloMock = computed(() => articuloLanding.value
-  ? convertirArticuloLandingAResumen(articuloLanding.value)
-  : articulosRecientes.find(item => item.slug === slugActual.value)
 )
 
 const { data: publicacionesDisponibles } = await useFetch<ResumenArticuloPublico[]>(
@@ -55,7 +42,7 @@ const articulosRelacionados = computed(() => {
   )
 })
 
-if (!articuloPublicado.value && !articuloMock.value) {
+if (!articuloPublicado.value) {
   if (import.meta.server) {
     const eventoSolicitud = useRequestEvent()
     eventoSolicitud?.node?.res?.setHeader('X-Robots-Tag', 'noindex, follow')
@@ -70,19 +57,18 @@ const urlCanonica = computed(() =>
 )
 const tituloSeo = computed(() => articuloPublicado.value
   ? articuloPublicado.value.seoTitulo || articuloPublicado.value.titulo
-  : articuloMock.value!.titulo
+  : 'Artículo no encontrado'
 )
 const tituloMeta = computed(() => construirTituloMetaConMarca(tituloSeo.value))
 const descripcionSeo = computed(() => articuloPublicado.value
   ? articuloPublicado.value.seoDescripcion || articuloPublicado.value.resumen
-  : articuloMock.value!.bajada
+  : 'La publicación solicitada no está disponible.'
 )
 const imagenSeo = computed(() => articuloPublicado.value?.portada?.url
-  || articuloMock.value?.imagen
+  || undefined
 )
 const imagenAltSeo = computed(() => articuloPublicado.value?.portada?.textoAlternativo
   || articuloPublicado.value?.titulo
-  || articuloMock.value?.titulo
   || 'Pont3la10'
 )
 const autorEstructurado = computed(() => {
@@ -183,7 +169,11 @@ function formatearFecha(fecha: string): string {
 <template>
   <article v-if="articuloPublicado" class="detalle-articulo detalle-articulo-publicado">
     <header class="cabecera-articulo-publicado">
-      <NuxtLink class="enlace-fuerte" to="/articulos">Volver a artículos</NuxtLink>
+      <p class="miga-articulo">
+        <NuxtLink to="/">Inicio</NuxtLink>
+        <span aria-hidden="true">/</span>
+        <NuxtLink to="/articulos">{{ articuloPublicado.categoria?.nombre || 'Noticias' }}</NuxtLink>
+      </p>
       <p class="etiqueta-seccion">
         {{ articuloPublicado.categoria?.nombre || 'Actualidad' }}
       </p>
@@ -249,27 +239,5 @@ function formatearFecha(fecha: string): string {
     />
 
     <SeccionArticulosRelacionados :articulos="articulosRelacionados" />
-  </article>
-
-  <article v-else-if="articuloMock" class="detalle-articulo">
-    <NuxtLink class="enlace-fuerte" to="/articulos">Volver a artículos</NuxtLink>
-    <p class="etiqueta-seccion">{{ articuloMock.categoria }}</p>
-    <h1>{{ articuloMock.titulo }}</h1>
-    <p class="resumen-articulo">{{ articuloMock.bajada }}</p>
-    <p class="meta-articulo">
-      {{ articuloMock.autor }} · {{ articuloMock.publicadoHace }} ·
-      {{ articuloMock.lecturaMinutos }} min
-    </p>
-    <img class="imagen-detalle" :src="articuloMock.imagen" :alt="articuloMock.titulo">
-    <div class="cuerpo-articulo">
-      <p>
-        Esta es una noticia de demostración para validar la experiencia editorial
-        de Pont3la10.
-      </p>
-      <p>
-        La regla desde el inicio: contexto claro, fuentes identificables y una
-        voz deportiva colombiana que informe sin titulares engañosos.
-      </p>
-    </div>
   </article>
 </template>

@@ -1,13 +1,7 @@
 <script setup lang="ts">
-import { footerLanding } from '~/data/landing.mock'
+import { pieSitio } from '~/data/sitioPublico'
 
 const anioActual = new Date().getFullYear()
-const redesSociales = [
-  { nombre: 'Instagram', red: 'instagram' as const, url: 'https://www.instagram.com/' },
-  { nombre: 'TikTok', red: 'tiktok' as const, url: 'https://www.tiktok.com/' },
-  { nombre: 'X', red: 'x' as const, url: 'https://x.com/' },
-  { nombre: 'YouTube', red: 'youtube' as const, url: 'https://www.youtube.com/' }
-]
 </script>
 
 <template>
@@ -22,23 +16,16 @@ const redesSociales = [
           loading="lazy"
           decoding="async"
         >
-        <p>{{ footerLanding.descripcion }}</p>
-        <div class="redes-pie-pagina" aria-label="Redes sociales">
-          <a
-            v-for="red in redesSociales"
-            :key="red.nombre"
-            :href="red.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            :aria-label="`Pont3la10 en ${red.nombre}`"
-            :title="red.nombre"
-          ><IconoRedSocial :red="red.red" /></a>
-        </div>
-        <small>© {{ anioActual }} Pont3la10. Todos los derechos reservados.</small>
+        <p>{{ pieSitio.descripcion }}</p>
+        <small>
+          © {{ anioActual }} Pont3la10. Todos los derechos reservados.
+          Producto propiedad de
+          <a href="https://labs.pont3la10.com" target="_blank" rel="noopener noreferrer">labs.pont3la10.com</a>.
+        </small>
       </section>
 
       <nav
-        v-for="columna in footerLanding.columnas"
+        v-for="columna in pieSitio.columnas"
         :key="columna.titulo"
         class="columna-pie-pagina"
         :aria-label="columna.titulo"
@@ -49,11 +36,12 @@ const redesSociales = [
         </NuxtLink>
       </nav>
 
-      <section class="newsletter-pie-pagina">
-        <strong>Newsletter</strong>
-        <p>{{ footerLanding.textoNewsletter }}</p>
-        <FormularioNewsletter />
+      <section class="patrocinio-pie-pagina" aria-label="Publicidad y alianzas">
+        <p>ANÚNCIATE CON NOSOTROS</p>
+        <strong>¿Quieres anunciarte en Pont3la10?</strong>
+        <a href="mailto:contact@pont3la10.com">contact@pont3la10.com</a>
       </section>
+
     </div>
   </footer>
 </template>

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import {
+  esEstadoEditableContenido,
   esquemaAutoguardadoArticulo,
   esquemaEliminarArticulo,
   esquemaGuardarArticulo
@@ -46,6 +47,14 @@ const datosValidos = {
 }
 
 describe('editor de artículos', () => {
+  it('solo habilita edición antes de revisión o cuando se solicitaron cambios', () => {
+    expect(esEstadoEditableContenido('draft')).toBe(true)
+    expect(esEstadoEditableContenido('changes_requested')).toBe(true)
+    expect(esEstadoEditableContenido('review')).toBe(false)
+    expect(esEstadoEditableContenido('approved')).toBe(false)
+    expect(esEstadoEditableContenido('published')).toBe(false)
+  })
+
   it('convierte bloques estructurados sin perder texto ni orden', () => {
     const documento = convertirBloquesADocumento([
       { id: 'uno', tipo: 'encabezado2', texto: 'La previa' },

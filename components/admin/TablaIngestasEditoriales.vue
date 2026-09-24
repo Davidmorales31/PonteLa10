@@ -4,13 +4,14 @@ import {
   AtSign,
   Camera,
   CircleAlert,
+  Eye,
   ExternalLink,
   FileCheck2,
+  FilePenLine,
   Globe2,
   Languages,
   LoaderCircle,
   MessageCircle,
-  Music2,
   Play,
   RotateCcw,
   Trash2,
@@ -24,11 +25,14 @@ import {
   etiquetasEstadoIngesta,
   etiquetasPlataformaIngesta
 } from '~/utils/editorial/ingestas'
+import IconoTikTok from '~/components/iconos/IconoTikTok.vue'
+import type { Component } from 'vue'
 
 defineProps<{
   ingestas: IngestaEditorial[]
   puedeGestionar: boolean
   puedeEliminar: boolean
+  puedeRedactar: boolean
   cancelandoId: string
 }>()
 
@@ -36,6 +40,7 @@ const emit = defineEmits<{
   cancelar: [ingesta: IngestaEditorial]
   reencolar: [ingesta: IngestaEditorial]
   eliminar: [ingesta: IngestaEditorial]
+  reintentarBorrador: [ingesta: IngestaEditorial]
 }>()
 
 const formatoFecha = new Intl.DateTimeFormat('es-CO', {
@@ -43,10 +48,10 @@ const formatoFecha = new Intl.DateTimeFormat('es-CO', {
   timeStyle: 'short'
 })
 
-const iconosPlataforma: Record<PlataformaIngestaEditorial, typeof Globe2> = {
+const iconosPlataforma: Record<PlataformaIngestaEditorial, Component> = {
   web: Globe2,
   youtube: Play,
-  tiktok: Music2,
+  tiktok: IconoTikTok,
   instagram: Camera,
   x: AtSign,
   facebook: MessageCircle
@@ -60,9 +65,6 @@ function puedeReencolar(ingesta: IngestaEditorial): boolean {
   return ingesta.estado === 'failed' && ingesta.recuperable
 }
 
-function esEliminable(ingesta: IngestaEditorial): boolean {
-  return ingesta.estado === 'failed' && !ingesta.articuloId && ingesta.versionResultado === 0
-}
 </script>
 
 <template>
@@ -101,7 +103,7 @@ function esEliminable(ingesta: IngestaEditorial): boolean {
           <td data-label="Estado">
             <span class="estado-ingesta" :data-estado="ingesta.estado">
               <LoaderCircle
-                v-if="ingesta.estado === 'processing'"
+                v-if="ingesta.estado === 'processing' || ingesta.estadoRedaccion === 'running'"
                 class="icono-girando"
                 aria-hidden="true"
               />
@@ -112,16 +114,26 @@ function esEliminable(ingesta: IngestaEditorial): boolean {
               <CircleAlert v-else-if="ingesta.estado === 'failed'" aria-hidden="true" />
               <Ban v-else-if="ingesta.estado === 'cancelled'" aria-hidden="true" />
               <TimerReset v-else aria-hidden="true" />
-              {{ etiquetasEstadoIngesta[ingesta.estado] }}
+              {{ ingesta.estadoRedaccion === 'running' ? 'Generando borrador con IA' : etiquetasEstadoIngesta[ingesta.estado] }}
             </span>
-            <small v-if="ingesta.estado === 'processing'" class="detalle-error-ingesta">
-              {{ ingesta.etapaProcesamiento || 'processing' }} · {{ ingesta.progresoPorcentaje }}%
+            <div v-if="ingesta.estado === 'processing'" class="progreso-ingesta" :aria-label="`Progreso: ${ingesta.progresoPorcentaje}%`">
+              <div><span>{{ ingesta.etapaProcesamiento || 'Procesando' }}</span><strong>{{ ingesta.progresoPorcentaje }}%</strong></div>
+              <span><i :style="{ width: `${ingesta.progresoPorcentaje}%` }" /></span>
+            </div>
+            <small v-else-if="ingesta.estadoRedaccion === 'running'" class="detalle-error-ingesta">
+              La evidencia ya está lista. DeepSeek está redactando y la bandeja se actualizará sola.
             </small>
             <small v-else-if="ingesta.estado === 'evidence_ready'" class="detalle-error-ingesta">
               Original {{ ingesta.idiomaFuente?.toUpperCase() || 'por revisar' }} · versión {{ ingesta.versionResultado }}
             </small>
             <small v-if="ingesta.mensajeError" class="detalle-error-ingesta">
               {{ ingesta.mensajeError }}
+            </small>
+            <small
+              v-if="puedeGestionar && puedeReencolar(ingesta)"
+              class="detalle-error-ingesta"
+            >
+              La corrección ya está lista: puedes reencolarla sin crear otra ingesta.
             </small>
           </td>
           <td data-label="Reglas">
@@ -146,24 +158,27 @@ function esEliminable(ingesta: IngestaEditorial): boolean {
           </td>
           <td data-label="Acciones">
             <button
-              v-if="puedeEliminar && esEliminable(ingesta)"
+              v-if="puedeEliminar"
               class="boton-icono-editorial boton-icono-editorial--peligro"
               type="button"
-              title="Eliminar ingesta fallida"
-              aria-label="Eliminar ingesta fallida"
+              title="Eliminar ingesta"
+              aria-label="Eliminar ingesta"
               @click="emit('eliminar', ingesta)"
             >
               <Trash2 aria-hidden="true" />
             </button>
             <button
               v-if="puedeGestionar && puedeReencolar(ingesta)"
-              class="boton-icono-editorial"
+              class="boton-editorial-secundario boton-reencolar-ingesta"
               type="button"
-              title="Reencolar evidencia"
-              aria-label="Reencolar evidencia"
+              title="Reintentar esta ingesta desde la evidencia"
+              aria-label="Reintentar esta ingesta desde la evidencia"
+              :disabled="cancelandoId === ingesta.id"
               @click="emit('reencolar', ingesta)"
             >
-              <RotateCcw aria-hidden="true" />
+              <LoaderCircle v-if="cancelandoId === ingesta.id" class="icono-girando" aria-hidden="true" />
+              <RotateCcw v-else aria-hidden="true" />
+              {{ cancelandoId === ingesta.id ? 'Reencolando' : 'Reintentar' }}
             </button>
             <NuxtLink
               v-if="ingesta.articuloId"
@@ -174,6 +189,27 @@ function esEliminable(ingesta: IngestaEditorial): boolean {
             >
               <FileCheck2 aria-hidden="true" />
             </NuxtLink>
+            <NuxtLink
+              v-if="ingesta.articuloId"
+              class="boton-icono-editorial"
+              :to="`/admin/contenidos/${ingesta.articuloId}?paso=revision`"
+              title="Ver contenido y revisión"
+              aria-label="Ver contenido creado en revisión"
+            >
+              <Eye aria-hidden="true" />
+            </NuxtLink>
+            <button
+              v-else-if="puedeRedactar && ingesta.estado === 'evidence_ready' && ingesta.estadoRedaccion !== 'running'"
+              class="boton-icono-editorial"
+              type="button"
+              title="Reintentar borrador"
+              aria-label="Reintentar borrador con la evidencia disponible"
+              :disabled="cancelandoId === ingesta.id"
+              @click="emit('reintentarBorrador', ingesta)"
+            >
+              <LoaderCircle v-if="cancelandoId === ingesta.id" class="icono-girando" aria-hidden="true" />
+              <FilePenLine v-else aria-hidden="true" />
+            </button>
             <button
               v-else-if="puedeGestionar && puedeCancelar(ingesta)"
               class="boton-icono-editorial boton-cancelar-ingesta"

@@ -31,15 +31,6 @@ defineProps<{
           <BotonBase :accion="datos.accionPrincipal" />
           <BotonBase :accion="datos.accionSecundaria" variante="secundario" />
         </div>
-        <EstadisticasHero :estadisticas="datos.estadisticas" />
-      </div>
-
-      <div class="tarjetas-flotantes-hero" aria-label="Destacados">
-        <TarjetaDestacadaFlotante
-          v-for="tarjeta in datos.tarjetasFlotantes"
-          :key="tarjeta.titulo"
-          :tarjeta="tarjeta"
-        />
       </div>
     </div>
   </section>

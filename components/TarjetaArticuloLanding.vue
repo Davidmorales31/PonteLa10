@@ -1,22 +1,24 @@
 <script setup lang="ts">
-import { Bookmark, Clock } from '@lucide/vue'
+import { Clock } from '@lucide/vue'
 import type { ArticuloLanding } from '~/types/landing'
 
-defineProps<{
+const props = defineProps<{
   articulo: ArticuloLanding
 }>()
+const imagenFallida = ref('')
+const tieneImagen = computed(() => Boolean(props.articulo.imagen?.trim()) && imagenFallida.value !== props.articulo.imagen)
 
-const guardado = ref(false)
 </script>
 
 <template>
-  <article class="tarjeta-articulo-landing">
-    <NuxtLink :to="articulo.ruta" class="imagen-tarjeta-articulo-landing">
+  <article class="tarjeta-articulo-landing" :class="{ 'sin-portada': !tieneImagen }">
+    <NuxtLink v-if="tieneImagen" :to="articulo.ruta" class="imagen-tarjeta-articulo-landing">
       <img
         :src="articulo.imagen"
         :alt="articulo.descripcionImagen"
         :style="{ objectPosition: articulo.posicionImagen || 'center' }"
         loading="lazy"
+        @error="imagenFallida = articulo.imagen"
       >
     </NuxtLink>
     <div class="contenido-tarjeta-articulo-landing">
@@ -27,17 +29,11 @@ const guardado = ref(false)
           <span>{{ articulo.publicadoHace }}</span>
           <span><Clock aria-hidden="true" /> {{ articulo.tiempoLectura }}</span>
         </p>
-        <button
-          type="button"
-          :class="{ guardado }"
-          :aria-pressed="guardado"
-          :aria-label="guardado ? 'Quitar de guardados' : 'Guardar artículo'"
-          :title="guardado ? 'Quitar de guardados' : 'Guardar artículo'"
-          @click="guardado = !guardado"
-        >
-          <Bookmark aria-hidden="true" />
-        </button>
       </footer>
     </div>
   </article>
 </template>
+
+<style scoped>
+.tarjeta-articulo-landing.sin-portada { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; }
+</style>

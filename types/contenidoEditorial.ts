@@ -228,6 +228,8 @@ export interface ArticuloDetalleEditorial extends DatosEditorArticulo {
   programadoPara: string | null
   publicadoEn: string | null
   tieneVersionPublica: boolean
+  funcionDestacadaDisponible: boolean
+  destacadaEnPortada: boolean
   puedeEditar: boolean
   portada: MedioEditorial | null
   autoguardado: AutoguardadoArticuloEditorial | null
@@ -317,6 +319,7 @@ export interface EntradaTransicionEditorial {
   versionBloqueo: number
   nota: string
   programadoPara: string | null
+  aplicarConIa?: boolean
 }
 
 export interface ElementoColaRevisionEditorial extends ArticuloBandejaEditorial {

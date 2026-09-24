@@ -63,7 +63,7 @@ export const esquemaMetadatosFuenteTikTok = z.object({
   titulo: z.string().trim().max(500).nullable(),
   autor: z.string().trim().max(160).nullable(),
   creditos: z.string().trim().min(1).max(500),
-  duracionSegundos: numeroTiempo.gt(0).max(180),
+  duracionSegundos: numeroTiempo.gt(0),
   consultadoEn: fechaUtc
 }).strict()
 
@@ -83,7 +83,10 @@ export const esquemaSegmentoOriginalIngesta = z.object({
 })
 
 export const esquemaTranscripcionOriginalIngesta = z.object({
-  idioma: z.enum(['es', 'en']),
+  // faster-whisper devuelve códigos ISO en minúscula. Solo el español evita la
+  // traducción; cualquier otro idioma válido se traduce al español antes de
+  // persistir la evidencia final.
+  idioma: z.string().regex(/^[a-z]{2,3}(?:-[A-Z]{2})?$/),
   modelo: z.string().trim().min(1).max(80),
   motor: z.literal('faster-whisper'),
   versionMotor: z.string().trim().min(1).max(40),
@@ -183,11 +186,11 @@ export const esquemaEvidenciaIngestaEditorial = z.object({
     })
   }
 
-  if (evidencia.original.idioma === 'en' && evidencia.traduccion === null) {
+  if (evidencia.original.idioma !== 'es' && evidencia.traduccion === null) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['traduccion'],
-      message: 'Las fuentes en inglés requieren traducción al español.'
+      message: 'Las fuentes que no están en español requieren traducción al español.'
     })
   }
 

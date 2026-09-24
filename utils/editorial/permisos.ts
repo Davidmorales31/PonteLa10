@@ -23,6 +23,7 @@ export const permisosEditoriales: PermisoEditorial[] = [
   'ingestas.registrar',
   'ingestas.gestionar',
   'ingestas.eliminar',
+  'ingestas.redactar',
   'ingestas.worker.reclamar',
   'ingestas.worker.reportar',
   'ingestas.worker.finalizar',
@@ -80,7 +81,8 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'taxonomia.ver',
     'taxonomia.gestionar',
     'ingestas.ver',
-    'ingestas.registrar'
+    'ingestas.registrar',
+    'ingestas.redactar'
   ],
   editor: [
     'panel.acceder',
@@ -95,7 +97,8 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'media.editar',
     'taxonomia.ver',
     'ingestas.ver',
-    'ingestas.registrar'
+    'ingestas.registrar',
+    'ingestas.redactar'
   ],
   autor: [
     'panel.acceder',
@@ -106,7 +109,8 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'media.ver',
     'media.subir',
     'taxonomia.ver',
-    'ingestas.registrar'
+    'ingestas.registrar',
+    'ingestas.redactar'
   ],
   colaborador: [
     'panel.acceder',
