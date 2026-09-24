@@ -285,6 +285,15 @@ validaron visualmente ambos temas, `lint`, las 2 pruebas de `landing` y
 ingestas fallidas: la primera avanzó a `Procesando` (1 %) y la segunda quedó en
 cola con el worker local activo.
 
+**Base SEO pública (2026-09-24):** se incorporaron las rutas evergreen
+`/partidos-hoy` y `/resultados/en-vivo`, ambas alimentadas únicamente por el
+endpoint real de resultados. Tienen title, descripción, canonical, JSON-LD,
+estados vacíos útiles y enlaces al detalle existente; el sitemap las incluye.
+Liga BetPlay, Selección Colombia y equipos quedan deliberadamente aplazados
+hasta disponer de datos reales suficientes. La cabecera importa de forma
+explícita `useTemaPublico`, eliminando el 500 que podía causar la resolución
+automática desactualizada del composable durante desarrollo.
+
 ## Documentos posiblemente desactualizados
 
 - `docs/ARQUITECTURA_INICIAL.md`: conserva el diseño de la primera etapa y no

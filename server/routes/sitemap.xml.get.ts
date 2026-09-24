@@ -16,7 +16,9 @@ export default defineEventHandler(async (evento) => {
   const entradas: EntradaSitemap[] = [
     { ruta: '/', frecuencia: 'daily', prioridad: '1.0' },
     { ruta: '/articulos', frecuencia: 'daily', prioridad: '0.9' },
+    { ruta: '/partidos-hoy', frecuencia: 'daily', prioridad: '0.9' },
     { ruta: '/resultados', frecuencia: 'daily', prioridad: '0.9' },
+    { ruta: '/resultados/en-vivo', frecuencia: 'daily', prioridad: '0.8' },
     { ruta: '/resultados/futbol', frecuencia: 'daily', prioridad: '0.8' },
     { ruta: '/resultados/baloncesto', frecuencia: 'daily', prioridad: '0.8' },
     { ruta: '/resultados/tenis', frecuencia: 'daily', prioridad: '0.7' },

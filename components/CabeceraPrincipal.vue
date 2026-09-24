@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronDown, Menu, Moon, Search, Sun, X } from '@lucide/vue'
 import { navegacionMasSitio, navegacionSitio } from '~/data/sitioPublico'
+import { useTemaPublico } from '~/composables/useTemaPublico'
 
 const rutaActual = useRoute()
 const menuAbierto = ref(false)
