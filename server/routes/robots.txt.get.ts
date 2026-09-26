@@ -13,6 +13,7 @@ export default defineEventHandler((evento) => {
     'Disallow: /admin',
     'Disallow: /api/',
     '',
-    `Sitemap: ${urlSitio}/sitemap.xml`
+    `Sitemap: ${urlSitio}/sitemap.xml`,
+    `Sitemap: ${urlSitio}/news-sitemap.xml`
   ].join('\n')
 })

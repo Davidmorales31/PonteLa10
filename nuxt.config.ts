@@ -1,5 +1,15 @@
 const supabaseUrl = process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ''
+const dominioProduccionVercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
+  ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+  : ''
+const urlPublica = process.env.NUXT_PUBLIC_SITE_URL || dominioProduccionVercel
+
+if (process.env.NODE_ENV === 'production' && !urlPublica) {
+  throw new Error(
+    'Configura NUXT_PUBLIC_SITE_URL (dominio canónico público) o VERCEL_PROJECT_PRODUCTION_URL antes de compilar para producción.'
+  )
+}
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
@@ -50,7 +60,7 @@ export default defineNuxtConfig({
     theSportsDbApiKey: process.env.NUXT_THE_SPORTS_DB_API_KEY || '123',
     theSportsDbBaseUrl: process.env.NUXT_THE_SPORTS_DB_BASE_URL || 'https://www.thesportsdb.com/api/v1/json',
     public: {
-      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://localhost:3001',
+      siteUrl: urlPublica || 'http://localhost:3001',
       supabaseUrl,
       supabaseKey
     }

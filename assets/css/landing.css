@@ -3154,3 +3154,298 @@ body.tema-publico-blanco .tarjeta-noticia-medio .etiqueta-seccion {
   background: #e9f7ff;
   color: #0b639c;
 }
+
+/* Inicio: las reglas locales del modo azul no deben filtrarse al tema clásico. */
+body.tema-publico-blanco .portada-medio,
+body.tema-publico-blanco .portada-medio :is(.medio-hero, .medio-ultimas, .medio-patrocinios) {
+  background: #f4f7fb;
+  color: #08204a;
+}
+body.tema-publico-blanco .portada-medio :is(.tarjeta-marcador-compacto, .medio-explora a) {
+  background: #fff !important;
+  border-color: #dbe2ee !important;
+  color: #08204a !important;
+}
+
+/* Inicio comparte el mismo carril adaptable de marcadores de Noticias. */
+.portada-medio .franja-marcadores-contenido {
+  width: min(1240px, calc(100% - 48px));
+}
+
+@media (max-width: 680px) {
+  .portada-medio .franja-marcadores-contenido {
+    width: 100%;
+  }
+}
+
+/* En tema claro, los elementos del marcador también deben recuperar el
+ * contraste clásico; la estructura scoped de Inicio no debe teñirlos de azul. */
+body.tema-publico-blanco .portada-medio .tarjeta-marcador-compacto {
+  background: #fff !important;
+  border-color: #dbe2ee !important;
+  color: #08204a !important;
+  box-shadow: 0 3px 12px rgba(8, 32, 74, .06) !important;
+}
+body.tema-publico-blanco .portada-medio .tarjeta-marcador-compacto header > span {
+  color: #5f6878 !important;
+}
+body.tema-publico-blanco .portada-medio .fila-equipo-marcador strong,
+body.tema-publico-blanco .portada-medio .fila-equipo-marcador b {
+  color: #08204a !important;
+}
+body.tema-publico-blanco .portada-medio .medio-explora a {
+  background: #fff !important;
+  border-color: #dbe2ee !important;
+  color: #08204a !important;
+}
+body.tema-publico-blanco .portada-medio .medio-explora a:hover {
+  border-color: #174ea6 !important;
+  color: #174ea6 !important;
+}
+body.tema-publico-blanco .portada-medio .medio-patrocinios {
+  background: #fff !important;
+  border-color: #dbe2ee !important;
+  border-left-color: #174ea6 !important;
+}
+body.tema-publico-blanco .portada-medio .noticia-portada {
+  border-color: #dbe2ee;
+  background: #fff;
+  box-shadow: 0 5px 18px rgba(8, 32, 74, .07);
+}
+body.tema-publico-blanco .portada-medio .noticia-portada:not(.principal) :is(h2, h2 a) {
+  color: #08204a;
+}
+body.tema-publico-blanco .portada-medio .noticia-portada:not(.principal) .categoria {
+  color: #174ea6;
+}
+body.tema-publico-blanco .portada-medio .noticia-portada:not(.principal) .resumen {
+  color: #5f6878;
+}
+body.tema-publico-blanco .portada-medio .noticia-portada.principal:not(.con-imagen) {
+  background: linear-gradient(145deg, #fff, #f4f7fb);
+  border-top-color: #174ea6;
+}
+body.tema-publico-blanco .portada-medio .noticia-portada.principal:not(.con-imagen) :is(h1, h1 a) {
+  color: #08204a;
+}
+body.tema-publico-blanco .portada-medio .noticia-portada.principal:not(.con-imagen) :is(.categoria, .resumen) {
+  color: #42536b;
+}
+body.tema-publico-blanco .portada-medio .noticia-portada .leer {
+  background: #174ea6;
+  color: #fff;
+}
+/* Las noticias del tema azul siempre necesitan contraste legible. */
+body.tema-publico-azul .pagina-noticias-medio :is(h1, h2, h3, .tarjeta-noticia-medio h3, .lista-tendencias-medio a) { color: #edf3ff; }
+body.tema-publico-azul .pagina-noticias-medio :is(p, .meta-noticia-medio, .lista-tendencias-medio p) { color: #bfd0e7; }
+
+.acciones-cabecera-landing .boton-tema-publico { align-self: center; flex: 0 0 38px; position: relative; top: 0; }
+.busqueda-cabecera-landing { max-width: min(760px, calc(100% - 32px)); margin: 12px auto; border: 1px solid #2c5f99; border-radius: 12px; background: #0c2443; box-shadow: 0 14px 30px rgba(3, 20, 49, .22); }
+.busqueda-cabecera-landing > div { display: flex; align-items: center; gap: 8px; padding: 8px; }
+.busqueda-cabecera-landing input { min-width: 0; flex: 1; }
+
+/* Lectura editorial de alto contraste en el tema azul. */
+body.tema-publico-azul .detalle-articulo-publicado {
+  color: #e8eef8;
+}
+body.tema-publico-azul .detalle-articulo-publicado .cabecera-articulo-publicado h1,
+body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado h2,
+body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado h3,
+body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado strong {
+  color: #f4f7fc;
+}
+body.tema-publico-azul .detalle-articulo-publicado .miga-articulo,
+body.tema-publico-azul .detalle-articulo-publicado .resumen-articulo,
+body.tema-publico-azul .detalle-articulo-publicado .meta-articulo,
+body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado,
+body.tema-publico-azul .detalle-articulo-publicado .portada-articulo-publicado figcaption {
+  color: #bdcbe0;
+}
+body.tema-publico-azul .detalle-articulo-publicado .miga-articulo a,
+body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado a {
+  color: #68d9ff;
+}
+body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado p,
+body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado li {
+  color: #dce5f1;
+  font-size: 1.12rem;
+  font-weight: 450;
+  line-height: 1.9;
+}
+body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado h2,
+body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado h3 {
+  margin-top: 2.2em;
+}
+body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado blockquote {
+  border-left-color: #24d9ef;
+  color: #edf5ff;
+}
+body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno {
+  border-color: #315273;
+  border-left-color: #24d9ef;
+  background: #102844;
+  color: #edf5ff;
+}
+body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno :is(h2, h3, p, span) {
+  color: #dce8f6;
+}
+body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno:hover {
+  border-color: #68d9ff;
+  background: #153656;
+}
+body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado {
+  border-color: #315273;
+}
+body.tema-publico-azul .seccion-articulos-relacionados {
+  border-top-color: #315273;
+}
+body.tema-publico-azul .seccion-articulos-relacionados > header .etiqueta-seccion {
+  border-color: #1b728d;
+  background: #10364e;
+  color: #75e5ff;
+}
+body.tema-publico-azul .seccion-articulos-relacionados h2 {
+  color: #f2f6fc;
+}
+body.tema-publico-azul .rejilla-articulos-relacionados > a {
+  gap: 10px;
+  border: 1px solid #294467;
+  border-radius: 12px;
+  background: #0c2038;
+  color: #eef4fc;
+  padding: 12px;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+body.tema-publico-azul .rejilla-articulos-relacionados > a:hover {
+  transform: translateY(-2px);
+  border-color: #36c9ed;
+  background: #102b49;
+}
+body.tema-publico-azul .rejilla-articulos-relacionados > a:focus-visible {
+  outline: 3px solid #68d9ff;
+  outline-offset: 3px;
+}
+body.tema-publico-azul .imagen-articulo-recomendado {
+  border: 1px solid #315273;
+  background: linear-gradient(140deg, #173958, #0a1a2e);
+  color: #72dcfa;
+}
+body.tema-publico-azul .rejilla-articulos-relacionados small {
+  color: #70ddfa;
+}
+body.tema-publico-azul .rejilla-articulos-relacionados strong {
+  color: #f0f5fc;
+}
+body.tema-publico-azul .leer-articulo-recomendado {
+  color: #78dfff;
+}
+
+/* Páginas legales: jerarquía editorial, lectura cómoda y adaptable. */
+.pagina-legal {
+  width: min(1040px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: clamp(42px, 8vw, 96px) 0 88px;
+}
+.cabecera-legal {
+  max-width: 780px;
+  margin: 0 auto;
+  padding: clamp(28px, 6vw, 64px);
+  border: 1px solid #dbe2ee;
+  border-radius: 20px;
+  background: radial-gradient(circle at 100% 0, #e3f5ff 0, #fff 46%);
+  box-shadow: 0 18px 50px rgba(8, 32, 74, .08);
+}
+.insignia-legal {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #1463a8;
+  font-size: .76rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.insignia-legal svg { width: 18px; height: 18px; }
+.cabecera-legal h1 {
+  max-width: 16ch;
+  margin: 18px 0 12px;
+  color: #08204a;
+  font-size: clamp(2.3rem, 6vw, 4.4rem);
+  line-height: .98;
+  letter-spacing: -.045em;
+  text-wrap: balance;
+}
+.introduccion-legal {
+  max-width: 62ch;
+  margin: 0;
+  color: #40536d;
+  font-size: clamp(1rem, 2vw, 1.15rem);
+  line-height: 1.75;
+}
+.fecha-legal { margin: 20px 0 0; color: #67758a; font-size: .78rem; }
+.contenido-legal {
+  max-width: 760px;
+  margin: 30px auto 0;
+  color: #29384c;
+}
+.contenido-legal section { padding: 24px 0; border-bottom: 1px solid #dbe2ee; }
+.contenido-legal h2 { margin: 0 0 10px; color: #08204a; font-size: 1.25rem; letter-spacing: -.02em; }
+.contenido-legal p,
+.contenido-legal li { color: #40516a; font-size: 1rem; line-height: 1.8; }
+.contenido-legal p { margin: 8px 0; }
+.contenido-legal ul { display: grid; gap: 10px; margin: 12px 0; padding-left: 22px; }
+.contenido-legal li::marker { color: #1686c9; }
+.contenido-legal a:not(.contacto-legal) { color: #075ea8; font-weight: 700; text-underline-offset: 3px; }
+.resumen-legal {
+  margin: 0 0 4px;
+  border-left: 4px solid #0787c9;
+  border-radius: 0 12px 12px 0;
+  background: #eef8ff;
+  padding: 20px 24px;
+}
+.resumen-legal strong { color: #08204a; }
+.resumen-legal p { margin-bottom: 0; }
+.nota-legal { border-radius: 8px; background: #fff8e3; padding: 12px 14px; font-size: .86rem !important; }
+.contacto-legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  border: 1px solid #c9d8ea;
+  border-radius: 12px;
+  background: #f4f9ff;
+  color: #08204a;
+  padding: 16px 18px;
+  text-decoration: none;
+}
+.contacto-legal svg { width: 20px; height: 20px; color: #0878bd; }
+.contacto-legal span { margin-left: auto; color: #075ea8; font-weight: 800; }
+
+body.tema-publico-azul .pagina-legal { color: #dce6f3; }
+body.tema-publico-azul .cabecera-legal {
+  border-color: #294467;
+  background: radial-gradient(circle at 100% 0, #123e68 0, #0b1d35 52%, #09172a 100%);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .2);
+}
+body.tema-publico-azul .cabecera-legal h1,
+body.tema-publico-azul .contenido-legal h2,
+body.tema-publico-azul .resumen-legal strong { color: #f1f6ff; }
+body.tema-publico-azul .introduccion-legal,
+body.tema-publico-azul .contenido-legal p,
+body.tema-publico-azul .contenido-legal li { color: #c5d3e5; }
+body.tema-publico-azul .fecha-legal { color: #9fb2ca; }
+body.tema-publico-azul .contenido-legal section { border-color: #294467; }
+body.tema-publico-azul .resumen-legal { border-left-color: #19cde5; background: #102c49; }
+body.tema-publico-azul .nota-legal { background: #342e1d; }
+body.tema-publico-azul .contacto-legal { border-color: #315273; background: #102c49; color: #eef5ff; }
+body.tema-publico-azul .contacto-legal span,
+body.tema-publico-azul .contenido-legal a:not(.contacto-legal) { color: #6bdcff; }
+
+@media (max-width: 640px) {
+  .pagina-legal { width: calc(100% - 28px); padding-top: 28px; }
+  .cabecera-legal { padding: 25px 22px; border-radius: 15px; }
+  .contenido-legal { margin-top: 20px; }
+  .contenido-legal section { padding: 20px 0; }
+  .contacto-legal span { width: 100%; margin-left: 30px; }
+}

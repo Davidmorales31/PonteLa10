@@ -33,6 +33,7 @@ export const pieSitio: FooterLanding = {
   descripcion: 'Deportes, tecnología y tendencias con la jugada clara.',
   columnas: [
     { titulo: 'Navegación', enlaces: [{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Noticias', ruta: '/articulos' }, { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' }, { etiqueta: 'Resultados', ruta: '/resultados' }] },
-    { titulo: 'Categorías', enlaces: [{ etiqueta: 'Fútbol', ruta: '/articulos?categoria=futbol' }, { etiqueta: 'Tech deportiva', ruta: '/articulos?categoria=tecnologia' }, { etiqueta: 'Tendencias', ruta: '/articulos?categoria=tendencias' }] }
+    { titulo: 'Categorías', enlaces: [{ etiqueta: 'Fútbol', ruta: '/articulos?categoria=futbol' }, { etiqueta: 'Tech deportiva', ruta: '/articulos?categoria=tecnologia' }, { etiqueta: 'Tendencias', ruta: '/articulos?categoria=tendencias' }] },
+    { titulo: 'Legal', enlaces: [{ etiqueta: 'Términos y condiciones', ruta: '/terminos' }, { etiqueta: 'Privacidad', ruta: '/privacidad' }] }
   ]
 }

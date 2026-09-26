@@ -12,7 +12,7 @@ const { modoBlancoActivo, etiquetaAlternarTema, alternarTema } = useTemaPublico(
 const { autenticacionConfigurada, usuarioActual, obtenerSesionActual } = useAutenticacionEditorial()
 const { contextoEditorial, cargarContextoEditorial } = useContextoEditorial()
 const logoCabecera = computed(() => modoBlancoActivo.value
-  ? '/brand/pont3la10_logo_06_horizontal_sobre_blanco.png'
+  ? '/brand/pont3la10_logo_modo_blanco.png'
   : '/brand/pont3la10_logo_login_blanco.png'
 )
 
@@ -119,7 +119,7 @@ async function buscarContenido() {
           type="button"
           :aria-pressed="modoBlancoActivo"
           :title="etiquetaAlternarTema"
-          @click="alternarTema"
+          @click.prevent="alternarTema"
         >
           <Sun v-if="modoBlancoActivo" aria-hidden="true" />
           <Moon v-else aria-hidden="true" />
