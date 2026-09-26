@@ -6,6 +6,11 @@ on:
   push:
     branches: [main]
 
+# Nuxt exige un origen canónico incluso durante prepare, tests y build.
+# Este dominio reservado solo se usa dentro de CI; Vercel usa su propio origen.
+env:
+  NUXT_PUBLIC_SITE_URL: https://pont3la10.invalid
+
 jobs:
   lint:
     name: lint
