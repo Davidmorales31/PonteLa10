@@ -1,21 +1,28 @@
 # Estado actual de Pont3la10
 
 - **Cierre de migraciones y validación (2026-09-26):** respecto a la nota
-  histórica inferior, ya quedaron aplicadas en Supabase producción las cuatro
+  histórica inferior, ya quedaron aplicadas en Supabase producción las cinco
   migraciones HU-ED-11–13 en orden: `codex_editorial_proposals`,
   `hu_ed_10_codex_agenda_checkpoints`,
   `hu_ed_12_aprobar_programar_siguiente_slot` y
-  `hu_ed_13_worker_heartbeat_y_salud`. La segunda necesitó simplificar la
+  `hu_ed_13_worker_heartbeat_y_salud` y
+  `hu_ed_13_cron_privilege_guard`. La segunda necesitó simplificar la
   validación de scores tras el primer intento de sintaxis; el segundo intento
-  pasó y el historial remoto confirma las cuatro versiones. No se modificaron
+  pasó y el historial remoto confirma las cinco versiones. No se modificaron
   filas de artículos ni programaciones existentes. `npm run lint`, typecheck,
   build, `git diff --check` y 110 pruebas (22 archivos) pasan. La regla editorial
   de 60 minutos sí se aplica tanto a nuevas reservas manuales como a las
   automáticas, según HU-ED-12; no desplaza horarios ya reservados. Revisión
   estática de API/RPC sin bypass de aprobación/publicación; falta el smoke test
-  firmado tras el deploy. Cambios todavía en working tree, aún no commiteados ni
-  publicados a `main`. Se excluye `pontela10.zip` (artefacto de respaldo) del
-  commit; no se borra.
+  firmado desde Vercel ya responde. La primera llamada encontró que `service_role`
+  no puede inspeccionar `cron`; la migración correctiva informa Cron como
+  desconocido sin ampliar grants, y se verificó el RPC usando ese rol.
+  Diagnóstico de producción: worker desconocido (sin latido), 2 ingestas fallidas,
+  cero en cola/en curso, cero programadas vencidas y Cron desconocido. No se
+  alteraron las dos ingestas ni horarios existentes. PR #10 quedó mergeado a
+  `main` en `1e3cf28` y Vercel preview/checks pasaron. La migración correctiva y
+  su prueba de regresión aún deben ir en un nuevo PR corto. Se excluye
+  `pontela10.zip` (artefacto de respaldo) del commit; no se borra.
 
 - **Automatización editorial con Codex (2026-09-26, local, sin commit):** se
   inició HU-ED-10–13 en `codex/hu-ed-10-contenido-programado`, basada en `main`
