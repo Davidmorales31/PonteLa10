@@ -267,7 +267,6 @@ const retornoEditor = computed(() => route.fullPath)
 const recomendacionesFlujo = computed(() => {
   const faltantes: string[] = []
 
-  if (!portadaSeleccionada.value) faltantes.push('una portada')
   if ((formulario.value?.seo.descripcion.trim().length || 0) < 40) {
     faltantes.push('una descripción SEO de al menos 40 caracteres')
   }
@@ -1202,7 +1201,7 @@ function formatearFecha(fecha: string): string {
 
             <div v-else class="portada-vacia-editor">
               <ImagePlus aria-hidden="true" />
-              <span>Elige una imagen para representar la historia.</span>
+              <span>Portada opcional: si no hay una foto adecuada, la noticia se publicará sin imagen.</span>
             </div>
 
             <div class="acciones-portada-editor">

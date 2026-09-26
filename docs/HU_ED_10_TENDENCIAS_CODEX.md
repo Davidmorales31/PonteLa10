@@ -14,8 +14,11 @@ inventados.
   Trends RSS y fuentes abiertas compatibles; registrar origen y fecha de la señal.
 - Leer en cada ejecución el catálogo de categorías activas y la ventana de
   artículos recientes/publicados para detectar repetición y temas ya cubiertos.
-- Proponer objetivo de 5–7 contenidos por categoría activa, condicionado a
-  relevancia, evidencia y valor único. No rellenar cuotas.
+- Proponer un objetivo mínimo de 15 borradores completos por corrida diaria,
+  distribuidos entre las categorías activas según evidencia y relevancia. Es un
+  objetivo de producción, no una autorización para inventar, duplicar ni rellenar
+  temas; registrar cualquier faltante con sus causas verificables. No significa
+  15 por categoría.
 - Dejar una agenda/checkpoint durable por ejecución, categoría y tema; continuar
   lotes incompletos sin duplicar.
 - Crear la Skill de proyecto `pont3la10-trend-research` para repetir criterios,

@@ -20,14 +20,14 @@ revisión editorial.
   públicos conforme a HU-ED-09 y hasta tres relacionados publicados.
 - SEO editorial derivado de la historia; claims sensibles y limitaciones visibles
   al revisor.
-- Foto de archivo obtenida de una fuente que permita reutilización editorial
+- Foto de archivo opcional obtenida de una fuente que permita reutilización editorial
   (piloto: Wikimedia Commons, solo CC0 1.0, CC BY 4.0 o dominio público),
   verificada en su ficha original, optimizada por el procesador de medios y
   guardada con alt, leyenda, autor, licencia, crédito y URL de procedencia.
   Mostrar atribución y enlace a la fuente/licencia tanto en el CMS como bajo la
   imagen publicada. Crédito no reemplaza permiso: si licencia o autor no se
-  pueden verificar, detener la propuesta. Nunca llamar foto real a una
-  ilustración de IA.
+  pueden verificar, omitir la foto y continuar la propuesta sin portada. Nunca
+  llamar foto real a una ilustración de IA.
 - API privada de servicio a servicio que recibe un paquete validado y crea el
   artículo y trazabilidad en estado `review`.
 - Búsqueda/deduplicación contra URLs, contenido publicado y candidatos previos;
@@ -59,8 +59,9 @@ revisión editorial.
 - Exigir ficha de Commons, creador y licencia permitida por la Skill. Guardar
   URL de la ficha y crédito literal con creador/licencia; el revisor ve ambos
   antes de aprobar.
-- Si no existe una foto pertinente con permiso comprobable, detener el
-  candidato y explicar el bloqueo; nunca fingir licencia o completar cuota.
+- Si no existe una foto pertinente con permiso comprobable, registrar la
+  omisión y continuar sin portada; nunca fingir licencia ni usar una imagen de
+  relleno.
 
 ## Especiales y Opinión
 
@@ -74,12 +75,13 @@ revisión editorial.
 ## Criterios de aceptación
 
 - Con un dossier de fuentes válido, el contenido queda en CRM `review` con
-  fuentes estructuradas, taxonomía válida, relaciones reales, SEO, imagen
-  optimizada y alertas de revisión pertinentes.
+  fuentes estructuradas, taxonomía válida, relaciones reales, SEO y alertas de
+  revisión pertinentes; una portada pertinente es opcional.
 - Ninguna fuente se imprime como línea incrustada en el cuerpo; las referencias
   se renderizan en el módulo de fuentes.
-- Falta de fuentes, imagen, contrato o categoría no crea una noticia “lista”; se
+- Falta de fuentes, contrato o categoría no crea una noticia “lista”; se
   conserva el error por etapa y puede reanudarse sin duplicar/cobrar de nuevo.
+  La falta de imagen se registra, pero no bloquea la entrega del borrador.
 - La misma petición repetida no crea un segundo artículo, media ni temas.
 - Una carga adversarial en una fuente no cambia categoría, permisos ni destino.
 - Un artículo todavía en `review` no puede cambiar a aprobado/programado ni ser

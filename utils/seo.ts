@@ -105,7 +105,7 @@ export function evaluarTarjetaSocial(
     {
       id: 'imagen',
       estado: !datos.tieneImagen
-        ? 'error'
+        ? 'advertencia'
         : ancho >= 1200 && alto >= 630
           ? 'correcto'
           : 'advertencia',
@@ -113,7 +113,7 @@ export function evaluarTarjetaSocial(
         ? ancho >= 1200 && alto >= 630
           ? 'La portada tiene resolución amplia.'
           : 'Se recomienda una portada de al menos 1200 × 630 px.'
-        : 'Selecciona una portada antes de publicar.'
+        : 'Sin portada: la noticia se publicará sin imagen; puedes añadir una después.'
     },
     {
       id: 'proporcion',

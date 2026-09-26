@@ -68,13 +68,14 @@ describe('utilidades SEO', () => {
     expect(comprobaciones.every(item => item.estado === 'correcto')).toBe(true)
   })
 
-  it('marca como error una tarjeta sin portada', () => {
+  it('permite publicar una tarjeta sin portada con advertencia, no error', () => {
     const comprobaciones = evaluarTarjetaSocial({
       titulo: 'Título corto',
       descripcion: 'Resumen corto.',
       tieneImagen: false
     })
 
-    expect(comprobaciones.find(item => item.id === 'imagen')?.estado).toBe('error')
+    expect(comprobaciones.find(item => item.id === 'imagen')?.estado).toBe('advertencia')
+    expect(comprobaciones.find(item => item.id === 'imagen')?.mensaje).toContain('sin imagen')
   })
 })

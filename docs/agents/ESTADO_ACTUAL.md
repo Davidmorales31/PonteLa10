@@ -1,5 +1,25 @@
 # Estado actual de Pont3la10
 
+- **Lote editorial mínimo y portada opcional (2026-09-26, local):** la tarea
+  diaria existente quedó actualizada para apuntar a un mínimo de 15 propuestas
+  completas por corrida total (no por categoría), balanceadas entre categorías
+  activas y sin rellenar con historias débiles. Si la evidencia no permite
+  llegar, debe reportar una corrida parcial y el faltante. La foto licenciada
+  pasó a ser opcional: si no hay una imagen pertinente y verificable, puede
+  enviar `coverMediaId: null`; la RPC mantiene la verificación completa cuando
+  sí hay foto y ambas rutas crean solo contenido `review`.
+  En `C:\PONTE LA 10`, rama `codex/propuestas-sin-portada-minimo-15`, se cambió
+  el esquema API, los checkpoints, la completitud del editor, el aviso SEO y las
+  instrucciones HU/Skills. Supabase producción se inspeccionó en solo lectura:
+  `articles.cover_media_id` ya acepta NULL y la RPC actual es `SECURITY INVOKER`;
+  un query de simulación confirmó que los reemplazos conservan el chequeo de
+  licencia y condicionan los flags. Migración pendiente de aplicarse y código
+  pendiente de integrarse/desplegarse; no se generaron propuestas ni se tocó
+  contenido editorial. Suite 23 archivos/117 pruebas, lint y build pasan;
+  typecheck pasó al ejecutarse secuencialmente (una primera ejecución paralela
+  chocó con la generación de `.nuxt` y dio falsos errores). Handoff:
+  `docs/agents/handoffs/2026-09-26-minimo-15-sin-portada.md`.
+
 - **Corrida editorial diaria 2026-09-26 (parcial):** la API confirmó el runId
   `bc0378be-0cbb-4449-9d20-7db13d7b3e11`, siete categorías activas,
   cinco oportunidades acumuladas y checkpoint de agenda en las siete. Se
