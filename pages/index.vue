@@ -193,16 +193,6 @@ useSeoPont3la10(() => ({
 .medio-texto-suave, .medio-vacio p { color: #a8bbd5; }
 .medio-vacio { padding: 36px 0; }
 .medio-vacio h1 { font-size: 2rem; }
-.portada-medio :deep(.franja-marcadores-home) { background: #0b213e; border-bottom: 1px solid #294467; }
-.portada-medio :deep(.franja-marcadores-contenido) { width: min(1240px, calc(100% - 48px)); grid-template-columns: 140px minmax(0, 1fr); }
-.portada-medio :deep(.encabezado-franja-marcadores) { min-width: 130px; }
-.portada-medio :deep(.encabezado-franja-marcadores h2) { color: #fff; white-space: nowrap; }
-.portada-medio :deep(.encabezado-franja-marcadores a) { color: #9bc8ff; }
-.portada-medio :deep(.tarjeta-marcador-compacto) { background: #102c51; border-color: #294467; color: #edf3ff; box-shadow: none; }
-.portada-medio :deep(.tarjeta-marcador-compacto header > span) { color: #a8bbd5; }
-.portada-medio :deep(.fila-equipo-marcador strong), .portada-medio :deep(.fila-equipo-marcador b) { color: #edf3ff; }
-.portada-medio :deep(.tarjeta-marcador-compacto:hover) { border-color: #ffd800; }
-.portada-medio :deep(a:focus-visible) { outline: 3px solid #ffd800; outline-offset: 3px; }
 @media (max-width: 900px) {
   .medio-apertura { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
   .medio-actualidad { gap: 20px; }
@@ -218,6 +208,5 @@ useSeoPont3la10(() => ({
   .medio-explora { align-items: start; flex-direction: column; gap: 12px; }
   .medio-encabezado a { font-size: .66rem; }
   .medio-patrocinios { padding: 18px; }
-  .portada-medio :deep(.franja-marcadores-contenido) { width: calc(100% - 32px); }
 }
 </style>

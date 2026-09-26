@@ -27,7 +27,7 @@ export function useTemaPublico() {
   }
 
   function alternarTema() {
-    tema.value = modoBlancoActivo.value ? 'azul' : 'blanco'
+    establecerTema(modoBlancoActivo.value ? 'azul' : 'blanco')
   }
 
   if (import.meta.client) {
@@ -38,7 +38,7 @@ export function useTemaPublico() {
     watch(tema, (nuevoTema) => {
       window.localStorage.setItem(CLAVE_TEMA_PUBLICO, nuevoTema)
       aplicarClaseTema(nuevoTema)
-    }, { immediate: true })
+    }, { immediate: true, flush: 'post' })
   }
 
   return {

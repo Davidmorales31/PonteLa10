@@ -4,9 +4,8 @@ import { construirUrlAbsoluta, escaparXml } from '~/utils/seo'
 
 interface EntradaSitemap {
   ruta: string
-  frecuencia: 'daily' | 'weekly' | 'monthly'
+  frecuencia: 'daily' | 'weekly' | 'monthly' | 'yearly'
   prioridad: string
-  ultimaModificacion?: string
 }
 
 export default defineEventHandler(async (evento) => {
@@ -16,27 +15,37 @@ export default defineEventHandler(async (evento) => {
   const entradas: EntradaSitemap[] = [
     { ruta: '/', frecuencia: 'daily', prioridad: '1.0' },
     { ruta: '/articulos', frecuencia: 'daily', prioridad: '0.9' },
+    { ruta: '/partidos-hoy', frecuencia: 'daily', prioridad: '0.9' },
     { ruta: '/resultados', frecuencia: 'daily', prioridad: '0.9' },
+    { ruta: '/resultados/en-vivo', frecuencia: 'daily', prioridad: '0.8' },
     { ruta: '/resultados/futbol', frecuencia: 'daily', prioridad: '0.8' },
     { ruta: '/resultados/baloncesto', frecuencia: 'daily', prioridad: '0.8' },
     { ruta: '/resultados/tenis', frecuencia: 'daily', prioridad: '0.7' },
     { ruta: '/resultados/beisbol', frecuencia: 'daily', prioridad: '0.7' },
-    { ruta: '/especiales', frecuencia: 'weekly', prioridad: '0.8' }
+    { ruta: '/especiales', frecuencia: 'weekly', prioridad: '0.8' },
+    { ruta: '/privacidad', frecuencia: 'yearly', prioridad: '0.3' },
+    { ruta: '/terminos', frecuencia: 'yearly', prioridad: '0.3' }
   ]
 
   try {
     const clienteSupabase = obtenerClienteSupabaseEditorial(evento)
-    const publicaciones = await listarArticulosPublicosEditoriales(
-      clienteSupabase,
-      50
-    )
+    const tamanoPagina = 50
+    let desplazamiento = 0
+    let publicaciones: Awaited<ReturnType<typeof listarArticulosPublicosEditoriales>>
 
-    entradas.push(...publicaciones.map(publicacion => ({
-      ruta: `/articulos/${publicacion.slug}`,
-      frecuencia: 'weekly' as const,
-      prioridad: '0.8',
-      ultimaModificacion: publicacion.publicadoEn
-    })))
+    do {
+      publicaciones = await listarArticulosPublicosEditoriales(
+        clienteSupabase,
+        tamanoPagina,
+        desplazamiento
+      )
+      entradas.push(...publicaciones.map(publicacion => ({
+        ruta: `/articulos/${publicacion.slug}`,
+        frecuencia: 'weekly' as const,
+        prioridad: '0.8'
+      })))
+      desplazamiento += publicaciones.length
+    } while (publicaciones.length === tamanoPagina)
   } catch {
     // El sitemap base sigue disponible durante una degradación de Supabase.
   }
@@ -44,9 +53,6 @@ export default defineEventHandler(async (evento) => {
   const urls = entradas.map(entrada => [
     '  <url>',
     `    <loc>${escaparXml(construirUrlAbsoluta(urlSitio, entrada.ruta))}</loc>`,
-    ...(entrada.ultimaModificacion
-      ? [`    <lastmod>${escaparXml(entrada.ultimaModificacion)}</lastmod>`]
-      : []),
     `    <changefreq>${entrada.frecuencia}</changefreq>`,
     `    <priority>${entrada.prioridad}</priority>`,
     '  </url>'

@@ -1,9 +1,12 @@
 # Estado actual de Pont3la10
 
-- **Actualizado:** 2026-09-23
+- **Actualizado:** 2026-09-25
+- **Salida Vercel (2026-09-26):** el proyecto `ponte-la10` quedó creado en el equipo Hobby y `main` está desplegada en `https://ponte-la10.vercel.app`. El primer runtime respondió 500 porque faltaban las dos variables públicas de Supabase; se añadieron solo `NUXT_PUBLIC_SUPABASE_URL` y la clave `sb_publishable` en el entorno Production, sin trasladar secretos de DeepSeek ni credenciales/rutas del worker. El redeploy sirve Inicio y Noticias con contenido real. `pont3la10.com` no quedó conectado. El nuevo PR #8 propone los cambios de SEO que aún están en `codex/ui-ux-publico`; sus checks iniciales fallaron porque GitHub Actions no tenía origen canónico para `nuxt prepare`. Se agrega un origen `.invalid` exclusivo de CI; falta verificar todos los checks antes de integrar.
 - **Commit base:** `3b2ec84` (`codex/hu-ed-08`)
 - **Estado general:** HU-ED-07 y HU-ED-08 operan desde `C:\PONTE LA 10`. La ingesta durable genera el borrador automáticamente; la bandeja se actualiza en tiempo real y anuncia con una alerta global cuando el borrador queda listo.
 - **Árbol de trabajo:** `C:\PONTE LA 10`. Los respaldos locales están ignorados por Nuxt para no duplicar el escaneo del proyecto.
+- **Preflight de salida pública (2026-09-25):** `npm.cmd run typecheck` pasa al excluir `_RESPALDOS_POR_ELIMINAR/**` del proyecto TypeScript, conservando los tipos generados de `.nuxt`; la carpeta también queda ignorada por Git y no se borró. `nuxt.config.ts` usa `NUXT_PUBLIC_SITE_URL` o `VERCEL_PROJECT_PRODUCTION_URL` para el origen canónico y detiene builds de producción si ninguno existe, evitando canonicals/sitemaps en localhost. En copia temporal aislada (sin `.env`, demo intacta) pasaron ESLint completo, typecheck, 89 pruebas unitarias, build de producción y `git diff --check`. Los cambios quedaron committeados y empujados a `github/codex/ui-ux-publico` en `06548a7`; no se publicó producción. El dominio canónico confirmado es `pont3la10.com`; privacidad/términos muestran nombre, correo y domicilio Neiva, Huila, y omiten la identificación hasta autorización expresa. La integración Vercel conectada muestra el equipo `SomosNoobs' projects` pero ningún proyecto; el dashboard web está sin sesión y el asistente de deploy no está disponible. `pont3la10.com` no está disponible para registro (esto no verifica propiedad ni asignación DNS). Próximo paso: el usuario debe iniciar sesión en el dashboard de Vercel o cambiar a la cuenta/equipo correcto para importar GitHub, crear preview, configurar variables y verificarlo antes de producción. El worker seguirá en el PC del usuario y solo procesa mientras ese equipo y conexión estén activos.
+- **SEO, páginas legales y lectura pública (2026-09-25, local):** el sitemap general pagina el catálogo público completo en grupos de 50 e incluye `/privacidad` y `/terminos`; el sitemap de Google News recorre la ventana móvil de 48 horas en páginas de 50. Se retiró `lastmod` inventado a partir de la publicación porque el DTO público no expone una modificación verificable. Privacidad y términos tienen contenido y presentación editorial responsive, canonical y `WebPage` JSON-LD. El artículo en tema azul recibe contraste claro para texto, listas, encabezados, fuentes y enlaces relacionados. Lint focalizado, `git diff --check` y rutas locales `/privacidad`, `/terminos`, una noticia, `/sitemap.xml` y `/news-sitemap.xml` respondieron correctamente. Build no ejecutado: Nuxt detectó activo el servidor de demo `3001`; no se detuvo ni se forzó sobre el mismo árbol. Pendiente completar identificación jurídica/domicilio del responsable en política de privacidad antes de tratarla como documento legal definitivo.
 - **Preflight del worker (2026-09-23):** el worker ahora verifica al inicio las
   dependencias Python de TikTok (`imageio-ffmpeg`, `yt-dlp`,
   `faster-whisper`) después de autenticarse y antes de reclamar una ingesta.
@@ -284,6 +287,15 @@ validaron visualmente ambos temas, `lint`, las 2 pruebas de `landing` y
 `git diff --check`. Con sesión editorial de propietario se reencolaron las dos
 ingestas fallidas: la primera avanzó a `Procesando` (1 %) y la segunda quedó en
 cola con el worker local activo.
+
+**Base SEO pública (2026-09-24):** se incorporaron las rutas evergreen
+`/partidos-hoy` y `/resultados/en-vivo`, ambas alimentadas únicamente por el
+endpoint real de resultados. Tienen title, descripción, canonical, JSON-LD,
+estados vacíos útiles y enlaces al detalle existente; el sitemap las incluye.
+Liga BetPlay, Selección Colombia y equipos quedan deliberadamente aplazados
+hasta disponer de datos reales suficientes. La cabecera importa de forma
+explícita `useTemaPublico`, eliminando el 500 que podía causar la resolución
+automática desactualizada del composable durante desarrollo.
 
 ## Documentos posiblemente desactualizados
 
