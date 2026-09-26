@@ -1,5 +1,23 @@
 # Estado actual de Pont3la10
 
+- **Corrida editorial diaria 2026-09-26 (parcial):** la API confirmó el runId
+  `bc0378be-0cbb-4449-9d20-7db13d7b3e11`, siete categorías activas,
+  cinco oportunidades acumuladas y checkpoint de agenda en las siete. Se
+  reanudó sin duplicar la propuesta previa Colombia–México, que ya figura
+  `published` por una acción ajena a esta corrida. La tarea entregó dos nuevas
+  propuestas privadas en `review`: final femenina Cali–Santa Fe
+  (`e77cb5e9-4e13-41f3-9e91-a412897e45b4`) e Inglaterra–España
+  (`923ac0a0-19e4-4b50-b1c3-02bfedca5600`). Ambas tienen expediente,
+  borrador, fuentes, SEO, foto original de Wikimedia Commons CC BY 4.0 con
+  crédito y recibos de media/entrega. Quedaron dos expedientes incompletos:
+  Colombia–Italia Sub-20 sin resultado final corroborado al cierre y FC 27 sin
+  fotografía específica con licencia admitida. Fútbol colombiano suma tres
+  oportunidades (dos entregas, una incompleta); Fútbol mundial una entrega;
+  Gaming deportivo una incompleta; Tecnología deportiva, Tendencias,
+  Especiales y Opinión quedaron en cero por falta de evidencia/encaje o enfoque
+  humano. La corrida quedó `partial`, sin aprobar, programar ni publicar.
+  Handoff: `docs/agents/handoffs/2026-09-26-corrida-propuestas-editoriales.md`.
+
 - **Cierre de migraciones y validación (2026-09-26):** respecto a la nota
   histórica inferior, ya quedaron aplicadas en Supabase producción las cinco
   migraciones HU-ED-11–13 en orden: `codex_editorial_proposals`,
