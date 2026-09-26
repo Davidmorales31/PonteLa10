@@ -34,14 +34,12 @@ export function evaluarCompletitudEditor(
     ),
     presentacion: Boolean(
       datos?.categoriaId
-      && entrada.tienePortada
       && slugValido
     ),
     seo: Boolean(
       datos
       && (datos.seo.titulo || datos.titulo).trim().length >= 8
       && datos.seo.descripcion.trim().length >= 40
-      && entrada.tienePortada
     ),
     revision: ['review', 'approved', 'scheduled', 'published'].includes(entrada.estado)
   }

@@ -196,6 +196,26 @@ describe('editor de artículos', () => {
     })
   })
 
+  it('no bloquea presentación ni SEO cuando la noticia no tiene portada', () => {
+    const completitud = evaluarCompletitudEditor({
+      datos: {
+        ...datosValidos,
+        categoriaId: '127758f0-f1ec-4bd4-a4d1-683ca6c4d6e2',
+        portadaId: null
+      },
+      bloques: convertirDocumentoABloques(datosValidos.documento),
+      tienePortada: false,
+      estado: 'review'
+    })
+
+    expect(completitud).toEqual({
+      contenido: true,
+      presentacion: true,
+      seo: true,
+      revision: true
+    })
+  })
+
   it('mantiene pendientes las etapas incompletas sin bloquear la navegación', () => {
     const completitud = evaluarCompletitudEditor({
       datos: {

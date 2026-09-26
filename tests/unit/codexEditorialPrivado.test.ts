@@ -105,6 +105,20 @@ describe('API privada de propuestas Codex', () => {
     }).success).toBe(true)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
+      coverMediaId: null,
+      editorialFlags: ['needs_angle_review']
+    }).success).toBe(true)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      coverMediaId: null,
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
+    }).success).toBe(false)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      editorialFlags: ['needs_angle_review']
+    }).success).toBe(false)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
       editorialFlags: ['needs_angle_review', 'licensed_photo_cover'],
       newTopics: [{ name: 'Tema\u0007 deportivo', description: 'Descripción válida.' }]
     }).success).toBe(false)
@@ -127,6 +141,22 @@ describe('API privada de propuestas Codex', () => {
     expect(migracion).toContain("'review'")
     expect(migracion).not.toMatch(/set status\s*=\s*'(?:approved|scheduled|published)'/i)
     expect(migracion).toContain("v_article_body_json, 'review'")
+  })
+
+  it('permite omitir portada sin relajar la seguridad de la RPC privada', () => {
+    const migracion = readFileSync(
+      new URL('../../supabase/migrations/20260926183207_permitir_propuestas_codex_sin_portada.sql', import.meta.url),
+      'utf8'
+    )
+
+    expect(migracion).toContain('is_nullable = \'YES\'')
+    expect(migracion).toContain('v_media_id is null')
+    expect(migracion).toContain('v_media_id is not null')
+    expect(migracion).toContain('licensed_photo_cover')
+    expect(migracion).toContain('pg_catalog.pg_proc')
+    expect(migracion).not.toContain('security definer')
+    expect(migracion).not.toMatch(/grant\s+execute\s+on\s+function/i)
+    expect(migracion).not.toMatch(/set\s+status\s*=\s*'(?:approved|scheduled|published)'/i)
   })
 
   it('rechaza controles en temas públicos nuevos también dentro de la RPC', () => {

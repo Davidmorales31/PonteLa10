@@ -35,3 +35,5 @@ traced to the dossier. Follow the existing evidence and editorial contracts in
 
 Submit as a structured proposal to the private API. It may create only a private
 `review` draft. Never approve, schedule, publish, or bypass an API validation.
+An appropriate, verifiably licensed cover is optional: if none can be found,
+submit the complete story with `coverMediaId: null` and no photo-license flag.

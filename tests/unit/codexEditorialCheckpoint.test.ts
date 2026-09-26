@@ -34,6 +34,27 @@ function crearPngPrueba() {
 }
 
 describe('checkpoints locales reanudables de contenido Codex', () => {
+  it('permite entregar una propuesta sin portada ni etapa de media', async () => {
+    const raiz = await mkdtemp(join(tmpdir(), 'pont3la10-checkpoint-sin-portada-'))
+    try {
+      await guardarCheckpoint(raiz, identidad, 'expediente', { claims: ['Dos fuentes respaldan el hecho.'] })
+      await guardarCheckpoint(raiz, identidad, 'borrador', { title: 'Un borrador completo sin portada' })
+      await guardarCheckpoint(raiz, identidad, 'propuesta', {
+        idempotencyKey: 'sin-foto',
+        coverMediaId: null,
+        editorialFlags: []
+      })
+      await guardarCheckpoint(raiz, identidad, 'entrega', { articleId: 'pendiente-de-aprobacion' })
+
+      expect(await leerCheckpoint(raiz, identidad)).toMatchObject({
+        propuesta: { coverMediaId: null, editorialFlags: [] },
+        entrega: { articleId: 'pendiente-de-aprobacion' }
+      })
+    } finally {
+      await rm(raiz, { recursive: true, force: true })
+    }
+  })
+
   it('persiste etapas en orden, conserva revisiones y lee el último resultado', async () => {
     const raiz = await mkdtemp(join(tmpdir(), 'pont3la10-checkpoint-'))
     try {

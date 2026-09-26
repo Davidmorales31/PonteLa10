@@ -75,7 +75,7 @@ const prerequisitos = {
   borrador: ['expediente'],
   portada: ['borrador'],
   media: ['portada'],
-  propuesta: ['borrador', 'media'],
+  propuesta: ['borrador'],
   entrega: ['propuesta']
 }
 

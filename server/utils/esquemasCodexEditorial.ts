@@ -55,7 +55,7 @@ export const esquemaPropuestaCodex = z.object({
   socialBrief: z.string().trim().min(10).max(300),
   sourceUrl: esquemaUrlHttps,
   sourceName: z.string().trim().min(2).max(160),
-  coverMediaId: z.string().uuid(),
+  coverMediaId: z.string().uuid().nullable(),
   tagIds: z.array(z.string().uuid()).max(12),
   newTopics: z.array(z.object({
     name: z.string().trim().min(2).max(80)
@@ -123,11 +123,19 @@ export const esquemaPropuestaCodex = z.object({
     })
   }
 
-  if (!propuesta.editorialFlags.includes('licensed_photo_cover')) {
+  if (propuesta.coverMediaId && !propuesta.editorialFlags.includes('licensed_photo_cover')) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['editorialFlags'],
       message: 'La foto con licencia debe quedar identificada para mostrar su atribución.'
+    })
+  }
+
+  if (!propuesta.coverMediaId && propuesta.editorialFlags.includes('licensed_photo_cover')) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['editorialFlags'],
+      message: 'No se puede declarar una foto con licencia cuando la propuesta no tiene portada.'
     })
   }
 })
