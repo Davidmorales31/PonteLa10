@@ -12,10 +12,15 @@ export const esquemaPortadaCodex = z.object({
   imagenBase64: z.string().min(100).max(5_000_000),
   titulo: z.string().trim().min(2).max(160),
   alt: z.string().trim().min(5).max(240),
-  pie: z.string().trim().min(20).max(500).default('Ilustración editorial generada con IA.')
-    .refine(texto => /ilustraci[oó]n editorial/i.test(texto)),
-  credito: z.string().trim().min(10).max(300).default('Pont3la10 · Imagen generada con IA')
-    .refine(texto => /generad[ao].{0,15}ia|ia.{0,15}generad[ao]/i.test(texto))
+  pie: z.string().trim().min(10).max(500),
+  credito: z.string().trim().min(10).max(300),
+  urlFuente: esquemaUrlHttps.refine((valor) => {
+    const url = new URL(valor)
+    return url.hostname === 'commons.wikimedia.org'
+      && url.pathname.startsWith('/wiki/File:')
+  }, 'La foto debe enlazar a su ficha de Wikimedia Commons.'),
+  autorFoto: z.string().trim().min(2).max(200),
+  licenciaFoto: z.enum(['CC0 1.0', 'CC BY 4.0', 'Dominio público'])
 }).strict()
 
 const esquemaFuenteCodex = z.object({
@@ -64,7 +69,7 @@ export const esquemaPropuestaCodex = z.object({
     'needs_angle_review',
     'insufficient_independent_corroboration',
     'sensitive_claims',
-    'illustrative_cover'
+    'licensed_photo_cover'
   ])).max(8)
 }).strict().superRefine((propuesta, contexto) => {
   const recogerTexto = (valor: unknown): string => {
@@ -118,11 +123,11 @@ export const esquemaPropuestaCodex = z.object({
     })
   }
 
-  if (!propuesta.editorialFlags.includes('illustrative_cover')) {
+  if (!propuesta.editorialFlags.includes('licensed_photo_cover')) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['editorialFlags'],
-      message: 'La portada generada debe quedar marcada como ilustración editorial.'
+      message: 'La foto con licencia debe quedar identificada para mostrar su atribución.'
     })
   }
 })

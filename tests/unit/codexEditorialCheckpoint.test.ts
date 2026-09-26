@@ -18,10 +18,12 @@ const identidad = {
 }
 
 const metadatos = {
-  titulo: 'Ilustración editorial de fútbol nocturno',
-  alt: 'Ilustración editorial de una cancha iluminada de noche',
-  pie: 'Ilustración editorial generada con IA para esta noticia deportiva.',
-  credito: 'Pont3la10 · Imagen generada con IA'
+  titulo: 'Selección Colombia en partido internacional',
+  alt: 'Selección Colombia durante un partido de fútbol internacional',
+  pie: 'Fotografía de archivo de Colombia durante un encuentro internacional.',
+  autorFoto: 'Carlos Pérez',
+  licenciaFoto: 'CC BY 4.0',
+  urlFuente: 'https://commons.wikimedia.org/wiki/File:Colombia_football_team.jpg'
 }
 
 function crearPngPrueba() {

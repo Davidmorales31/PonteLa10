@@ -6,6 +6,7 @@ import {
   verificarFirmaCodex
 } from '~/server/utils/codexEditorialPrivado'
 import { procesarImagenEditorial } from '~/server/utils/procesadorImagenEditorial'
+import { verificarAtribucionFotoCommons } from '~/server/utils/validarAtribucionFotoCommons'
 
 // Vercel Functions admiten peticiones mucho menores que el límite bruto de Nuxt;
 // dejamos margen para cabeceras y JSON/base64 en el cuerpo HTTPS.
@@ -30,6 +31,14 @@ export default defineEventHandler(async (evento) => {
   }
 
   const entrada = resultado.data
+  const creditoEsperado = await verificarAtribucionFotoCommons(entrada)
+  if (entrada.credito !== creditoEsperado) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'El crédito debe identificar autor, licencia y Wikimedia Commons.',
+      data: { codigo: 'ATRIBUCION_FOTO_CODEX_INVALIDA' }
+    })
+  }
   if (!/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(entrada.imagenBase64)) {
     throw createError({
       statusCode: 422,
@@ -52,11 +61,18 @@ export default defineEventHandler(async (evento) => {
 
   const { data: existente } = await cliente
     .from('media_files')
-    .select('id, width, height, size_bytes')
+    .select('id, width, height, size_bytes, credit, source_url')
     .eq('file_hash', imagen.hash)
     .maybeSingle()
 
   if (existente) {
+    if (existente.credit !== entrada.credito || existente.source_url !== entrada.urlFuente) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: 'La imagen ya está registrada con otra atribución; usa el archivo original de la fuente.',
+        data: { codigo: 'ATRIBUCION_FOTO_CODEX_EN_CONFLICTO' }
+      })
+    }
     return {
       mediaId: String(existente.id),
       hash: imagen.hash,
@@ -95,6 +111,7 @@ export default defineEventHandler(async (evento) => {
       is_decorative: false,
       caption: entrada.pie,
       credit: entrada.credito,
+      source_url: entrada.urlFuente,
       mime_type: imagen.tipoMime,
       size_bytes: imagen.tamanoBytes,
       width: imagen.ancho,
@@ -108,11 +125,18 @@ export default defineEventHandler(async (evento) => {
     if (errorRegistro.code === '23505') {
       const { data: duplicado } = await cliente
         .from('media_files')
-        .select('id, width, height, size_bytes')
+        .select('id, width, height, size_bytes, credit, source_url')
         .eq('file_hash', imagen.hash)
         .maybeSingle()
 
       if (duplicado) {
+        if (duplicado.credit !== entrada.credito || duplicado.source_url !== entrada.urlFuente) {
+          throw createError({
+            statusCode: 409,
+            statusMessage: 'La imagen ya está registrada con otra atribución; usa el archivo original de la fuente.',
+            data: { codigo: 'ATRIBUCION_FOTO_CODEX_EN_CONFLICTO' }
+          })
+        }
         return {
           mediaId: String(duplicado.id),
           hash: imagen.hash,

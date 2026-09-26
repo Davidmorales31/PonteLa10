@@ -190,6 +190,7 @@ interface FilaArticuloPublicoRpc {
     textoAlternativo: string
     pieDeFoto: string
     credito: string
+    fuenteFotoUrl: string
     ancho: number | null
     alto: number | null
   }
@@ -1404,6 +1405,7 @@ export async function obtenerArticuloPublicoEditorial(
           textoAlternativo: fila.portada.textoAlternativo,
           pieDeFoto: fila.portada.pieDeFoto,
           credito: fila.portada.credito,
+          fuenteFotoUrl: fila.portada.fuenteFotoUrl || '',
           ancho: fila.portada.ancho,
           alto: fila.portada.alto
         }

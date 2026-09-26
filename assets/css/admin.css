@@ -4677,6 +4677,27 @@
   font-size: 0.62rem;
 }
 
+.detalle-tarjeta-medio .atribucion-medio-editorial {
+  display: -webkit-box;
+  overflow: hidden;
+  line-height: 1.4;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.detalle-tarjeta-medio .enlace-fuente-medio-editorial {
+  width: fit-content;
+  color: #0877d8;
+  font-size: 0.64rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.detalle-tarjeta-medio .aviso-atribucion-pendiente {
+  color: #a35c05;
+}
+
 .acciones-tarjeta-medio {
   display: flex;
   justify-content: flex-end;
@@ -4865,6 +4886,13 @@
   color: #08204a;
   font-size: 0.7rem;
   font-weight: 850;
+}
+
+.rejilla-formulario-medio > label > small {
+  color: #778194;
+  font-size: 0.65rem;
+  font-weight: 500;
+  line-height: 1.4;
 }
 
 .rejilla-formulario-medio input:not([type="checkbox"]) {
@@ -5164,6 +5192,14 @@
 
 .portada-previa-articulo small {
   flex: 0 0 auto;
+}
+
+.portada-previa-articulo figcaption a {
+  margin-left: 6px;
+  color: #0877d8;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 @media (max-width: 1180px) {

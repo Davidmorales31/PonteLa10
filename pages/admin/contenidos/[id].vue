@@ -101,7 +101,8 @@ const etiquetasBanderaCodex: Record<string, string> = {
   needs_angle_review: 'Requiere aprobación humana del enfoque editorial.',
   insufficient_independent_corroboration: 'La corroboración independiente es limitada.',
   sensitive_claims: 'Contiene afirmaciones sensibles para verificar antes de aprobarla.',
-  illustrative_cover: 'La portada es una ilustración generada con IA, no una foto documental.'
+  illustrative_cover: 'La portada es una ilustración generada con IA, no una foto documental.',
+  licensed_photo_cover: 'La foto incluye crédito y enlace para comprobar su licencia.'
 }
 
 watch(cargaEditor, (carga) => {

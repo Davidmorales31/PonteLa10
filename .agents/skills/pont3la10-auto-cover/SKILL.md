@@ -1,41 +1,42 @@
 ---
 name: pont3la10-auto-cover
-description: Create an attention-worthy Pont3la10 editorial cover illustration for a researched article using Codex image generation. Use when a verified dossier and draft are available; not for documentary evidence or fake press photos.
+description: Find and prepare a genuinely reusable, accurately credited sports/editorial photograph for a Pont3la10 article; never fabricate documentary photography.
 ---
 
-# Pont3la10 Automated Editorial Covers
+# Pont3la10 Sourced Editorial Photos
 
-Use the built-in image-generation tool for one original cover that clarifies the
-story and invites a legitimate click. Follow `docs/HU_ED_11_CONTENIDO_DESDE_INVESTIGACION.md`.
+Use only after the article's reporting is complete. Follow HU-ED-11 and the
+source-page license, not just the image preview.
 
-1. Read the verified dossier and intended headline. Identify what can be shown
-   accurately and what must remain generic or absent.
-2. Create a landscape image that survives a 16:9 crop, with one clear focal
-   point, natural light/texture, believable camera framing, and restrained
-   Pont3la10 navy/electric-blue/yellow accents where appropriate.
-3. Create intrigue through composition and human stakes, never fabricated
-   scandal, injury, conflict, logos, sponsor marks, uniforms, or clickbait.
-4. Do not depict a recognizable real person, a claimed real event, or a specific
-   action as a photograph unless the user supplies a rights-cleared reference
-   and explicitly requests an edit. Otherwise use a clearly illustrative,
-   unidentifiable scene.
-5. Add no text, title, logo, badge, or watermark inside the image. Keep the
-   article's words and brand separate in the UI.
-6. Inspect the actual image for artifacts, misleading details, anatomy, text,
-   and crop safety. If it could be mistaken for documentary evidence, regenerate
-   it or return an image-quality failure.
-7. Save the inspected image to a temporary local file. Write a separate
-   temporary JSON file with exactly `titulo`, `alt`, `pie`, and `credito`; the
-   latter two must identify an AI-generated editorial illustration. From the
-   repository root, run
-   `node scripts/preparar-portada-codex.mjs <image> <metadata.json> <payload.json>`
+1. Search Wikimedia Commons for a photograph that directly and accurately
+   illustrates the story. Do not imply that an archival image depicts a current
+   event, match, lineup, injury, or person when it does not.
+2. Open the Commons file page and verify its creator and reuse terms. Only use
+   `CC0 1.0`, `CC BY 4.0`, or clearly stated `Dominio público`. Do not use
+   `NC`, `ND`, `BY-SA`, unclear, or missing licenses in this first production
+   pilot. If the author, license, or provenance cannot be verified, do not use
+   the image and do not submit the article as complete.
+3. Download the original image from that Commons file page. Never take a
+   thumbnail from a search-results page, remove a watermark, or re-create a
+   real player's likeness. The CMS optimizes to WebP; the visible credit must
+   identify the author, exact allowed license, and Wikimedia Commons. The file
+   page link is retained so a reviewer can verify the credit/license.
+4. Prepare a temporary JSON file containing exactly `titulo`, `alt`, `pie`,
+   `autorFoto`, `licenciaFoto`, and `urlFuente`. `urlFuente` must be the HTTPS
+   Wikimedia Commons file page (`/wiki/File:...`). The helper derives the
+   visible credit as `autorFoto · licenciaFoto · Wikimedia Commons` and rejects
+   unapproved license classes or other domains.
+5. From the repository root, run
+   `node scripts/preparar-portada-codex.mjs <imagen> <metadatos.json> <payload.json>`
    and then `node scripts/codex-editorial-submit.mjs media <payload.json>`. The
-   helper checks the actual JPEG/PNG/WebP signature and a 2.4 MB limit; the
-   server optimizes and registers the upload. Use the returned `mediaId` in the
-   draft. Remove only the exact temporary metadata and payload files after
-   submission; do not display or log the base64 payload.
+   helper verifies the real JPEG/PNG/WebP signature and 2.4 MB limit; the
+   server optimizes and stores the credit and source page. Never print or log
+   base64 image data.
+6. Use the returned media ID. The cover credit and source link must be visible
+   in the CRM image selector and article preview. Keep the exact licensing
+   wording; never claim Pont3la10 owns the photograph.
+7. Remove only the exact temporary metadata and payload files after submission.
 
-If image generation or safe file delivery is unavailable, stop that candidate at
-editorial attention. Never substitute a nonexistent article image, stock image
-without licensing, or invented documentary photo. This Skill cannot approve,
-schedule, or publish content.
+If no correctly licensed, relevant photo is available, stop the candidate at
+editorial attention. Never fall back to AI imagery or an unlicensed stock image.
+This Skill cannot approve, schedule, or publish content.

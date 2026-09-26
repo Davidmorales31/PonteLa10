@@ -93,10 +93,11 @@ para cambiar la política de slots siguen pendientes; no se aplicó esta migraci
 
 Incorporar una tercera vía de creación de contenido: automatizaciones locales de
 Codex investigan tendencias, construyen expedientes verificables, redactan y
-generan ilustraciones editoriales; una API privada de Pont3la10 registra cada
-pieza completa y la deja únicamente en revisión. El responsable conserva la
-decisión de aprobar. Después de esa aprobación, el sistema asigna el siguiente
-horario libre y Supabase Cron publica la pieza programada.
+seleccionan fotografías con licencia reutilizable y atribución; una API privada
+de Pont3la10 registra cada pieza completa y la deja únicamente en revisión. El
+responsable conserva la decisión de aprobar. Después de esa aprobación, el
+sistema asigna el siguiente horario libre y Supabase Cron publica la pieza
+programada.
 
 Esta vía es distinta de la ingesta TikTok y del editor manual. No crea
 ingestas ficticias ni reutiliza la transcripción como evidencia.
@@ -116,10 +117,11 @@ ingestas ficticias ni reutiliza la transcripción como evidencia.
 - Especiales y Opinión pueden tener borrador, pero llevan una advertencia
   visible de enfoque humano. No inventar postura, autor, firma, experiencia ni
   cobertura de Pont3la10.
-- Generar portadas desde las tareas de Codex. Deben ser ilustraciones editoriales
-  atractivas y pertinentes, no evidencia fotográfica fabricada de personas,
-  equipos o eventos reales. Mostrar “Ilustración editorial” donde corresponda y
-  conservar los metadatos de generación para revisión.
+- Para esta vía, usar una foto pertinente con permiso comprobable y conservar
+  autor, licencia, crédito y URL de la ficha original; el piloto limita la
+  selección a Wikimedia Commons, CC0 1.0, CC BY 4.0 o dominio público. Si los
+  términos no se verifican, no entregar la propuesta. No fingir fotos ni
+  atribuir una imagen generada como documental.
 - La persona responsable aprueba cada artículo. La aprobación puede asignar el
   próximo espacio disponible de programación. Nunca programar/publicar contenido
   aún en `review`.
@@ -154,7 +156,7 @@ ingestas ficticias ni reutiliza la transcripción como evidencia.
 Codex Automation local (diario, lotes reanudables)
   -> detectar tendencias + priorizar temas por categoría activa
   -> investigación web + expediente de fuentes/afirmaciones
-  -> Skills: redactar + proponer taxonomía + generar portada ilustrativa
+  -> Skills: redactar + proponer taxonomía + seleccionar foto con licencia
   -> API privada: validar firma, esquema, fuentes, categoría, imagen e idempotencia
   -> artículo y trazabilidad guardados -> estado review
   -> responsable revisa y aprueba (MFA)

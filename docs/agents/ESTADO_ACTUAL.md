@@ -444,6 +444,21 @@ hasta disponer de datos reales suficientes. La cabecera importa de forma
 explícita `useTemaPublico`, eliminando el 500 que podía causar la resolución
 automática desactualizada del composable durante desarrollo.
 
+**Fotos con fuente y programación editorial (2026-09-26, local):** se cambió
+el contrato de portadas del flujo Codex de ilustración generada a fotografía
+reutilizable verificada contra la ficha de Wikimedia Commons (CC0 1.0, CC BY
+4.0 o dominio público). El endpoint privado obtiene la atribución desde la API
+de Commons y guarda el enlace de fuente; biblioteca, selección, vista previa y
+artículo público muestran crédito y fuente. Se versionó la Skill de portada y
+se actualizaron los documentos HU-ED-10/11. La migración
+`20260926174021_codex_licensed_photo_attribution.sql` quedó aplicada en
+Supabase y se verificó el contrato de las dos RPC. No se cambió el flujo de aprobación: la
+propuesta sigue en `review` hasta que Juan use **Aprobar y programar**; esa
+acción reserva la siguiente franja y el cron publica al llegar la hora.
+Validado localmente: suite unitaria (23 archivos/114 pruebas), lint,
+typecheck, build con `NUXT_IGNORE_LOCK=1` y `git diff --check`. El servidor
+de demo continuó activo. El código aún requiere commit y despliegue.
+
 ## Documentos posiblemente desactualizados
 
 - `docs/ARQUITECTURA_INICIAL.md`: conserva el diseño de la primera etapa y no

@@ -55,9 +55,19 @@ function elementosLista(texto: string): string[] {
         width="1200"
         height="675"
       >
-      <figcaption v-if="portada.pieDeFoto || portada.credito">
+      <figcaption v-if="portada.pieDeFoto || portada.credito || portada.urlFuente">
         <span>{{ portada.pieDeFoto }}</span>
-        <small v-if="portada.credito">Crédito: {{ portada.credito }}</small>
+        <small v-if="portada.credito">
+          Crédito: {{ portada.credito }}
+        </small>
+        <a
+          v-if="portada.urlFuente"
+          :href="portada.urlFuente"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+        >
+          Ver fuente/licencia
+        </a>
       </figcaption>
     </figure>
 

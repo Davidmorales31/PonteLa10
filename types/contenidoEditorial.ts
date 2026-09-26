@@ -360,6 +360,7 @@ export interface PortadaArticuloPublico {
   textoAlternativo: string
   pieDeFoto: string
   credito: string
+  fuenteFotoUrl: string
   ancho: number | null
   alto: number | null
 }

@@ -10,7 +10,8 @@ revisión editorial.
 ## Alcance
 
 - Skill `pont3la10-investigative-writing` para expediente de evidencia, contraste
-  y redacción; Skill `pont3la10-auto-cover` para portadas de noticias.
+  y redacción; Skill `pont3la10-auto-cover` para fotos con permiso reutilizable
+  y atribución verificable.
 - Investigación desde fuentes externas públicas; conservar fuentes como datos
   estructurados, separadas del cuerpo.
 - Redacción en español colombiano con el estándar actual de HU-ED-08 cuando las
@@ -19,10 +20,14 @@ revisión editorial.
   públicos conforme a HU-ED-09 y hasta tres relacionados publicados.
 - SEO editorial derivado de la historia; claims sensibles y limitaciones visibles
   al revisor.
-- Portada generada por las tareas programadas de Codex y optimizada con el
-  procesador de medios del CMS; texto alternativo, crédito y marca visible de
-  “Ilustración editorial” cuando aplique. Conservar detalles de generación para
-  revisión.
+- Foto de archivo obtenida de una fuente que permita reutilización editorial
+  (piloto: Wikimedia Commons, solo CC0 1.0, CC BY 4.0 o dominio público),
+  verificada en su ficha original, optimizada por el procesador de medios y
+  guardada con alt, leyenda, autor, licencia, crédito y URL de procedencia.
+  Mostrar atribución y enlace a la fuente/licencia tanto en el CMS como bajo la
+  imagen publicada. Crédito no reemplaza permiso: si licencia o autor no se
+  pueden verificar, detener la propuesta. Nunca llamar foto real a una
+  ilustración de IA.
 - API privada de servicio a servicio que recibe un paquete validado y crea el
   artículo y trazabilidad en estado `review`.
 - Búsqueda/deduplicación contra URLs, contenido publicado y candidatos previos;
@@ -49,13 +54,13 @@ revisión editorial.
 
 - Imagen contextual, atractiva y compuesta para clic legítimo, no clickbait.
 - No fabricar una fotografía de una persona real, uniforme, lesión, acción o
-  evento que la investigación no documente; usar ilustración genérica sin
-  semejanza identificable o detener la generación.
-- No agregar titulares/logos/watermarks dentro del bitmap. El CMS la optimiza y
-  conserva alt/leyenda/crédito; el revisor la ve antes de aprobar.
-- Si Codex programado no dispone de ImageGen o no permite devolver el archivo,
-  guardar artículo incompleto en atención editorial: jamás usar placeholder o
-  imagen falsa.
+  evento que la investigación no documente. No retirar marcas de agua ni copiar
+  imágenes de páginas de búsqueda.
+- Exigir ficha de Commons, creador y licencia permitida por la Skill. Guardar
+  URL de la ficha y crédito literal con creador/licencia; el revisor ve ambos
+  antes de aprobar.
+- Si no existe una foto pertinente con permiso comprobable, detener el
+  candidato y explicar el bloqueo; nunca fingir licencia o completar cuota.
 
 ## Especiales y Opinión
 
