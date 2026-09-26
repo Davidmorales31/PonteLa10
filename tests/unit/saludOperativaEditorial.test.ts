@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { normalizarSaludOperativaEditorial } from '../../server/utils/saludOperativaEditorial'
 
 describe('vista segura de salud editorial', () => {
@@ -48,5 +49,18 @@ describe('vista segura de salud editorial', () => {
     expect(resultado.codex.ultimaCorrida?.iniciadaEn).toBeNull()
     expect(resultado.cron.estado).toBe('desconocido')
     expect(resultado.cron.disponible).toBe(false)
+  })
+
+  it('no eleva privilegios para consultar Cron cuando service_role no tiene acceso al esquema', () => {
+    const migracion = readFileSync(new URL(
+      '../../supabase/migrations/20260926151000_hu_ed_13_cron_privilege_guard.sql',
+      import.meta.url
+    ), 'utf8')
+    const guardia = migracion.indexOf("has_schema_privilege(current_user, 'cron', 'USAGE')")
+    const consultaCatalogo = migracion.indexOf("to_regclass('cron.job_run_details')")
+
+    expect(guardia).toBeGreaterThanOrEqual(0)
+    expect(consultaCatalogo).toBeGreaterThan(guardia)
+    expect(migracion).toContain("jsonb_build_object('estado', 'desconocido', 'disponible', false)")
   })
 })
