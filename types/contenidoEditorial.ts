@@ -188,6 +188,14 @@ export interface FuenteArticuloEditorial {
   creditos: string
 }
 
+export interface FuenteInvestigacionEditorial extends FuenteArticuloEditorial {
+  titulo: string
+  publicadaEn: string | null
+  consultadaEn: string
+  tipo: 'primaria' | 'secundaria'
+  afirmacionesRespaldadas: string[]
+}
+
 export interface SeoArticuloEditorial {
   titulo: string
   descripcion: string
@@ -233,6 +241,8 @@ export interface ArticuloDetalleEditorial extends DatosEditorArticulo {
   puedeEditar: boolean
   portada: MedioEditorial | null
   autoguardado: AutoguardadoArticuloEditorial | null
+  fuentesInvestigacion: FuenteInvestigacionEditorial[]
+  banderasEditorialesCodex: string[]
 }
 
 export interface ResultadoGuardadoEditorial {
@@ -270,6 +280,7 @@ export type IdAccionFlujoEditorial =
   | 'enviarRevision'
   | 'solicitarCambios'
   | 'aprobar'
+  | 'aprobarYProgramar'
   | 'programar'
   | 'publicar'
   | 'cancelarProgramacion'
@@ -285,6 +296,7 @@ export interface AccionFlujoEditorial {
   requiereNota: boolean
   requiereProgramacion: boolean
   requiereMfa: boolean
+  programacionAutomatica?: boolean
 }
 
 export interface ComentarioRevisionEditorial {
@@ -320,6 +332,17 @@ export interface EntradaTransicionEditorial {
   nota: string
   programadoPara: string | null
   aplicarConIa?: boolean
+  confirmacionAutomatica?: boolean
+}
+
+export interface ResultadoAprobacionProgramacionEditorial {
+  id: string
+  estado: 'approved' | 'scheduled'
+  versionBloqueo: number
+  programadoPara: string | null
+  zonaHoraria: string
+  intervaloMinutos: number
+  codigo?: 'APROBADO_SIN_SLOT'
 }
 
 export interface ElementoColaRevisionEditorial extends ArticuloBandejaEditorial {

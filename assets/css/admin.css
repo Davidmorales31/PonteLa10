@@ -2566,6 +2566,97 @@
   gap: 14px;
 }
 
+.fuentes-investigacion-editor {
+  display: grid;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #dfe5ee;
+}
+
+.fuentes-investigacion-editor > h3 {
+  margin: 0;
+  color: #071b3f;
+  font-size: 0.9rem;
+}
+
+.fuente-investigacion-editor {
+  padding: 14px 16px;
+  border: 1px solid #dfe5ee;
+  border-radius: 8px;
+  background: #f8faff;
+}
+
+.fuente-investigacion-editor > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #174ea6;
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.fuente-investigacion-editor > header a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #174ea6;
+}
+
+.fuente-investigacion-editor > header svg {
+  width: 14px;
+  height: 14px;
+}
+
+.fuente-investigacion-editor h4 {
+  margin: 12px 0 4px;
+  color: #071b3f;
+  font-size: 0.84rem;
+}
+
+.fuente-investigacion-editor p,
+.fuente-investigacion-editor li {
+  color: #475467;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.fuente-investigacion-editor p {
+  margin: 0 0 8px;
+}
+
+.fuente-investigacion-editor ul {
+  display: grid;
+  gap: 5px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.alerta-revision-codex {
+  margin: 16px 0;
+  padding: 14px 18px;
+  border: 1px solid #e7c86d;
+  border-radius: 8px;
+  background: #fff8df;
+  color: #59420b;
+}
+
+.alerta-revision-codex strong {
+  display: block;
+  font-size: 0.86rem;
+}
+
+.alerta-revision-codex ul {
+  display: grid;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding-left: 20px;
+  font-size: 0.77rem;
+  line-height: 1.5;
+}
+
 .rejilla-campos-editor label,
 .panel-configuracion-editor > label {
   display: grid;
@@ -4141,6 +4232,38 @@
   font-weight: 850;
   text-decoration: none;
   white-space: nowrap;
+}
+
+.aviso-programacion-automatica-editorial {
+  display: grid;
+  gap: 10px;
+  border: 1px solid #bfd2f2;
+  border-radius: 8px;
+  background: #f4f7fb;
+  color: #08204a;
+  padding: 14px;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.aviso-programacion-automatica-editorial > svg {
+  width: 22px;
+  color: #174ea6;
+}
+
+.aviso-programacion-automatica-editorial p {
+  margin: 0;
+}
+
+.aviso-programacion-automatica-editorial label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-weight: 750;
+}
+
+.aviso-programacion-automatica-editorial input {
+  margin-top: 3px;
 }
 
 .modal-eliminar-contenido {

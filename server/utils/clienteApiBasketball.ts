@@ -4,6 +4,7 @@ import type {
   PosicionApiBasketball,
   RespuestaApiBasketball
 } from '~/types/apiBasketball'
+import { zonaHorariaColombia } from '~/utils/zonasHorarias'
 
 export interface ConfiguracionApiBasketball {
   baseUrl: string
@@ -12,11 +13,12 @@ export interface ConfiguracionApiBasketball {
 
 export function consultarPartidosFechaApiBasketball(
   configuracion: ConfiguracionApiBasketball,
-  fecha: string
+  fecha: string,
+  zonaHoraria = zonaHorariaColombia
 ): Promise<PartidoApiBasketball[]> {
   return consultarApiBasketball(configuracion, 'games', {
     date: fecha,
-    timezone: 'America/Bogota'
+    timezone: zonaHoraria
   })
 }
 

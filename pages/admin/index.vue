@@ -2,6 +2,7 @@
 import {
   CheckCircle2,
   ClipboardCheck,
+  Activity,
   Files,
   FilePenLine,
   Newspaper,
@@ -130,17 +131,25 @@ async function recargarResumen() {
       </div>
     </section>
 
-    <section class="proximas-fases-panel" aria-labelledby="titulo-proximas-fases">
+    <section class="proximas-fases-panel" aria-labelledby="titulo-operacion-editorial">
       <div class="cabecera-bloque-panel">
         <div>
-          <p class="etiqueta-panel">Siguiente bloque</p>
-          <h2 id="titulo-proximas-fases">Camino editorial</h2>
+          <p class="etiqueta-panel">Flujo actual</p>
+          <h2 id="titulo-operacion-editorial">Producción con revisión humana</h2>
         </div>
+        <NuxtLink
+          v-if="contextoEditorial?.permisos.includes('configuracion.ver')"
+          class="accion-panel-secundaria"
+          to="/admin/operacion"
+        >
+          <Activity aria-hidden="true" />
+          <span>Ver operación</span>
+        </NuxtLink>
       </div>
       <ol>
-        <li><span>01</span><strong>Modelo y taxonomías</strong><small>Bandeja y borradores operativos.</small></li>
-        <li><span>02</span><strong>Editor estructurado</strong><small>Escritura, bloques y autoguardado.</small></li>
-        <li><span>03</span><strong>Biblioteca de medios</strong><small>Imágenes seguras y reutilizables.</small></li>
+        <li><span>01</span><strong>Crear</strong><small>Editor manual o ingesta automática desde TikTok.</small></li>
+        <li><span>02</span><strong>Investigar</strong><small>La nueva vía Codex deja propuestas privadas en revisión.</small></li>
+        <li><span>03</span><strong>Aprobar y programar</strong><small>La publicación requiere decisión editorial y autorización.</small></li>
       </ol>
     </section>
   </div>

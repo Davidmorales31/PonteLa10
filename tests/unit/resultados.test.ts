@@ -47,6 +47,13 @@ describe('resultados deportivos', () => {
     expect(obtenerEtiquetaEstado({ ...partido, estado: 'finalizado' } as PartidoResultado)).toBe('Finalizado')
   })
 
+  it('muestra el horario del partido en la zona elegida y conserva Bogotá por defecto', () => {
+    const partidoProgramado = { ...mapearFixtureApiFootball(fixtureBase), estado: 'programado' as const }
+
+    expect(obtenerEtiquetaEstado(partidoProgramado)).toBe('20:00')
+    expect(obtenerEtiquetaEstado(partidoProgramado, 'Asia/Tokyo')).toBe('10:00')
+  })
+
   it('adapta un evento gratuito al contrato interno', () => {
     const evento: EventoTheSportsDb = {
       idEvent: '2397222',

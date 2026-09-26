@@ -293,6 +293,11 @@ export const esquemaTransicionEditorial = z.object({
   }
 })
 
+export const esquemaAprobarProgramarEditorial = z.object({
+  versionBloqueo: z.number().int().positive(),
+  confirmar: z.literal(true)
+}).strict()
+
 export const esquemaComentarioRevision = z.object({
   mensaje: z.string().trim().min(3).max(1000)
 })
@@ -304,7 +309,10 @@ export const esquemaReescrituraIaEditorial = z.object({
 
 const definicionesAccionesFlujo: Record<
   string,
-  AccionFlujoEditorial & { permiso: PermisoEditorial }
+  AccionFlujoEditorial & {
+    permiso: PermisoEditorial
+    permisosRequeridos?: PermisoEditorial[]
+  }
 > = {
   enviarRevision: {
     id: 'enviarRevision',
@@ -335,6 +343,18 @@ const definicionesAccionesFlujo: Record<
     requiereProgramacion: false,
     requiereMfa: false,
     permiso: 'contenido.aprobar'
+  },
+  aprobarYProgramar: {
+    id: 'aprobarYProgramar',
+    estadoObjetivo: 'scheduled',
+    etiqueta: 'Aprobar y programar',
+    descripcion: 'Aprueba con MFA y reserva el siguiente horario disponible.',
+    requiereNota: false,
+    requiereProgramacion: false,
+    requiereMfa: true,
+    programacionAutomatica: true,
+    permiso: 'contenido.aprobar',
+    permisosRequeridos: ['contenido.aprobar', 'contenido.programar']
   },
   programar: {
     id: 'programar',
@@ -400,7 +420,7 @@ const definicionesAccionesFlujo: Record<
 
 const accionesPorEstado: Record<EstadoContenidoEditorial, string[]> = {
   draft: ['enviarRevision', 'archivar'],
-  review: ['solicitarCambios', 'aprobar', 'archivar'],
+  review: ['solicitarCambios', 'aprobar', 'aprobarYProgramar', 'archivar'],
   changes_requested: ['enviarRevision', 'archivar'],
   approved: ['solicitarCambios', 'programar', 'publicar', 'archivar'],
   scheduled: ['solicitarCambios', 'cancelarProgramacion', 'publicar', 'archivar'],
@@ -414,8 +434,9 @@ export function obtenerAccionesFlujoEditorial(
 ): AccionFlujoEditorial[] {
   return accionesPorEstado[estado]
     .map(id => definicionesAccionesFlujo[id])
-    .filter(definicion => permisos.includes(definicion.permiso))
-    .map(({ permiso: _permiso, ...accion }) => accion)
+    .filter(definicion => (definicion.permisosRequeridos || [definicion.permiso])
+      .every(permiso => permisos.includes(permiso)))
+    .map(({ permiso: _permiso, permisosRequeridos: _permisosRequeridos, ...accion }) => accion)
 }
 
 export function obtenerPermisoTransicionEditorial(

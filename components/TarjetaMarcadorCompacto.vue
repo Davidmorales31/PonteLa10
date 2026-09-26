@@ -2,7 +2,7 @@
 import { ChevronRight } from '@lucide/vue'
 import type { PartidoResultado } from '~/types/resultados'
 
-defineProps<{ partido: PartidoResultado }>()
+defineProps<{ partido: PartidoResultado, zonaHoraria?: string }>()
 </script>
 
 <template>
@@ -14,7 +14,7 @@ defineProps<{ partido: PartidoResultado }>()
   >
     <header>
       <span>{{ partido.competencia }}</span>
-      <EtiquetaEstadoPartido :partido="partido" />
+      <EtiquetaEstadoPartido :partido="partido" :zona-horaria="zonaHoraria" />
     </header>
     <div class="fila-equipo-marcador">
       <EscudoEquipo :equipo="partido.equipoLocal" tamano="pequeno" />

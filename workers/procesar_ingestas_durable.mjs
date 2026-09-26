@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import { createClient } from '@supabase/supabase-js'
+import { crearLatidoWorker } from './latido_worker.mjs'
 
 const espera = milisegundos => new Promise(resolve => setTimeout(resolve, milisegundos))
 const unaVez = process.argv.includes('--once')
@@ -559,33 +560,40 @@ async function iniciar() {
   await autenticar(cliente)
   await verificarDependenciasPython()
   console.log('Worker listo: Supabase y dependencias de TikTok verificadas.')
-  if (ingestaParaRedactar) {
-    const { data: evidencia, error } = await cliente.rpc('get_editorial_ingestion_evidence_for_worker', {
-      p_ingestion_id: ingestaParaRedactar
-    })
-    if (error || !evidencia) throw new Error('No se pudo recuperar la evidencia para reintentar el borrador.')
-    await redactarBorradorAutomatico(cliente, ingestaParaRedactar, evidencia)
-    console.log(`Borrador reintentado: ${ingestaParaRedactar}`)
-    return
-  }
-  do {
-    try {
-      const asignacion = await rpc(cliente, 'claim_next_editorial_ingestion', {
-        p_worker_instance_id: instancia,
-        p_request_id: randomUUID()
+  const heartbeatWorker = crearLatidoWorker({ cliente, workerInstanceId: instancia })
+  await heartbeatWorker.iniciar()
+  try {
+    if (ingestaParaRedactar) {
+      const { data: evidencia, error } = await cliente.rpc('get_editorial_ingestion_evidence_for_worker', {
+        p_ingestion_id: ingestaParaRedactar
       })
-      if (asignacion.tipo === 'asignado') await procesarAsignacion(cliente, asignacion)
-      else if (!soloCola && await recuperarEvidenciaPendiente(cliente)) continue
-      else {
-        console.log(`Cola ${asignacion.tipo || 'sin estado'}; esperando ${asignacion.esperarMs || 0} ms.`)
-        if (!unaVez) await espera(asignacion.esperarMs || 5000)
-      }
-    } catch (error) {
-      if (unaVez) throw error
-      console.error(`Worker temporalmente sin conexión: ${error instanceof Error ? error.message : 'error desconocido'}`)
-      await espera(5000)
+      if (error || !evidencia) throw new Error('No se pudo recuperar la evidencia para reintentar el borrador.')
+      await redactarBorradorAutomatico(cliente, ingestaParaRedactar, evidencia)
+      console.log(`Borrador reintentado: ${ingestaParaRedactar}`)
+      return
     }
-  } while (!unaVez)
+
+    do {
+      try {
+        const asignacion = await rpc(cliente, 'claim_next_editorial_ingestion', {
+          p_worker_instance_id: instancia,
+          p_request_id: randomUUID()
+        })
+        if (asignacion.tipo === 'asignado') await procesarAsignacion(cliente, asignacion)
+        else if (!soloCola && await recuperarEvidenciaPendiente(cliente)) continue
+        else {
+          console.log(`Cola ${asignacion.tipo || 'sin estado'}; esperando ${asignacion.esperarMs || 0} ms.`)
+          if (!unaVez && !heartbeatWorker.debeDetenerse()) await espera(asignacion.esperarMs || 5000)
+        }
+      } catch (error) {
+        if (unaVez) throw error
+        console.error(`Worker temporalmente sin conexión: ${error instanceof Error ? error.message : 'error desconocido'}`)
+        if (!heartbeatWorker.debeDetenerse()) await espera(5000)
+      }
+    } while (!unaVez && !heartbeatWorker.debeDetenerse())
+  } finally {
+    await heartbeatWorker.detener()
+  }
 }
 
 iniciar().catch(error => {

@@ -10,6 +10,7 @@ coverage
 .DS_Store
 *.log
 .codex-dev-server.*.log
+.codex/editorial-runs/
 .memento/
 .memento-multiagent/
 _RESPALDOS_POR_ELIMINAR/

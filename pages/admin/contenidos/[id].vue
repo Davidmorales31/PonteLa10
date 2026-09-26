@@ -73,6 +73,7 @@ const router = useRouter()
 const articuloId = computed(() => String(route.params.id || ''))
 const { ejecutarConBloqueo } = useBloqueoInterfaz()
 const { contextoEditorial, tienePermiso } = useContextoEditorial()
+const { mostrarAlerta } = useAlertasEditoriales()
 
 const {
   data: cargaEditor,
@@ -96,6 +97,12 @@ const flujo = ref<FlujoArticuloEditorial | null>(
 const portadaSeleccionada = ref<MedioEditorial | null>(
   cargaEditor.value?.articulo.portada || null
 )
+const etiquetasBanderaCodex: Record<string, string> = {
+  needs_angle_review: 'Requiere aprobación humana del enfoque editorial.',
+  insufficient_independent_corroboration: 'La corroboración independiente es limitada.',
+  sensitive_claims: 'Contiene afirmaciones sensibles para verificar antes de aprobarla.',
+  illustrative_cover: 'La portada es una ilustración generada con IA, no una foto documental.'
+}
 
 watch(cargaEditor, (carga) => {
   if (!carga) return
@@ -702,6 +709,66 @@ function abrirAccionFlujo(accion: AccionFlujoEditorial) {
 }
 
 async function confirmarAccionFlujo(entrada: EntradaTransicionEditorial) {
+  if (entrada.confirmacionAutomatica) {
+    if (hayCambiosQueBloqueanFlujo.value || !articulo.value) {
+      errorGuardado.value = 'Guarda los cambios pendientes antes de aprobar y programar.'
+      accionFlujoSeleccionada.value = null
+      return
+    }
+
+    errorGuardado.value = ''
+    guardando.value = true
+    await ejecutarConBloqueo(
+      `aprobar-programar:${articuloId.value}`,
+      'Aprobando y reservando el siguiente horario',
+      async () => {
+        try {
+          const resultado = await $fetch<{
+            id: string
+            estado: 'approved' | 'scheduled'
+            programadoPara: string | null
+            zonaHoraria: string
+          }>(`/api/admin/contenidos/${articuloId.value}/aprobar-programar`, {
+            method: 'POST',
+            body: {
+              versionBloqueo: articulo.value?.versionBloqueo,
+              confirmar: true
+            }
+          })
+          accionFlujoSeleccionada.value = null
+          formulario.value = null
+          await recargarArticulo()
+          if (articulo.value) inicializarEditor(articulo.value)
+          if (resultado.estado === 'scheduled' && resultado.programadoPara) {
+            mensajeEstado.value = 'Contenido aprobado y programado'
+            mostrarAlerta({
+              tipo: 'exito',
+              titulo: 'Aprobado y programado',
+              mensaje: `Publicación reservada para ${formatearFecha(resultado.programadoPara)} (${resultado.zonaHoraria}).`
+            })
+          } else {
+            mensajeEstado.value = 'Contenido aprobado; falta programar'
+            mostrarAlerta({
+              tipo: 'advertencia',
+              titulo: 'Quedó aprobado, falta programar',
+              mensaje: 'No se encontró un horario libre durante el próximo año. Puedes asignar la fecha manualmente más tarde.'
+            })
+          }
+        } catch (errorPeticion: unknown) {
+          errorGuardado.value = obtenerMensajePeticion(errorPeticion)
+          mostrarAlerta({
+            tipo: 'error',
+            titulo: 'No se pudo aprobar y programar',
+            mensaje: errorGuardado.value
+          })
+        } finally {
+          guardando.value = false
+        }
+      }
+    )
+    return
+  }
+
   const transicionCompletada = await realizarTransicion(entrada)
   if (!transicionCompletada || !entrada.aplicarConIa || !articulo.value) return
 
@@ -900,6 +967,19 @@ function formatearFecha(fecha: string): string {
         @seleccionar="irAPasoEditor"
       />
 
+      <section
+        v-if="articulo?.banderasEditorialesCodex?.length"
+        class="alerta-revision-codex"
+        aria-label="Notas de revisión de la propuesta automatizada"
+      >
+        <strong>Revisión editorial de la propuesta automatizada</strong>
+        <ul>
+          <li v-for="bandera in articulo.banderasEditorialesCodex" :key="bandera">
+            {{ etiquetasBanderaCodex[bandera] || 'Verifica esta propuesta antes de aprobarla.' }}
+          </li>
+        </ul>
+      </section>
+
       <BarraAccionesFlujoEditorial
         v-if="flujo"
         :flujo="flujo"
@@ -1001,6 +1081,36 @@ function formatearFecha(fecha: string): string {
                   :disabled="!puedeEditar"
                 />
               </label>
+            </div>
+
+            <div
+              v-if="articulo?.fuentesInvestigacion?.length"
+              class="fuentes-investigacion-editor"
+            >
+              <h3>Investigación y afirmaciones respaldadas</h3>
+              <article
+                v-for="(fuente, indice) in articulo.fuentesInvestigacion"
+                :key="`${fuente.url}-${indice}`"
+                class="fuente-investigacion-editor"
+              >
+                <header>
+                  <span>{{ fuente.tipo === 'primaria' ? 'Fuente primaria' : 'Fuente independiente' }}</span>
+                  <a
+                    :href="fuente.url"
+                    target="_blank"
+                    rel="noopener noreferrer nofollow"
+                  >
+                    Abrir fuente <Link2 aria-hidden="true" />
+                  </a>
+                </header>
+                <h4>{{ fuente.titulo }}</h4>
+                <p>{{ fuente.nombre }}</p>
+                <ul>
+                  <li v-for="afirmacion in fuente.afirmacionesRespaldadas" :key="afirmacion">
+                    {{ afirmacion }}
+                  </li>
+                </ul>
+              </article>
             </div>
           </section>
         </main>

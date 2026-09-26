@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ChevronDown, Menu, Moon, Search, Sun, X } from '@lucide/vue'
+import { ChevronDown, ChevronRight, Menu, Moon, Search, Sun, UserRound, X } from '@lucide/vue'
 import { navegacionMasSitio, navegacionSitio } from '~/data/sitioPublico'
 import { useTemaPublico } from '~/composables/useTemaPublico'
 
@@ -79,7 +79,7 @@ async function buscarContenido() {
 </script>
 
 <template>
-  <header class="cabecera-landing">
+  <header class="cabecera-landing" @keydown.esc="menuAbierto = false">
     <div class="cabecera-landing-contenido">
       <NuxtLink class="marca-cabecera-landing" to="/" aria-label="Pont3la10, ir al inicio">
         <img
@@ -176,22 +176,45 @@ async function buscarContenido() {
     </form>
 
     <nav v-if="menuAbierto" id="menu-principal-movil" class="navegacion-landing-movil" aria-label="Menú móvil">
-      <NuxtLink
-        v-for="item in navegacionSitio"
-        :key="item.etiqueta"
-        :to="item.ruta"
-        :class="{ activo: esRutaActiva(item.ruta, item.exacta) }"
-      >
-        {{ item.etiqueta }}
-      </NuxtLink>
-      <p class="titulo-seccion-menu-movil">Más</p>
-      <NuxtLink
-        v-for="item in navegacionMasSitio"
-        :key="item.etiqueta"
-        :to="item.ruta"
-        :class="{ activo: esRutaActiva(item.ruta, item.exacta) }"
-      >
-        {{ item.etiqueta }}
+      <div class="encabezado-menu-movil">
+        <div>
+          <span>Explora Pont3la10</span>
+          <p>Deportes, tecnología y actualidad</p>
+        </div>
+        <span class="insignia-menu-movil">MENÚ</span>
+      </div>
+      <div class="grupos-menu-movil">
+        <section class="grupo-menu-movil" aria-labelledby="titulo-menu-principal">
+          <h2 id="titulo-menu-principal">Secciones</h2>
+          <NuxtLink
+            v-for="item in navegacionSitio"
+            :key="item.etiqueta"
+            :to="item.ruta"
+            :class="{ activo: esRutaActiva(item.ruta, item.exacta) }"
+            :aria-current="esRutaActiva(item.ruta, item.exacta) ? 'page' : undefined"
+          >
+            <span>{{ item.etiqueta }}</span>
+            <ChevronRight aria-hidden="true" />
+          </NuxtLink>
+        </section>
+        <section class="grupo-menu-movil" aria-labelledby="titulo-menu-explora">
+          <h2 id="titulo-menu-explora">Para explorar</h2>
+          <NuxtLink
+            v-for="item in navegacionMasSitio"
+            :key="item.etiqueta"
+            :to="item.ruta"
+            :class="{ activo: esRutaActiva(item.ruta, item.exacta) }"
+            :aria-current="esRutaActiva(item.ruta, item.exacta) ? 'page' : undefined"
+          >
+            <span>{{ item.etiqueta }}</span>
+            <ChevronRight aria-hidden="true" />
+          </NuxtLink>
+        </section>
+      </div>
+      <NuxtLink class="enlace-cuenta-menu-movil" :to="accionCuenta.ruta">
+        <UserRound aria-hidden="true" />
+        <span>{{ accionCuenta.etiqueta }}</span>
+        <ChevronRight aria-hidden="true" />
       </NuxtLink>
     </nav>
   </header>
