@@ -10,21 +10,36 @@
   validación de scores tras el primer intento de sintaxis; el segundo intento
   pasó y el historial remoto confirma las cinco versiones. No se modificaron
   filas de artículos ni programaciones existentes. `npm run lint`, typecheck,
-  build, `git diff --check` y 110 pruebas (22 archivos) pasan. La regla editorial
+  build, `git diff --check` y 111 pruebas (22 archivos) pasan. La regla editorial
   de 60 minutos sí se aplica tanto a nuevas reservas manuales como a las
   automáticas, según HU-ED-12; no desplaza horarios ya reservados. Revisión
-  estática de API/RPC sin bypass de aprobación/publicación; falta el smoke test
+  estática de API/RPC sin bypass de aprobación/publicación; el smoke test
   firmado desde Vercel ya responde. La primera llamada encontró que `service_role`
   no puede inspeccionar `cron`; la migración correctiva informa Cron como
   desconocido sin ampliar grants, y se verificó el RPC usando ese rol.
   Diagnóstico de producción: worker desconocido (sin latido), 2 ingestas fallidas,
   cero en cola/en curso, cero programadas vencidas y Cron desconocido. No se
   alteraron las dos ingestas ni horarios existentes. PR #10 quedó mergeado a
-  `main` en `1e3cf28` y Vercel preview/checks pasaron. La migración correctiva y
-  su prueba de regresión aún deben ir en un nuevo PR corto. Se excluye
+  `main` en `1e3cf28`; PR #11 también quedó mergeado en `044bd4e`. Ambos PR
+  pasaron build, lint, typecheck y pruebas; Vercel generó los despliegues. Se excluye
   `pontela10.zip` (artefacto de respaldo) del commit; no se borra.
 
-- **Automatización editorial con Codex (2026-09-26, local, sin commit):** se
+- **Tareas Codex activas (2026-09-26):** en el proyecto local canónico
+  `C:\PONTE LA 10` quedó activa la tarea diaria de investigación y creación de
+  borradores para todas las categorías, a las 06:00 America/Bogota, con meta de
+  5–7 propuestas sólidas por categoría y estado `review` únicamente. También
+  quedó activo un monitor operativo cada seis horas; solo consulta salud y puede
+  reintentar una entrega técnica ya preparada e idempotente. Ninguna tarea puede
+  aprobar, programar, publicar, despertar al worker ni reencolar ingestas. Node
+  carga `.env` solo al proceso cliente mediante `--env-file-if-exists=.env`; no se
+  imprimen credenciales. La PC y Codex Desktop deben estar encendidos para las
+  ejecuciones locales. Primer diagnóstico seguro: worker desconocido (sin
+  heartbeat), dos ingestas fallidas, ninguna en cola/procesando ni programación
+  vencida; Cron queda desconocido porque `service_role` no inspecciona su esquema.
+  No se modificaron esas ingestas ni publicaciones existentes.
+
+- **Automatización editorial con Codex (registro histórico del corte local
+  previo a integración; estado vigente arriba):** se
   inició HU-ED-10–13 en `codex/hu-ed-10-contenido-programado`, basada en `main`
   (`39acbb2`), preservando los cambios previos del árbol. Primer hito HU-ED-11:
   API privada firmada para cargar portada y entregar borradores en `review`, con
