@@ -1,4 +1,5 @@
 import type { EstadoPartido, FixtureApiFootball, PartidoResultado } from '~/types/resultados'
+import { normalizarZonaHoraria, zonaHorariaColombia } from '~/utils/zonasHorarias'
 
 const estadosEnVivo = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP', 'INT', 'LIVE'])
 const estadosFinalizados = new Set(['FT', 'AET', 'PEN', 'AWD', 'WO'])
@@ -58,7 +59,7 @@ export function ordenarPartidosRelevantes(partidos: PartidoResultado[]): Partido
   })
 }
 
-export function obtenerEtiquetaEstado(partido: PartidoResultado): string {
+export function obtenerEtiquetaEstado(partido: PartidoResultado, zonaHoraria = zonaHorariaColombia): string {
   if (partido.estado === 'en-vivo') {
     return partido.minuto ? `${partido.minuto}′` : partido.periodo || 'En vivo'
   }
@@ -71,7 +72,7 @@ export function obtenerEtiquetaEstado(partido: PartidoResultado): string {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
-    timeZone: 'America/Bogota'
+    timeZone: normalizarZonaHoraria(zonaHoraria)
   }).format(new Date(partido.fechaIso))
 }
 

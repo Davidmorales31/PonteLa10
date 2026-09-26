@@ -1,5 +1,130 @@
 # Estado actual de Pont3la10
 
+- **Cierre de migraciones y validación (2026-09-26):** respecto a la nota
+  histórica inferior, ya quedaron aplicadas en Supabase producción las cuatro
+  migraciones HU-ED-11–13 en orden: `codex_editorial_proposals`,
+  `hu_ed_10_codex_agenda_checkpoints`,
+  `hu_ed_12_aprobar_programar_siguiente_slot` y
+  `hu_ed_13_worker_heartbeat_y_salud`. La segunda necesitó simplificar la
+  validación de scores tras el primer intento de sintaxis; el segundo intento
+  pasó y el historial remoto confirma las cuatro versiones. No se modificaron
+  filas de artículos ni programaciones existentes. `npm run lint`, typecheck,
+  build, `git diff --check` y 110 pruebas (22 archivos) pasan. La regla editorial
+  de 60 minutos sí se aplica tanto a nuevas reservas manuales como a las
+  automáticas, según HU-ED-12; no desplaza horarios ya reservados. Revisión
+  estática de API/RPC sin bypass de aprobación/publicación; falta el smoke test
+  firmado tras el deploy. Cambios todavía en working tree, aún no commiteados ni
+  publicados a `main`. Se excluye `pontela10.zip` (artefacto de respaldo) del
+  commit; no se borra.
+
+- **Automatización editorial con Codex (2026-09-26, local, sin commit):** se
+  inició HU-ED-10–13 en `codex/hu-ed-10-contenido-programado`, basada en `main`
+  (`39acbb2`), preservando los cambios previos del árbol. Primer hito HU-ED-11:
+  API privada firmada para cargar portada y entregar borradores en `review`, con
+  HMAC/nonce de un solo uso, límites, esquema estricto, idempotencia, fuentes y
+  trazabilidad; migración local y Skills de investigación/redacción/imagen. El
+  responsable sigue siendo quien aprueba; no hay autoaprobación ni publicación.
+  Typecheck, 110 pruebas unitarias, lint completo, build y `git diff --check` pasan.
+  La revisión de seguridad confirmó firma ligada a método/ruta/requestId,
+  nonce de un uso, límite durante streaming e idempotencia serializada; el
+  adaptador sin streaming ahora falla cerrado. El build de producción local pasó;
+  no se aplicaron las migraciones, ni se tocaron secretos/producción,
+  ni se creó automatización. HU-ED-10 también tiene endpoints privados de
+  contexto/agenda y checkpoints diarios deduplicados por 30 días, con hasta siete
+  propuestas verificables por categoría, con motivo cuando el total acumulado
+  termina por debajo de cinco. El contexto entrega también los temas públicos
+  activos. Al reanudar, devuelve metadatos de propuestas ya creadas en esa
+  corrida para saltarlas y no volver a pagar su redacción/portada.
+  Las RPC usan `SECURITY INVOKER`, grants solo a service_role y no dependen de
+  `auth.role()`; segunda revisión ACL confirma el cierre a clientes. SQL valida
+  `trendTitle` y scores además de Zod. Los temas públicos nuevos ahora rechazan
+  caracteres de control tanto en Zod como dentro de la RPC, alineado con la
+  protección HU-ED-09. El revisor detectó y se corrigió el conteo
+  no acumulativo al reanudar lotes: el checkpoint se calcula desde oportunidades
+  persistidas por corrida/categoría, conserva el motivo si aún faltan hallazgos,
+  lo limpia al llegar a cinco y rechaza más de siete en total. Zod permite enviar
+  lotes parciales; el servidor decide según el acumulado. Revisión final sin
+  riesgo nuevo; falta cobertura PostgreSQL para dos lotes y rollback al superar
+  siete. La migración aún no se ejecutó localmente,
+  por lo que la sintaxis/plpgsql y RPC no tienen verificación de integración.
+  HU-ED-12 tiene un primer flujo local de **Aprobar y programar**: exige ambos
+  permisos editoriales, MFA/AAL2, confirmación explícita y versión vigente; la
+  RPC bloquea artículo/slot y registra aprobación + reserva en una transacción,
+  usando el primer intervalo libre de 60 minutos en America/Bogota. Un trigger
+  común serializa las reservas manuales y automáticas y bloquea colisiones; si
+  no hay slot, conserva `approved` y notifica. La revisión SQL confirmó permisos,
+  MFA y bloqueo compartido; los conflictos manuales se mapean a HTTP 409. Suite
+  completa, typecheck y build pasan. La configuración desde UI y ejecución
+  PostgreSQL siguen pendientes.
+  HU-ED-13 tiene un primer hito local: heartbeat independiente cada 60 s que no
+  bloquea al worker si la migración aún no está instalada; API privada firmada
+  de salud resume worker, ingestas, lotes Codex, programadas vencidas y última
+  ejecución de Cron, distinguiendo extensión ausente y job sin configurar.
+  Incluye edades de cola/evidencia y atraso programado, y omite mensajes crudos
+  de Cron. La Skill `pont3la10-operational-monitor` limita el chequeo a lectura.
+  Los datos de heartbeat se purgan tras 30 días; una señal `stopping` caduca a
+  desconectado en 120 s. La Skill de seis horas permite una sola recuperación
+  técnica idempotente de entregas ya preparadas, sin generar de nuevo, reencolar
+  ingestas ni publicar; Cron conserva sus reintentos propios. La Skill de portadas ahora usa
+  `scripts/preparar-portada-codex.mjs` para verificar firma MIME/tamaño y
+  preparar el payload binario sin imprimir base64. Hay checkpoints locales por
+  candidato/etapa, portada almacenada por SHA-256, payload restringido al
+  directorio aislado y exportación silenciosa de etapas para replay. Preparar el
+  payload de portada ahora es reanudable: reutiliza el JSON existente solo si es
+  idéntico y falla cerrado ante colisiones; dos pruebas cubren ambos casos. El CLI puede
+  enumerar etapas de una corrida para reanudarla;
+  la Skill `pont3la10-daily-editorial-run` coordina la
+  reanudación sin repetir propuestas registradas ni cruzar aprobación humana.
+  El CRM tiene una vista Operación de solo lectura protegida por
+  `configuracion.ver` (propietario/administrador), con alertas globales y
+  proyección de estado sin IDs, secretos ni mensajes crudos. El inicio del CRM
+  ya describe los tres flujos actuales y enlaza al monitor para los roles
+  habilitados. Revisión de seguridad sin bloqueantes. Suite completa (22
+  archivos, 110 pruebas), lint, typecheck, build y `git diff --check` pasan. Revisión
+  estática SQL sin bloqueantes; no hay PostgreSQL local para ejecutar las
+  migraciones. Inspección de solo lectura a Supabase confirmó PostgreSQL 17.6,
+  ninguna rama de desarrollo activa y que la lista remota aún no contiene las
+  migraciones de 2026-09-26. Una consulta constante y sin escritura verificó que
+  `[:cntrl:]` rechaza controles C0/C1 y acepta texto normal en esa versión; no
+  valida la migración completa ni modifica datos.
+  Bloqueo de automatización confirmado de nuevo el 2026-09-26: `list_projects`
+  solo registra `PONTE LA 10` en OneDrive (`54ac99aa-ff11-473b-a742-42fdfa87e236`).
+  No existe `C:\Users\juand\.codex\automations`, por lo que no hay una tarea
+  local anterior que reusar o actualizar.
+  No es el árbol canónico: allí Git está en `master`/`65afe48`, mientras
+  `C:\PONTE LA 10` está en `codex/hu-ed-10-contenido-programado`/`39acbb2` con
+  59 rutas modificadas o nuevas que deben preservarse. No programar la tarea
+  diaria en el proyecto OneDrive. La inspección local de nombres de variables
+  halló únicamente las dos públicas de Supabase; no existen en `.env` las
+  variables privadas requeridas por el endpoint (`NUXT_CODEX_EDITORIAL_API_SECRET`
+  y `NUXT_SUPABASE_SERVICE_ROLE_KEY`), ni la URL del cliente. Se añadieron los
+  tres nombres a `.env.example` con URL local y secretos vacíos; no se mostraron
+  valores. Pendientes:
+  HU-ED-11 end-to-end, recuperación HU-ED-13, validación visual del monitor con
+  sesión y pruebas PostgreSQL reales de todas las migraciones/API.
+
+- **Imagen del login (2026-09-26, local):** se integró, con aprobación del
+  responsable, una imagen genérica generada para el panel visual del login.
+  Está en `public/editorial/login_pont3la10_tunel_estadio.png`; no incrusta logo
+  ni texto y la marca del sitio sigue renderizada por separado. La imagen previa
+  se conserva. No se publicó ni se desplegó este cambio.
+
+- **Login y correos Auth (2026-09-26):** se corrigió en el proyecto Supabase
+  `pont3la10` el `Site URL` que apuntaba a `http://localhost:3000/admin/login`;
+  ahora es `https://www.pont3la10.com`. Se añadieron y verificaron tres destinos
+  exactos: producción `/login`, `localhost:3001/login` y
+  `127.0.0.1:3001/login`. Antes no existía ninguna Redirect URL, por lo que los
+  enlaces de confirmación/recuperación podían caer al Site URL local. SMTP
+  personalizado quedó activo con Brevo, remitente `contact@pont3la10.com`,
+  nombre `Pont3la10`, relay Brevo y puerto 587. La clave permanece únicamente en
+  el Dashboard. Se guardaron y previsualizaron las plantillas Confirm sign up y
+  Reset password desde `supabase/templates/`; ambas conservan
+  `{{ .ConfirmationURL }}`. Falta que el responsable inicie una recuperación o
+  registro real para comprobar entrega en su bandeja; no se enviaron correos de
+  prueba. El login de contraseña no dispara por sí mismo un correo: normalmente
+  el mensaje corresponde a confirmación de cuenta o recuperación.
+
+- **Navegación, horarios locales y paridad de resultados (2026-09-26):** el menú móvil es un panel agrupado con estados activos, enlace a cuenta y cierre con Escape; hay migas reutilizables en artículo, partidos de hoy y resultados en vivo. `/partidos-hoy` consulta y muestra horarios según la zona del navegador (Bogotá como respaldo); el indicador muestra una zona localizada y los enlaces relacionados son controles compactos. El usuario actualizó variables/deploy de Production; el deployment `8rXU7by5tM3LJApYWmR2k8qq82NZ` aparece Ready en `main` (`a1fa711`). Comparación del endpoint para `America/Bogota`: local y producción devolvieron 30 partidos y origen `mixto`; los tres primeros encuentros coincidieron. Por tratarse de datos en vivo, scores/estados pueden cambiar entre consultas. En el árbol local aún sin commit, rama `codex/ui-ux-publico` en `21483de`, están los cambios UI y de timezone, por lo que el deploy de `a1fa711` no incluye ese último ajuste visual. Lint, suite relacionada (10 pruebas), typecheck y `git diff --check` pasan. Build omitido para preservar el servidor de demo en 3001; verificación visual responsive sigue pendiente.
 - **Actualizado:** 2026-09-25
 - **Salida Vercel (2026-09-26):** el proyecto `ponte-la10` quedó creado en el equipo Hobby y `main` está desplegada en `https://ponte-la10.vercel.app`. El primer runtime respondió 500 porque faltaban las dos variables públicas de Supabase; se añadieron solo `NUXT_PUBLIC_SUPABASE_URL` y la clave `sb_publishable` en el entorno Production, sin trasladar secretos de DeepSeek ni credenciales/rutas del worker. El redeploy sirve Inicio y Noticias con contenido real. `pont3la10.com` no quedó conectado. El nuevo PR #8 propone los cambios de SEO que aún están en `codex/ui-ux-publico`; sus checks iniciales fallaron porque GitHub Actions no tenía origen canónico para `nuxt prepare`. Se agrega un origen `.invalid` exclusivo de CI; falta verificar todos los checks antes de integrar.
 - **Commit base:** `3b2ec84` (`codex/hu-ed-08`)

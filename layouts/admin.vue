@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   RadioTower,
+  Server,
   ShieldCheck,
   Tags,
   X
@@ -82,6 +83,12 @@ const entradasPanel: EntradaPanel[] = [
     ruta: '/admin/auditoria',
     icono: Activity,
     permiso: 'auditoria.ver'
+  },
+  {
+    etiqueta: 'Operación',
+    ruta: '/admin/operacion',
+    icono: Server,
+    permiso: 'configuracion.ver'
   }
 ]
 

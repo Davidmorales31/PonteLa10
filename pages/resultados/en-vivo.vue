@@ -24,7 +24,7 @@ useSeoPont3la10(() => ({
 
 <template>
   <main class="pagina-resultados pagina-publica-medio pagina-seo-resultados">
-    <nav class="migas-seo" aria-label="Migas de pan"><NuxtLink to="/">Inicio</NuxtLink><span>/</span><NuxtLink to="/resultados">Resultados</NuxtLink><span>/</span><span>En vivo</span></nav>
+    <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Resultados', ruta: '/resultados' }, { etiqueta: 'En vivo' }]" />
     <header class="cabecera-resultados"><div><p>Marcadores en directo</p><h1>Resultados en vivo</h1><span>Partidos que se están jugando ahora, con marcador y acceso al detalle disponible.</span></div></header>
     <EstadoDatosResultados v-if="error" descripcion="No fue posible actualizar los resultados en vivo." :permitir-reintento="true" @reintentar="refresh" />
     <EstadoDatosResultados v-else-if="!partidosEnVivo.length" titulo="No hay partidos en vivo en este momento" descripcion="Consulta los partidos de hoy para ver próximos encuentros y resultados finalizados." />

@@ -31,6 +31,7 @@ const emit = defineEmits<{
 
 const nota = ref('')
 const aplicarConIa = ref(false)
+const confirmarProgramacionAutomatica = ref(false)
 const fechaProgramacion = ref(
   props.programadoPara
     ? fechaParaCampoLocal(new Date(props.programadoPara))
@@ -41,6 +42,7 @@ const iconosAcciones = {
   enviarRevision: Send,
   solicitarCambios: Undo2,
   aprobar: BadgeCheck,
+  aprobarYProgramar: CalendarClock,
   programar: CalendarClock,
   publicar: Rocket,
   cancelarProgramacion: Undo2,
@@ -74,6 +76,7 @@ const formularioValido = computed(() => {
     && nota.value.trim().length < 10
   ) return false
   if (props.accion.requiereProgramacion && !fechaProgramacion.value) return false
+  if (props.accion.programacionAutomatica && !confirmarProgramacionAutomatica.value) return false
   return !requiereVerificacion.value
 })
 
@@ -88,7 +91,9 @@ function confirmar() {
       ? new Date(fechaProgramacion.value).toISOString()
       : null,
     aplicarConIa: props.accion.estadoObjetivo === 'changes_requested'
-      && aplicarConIa.value
+      && aplicarConIa.value,
+    confirmacionAutomatica: props.accion.programacionAutomatica
+      && confirmarProgramacionAutomatica.value
   })
 }
 </script>
@@ -132,6 +137,19 @@ function confirmar() {
           >
         </label>
 
+        <div v-if="accion.programacionAutomatica" class="aviso-programacion-automatica-editorial">
+          <CalendarClock aria-hidden="true" />
+          <p>
+            La aprobación y la reserva se realizarán juntas. El sistema asignará
+            el siguiente espacio libre, en intervalos configurados de una hora
+            y horario de Colombia (America/Bogota).
+          </p>
+          <label>
+            <input v-model="confirmarProgramacionAutomatica" type="checkbox">
+            Confirmo aprobar este contenido y programar su publicación.
+          </label>
+        </div>
+
         <label>
           Nota editorial
           <textarea
@@ -161,7 +179,7 @@ function confirmar() {
           <div>
             <strong>Verifica tu sesión para continuar</strong>
             <p>
-              Publicar y programar requieren el código de tu autenticador.
+              Esta decisión editorial requiere el código de tu autenticador.
               Volverás a esta noticia al terminar.
             </p>
           </div>

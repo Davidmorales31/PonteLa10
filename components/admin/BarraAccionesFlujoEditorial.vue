@@ -31,6 +31,7 @@ const iconosAcciones = {
   enviarRevision: Send,
   solicitarCambios: Undo2,
   aprobar: BadgeCheck,
+  aprobarYProgramar: CalendarClock,
   programar: CalendarClock,
   publicar: Rocket,
   cancelarProgramacion: Undo2,
@@ -40,6 +41,7 @@ const iconosAcciones = {
 }
 
 const ordenAcciones: AccionFlujoEditorial['id'][] = [
+  'aprobarYProgramar',
   'aprobar',
   'publicar',
   'enviarRevision',
@@ -65,6 +67,7 @@ const avisosBloqueo = computed(() => [...new Set(
 const accionesPrincipales = new Set<AccionFlujoEditorial['id']>([
   'enviarRevision',
   'aprobar',
+  'aprobarYProgramar',
   'publicar',
   'crearRevision',
   'reabrir'

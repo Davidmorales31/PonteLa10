@@ -27,15 +27,33 @@ Como usuario de Pont3la10, quiero iniciar sesion con correo o Google, para usar 
 - Si se usa Google, Supabase redirige al proveedor configurado.
 - Las pruebas unitarias pasan en local y en CI.
 
-## Configuracion Supabase Pendiente En Dashboard
+## Configuracion Supabase En Produccion
 
-- Activar Email Auth si no esta activo.
-- Configurar plantillas de correo con marca Pont3la10.
-- Configurar Google como proveedor OAuth.
-- Agregar redirect URLs:
+- `Site URL`: `https://www.pont3la10.com`.
+- Redirect URLs exactas permitidas:
+  - `https://www.pont3la10.com/login`
   - `http://localhost:3001/login`
-  - URL final de produccion cuando exista deploy.
-- Mantener RLS y roles como barrera real de datos internos.
+  - `http://127.0.0.1:3001/login`
+- No se usan comodines de producción. El flujo de registro y recuperación envía
+  su destino explícito a `/login` con parámetros de consulta, que no cambian la
+  ruta permitida.
+- Supabase estaba usando `http://localhost:3000/admin/login` como `Site URL` y
+  no tenía Redirect URLs; por eso un enlace de confirmación/recuperación podía
+  volver a localhost. La configuración fue corregida y verificada en el
+  Dashboard el 2026-09-26.
+- SMTP personalizado quedó activo en Supabase con Brevo. El remitente es
+  `contact@pont3la10.com` y el nombre visible `Pont3la10`; no guardar la clave
+  SMTP en el repositorio ni en memoria.
+- Las plantillas `Confirm sign up` y `Reset password` se actualizaron en el
+  Dashboard con los diseños de `supabase/templates/confirmar-correo.html` y
+  `supabase/templates/restablecer-contrasena.html`. Ambas usan
+  `{{ .ConfirmationURL }}`; la vista previa se verificó y se guardaron sin
+  duplicar el contenido predeterminado.
+- Falta una prueba de envío real iniciada por el responsable (registro o
+  recuperación) para comprobar la entrega final en correo; no se disparó ningún
+  mensaje de autenticación durante esta configuración.
+- Configurar Google como proveedor OAuth únicamente cuando se vaya a habilitar
+  ese método. Mantener RLS y roles como barrera real de datos internos.
 
 ## Nota De Seguridad
 

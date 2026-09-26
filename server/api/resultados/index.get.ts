@@ -11,6 +11,7 @@ import { consultarEventosDiaTheSportsDb } from '~/server/utils/clienteTheSportsD
 import { mapearPartidoApiBasketball } from '~/utils/resultadosBasketball'
 import { mapearFixtureApiFootball, ordenarPartidosRelevantes } from '~/utils/resultadosDeportivos'
 import { mapearEventoTheSportsDb } from '~/utils/resultadosTheSportsDb'
+import { obtenerFechaEnZonaHoraria, normalizarZonaHoraria, zonaHorariaColombia } from '~/utils/zonasHorarias'
 
 const deportesDisponibles: DeporteResultado[] = ['futbol', 'baloncesto', 'tenis', 'beisbol']
 const nombresTheSportsDb: Record<DeporteResultado, string> = {
@@ -33,9 +34,10 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaResulta
     throw createError({ statusCode: 400, statusMessage: 'El deporte solicitado no es válido.' })
   }
   const deportesAConsultar = deporteSolicitado ? [deporteSolicitado] : deportesDisponibles
-  const fechaColombia = obtenerFechaColombia()
+  const zonaHoraria = obtenerZonaHorariaDesdeUrl(evento.node?.req?.url)
+  const fechaLocal = obtenerFechaEnZonaHoraria(new Date(), zonaHoraria)
   const resultados = await Promise.all(
-    deportesAConsultar.map(deporte => consultarDeporte(deporte, fechaColombia, configuracion))
+    deportesAConsultar.map(deporte => consultarDeporte(deporte, fechaLocal, zonaHoraria, configuracion))
   )
   const partidos = ordenarPartidosRelevantes(
     resultados.flatMap(resultado => resultado.partidos)
@@ -50,12 +52,16 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaResulta
   }
 }, {
   maxAge: 60,
-  getKey: evento => `resultados-${obtenerClaveCache(evento.node?.req?.url)}-${obtenerFechaColombia()}`
+  getKey: evento => {
+    const zonaHoraria = obtenerZonaHorariaDesdeUrl(evento.node?.req?.url)
+    return `resultados-${obtenerClaveCache(evento.node?.req?.url)}-${zonaHoraria}-${obtenerFechaEnZonaHoraria(new Date(), zonaHoraria)}`
+  }
 })
 
 async function consultarDeporte(
   deporte: DeporteResultado,
   fecha: string,
+  zonaHoraria: string,
   configuracion: ReturnType<typeof useRuntimeConfig>
 ): Promise<ResultadoProveedor> {
   if (deporte === 'futbol' && configuracion.apiSportsKey) {
@@ -63,7 +69,8 @@ async function consultarDeporte(
       const partidos = await consultarApiFootball(
         String(configuracion.apiSportsBaseUrl),
         String(configuracion.apiSportsKey),
-        fecha
+        fecha,
+        zonaHoraria
       )
       if (partidos.length) return { partidos, origen: 'api-sports' }
     } catch {
@@ -76,7 +83,7 @@ async function consultarDeporte(
       const respuesta = await consultarPartidosFechaApiBasketball({
         baseUrl: String(configuracion.apiBasketballBaseUrl),
         apiKey: String(configuracion.apiBasketballKey)
-      }, fecha)
+      }, fecha, zonaHoraria)
       const partidos = ordenarPartidosRelevantes(respuesta.map(mapearPartidoApiBasketball)).slice(0, 24)
       if (partidos.length) return { partidos, origen: 'api-basketball' }
     } catch {
@@ -98,9 +105,9 @@ async function consultarDeporte(
   }
 }
 
-async function consultarApiFootball(baseUrl: string, apiKey: string, fecha: string) {
+async function consultarApiFootball(baseUrl: string, apiKey: string, fecha: string, zonaHoraria: string) {
   const respuesta = await $fetch<RespuestaApiFootball<FixtureApiFootball>>(`${baseUrl}/fixtures`, {
-    query: { date: fecha, timezone: 'America/Bogota' },
+    query: { date: fecha, timezone: zonaHoraria },
     headers: { 'x-apisports-key': apiKey },
     timeout: 8_000,
     retry: 1
@@ -124,6 +131,12 @@ function obtenerDeporteDesdeUrl(url?: string): string | undefined {
   return new URLSearchParams(queryString).get('deporte') || undefined
 }
 
+function obtenerZonaHorariaDesdeUrl(url?: string): string {
+  const queryString = url?.split('?')[1]
+  if (!queryString) return zonaHorariaColombia
+  return normalizarZonaHoraria(new URLSearchParams(queryString).get('timeZone'))
+}
+
 function obtenerClaveCache(url?: string): string {
   const deporteRecibido = obtenerDeporteDesdeUrl(url)
   if (!deporteRecibido) return 'todos'
@@ -137,13 +150,4 @@ function obtenerOrigenConsolidado(resultados: ResultadoProveedor[]): OrigenResul
   if (origenesConDatos.size === 1) return [...origenesConDatos][0]!
   if (origenesConDatos.size > 1) return 'mixto'
   return 'the-sports-db'
-}
-
-function obtenerFechaColombia(): string {
-  return new Intl.DateTimeFormat('en-CA', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    timeZone: 'America/Bogota'
-  }).format(new Date())
 }

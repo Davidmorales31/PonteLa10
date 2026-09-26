@@ -35,6 +35,7 @@ const iconosAcciones = {
   enviarRevision: Send,
   solicitarCambios: Undo2,
   aprobar: BadgeCheck,
+  aprobarYProgramar: CalendarClock,
   programar: CalendarClock,
   publicar: Rocket,
   cancelarProgramacion: Undo2,

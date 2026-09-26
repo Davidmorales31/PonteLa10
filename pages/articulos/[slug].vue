@@ -168,12 +168,8 @@ function formatearFecha(fecha: string): string {
 
 <template>
   <article v-if="articuloPublicado" class="detalle-articulo detalle-articulo-publicado">
+    <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: articuloPublicado.categoria?.nombre || 'Noticias', ruta: '/articulos' }, { etiqueta: articuloPublicado.titulo }]" />
     <header class="cabecera-articulo-publicado">
-      <p class="miga-articulo">
-        <NuxtLink to="/">Inicio</NuxtLink>
-        <span aria-hidden="true">/</span>
-        <NuxtLink to="/articulos">{{ articuloPublicado.categoria?.nombre || 'Noticias' }}</NuxtLink>
-      </p>
       <p class="etiqueta-seccion">
         {{ articuloPublicado.categoria?.nombre || 'Actualidad' }}
       </p>

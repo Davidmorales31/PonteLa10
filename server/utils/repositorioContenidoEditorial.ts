@@ -17,10 +17,12 @@ import type {
   EnlaceArticuloInternoEditorial,
   EtiquetaInternaEditorial,
   FlujoArticuloEditorial,
+  FuenteInvestigacionEditorial,
   NodoBloqueEditorial,
   RespuestaBandejaEditorial,
   ResumenArticuloPublico,
   ResultadoTransicionEditorial,
+  ResultadoAprobacionProgramacionEditorial,
   ResultadoEliminacionArticuloEditorial,
   ResultadoGuardadoEditorial,
   TaxonomiasEditoriales,
@@ -123,6 +125,20 @@ interface FilaArticuloDetalle extends FilaArticulo {
   article_tags: FilaRelacionTema[]
   article_labels: FilaRelacionEtiqueta[]
   media_files: FilaMedioEditorial | FilaMedioEditorial[] | null
+}
+
+interface FilaFuenteInvestigacion {
+  url: string
+  title: string
+  publisher: string
+  published_at: string | null
+  accessed_at: string
+  source_type: 'primaria' | 'secundaria'
+  supported_claims: string[]
+}
+
+interface FilaPropuestaCodex {
+  editorial_flags: string[]
 }
 
 interface FilaNoticiaDestacada {
@@ -502,7 +518,9 @@ export async function obtenerArticuloEditorial(
   const [
     respuestaAutoguardado,
     autorNombre,
-    respuestaDestacada
+    respuestaDestacada,
+    respuestaFuentes,
+    respuestaCodex
   ] = await Promise.all([
     clienteSupabase
       .from('article_autosaves')
@@ -511,11 +529,31 @@ export async function obtenerArticuloEditorial(
       .eq('user_id', usuarioId)
       .maybeSingle(),
     obtenerNombreAutor(clienteSupabase, fila.author_id),
-    clienteSupabase.rpc('get_public_editorial_home_feature')
+    clienteSupabase.rpc('get_public_editorial_home_feature'),
+    clienteSupabase
+      .from('editorial_article_sources')
+      .select('url, title, publisher, published_at, accessed_at, source_type, supported_claims')
+      .eq('article_id', articuloId)
+      .order('source_type')
+      .order('publisher'),
+    clienteSupabase
+      .from('editorial_codex_proposals')
+      .select('editorial_flags')
+      .eq('article_id', articuloId)
+      .maybeSingle()
   ])
 
   if (respuestaAutoguardado.error) {
     throw crearErrorRepositorio('No se pudo recuperar el autoguardado.')
+  }
+
+  const tablaFuentesPendiente = respuestaFuentes.error
+    && ['42P01', 'PGRST205'].includes(respuestaFuentes.error.code || '')
+  const tablaCodexPendiente = respuestaCodex.error
+    && ['42P01', 'PGRST205'].includes(respuestaCodex.error.code || '')
+  if ((respuestaFuentes.error && !tablaFuentesPendiente)
+    || (respuestaCodex.error && !tablaCodexPendiente)) {
+    throw crearErrorRepositorio('No se pudo cargar la trazabilidad de investigación.')
   }
 
   const tienePermisoEdicion = permisos.editarTodos
@@ -574,7 +612,23 @@ export async function obtenerArticuloEditorial(
       : null,
     autoguardado: mapearAutoguardado(
       respuestaAutoguardado.data as FilaAutoguardado | null
-    )
+    ),
+    fuentesInvestigacion: ((respuestaFuentes.data || []) as FilaFuenteInvestigacion[])
+      .map((fuente): FuenteInvestigacionEditorial => ({
+        url: fuente.url,
+        nombre: fuente.publisher,
+        autor: '',
+        creditos: '',
+        titulo: fuente.title,
+        publicadaEn: fuente.published_at,
+        consultadaEn: fuente.accessed_at,
+        tipo: fuente.source_type,
+        afirmacionesRespaldadas: Array.isArray(fuente.supported_claims)
+          ? fuente.supported_claims
+          : []
+      })),
+    banderasEditorialesCodex: ((respuestaCodex.data as FilaPropuestaCodex | null)
+      ?.editorial_flags || [])
   }
 }
 
@@ -969,6 +1023,14 @@ export async function transicionarArticuloEditorial(
   if (error) {
     const mensaje = error.message || ''
 
+    if (error.code === '23P01' || mensaje.includes('horario está ocupado')) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: 'Ese horario está ocupado. Elige otro espacio de publicación.',
+        data: { codigo: 'SLOT_PUBLICACION_OCUPADO' }
+      })
+    }
+
     if (mensaje.includes('cambió en otra sesión')) {
       throw createError({
         statusCode: 409,
@@ -1008,6 +1070,65 @@ export async function transicionarArticuloEditorial(
   }
 
   return data as ResultadoTransicionEditorial
+}
+
+export async function aprobarYProgramarArticuloEditorial(
+  clienteSupabase: SupabaseClient,
+  articuloId: string,
+  versionBloqueo: number
+): Promise<ResultadoAprobacionProgramacionEditorial> {
+  const { data, error } = await clienteSupabase.rpc(
+    'approve_and_schedule_editorial_article',
+    {
+      p_article_id: articuloId,
+      p_expected_lock_version: versionBloqueo,
+      p_confirmed: true
+    }
+  )
+
+  if (error) {
+    if (error.code === '40001' || error.message.includes('cambió en otra sesión')) {
+      throw createError({
+        statusCode: 409,
+        statusMessage: 'El contenido cambió en otra sesión. Recarga antes de continuar.',
+        data: { codigo: 'VERSION_EDITORIAL_EN_CONFLICTO' }
+      })
+    }
+    if (error.code === '42501') {
+      throw createError({
+        statusCode: 403,
+        statusMessage: error.message,
+        data: { codigo: 'APROBACION_PROGRAMACION_NO_AUTORIZADA' }
+      })
+    }
+    if (error.code === 'P0002') {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'El contenido no existe.',
+        data: { codigo: 'CONTENIDO_EDITORIAL_NO_ENCONTRADO' }
+      })
+    }
+    if (error.code === '22023') {
+      throw createError({
+        statusCode: 422,
+        statusMessage: error.message,
+        data: { codigo: 'APROBACION_PROGRAMACION_INVALIDA' }
+      })
+    }
+    throw crearErrorRepositorio('No se pudo aprobar y programar el contenido.')
+  }
+
+  if (!data || typeof data !== 'object'
+    || !['approved', 'scheduled'].includes(String(data.estado))
+    || (data.estado === 'scheduled' && typeof data.programadoPara !== 'string')
+    || (data.estado === 'approved' && data.programadoPara !== null)) {
+    throw createError({
+      statusCode: 502,
+      statusMessage: 'La programación automática devolvió una respuesta incompleta.',
+      data: { codigo: 'RESPUESTA_APROBACION_PROGRAMACION_INVALIDA' }
+    })
+  }
+  return data as ResultadoAprobacionProgramacionEditorial
 }
 
 export async function eliminarArticuloEditorial(
