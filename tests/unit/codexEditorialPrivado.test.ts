@@ -5,6 +5,7 @@ import { firmaCodexEsValida } from '~/server/utils/codexEditorialPrivado'
 import {
   esquemaAgendaCodex,
   esquemaConsultaSaludCodex,
+  esquemaPortadaCodex,
   esquemaPropuestaCodex
 } from '~/server/utils/esquemasCodexEditorial'
 
@@ -16,6 +17,31 @@ function crearFirma(timestamp: string, metodo: string, ruta: string, requestId: 
 }
 
 describe('API privada de propuestas Codex', () => {
+  it('valida atribución y licencia reutilizable de la foto', () => {
+    const portada = {
+      nombreOriginal: 'colombia.webp',
+      tipoMime: 'image/webp' as const,
+      imagenBase64: 'a'.repeat(100),
+      titulo: 'Selección Colombia',
+      alt: 'Selección Colombia durante un partido internacional.',
+      pie: 'Fotografía de archivo de la selección durante un partido internacional.',
+      autorFoto: 'Carlos Pérez',
+      licenciaFoto: 'CC BY 4.0' as const,
+      urlFuente: 'https://commons.wikimedia.org/wiki/File:Colombia_football_team.jpg',
+      credito: 'Carlos Pérez · CC BY 4.0 · Wikimedia Commons'
+    }
+
+    expect(esquemaPortadaCodex.safeParse(portada).success).toBe(true)
+    expect(esquemaPortadaCodex.safeParse({
+      ...portada,
+      urlFuente: 'https://example.org/image.jpg'
+    }).success).toBe(false)
+    expect(esquemaPortadaCodex.safeParse({
+      ...portada,
+      licenciaFoto: 'CC BY-NC 4.0'
+    }).success).toBe(false)
+  })
+
   it('valida HMAC, contenido exacto y ventana temporal', () => {
     const instante = 1_790_000_000
     const timestamp = String(instante)
@@ -75,16 +101,16 @@ describe('API privada de propuestas Codex', () => {
     expect(esquemaPropuestaCodex.safeParse(propuesta).success).toBe(false)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
-      editorialFlags: ['needs_angle_review', 'illustrative_cover']
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
     }).success).toBe(true)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
-      editorialFlags: ['needs_angle_review', 'illustrative_cover'],
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover'],
       newTopics: [{ name: 'Tema\u0007 deportivo', description: 'Descripción válida.' }]
     }).success).toBe(false)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
-      editorialFlags: ['needs_angle_review', 'illustrative_cover'],
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover'],
       newTopics: [{ name: 'Tema deportivo', description: 'Descripción\u0085 inválida.' }]
     }).success).toBe(false)
   })

@@ -6,9 +6,11 @@ import {
 
 const metadatos = {
   titulo: 'Una historia deportiva en contexto',
-  alt: 'Ilustración editorial de una cancha bajo luces nocturnas',
-  pie: 'Ilustración editorial generada con IA para acompañar la historia.',
-  credito: 'Pont3la10 · Imagen generada con IA'
+  alt: 'Selección Colombia durante un partido de fútbol',
+  pie: 'Fotografía de archivo de la selección durante un encuentro internacional.',
+  autorFoto: 'Carlos Pérez',
+  licenciaFoto: 'CC BY 4.0',
+  urlFuente: 'https://commons.wikimedia.org/wiki/File:Colombia_football_team.jpg'
 }
 const pngPrueba = () => Buffer.concat([
   Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]),
@@ -24,7 +26,13 @@ describe('preparación segura de portada Codex', () => {
       nombreOriginal: 'cubierta.png',
       tipoMime: 'image/png',
       imagenBase64: png.toString('base64'),
-      ...metadatos
+      titulo: metadatos.titulo,
+      alt: metadatos.alt,
+      pie: metadatos.pie,
+      credito: 'Carlos Pérez · CC BY 4.0 · Wikimedia Commons',
+      urlFuente: metadatos.urlFuente,
+      autorFoto: 'Carlos Pérez',
+      licenciaFoto: 'CC BY 4.0'
     })
   })
 
@@ -35,10 +43,10 @@ describe('preparación segura de portada Codex', () => {
     expect(() => prepararPayloadPortada(Buffer.alloc(2_400_001), 'x.png', metadatos))
       .toThrow('La imagen debe pesar entre 75 bytes y 2400000 bytes.')
     expect(() => prepararPayloadPortada(pngPrueba(), 'x.png', { ...metadatos, extra: 'no' }))
-      .toThrow('Los metadatos deben incluir título, alt, pie y crédito.')
+      .toThrow('Los metadatos deben identificar una foto de Commons, autor y licencia permitida.')
     expect(() => prepararPayloadPortada(pngPrueba(), 'x.png', {
       ...metadatos,
-      pie: 'Portada generada.'
-    })).toThrow('Los metadatos deben incluir título, alt, pie y crédito.')
+      licenciaFoto: 'CC BY-NC 4.0'
+    })).toThrow('Los metadatos deben identificar una foto de Commons, autor y licencia permitida.')
   })
 })

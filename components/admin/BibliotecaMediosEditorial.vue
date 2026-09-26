@@ -167,6 +167,22 @@ defineExpose({ refresh })
 
         <div class="detalle-tarjeta-medio">
           <strong :title="medio.titulo">{{ medio.titulo }}</strong>
+          <small v-if="medio.credito" class="atribucion-medio-editorial">
+            Crédito: {{ medio.credito }}
+          </small>
+          <a
+            v-if="medio.urlFuente"
+            class="enlace-fuente-medio-editorial"
+            :href="medio.urlFuente"
+            target="_blank"
+            rel="noopener noreferrer nofollow"
+            @click.stop
+          >
+            Ver fuente y licencia
+          </a>
+          <small v-else class="aviso-atribucion-pendiente">
+            Sin fuente/licencia registrada
+          </small>
           <span>
             {{ medio.ancho }} × {{ medio.alto }}
             · {{ formatearTamanoArchivo(medio.tamanoBytes) }}

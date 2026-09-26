@@ -29,25 +29,33 @@ export function prepararPayloadPortada(bytes, nombreArchivo, metadatos) {
     throw new Error('La imagen debe ser JPEG, PNG o WebP válido.')
   }
 
-  const campos = ['titulo', 'alt', 'pie', 'credito']
+  const campos = ['titulo', 'alt', 'pie', 'autorFoto', 'licenciaFoto', 'urlFuente']
   if (!metadatos || typeof metadatos !== 'object' || Array.isArray(metadatos)
     || Object.keys(metadatos).length !== campos.length
     || campos.some(campo => typeof metadatos[campo] !== 'string'
       || !metadatos[campo].trim())
     || metadatos.titulo.trim().length < 8 || metadatos.titulo.trim().length > 160
     || metadatos.alt.trim().length < 5 || metadatos.alt.trim().length > 240
-    || metadatos.pie.trim().length < 20 || metadatos.pie.trim().length > 500
-    || metadatos.credito.trim().length < 10 || metadatos.credito.trim().length > 300
-    || !/ilustraci[oó]n editorial/i.test(metadatos.pie)
-    || !/(generad[ao].{0,15}ia|ia.{0,15}generad[ao])/i.test(metadatos.credito)) {
-    throw new Error('Los metadatos deben incluir título, alt, pie y crédito.')
+    || metadatos.pie.trim().length < 10 || metadatos.pie.trim().length > 500
+    || metadatos.autorFoto.trim().length < 2 || metadatos.autorFoto.trim().length > 200
+    || !['CC0 1.0', 'CC BY 4.0', 'Dominio público'].includes(metadatos.licenciaFoto)
+    || metadatos.urlFuente.trim().length > 2048
+    || !/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/i.test(metadatos.urlFuente.trim())) {
+    throw new Error('Los metadatos deben identificar una foto de Commons, autor y licencia permitida.')
   }
 
+  const credito = `${metadatos.autorFoto.trim()} · ${metadatos.licenciaFoto} · Wikimedia Commons`
   return {
     nombreOriginal: basename(nombreArchivo).slice(0, 160),
     tipoMime,
     imagenBase64: bytes.toString('base64'),
-    ...Object.fromEntries(campos.map(campo => [campo, metadatos[campo].trim()]))
+    titulo: metadatos.titulo.trim(),
+    alt: metadatos.alt.trim(),
+    pie: metadatos.pie.trim(),
+    credito,
+    urlFuente: metadatos.urlFuente.trim(),
+    autorFoto: metadatos.autorFoto.trim(),
+    licenciaFoto: metadatos.licenciaFoto
   }
 }
 

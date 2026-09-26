@@ -208,13 +208,14 @@ onBeforeUnmount(limpiarPrevia)
           </label>
 
           <label>
-            Crédito
+            Crédito (autor y licencia)
             <input
               v-model="formulario.credito"
               type="text"
               maxlength="300"
-              placeholder="Fotógrafo, agencia o medio"
+              placeholder="Autor · licencia de uso"
             >
+            <small>Verifica permiso de reutilización; el crédito por sí solo no lo concede.</small>
           </label>
           <label>
             URL de la fuente
@@ -224,6 +225,7 @@ onBeforeUnmount(limpiarPrevia)
               maxlength="2048"
               placeholder="https://"
             >
+            <small>Enlaza a la ficha donde constan autoría y licencia.</small>
           </label>
           <label class="campo-ancho-completo">
             Pie de foto

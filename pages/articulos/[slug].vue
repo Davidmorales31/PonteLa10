@@ -198,12 +198,20 @@ function formatearFecha(fecha: string): string {
         :height="articuloPublicado.portada.alto || 900"
       >
       <figcaption
-        v-if="articuloPublicado.portada.pieDeFoto || articuloPublicado.portada.credito"
+        v-if="articuloPublicado.portada.pieDeFoto || articuloPublicado.portada.credito || articuloPublicado.portada.fuenteFotoUrl"
       >
         <span>{{ articuloPublicado.portada.pieDeFoto }}</span>
         <small v-if="articuloPublicado.portada.credito">
           {{ articuloPublicado.portada.credito }}
         </small>
+        <a
+          v-if="articuloPublicado.portada.fuenteFotoUrl"
+          :href="articuloPublicado.portada.fuenteFotoUrl"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+        >
+          Ver foto y licencia
+        </a>
       </figcaption>
     </figure>
 
