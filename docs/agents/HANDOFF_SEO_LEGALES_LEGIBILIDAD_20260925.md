@@ -24,8 +24,10 @@
   Huila; se omitió el número de identificación sin autorización explícita. La
   cuenta Vercel conectada no tiene proyectos; dominio canónico confirmado:
   `pont3la10.com`. El worker continúa pensado para el PC del usuario.
-- **Siguiente acción exacta:** integrar los cambios locales validados a GitHub,
-  crear un preview en Vercel y verificar variables/SSR; después revisar dominio
-  y entorno productivo antes del lanzamiento.
+- **Siguiente acción exacta:** iniciar sesión en el dashboard correcto de
+  Vercel (el asistente web quedó en `/new`; la cuenta conectada no lista
+  proyectos) e importar la rama `codex/ui-ux-publico` para generar un preview.
+  Revisar variables/SSR y dominio antes de producción.
 - **Commit base:** `4101f22`.
-- **Commit final:** sin commit.
+- **Commit final:** `06548a7` (`codex/ui-ux-publico`, empujada a GitHub); sin
+  despliegue Vercel.
