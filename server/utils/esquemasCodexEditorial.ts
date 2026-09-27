@@ -1,6 +1,10 @@
 import { z } from 'zod'
 import { esquemaDocumentoEditorial } from '~/utils/editorial/contenido'
 
+// El estimador editorial usa 220 palabras por minuto: 660 palabras garantizan
+// un cuerpo de al menos tres minutos, sin confiar únicamente en el prompt.
+export const PALABRAS_MINIMAS_BORRADOR_CODEX = 660
+
 const esquemaUrlHttps = z.string().url().max(2048).refine(
   valor => new URL(valor).protocol === 'https:',
   'Las fuentes deben usar HTTPS.'
@@ -88,6 +92,15 @@ export const esquemaPropuestaCodex = z.object({
     .replace(/\s+/g, ' ')
     .trim()
   const textoPlano = propuesta.body.replace(/\s+/g, ' ').trim()
+  const cantidadPalabras = textoPlano ? textoPlano.split(' ').length : 0
+
+  if (cantidadPalabras < PALABRAS_MINIMAS_BORRADOR_CODEX) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['body'],
+      message: `El cuerpo debe tener al menos ${PALABRAS_MINIMAS_BORRADOR_CODEX} palabras para alcanzar tres minutos de lectura.`
+    })
+  }
 
   if (textoDocumento !== textoPlano) {
     contexto.addIssue({

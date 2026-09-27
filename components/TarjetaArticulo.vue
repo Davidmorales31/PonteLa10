@@ -21,7 +21,9 @@ const tieneImagen = computed(() => Boolean(props.articulo.imagen?.trim()) && ima
         <NuxtLink :to="obtenerRutaArticulo(articulo.slug)">{{ articulo.titulo }}</NuxtLink>
       </h3>
       <p v-if="variante !== 'compacta'" class="texto-apoyo">{{ articulo.bajada }}</p>
-      <p class="meta-articulo">{{ articulo.autor }} · {{ articulo.publicadoHace }} · {{ articulo.lecturaMinutos }} min</p>
+      <p class="meta-articulo">
+        {{ articulo.autor }} · {{ articulo.publicadoHace }}<template v-if="articulo.lecturaMinutos"> · {{ articulo.lecturaMinutos }} min</template>
+      </p>
     </div>
   </article>
 </template>

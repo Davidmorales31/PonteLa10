@@ -1,6 +1,11 @@
 import { createHmac, randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import {
+  contarPalabrasEditoriales,
+  PALABRAS_MINIMAS_ARTICULO_CODEX
+} from './codex-editorial-contract.mjs'
 
 const [recurso, archivo] = process.argv.slice(2)
 const rutas = {
@@ -15,6 +20,16 @@ const rutas = {
 function terminar(mensaje, codigo = 1) {
   process.stderr.write(`${mensaje}\n`)
   process.exit(codigo)
+}
+
+// Scheduled Codex tasks may not inherit the interactive shell's variables.
+// Load the repository's private .env silently; existing process variables win.
+try {
+  process.loadEnvFile(fileURLToPath(new URL('../.env', import.meta.url)))
+} catch (error) {
+  if (error?.code !== 'ENOENT') {
+    terminar('No se pudo cargar la configuración privada local.')
+  }
 }
 
 if (!rutas[recurso] || !archivo) {
@@ -50,6 +65,20 @@ try {
 const limite = recurso === 'media' ? 3_500_000 : 1_000_000
 if (cuerpo.byteLength > limite) {
   terminar(`El archivo supera el límite de ${limite} bytes.`)
+}
+
+if (recurso === 'propuesta') {
+  let payload
+  try {
+    payload = JSON.parse(cuerpo.toString('utf8'))
+  } catch {
+    terminar('La propuesta debe ser un JSON válido para validar su extensión.')
+  }
+
+  const palabras = contarPalabrasEditoriales(payload?.body)
+  if (palabras < PALABRAS_MINIMAS_ARTICULO_CODEX) {
+    terminar(`La propuesta no se envió: requiere al menos ${PALABRAS_MINIMAS_ARTICULO_CODEX} palabras (recibidas: ${palabras}).`)
+  }
 }
 
 const timestamp = String(Math.floor(Date.now() / 1000))

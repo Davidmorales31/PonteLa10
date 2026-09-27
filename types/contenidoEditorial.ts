@@ -396,4 +396,5 @@ export interface ResumenArticuloPublico {
   autorNombre: string
   categoria: string
   imagen: string
+  lecturaMinutos?: number
 }

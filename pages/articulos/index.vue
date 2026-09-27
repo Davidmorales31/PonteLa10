@@ -45,7 +45,7 @@ const articulosPublicados = computed<ArticuloListado[]>(() =>
       dateStyle: 'medium'
     }).format(new Date(articulo.publicadoEn)),
     fechaPublicacion: articulo.publicadoEn,
-    lecturaMinutos: 4,
+    lecturaMinutos: articulo.lecturaMinutos,
     imagen: articulo.imagen
   }))
 )
@@ -213,7 +213,9 @@ useSeoPont3la10(() => {
                   <h3>
                     <NuxtLink :to="`/articulos/${articulo.slug}`">{{ articulo.titulo }}</NuxtLink>
                   </h3>
-                  <p class="meta-noticia-medio">{{ articulo.publicadoHace }} · {{ articulo.lecturaMinutos }} min</p>
+                  <p class="meta-noticia-medio">
+                    {{ articulo.publicadoHace }}<template v-if="articulo.lecturaMinutos"> · {{ articulo.lecturaMinutos }} min</template>
+                  </p>
                 </div>
               </article>
             </div>
