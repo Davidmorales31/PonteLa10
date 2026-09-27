@@ -35,3 +35,25 @@ export function obtenerEtiquetaCategoria(categoria: string): string {
   const categoriaNormalizada = normalizarTextoBusqueda(categoria.replaceAll('-', ' '))
   return etiquetasCategorias[categoriaNormalizada] || categoria.replaceAll('-', ' ')
 }
+
+export function combinarArticulosPublicos<T extends { slug: string }>(
+  existentes: readonly T[],
+  nuevos: readonly T[]
+): T[] {
+  const slugs = new Set(existentes.map(articulo => articulo.slug))
+  const articulosNuevos = nuevos.filter((articulo) => {
+    if (slugs.has(articulo.slug)) return false
+    slugs.add(articulo.slug)
+    return true
+  })
+
+  return [...existentes, ...articulosNuevos]
+}
+
+export function aumentarNoticiasVisibles(
+  actuales: number,
+  disponibles: number,
+  incremento = 6
+): number {
+  return Math.min(Math.max(actuales, 0) + Math.max(incremento, 1), Math.max(disponibles, 0))
+}

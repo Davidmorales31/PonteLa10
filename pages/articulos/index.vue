@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import {
+  ArrowDown,
   Cpu,
   Flag,
   Globe2,
   LayoutGrid,
+  LoaderCircle,
   MessageCircle,
   Trophy
 } from '@lucide/vue'
@@ -11,6 +13,8 @@ import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { ArticuloResumen } from '~/types/editorial'
 import type { RespuestaResultados } from '~/types/resultados'
 import {
+  aumentarNoticiasVisibles,
+  combinarArticulosPublicos,
   normalizarTextoBusqueda,
   obtenerAliasCategoria,
   obtenerEtiquetaCategoria
@@ -18,24 +22,38 @@ import {
 import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
 
 type ArticuloListado = ArticuloResumen & { fechaPublicacion: string }
+type PaginaArticulosPublicos = {
+  articulos: ResumenArticuloPublico[]
+  hayMas: boolean
+}
+
+const limitePaginaArticulos = 20
+const incrementoNoticiasVisibles = 6
 
 const rutaActual = useRoute()
 const { data: resultados, status: estadoResultados } = await useFetch<RespuestaResultados>('/api/resultados', {
   key: 'resultados-noticias',
   lazy: true
 })
-const { data: publicacionesReales } = await useFetch<ResumenArticuloPublico[]>(
-  '/api/articulos',
+const { data: paginaInicial } = await useFetch<PaginaArticulosPublicos>(
+  `/api/articulos?paginado=true&limite=${limitePaginaArticulos}`,
   {
-    default: () => [],
+    default: () => ({ articulos: [], hayMas: false }),
     ignoreResponseError: true
   }
 )
 
+const articulosCargados = ref(paginaInicial.value?.articulos || [])
+const hayMasDesdeServidor = ref(paginaInicial.value?.hayMas || false)
+const desplazamientoSiguiente = ref(articulosCargados.value.length)
+const cantidadNoticiasVisibles = ref(incrementoNoticiasVisibles)
+const cargandoMasNoticias = ref(false)
+const mensajeCargaNoticias = ref('')
+const errorCargaNoticias = ref('')
 const imagenesFallidas = ref<string[]>([])
 
 const articulosPublicados = computed<ArticuloListado[]>(() =>
-  (publicacionesReales.value || []).map(articulo => ({
+  articulosCargados.value.map(articulo => ({
     slug: articulo.slug,
     titulo: articulo.titulo,
     bajada: articulo.resumen,
@@ -88,9 +106,14 @@ const filtrosRapidos = [
   { etiqueta: 'Tech', ruta: '/articulos?categoria=tecnologia', categoria: 'tecnologia', icono: Cpu }
 ]
 const noticiaPrincipal = computed(() => articulosFiltrados.value[0] || null)
-const ultimasNoticias = computed(() => articulosFiltrados.value
+const todasUltimasNoticias = computed(() => articulosFiltrados.value
   .filter(articulo => articulo.slug !== noticiaPrincipal.value?.slug)
-  .slice(0, 6)
+)
+const ultimasNoticias = computed(() => todasUltimasNoticias.value
+  .slice(0, cantidadNoticiasVisibles.value)
+)
+const hayMasNoticias = computed(() =>
+  cantidadNoticiasVisibles.value < todasUltimasNoticias.value.length || hayMasDesdeServidor.value
 )
 const noticiasTendencia = computed(() => {
   const candidatas = articulosFiltrados.value.length > 1 ? articulosFiltrados.value : articulosDisponibles.value
@@ -99,6 +122,77 @@ const noticiasTendencia = computed(() => {
     .slice(0, 5)
 })
 const noticiaLateral = computed(() => noticiasTendencia.value.find(tieneImagen) || noticiasTendencia.value[0] || null)
+
+watch(
+  () => [rutaActual.query.buscar, rutaActual.query.categoria],
+  () => {
+    cantidadNoticiasVisibles.value = incrementoNoticiasVisibles
+    mensajeCargaNoticias.value = ''
+    errorCargaNoticias.value = ''
+  }
+)
+
+async function cargarMasNoticias() {
+  if (cargandoMasNoticias.value || !hayMasNoticias.value) return
+
+  mensajeCargaNoticias.value = ''
+  errorCargaNoticias.value = ''
+  const objetivoVisibles = cantidadNoticiasVisibles.value + incrementoNoticiasVisibles
+
+  if (cantidadNoticiasVisibles.value < todasUltimasNoticias.value.length) {
+    cantidadNoticiasVisibles.value = aumentarNoticiasVisibles(
+      cantidadNoticiasVisibles.value,
+      todasUltimasNoticias.value.length,
+      incrementoNoticiasVisibles
+    )
+    return
+  }
+
+  cargandoMasNoticias.value = true
+
+  try {
+    let paginasConsultadas = 0
+
+    while (
+      hayMasDesdeServidor.value
+      && todasUltimasNoticias.value.length < objetivoVisibles
+      && paginasConsultadas < 3
+    ) {
+      const pagina = await $fetch<PaginaArticulosPublicos>('/api/articulos', {
+        query: {
+          paginado: 'true',
+          limite: limitePaginaArticulos,
+          desplazamiento: desplazamientoSiguiente.value
+        }
+      })
+
+      articulosCargados.value = combinarArticulosPublicos(
+        articulosCargados.value,
+        pagina.articulos
+      )
+      desplazamientoSiguiente.value += pagina.articulos.length
+      hayMasDesdeServidor.value = pagina.hayMas
+      paginasConsultadas += 1
+    }
+
+    if (todasUltimasNoticias.value.length > cantidadNoticiasVisibles.value) {
+      cantidadNoticiasVisibles.value = aumentarNoticiasVisibles(
+        cantidadNoticiasVisibles.value,
+        todasUltimasNoticias.value.length,
+        incrementoNoticiasVisibles
+      )
+      return
+    }
+
+    mensajeCargaNoticias.value = hayMasDesdeServidor.value
+      ? 'No encontramos más noticias de este filtro en los últimos resultados consultados. Puedes seguir buscando.'
+      : 'Llegaste al final de las noticias disponibles para este filtro.'
+  } catch {
+    errorCargaNoticias.value = 'No se pudieron cargar más noticias. Inténtalo de nuevo.'
+  } finally {
+    cargandoMasNoticias.value = false
+  }
+}
 
 function filtroActivo(categoria: string) {
   if (!categoria) return !categoriaBusqueda.value
@@ -198,7 +292,7 @@ useSeoPont3la10(() => {
               <h2 id="titulo-ultimas-noticias-listado">Últimas noticias</h2>
               <p>Ordenar por: <strong>Más recientes</strong> <ChevronDown aria-hidden="true" /></p>
             </div>
-            <div v-if="ultimasNoticias.length" class="grilla-noticias-medio">
+            <div v-if="ultimasNoticias.length" id="lista-ultimas-noticias" class="grilla-noticias-medio">
               <article
                 v-for="articulo in ultimasNoticias"
                 :key="articulo.slug"
@@ -219,7 +313,21 @@ useSeoPont3la10(() => {
                 </div>
               </article>
             </div>
-            <NuxtLink v-if="ultimasNoticias.length > 5" class="boton-cargar-noticias" to="/articulos">Cargar más noticias <span aria-hidden="true">↓</span></NuxtLink>
+            <button
+              v-if="hayMasNoticias"
+              class="boton-cargar-noticias"
+              type="button"
+              aria-controls="lista-ultimas-noticias"
+              :disabled="cargandoMasNoticias"
+              :aria-busy="cargandoMasNoticias"
+              @click="cargarMasNoticias"
+            >
+              <LoaderCircle v-if="cargandoMasNoticias" class="icono-carga-noticias girando" aria-hidden="true" />
+              <ArrowDown v-else class="icono-carga-noticias" aria-hidden="true" />
+              <span>{{ cargandoMasNoticias ? 'Buscando noticias…' : 'Cargar más noticias' }}</span>
+            </button>
+            <p v-if="errorCargaNoticias" class="estado-carga-noticias error" role="alert">{{ errorCargaNoticias }}</p>
+            <p v-else-if="mensajeCargaNoticias" class="estado-carga-noticias" role="status">{{ mensajeCargaNoticias }}</p>
           </section>
         </main>
 
@@ -276,8 +384,8 @@ useSeoPont3la10(() => {
         </aside>
       </div>
       <div v-else class="estado-vacio-articulos">
-        <h2>{{ publicacionesReales?.length ? 'No encontramos noticias con esos criterios' : 'Aún no hay noticias publicadas' }}</h2>
-        <p>{{ publicacionesReales?.length ? 'Prueba con otra palabra o vuelve a todas las noticias.' : 'Las historias aparecerán aquí cuando el equipo editorial las publique.' }}</p>
+        <h2>{{ articulosCargados.length ? 'No encontramos noticias con esos criterios' : 'Aún no hay noticias publicadas' }}</h2>
+        <p>{{ articulosCargados.length ? 'Prueba con otra palabra o vuelve a todas las noticias.' : 'Las historias aparecerán aquí cuando el equipo editorial las publique.' }}</p>
         <NuxtLink class="boton-primario" to="/articulos">Ver todas las noticias</NuxtLink>
       </div>
     </section>
