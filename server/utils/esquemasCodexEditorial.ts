@@ -162,6 +162,63 @@ export const esquemaContextoCodex = z.object({
   runId: z.string().uuid()
 }).strict()
 
+export const esquemaBorradorCodex = z.object({
+  idempotencyKey: z.string().uuid(),
+  retryUncertain: z.boolean().default(false),
+  runId: z.string().uuid(),
+  categoryId: z.string().uuid(),
+  storyFingerprint: z.string().regex(/^[a-f0-9]{64}$/i),
+  titleHint: z.string().trim().min(8).max(220),
+  contentType: z.enum(['noticia', 'analisis', 'informe', 'opinion', 'especial']),
+  researchSummary: z.string().trim().min(80).max(6000),
+  trend: z.object({
+    term: z.string().trim().min(2).max(160),
+    title: z.string().trim().min(3).max(240),
+    url: esquemaUrlHttps,
+    observedAt: z.string().datetime({ offset: true })
+  }).strict(),
+  seoResearch: z.object({
+    primaryQuery: z.string().trim().min(2).max(160),
+    relatedQueries: z.array(z.string().trim().min(2).max(160)).max(8),
+    intent: z.enum(['informativa', 'navegacional', 'analisis'])
+  }).strict(),
+  primarySourceUrl: esquemaUrlHttps,
+  sources: z.array(esquemaFuenteCodex).min(2).max(10),
+  topicCatalog: z.array(z.object({
+    id: z.string().uuid(),
+    name: z.string().trim().min(2).max(80),
+    description: z.string().trim().max(240)
+  }).strict()).max(300),
+  relatedArticles: z.array(z.object({
+    id: z.string().uuid(),
+    title: z.string().trim().min(8).max(160),
+    summary: z.string().trim().max(320),
+    categoryName: z.string().trim().min(2).max(80)
+  }).strict()).max(100)
+}).strict().superRefine((entrada, contexto) => {
+  const urlFuentePrincipal = entrada.sources.some(fuente => fuente.url === entrada.primarySourceUrl)
+  if (!urlFuentePrincipal) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['primarySourceUrl'],
+      message: 'La fuente principal debe pertenecer al expediente de investigación.'
+    })
+  }
+
+  const urlsFuentes = entrada.sources.map(fuente => fuente.url)
+  const idsTemas = entrada.topicCatalog.map(tema => tema.id)
+  const idsArticulos = entrada.relatedArticles.map(articulo => articulo.id)
+  if (new Set(urlsFuentes).size !== urlsFuentes.length
+    || new Set(idsTemas).size !== idsTemas.length
+    || new Set(idsArticulos).size !== idsArticulos.length) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['sources'],
+      message: 'El expediente no puede repetir fuentes, temas ni artículos relacionados.'
+    })
+  }
+})
+
 export const esquemaConsultaSaludCodex = z.object({}).strict()
 
 export const esquemaAgendaCodex = z.object({

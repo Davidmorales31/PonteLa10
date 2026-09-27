@@ -14,6 +14,11 @@ if (process.env.NODE_ENV === 'production' && !urlPublica) {
 export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
+  nitro: {
+    // El proveedor DeepSeek puede tardar hasta 60 s; deja margen para persistir
+    // y responder sin depender de un ajuste manual del límite por defecto.
+    vercel: { functions: { maxDuration: 120 } }
+  },
   experimental: {
     appManifest: false
   },

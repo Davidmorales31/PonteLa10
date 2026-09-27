@@ -1,6 +1,40 @@
 # Estado actual de Pont3la10
 
-- **Lote editorial mínimo y portada opcional (2026-09-26, local):** la tarea
+- **Corrida editorial de producción 2/5 (2026-09-26, cierre parcial):** se
+  reutilizó el runId `97a62412-2f4a-4c88-a914-3e7641edc3fd` y la API aceptó
+  15 propuestas en total. El checkpoint cerró las siete categorías activas;
+  Trends Colombia aportó 4 oportunidades de fútbol colombiano y 2 de fútbol
+  mundial. Tecnología deportiva y Gaming tienen propuesta sustentada en fuente
+  institucional, pero sin señal de búsqueda de Trends. Tendencias, Especiales
+  y Opinión quedaron con motivo explícito de omisión; no se inventó demanda ni
+  voz editorial para completar el lote. Estado remoto `partial`. En la última
+  lectura, las 15 propuestas asociadas a esta corrida estaban así: 3
+  `published`, 7 `scheduled`, 5 `review`; Juan confirmó que está aprobándolas
+  desde el CMS. Las ocho entregas de esta continuación fueron: Países Bajos–
+  Alemania (`6b4ad99f-6c2f-40e8-a91e-bd56f8cff25a`), Noruega–Dinamarca
+  (`4d0f1df0-6858-45a1-90c1-18b149e6946d`), Portugal–Gales
+  (`e536db78-b20d-4817-bca0-40e1dc473093`), Serbia–Grecia
+  (`f3a43ff5-1d7c-453d-b58e-17a7e2401ef2`), Suecia–Rumania
+  (`4cf27d33-bbe7-45f1-960a-97c077dc90ec`), Georgia–Irlanda del Norte
+  (`6e75fbd9-249c-4204-baa4-7047c1980e3b`), UEFA Clear Line
+  (`07a4f819-2572-4f0b-8e41-6673208edaa1`) y FIFAe Finals 2026
+  (`caf153d5-098b-41a9-9949-e77b934b8cda`). Todas se enviaron sin portada
+  cuando no había fotografía pertinente licenciada; nunca se aprobaron,
+  programaron ni publicaron desde Codex. Quedan 3 corridas nuevas disponibles
+  para hoy; no abrir otra sin solicitud explícita.
+
+- **Límite de corridas editoriales (2026-09-26):** regla corregida a un máximo
+  de cinco `runId` distintos por fecha de Colombia, aplicado directamente en
+  Supabase producción (`ykjithahavncswlfgsqa`) mediante
+  `20260926195023_limite_cinco_corridas_editoriales_por_dia.sql`. La función
+  mantiene `SECURITY INVOKER`, ejecución solo para `service_role`, bloqueo para
+  asignaciones concurrentes e idempotencia por `runId`; los reintentos reutilizan
+  el mismo ID y una corrida parcial no se borra ni se reabre como otra. Verificado
+  en producción: hoy hay 2 corridas de 5; la primera y la segunda permanecen
+  `partial`. La segunda alcanzó 15 propuestas aceptadas y dejó el detalle de
+  categorías/faltantes en el checkpoint editorial superior.
+
+- **Lote editorial mínimo y portada opcional (2026-09-26):** la tarea
   diaria existente quedó actualizada para apuntar a un mínimo de 15 propuestas
   completas por corrida total (no por categoría), balanceadas entre categorías
   activas y sin rellenar con historias débiles. Si la evidencia no permite
@@ -8,14 +42,15 @@
   pasó a ser opcional: si no hay una imagen pertinente y verificable, puede
   enviar `coverMediaId: null`; la RPC mantiene la verificación completa cuando
   sí hay foto y ambas rutas crean solo contenido `review`.
-  En `C:\PONTE LA 10`, rama `codex/propuestas-sin-portada-minimo-15`, se cambió
+  En `C:\PONTE LA 10`, rama `codex/cinco-corridas-diarias`, se cambió
   el esquema API, los checkpoints, la completitud del editor, el aviso SEO y las
   instrucciones HU/Skills. Supabase producción se inspeccionó en solo lectura:
   `articles.cover_media_id` ya acepta NULL y la RPC actual es `SECURITY INVOKER`;
   un query de simulación confirmó que los reemplazos conservan el chequeo de
-  licencia y condicionan los flags. Migración pendiente de aplicarse y código
-  pendiente de integrarse/desplegarse; no se generaron propuestas ni se tocó
-  contenido editorial. Suite 23 archivos/117 pruebas, lint y build pasan;
+  licencia y condicionan los flags. Esos cambios funcionales de portada opcional
+  ya estaban integrados en `main`; la migración adicional para cinco corridas
+  está aplicada, y la segunda corrida ya creó un borrador en revisión. Suite
+  23 archivos/117 pruebas, lint y build pasan en la validación histórica previa;
   typecheck pasó al ejecutarse secuencialmente (una primera ejecución paralela
   chocó con la generación de `.nuxt` y dio falsos errores). Handoff:
   `docs/agents/handoffs/2026-09-26-minimo-15-sin-portada.md`.
@@ -496,6 +531,36 @@ acción reserva la siguiente franja y el cron publica al llegar la hora.
 Validado localmente: suite unitaria (23 archivos/114 pruebas), lint,
 typecheck, build con `NUXT_IGNORE_LOCK=1` y `git diff --check`. El servidor
 de demo continuó activo. El código aún requiere commit y despliegue.
+
+**Redacción Codex con DeepSeek y SEO (2026-09-26, local):** en la rama
+`codex/cinco-corridas-diarias` se añadió la ruta privada firmada
+`/api/internal/codex/draft`. Codex entrega un expediente investigado y el
+servidor llama al mismo proveedor/prompt y contrato de redacción DeepSeek usado
+por ingestas; la respuesta estructurada incluye propuesta editorial, consultas
+SEO limitadas a términos investigados (sin aceptar consultas inventadas por el
+modelo), temas y artículos relacionados limitados al catálogo recibido. La generación
+no crea ni aprueba un artículo: `/proposals` sigue siendo la entrega separada a
+`review`. La migración nueva persiste el resultado idempotente en tabla privada
+con RLS y RPC solo para `service_role`; si la llamada/guardado queda ambiguo,
+bloquea el cobro repetido y admite a lo sumo un reintento explícito. La migración
+`20260926234143` fija 15 minutos como separación mínima de slots y conserva
+permisos, MFA y aprobación humana. Ambas quedaron aplicadas en Supabase
+`ykjithahavncswlfgsqa` y se verificaron: tabla privada con RLS, RPC disponibles
+solo para `service_role`, intervalo de 15 minutos y guard de aprobación
+actualizado. El límite de cinco corridas ya coincidía con el registro remoto
+`20260926195023`; se alineó el nombre del archivo local.
+
+Se creó la Skill local `pont3la10-seo-editorial` y se actualizaron Skills y HUs
+para cinco corridas/día, meta de cinco a siete por categoría cuando la evidencia
+lo permita, piso total de 15 por corrida y SEO people-first. Suite unitaria
+(24 archivos/123 pruebas), lint, typecheck y build Vercel pasaron
+(`maxDuration: 120` confirmado en `.vc-config.json`). La ruta local rechaza
+solicitudes sin firma con HTTP 401 antes de acceder a Supabase. El servidor Nuxt
+de demo (PID 9708) siguió activo. Falta desplegar el endpoint y verificar las
+variables runtime en Vercel sin revelar sus valores. Después se debe actualizar
+la automatización editorial existente a cinco corridas diarias, usando solo la
+ruta canónica `C:\\PONTE LA 10`, y sin generar contenido durante el despliegue.
+No crear una automatización duplicada ni apuntarla al árbol OneDrive.
 
 ## Documentos posiblemente desactualizados
 

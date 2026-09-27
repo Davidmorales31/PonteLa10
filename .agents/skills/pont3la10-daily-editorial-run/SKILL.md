@@ -12,20 +12,29 @@ the operational-monitor skill only for a separate read-only health check.
 ## Run and resume safely
 
 1. Load active categories, public topics, recent published coverage, the
-   authoritative daily `runId`, current-run proposals, and candidate checkpoints
-   using the trend-research skill. Never hard-code IDs or create a second run
-   merely because a prior task was interrupted.
-2. Target at least 15 complete proposals total per daily run, distributed as
-   evenly as the current evidence and active categories allow. This is a
-   minimum production goal, not permission to invent, duplicate, or pad stories;
-   report a shortfall with concrete evidence gaps. Do not interpret it as 15 per
-   category. Continue across all active categories until 15 proposals have been
-   accepted by the API or every viable candidate is exhausted. Opinión and
-   Especiales stay explicitly flagged for human angle/format review.
+   requested run's `runId`, current-run proposals, and candidate checkpoints
+   using the trend-research skill. A day permits at most five distinct runs.
+   Reuse exactly the same `runId` on retries/resumes; only create a new UUID for
+   a deliberately requested fresh run, after confirming the daily cap permits
+   it. Never create a second run merely because a prior task was interrupted.
+2. Cover every active category. Aim for five to seven complete proposals per
+   category when research supports them; at least 15 complete proposals total
+   is the run-wide floor. This is never permission to invent, duplicate, or pad
+   stories. If evidence cannot support the floor, record the gaps honestly.
+   Opinión and Especiales stay flagged for human angle/format review.
 3. Deduplicate before investigation and before image generation using category
    plus fingerprint. If the API context already contains a proposal for that
    candidate, do not generate or submit another one.
-4. For each candidate, use the checkpoint CLI from the repository root. Save
+4. For each candidate, read `pont3la10-seo-editorial` after research and before
+   submission. Use Codex research for trends and claim verification; call the
+   private `borrador` endpoint once per stable idempotency key so the server
+   invokes the same DeepSeek redaction provider and contract used by TikTok
+   ingestion. Reuse the cached result on resume; do not make a fresh DeepSeek
+   request to repair a timeout or lost response. If the API returns
+   `DEEPSEEK_RESULTADO_INCIERTO`, stop that candidate and report it; do not set
+   `retryUncertain: true` unless Juan explicitly authorizes that paid retry.
+
+5. For each candidate, use the checkpoint CLI from the repository root. Save
    each completed stage as soon as it is ready, and read the checkpoint before
    resuming work:
 
@@ -39,6 +48,13 @@ the operational-monitor skill only for a separate read-only health check.
    - `propuesta`: exact API proposal payload plus stable idempotency key.
    - `entrega`: API response identifying the private review draft.
 
+   Map the saved `borrador` response into the strict `propuesta` contract:
+   `propuesta.titulo/resumen/documento/seo` become title, summary, body/bodyJson,
+   and SEO fields; `seleccionEditorial.tagIds/temasNuevos/relatedArticleIds`
+   become the corresponding taxonomy and relationship fields. Keep the dossier's
+   source records and primary URL; never let DeepSeek replace or invent them.
+   Derive human-review flags from the content type and verified photo receipt.
+
    Use `node scripts/codex-editorial-checkpoint.mjs leer <runId> <categoryId> <fingerprint>`
    to inspect saved stages. Use `guardar` for JSON stages, `portada` for the
    verified original photo plus metadata, and `payload-portada` with an output filename
@@ -48,14 +64,14 @@ the operational-monitor skill only for a separate read-only health check.
    Use `exportar` to materialize an exact saved stage to a file inside its
    ignored candidate folder without printing article/source content to terminal.
 
-5. Never repeat completed research or image-search calls on resume. Reuse
+6. Never repeat completed research or image-search calls on resume. Reuse
    stored dossiers, draft, and any verified cover/media ID. For an uncertain API
    outcome, replay the exact saved proposal payload and idempotency key; inspect the API
    context first. Do not create a replacement identity to bypass a conflict.
-6. Submit only through `scripts/codex-editorial-submit.mjs`. The pipeline may
+7. Submit only through `scripts/codex-editorial-submit.mjs`. The pipeline may
    create or update a private `review` draft only. Never approve, schedule,
    publish, or bypass server-side validation; human approval is the boundary.
-7. Report the run ID, per-category counts, drafts created, skipped duplicates,
+8. Report the run ID, per-category counts, drafts created, skipped duplicates,
    unresolved candidates, and any safe required action. Distinguish partial
    completion from success; do not claim all categories met the target unless
    API receipts prove it.

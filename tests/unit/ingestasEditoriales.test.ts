@@ -4,7 +4,7 @@ import {
   esquemaCrearIngestaEditorial,
   normalizarUrlFuenteEditorial
 } from '~/utils/editorial/ingestas'
-import { normalizarPropuestaProveedor } from '~/server/utils/ai/deepseekRedaccion'
+import { normalizarPropuestaProveedor, normalizarSeleccionEditorial } from '~/server/utils/ai/deepseekRedaccion'
 import {
   esquemaEvidenciaIngestaEditorial,
   versionContratoEvidenciaIngesta
@@ -221,5 +221,42 @@ describe('ingestas editoriales', () => {
       afirmacionesPorCorroborar: [], advertencias: []
     })
     expect(propuesta.success).toBe(true)
+  })
+
+  it('solo conserva consultas SEO observadas y IDs del contexto investigado', () => {
+    const seleccion = normalizarSeleccionEditorial({
+      seleccionEditorial: {
+        consultaPrincipal: 'Consulta inventada por el modelo',
+        consultasRelacionadas: ['Keyword sin señal', 'convocados selección Colombia'],
+        intencion: 'informativa',
+        tagIds: ['tema-real', 'tema-inventado'],
+        temasNuevos: [],
+        relatedArticleIds: ['articulo-real', 'articulo-inventado']
+      }
+    }, {
+      ingestaId: 'f0098a0f-33b8-4509-921d-f68f132f165e',
+      tituloSugerido: 'Convocatoria de la selección Colombia',
+      instrucciones: '',
+      urlFuente: 'https://example.com/noticia',
+      creditos: '',
+      categoriaId: 'categoria-real',
+      tipoSugerido: 'noticia',
+      segmentos: [],
+      contextoInvestigacion: {
+        consultaPrincipal: 'selección Colombia',
+        consultasRelacionadas: ['convocados selección Colombia'],
+        intencion: 'informativa',
+        resumen: 'Resumen investigado.',
+        senalTendencia: { termino: 'selección Colombia', titulo: 'Tendencia', url: 'https://example.com/trend', observadaEn: '2026-09-26T18:00:00.000Z' },
+        fuentes: [],
+        temasDisponibles: [{ id: 'tema-real', nombre: 'Selección Colombia', descripcion: '' }],
+        articulosPublicados: [{ id: 'articulo-real', titulo: 'Convocatoria anterior', resumen: '', categoria: 'Fútbol' }]
+      }
+    })
+
+    expect(seleccion.consultaPrincipal).toBe('selección Colombia')
+    expect(seleccion.consultasRelacionadas).toEqual(['convocados selección Colombia'])
+    expect(seleccion.tagIds).toEqual(['tema-real'])
+    expect(seleccion.relatedArticleIds).toEqual(['articulo-real'])
   })
 })

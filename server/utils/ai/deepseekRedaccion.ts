@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import { esquemaPropuestaBorradorIa, versionContratoRedaccionIa } from '~/utils/editorial/redaccionIa'
-import type { EntradaRedaccionIa, ProveedorRedaccionIa, ResultadoRedaccionIa } from './contratosRedaccion'
+import type { EntradaRedaccionIa, ProveedorRedaccionIa, ResultadoRedaccionIa, SeleccionEditorialIa } from './contratosRedaccion'
 import { instruccionesRedaccionV1 } from './instrucciones/redaccion-v1'
 import { esquemaDatosEditorArticulo } from '~/utils/editorial/contenido'
 import type { DatosEditorArticulo } from '~/types/contenidoEditorial'
@@ -126,6 +126,58 @@ export function normalizarPropuestaProveedor(propuesta: unknown, entrada: Entrad
   }
 }
 
+export function normalizarSeleccionEditorial(propuesta: unknown, entrada: EntradaRedaccionIa): SeleccionEditorialIa {
+  const origen = propuesta && typeof propuesta === 'object'
+    ? propuesta as Record<string, unknown>
+    : {}
+  const seleccion = origen.seleccionEditorial && typeof origen.seleccionEditorial === 'object'
+    ? origen.seleccionEditorial as Record<string, unknown>
+    : {}
+  const contexto = entrada.contextoInvestigacion
+  const idsTemas = new Set(contexto?.temasDisponibles.map(tema => tema.id) || [])
+  const idsArticulos = new Set(contexto?.articulosPublicados.map(articulo => articulo.id) || [])
+  const strings = (valor: unknown, limite: number) => Array.isArray(valor)
+    ? [...new Set(valor.filter((item): item is string => typeof item === 'string')
+      .map(item => item.trim()).filter(Boolean))].slice(0, limite)
+    : []
+  const temas = Array.isArray(seleccion.temasNuevos)
+    ? seleccion.temasNuevos.flatMap((item) => {
+        if (!item || typeof item !== 'object') return []
+        const tema = item as Record<string, unknown>
+        return typeof tema.name === 'string' && typeof tema.description === 'string'
+          ? [{ name: tema.name.trim().slice(0, 80), description: tema.description.trim().slice(0, 240) }]
+          : []
+      }).slice(0, 3)
+    : []
+  const consulta = (typeof seleccion.consultaPrincipal === 'string'
+    ? seleccion.consultaPrincipal
+    : contexto?.consultaPrincipal || '').trim().slice(0, 160)
+  const consultasInvestigadas = [...new Set([
+    contexto?.consultaPrincipal || '',
+    ...(contexto?.consultasRelacionadas || [])
+  ].map(item => item.trim()).filter(Boolean))]
+  const consultasPermitidas = new Map(consultasInvestigadas.map(item => [item.toLocaleLowerCase('es-CO'), item]))
+  const consultaValidada = consultasPermitidas.get(consulta.toLocaleLowerCase('es-CO'))
+    || contexto?.consultaPrincipal
+    || ''
+  const relacionadasValidadas = strings(seleccion.consultasRelacionadas, 8)
+    .map(item => consultasPermitidas.get(item.toLocaleLowerCase('es-CO')))
+    .filter((item): item is string => typeof item === 'string'
+      && item.toLocaleLowerCase('es-CO') !== consultaValidada.toLocaleLowerCase('es-CO'))
+  const intencion = ['informativa', 'navegacional', 'analisis'].includes(String(seleccion.intencion))
+    ? seleccion.intencion as SeleccionEditorialIa['intencion']
+    : contexto?.intencion || 'informativa'
+
+  return {
+    consultaPrincipal: consultaValidada,
+    consultasRelacionadas: [...new Set(relacionadasValidadas)].slice(0, 8),
+    intencion,
+    tagIds: strings(seleccion.tagIds, 12).filter(id => idsTemas.has(id)),
+    temasNuevos: temas,
+    relatedArticleIds: strings(seleccion.relatedArticleIds, 3).filter(id => idsArticulos.has(id))
+  }
+}
+
 export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
   return {
     async redactarBorrador(entrada: EntradaRedaccionIa): Promise<ResultadoRedaccionIa> {
@@ -153,7 +205,8 @@ export function crearProveedorDeepSeekRedaccion(): ProveedorRedaccionIa {
       try { json = extraerJsonProveedor(contenido) } catch { throw createError({ statusCode: 502, statusMessage: 'El proveedor devolvió una propuesta inválida.', data: { codigo: 'IA_REDACCION_INVALIDA' } }) }
       const propuesta = esquemaPropuestaBorradorIa.safeParse(normalizarPropuestaProveedor(json, entrada))
       if (!propuesta.success) throw createError({ statusCode: 502, statusMessage: 'La propuesta no cumple el contrato editorial.', data: { codigo: 'IA_REDACCION_CONTRATO_INVALIDO' } })
-      return { propuesta: propuesta.data, proveedor: 'deepseek', modelo: respuesta.model || modelo, consumo: { tokensEntrada: respuesta.usage?.prompt_tokens ?? null, tokensSalida: respuesta.usage?.completion_tokens ?? null, tokensRazonamiento: respuesta.usage?.reasoning_tokens ?? null, costoUsd: null, versionTarifa: null, duracionMs: Date.now() - inicio } }
+      const seleccionEditorial = normalizarSeleccionEditorial(json, entrada)
+      return { propuesta: propuesta.data, proveedor: 'deepseek', modelo: respuesta.model || modelo, consumo: { tokensEntrada: respuesta.usage?.prompt_tokens ?? null, tokensSalida: respuesta.usage?.completion_tokens ?? null, tokensRazonamiento: respuesta.usage?.reasoning_tokens ?? null, costoUsd: null, versionTarifa: null, duracionMs: Date.now() - inicio }, seleccionEditorial }
     }
   }
 }

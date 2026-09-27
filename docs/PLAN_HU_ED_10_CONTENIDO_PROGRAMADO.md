@@ -4,6 +4,25 @@ Fecha: 2026-09-26
 Estado: planificación aprobada por el responsable; implementación local autorizada.
 Base técnica: ingesta TikTok HU-ED-07/08/09 y flujo de publicación HU-ED-05.
 
+## Ajustes confirmados durante implementación (2026-09-26)
+
+- Cinco corridas Codex por día Colombia. Cada corrida busca cinco a siete
+  propuestas por categoría activa cuando hay evidencia, con un piso de 15
+  propuestas completas total por corrida. No completar cuotas con contenido
+  débil ni duplicado.
+- Investigación y verificación con Codex; redacción/SEO/taxonomía/relaciones con
+  el proveedor DeepSeek y el contrato existente de ingestas TikTok. El resultado
+  de DeepSeek se persiste por clave estable para recuperar reintentos.
+- Si el desenlace de una llamada DeepSeek o su persistencia queda ambiguo, no se
+  vuelve a llamar automáticamente: se marca `uncertain`; se permite como máximo
+  un reintento explícito tras verificar que no hay resultado recuperable.
+- La Skill `pont3la10-seo-editorial` da las reglas SEO people-first. Las
+  publicaciones aprobadas se programan con no menos de 15 minutos de separación.
+- La automatización existente se actualizará a cinco ejecuciones solo después
+  de desplegar/verificar la ruta privada nueva; activar antes produciría
+  fallos repetidos contra producción. No se aplicó ninguna migración remota en
+  este trabajo.
+
 ## Avance de implementación (2026-09-26)
 
 Rama local `codex/hu-ed-10-contenido-programado`, basada en `main` (`39acbb2`).

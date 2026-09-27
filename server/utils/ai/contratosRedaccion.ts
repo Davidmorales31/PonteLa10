@@ -16,6 +16,32 @@ export interface EntradaRedaccionIa {
   categoriaId: string | null
   tipoSugerido: string
   segmentos: SegmentoEvidenciaRedaccion[]
+  contextoInvestigacion?: {
+    consultaPrincipal: string
+    consultasRelacionadas: string[]
+    intencion: 'informativa' | 'navegacional' | 'analisis'
+    resumen: string
+    senalTendencia: { termino: string, titulo: string, url: string, observadaEn: string }
+    fuentes: Array<{
+      url: string
+      titulo: string
+      publisher: string
+      publishedAt: string | null
+      tipo: 'primaria' | 'secundaria'
+      claims: string[]
+    }>
+    temasDisponibles: Array<{ id: string, nombre: string, descripcion: string }>
+    articulosPublicados: Array<{ id: string, titulo: string, resumen: string, categoria: string }>
+  }
+}
+
+export interface SeleccionEditorialIa {
+  consultaPrincipal: string
+  consultasRelacionadas: string[]
+  intencion: 'informativa' | 'navegacional' | 'analisis'
+  tagIds: string[]
+  temasNuevos: Array<{ name: string, description: string }>
+  relatedArticleIds: string[]
 }
 
 export interface ConsumoRedaccionIa {
@@ -32,6 +58,7 @@ export interface ResultadoRedaccionIa {
   proveedor: string
   modelo: string
   consumo: ConsumoRedaccionIa
+  seleccionEditorial?: SeleccionEditorialIa
 }
 
 export interface ProveedorRedaccionIa {
