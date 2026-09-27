@@ -10,10 +10,12 @@ configuration is available. Health queries are read-only. The only permitted
 mutation is one retry of an already-prepared, idempotent API delivery from a
 local checkpoint; never regenerate editorial content or images here.
 
-1. From the repository root, verify only whether
-   `PONT3LA10_CODEX_API_BASE_URL` and `NUXT_CODEX_EDITORIAL_API_SECRET` exist in
-   the process environment. Never print, inspect, or copy their values. If either
-   is missing, report configuration unavailable and stop.
+1. From the repository root, do not preflight credentials by inspecting the
+   PowerShell shell environment: scheduled Codex tasks may not inherit the
+   interactive shell's variables. The submission CLI silently loads the root
+   `.env` while preserving variables already present in the process. Never
+   print, inspect, or copy credential values. If configuration is unavailable,
+   the CLI stops before making a request and reports that safely.
 2. Create a temporary JSON file containing exactly `{}` and run:
    `node scripts/codex-editorial-submit.mjs salud <temporary-json-file>`.
    Delete only that exact temporary file after the command completes. Do not put

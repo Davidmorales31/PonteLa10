@@ -69,6 +69,21 @@ describe('API privada de propuestas Codex', () => {
       tipo: 'primaria' as const,
       claims: ['El documento oficial confirma la fecha del evento.']
     }
+    const crearCuerpoDePrueba = (palabras: number) => {
+      const bloques = Array.from({ length: Math.ceil(palabras / 66) }, (_, indice) => {
+        const cantidad = Math.min(66, palabras - indice * 66)
+        const texto = Array.from({ length: cantidad }, () => 'palabra').join(' ')
+        return {
+          type: 'paragraph' as const,
+          content: [{ type: 'text' as const, text: texto }]
+        }
+      })
+      return {
+        texto: bloques.map(bloque => bloque.content[0].text).join('\n\n'),
+        documento: { type: 'doc' as const, content: bloques }
+      }
+    }
+    const cuerpoPrueba = crearCuerpoDePrueba(660)
     const propuesta = {
       idempotencyKey: '45d8b1c5-47e7-42b8-9ac5-ea753c4a5ebf',
       runId: '14a5f2b0-a9c1-41b2-9b82-729f52c3b4d2',
@@ -77,14 +92,8 @@ describe('API privada de propuestas Codex', () => {
       title: 'Una historia deportiva suficientemente clara',
       summary: 'Un resumen editorial de prueba que explica por qué importa esta historia.',
       contentType: 'opinion' as const,
-      body: 'p'.repeat(500),
-      bodyJson: {
-        type: 'doc' as const,
-        content: [{
-          type: 'paragraph' as const,
-          content: [{ type: 'text' as const, text: 'p'.repeat(500) }]
-        }]
-      },
+      body: cuerpoPrueba.texto,
+      bodyJson: cuerpoPrueba.documento,
       seoTitle: 'Una historia deportiva de prueba',
       seoDescription: 'Descripción de prueba suficientemente completa para validar el contrato editorial.',
       socialBrief: 'Contexto del tema para redes sociales.',
@@ -103,6 +112,13 @@ describe('API privada de propuestas Codex', () => {
       ...propuesta,
       editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
     }).success).toBe(true)
+    const cuerpoCorto = crearCuerpoDePrueba(659)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      body: cuerpoCorto.texto,
+      bodyJson: cuerpoCorto.documento,
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
+    }).success).toBe(false)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
       coverMediaId: null,
@@ -157,6 +173,19 @@ describe('API privada de propuestas Codex', () => {
     expect(migracion).not.toContain('security definer')
     expect(migracion).not.toMatch(/grant\s+execute\s+on\s+function/i)
     expect(migracion).not.toMatch(/set\s+status\s*=\s*'(?:approved|scheduled|published)'/i)
+  })
+
+  it('elige automáticamente la publicación más reciente con imagen pública existente', () => {
+    const migracion = readFileSync(
+      new URL('../../supabase/migrations/20260927131539_latest_public_home_feature_and_reading_time.sql', import.meta.url),
+      'utf8'
+    )
+    expect(migracion).toContain('get_public_editorial_latest_article_with_cover')
+    expect(migracion).toContain("article.status = 'published'")
+    expect(migracion).toContain('bucket.public is true')
+    expect(migracion).toContain('storage.objects')
+    expect(migracion).toContain("media.mime_type like 'image/%'")
+    expect(migracion).toContain("'lecturaMinutos'")
   })
 
   it('rechaza controles en temas públicos nuevos también dentro de la RPC', () => {

@@ -195,11 +195,6 @@ const puedeEditar = computed(() => {
   )
 })
 const hayCambiosQueBloqueanFlujo = computed(() => puedeEditar.value && cambiosPendientes.value)
-const puedeGestionarDestacada = computed(() =>
-  articulo.value?.estado === 'published'
-  && articulo.value.funcionDestacadaDisponible
-  && tienePermiso('contenido.publicar')
-)
 const puedeCambiarPortadaRapida = computed(() => {
   const estado = articulo.value?.estado
   const nivelAal = contextoEditorial.value?.nivelAal
@@ -678,30 +673,6 @@ async function realizarTransicion(entrada: EntradaTransicionEditorial): Promise<
   )
 
   return completada
-}
-
-async function actualizarNoticiaDestacada(activa: boolean) {
-  if (!puedeGestionarDestacada.value) return
-
-  errorGuardado.value = ''
-  await ejecutarConBloqueo(
-    `destacar-articulo:${articuloId.value}`,
-    activa ? 'Destacando noticia en portada' : 'Retirando noticia destacada',
-    async () => {
-      try {
-        await $fetch(`/api/admin/contenidos/${articuloId.value}/destacada`, {
-          method: 'PUT',
-          body: { activa }
-        })
-        await recargarArticulo()
-        mensajeEstado.value = activa
-          ? 'La noticia quedó destacada en la portada.'
-          : 'La noticia dejó de estar destacada en la portada.'
-      } catch (errorPeticion: unknown) {
-        errorGuardado.value = obtenerMensajePeticion(errorPeticion)
-      }
-    }
-  )
 }
 
 function abrirAccionFlujo(accion: AccionFlujoEditorial) {
@@ -1269,30 +1240,13 @@ function formatearFecha(fecha: string): string {
               </label>
             </div>
 
-            <section
-              v-if="puedeGestionarDestacada"
-              class="configuracion-destacada-portada"
-            >
-              <h2>Portada</h2>
-              <label>
-                <input
-                  type="checkbox"
-                  :checked="articulo?.destacadaEnPortada"
-                  @change="actualizarNoticiaDestacada(($event.target as HTMLInputElement).checked)"
-                >
-                <span>Noticia destacada del día</span>
-              </label>
+            <section class="configuracion-destacada-portada">
+              <h2>Portada automática</h2>
               <p>
-                Solo puede haber una. Al seleccionar esta, reemplaza la anterior
-                y aparece como “La jugada del día” en la portada.
+                Inicio muestra siempre la noticia publicada más reciente que
+                tenga una imagen disponible.
               </p>
             </section>
-            <p
-              v-else-if="articulo?.estado !== 'published'"
-              class="texto-secundario-editor"
-            >
-              La destacada de portada se habilita cuando la noticia ya está publicada.
-            </p>
           </section>
 
           <section

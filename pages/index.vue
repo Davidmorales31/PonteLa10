@@ -33,7 +33,7 @@ const articulosPublicados = computed<ArticuloPortada[]>(() =>
     publicadoHace: new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'America/Bogota' })
       .format(new Date(articulo.publicadoEn)),
     fechaPublicacion: articulo.publicadoEn,
-    lecturaMinutos: 4,
+    lecturaMinutos: articulo.lecturaMinutos,
     imagen: articulo.imagen
   }))
 )
@@ -49,7 +49,7 @@ const articuloDestacado = computed<ArticuloPortada | null>(() => {
     publicadoHace: new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'America/Bogota' })
       .format(new Date(articulo.publicadoEn)),
     fechaPublicacion: articulo.publicadoEn,
-    lecturaMinutos: 4,
+    lecturaMinutos: articulo.lecturaMinutos,
     imagen: articulo.imagen
   }
 })

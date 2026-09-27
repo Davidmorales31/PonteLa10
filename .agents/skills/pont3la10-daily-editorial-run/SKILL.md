@@ -9,6 +9,16 @@ Use this as the coordinator for the daily scheduled Codex task. Read the trend,
 investigative-writing, and auto-cover skills before producing candidates. Use
 the operational-monitor skill only for a separate read-only health check.
 
+## Private API configuration
+
+Run all private API requests through `scripts/codex-editorial-submit.mjs` from
+the canonical repository root. The CLI silently loads the root `.env` and keeps
+environment variables already present in the process as higher-priority
+values. Scheduled tasks may not inherit variables from an interactive
+PowerShell session, so never stop solely because `$env:` checks are empty and
+never print or inspect secret values. If configuration is missing, the CLI
+fails before sending a request.
+
 ## Run and resume safely
 
 1. Load active categories, public topics, recent published coverage, the
@@ -67,6 +77,18 @@ the operational-monitor skill only for a separate read-only health check.
    matches, and propose a deduplicated public topic only when the catalog has no
    equivalent. Never fabricate an internal label, category, or related article.
    Derive human-review flags from the content type and verified photo receipt.
+
+   Before saving or submitting each proposal, count the words in its plain-text
+   `body` after trimming and collapsing whitespace. A complete Codex article
+   must contain at least 660 words (three actual minutes at the site's
+   220-words-per-minute rate); prefer the existing 850–1,200-word editorial
+   target when the evidence supports it. The `propuesta` resource of
+   `scripts/codex-editorial-submit.mjs` enforces the 660-word floor locally,
+   and the Production API validates it too after deployment. If a draft is
+   shorter, do not submit it or pad it: research and corroborate more, obtain a
+   complete redraft, or mark that candidate incomplete and continue with a
+   different verified candidate. Never count title, summary, SEO, sources, or
+   metadata toward the article-body minimum.
 
    Use `node scripts/codex-editorial-checkpoint.mjs leer <runId> <categoryId> <fingerprint>`
    to inspect saved stages. Use `guardar` for JSON stages, `portada` for the

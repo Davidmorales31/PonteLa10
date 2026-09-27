@@ -1,6 +1,6 @@
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
-import { obtenerNoticiaDestacadaPublica } from '~/server/utils/repositorioContenidoEditorial'
+import { obtenerUltimaNoticiaPublicaConPortada } from '~/server/utils/repositorioContenidoEditorial'
 
 export default defineEventHandler(async (
   evento
@@ -8,7 +8,7 @@ export default defineEventHandler(async (
   setResponseHeader(
     evento,
     'Cache-Control',
-    'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
+    'public, max-age=15, s-maxage=30, stale-while-revalidate=30'
   )
-  return obtenerNoticiaDestacadaPublica(obtenerClienteSupabaseEditorial(evento))
+  return obtenerUltimaNoticiaPublicaConPortada(obtenerClienteSupabaseEditorial(evento))
 })

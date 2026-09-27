@@ -208,6 +208,7 @@ interface FilaResumenArticuloPublicoRpc {
   categoria: string
   imagenBucket: string
   imagenPath: string
+  lecturaMinutos?: number
 }
 
 interface FilaEnlaceArticuloInternoRpc {
@@ -1441,16 +1442,17 @@ export async function listarArticulosPublicosEditoriales(
       publicadoEn: fila.publicadoEn,
       autorNombre: fila.autorNombre,
       categoria: fila.categoria,
+      lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,
       imagen: fila.imagenBucket && fila.imagenPath
         ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
         : ''
     }))
 }
 
-export async function obtenerNoticiaDestacadaPublica(
+export async function obtenerUltimaNoticiaPublicaConPortada(
   clienteSupabase: SupabaseClient
 ): Promise<ResumenArticuloPublico | null> {
-  const { data, error } = await clienteSupabase.rpc('get_public_editorial_home_feature')
+  const { data, error } = await clienteSupabase.rpc('get_public_editorial_latest_article_with_cover')
 
   if (error) {
     throw crearErrorRepositorio('No se pudo cargar la noticia destacada.')
@@ -1468,6 +1470,7 @@ export async function obtenerNoticiaDestacadaPublica(
     publicadoEn: fila.publicadoEn,
     autorNombre: fila.autorNombre,
     categoria: fila.categoria,
+    lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,
     imagen: fila.imagenBucket && fila.imagenPath
       ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
       : ''

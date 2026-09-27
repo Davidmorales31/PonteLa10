@@ -5,7 +5,7 @@ export interface ArticuloResumen {
   categoria: string
   autor: string
   publicadoHace: string
-  lecturaMinutos: number
+  lecturaMinutos?: number
   imagen: string
   destacado?: boolean
 }
