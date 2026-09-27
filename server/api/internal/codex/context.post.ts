@@ -5,6 +5,7 @@ import {
   verificarFirmaCodex
 } from '~/server/utils/codexEditorialPrivado'
 import { esquemaContextoCodex } from '~/server/utils/esquemasCodexEditorial'
+import { clasificarErrorContextoCodex } from '~/server/utils/errorContextoCodex'
 
 const limiteContextoBytes = 20_000
 
@@ -27,10 +28,11 @@ export default defineEventHandler(async (evento) => {
   const { data, error } = await obtenerClienteCodexPrivado(evento)
     .rpc('get_codex_editorial_context', { p_run_id: resultado.data.runId })
   if (error || !data || typeof data !== 'object') {
+    const problema = clasificarErrorContextoCodex(error)
     throw createError({
-      statusCode: 502,
-      statusMessage: 'No se pudo cargar el contexto editorial actual.',
-      data: { codigo: 'CONTEXTO_CODEX_NO_DISPONIBLE' }
+      statusCode: problema.statusCode,
+      statusMessage: problema.statusMessage,
+      data: { codigo: problema.codigo }
     })
   }
 

@@ -12,11 +12,18 @@ the operational-monitor skill only for a separate read-only health check.
 ## Run and resume safely
 
 1. Load active categories, public topics, recent published coverage, the
-   requested run's `runId`, current-run proposals, and candidate checkpoints
-   using the trend-research skill. A day permits at most five distinct runs.
-   Reuse exactly the same `runId` on retries/resumes; only create a new UUID for
-   a deliberately requested fresh run, after confirming the daily cap permits
-   it. Never create a second run merely because a prior task was interrupted.
+   requested run's `runId` and `runDate`, current-run proposals, and candidate
+   checkpoints using the trend-research skill. Dates and the five-run cap use
+   `America/Bogota`. Reuse exactly the same `runId` for retries/resumes only
+   when its `runDate` is today's Colombia date. A run from a prior date is
+   immutable for this workflow: do not reopen it, even if it remains
+   `in_progress`; preserve its audit record and checkpoints. For today's first
+   scheduled run, request a new UUID and let the private context endpoint
+   atomically reserve it against the five-run cap. If the endpoint reports a
+   run-date conflict (`CORRIDA_CODEX_FECHA_DISTINTA` or SQLSTATE `22023`),
+   verify the date and use a new UUID only when the old run belongs to a prior
+   Colombia date and today's cap has not been reached. Never retry a date
+   conflict with the same old ID or use new IDs to evade today's cap.
 2. Cover every active category. Aim for five to seven complete proposals per
    category when research supports them; at least 15 complete proposals total
    is the run-wide floor. This is never permission to invent, duplicate, or pad
