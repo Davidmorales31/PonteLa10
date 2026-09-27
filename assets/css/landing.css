@@ -3004,8 +3004,67 @@ body.tema-publico-blanco .portada-medio .tarjeta-marcador-compacto header > span
 }
 
 .boton-cargar-noticias {
-  width: min(390px, 100%);
+  width: fit-content;
+  min-width: 210px;
   margin: 22px auto 0;
+  border-radius: 999px;
+  border-color: #285b8b;
+  background: rgba(11, 39, 71, 0.88);
+  color: #d5eeff;
+  box-shadow: 0 8px 20px rgba(0, 21, 48, 0.2);
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.boton-cargar-noticias:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #35c7ff;
+  background: #103b67;
+  box-shadow: 0 10px 24px rgba(0, 122, 255, 0.2);
+}
+
+.boton-cargar-noticias:focus-visible {
+  outline: 3px solid #54d7ff;
+  outline-offset: 3px;
+}
+
+.boton-cargar-noticias:disabled {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+.icono-carga-noticias {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+}
+
+.icono-carga-noticias.girando {
+  animation: girar-icono-noticias 900ms linear infinite;
+}
+
+@keyframes girar-icono-noticias {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boton-cargar-noticias,
+  .icono-carga-noticias.girando {
+    animation: none;
+    transition: none;
+  }
+}
+
+.estado-carga-noticias {
+  margin: 10px auto 0;
+  color: #a9c5df;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.estado-carga-noticias.error {
+  color: #ffb9bf;
 }
 
 .panel-noticias-lateral,
@@ -3254,6 +3313,27 @@ body.tema-publico-blanco .filtro-noticias-icono {
   background: rgba(8, 32, 74, 0.08);
 }
 
+body.tema-publico-blanco .boton-cargar-noticias {
+  border-color: #c7d8ed;
+  background: #ffffff;
+  color: #174ea6;
+  box-shadow: 0 5px 14px rgba(8, 32, 74, 0.08);
+}
+
+body.tema-publico-blanco .boton-cargar-noticias:hover:not(:disabled) {
+  border-color: #174ea6;
+  background: #f3f7ff;
+  box-shadow: 0 8px 18px rgba(23, 78, 166, 0.13);
+}
+
+body.tema-publico-blanco .estado-carga-noticias {
+  color: #52657d;
+}
+
+body.tema-publico-blanco .estado-carga-noticias.error {
+  color: #b42332;
+}
+
 @media (max-width: 1040px) {
   .filtros-noticias-medio {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -3309,6 +3389,12 @@ body.tema-publico-blanco .filtro-noticias-icono {
 
   .boletin-noticias-medio input {
     min-height: 44px;
+  }
+
+  .boton-cargar-noticias {
+    min-width: 0;
+    max-width: 100%;
+    padding-inline: 18px;
   }
 }
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { categoriasSitio, navegacionMasSitio, navegacionSitio } from '../../data/sitioPublico'
 import {
+  aumentarNoticiasVisibles,
+  combinarArticulosPublicos,
   normalizarTextoBusqueda,
   obtenerAliasCategoria,
   obtenerEtiquetaCategoria
@@ -21,5 +23,24 @@ describe('configuración de la landing', () => {
     expect(normalizarTextoBusqueda('  FÚTBOL Colombiano  ')).toBe('futbol colombiano')
     expect(obtenerAliasCategoria('tecnologia')).toContain('tech deportiva')
     expect(obtenerEtiquetaCategoria('futbol-colombiano')).toBe('fútbol colombiano')
+  })
+
+  it('combina páginas de noticias sin repetir slugs', () => {
+    const existentes = [{ slug: 'primera', titulo: 'Primera' }]
+    const nuevos = [
+      { slug: 'primera', titulo: 'Duplicada' },
+      { slug: 'segunda', titulo: 'Segunda' }
+    ]
+
+    expect(combinarArticulosPublicos(existentes, nuevos)).toEqual([
+      { slug: 'primera', titulo: 'Primera' },
+      { slug: 'segunda', titulo: 'Segunda' }
+    ])
+  })
+
+  it('muestra el siguiente bloque sin superar la cantidad disponible', () => {
+    expect(aumentarNoticiasVisibles(6, 20)).toBe(12)
+    expect(aumentarNoticiasVisibles(18, 20)).toBe(20)
+    expect(aumentarNoticiasVisibles(6, 4)).toBe(4)
   })
 })
