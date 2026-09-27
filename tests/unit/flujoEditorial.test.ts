@@ -152,7 +152,7 @@ describe('flujo editorial y publicación', () => {
     expect(migracion).toContain("status in ('running', 'completed', 'failed', 'uncertain')")
     expect(migracion).toContain('retry_count between 0 and 1')
     expect(migracion).toContain("set status = 'uncertain', error_code = 'LEASE_EXPIRADA'")
-    expect(ruta).toContain("crearProveedorDeepSeekRedaccion().redactarBorrador(entrada)")
+    expect(ruta).toContain("crearProveedorDeepSeekCodex().redactarBorrador(entrada)")
     expect(ruta).toContain("cliente.rpc('complete_codex_editorial_draft'")
     expect(ruta).toContain("cliente.rpc('fail_codex_editorial_draft'")
     expect(ruta).toContain("cliente.rpc('mark_codex_editorial_draft_uncertain'")

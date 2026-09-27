@@ -28,8 +28,9 @@ the operational-monitor skill only for a separate read-only health check.
 4. For each candidate, read `pont3la10-seo-editorial` after research and before
    submission. Use Codex research for trends and claim verification; call the
    private `borrador` endpoint once per stable idempotency key so the server
-   invokes the same DeepSeek redaction provider and contract used by TikTok
-   ingestion. Reuse the cached result on resume; do not make a fresh DeepSeek
+   invokes the Codex-only DeepSeek provider, whose article-writing criteria
+   mirror the proven TikTok standard while keeping both provider routes and
+   worker behavior isolated. Reuse the cached result on resume; do not make a fresh DeepSeek
    request to repair a timeout or lost response. If the API returns
    `DEEPSEEK_RESULTADO_INCIERTO`, stop that candidate and report it; do not set
    `retryUncertain: true` unless Juan explicitly authorizes that paid retry.
@@ -53,6 +54,11 @@ the operational-monitor skill only for a separate read-only health check.
    and SEO fields; `seleccionEditorial.tagIds/temasNuevos/relatedArticleIds`
    become the corresponding taxonomy and relationship fields. Keep the dossier's
    source records and primary URL; never let DeepSeek replace or invent them.
+   Check the returned taxonomy against the API-supplied public topic and
+   published-story candidates before mapping the payload. A blank selection is
+   not a default: select relevant exact IDs when warranted, omit unrelated
+   matches, and propose a deduplicated public topic only when the catalog has no
+   equivalent. Never fabricate an internal label, category, or related article.
    Derive human-review flags from the content type and verified photo receipt.
 
    Use `node scripts/codex-editorial-checkpoint.mjs leer <runId> <categoryId> <fingerprint>`
