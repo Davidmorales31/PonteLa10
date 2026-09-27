@@ -16,8 +16,9 @@ operación manual.
   disponibilidad del espacio y transición; graba aprobación/auditoría y fija
   `scheduled_at`/estado `scheduled` sin ventana en la que otra tarea pueda
   publicar un artículo todavía no aprobado.
-- Slots definidos por política editorial en `America/Bogota`; el primer valor de
-  piloto es un intervalo configurable de 60 minutos. Se busca el primer bloque
+- Slots definidos por política editorial en `America/Bogota`; el intervalo
+  configurable no puede ser menor de 15 minutos. El piloto asigna el siguiente
+  espacio libre con al menos 15 minutos entre publicaciones. Se busca el primer bloque
   libre futuro, sin desplazar las programaciones manuales. El monitor de seis
   horas no determina la cadencia de publicación.
 - Si no hay un horario válido, conservar `approved` y explicar el conflicto; no

@@ -5,10 +5,10 @@ description: Find and rank current Colombia-focused editorial opportunities for 
 
 # Pont3la10 Trend Research
 
-Turn current interest signals into an evidence-led editorial agenda that helps
-the daily run produce at least 15 complete proposals total across active
-categories when the reporting supports them—not 15 per category and never a
-quota that justifies weak or invented stories.
+Turn current interest signals into an evidence-led editorial agenda. Aim for
+five to seven complete proposals per active category when reporting supports
+them, with a minimum floor of 15 complete proposals total per run. Never use a
+quota to justify weak, duplicate, or invented stories.
 
 1. Load the active category catalog, recent published stories, and unfinished
    run checkpoints through the private Pont3la10 API. Do not assume seeded
@@ -37,13 +37,15 @@ quota that justifies weak or invented stories.
 Do not approve, schedule, or publish. Submit only a research dossier to the
 authorized private API. Use the versioned local client from the repository root:
 
-1. Generate a UUID `runId` once per daily run and write a minimal JSON request
-   containing only that UUID to a temporary, untracked file.
+1. Generate a UUID `runId` once per distinct run (maximum five per Colombia
+   calendar day) and write a minimal JSON request containing only that UUID to
+   a temporary, untracked file. Reuse that exact UUID for all retries and
+   checkpoints; a deliberately requested fresh run uses a new UUID only if the
+   daily cap has not been reached.
 2. Run `node scripts/codex-editorial-submit.mjs contexto <request.json>` and use
    the returned catalog, public topics, published stories, recent fingerprints,
    checkpoint status, and proposals already registered for this `runId`.
-   The server's returned `runId` is authoritative if a retry resumes that day's
-   existing run.
+   The server's returned `runId` is authoritative for the requested run.
    If its state is `completed` or `partial`, report that day's existing result
    without reopening it. A `failed` run is reopened by the context endpoint so
    the interrupted work can resume.

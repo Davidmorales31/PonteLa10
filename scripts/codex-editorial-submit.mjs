@@ -6,6 +6,7 @@ const [recurso, archivo] = process.argv.slice(2)
 const rutas = {
   contexto: '/api/internal/codex/context',
   agenda: '/api/internal/codex/agenda',
+  borrador: '/api/internal/codex/draft',
   media: '/api/internal/codex/media',
   propuesta: '/api/internal/codex/proposals',
   salud: '/api/internal/codex/health'
@@ -17,7 +18,7 @@ function terminar(mensaje, codigo = 1) {
 }
 
 if (!rutas[recurso] || !archivo) {
-  terminar('Uso: node scripts/codex-editorial-submit.mjs <contexto|agenda|media|propuesta|salud> <archivo-json>')
+  terminar('Uso: node scripts/codex-editorial-submit.mjs <contexto|agenda|borrador|media|propuesta|salud> <archivo-json>')
 }
 
 const baseUrl = process.env.PONT3LA10_CODEX_API_BASE_URL
@@ -69,7 +70,7 @@ try {
       'x-pont3la10-signature': firma
     },
     body: cuerpo,
-    signal: AbortSignal.timeout(45_000)
+    signal: AbortSignal.timeout(recurso === 'borrador' ? 90_000 : 45_000)
   })
 } catch {
   terminar('La API privada no respondió; conserva la misma clave de idempotencia para reintentar.')

@@ -16,6 +16,15 @@ revisión editorial.
   estructurados, separadas del cuerpo.
 - Redacción en español colombiano con el estándar actual de HU-ED-08 cuando las
   fuentes lo sostengan; no copiar, inventar ni alargar para llegar a un conteo.
+- Codex investiga tendencias y verifica el expediente; el servidor usa el
+  proveedor DeepSeek y el mismo contrato/prompt versionado del flujo TikTok para
+  redactar, proponer taxonomía, relaciones y metadatos SEO. El resultado queda
+  asociado a la clave estable de la historia: reintentos devuelven el resultado
+  guardado o retoman una reserva vencida, no repiten una generación completada.
+- Capa SEO editorial basada en intención y consultas realmente investigadas:
+  título y descripción fieles, entidades correctas, enlaces internos existentes,
+  términos relacionados naturales, fuentes estructuradas y revisión de datos.
+  Sin relleno de palabras clave ni claims de demanda que no estén respaldados.
 - Categoría de catálogo activo, temas existentes, creación deduplicada de temas
   públicos conforme a HU-ED-09 y hasta tres relacionados publicados.
 - SEO editorial derivado de la historia; claims sensibles y limitaciones visibles
@@ -84,6 +93,13 @@ revisión editorial.
   La falta de imagen se registra, pero no bloquea la entrega del borrador.
 - La misma petición repetida no crea un segundo artículo, media ni temas.
 - Una carga adversarial en una fuente no cambia categoría, permisos ni destino.
+- La ruta privada de borrador guarda el resultado DeepSeek de forma durable e
+  idempotente, y no crea por sí sola un artículo ni cambia el estado a `review`;
+  la ruta de propuesta valida y entrega posteriormente el borrador privado.
+- Si la llamada al proveedor o su persistencia termina con resultado ambiguo, el
+  candidato queda `uncertain` y no dispara otro cobro automático. Solo se permite
+  un reintento explícito, con la misma clave y auditoría, tras verificar que no
+  existe un resultado recuperable.
 - Un artículo todavía en `review` no puede cambiar a aprobado/programado ni ser
   visible en el sitio público.
 - Lint, pruebas API/RLS/contrato/media y matriz de validación del repo pasan.

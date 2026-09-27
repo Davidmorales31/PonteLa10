@@ -3,22 +3,22 @@
 ## Historia
 
 Como responsable editorial de Pont3la10, quiero que una automatización local
-de Codex detecte diariamente temas con interés real para cada categoría activa,
+de Codex detecte cinco veces al día temas con interés real para cada categoría activa,
 para comenzar desde oportunidades verificables y pertinentes, no desde titulares
 inventados.
 
 ## Alcance
 
-- Programación diaria de Codex Automation local, vinculada al proyecto local.
+- Cinco corridas diarias de Codex Automation local, vinculadas al proyecto
+  canónico local y con reanudación/idempotencia por `runId`.
 - Descubrir señales de búsqueda y conversación en Colombia, incluyendo Google
   Trends RSS y fuentes abiertas compatibles; registrar origen y fecha de la señal.
 - Leer en cada ejecución el catálogo de categorías activas y la ventana de
   artículos recientes/publicados para detectar repetición y temas ya cubiertos.
-- Proponer un objetivo mínimo de 15 borradores completos por corrida diaria,
-  distribuidos entre las categorías activas según evidencia y relevancia. Es un
-  objetivo de producción, no una autorización para inventar, duplicar ni rellenar
-  temas; registrar cualquier faltante con sus causas verificables. No significa
-  15 por categoría.
+- Apuntar a cinco a siete borradores completos por categoría activa cuando la
+  evidencia lo sostenga, con un piso de 15 propuestas completas por corrida en
+  total. El piso no autoriza inventar, duplicar ni rellenar; registrar cualquier
+  faltante con causas verificables. No significa 15 por categoría.
 - Dejar una agenda/checkpoint durable por ejecución, categoría y tema; continuar
   lotes incompletos sin duplicar.
 - Crear la Skill de proyecto `pont3la10-trend-research` para repetir criterios,
@@ -50,6 +50,8 @@ inventados.
 - Si RSS, red o Codex no están disponibles, el sistema informa la etapa y conserva
   agenda anterior sin marcar la corrida como exitosa.
 - No se crean artículos públicos, programados ni aprobados en esta HU.
+- Cada corrida permanece bajo el máximo de cinco por día Colombia; un reintento
+  conserva su mismo `runId` y no cuenta como corrida nueva.
 
 ## Fuera de alcance
 

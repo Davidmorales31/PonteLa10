@@ -118,6 +118,48 @@ describe('flujo editorial y publicación', () => {
     expect(nuevaMigracion).toContain("set status = 'scheduled'::public.article_status")
   })
 
+  it('fija 15 minutos como separación mínima sin relajar aprobación/MFA', () => {
+    const migracion = readFileSync(new URL(
+      '../../supabase/migrations/20260926234143_editorial_publication_spacing_15_minutes.sql',
+      import.meta.url
+    ), 'utf8')
+
+    expect(migracion).toContain('check (interval_minutes between 15 and 1440)')
+    expect(migracion).toContain("set interval_minutes = 15, updated_at = now()")
+    expect(migracion).toContain("'v_interval < 15 or v_interval > 1440'")
+    expect(migracion).toContain('pg_get_functiondef')
+    expect(migracion).not.toContain('grant execute')
+  })
+
+  it('persiste el resultado DeepSeek en una RPC privada e idempotente', () => {
+    const migracion = readFileSync(new URL(
+      '../../supabase/migrations/20260926234114_codex_deepseek_research_drafts.sql',
+      import.meta.url
+    ), 'utf8')
+    const ruta = readFileSync(new URL(
+      '../../server/api/internal/codex/draft.post.ts',
+      import.meta.url
+    ), 'utf8')
+
+    expect(migracion).toContain('editorial_codex_draft_generations')
+    expect(migracion).toContain('enable row level security')
+    expect(migracion).toContain('from public, anon, authenticated')
+    expect(migracion).toContain('to service_role')
+    expect(migracion).toContain('reserve_codex_editorial_draft')
+    expect(migracion).toContain('complete_codex_editorial_draft')
+    expect(migracion).toContain('fail_codex_editorial_draft')
+    expect(migracion).toContain('mark_codex_editorial_draft_uncertain')
+    expect(migracion).toContain("status in ('running', 'completed', 'failed', 'uncertain')")
+    expect(migracion).toContain('retry_count between 0 and 1')
+    expect(migracion).toContain("set status = 'uncertain', error_code = 'LEASE_EXPIRADA'")
+    expect(ruta).toContain("crearProveedorDeepSeekRedaccion().redactarBorrador(entrada)")
+    expect(ruta).toContain("cliente.rpc('complete_codex_editorial_draft'")
+    expect(ruta).toContain("cliente.rpc('fail_codex_editorial_draft'")
+    expect(ruta).toContain("cliente.rpc('mark_codex_editorial_draft_uncertain'")
+    expect(ruta).toContain('DEEPSEEK_RESULTADO_INCIERTO')
+    expect(ruta).not.toContain('submit_codex_editorial_proposal')
+  })
+
   it('renderiza documentos públicos sin insertar HTML arbitrario', () => {
     const rutaComponente = new URL(
       '../../components/editorial/ContenidoArticuloPublico.vue',
