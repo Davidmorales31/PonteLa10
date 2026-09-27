@@ -5,6 +5,7 @@ import {
   normalizarUrlFuenteEditorial
 } from '~/utils/editorial/ingestas'
 import { normalizarPropuestaProveedor, normalizarSeleccionEditorial } from '~/server/utils/ai/deepseekRedaccion'
+import { normalizarSeleccionEditorialCodex, prepararContextoEditorialCodex } from '~/server/utils/ai/seleccionEditorialCodex'
 import {
   esquemaEvidenciaIngestaEditorial,
   versionContratoEvidenciaIngesta
@@ -258,5 +259,70 @@ describe('ingestas editoriales', () => {
     expect(seleccion.consultasRelacionadas).toEqual(['convocados selección Colombia'])
     expect(seleccion.tagIds).toEqual(['tema-real'])
     expect(seleccion.relatedArticleIds).toEqual(['articulo-real'])
+  })
+
+  it('recupera temas y noticias pertinentes cuando DeepSeek omite las asociaciones', () => {
+    const entrada = {
+      ingestaId: 'f0098a0f-33b8-4509-921d-f68f132f165e',
+      tituloSugerido: 'James Rodríguez confirma su regreso con la Selección Colombia',
+      instrucciones: '',
+      urlFuente: 'https://example.com/noticia',
+      creditos: '',
+      categoriaId: 'categoria-real',
+      tipoSugerido: 'noticia',
+      segmentos: [],
+      contextoInvestigacion: {
+        consultaPrincipal: 'James Rodríguez Selección Colombia',
+        consultasRelacionadas: ['regreso James Rodríguez Colombia'],
+        intencion: 'informativa' as const,
+        resumen: 'James Rodríguez regresará a la Selección Colombia para la próxima convocatoria.',
+        senalTendencia: { termino: 'James Rodríguez', titulo: 'James Rodríguez vuelve a Colombia', url: 'https://example.com/tendencia', observadaEn: '2026-09-26T18:00:00.000Z' },
+        fuentes: [{ url: 'https://example.com/fuente', titulo: 'James Rodríguez volvería a la Selección Colombia', publisher: 'Medio', publishedAt: null, tipo: 'secundaria' as const, claims: ['James Rodríguez regresará a la convocatoria de Colombia.'] }],
+        temasDisponibles: [
+          { id: 'tema-james', nombre: 'James Rodríguez', descripcion: 'Actualidad del futbolista colombiano.' },
+          { id: 'tema-seleccion', nombre: 'Selección Colombia', descripcion: 'Noticias del equipo nacional.' },
+          { id: 'tema-champions', nombre: 'Champions League', descripcion: 'Competición europea de clubes.' }
+        ],
+        articulosPublicados: [
+          { id: 'articulo-james', titulo: 'James Rodríguez y su último regreso a la Selección Colombia', resumen: 'El volante volvió a vestir la camiseta nacional.', categoria: 'Fútbol colombiano' },
+          { id: 'articulo-madrid', titulo: 'Real Madrid prepara su debut en Champions League', resumen: 'El club inicia su temporada europea.', categoria: 'Fútbol mundial' }
+        ]
+      }
+    }
+
+    const seleccion = normalizarSeleccionEditorialCodex({
+      seleccionEditorial: {
+        consultaPrincipal: 'James Rodríguez Selección Colombia',
+        consultasRelacionadas: [],
+        intencion: 'informativa',
+        tagIds: [],
+        temasNuevos: [{ name: 'La Selección de Colombia', description: 'El equipo nacional colombiano.' }],
+        relatedArticleIds: []
+      }
+    }, entrada)
+    const contextoReducido = prepararContextoEditorialCodex(entrada).contextoInvestigacion
+
+    expect(seleccion.tagIds).toEqual(['tema-james', 'tema-seleccion'])
+    expect(seleccion.temasNuevos).toEqual([])
+    expect(seleccion.relatedArticleIds).toEqual(['articulo-james'])
+    expect(contextoReducido?.temasDisponibles.map(tema => tema.id)).not.toContain('tema-champions')
+    expect(contextoReducido?.articulosPublicados.map(articulo => articulo.id)).not.toContain('articulo-madrid')
+  })
+
+  it('separa Codex de la ruta de redacción ya pulida para TikTok', () => {
+    const worker = readFileSync(new URL('../../workers/procesar_ingestas_durable.mjs', import.meta.url), 'utf8')
+    const proveedor = readFileSync(new URL('../../server/utils/ai/deepseekRedaccion.ts', import.meta.url), 'utf8')
+    const endpointCodex = readFileSync(new URL('../../server/api/internal/codex/draft.post.ts', import.meta.url), 'utf8')
+    const instruccionesWorker = readFileSync(new URL('../../server/utils/ai/instrucciones/redaccion-v1.ts', import.meta.url), 'utf8')
+    const instruccionesCodex = readFileSync(new URL('../../server/utils/ai/instrucciones/redaccion-codex.mjs', import.meta.url), 'utf8')
+
+    expect(worker).not.toContain('redaccion-codex')
+    expect(worker).not.toContain('seleccionEditorialCodex')
+    expect(worker).toContain("p_instruction_version: 'redaccion-v1'")
+    expect(proveedor).toContain("instruccionesRedaccionV1 } from './instrucciones/redaccion-v1'")
+    expect(endpointCodex).toContain('crearProveedorDeepSeekCodex')
+    expect(instruccionesWorker).toContain('7 a 10 párrafos y entre 850 y 1.200 palabras')
+    expect(instruccionesCodex).toContain('el mismo estándar de redacción editorial de Pont3la10 usado en la ruta de ingestas')
+    expect(instruccionesCodex).toContain('"tagIds"')
   })
 })

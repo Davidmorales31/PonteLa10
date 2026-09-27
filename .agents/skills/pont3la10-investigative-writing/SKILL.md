@@ -9,6 +9,10 @@ Write a publishable-quality draft whose every material factual claim can be
 traced to the dossier. Follow the existing evidence and editorial contracts in
 `docs/HU_ED_08_BORRADOR_IA.md` when present and the current HU-ED-11.
 
+Use the Codex-specific DeepSeek provider and its contract. Mirror the proven
+article length, paragraph development, and factual discipline of TikTok
+ingestion without editing or routing through the TikTok worker/provider.
+
 - Lead with the verified development and explain why it matters to the reader.
 - Build context, chronology, protagonists, and consequences only from the
   sources. Distinguish confirmed facts from unresolved claims; omit unsupported
@@ -25,6 +29,15 @@ traced to the dossier. Follow the existing evidence and editorial contracts in
   existing public topics; propose a new public topic only when necessary and
   directly relevant. Never create internal labels or categories. Link only real
   published related articles supplied by the API.
+- Before submission, explicitly compare the verified lead, named entities,
+  competition/team, SEO query and source claims against the supplied public
+  topic candidates and published-article candidates. Select exact IDs for
+  genuinely relevant existing topics and up to three materially connected
+  stories; never leave either list empty by default, but do not force a match
+  based only on category. If a relevant match exists and the model omits it,
+  correct the selection from the supplied IDs. Create at most one new public
+  topic only if the catalog has no equivalent; never create a category or an
+  internal label.
 - Opinión requires a human-provided thesis and author; otherwise return an
   explicitly flagged neutral proposal for angle review, without attributed
   personal opinion. Especiales must not imply firsthand coverage that did not

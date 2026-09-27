@@ -6,7 +6,7 @@ import {
   verificarFirmaCodex
 } from '~/server/utils/codexEditorialPrivado'
 import { esquemaBorradorCodex } from '~/server/utils/esquemasCodexEditorial'
-import { crearProveedorDeepSeekRedaccion } from '~/server/utils/ai/deepseekRedaccion'
+import { crearProveedorDeepSeekCodex } from '~/server/utils/ai/deepseekCodexRedaccion'
 import type { EntradaRedaccionIa } from '~/server/utils/ai/contratosRedaccion'
 
 const limiteBorradorBytes = 1_000_000
@@ -147,7 +147,7 @@ export default defineEventHandler(async (evento) => {
   let proveedorInvocado = false
   try {
     proveedorInvocado = true
-    const resultado = await crearProveedorDeepSeekRedaccion().redactarBorrador(entrada)
+    const resultado = await crearProveedorDeepSeekCodex().redactarBorrador(entrada)
     const salida = {
       propuesta: resultado.propuesta,
       seleccionEditorial: resultado.seleccionEditorial,
