@@ -1,14 +1,16 @@
 import { createHash, randomUUID } from 'node:crypto'
-import { copyFile, mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises'
+import { copyFile, mkdir, readFile, readdir, stat, unlink, writeFile } from 'node:fs/promises'
 import { basename, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { detectarMimeEditorial, prepararPayloadPortada } from './preparar-portada-codex.mjs'
+import { optimizarPortadaIACodex, prepararPayloadPortadaIACodex } from './preparar-portada-ia-codex.mjs'
 
-const etapas = ['expediente', 'borrador', 'portada', 'media', 'propuesta', 'entrega']
+const etapas = ['expediente', 'borrador', 'portada', 'portadaIA', 'media', 'propuesta', 'entrega']
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const huella = /^[a-f0-9]{64}$/i
 const maximoJsonBytes = 1_000_000
 const maximoPortadaBytes = 2_400_000
+const maximoEsperaBloqueoMs = 10_000
 
 function validarIdentidad(runId, categoryId, fingerprint) {
   if (!uuid.test(runId || '') || !uuid.test(categoryId || '') || !huella.test(fingerprint || '')) {
@@ -70,50 +72,131 @@ async function leerEtapas(ruta) {
   return resultado
 }
 
+async function adquirirBloqueoPortada(ruta) {
+  const rutaBloqueo = resolve(ruta, '.bloqueo-portada')
+  const token = randomUUID()
+  const limite = Date.now() + maximoEsperaBloqueoMs
+
+  while (Date.now() < limite) {
+    try {
+      await writeFile(rutaBloqueo, JSON.stringify({ pid: process.pid, token }), { flag: 'wx' })
+      return async () => {
+        try {
+          const bloqueo = JSON.parse(await readFile(rutaBloqueo, 'utf8'))
+          if (bloqueo.token === token) await unlink(rutaBloqueo)
+        } catch (error) {
+          if (error?.code !== 'ENOENT') throw error
+        }
+      }
+    } catch (error) {
+      if (error?.code !== 'EEXIST') throw error
+    }
+
+    try {
+      const bloqueo = JSON.parse(await readFile(rutaBloqueo, 'utf8'))
+      let procesoActivo = Number.isInteger(bloqueo.pid) && bloqueo.pid > 0
+      if (procesoActivo) {
+        try {
+          process.kill(bloqueo.pid, 0)
+        } catch (error) {
+          if (error?.code === 'ESRCH') procesoActivo = false
+          else if (error?.code !== 'EPERM') throw error
+        }
+      }
+      if (!procesoActivo) {
+        await unlink(rutaBloqueo).catch(error => {
+          if (error?.code !== 'ENOENT') throw error
+        })
+        continue
+      }
+    } catch (error) {
+      if (error?.code === 'ENOENT') continue
+      if (error instanceof SyntaxError) {
+        const info = await stat(rutaBloqueo).catch(() => null)
+        if (info && Date.now() - info.mtimeMs > 60_000) {
+          await unlink(rutaBloqueo).catch(error => {
+            if (error?.code !== 'ENOENT') throw error
+          })
+          continue
+        }
+      } else if (error?.code !== 'ENOENT') {
+        throw error
+      }
+    }
+
+    await new Promise(resolveEspera => setTimeout(resolveEspera, 50))
+  }
+
+  throw new Error('Otra ejecución está guardando una portada para este candidato; vuelve a leer el checkpoint.')
+}
+
 const prerequisitos = {
   expediente: [],
   borrador: ['expediente'],
   portada: ['borrador'],
-  media: ['portada'],
+  portadaIA: ['borrador'],
+  media: [],
   propuesta: ['borrador'],
   entrega: ['propuesta']
 }
 
-async function guardarEtapa(raiz, identidad, etapa, payload) {
+async function guardarEtapa(raiz, identidad, etapa, payload, permitirPortada = false) {
   if (!etapas.includes(etapa)) throw new Error('La etapa de checkpoint no es válida.')
+  const esPortada = etapa === 'portada' || etapa === 'portadaIA'
+  if (esPortada && !permitirPortada) {
+    throw new Error('Las portadas solo se guardan mediante el flujo validado de imagen.')
+  }
   const texto = validarPayload(payload)
   const ruta = rutaCandidato(raiz, identidad.runId, identidad.categoryId, identidad.fingerprint)
   await mkdir(ruta, { recursive: true })
-  const actuales = await leerEtapas(ruta)
-  const faltantes = prerequisitos[etapa].filter(nombre => !actuales[nombre])
-  if (faltantes.length) {
-    throw new Error(`Primero guarda las etapas requeridas: ${faltantes.join(', ')}.`)
-  }
-
-  const nombres = await readdir(ruta)
-  const revisiones = nombres
-    .map(nombre => nombre.match(new RegExp(`^${etapa}\\.(\\d{3})\\.json$`)))
-    .filter(Boolean)
-    .map(coincidencia => Number(coincidencia[1]))
-  const existente = actuales[etapa]
-  if (existente && JSON.stringify(existente) === texto) {
-    return { guardado: true, repetido: true, etapa }
-  }
-  if (revisiones.length >= 30) throw new Error('La etapa alcanzó el máximo de revisiones permitido.')
-
-  const revision = (Math.max(0, ...revisiones) + 1).toString().padStart(3, '0')
-  const destino = resolve(ruta, `${etapa}.${revision}.json`)
-  const temporal = resolve(ruta, `.${etapa}.${randomUUID()}.tmp`)
-  await writeFile(temporal, texto, { flag: 'wx' })
+  const liberarBloqueo = esPortada ? await adquirirBloqueoPortada(ruta) : async () => {}
   try {
-    await copyFile(temporal, destino, 1)
-  } catch (error) {
-    if (error?.code !== 'EEXIST') throw error
-    throw new Error('Otro proceso guardó esta etapa al mismo tiempo; vuelve a leer el checkpoint.', { cause: error })
+    const actuales = await leerEtapas(ruta)
+    if (etapa === 'media' && !actuales.portada && !actuales.portadaIA) {
+      throw new Error('Primero guarda una portada licenciada o generada con IA.')
+    }
+    const faltantes = prerequisitos[etapa].filter(nombre => !actuales[nombre])
+    if (faltantes.length) {
+      throw new Error(`Primero guarda las etapas requeridas: ${faltantes.join(', ')}.`)
+    }
+
+    if (esPortada) {
+      const alternativa = etapa === 'portada' ? actuales.portadaIA : actuales.portada
+      if (alternativa) {
+        throw new Error('Ya existe otra portada guardada para este candidato; no se puede reemplazar al reintentar.')
+      }
+    }
+
+    const nombres = await readdir(ruta)
+    const revisiones = nombres
+      .map(nombre => nombre.match(new RegExp(`^${etapa}\\.(\\d{3})\\.json$`)))
+      .filter(Boolean)
+      .map(coincidencia => Number(coincidencia[1]))
+    const existente = actuales[etapa]
+    if (existente && JSON.stringify(existente) === texto) {
+      return { guardado: true, repetido: true, etapa }
+    }
+    if (esPortada && existente) {
+      throw new Error('La portada guardada es inmutable para este candidato; reanuda usando la misma imagen.')
+    }
+    if (revisiones.length >= 30) throw new Error('La etapa alcanzó el máximo de revisiones permitido.')
+
+    const revision = (Math.max(0, ...revisiones) + 1).toString().padStart(3, '0')
+    const destino = resolve(ruta, `${etapa}.${revision}.json`)
+    const temporal = resolve(ruta, `.${etapa}.${randomUUID()}.tmp`)
+    await writeFile(temporal, texto, { flag: 'wx' })
+    try {
+      await copyFile(temporal, destino, 1)
+    } catch (error) {
+      if (error?.code !== 'EEXIST') throw error
+      throw new Error('Otro proceso guardó esta etapa al mismo tiempo; vuelve a leer el checkpoint.', { cause: error })
+    } finally {
+      await unlink(temporal).catch(() => {})
+    }
+    return { guardado: true, repetido: false, etapa, revision: Number(revision) }
   } finally {
-    await unlink(temporal).catch(() => {})
+    await liberarBloqueo()
   }
-  return { guardado: true, repetido: false, etapa, revision: Number(revision) }
 }
 
 async function guardarPortada(raiz, identidad, rutaImagen, rutaMetadatos) {
@@ -121,6 +204,7 @@ async function guardarPortada(raiz, identidad, rutaImagen, rutaMetadatos) {
   await mkdir(ruta, { recursive: true })
   const actuales = await leerEtapas(ruta)
   if (!actuales.borrador) throw new Error('Guarda primero el borrador antes de generar la portada.')
+  if (actuales.portadaIA) throw new Error('Ya existe una portada IA guardada para este candidato.')
 
   const [bytes, textoMetadatos] = await Promise.all([
     readFile(resolve(rutaImagen)),
@@ -163,7 +247,60 @@ async function guardarPortada(raiz, identidad, rutaImagen, rutaMetadatos) {
     mime,
     bytes: bytes.length,
     metadatos
-  })
+  }, true)
+}
+
+async function guardarPortadaIA(raiz, identidad, rutaImagen, rutaMetadatos) {
+  const ruta = rutaCandidato(raiz, identidad.runId, identidad.categoryId, identidad.fingerprint)
+  await mkdir(ruta, { recursive: true })
+  const actuales = await leerEtapas(ruta)
+  if (!actuales.borrador) throw new Error('Guarda primero el borrador antes de generar la portada IA.')
+
+  const [bytes, textoMetadatos] = await Promise.all([
+    readFile(resolve(rutaImagen)),
+    readFile(resolve(rutaMetadatos), 'utf8')
+  ])
+  let metadatos
+  try {
+    metadatos = JSON.parse(textoMetadatos)
+  } catch {
+    throw new Error('El archivo de metadatos no contiene JSON válido.')
+  }
+  const optimizada = await optimizarPortadaIACodex(bytes)
+  prepararPayloadPortadaIACodex(optimizada, basename(rutaImagen), metadatos)
+  const hash = createHash('sha256').update(optimizada).digest('hex')
+
+  if (actuales.portadaIA) {
+    if (actuales.portadaIA.hash === hash) return { guardado: true, repetido: true, etapa: 'portadaIA' }
+    throw new Error('La portada IA ya está guardada; reutilízala para evitar generar o cobrar otra imagen.')
+  }
+  if (actuales.portada) {
+    throw new Error('Ya existe una portada licenciada guardada para este candidato.')
+  }
+
+  const nombreArchivo = `portada-ia-${hash}.webp`
+  const destino = resolve(ruta, nombreArchivo)
+  const temporal = resolve(ruta, `.portada-ia-${randomUUID()}.tmp`)
+  await writeFile(temporal, optimizada, { flag: 'wx' })
+  try {
+    await copyFile(temporal, destino, 1)
+  } catch (error) {
+    if (error?.code !== 'EEXIST') throw error
+    const existente = await readFile(destino)
+    if (!existente.equals(optimizada)) throw new Error('La portada IA almacenada no coincide con su huella.', { cause: error })
+  } finally {
+    await unlink(temporal).catch(() => {})
+  }
+
+  const assetPath = relative(resolve(raiz), destino).split(sep).join('/')
+  const resultado = await guardarEtapa(raiz, identidad, 'portadaIA', {
+    assetPath,
+    hash,
+    mime: 'image/webp',
+    bytes: optimizada.length,
+    metadatos
+  }, true)
+  return { ...resultado, mime: 'image/webp' }
 }
 
 export async function leerCheckpoint(raiz, identidad) {
@@ -266,6 +403,43 @@ export async function prepararPayloadPortadaCheckpoint(raiz, identidad, rutaSali
   }
 }
 
+export async function guardarPortadaIACheckpoint(raiz, identidad, rutaImagen, rutaMetadatos) {
+  return guardarPortadaIA(raiz, identidad, rutaImagen, rutaMetadatos)
+}
+
+export async function prepararPayloadPortadaIACheckpoint(raiz, identidad, rutaSalida) {
+  const ruta = rutaCandidato(raiz, identidad.runId, identidad.categoryId, identidad.fingerprint)
+  const etapasGuardadas = await leerEtapas(ruta)
+  const portada = etapasGuardadas.portadaIA
+  if (!portada?.assetPath || !portada?.metadatos) {
+    throw new Error('La portada IA todavía no está guardada en el checkpoint.')
+  }
+  const rutaImagen = resolve(raiz, portada.assetPath)
+  const relativa = relative(ruta, rutaImagen)
+  if (!relativa || relativa === '..' || relativa.startsWith(`..${sep}`)) {
+    throw new Error('La portada IA guardada no pertenece a este candidato.')
+  }
+  const destino = resolve(ruta, rutaSalida)
+  const salidaRelativa = relative(ruta, destino)
+  if (!salidaRelativa || salidaRelativa === '..' || salidaRelativa.startsWith(`..${sep}`)) {
+    throw new Error('El payload debe guardarse dentro del directorio de este candidato.')
+  }
+  const bytes = await readFile(rutaImagen)
+  const payload = prepararPayloadPortadaIACodex(bytes, rutaImagen, portada.metadatos)
+  const contenido = JSON.stringify(payload)
+  try {
+    await writeFile(destino, contenido, { flag: 'wx' })
+    return { preparado: true, repetido: false, mime: payload.tipoMime, bytes: bytes.length }
+  } catch (error) {
+    if (error?.code !== 'EEXIST') throw error
+    const existente = await readFile(destino, 'utf8')
+    if (existente !== contenido) {
+      throw new Error('El payload IA existente no coincide con el checkpoint guardado.', { cause: error })
+    }
+    return { preparado: true, repetido: true, mime: payload.tipoMime, bytes: bytes.length }
+  }
+}
+
 async function main() {
   const [comando, runId, categoryId, fingerprint, etapa, archivo] = process.argv.slice(2)
   if (comando === 'listar' && runId && !categoryId) {
@@ -302,12 +476,22 @@ async function main() {
       process.stdout.write(JSON.stringify(resultado) + '\n')
       return
     }
+    if (comando === 'portada-ia' && etapa && archivo) {
+      const resultado = await guardarPortadaIACheckpoint(raiz, identidad, etapa, archivo)
+      process.stdout.write(JSON.stringify(resultado) + '\n')
+      return
+    }
     if (comando === 'payload-portada' && etapa && !archivo) {
       const resultado = await prepararPayloadPortadaCheckpoint(raiz, identidad, etapa)
       process.stdout.write(JSON.stringify(resultado) + '\n')
       return
     }
-    process.stderr.write('Uso: listar <runId> | leer <runId> <categoryId> <fingerprint> | exportar <runId> <categoryId> <fingerprint> <etapa> <salida.json> | guardar <runId> <categoryId> <fingerprint> <etapa> <payload.json> | portada <runId> <categoryId> <fingerprint> <imagen> <metadatos.json> | payload-portada <runId> <categoryId> <fingerprint> <payload.json>\n')
+    if (comando === 'payload-portada-ia' && etapa && !archivo) {
+      const resultado = await prepararPayloadPortadaIACheckpoint(raiz, identidad, etapa)
+      process.stdout.write(JSON.stringify(resultado) + '\n')
+      return
+    }
+    process.stderr.write('Uso: listar <runId> | leer <runId> <categoryId> <fingerprint> | exportar <runId> <categoryId> <fingerprint> <etapa> <salida.json> | guardar <runId> <categoryId> <fingerprint> <etapa> <payload.json> | portada <runId> <categoryId> <fingerprint> <imagen> <metadatos.json> | portada-ia <runId> <categoryId> <fingerprint> <imagen> <metadatos.json> | payload-portada <runId> <categoryId> <fingerprint> <payload.json> | payload-portada-ia <runId> <categoryId> <fingerprint> <payload.json>\n')
     process.exitCode = 2
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.message : 'No se pudo guardar el checkpoint.'}\n`)

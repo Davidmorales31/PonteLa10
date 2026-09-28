@@ -4,6 +4,8 @@ import { esquemaDocumentoEditorial } from '~/utils/editorial/contenido'
 // El estimador editorial usa 220 palabras por minuto: 660 palabras garantizan
 // un cuerpo de al menos tres minutos, sin confiar únicamente en el prompt.
 export const PALABRAS_MINIMAS_BORRADOR_CODEX = 660
+export const CREDITO_PORTADA_IA_CODEX = 'Imagen generada con IA'
+export const PIE_PORTADA_IA_CODEX = 'Ilustración editorial generada con IA. No es una fotografía documental del evento.'
 
 const esquemaUrlHttps = z.string().url().max(2048).refine(
   valor => new URL(valor).protocol === 'https:',
@@ -25,6 +27,17 @@ export const esquemaPortadaCodex = z.object({
   }, 'La foto debe enlazar a su ficha de Wikimedia Commons.'),
   autorFoto: z.string().trim().min(2).max(200),
   licenciaFoto: z.enum(['CC0 1.0', 'CC BY 4.0', 'Dominio público'])
+}).strict()
+
+export const esquemaPortadaIACodex = z.object({
+  nombreOriginal: z.string().trim().min(3).max(160),
+  tipoMime: z.enum(['image/jpeg', 'image/png', 'image/webp']),
+  imagenBase64: z.string().min(100).max(3_300_000).regex(
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/,
+    'La imagen generada debe estar codificada en base64.'
+  ),
+  titulo: z.string().trim().min(2).max(160),
+  alt: z.string().trim().min(5).max(240)
 }).strict()
 
 const esquemaFuenteCodex = z.object({
@@ -73,7 +86,8 @@ export const esquemaPropuestaCodex = z.object({
     'needs_angle_review',
     'insufficient_independent_corroboration',
     'sensitive_claims',
-    'licensed_photo_cover'
+    'licensed_photo_cover',
+    'ai_generated_cover'
   ])).max(8)
 }).strict().superRefine((propuesta, contexto) => {
   const recogerTexto = (valor: unknown): string => {
@@ -136,19 +150,22 @@ export const esquemaPropuestaCodex = z.object({
     })
   }
 
-  if (propuesta.coverMediaId && !propuesta.editorialFlags.includes('licensed_photo_cover')) {
+  const tieneFotoLicenciada = propuesta.editorialFlags.includes('licensed_photo_cover')
+  const tienePortadaIA = propuesta.editorialFlags.includes('ai_generated_cover')
+
+  if (propuesta.coverMediaId && tieneFotoLicenciada === tienePortadaIA) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['editorialFlags'],
-      message: 'La foto con licencia debe quedar identificada para mostrar su atribución.'
+      message: 'Cada portada debe indicar exactamente si es una foto licenciada o una ilustración generada con IA.'
     })
   }
 
-  if (!propuesta.coverMediaId && propuesta.editorialFlags.includes('licensed_photo_cover')) {
+  if (!propuesta.coverMediaId && (tieneFotoLicenciada || tienePortadaIA)) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['editorialFlags'],
-      message: 'No se puede declarar una foto con licencia cuando la propuesta no tiene portada.'
+      message: 'No se puede declarar una portada cuando la propuesta no tiene imagen.'
     })
   }
 })

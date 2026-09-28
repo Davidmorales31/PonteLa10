@@ -6,6 +6,7 @@ import {
   esquemaAgendaCodex,
   esquemaConsultaSaludCodex,
   esquemaPortadaCodex,
+  esquemaPortadaIACodex,
   esquemaPropuestaCodex
 } from '~/server/utils/esquemasCodexEditorial'
 
@@ -39,6 +40,30 @@ describe('API privada de propuestas Codex', () => {
     expect(esquemaPortadaCodex.safeParse({
       ...portada,
       licenciaFoto: 'CC BY-NC 4.0'
+    }).success).toBe(false)
+  })
+
+  it('acepta una portada IA sin permitir fuente, crédito o licencia inventados', () => {
+    const portadaIA = {
+      nombreOriginal: 'portada-generada.webp',
+      tipoMime: 'image/webp' as const,
+      imagenBase64: Buffer.alloc(100, 2).toString('base64'),
+      titulo: 'Ilustración editorial del tema',
+      alt: 'Escena editorial genérica relacionada con la noticia'
+    }
+
+    expect(esquemaPortadaIACodex.safeParse(portadaIA).success).toBe(true)
+    expect(esquemaPortadaIACodex.safeParse({
+      ...portadaIA,
+      urlFuente: 'https://example.org/fuente.jpg'
+    }).success).toBe(false)
+    expect(esquemaPortadaIACodex.safeParse({
+      ...portadaIA,
+      credito: 'Creative Commons'
+    }).success).toBe(false)
+    expect(esquemaPortadaIACodex.safeParse({
+      ...portadaIA,
+      imagenBase64: 'no es base64'
     }).success).toBe(false)
   })
 
@@ -112,6 +137,14 @@ describe('API privada de propuestas Codex', () => {
       ...propuesta,
       editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
     }).success).toBe(true)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      editorialFlags: ['needs_angle_review', 'ai_generated_cover']
+    }).success).toBe(true)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover', 'ai_generated_cover']
+    }).success).toBe(false)
     const cuerpoCorto = crearCuerpoDePrueba(659)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
@@ -128,6 +161,11 @@ describe('API privada de propuestas Codex', () => {
       ...propuesta,
       coverMediaId: null,
       editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
+    }).success).toBe(false)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      coverMediaId: null,
+      editorialFlags: ['needs_angle_review', 'ai_generated_cover']
     }).success).toBe(false)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
@@ -173,6 +211,29 @@ describe('API privada de propuestas Codex', () => {
     expect(migracion).not.toContain('security definer')
     expect(migracion).not.toMatch(/grant\s+execute\s+on\s+function/i)
     expect(migracion).not.toMatch(/set\s+status\s*=\s*'(?:approved|scheduled|published)'/i)
+  })
+
+  it('permite la portada IA solo con su disclosure, sin debilitar la RPC', () => {
+    const migracion = readFileSync(
+      new URL('../../supabase/migrations/20260928003905_codex_ai_generated_covers.sql', import.meta.url),
+      'utf8'
+    )
+    const ruta = readFileSync(new URL('../../server/api/internal/codex/media-ai.post.ts', import.meta.url), 'utf8')
+
+    expect(migracion).toContain('ai_generated_cover')
+    expect(migracion).toContain('media.source_url is null')
+    expect(migracion).toContain("media.credit = 'Imagen generada con IA'")
+    expect(migracion).toContain('media.caption =')
+    expect(migracion).toContain('or v_is_security_definer')
+    expect(migracion).toContain("has_function_privilege('service_role'")
+    expect(migracion).toContain("has_function_privilege('anon'")
+    expect(migracion).toContain("or (v_media_id is null and (\n      (p_input -> 'editorialFlags') @> '[\"licensed_photo_cover\"]'::jsonb\n      or (p_input -> 'editorialFlags') @> '[\"ai_generated_cover\"]'::jsonb\n    )\n$new$;")
+    expect(ruta).toContain('source_url: null')
+    expect(ruta).toContain('CREDITO_PORTADA_IA_CODEX')
+    expect(ruta).toContain('PIE_PORTADA_IA_CODEX')
+    expect(ruta).toContain("existente.bucket !== 'editorial-media'")
+    expect(ruta).toContain("duplicado.bucket !== 'editorial-media'")
+    expect(ruta).not.toContain('verificarAtribucionFotoCommons')
   })
 
   it('elige automáticamente la publicación más reciente con imagen pública existente', () => {

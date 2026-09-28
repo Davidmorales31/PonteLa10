@@ -1,14 +1,17 @@
-import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises'
+import { mkdtemp, rm, readFile, readdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { tmpdir } from 'node:os'
 import { describe, expect, it } from 'vitest'
+import sharp from 'sharp'
 import {
   guardarCheckpoint,
   guardarPortadaCheckpoint,
+  guardarPortadaIACheckpoint,
   exportarEtapaCheckpoint,
   leerCheckpoint,
   listarCheckpointsRun,
-  prepararPayloadPortadaCheckpoint
+  prepararPayloadPortadaCheckpoint,
+  prepararPayloadPortadaIACheckpoint
 } from '../../scripts/codex-editorial-checkpoint.mjs'
 
 const identidad = {
@@ -25,6 +28,10 @@ const metadatos = {
   licenciaFoto: 'CC BY 4.0',
   urlFuente: 'https://commons.wikimedia.org/wiki/File:Colombia_football_team.jpg'
 }
+const metadatosIA = {
+  titulo: 'Ilustración editorial de un estadio',
+  alt: 'Estadio genérico iluminado antes del inicio de un partido'
+}
 
 function crearPngPrueba() {
   return Buffer.concat([
@@ -34,6 +41,79 @@ function crearPngPrueba() {
 }
 
 describe('checkpoints locales reanudables de contenido Codex', () => {
+  it('serializa las portadas concurrentes y rechaza cambios posteriores', async () => {
+    const raiz = await mkdtemp(join(tmpdir(), 'pont3la10-checkpoint-portada-concurrente-'))
+    try {
+      await guardarCheckpoint(raiz, identidad, 'expediente', { claims: ['Dos fuentes respaldan el hecho.'] })
+      await guardarCheckpoint(raiz, identidad, 'borrador', { title: 'Borrador con portada' })
+      const imagenes = [join(raiz, 'imagen-a.png'), join(raiz, 'imagen-b.png')]
+      const metadata = join(raiz, 'portada-ia.json')
+      await Promise.all([
+        sharp({ create: { width: 1200, height: 675, channels: 3, background: '#102238' } }).png().toFile(imagenes[0]),
+        sharp({ create: { width: 1200, height: 675, channels: 3, background: '#204060' } }).png().toFile(imagenes[1]),
+        writeFile(metadata, JSON.stringify(metadatosIA))
+      ])
+
+      const resultados = await Promise.allSettled(imagenes.map(imagen =>
+        guardarPortadaIACheckpoint(raiz, identidad, imagen, metadata)))
+      expect(resultados.filter(resultado => resultado.status === 'fulfilled')).toHaveLength(1)
+      expect(resultados.filter(resultado => resultado.status === 'rejected')).toHaveLength(1)
+
+      const checkpoint = await leerCheckpoint(raiz, identidad) as Record<string, unknown>
+      expect(checkpoint.portadaIA).toBeDefined()
+      expect(checkpoint.portada).toBeUndefined()
+      const carpeta = join(raiz, '.codex', 'editorial-runs', identidad.runId, identidad.categoryId, identidad.fingerprint)
+      expect((await readdir(carpeta)).filter(nombre => nombre.startsWith('portadaIA.'))).toEqual(['portadaIA.001.json'])
+      await expect(guardarCheckpoint(raiz, identidad, 'portadaIA', { hash: 'cambio' }))
+        .rejects.toThrow('Las portadas solo se guardan mediante el flujo validado de imagen.')
+    } finally {
+      await rm(raiz, { recursive: true, force: true })
+    }
+  })
+
+  it('guarda una portada IA optimizada una sola vez y reutiliza su payload', async () => {
+    const raiz = await mkdtemp(join(tmpdir(), 'pont3la10-checkpoint-portada-ia-'))
+    try {
+      await guardarCheckpoint(raiz, identidad, 'expediente', { claims: ['Dos fuentes respaldan el hecho.'] })
+      await guardarCheckpoint(raiz, identidad, 'borrador', { title: 'Un borrador completo con portada IA' })
+      const imagen = join(raiz, 'imagen-generada.png')
+      const metadata = join(raiz, 'portada-ia.json')
+      await Promise.all([
+        sharp({ create: { width: 1200, height: 675, channels: 3, background: '#102238' } })
+          .png().toFile(imagen),
+        writeFile(metadata, JSON.stringify(metadatosIA))
+      ])
+
+      expect(await guardarPortadaIACheckpoint(raiz, identidad, imagen, metadata))
+        .toMatchObject({ guardado: true, repetido: false, etapa: 'portadaIA', mime: 'image/webp' })
+      expect(await guardarPortadaIACheckpoint(raiz, identidad, imagen, metadata))
+        .toMatchObject({ guardado: true, repetido: true, etapa: 'portadaIA' })
+
+      const checkpoint = await leerCheckpoint(raiz, identidad) as Record<string, unknown>
+      const portada = checkpoint.portadaIA as { assetPath: string, mime: string, metadatos: typeof metadatosIA }
+      expect(portada).toMatchObject({ mime: 'image/webp', metadatos: metadatosIA })
+      await expect(guardarCheckpoint(raiz, identidad, 'media', { mediaId: 'sin-portada' }))
+        .resolves.toMatchObject({ guardado: true })
+
+      expect(await prepararPayloadPortadaIACheckpoint(raiz, identidad, 'media-ia.payload.json'))
+        .toMatchObject({ preparado: true, mime: 'image/webp' })
+      const carpeta = join(
+        raiz, '.codex', 'editorial-runs', identidad.runId, identidad.categoryId,
+        identidad.fingerprint
+      )
+      const payload = JSON.parse(await readFile(join(carpeta, 'media-ia.payload.json'), 'utf8'))
+      expect(payload).toMatchObject({
+        tipoMime: 'image/webp',
+        titulo: metadatosIA.titulo,
+        alt: metadatosIA.alt
+      })
+      expect(payload).not.toHaveProperty('credito')
+      expect(payload).not.toHaveProperty('urlFuente')
+    } finally {
+      await rm(raiz, { recursive: true, force: true })
+    }
+  })
+
   it('permite entregar una propuesta sin portada ni etapa de media', async () => {
     const raiz = await mkdtemp(join(tmpdir(), 'pont3la10-checkpoint-sin-portada-'))
     try {
@@ -65,7 +145,7 @@ describe('checkpoints locales reanudables de contenido Codex', () => {
         .toMatchObject({ guardado: true, repetido: true, etapa: 'expediente' })
 
       await expect(guardarCheckpoint(raiz, identidad, 'media', { mediaId: 'x' }))
-        .rejects.toThrow('Primero guarda las etapas requeridas: portada.')
+        .rejects.toThrow('Primero guarda una portada licenciada o generada con IA.')
       await guardarCheckpoint(raiz, identidad, 'borrador', { title: 'Un título verificable' })
 
       const imagen = join(raiz, 'cover.png')
