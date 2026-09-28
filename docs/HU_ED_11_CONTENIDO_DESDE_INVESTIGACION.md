@@ -11,7 +11,8 @@ revisión editorial.
 
 - Skill `pont3la10-investigative-writing` para expediente de evidencia, contraste
   y redacción; Skill `pont3la10-auto-cover` para fotos con permiso reutilizable
-  y atribución verificable.
+  y atribución verificable; Skill `pont3la10-ai-editorial-cover` para generar
+  portadas solo dentro de la tarea programada de Codex.
 - Investigación desde fuentes externas públicas; conservar fuentes como datos
   estructurados, separadas del cuerpo.
 - Redacción en español colombiano con el estándar actual de HU-ED-08 cuando las
@@ -37,6 +38,14 @@ revisión editorial.
   imagen publicada. Crédito no reemplaza permiso: si licencia o autor no se
   pueden verificar, omitir la foto y continuar la propuesta sin portada. Nunca
   llamar foto real a una ilustración de IA.
+- En el flujo programado de Codex, generar como primera opción una ilustración
+  editorial con ImageGen después de completar y validar la redacción DeepSeek.
+  Guardarla con el crédito fijo “Imagen generada con IA” y una leyenda visible
+  que aclare que no es fotografía documental; `source_url` permanece NULL. La
+  RPC valida el origen editorial y el flag exclusivo `ai_generated_cover`; no
+  se presenta ni valida como foto licenciada. Una imagen imposible de ilustrar
+  responsablemente, o un fallo de ImageGen, no bloquea una propuesta sin imagen.
+  Esto no se aplica a TikTok ni a las cargas manuales del CMS.
 - API privada de servicio a servicio que recibe un paquete validado y crea el
   artículo y trazabilidad en estado `review`.
 - Búsqueda/deduplicación contra URLs, contenido publicado y candidatos previos;
@@ -61,16 +70,22 @@ revisión editorial.
 
 ## Guía de imagen
 
-- Imagen contextual, atractiva y compuesta para clic legítimo, no clickbait.
-- No fabricar una fotografía de una persona real, uniforme, lesión, acción o
-  evento que la investigación no documente. No retirar marcas de agua ni copiar
-  imágenes de páginas de búsqueda.
-- Exigir ficha de Commons, creador y licencia permitida por la Skill. Guardar
-  URL de la ficha y crédito literal con creador/licencia; el revisor ve ambos
-  antes de aprobar.
-- Si no existe una foto pertinente con permiso comprobable, registrar la
-  omisión y continuar sin portada; nunca fingir licencia ni usar una imagen de
-  relleno.
+- La tarea programada de Codex genera una sola ilustración editorial contextual,
+  atractiva para un clic legítimo y fiel al expediente; nunca clickbait. No
+  representar como documental a una persona real, uniforme, lesión, acción o
+  evento que la investigación no documente. Usar la Skill
+  `pont3la10-ai-editorial-cover`, revisar la salida y guardar el disclosure que
+  aplica el servidor: “Imagen generada con IA”; la leyenda aclara que no es una
+  fotografía documental y `source_url` queda NULL.
+- Si ImageGen no está disponible, la salida no es utilizable o puede inducir a
+  error, registrar la omisión y continuar sin portada. No regenerar una imagen
+  ya guardada al reanudar el mismo candidato.
+- La foto licenciada de Commons conserva su ruta separada: exigir ficha,
+  creador y licencia permitida por la Skill; guardar URL de ficha y crédito
+  literal. No retirar marcas de agua ni copiar imágenes de páginas de búsqueda.
+- La ilustración IA es exclusiva de la tarea programada de Codex. La ingesta de
+  TikTok y la carga manual del CMS no cambian y nunca deben rotularse como
+  generadas por IA salvo que su flujo lo registre expresamente.
 
 ## Especiales y Opinión
 
@@ -92,6 +107,8 @@ revisión editorial.
   conserva el error por etapa y puede reanudarse sin duplicar/cobrar de nuevo.
   La falta de imagen se registra, pero no bloquea la entrega del borrador.
 - La misma petición repetida no crea un segundo artículo, media ni temas.
+- Una portada generada para Codex conserva su hash al reanudar, muestra crédito
+  y disclosure IA en el CMS y publicación; nunca tiene fuente/licencia ficticia.
 - Una carga adversarial en una fuente no cambia categoría, permisos ni destino.
 - La ruta privada de borrador guarda el resultado DeepSeek de forma durable e
   idempotente, y no crea por sí sola un artículo ni cambia el estado a `review`;

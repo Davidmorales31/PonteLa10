@@ -6,8 +6,10 @@ description: Run or resume Pont3la10's daily research-to-review editorial batch 
 # Pont3la10 Daily Editorial Run
 
 Use this as the coordinator for the daily scheduled Codex task. Read the trend,
-investigative-writing, and auto-cover skills before producing candidates. Use
-the operational-monitor skill only for a separate read-only health check.
+investigative-writing, SEO, auto-cover, and `pont3la10-ai-editorial-cover`
+skills before producing candidates. The AI-cover skill is exclusive to this
+Codex task; never change the TikTok ingestion workflow. Use the
+operational-monitor skill only for a separate read-only health check.
 
 ## Private API configuration
 
@@ -58,9 +60,13 @@ fails before sending a request.
 
    - `expediente`: trend signal, source records, claim/source map, uncertainty.
    - `borrador`: complete structured article proposal, taxonomy and SEO.
-   - `portada`: optional image bytes stored by content hash and verified
-     editorial metadata. Use only a pertinent photo with a verified permitted
-     license; otherwise record the omission and continue without a cover.
+   - `portada` or `portadaIA`: optional image bytes stored by content hash and
+     verified metadata. For a new scheduled-task candidate, prefer one
+     ImageGen editorial illustration after the draft passes quality checks.
+     Apply the AI-cover skill and save it as `portadaIA`. If generation is
+     unavailable or misleading, continue without a cover. A pre-existing
+     licensed Commons cover remains valid only through the separate `portada`
+     path with its checked author, license, and source.
    - `media`: optional stable returned media ID and safe upload receipt; omit
      this stage when no suitable licensed photo exists.
    - `propuesta`: exact API proposal payload plus stable idempotency key.
@@ -91,10 +97,12 @@ fails before sending a request.
    metadata toward the article-body minimum.
 
    Use `node scripts/codex-editorial-checkpoint.mjs leer <runId> <categoryId> <fingerprint>`
-   to inspect saved stages. Use `guardar` for JSON stages, `portada` for the
-   verified original photo plus metadata, and `payload-portada` with an output filename
-   relative to that candidate's folder (for example `portada.payload.json`) to
-   create the upload payload there. Never print
+   to inspect saved stages. Use `guardar` for JSON stages, `portada` for a
+   verified original Commons photo, or `portada-ia` for an inspected ImageGen
+   result and its title/alt metadata. Use the corresponding `payload-portada`
+   or `payload-portada-ia` command with an output filename relative to that
+   candidate's folder. Submit licensed photos using `media` and generated
+   illustrations using `media-ia`. Never print
    the base64 media payload or store credentials in checkpoints.
    Use `exportar` to materialize an exact saved stage to a file inside its
    ignored candidate folder without printing article/source content to terminal.
@@ -114,5 +122,6 @@ fails before sending a request.
 If required API configuration, research access, or safe checkpoint artifacts
 are unavailable, stop the affected candidate at the last completed stage and
 report what is needed. A missing suitable image is not a blocker: submit
-`coverMediaId: null` and leave out `licensed_photo_cover`. Do not fabricate
+`coverMediaId: null` and leave out both `licensed_photo_cover` and
+`ai_generated_cover`. Do not fabricate
 sources, drafts, images, receipts, or successful API writes.

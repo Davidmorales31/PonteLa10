@@ -102,7 +102,8 @@ const etiquetasBanderaCodex: Record<string, string> = {
   insufficient_independent_corroboration: 'La corroboración independiente es limitada.',
   sensitive_claims: 'Contiene afirmaciones sensibles para verificar antes de aprobarla.',
   illustrative_cover: 'La portada es una ilustración generada con IA, no una foto documental.',
-  licensed_photo_cover: 'La foto incluye crédito y enlace para comprobar su licencia.'
+  licensed_photo_cover: 'La foto incluye crédito y enlace para comprobar su licencia.',
+  ai_generated_cover: 'Portada generada con IA; no representa una fotografía documental.'
 }
 
 watch(cargaEditor, (carga) => {

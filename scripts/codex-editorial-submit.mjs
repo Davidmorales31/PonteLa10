@@ -13,6 +13,7 @@ const rutas = {
   agenda: '/api/internal/codex/agenda',
   borrador: '/api/internal/codex/draft',
   media: '/api/internal/codex/media',
+  'media-ia': '/api/internal/codex/media-ai',
   propuesta: '/api/internal/codex/proposals',
   salud: '/api/internal/codex/health'
 }
@@ -33,7 +34,7 @@ try {
 }
 
 if (!rutas[recurso] || !archivo) {
-  terminar('Uso: node scripts/codex-editorial-submit.mjs <contexto|agenda|borrador|media|propuesta|salud> <archivo-json>')
+  terminar('Uso: node scripts/codex-editorial-submit.mjs <contexto|agenda|borrador|media|media-ia|propuesta|salud> <archivo-json>')
 }
 
 const baseUrl = process.env.PONT3LA10_CODEX_API_BASE_URL
@@ -62,7 +63,7 @@ try {
   terminar('No se pudo leer el archivo JSON indicado.')
 }
 
-const limite = recurso === 'media' ? 3_500_000 : 1_000_000
+const limite = ['media', 'media-ia'].includes(recurso) ? 3_500_000 : 1_000_000
 if (cuerpo.byteLength > limite) {
   terminar(`El archivo supera el límite de ${limite} bytes.`)
 }
@@ -119,7 +120,7 @@ if (!respuesta.ok) {
   terminar(`La API privada rechazó la solicitud: HTTP ${respuesta.status}${codigo}.`)
 }
 
-if (recurso === 'media') {
+if (['media', 'media-ia'].includes(recurso)) {
   process.stdout.write(JSON.stringify({
     mediaId: resultado.mediaId,
     hash: resultado.hash,
