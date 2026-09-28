@@ -32,6 +32,15 @@ piloto de 90 días, siempre que existan fuentes relevantes y contenido de calida
 - Ningún contenido generado se publica sin aprobación humana.
 - Las acciones sensibles conservan MFA, capacidades y auditoría.
 
+## Cerrado recientemente
+
+- **HU-ED-11 — Portada editorial con IA en la tarea programada Codex
+  (2026-09-28):** la tarea puede generar una ilustración pertinente con
+  ImageGen, optimizarla, cargarla con disclosure y dejarla ligada al borrador
+  `review`. No cambia TikTok ni la carga manual; si la imagen no es segura o no
+  está disponible, entrega el borrador sin portada. Ver
+  `docs/agents/handoffs/2026-09-27-portadas-ia-tarea-codex.md`.
+
 # NOW — MVP
 
 ## EP-ED-01 — Ingesta editorial asistida
