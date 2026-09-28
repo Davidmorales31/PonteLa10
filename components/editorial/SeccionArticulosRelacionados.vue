@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, Image as ImageIcon } from '@lucide/vue'
+import { ArrowRight } from '@lucide/vue'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 
 defineProps<{
@@ -23,16 +23,14 @@ defineProps<{
         :key="articulo.id"
         :to="`/articulos/${articulo.slug}`"
       >
-        <span class="imagen-articulo-recomendado">
+        <span v-if="articulo.imagen" class="imagen-articulo-recomendado">
           <img
-            v-if="articulo.imagen"
             :src="articulo.imagen"
             :alt="articulo.titulo"
             width="480"
             height="270"
             loading="lazy"
           >
-          <ImageIcon v-else aria-hidden="true" />
         </span>
         <small>{{ articulo.categoria }}</small>
         <strong>{{ articulo.titulo }}</strong>

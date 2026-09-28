@@ -3999,6 +3999,7 @@ body.tema-publico-azul .cabecera-legal {
   background: radial-gradient(circle at 100% 0, #123e68 0, #0b1d35 52%, #09172a 100%);
   box-shadow: 0 18px 50px rgba(0, 0, 0, .2);
 }
+body.tema-publico-azul .insignia-legal { color: #6bdcff; }
 body.tema-publico-azul .cabecera-legal h1,
 body.tema-publico-azul .contenido-legal h2,
 body.tema-publico-azul .resumen-legal strong { color: #f1f6ff; }
