@@ -2397,6 +2397,10 @@ body.tema-publico-azul .grilla-especiales-publicos article span {
   color: #a8bbd5;
 }
 
+body.tema-publico-azul .grilla-especiales-publicos article p {
+  color: #7ee8ff;
+}
+
 body.tema-publico-azul .estado-vacio-articulos,
 body.tema-publico-azul .lista-articulos .tarjeta-articulo,
 body.tema-publico-azul .grilla-especiales-publicos article,

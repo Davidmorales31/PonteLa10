@@ -7,6 +7,29 @@ siempre con el código actual, las migraciones aplicadas y las HU específicas.
 No autoriza publicación automática ni reemplaza los criterios de aceptación de
 cada historia.
 
+**Estado del producto revisado el 2026-09-28:** Pont3la10 ya está publicado en
+producción; la ingesta TikTok y la tarea editorial programada de Codex existen
+en el producto. Las listas históricas de HU-ED-07/08/09 contienen verificaciones
+pendientes, no una indicación de que esos flujos todavía no existan. No volver a
+implementar esos procesos sin contrastar primero el código y el despliegue.
+
+## Orden de ejecución revisado
+
+1. **P0 — Estabilidad de producción:** vigilar respuestas, legibilidad en temas,
+   rutas públicas y fallos del flujo editorial; detener despliegues si hay
+   regresiones.
+2. **P1 — Seguridad de dependencias:** HU-OP-01; el arreglo amplio de NPM queda
+   pendiente porque rompió el typecheck.
+3. **P1 — Tablas deportivas:** HU-DA-01; empezar por Liga BetPlay, sujeto a
+   cobertura por temporada y derechos de publicación escritos.
+4. **P2 — Cierre operativo editorial/SEO:** completar verificaciones reales de
+   HU-ED-07/08/09 y la siguiente corrida de portadas IA, sin duplicar flujos que
+   ya están activos.
+5. **P2 — Analítica y distribución social:** terminar HU-AN-01 y HU-SO-01/02/03;
+   publicación en redes depende de credenciales oficiales y permisos.
+6. **P3 — Expansión:** nuevas fuentes RSS/web, preferencias/notificaciones,
+   boletín y monetización cuando presupuesto y derechos estén definidos.
+
 ## Objetivo del producto
 
 Construir audiencia hispanohablante global mediante contenido original de
@@ -24,7 +47,8 @@ piloto de 90 días, siempre que existan fuentes relevantes y contenido de calida
 - El desarrollo y el procesamiento pesado se ejecutarán inicialmente en el PC
   del propietario.
 - Equipo conocido: Intel i5-10300H, NVIDIA GTX 1650 y 8 GB de RAM.
-- El sitio permanecerá local durante desarrollo y se publicará posteriormente.
+- Desarrollo y pruebas son locales; el sitio público corre en producción y
+  depende de Vercel/Supabase.
 - DeepSeek será el proveedor principal de redacción, detrás de una interfaz
   intercambiable.
 - La transcripción se realizará localmente con Whisper.
@@ -40,6 +64,11 @@ piloto de 90 días, siempre que existan fuentes relevantes y contenido de calida
   `review`. No cambia TikTok ni la carga manual; si la imagen no es segura o no
   está disponible, entrega el borrador sin portada. Ver
   `docs/agents/handoffs/2026-09-27-portadas-ia-tarea-codex.md`.
+  **Verificación operativa pendiente:** la corrida `f9de3dc4-6ebd-47f3-9435-ced24106fc3e`
+  terminó parcial con 12 borradores antes de que la tarea programada recibiera
+  las instrucciones de portada (actualizadas después de esa corrida). No se
+  encontraron llamadas ni artefactos de imagen en sus logs; confirmar la
+  siguiente corrida real antes de cerrar este punto.
 
 # NOW — MVP
 
@@ -49,7 +78,9 @@ piloto de 90 días, siempre que existan fuentes relevantes y contenido de calida
 
 #### HU-ED-07 — Convertir un TikTok en una ingesta procesable
 
-**Estado:** Flujo existente experimental; continuación exclusivamente en planeación.
+**Estado revisado:** el flujo ya está activo en producción. Los ítems siguientes
+son endurecimiento/verificación histórica que deben contrastarse con la cola,
+el worker y las migraciones actuales antes de reabrir desarrollo.
 
 Decisión del propietario (2026-09-10): HU-ED-07 termina en evidencia y traducción;
 redacción y borrador pasan a HU-ED-08. Registro separado mediante
@@ -102,7 +133,9 @@ aprobación humana → publicación web.
 
 #### HU-ED-08 — Generar un borrador editorial con DeepSeek
 
-**Estado:** Pendiente. Bloqueada por la estabilización de HU-ED-07.
+**Estado revisado:** ya existe redacción DeepSeek dentro del flujo editorial
+activo. No iniciar una implementación paralela; confirmar los criterios de
+calidad, trazabilidad y costo pendientes contra el proceso en producción.
 
 Como responsable editorial, quiero convertir la transcripción y los metadatos
 de una fuente en un borrador estructurado, para reducir el tiempo de redacción
@@ -132,8 +165,9 @@ sin perder trazabilidad ni control humano.
 
 #### HU-ED-09 — Revisar y publicar un artículo proveniente de una ingesta
 
-**Estado:** Pendiente. Parte del flujo editorial base ya existe; falta validar la
-integración completa.
+**Estado revisado:** el CMS ya ofrece revisión, aprobación y publicación. La
+lista de abajo representa verificaciones operativas de extremo a extremo, no
+funcionalidad ausente confirmada.
 
 Como responsable superior, quiero revisar, corregir, aprobar o rechazar el
 borrador generado, para publicar únicamente contenido confiable y optimizado.
@@ -165,6 +199,62 @@ borrador generado, para publicar únicamente contenido confiable y optimizado.
 - No introducir regresiones conocidas en autenticación, RLS, editor o SEO.
 
 # NEXT
+
+## EP-OP-01 — Actualización segura de dependencias
+
+### HU-OP-01 — Corregir vulnerabilidades sin romper el chequeo de tipos
+
+**Prioridad propuesta:** P1 de seguridad. La auditoría del lockfile actual
+reporta 15 vulnerabilidades (1 crítica, 8 altas y 6 moderadas); el chequeo de
+producción (`npm audit --omit=dev`) reporta 13. Una actualización estándar
+propuesta por NPM llegó a cero hallazgos, pero actualizó 120 dependencias y
+`nuxt typecheck` falló con errores de inferencia en varias decenas de archivos.
+No se retuvo esa actualización ni se debe desplegar sin resolverlos.
+
+- [ ] Reproducir el fallo de tipos con el lockfile base y el lockfile actualizado
+      para separar un defecto preexistente de una incompatibilidad introducida.
+- [ ] Reducir la actualización a versiones directas/transitivas mínimas y
+      compatibles; no usar `npm audit fix --force`.
+- [ ] Mantener `npm ci`, lint, pruebas, typecheck y build reproducibles.
+- [ ] Confirmar el riesgo real de Nuxt DevTools/RPC sólo en servidor de
+      desarrollo y actualizar/desactivar DevTools donde aplique.
+- [ ] Revisar el advisories report en CI y dejar el conteo documentado.
+
+**Criterio de cierre:** lockfile limpio y reproducible, cero vulnerabilidades
+explotables en producción o excepciones justificadas, y batería completa verde.
+
+## EP-DA-01 — Datos deportivos y tablas de posiciones
+
+### FE-DA-01 — Clasificación de fútbol
+
+#### HU-DA-01 — Consultar y mostrar tablas de posiciones con fuente autorizada
+
+**Prioridad propuesta:** P1 tras estabilidad operativa y cierre de licencias.
+**Estado:** investigación comparativa completada el 2026-09-28; proveedor no
+seleccionado por falta de confirmación escrita de derechos de publicación y
+presupuesto.
+
+- [ ] Solicitar y archivar confirmación escrita de licencia de publicación web,
+      uso comercial, caché/retención, atribución, límites, SLA y derechos de
+      escudos para Primera A y las competiciones objetivo.
+- [ ] Verificar por temporada/endpoint que Liga BetPlay 2026 entregue tablas,
+      etapas Apertura/Finalización, clasificación y promedio de descenso, sin
+      asumir equivalencias entre “standings” simples y reglas DIMAYOR.
+- [ ] Comparar con datos oficiales de DIMAYOR una muestra de jornadas, puntos,
+      diferencia de gol, etapas y fechas de actualización antes de elegir.
+- [ ] Diseñar contrato interno normalizado por competición/temporada/etapa/grupo
+      y un adaptador servidor para el proveedor aprobado.
+- [ ] Añadir caché servidor, atribución y fecha visible de actualización;
+      degradar de forma honesta si el feed falla, sin datos quemados.
+- [ ] Activar primero Liga BetPlay; añadir Premier League, LaLiga, Serie A,
+      Bundesliga, Ligue 1 y Champions League cuando licencia, coste y coverage
+      hayan sido confirmados.
+
+**Criterio de cierre:** fuente/temporada actuales, datos contrastados con el
+organizador, licencia archivada y pruebas de actualización/fallo. No publicar
+escudos ni tablas del proveedor antes de resolver los derechos.
+
+**Investigación:** `docs/INVESTIGACION_APIS_TABLAS_FUTBOL.md`.
 
 ## EP-SO-01 — Distribución social coordinada
 
@@ -291,5 +381,14 @@ monetización, costos y tiempo ahorrado continúa pendiente.
 
 # Próxima acción recomendada
 
-Revisar SQL/JSON y contrastar el remoto antes de cerrar B0. Instalaciones y pruebas
-instrumentadas quedan para implementación autorizada.
+1. Resolver **HU-OP-01** con una actualización de dependencias que mantenga
+   `npm ci`, tipos, pruebas y build verdes; no promover el intento que dejó
+   errores de tipos.
+2. Completar **HU-DA-01** sólo después de recibir confirmación escrita de
+   licencias y validar Liga BetPlay 2026 contra DIMAYOR. La comparación está en
+   `docs/INVESTIGACION_APIS_TABLAS_FUTBOL.md`.
+3. En la siguiente corrida real de Codex, confirmar la etapa ImageGen → carga
+   optimizada → fila `media_files` → asociación al artículo en `review`; no
+   duplicar ni aprobar/publicar borradores durante la comprobación.
+4. Mantener las integraciones sociales y proveedores pagos detrás de las
+   condiciones de presupuesto, credenciales y derechos de uso correspondientes.

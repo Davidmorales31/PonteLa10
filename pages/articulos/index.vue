@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import {
   ArrowDown,
+  ChevronDown,
   Cpu,
+  Flame,
   Flag,
   Globe2,
   LayoutGrid,
   LoaderCircle,
+  Mail,
   MessageCircle,
   Trophy
 } from '@lucide/vue'

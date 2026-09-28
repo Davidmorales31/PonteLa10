@@ -94,4 +94,16 @@ describe('dominio de contenido editorial', () => {
     expect(migracion).toContain('enable row level security')
     expect(migracion).not.toContain('service_role')
   })
+
+  it('no reserva un bloque vacio para imagenes ausentes en noticias relacionadas', () => {
+    const rutaTarjeta = new URL(
+      '../../components/editorial/TarjetaEnlaceInterno.vue',
+      import.meta.url
+    )
+    const tarjeta = readFileSync(rutaTarjeta, 'utf8')
+
+    expect(tarjeta).toContain('<span v-if="articulo.imagen" class="imagen-enlace-interno">')
+    expect(tarjeta).not.toContain('ImageIcon')
+    expect(tarjeta).toContain("'sin-imagen': !articulo.imagen")
+  })
 })
