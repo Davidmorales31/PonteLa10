@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ShieldCheck } from '@lucide/vue'
 import { pieSitio } from '~/data/sitioPublico'
 
 const anioActual = new Date().getFullYear()
@@ -49,7 +50,11 @@ const { disponible: analiticaDisponible, abrirPreferencias } = useAnaliticaPubli
         type="button"
         @click="abrirPreferencias"
       >
-        Preferencias de privacidad
+        <ShieldCheck aria-hidden="true" />
+        <span>
+          <strong>Preferencias de privacidad</strong>
+          <small>Gestiona el consentimiento de analítica</small>
+        </span>
       </button>
 
     </div>
@@ -58,20 +63,62 @@ const { disponible: analiticaDisponible, abrirPreferencias } = useAnaliticaPubli
 
 <style scoped>
 .enlace-preferencias-analitica {
+  display: inline-flex;
+  min-height: 52px;
+  grid-column: 1 / -1;
+  align-items: center;
   justify-self: start;
-  padding: .25rem 0;
-  color: inherit;
+  gap: .7rem;
+  border: 1px solid #416488;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .06);
+  color: #f2f7ff;
+  padding: .55rem .85rem;
   font: inherit;
   text-align: left;
-  text-decoration: underline;
-  text-underline-offset: .2em;
+  text-decoration: none;
   cursor: pointer;
-  background: transparent;
-  border: 0;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.enlace-preferencias-analitica > svg {
+  width: 19px;
+  height: 19px;
+  flex: 0 0 auto;
+  color: #7ce6f5;
+}
+
+.enlace-preferencias-analitica > span {
+  display: grid;
+  gap: 3px;
+}
+
+.enlace-preferencias-analitica strong {
+  color: #f2f7ff;
+  font-size: .76rem;
+  line-height: 1.3;
+}
+
+.enlace-preferencias-analitica small {
+  color: #c5d4e7;
+  font-size: .66rem;
+  line-height: 1.35;
+}
+
+.enlace-preferencias-analitica:hover {
+  transform: translateY(-1px);
+  border-color: #71d8ee;
+  background: rgba(23, 78, 166, .28);
 }
 
 .enlace-preferencias-analitica:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 4px;
+  outline: 3px solid #7ce6f5;
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enlace-preferencias-analitica {
+    transition: none;
+  }
 }
 </style>

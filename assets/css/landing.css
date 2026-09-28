@@ -1513,7 +1513,7 @@ body.tema-publico-blanco .migas-navegacion .separador-miga {
 .marca-pie-pagina small {
   display: block;
   margin-top: 20px;
-  color: rgba(255, 255, 255, 0.48);
+  color: rgba(255, 255, 255, 0.76);
   font-size: 0.58rem;
 }
 
@@ -1532,7 +1532,7 @@ body.tema-publico-blanco .migas-navegacion .separador-miga {
 }
 
 .columna-pie-pagina a {
-  color: rgba(255, 255, 255, 0.68);
+  color: rgba(255, 255, 255, 0.82);
   font-size: 0.68rem;
   font-weight: 600;
 }
@@ -3738,6 +3738,9 @@ body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno {
 body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno :is(h2, h3, p, span) {
   color: #dce8f6;
 }
+body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno small {
+  color: #a9eaff;
+}
 body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno:hover {
   border-color: #68d9ff;
   background: #153656;
@@ -3749,7 +3752,11 @@ body.tema-publico-azul .seccion-articulos-relacionados {
   border-top-color: #315273;
 }
 body.tema-publico-azul .seccion-articulos-relacionados > header .etiqueta-seccion {
-  border-color: #1b728d;
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid #1b728d;
+  border-radius: 999px;
+  padding: 4px 9px;
   background: #10364e;
   color: #75e5ff;
 }
@@ -3787,6 +3794,121 @@ body.tema-publico-azul .rejilla-articulos-relacionados strong {
 }
 body.tema-publico-azul .leer-articulo-recomendado {
   color: #78dfff;
+}
+
+/* El lienzo de lectura debe seguir al tema activo, sin heredar superficies
+ * azules de otras vistas ni dejar texto oscuro sobre fondos oscuros. */
+body.tema-publico-blanco .superficie-principal:has(> .detalle-articulo-publicado) {
+  background: #f4f7fb;
+}
+body.tema-publico-blanco .detalle-articulo-publicado {
+  border: 1px solid #dbe2ee;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(8, 32, 74, 0.07);
+  color: #263548;
+  padding: clamp(20px, 4vw, 38px);
+}
+body.tema-publico-blanco .detalle-articulo-publicado :is(h1, h2, h3, .fuentes-articulo-publicado strong) {
+  color: #102d52;
+}
+body.tema-publico-blanco .detalle-articulo-publicado :is(.miga-articulo, .resumen-articulo, .meta-articulo, .fuentes-articulo-publicado, .portada-articulo-publicado figcaption) {
+  color: #53657a;
+}
+body.tema-publico-blanco .detalle-articulo-publicado .cuerpo-articulo-publicado :is(p, li) {
+  color: #273444;
+}
+body.tema-publico-blanco .detalle-articulo-publicado .cuerpo-articulo-publicado blockquote {
+  border-left-color: #174ea6;
+  color: #18365b;
+}
+body.tema-publico-blanco .detalle-articulo-publicado :is(.miga-articulo a, .fuentes-articulo-publicado a) {
+  color: #174ea6;
+}
+body.tema-publico-blanco .detalle-articulo-publicado .tarjeta-enlace-interno {
+  border-color: #dbe2ee;
+  border-left-color: #174ea6;
+  background: #f8fbff;
+  color: #263548;
+}
+body.tema-publico-blanco .detalle-articulo-publicado .tarjeta-enlace-interno :is(h2, h3, p, span, strong) {
+  color: #24364d;
+}
+body.tema-publico-blanco .detalle-articulo-publicado .tarjeta-enlace-interno small,
+body.tema-publico-blanco .detalle-articulo-publicado .tarjeta-enlace-interno > svg {
+  color: #174ea6;
+}
+body.tema-publico-blanco .detalle-articulo-publicado .barra-compartir-articulo:not(.barra-compartir-inferior) {
+  border-color: #dbe2ee;
+}
+body.tema-publico-blanco .detalle-articulo-publicado .barra-compartir-articulo:not(.barra-compartir-inferior) strong {
+  color: #45566e;
+}
+body.tema-publico-blanco .seccion-articulos-relacionados {
+  border-top-color: #dbe2ee;
+}
+body.tema-publico-blanco .seccion-articulos-relacionados h2,
+body.tema-publico-blanco .rejilla-articulos-relacionados strong {
+  color: #102d52;
+}
+body.tema-publico-blanco .seccion-articulos-relacionados > header .etiqueta-seccion {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid #b9d5ee;
+  border-radius: 999px;
+  background: #eaf5ff;
+  color: #174ea6;
+  padding: 4px 9px;
+}
+body.tema-publico-blanco .rejilla-articulos-relacionados > a {
+  border: 1px solid #dbe2ee;
+  border-radius: 12px;
+  background: #ffffff;
+  color: #263548;
+  padding: 12px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+body.tema-publico-blanco .rejilla-articulos-relacionados > a:hover {
+  transform: translateY(-2px);
+  border-color: #8fb2df;
+  box-shadow: 0 10px 24px rgba(8, 32, 74, 0.1);
+}
+body.tema-publico-blanco .rejilla-articulos-relacionados > a:focus-visible {
+  outline: 3px solid #174ea6;
+  outline-offset: 3px;
+}
+body.tema-publico-blanco .rejilla-articulos-relacionados small,
+body.tema-publico-blanco .leer-articulo-recomendado {
+  color: #174ea6;
+}
+body.tema-publico-blanco .imagen-articulo-recomendado {
+  border: 1px solid #dbe2ee;
+  background: #edf3fa;
+  color: #48627f;
+}
+
+/* En modo azul los subcomponentes editoriales declaran también su propia
+ * paleta: así ningún estilo base o scoped deja títulos oscuros sin contraste. */
+body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado :is(p, li) {
+  color: #dce5f1;
+}
+body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno :is(h2, h3, p, span, strong) {
+  color: #dce8f6;
+}
+body.tema-publico-azul .detalle-articulo-publicado .barra-compartir-articulo {
+  border-color: #315273;
+}
+body.tema-publico-azul .detalle-articulo-publicado .barra-compartir-articulo strong {
+  color: #c7d5e8;
+}
+body.tema-publico-azul .rejilla-articulos-relacionados > a :is(small, strong, .leer-articulo-recomendado) {
+  color: #eef4fc;
+}
+body.tema-publico-azul .rejilla-articulos-relacionados > a small {
+  color: #a9eaff;
+}
+body.tema-publico-azul .rejilla-articulos-relacionados > a .leer-articulo-recomendado {
+  color: #a9eaff;
 }
 
 /* Páginas legales: jerarquía editorial, lectura cómoda y adaptable. */
