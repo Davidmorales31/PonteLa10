@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-- **Google Analytics 4 (2026-09-27, rama `codex/ga4-consent`):** integración
+- **Google Analytics 4 (publicado 2026-09-28, PR #21):** integración
   pública con consentimiento explícito; la etiqueta no se descarga antes de
   aceptar. Pageviews SPA manuales, `article_view`, búsquedas sin términos,
   categorías en allowlist, y exclusión de admin/login/API. La política de
@@ -13,9 +13,12 @@
   legal mostró el aviso, guardó el rechazo y permitió abrir de nuevo las
   preferencias. La home de ese preview respondió 500 `Invalid time value` al
   no tener variables de Supabase del proyecto; la política legal no depende de
-  ellas y cargó normalmente. Producción todavía no contiene este commit; falta
-  PR/merge y validar el despliegue automático de Vercel, consentimiento y
-  Realtime. No pegar el script en Supabase Auth. Handoff:
+  ellas y cargó normalmente. El PR #21 se fusionó a `main` como
+  `3c4da416aacbec5704228ec7e9220b6223a6defa`; CI y Vercel terminaron en éxito.
+  Se verificó en producción que `/privacidad` responde 200, sirve el ID GA4 y
+  permite reabrir las preferencias. No se aceptó el consentimiento ni se
+  enviaron eventos; falta que Juan acepte la medición y confirme `page_view` /
+  `article_view` en Realtime. No pegar el script en Supabase Auth. Handoff:
   `docs/agents/handoffs/2026-09-27-ga4-consentimiento.md`.
 
 - **Corrida editorial de producción 2/5 (2026-09-26, cierre parcial):** se
