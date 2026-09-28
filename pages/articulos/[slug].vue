@@ -32,6 +32,24 @@ const { data: publicacionesDisponibles } = await useFetch<ResumenArticuloPublico
   }
 )
 
+const analitica = useAnaliticaPublica()
+let articuloVisitado = ''
+watch(
+  [() => articuloPublicado.value?.id, slugActual, analitica.decision],
+  ([id, slug, decision]) => {
+    const articulo = articuloPublicado.value
+    if (!id || !articulo || articulo.slug !== slug || decision !== 'aceptada') {
+      if (articulo?.slug !== slug) articuloVisitado = ''
+      return
+    }
+
+    if (articuloVisitado === slug) return
+    articuloVisitado = slug
+    void analitica.registrarEvento('article_view')
+  },
+  { immediate: true }
+)
+
 const articulosRelacionados = computed(() => {
   if (!articuloPublicado.value) return []
 

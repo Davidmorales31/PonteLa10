@@ -1,5 +1,23 @@
 # Estado actual de Pont3la10
 
+- **Google Analytics 4 (2026-09-27, rama `codex/ga4-consent`):** integración
+  pública con consentimiento explícito; la etiqueta no se descarga antes de
+  aceptar. Pageviews SPA manuales, `article_view`, búsquedas sin términos,
+  categorías en allowlist, y exclusión de admin/login/API. La política de
+  privacidad informa el tratamiento y el pie permite reabrir preferencias.
+  Medición configurada por `NUXT_PUBLIC_GA_MEASUREMENT_ID` (ID público
+  `G-PHNWBM2D7X`); Juan confirmó que añadió la variable a Vercel Production y
+  pidió publicar. El dominio raíz `pont3la10.com` redirige a
+  `www.pont3la10.com`, que es el host canónico del flujo. En el checkout limpio
+  pasaron lint, 135 pruebas, typecheck y build. El preview local de la política
+  legal mostró el aviso, guardó el rechazo y permitió abrir de nuevo las
+  preferencias. La home de ese preview respondió 500 `Invalid time value` al
+  no tener variables de Supabase del proyecto; la política legal no depende de
+  ellas y cargó normalmente. Producción todavía no contiene este commit; falta
+  PR/merge y validar el despliegue automático de Vercel, consentimiento y
+  Realtime. No pegar el script en Supabase Auth. Handoff:
+  `docs/agents/handoffs/2026-09-27-ga4-consentimiento.md`.
+
 - **Corrida editorial de producción 2/5 (2026-09-26, cierre parcial):** se
   reutilizó el runId `97a62412-2f4a-4c88-a914-3e7641edc3fd` y la API aceptó
   15 propuestas en total. El checkpoint cerró las siete categorías activas;

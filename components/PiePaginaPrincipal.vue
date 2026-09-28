@@ -2,6 +2,7 @@
 import { pieSitio } from '~/data/sitioPublico'
 
 const anioActual = new Date().getFullYear()
+const { disponible: analiticaDisponible, abrirPreferencias } = useAnaliticaPublica()
 </script>
 
 <template>
@@ -42,6 +43,35 @@ const anioActual = new Date().getFullYear()
         <a href="mailto:contact@pont3la10.com">contact@pont3la10.com</a>
       </section>
 
+      <button
+        v-if="analiticaDisponible"
+        class="enlace-preferencias-analitica"
+        type="button"
+        @click="abrirPreferencias"
+      >
+        Preferencias de privacidad
+      </button>
+
     </div>
   </footer>
 </template>
+
+<style scoped>
+.enlace-preferencias-analitica {
+  justify-self: start;
+  padding: .25rem 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: .2em;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+}
+
+.enlace-preferencias-analitica:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}
+</style>
