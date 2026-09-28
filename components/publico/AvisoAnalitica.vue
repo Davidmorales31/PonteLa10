@@ -6,12 +6,14 @@ const {
   rechazarAnalitica,
   cerrarPreferencias
 } = useAnaliticaPublica()
+const { modoBlancoActivo } = useTemaPublico()
 </script>
 
 <template>
   <aside
     v-if="mostrarAviso"
     class="aviso-analitica"
+    :class="{ 'aviso-analitica--tema-blanco': modoBlancoActivo }"
     role="dialog"
     aria-labelledby="titulo-aviso-analitica"
     aria-describedby="descripcion-aviso-analitica"
@@ -65,6 +67,7 @@ const {
 
 .aviso-analitica__texto h2 {
   margin: 0 0 .3rem;
+  color: inherit;
   font-size: 1rem;
 }
 
@@ -113,23 +116,23 @@ const {
   border-color: transparent;
 }
 
-:global(body.tema-publico-blanco) .aviso-analitica {
+.aviso-analitica--tema-blanco {
   color: #102544;
   background: #fff;
   border-color: #176bd1;
   box-shadow: 0 16px 50px #15345b30;
 }
 
-:global(body.tema-publico-blanco) .aviso-analitica__texto p {
+.aviso-analitica--tema-blanco .aviso-analitica__texto p {
   color: #43556b;
 }
 
-:global(body.tema-publico-blanco) .aviso-analitica__acciones button {
+.aviso-analitica--tema-blanco .aviso-analitica__acciones button {
   color: #102544;
   border-color: #aab9cc;
 }
 
-:global(body.tema-publico-blanco) .aviso-analitica__acciones .aviso-analitica__primario {
+.aviso-analitica--tema-blanco .aviso-analitica__acciones .aviso-analitica__primario {
   color: #fff;
   background: #086ce0;
   border-color: #086ce0;
