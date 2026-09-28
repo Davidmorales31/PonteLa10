@@ -1,5 +1,24 @@
 # Estado actual de Pont3la10
 
+- **Portadas editoriales generadas con IA en tarea Codex (Production, 2026-09-28):**
+  HU-ED-11 agrega una ruta privada e idempotente de imagen generada, optimiza a
+  WebP y guarda la atribución fija “Imagen generada con IA” con disclosure de
+  que no es fotografía documental. Es exclusiva de la tarea programada Codex;
+  ingesta TikTok y carga manual siguen sin cambios. El checkpoint impide
+  regenerar o sustituir una portada al reanudar. La propuesta continúa siempre
+  en `review`; la imagen es opcional si ImageGen no está disponible o puede
+  inducir a error. Migración `20260928010850_codex_ai_generated_covers`
+  aplicada y verificada en Supabase Production: RPC `SECURITY INVOKER`,
+  `search_path` vacío, grants solo a `service_role`. PR #23 se integró en `main`
+  como `308827a1bd919efabdad587d0e6f077df66154a4`; Vercel reportó deployment
+  completo y la ruta pública devuelve 401 sin firma. La automatización local
+  diaria existente fue actualizada (3 corridas/día, configuración intacta)
+  para invocar `pont3la10-ai-editorial-cover` e `imagegen`; no se disparó una
+  corrida real como parte del despliegue. Siguiente verificación: en la próxima
+  corrida programada confirmar un recibo `media-ia` y portada visible en un
+  borrador, o verificar el fallback sin portada. Handoff:
+  `docs/agents/handoffs/2026-09-27-portadas-ia-tarea-codex.md`.
+
 - **Google Analytics 4 (publicado 2026-09-28, PR #21):** integración
   pública con consentimiento explícito; la etiqueta no se descarga antes de
   aceptar. Pageviews SPA manuales, `article_view`, búsquedas sin términos,
