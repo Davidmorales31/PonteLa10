@@ -4020,3 +4020,70 @@ body.tema-publico-azul .contenido-legal a:not(.contacto-legal) { color: #6bdcff;
   .contenido-legal section { padding: 20px 0; }
   .contacto-legal span { width: 100%; margin-left: 30px; }
 }
+
+/* Contrato de superficie para todas las rutas públicas. El fondo del tema se
+ * aplica al <main> compartido para que una clase de tema residual nunca deje
+ * Noticias, Resultados o Especiales sobre un azul ajeno al modo claro. */
+body.tema-publico-blanco .superficie-principal {
+  background: #f4f7fb;
+  color: #172b45;
+}
+
+body.tema-publico-blanco .superficie-principal > :is(
+  .pagina-contenido,
+  .pagina-publica-medio,
+  .pagina-resultados,
+  .pagina-detalle-resultado
+) {
+  color: #172b45;
+}
+
+body.tema-publico-blanco .pagina-especiales .especial-destacado {
+  border-color: #d5e0ee;
+  background: linear-gradient(135deg, #ffffff 0%, #edf5ff 100%);
+  color: #102d52;
+}
+
+body.tema-publico-blanco .pagina-especiales .especial-destacado > div > p:not(.etiqueta-seccion) {
+  color: #526780;
+}
+
+body.tema-publico-blanco .pagina-especiales .especial-destacado .etiqueta-seccion {
+  color: #1765a8;
+}
+
+body.tema-publico-blanco .pagina-especiales .boton-especial-inactivo {
+  border-color: #c4d3e5;
+  background: #f4f7fb;
+  color: #4c607a;
+}
+
+body.tema-publico-blanco .pagina-especiales .ilustracion-especial {
+  color: #1765a8;
+}
+
+body.tema-publico-azul .pagina-especiales .especial-destacado h2 {
+  color: #f4f8ff;
+}
+
+body.tema-publico-azul .pagina-especiales .especial-destacado > div > p:not(.etiqueta-seccion) {
+  color: #c5d7ec;
+}
+
+body.tema-publico-azul .pagina-especiales .especial-destacado .etiqueta-seccion {
+  color: #7ee8ff;
+}
+
+body.tema-publico-azul .pagina-especiales .ilustracion-especial {
+  color: #69dfff;
+}
+
+body.tema-publico-azul .pagina-resultados .titulo-panel-resultados svg,
+body.tema-publico-azul .pagina-resultados .enlace-detalle-partido {
+  color: #75dcff;
+}
+
+body.tema-publico-azul .pagina-resultados .estado-vacio-resultados,
+body.tema-publico-azul .pagina-resultados .estado-carga-resultados {
+  color: #c4d4e8;
+}
