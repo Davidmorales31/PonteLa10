@@ -1,6 +1,6 @@
 # Backlog de producto — Pont3la10
 
-Última actualización: 2026-09-10
+Última actualización: 2026-09-28
 
 Este backlog consolida el Discovery aprobado para Pont3la10. Debe contrastarse
 siempre con el código actual, las migraciones aplicadas y las HU específicas.
@@ -210,6 +210,12 @@ borrador generado, para publicar únicamente contenido confiable y optimizado.
 - [ ] No convertir sugerencias automáticamente en publicaciones.
 
 ## EP-AN-01 — Métricas editoriales y comerciales
+
+**Avance 2026-09-28 — base GA4 publicada:** el sitio público incorpora
+medición opcional con consentimiento explícito, pageviews SPA y eventos
+generales de lectura/búsqueda/filtros con minimización de datos. Esto no
+completa HU-AN-01: el panel editorial de audiencia, atribución, redes,
+monetización, costos y tiempo ahorrado continúa pendiente.
 
 ### FE-AN-01 — Panel de rendimiento
 
