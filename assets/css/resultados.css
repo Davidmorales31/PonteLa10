@@ -433,6 +433,7 @@
 .titulo-panel-resultados svg { width: 18px; color: var(--blue); }
 .titulo-panel-resultados h2,
 .panel-resultados h2 { font-size: 0.92rem; text-transform: uppercase; }
+.titulo-panel-resultados h2 { flex: 0 0 auto; white-space: nowrap; }
 .titulo-panel-resultados span { color: var(--muted); font-size: 0.68rem; font-weight: 800; }
 .grilla-marcadores-resultados { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .estado-vacio-resultados,
