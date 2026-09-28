@@ -215,7 +215,7 @@ describe('API privada de propuestas Codex', () => {
 
   it('permite la portada IA solo con su disclosure, sin debilitar la RPC', () => {
     const migracion = readFileSync(
-      new URL('../../supabase/migrations/20260928003905_codex_ai_generated_covers.sql', import.meta.url),
+      new URL('../../supabase/migrations/20260928010850_codex_ai_generated_covers.sql', import.meta.url),
       'utf8'
     )
     const ruta = readFileSync(new URL('../../server/api/internal/codex/media-ai.post.ts', import.meta.url), 'utf8')
