@@ -1,0 +1,211 @@
+import {
+  esRutaPublicaMedible,
+  normalizarCategoriaMedible,
+  normalizarIdMedicionGa4
+} from '~/utils/analiticaPublica'
+
+type DecisionAnalitica = 'aceptada' | 'rechazada' | null
+type EventoAnalitica = 'article_view' | 'search' | 'category_filter'
+
+declare global {
+  interface Window {
+    dataLayer?: unknown[][]
+    gtag?: (...argumentos: unknown[]) => void
+  }
+}
+
+const CLAVE_CONSENTIMIENTO = 'pont3la10:consentimiento-analitica:v1'
+const CATEGORIAS_CONSENTIMIENTO = {
+  analytics_storage: 'denied',
+  ad_storage: 'denied',
+  ad_user_data: 'denied',
+  ad_personalization: 'denied'
+} as const
+let promesaCargaEtiqueta: Promise<boolean> | null = null
+let idEtiquetaCargada = ''
+
+function borrarCookiesAnalitica() {
+  const host = window.location.hostname
+  const dominios = host === 'localhost' || host === '127.0.0.1'
+    ? [undefined]
+    : [undefined, host, `.${host}`, 'pont3la10.com', '.pont3la10.com']
+
+  document.cookie.split(';').forEach((cookie) => {
+    const nombre = cookie.split('=')[0]?.trim()
+    if (!nombre || !/^_ga(?:_|$)/.test(nombre)) return
+    dominios.forEach((dominio) => {
+      const atributoDominio = dominio ? `; domain=${dominio}` : ''
+      document.cookie = `${nombre}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/${atributoDominio}; SameSite=Lax`
+    })
+  })
+}
+
+export function useAnaliticaPublica() {
+  const configuracion = useRuntimeConfig()
+  const idMedicion = normalizarIdMedicionGa4(configuracion.public.gaMeasurementId)
+  const disponible = computed(() => Boolean(idMedicion))
+  const decision = useState<DecisionAnalitica>('decision-analitica-publica', () => null)
+  const listo = useState('consentimiento-analitica-listo', () => false)
+  const preferenciasAbiertas = useState('preferencias-analitica-abiertas', () => false)
+  const etiquetaLista = useState('google-analytics-etiqueta-lista', () => false)
+
+  function inicializarConsentimiento() {
+    if (!import.meta.client || listo.value) return
+
+    try {
+      const valorGuardado = window.localStorage.getItem(CLAVE_CONSENTIMIENTO)
+      if (valorGuardado === 'aceptada' || valorGuardado === 'rechazada') {
+        decision.value = valorGuardado
+      }
+    } catch {
+      // Si el almacenamiento del navegador está bloqueado, se mantiene el valor
+      // por defecto: no hay consentimiento y no se carga analítica.
+    }
+
+    listo.value = true
+  }
+
+  function guardarDecision(nuevaDecision: Exclude<DecisionAnalitica, null>) {
+    decision.value = nuevaDecision
+    preferenciasAbiertas.value = false
+    try {
+      window.localStorage.setItem(CLAVE_CONSENTIMIENTO, nuevaDecision)
+    } catch {
+      // La elección explícita rige la sesión actual aunque no pueda persistirse.
+    }
+  }
+
+  function encolarGtag(...argumentos: unknown[]) {
+    if (!window.gtag) {
+      window.dataLayer = window.dataLayer || []
+      window.gtag = (...nuevosArgumentos: unknown[]) => {
+        window.dataLayer?.push(nuevosArgumentos)
+      }
+    }
+    window.gtag(...argumentos)
+  }
+
+  function revocarEtiqueta() {
+    etiquetaLista.value = false
+    if (!import.meta.client) return
+    if (window.gtag && idEtiquetaCargada) {
+      encolarGtag('consent', 'update', CATEGORIAS_CONSENTIMIENTO)
+    }
+    borrarCookiesAnalitica()
+  }
+
+  function cargarEtiqueta(): Promise<boolean> {
+    if (!import.meta.client || !idMedicion || decision.value !== 'aceptada') {
+      return Promise.resolve(false)
+    }
+
+    if (idEtiquetaCargada === idMedicion && etiquetaLista.value) {
+      return Promise.resolve(true)
+    }
+
+    if (idEtiquetaCargada === idMedicion && window.gtag) {
+      encolarGtag('consent', 'update', { ...CATEGORIAS_CONSENTIMIENTO, analytics_storage: 'granted' })
+      etiquetaLista.value = true
+      return Promise.resolve(true)
+    }
+
+    if (promesaCargaEtiqueta) return promesaCargaEtiqueta
+
+    promesaCargaEtiqueta = new Promise<boolean>((resolver) => {
+      encolarGtag('consent', 'default', CATEGORIAS_CONSENTIMIENTO)
+      encolarGtag('js', new Date())
+      encolarGtag('config', idMedicion, {
+        send_page_view: false,
+        allow_google_signals: false,
+        allow_ad_personalization_signals: false
+      })
+
+      const script = document.createElement('script')
+      script.async = true
+      script.dataset.pont3la10Analytics = 'ga4'
+      script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(idMedicion)}`
+      script.onload = () => {
+        promesaCargaEtiqueta = null
+        idEtiquetaCargada = idMedicion
+        const tieneConsentimiento = decision.value === 'aceptada'
+        encolarGtag('consent', 'update', {
+          ...CATEGORIAS_CONSENTIMIENTO,
+          analytics_storage: tieneConsentimiento ? 'granted' : 'denied'
+        })
+        etiquetaLista.value = tieneConsentimiento
+        if (!tieneConsentimiento) borrarCookiesAnalitica()
+        resolver(tieneConsentimiento)
+      }
+      script.onerror = () => {
+        promesaCargaEtiqueta = null
+        script.remove()
+        resolver(false)
+      }
+      document.head.appendChild(script)
+    })
+
+    return promesaCargaEtiqueta
+  }
+
+  async function registrarVistaPagina(ruta: string) {
+    if (!idMedicion || !esRutaPublicaMedible(ruta) || !(await cargarEtiqueta())) return
+    if (decision.value !== 'aceptada') return
+
+    const rutaSinParametros = ruta.split(/[?#]/, 1)[0] || '/'
+    encolarGtag('event', 'page_view', {
+      page_location: `${window.location.origin}${rutaSinParametros}`,
+      page_path: rutaSinParametros
+    })
+  }
+
+  async function registrarEvento(nombre: EventoAnalitica, categoria?: unknown) {
+    if (!idMedicion || !(await cargarEtiqueta()) || decision.value !== 'aceptada') return
+
+    if (nombre === 'category_filter') {
+      const categoriaSegura = normalizarCategoriaMedible(categoria)
+      if (!categoriaSegura) return
+      encolarGtag('event', nombre, { category: categoriaSegura })
+      return
+    }
+
+    encolarGtag('event', nombre)
+  }
+
+  function aceptarAnalitica() {
+    guardarDecision('aceptada')
+    void cargarEtiqueta()
+  }
+
+  function rechazarAnalitica() {
+    guardarDecision('rechazada')
+    revocarEtiqueta()
+  }
+
+  function abrirPreferencias() {
+    preferenciasAbiertas.value = true
+  }
+
+  function cerrarPreferencias() {
+    preferenciasAbiertas.value = false
+  }
+
+  const mostrarAviso = computed(() =>
+    listo.value
+    && disponible.value
+    && (decision.value === null || preferenciasAbiertas.value)
+  )
+
+  return {
+    disponible,
+    decision,
+    listo,
+    mostrarAviso,
+    aceptarAnalitica,
+    rechazarAnalitica,
+    abrirPreferencias,
+    cerrarPreferencias,
+    inicializarConsentimiento,
+    registrarVistaPagina,
+    registrarEvento
+  }
+}

@@ -15,7 +15,7 @@ useSeoPont3la10({
   }
 })
 
-const fechaActualizacion = '25 de septiembre de 2026'
+const fechaActualizacion = '27 de septiembre de 2026'
 </script>
 
 <template>
@@ -24,7 +24,7 @@ const fechaActualizacion = '25 de septiembre de 2026'
       <span class="insignia-legal"><ShieldCheck aria-hidden="true" /> Privacidad y datos</span>
       <h1 id="titulo-legal">Tu privacidad importa.</h1>
       <p class="introduccion-legal">Esta página explica, en lenguaje claro, qué información puede tratar Pont3la10 cuando navegas por el sitio o utilizas sus funciones.</p>
-      <p class="fecha-legal">Última actualización: <time datetime="2026-09-25">{{ fechaActualizacion }}</time></p>
+      <p class="fecha-legal">Última actualización: <time datetime="2026-09-27">{{ fechaActualizacion }}</time></p>
     </header>
 
     <div class="contenido-legal">
@@ -51,6 +51,7 @@ const fechaActualizacion = '25 de septiembre de 2026'
       <section>
         <h2>Finalidades y proveedores</h2>
         <p>La información se utiliza para entregar las páginas y funciones solicitadas, mantener sesiones autorizadas, proteger el servicio, recordar ajustes locales y gestionar el flujo editorial. El sitio puede usar cookies técnicas o almacenamiento local para mantener una sesión y recordar preferencias; no se presentan como cookies publicitarias.</p>
+        <p>Si Google Analytics 4 está configurado, la etiqueta de medición opcional solo se carga después de que la persona visitante la acepte. Puede rechazarla o cambiar su decisión desde “Preferencias de privacidad” en el pie de página. Con esa autorización se registran visitas a páginas públicas y eventos generales de lectura, búsqueda y filtros; Pont3la10 no envía a Analytics el texto buscado, correos electrónicos, identificadores de cuenta ni rutas del panel administrativo. Google puede tratar los datos técnicos de medición según sus propias condiciones y políticas.</p>
         <p>En el flujo editorial interno, el equipo puede enviar transcripciones y evidencia a DeepSeek para preparar borradores. Esa función no es necesaria para leer el sitio. El equipo debe evitar incluir datos personales de terceros que no sean indispensables; el tratamiento por el proveedor también está sujeto a sus condiciones.</p>
         <p>La infraestructura de autenticación, base de datos y almacenamiento puede ser prestada por proveedores como Supabase. Los proveedores técnicos estrictamente necesarios tratan información por cuenta del servicio según la función que prestan y sus propias condiciones.</p>
         <p>El sitio puede enlazar a plataformas externas. Al abrirlas, su tratamiento de datos se rige por las políticas de cada plataforma.</p>

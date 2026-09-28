@@ -69,7 +69,8 @@ export default defineNuxtConfig({
     public: {
       siteUrl: urlPublica || 'http://localhost:3001',
       supabaseUrl,
-      supabaseKey
+      supabaseKey,
+      gaMeasurementId: ''
     }
   },
   typescript: {
