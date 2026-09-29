@@ -60,15 +60,16 @@ fails before sending a request.
 
    - `expediente`: trend signal, source records, claim/source map, uncertainty.
    - `borrador`: complete structured article proposal, taxonomy and SEO.
-   - `portada` or `portadaIA`: optional image bytes stored by content hash and
-     verified metadata. For a new scheduled-task candidate, prefer one
-     ImageGen editorial illustration after the draft passes quality checks.
-     Apply the AI-cover skill and save it as `portadaIA`. If generation is
-     unavailable or misleading, continue without a cover. A pre-existing
-     licensed Commons cover remains valid only through the separate `portada`
-     path with its checked author, license, and source.
-   - `media`: optional stable returned media ID and safe upload receipt; omit
-     this stage when no suitable licensed photo exists.
+   - `portadaIA`: required ImageGen editorial illustration after the draft
+     passes quality checks. Read and follow `pont3la10-ai-editorial-cover` and
+     `pont3la10-editorial-imagery`; inspect, optimize, and checkpoint the
+     result. If it cannot be generated safely, skip this candidate rather than
+     create a text-only Codex draft. Do not replace this task's ImageGen step
+     with the optional licensed-photo search path.
+   - `media`: required stable returned media ID and safe upload receipt from
+     `media-ia`; on an ambiguous persistence response, reuse the checkpoint and
+     idempotency key rather than regenerating, duplicating, or submitting
+     without the media ID.
    - `propuesta`: exact API proposal payload plus stable idempotency key.
    - `entrega`: API response identifying the private review draft.
 
@@ -97,12 +98,14 @@ fails before sending a request.
    metadata toward the article-body minimum.
 
    Use `node scripts/codex-editorial-checkpoint.mjs leer <runId> <categoryId> <fingerprint>`
-   to inspect saved stages. Use `guardar` for JSON stages, `portada` for a
-   verified original Commons photo, or `portada-ia` for an inspected ImageGen
-   result and its title/alt metadata. Use the corresponding `payload-portada`
-   or `payload-portada-ia` command with an output filename relative to that
-   candidate's folder. Submit licensed photos using `media` and generated
-   illustrations using `media-ia`. Never print
+   to inspect saved stages. Use `guardar` for JSON stages and `portada-ia` for
+   an inspected ImageGen result and its title/alt metadata. Use
+   `payload-portada-ia` with an output filename relative to that candidate's
+   folder. Submit generated illustrations using `media-ia`. Before proposal
+   submission, verify `coverMediaId` equals the persisted media receipt ID and
+   `editorialFlags` includes `ai_generated_cover` but not
+   `licensed_photo_cover`; the CLI and private API reject proposals without a
+   persisted cover. Never print
    the base64 media payload or store credentials in checkpoints.
    Use `exportar` to materialize an exact saved stage to a file inside its
    ignored candidate folder without printing article/source content to terminal.
@@ -119,9 +122,9 @@ fails before sending a request.
    completion from success; do not claim all categories met the target unless
    API receipts prove it.
 
-If required API configuration, research access, or safe checkpoint artifacts
-are unavailable, stop the affected candidate at the last completed stage and
-report what is needed. A missing suitable image is not a blocker: submit
-`coverMediaId: null` and leave out both `licensed_photo_cover` and
-`ai_generated_cover`. Do not fabricate
+If required API configuration, research access, ImageGen, or safe checkpoint
+artifacts are unavailable, stop the affected candidate at the last completed
+stage and report what is needed. Never submit a Codex draft with a missing
+cover; keep researching other candidates and report a shortfall honestly if
+fewer than 15 complete, image-backed drafts can be confirmed. Do not fabricate
 sources, drafts, images, receipts, or successful API writes.

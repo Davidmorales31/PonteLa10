@@ -4,6 +4,7 @@ import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   contarPalabrasEditoriales,
+  cumplePortadaPropuestaCodex,
   PALABRAS_MINIMAS_ARTICULO_CODEX
 } from './codex-editorial-contract.mjs'
 
@@ -79,6 +80,10 @@ if (recurso === 'propuesta') {
   const palabras = contarPalabrasEditoriales(payload?.body)
   if (palabras < PALABRAS_MINIMAS_ARTICULO_CODEX) {
     terminar(`La propuesta no se envió: requiere al menos ${PALABRAS_MINIMAS_ARTICULO_CODEX} palabras (recibidas: ${palabras}).`)
+  }
+
+  if (!cumplePortadaPropuestaCodex(payload)) {
+    terminar('La propuesta no se envió: requiere una portada persistida y exactamente una marca de tipo de imagen.')
   }
 }
 
