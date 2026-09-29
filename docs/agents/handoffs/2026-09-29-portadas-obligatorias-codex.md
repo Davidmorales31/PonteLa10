@@ -44,11 +44,19 @@ Rama aislada: `codex/require-editorial-covers`, basada en `origin/main` (`b6b865
 - Las primeras pruebas Nuxt requieren definir la variable pública no secreta
   `NUXT_PUBLIC_SITE_URL=https://www.pont3la10.com`.
 
-## Pendiente
+## Integración y despliegue
 
-- Crear/integrar PR y confirmar Vercel Production en `READY`.
-- No se lanzó otra corrida ni se generaron imágenes durante la reparación.
-- Tras el próximo ciclo programado normal, verificar que los recibos `media-ia`
-  y los borradores `review` comparten el mismo ID de portada. Si ImageGen falla,
-  el resultado correcto es un candidato omitido y un reporte parcial, nunca un
-  borrador sin imagen.
+- PR #32: https://github.com/Davidmorales31/PonteLa10/pull/32
+- Integrado en `main` como `1f199aaeb11797a63a01e39f761676d50cb058a4`.
+- CI de `main` (lint, tests, typecheck, build) y despliegue Vercel de Production
+  finalizaron correctamente el 2026-09-29.
+- La automatización actualizada inició la corrida normal de las 14:05 COT con
+  runId `e0cc7461-5321-4431-aa91-48ef81a73f79`. Al momento de esta actualización
+  seguía activa; sus archivos locales todavía solo confirmaban el contexto.
+
+## Seguimiento pendiente
+
+- Al terminar esa corrida programada, verificar que cada borrador `review` tenga
+  recibo `media-ia` persistido y asociado al mismo `mediaId`. La garantía nueva
+  es que una falla de ImageGen impide el envío del candidato; no garantiza que
+  ImageGen o almacenamiento nunca fallen, pero evita otro borrador sin imagen.
