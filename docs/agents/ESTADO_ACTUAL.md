@@ -1,5 +1,16 @@
 # Estado actual de Pont3la10
 
+- **Backlog maestro v4.0 (2026-09-29, documentación):** `docs/BACKLOG.md`
+  fue sustituido íntegramente por el backlog maestro de refactor hacia Growth,
+  SEO Utility, Sports Data, P10 Games, retención, monetización evergreen y
+  P10 Tools. El documento fija 60 HUs activas, incorpora `HU-TR-53` a
+  `HU-TR-60` y mantiene la separación de `tools.pont3la10.com` como superficie
+  experimental independiente del producto editorial/deportivo. No se cambió
+  código, configuración, migraciones ni estados editoriales. El contenido se
+  verificó contra el archivo fuente entregado mediante comparación normalizada
+  de líneas. `git diff --check` identifica espacios finales intencionales del
+  Markdown entregado, usados como saltos de línea; no se alteraron.
+
 - **Portada obligatoria en propuestas de la tarea Codex (2026-09-29, Production):** auditoría
   de la corrida `3b39393b-8709-4aa7-b8ae-0d5922fb07eb` encontró cero artefactos
   `portadaIA`/`media`; la corrida previa `bd4ad640-dec7-4560-8720-ba757d89b496`
