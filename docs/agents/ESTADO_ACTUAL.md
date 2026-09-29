@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-- **Portada obligatoria en propuestas de la tarea Codex (2026-09-29):** auditoría
+- **Portada obligatoria en propuestas de la tarea Codex (2026-09-29, Production):** auditoría
   de la corrida `3b39393b-8709-4aa7-b8ae-0d5922fb07eb` encontró cero artefactos
   `portadaIA`/`media`; la corrida previa `bd4ad640-dec7-4560-8720-ba757d89b496`
   sí tiene 56 artefactos de imagen. Causa reproducible: la instrucción activa de
@@ -14,10 +14,13 @@
   sin portada y con flags ausentes/ambiguos; la Skill instruye omitir ese
   candidato y reportar el faltante si ImageGen falla, nunca entregar un borrador
   sin imagen. No se cambia TikTok, carga manual ni base de datos; no se generó
-  imagen ni se disparó una corrida adicional. Validaciones: `npm ci`, lint,
-  suite (29 archivos/146 pruebas), typecheck, build y `git diff --check` pasan.
-  Pendiente: integrar el PR y verificar despliegue de Producción; después
-  comprobar el primer recibo real de `media-ia`. Handoff:
+  imagen ni se disparó una corrida manual. Validaciones locales y de GitHub:
+  `npm ci`, lint, suite (29 archivos/146 pruebas), typecheck, build y
+  `git diff --check` pasan. PR #32 se integró a `main` como
+  `1f199aaeb11797a63a01e39f761676d50cb058a4`; CI y el despliegue Vercel de
+  Production reportaron éxito. La ejecución programada de las 14:05 COT está
+  activa, pero aún no hay recibo `media-ia` verificable; revisar sus artefactos
+  al terminar. Handoff:
   `docs/agents/handoffs/2026-09-29-portadas-obligatorias-codex.md`.
 
 - **Buscador y noticias relacionadas (2026-09-29):** el buscador de noticias
