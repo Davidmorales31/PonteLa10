@@ -19,17 +19,17 @@ const { modoBlancoActivo } = useTemaPublico()
     aria-describedby="descripcion-aviso-analitica"
   >
     <div class="aviso-analitica__texto">
-      <h2 id="titulo-aviso-analitica">Tu privacidad, tu elección</h2>
+      <h2 id="titulo-aviso-analitica">Preferencias de analítica</h2>
       <p id="descripcion-aviso-analitica">
-        Si aceptas, Google Analytics medirá visitas y uso general del sitio. No enviamos el texto que buscas ni tu correo. Puedes cambiar esta decisión desde el pie de página.
+        Google Analytics mide por defecto visitas y uso general de las páginas públicas. No enviamos el texto que buscas, tu correo ni datos de cuenta. Puedes desactivar esta medición aquí.
       </p>
     </div>
     <div class="aviso-analitica__acciones">
       <button type="button" class="aviso-analitica__secundario" @click="rechazarAnalitica">
-        Solo necesarias
+        Desactivar analítica
       </button>
       <button type="button" class="aviso-analitica__primario" @click="aceptarAnalitica">
-        Aceptar analítica
+        Activar analítica
       </button>
       <button
         v-if="decision !== null"

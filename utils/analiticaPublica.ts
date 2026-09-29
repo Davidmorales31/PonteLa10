@@ -1,4 +1,10 @@
-const ID_MEDICION_GA4 = /^G-[A-Z0-9]{10}$/i
+export const ID_MEDICION_GA4 = 'G-PHNWBM2D7X'
+export type DecisionAnaliticaPublica = 'aceptada' | 'rechazada'
+export type EstadoAnaliticaPublica = DecisionAnaliticaPublica | null
+
+export function resolverDecisionAnalitica(valorGuardado: unknown): DecisionAnaliticaPublica {
+  return valorGuardado === 'rechazada' ? 'rechazada' : 'aceptada'
+}
 
 const CATEGORIAS_MEDIBLES = new Set([
   'colombia',
@@ -10,12 +16,6 @@ const CATEGORIAS_MEDIBLES = new Set([
   'tecnologia',
   'tendencias'
 ])
-
-export function normalizarIdMedicionGa4(valor: unknown): string | null {
-  if (typeof valor !== 'string') return null
-  const id = valor.trim()
-  return ID_MEDICION_GA4.test(id) ? id : null
-}
 
 export function esRutaPublicaMedible(ruta: string): boolean {
   if (!ruta.startsWith('/') || ruta.startsWith('//')) return false

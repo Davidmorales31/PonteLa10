@@ -12,3 +12,17 @@
 - **Commit base:** `7c89fe8` (`origin/main`).
 - **Commit de funcionalidad:** `1f8c4a2` (`feat(analytics): add consent-based GA4 tracking`).
 - **Commit de publicación:** `3c4da416aacbec5704228ec7e9220b6223a6defa` (squash de PR #21).
+
+## Actualización 2026-09-28 — activación predeterminada
+
+- Juan pidió que GA4 quedara activa sin depender de aceptar el aviso inicial.
+  La rama `codex/ga4-active-default`, basada en `origin/main`, fija el ID
+  público `G-PHNWBM2D7X` en el código. Se activa para visitantes nuevos y
+  mantiene una opción persistente de desactivación/reactivación; los rechazos
+  guardados se respetan.
+- Política de privacidad y textos de preferencias actualizados. Continúan las
+  exclusiones del CMS, login, cuenta y API; no se envía texto de búsqueda, email
+  ni ID de usuario.
+- La propiedad no necesita secreto: el Measurement ID es un identificador
+  público. Sin push, PR, merge ni despliegue todavía; se hará tras validar esta
+  rama aislada.

@@ -12,6 +12,7 @@ import {
   robotsNoIndex
 } from '~/utils/seo'
 import { seleccionarArticulosRelacionados } from '~/utils/editorial/distribucion'
+import type { EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
 
 const ruta = useRoute()
 const slugActual = computed(() => String(ruta.params.slug || ''))
@@ -36,7 +37,7 @@ const analitica = useAnaliticaPublica()
 let articuloVisitado = ''
 watch(
   [() => articuloPublicado.value?.id, slugActual, analitica.decision],
-  ([id, slug, decision]) => {
+  ([id, slug, decision]: [string | undefined, string, EstadoAnaliticaPublica]) => {
     const articulo = articuloPublicado.value
     if (!id || !articulo || articulo.slug !== slug || decision !== 'aceptada') {
       if (articulo?.slug !== slug) articuloVisitado = ''

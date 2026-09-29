@@ -25,8 +25,9 @@ implementar esos procesos sin contrastar primero el código y el despliegue.
 4. **P2 — Cierre operativo editorial/SEO:** completar verificaciones reales de
    HU-ED-07/08/09 y la siguiente corrida de portadas IA, sin duplicar flujos que
    ya están activos.
-5. **P2 — Analítica y distribución social:** terminar HU-AN-01 y HU-SO-01/02/03;
-   publicación en redes depende de credenciales oficiales y permisos.
+5. **P2 — Analítica y distribución social:** HU-AN-01 incluye GA4 fijado y
+   medición pública por defecto en este cambio; comprobar Realtime después del
+   despliegue. HU-SO-01/02/03 sigue pendiente y depende de permisos oficiales.
 6. **P3 — Expansión:** nuevas fuentes RSS/web, preferencias/notificaciones,
    boletín y monetización cuando presupuesto y derechos estén definidos.
 
