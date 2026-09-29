@@ -1,10 +1,11 @@
 import {
   esRutaPublicaMedible,
+  ID_MEDICION_GA4,
   normalizarCategoriaMedible,
-  normalizarIdMedicionGa4
+  resolverDecisionAnalitica
 } from '~/utils/analiticaPublica'
+import type { EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
 
-type DecisionAnalitica = 'aceptada' | 'rechazada' | null
 type EventoAnalitica = 'article_view' | 'search' | 'category_filter'
 
 declare global {
@@ -41,10 +42,9 @@ function borrarCookiesAnalitica() {
 }
 
 export function useAnaliticaPublica() {
-  const configuracion = useRuntimeConfig()
-  const idMedicion = normalizarIdMedicionGa4(configuracion.public.gaMeasurementId)
+  const idMedicion = ID_MEDICION_GA4
   const disponible = computed(() => Boolean(idMedicion))
-  const decision = useState<DecisionAnalitica>('decision-analitica-publica', () => null)
+  const decision = useState<EstadoAnaliticaPublica>('decision-analitica-publica', () => null)
   const listo = useState('consentimiento-analitica-listo', () => false)
   const preferenciasAbiertas = useState('preferencias-analitica-abiertas', () => false)
   const etiquetaLista = useState('google-analytics-etiqueta-lista', () => false)
@@ -54,18 +54,15 @@ export function useAnaliticaPublica() {
 
     try {
       const valorGuardado = window.localStorage.getItem(CLAVE_CONSENTIMIENTO)
-      if (valorGuardado === 'aceptada' || valorGuardado === 'rechazada') {
-        decision.value = valorGuardado
-      }
+      decision.value = resolverDecisionAnalitica(valorGuardado)
     } catch {
-      // Si el almacenamiento del navegador está bloqueado, se mantiene el valor
-      // por defecto: no hay consentimiento y no se carga analítica.
+      // Si el almacenamiento está bloqueado, la medición rige solo esta sesión.
     }
 
     listo.value = true
   }
 
-  function guardarDecision(nuevaDecision: Exclude<DecisionAnalitica, null>) {
+  function guardarDecision(nuevaDecision: Exclude<EstadoAnaliticaPublica, null>) {
     decision.value = nuevaDecision
     preferenciasAbiertas.value = false
     try {

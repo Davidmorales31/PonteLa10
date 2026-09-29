@@ -1,4 +1,8 @@
-import { esRutaPublicaMedible, normalizarCategoriaMedible } from '~/utils/analiticaPublica'
+import {
+  esRutaPublicaMedible,
+  normalizarCategoriaMedible,
+  type EstadoAnaliticaPublica
+} from '~/utils/analiticaPublica'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const analitica = useAnaliticaPublica()
@@ -35,7 +39,7 @@ export default defineNuxtPlugin((nuxtApp) => {
     }
   })
 
-  watch(analitica.decision, (decision) => {
+  watch(analitica.decision, (decision: EstadoAnaliticaPublica) => {
     if (decision === 'aceptada') {
       void medirRuta(router.currentRoute.value)
     } else {

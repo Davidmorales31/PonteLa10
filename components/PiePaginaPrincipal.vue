@@ -53,7 +53,7 @@ const { disponible: analiticaDisponible, abrirPreferencias } = useAnaliticaPubli
         <ShieldCheck aria-hidden="true" />
         <span>
           <strong>Preferencias de privacidad</strong>
-          <small>Gestiona el consentimiento de analítica</small>
+          <small>La analítica está activa por defecto; puedes desactivarla</small>
         </span>
       </button>
 

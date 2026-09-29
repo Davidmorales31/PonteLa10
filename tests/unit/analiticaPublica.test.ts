@@ -1,17 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import {
   esRutaPublicaMedible,
+  ID_MEDICION_GA4,
   normalizarCategoriaMedible,
-  normalizarIdMedicionGa4
+  resolverDecisionAnalitica
 } from '../../utils/analiticaPublica'
 
-describe('configuración segura de analítica pública', () => {
-  it('acepta solo IDs de medición GA4 con el formato G-XXXXXXXXXX', () => {
-    expect(normalizarIdMedicionGa4('G-ABC1234567')).toBe('G-ABC1234567')
-    expect(normalizarIdMedicionGa4(' G-ABC1234567 ')).toBe('G-ABC1234567')
-    expect(normalizarIdMedicionGa4('UA-123456-1')).toBeNull()
-    expect(normalizarIdMedicionGa4('G-ABC123')).toBeNull()
-    expect(normalizarIdMedicionGa4(undefined)).toBeNull()
+describe('analítica pública', () => {
+  it('usa el ID GA4 fijado para Pont3la10', () => {
+    expect(ID_MEDICION_GA4).toBe('G-PHNWBM2D7X')
+  })
+
+  it('activa medición por defecto y respeta un opt-out guardado', () => {
+    expect(resolverDecisionAnalitica(null)).toBe('aceptada')
+    expect(resolverDecisionAnalitica(undefined)).toBe('aceptada')
+    expect(resolverDecisionAnalitica('rechazada')).toBe('rechazada')
   })
 
   it('excluye rutas privadas y no acepta rutas que no sean relativas al sitio', () => {

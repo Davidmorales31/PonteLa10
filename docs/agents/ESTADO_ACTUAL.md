@@ -19,25 +19,15 @@
   borrador, o verificar el fallback sin portada. Handoff:
   `docs/agents/handoffs/2026-09-27-portadas-ia-tarea-codex.md`.
 
-- **Google Analytics 4 (publicado 2026-09-28, PR #21):** integración
-  pública con consentimiento explícito; la etiqueta no se descarga antes de
-  aceptar. Pageviews SPA manuales, `article_view`, búsquedas sin términos,
-  categorías en allowlist, y exclusión de admin/login/API. La política de
-  privacidad informa el tratamiento y el pie permite reabrir preferencias.
-  Medición configurada por `NUXT_PUBLIC_GA_MEASUREMENT_ID` (ID público
-  `G-PHNWBM2D7X`); Juan confirmó que añadió la variable a Vercel Production y
-  pidió publicar. El dominio raíz `pont3la10.com` redirige a
-  `www.pont3la10.com`, que es el host canónico del flujo. En el checkout limpio
-  pasaron lint, 135 pruebas, typecheck y build. El preview local de la política
-  legal mostró el aviso, guardó el rechazo y permitió abrir de nuevo las
-  preferencias. La home de ese preview respondió 500 `Invalid time value` al
-  no tener variables de Supabase del proyecto; la política legal no depende de
-  ellas y cargó normalmente. El PR #21 se fusionó a `main` como
-  `3c4da416aacbec5704228ec7e9220b6223a6defa`; CI y Vercel terminaron en éxito.
-  Se verificó en producción que `/privacidad` responde 200, sirve el ID GA4 y
-  permite reabrir las preferencias. No se aceptó el consentimiento ni se
-  enviaron eventos; falta que Juan acepte la medición y confirme `page_view` /
-  `article_view` en Realtime. No pegar el script en Supabase Auth. Handoff:
+- **Google Analytics 4 (actualización local, 2026-09-28):** se conserva la
+  integración pública del PR #21 (`3c4da416aacbec5704228ec7e9220b6223a6defa`),
+  pero ahora el ID `G-PHNWBM2D7X` queda fijado en el cliente y GA4 inicia para
+  visitantes nuevos sin exigir aceptar primero. Se conserva el control del pie
+  para desactivar/reactivar, respetando rechazos ya guardados. Pageviews SPA
+  manuales; `article_view`; búsqueda sin texto; categorías en allowlist; rutas
+  administrativas, login y API excluidas. Se actualizó la política de
+  privacidad. El cambio va aislado en `codex/ga4-active-default`; pruebas y
+  despliegue pendientes en esta instantánea. Handoff:
   `docs/agents/handoffs/2026-09-27-ga4-consentimiento.md`.
 
 - **Corrida editorial de producción 2/5 (2026-09-26, cierre parcial):** se
