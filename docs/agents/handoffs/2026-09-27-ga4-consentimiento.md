@@ -24,5 +24,9 @@
   exclusiones del CMS, login, cuenta y API; no se envía texto de búsqueda, email
   ni ID de usuario.
 - La propiedad no necesita secreto: el Measurement ID es un identificador
-  público. Sin push, PR, merge ni despliegue todavía; se hará tras validar esta
-  rama aislada.
+  público. PR #30 se fusionó a `main` como
+  `e173dfbddcf2a7a187c59493cf33310818d7c21e`. El check de Vercel terminó
+  exitosamente; Inicio y Privacidad devolvieron HTTP 200 y el bundle público
+  contiene `G-PHNWBM2D7X` y el cargador de Google. No se verificó Realtime desde
+  la cuenta de Analytics; una preferencia previa de rechazo sigue requiriendo
+  reactivación desde el pie de página.

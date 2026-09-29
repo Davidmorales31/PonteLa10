@@ -1,5 +1,13 @@
 # Estado actual de Pont3la10
 
+- **Buscador y noticias relacionadas (2026-09-29):** el buscador de noticias
+  define fondo, borde, texto, placeholder y foco legibles al activar el tema
+  blanco, manteniendo el diseño azul intacto. Las tarjetas de artículos
+  relacionados usan `NuxtLink` explícito cuando son navegables y conservan un
+  contenedor no navegable en la vista previa editorial; no se vuelve a mostrar
+  un espacio de imagen cuando el artículo no tiene portada. Se añadieron
+  pruebas para ambos contratos.
+
 - **Portadas editoriales generadas con IA en tarea Codex (Production, 2026-09-28):**
   HU-ED-11 agrega una ruta privada e idempotente de imagen generada, optimiza a
   WebP y guarda la atribución fija “Imagen generada con IA” con disclosure de
@@ -19,15 +27,18 @@
   borrador, o verificar el fallback sin portada. Handoff:
   `docs/agents/handoffs/2026-09-27-portadas-ia-tarea-codex.md`.
 
-- **Google Analytics 4 (actualización local, 2026-09-28):** se conserva la
+- **Google Analytics 4 (Production, 2026-09-29):** se conserva la
   integración pública del PR #21 (`3c4da416aacbec5704228ec7e9220b6223a6defa`),
   pero ahora el ID `G-PHNWBM2D7X` queda fijado en el cliente y GA4 inicia para
   visitantes nuevos sin exigir aceptar primero. Se conserva el control del pie
   para desactivar/reactivar, respetando rechazos ya guardados. Pageviews SPA
   manuales; `article_view`; búsqueda sin texto; categorías en allowlist; rutas
   administrativas, login y API excluidas. Se actualizó la política de
-  privacidad. El cambio va aislado en `codex/ga4-active-default`; pruebas y
-  despliegue pendientes en esta instantánea. Handoff:
+  privacidad. PR #30 quedó integrado en `main` como
+  `e173dfbddcf2a7a187c59493cf33310818d7c21e`; el estado de Vercel fue exitoso,
+  Inicio y Privacidad respondieron HTTP 200 y el JavaScript publicado contiene
+  el ID y el cargador de Google. La recepción en Realtime/DebugView aún no se
+  confirmó desde la cuenta de Analytics. Handoff:
   `docs/agents/handoffs/2026-09-27-ga4-consentimiento.md`.
 
 - **Corrida editorial de producción 2/5 (2026-09-26, cierre parcial):** se

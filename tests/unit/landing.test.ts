@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import { categoriasSitio, navegacionMasSitio, navegacionSitio } from '../../data/sitioPublico'
 import {
   aumentarNoticiasVisibles,
@@ -42,5 +43,14 @@ describe('configuración de la landing', () => {
     expect(aumentarNoticiasVisibles(6, 20)).toBe(12)
     expect(aumentarNoticiasVisibles(18, 20)).toBe(20)
     expect(aumentarNoticiasVisibles(6, 4)).toBe(4)
+  })
+
+  it('aplica colores claros al buscador cuando el tema blanco está activo', () => {
+    const estilos = readFileSync(new URL('../../assets/css/landing.css', import.meta.url), 'utf8')
+
+    expect(estilos).toContain('body.tema-publico-blanco .busqueda-cabecera-landing')
+    expect(estilos).toContain('body.tema-publico-blanco .busqueda-cabecera-landing input')
+    expect(estilos).toContain('body.tema-publico-blanco .busqueda-cabecera-landing input::placeholder')
+    expect(estilos).toContain('body.tema-publico-blanco .busqueda-cabecera-landing input:focus')
   })
 })
