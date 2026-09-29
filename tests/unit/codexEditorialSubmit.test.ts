@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   contarPalabrasEditoriales,
+  cumplePortadaPropuestaCodex,
   cumpleMinimoLecturaCodex,
   PALABRAS_MINIMAS_ARTICULO_CODEX
 } from '../../scripts/codex-editorial-contract.mjs'
@@ -15,5 +16,14 @@ describe('contrato de extensión de propuestas Codex', () => {
     expect(cumpleMinimoLecturaCodex(Array(660).fill('palabra').join(' '))).toBe(true)
     expect(cumpleMinimoLecturaCodex(Array(659).fill('palabra').join(' '))).toBe(false)
     expect(cumpleMinimoLecturaCodex('')).toBe(false)
+  })
+
+  it('requiere una portada persistida y una sola marca de imagen', () => {
+    const base = { coverMediaId: 'ed2af2d4-533e-4dab-9e9d-a48268297220', editorialFlags: [] as string[] }
+    expect(cumplePortadaPropuestaCodex({ ...base, editorialFlags: ['ai_generated_cover'] })).toBe(true)
+    expect(cumplePortadaPropuestaCodex({ ...base, editorialFlags: ['licensed_photo_cover'] })).toBe(true)
+    expect(cumplePortadaPropuestaCodex({ ...base, coverMediaId: null, editorialFlags: [] })).toBe(false)
+    expect(cumplePortadaPropuestaCodex({ ...base, editorialFlags: [] })).toBe(false)
+    expect(cumplePortadaPropuestaCodex({ ...base, editorialFlags: ['ai_generated_cover', 'licensed_photo_cover'] })).toBe(false)
   })
 })

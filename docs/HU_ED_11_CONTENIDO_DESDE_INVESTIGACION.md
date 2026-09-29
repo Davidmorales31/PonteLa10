@@ -38,14 +38,16 @@ revisión editorial.
   imagen publicada. Crédito no reemplaza permiso: si licencia o autor no se
   pueden verificar, omitir la foto y continuar la propuesta sin portada. Nunca
   llamar foto real a una ilustración de IA.
-- En el flujo programado de Codex, generar como primera opción una ilustración
-  editorial con ImageGen después de completar y validar la redacción DeepSeek.
+- En el flujo programado de Codex, generar una ilustración editorial obligatoria
+  con ImageGen después de completar y validar la redacción DeepSeek.
   Guardarla con el crédito fijo “Imagen generada con IA” y una leyenda visible
   que aclare que no es fotografía documental; `source_url` permanece NULL. La
   RPC valida el origen editorial y el flag exclusivo `ai_generated_cover`; no
-  se presenta ni valida como foto licenciada. Una imagen imposible de ilustrar
-  responsablemente, o un fallo de ImageGen, no bloquea una propuesta sin imagen.
-  Esto no se aplica a TikTok ni a las cargas manuales del CMS.
+  se presenta ni valida como foto licenciada. Esto no se aplica a TikTok ni a
+  las cargas manuales del CMS. Para este flujo
+  programado, la imagen es requisito de entrega: si no se puede generar,
+  inspeccionar o persistir con seguridad, se omite el candidato completo y no
+  se crea un borrador sin portada.
 - API privada de servicio a servicio que recibe un paquete validado y crea el
   artículo y trazabilidad en estado `review`.
 - Búsqueda/deduplicación contra URLs, contenido publicado y candidatos previos;
@@ -78,8 +80,8 @@ revisión editorial.
   aplica el servidor: “Imagen generada con IA”; la leyenda aclara que no es una
   fotografía documental y `source_url` queda NULL.
 - Si ImageGen no está disponible, la salida no es utilizable o puede inducir a
-  error, registrar la omisión y continuar sin portada. No regenerar una imagen
-  ya guardada al reanudar el mismo candidato.
+  error, registrar la omisión y no entregar ese candidato. No regenerar una
+  imagen ya guardada al reanudar el mismo candidato.
 - La foto licenciada de Commons conserva su ruta separada: exigir ficha,
   creador y licencia permitida por la Skill; guardar URL de ficha y crédito
   literal. No retirar marcas de agua ni copiar imágenes de páginas de búsqueda.
@@ -98,9 +100,9 @@ revisión editorial.
 
 ## Criterios de aceptación
 
-- Con un dossier de fuentes válido, el contenido queda en CRM `review` con
-  fuentes estructuradas, taxonomía válida, relaciones reales, SEO y alertas de
-  revisión pertinentes; una portada pertinente es opcional.
+- Con un dossier de fuentes válido y una portada IA optimizada, persistida y
+  asociada, el contenido queda en CRM `review` con fuentes estructuradas,
+  taxonomía válida, relaciones reales, SEO y alertas de revisión pertinentes.
 - Ninguna fuente se imprime como línea incrustada en el cuerpo; las referencias
   se renderizan en el módulo de fuentes.
 - Falta de fuentes, contrato o categoría no crea una noticia “lista”; se

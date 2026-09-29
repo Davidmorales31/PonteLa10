@@ -1,5 +1,25 @@
 # Estado actual de Pont3la10
 
+- **Portada obligatoria en propuestas de la tarea Codex (2026-09-29):** auditoría
+  de la corrida `3b39393b-8709-4aa7-b8ae-0d5922fb07eb` encontró cero artefactos
+  `portadaIA`/`media`; la corrida previa `bd4ad640-dec7-4560-8720-ba757d89b496`
+  sí tiene 56 artefactos de imagen. Causa reproducible: la instrucción activa de
+  la automatización aún permitía explícitamente entregar sin portada cuando no
+  hubiera foto licenciada, y el contrato privado también aceptaba
+  `coverMediaId: null`; la Skill IA además permitía continuar sin imagen. La
+  tarea activa se actualizó para exigir ImageGen → inspección → checkpoint →
+  `media-ia` → propuesta con el ID persistido. El horario (06:05, 14:05, 20:05
+  COT), modelo, proyecto y entorno local se conservaron. En la rama
+  `codex/require-editorial-covers`, el CLI y la API ahora rechazan propuestas
+  sin portada y con flags ausentes/ambiguos; la Skill instruye omitir ese
+  candidato y reportar el faltante si ImageGen falla, nunca entregar un borrador
+  sin imagen. No se cambia TikTok, carga manual ni base de datos; no se generó
+  imagen ni se disparó una corrida adicional. Validaciones: `npm ci`, lint,
+  suite (29 archivos/146 pruebas), typecheck, build y `git diff --check` pasan.
+  Pendiente: integrar el PR y verificar despliegue de Producción; después
+  comprobar el primer recibo real de `media-ia`. Handoff:
+  `docs/agents/handoffs/2026-09-29-portadas-obligatorias-codex.md`.
+
 - **Buscador y noticias relacionadas (2026-09-29):** el buscador de noticias
   define fondo, borde, texto, placeholder y foco legibles al activar el tema
   blanco, manteniendo el diseño azul intacto. Las tarjetas de artículos

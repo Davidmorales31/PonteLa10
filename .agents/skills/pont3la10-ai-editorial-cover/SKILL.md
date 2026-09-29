@@ -5,9 +5,11 @@ description: Generate and deliver an explicitly disclosed AI editorial cover onl
 
 # Pont3la10 AI editorial cover
 
-This skill is exclusive to the scheduled Codex editorial task. Never apply it
-to TikTok ingestion, manual CMS uploads, or a human-provided/licensed photo.
-Read `pont3la10-editorial-imagery` and `imagegen` before creating a cover.
+This skill is exclusive to the scheduled Codex editorial task. Every Codex
+proposal sent to the CMS must have a successfully generated, inspected, and
+persisted cover. Never apply it to TikTok ingestion, manual CMS uploads, or a
+human-provided/licensed photo. Read `pont3la10-editorial-imagery` and `imagegen`
+before creating a cover.
 
 ## Before generation
 
@@ -32,7 +34,7 @@ Read `pont3la10-editorial-imagery` and `imagegen` before creating a cover.
   Never imply the illustration documents the reported event.
 - No words, typography, watermarks, brand marks, or fake press/photo credits.
 - If the subject cannot be illustrated without suggesting false documentary
-  evidence, omit the cover and continue the text-only proposal.
+  evidence, mark that candidate unusable and do not submit its proposal.
 - Visually inspect the generated result for factual implication, artifacts,
   unsafe content, and crop suitability. If it fails, omit it rather than
   silently submitting a misleading image.
@@ -52,9 +54,12 @@ Read `pont3la10-editorial-imagery` and `imagegen` before creating a cover.
    `licensed_photo_cover` in `editorialFlags`.
 5. The server assigns the fixed public credit `Imagen generada con IA` and the
    disclosure caption. Never supply an invented source URL or a license.
-6. If ImageGen is unavailable or fails, report the image omission and submit
-   the otherwise complete proposal without a cover. A missing image must not
-   block a valid, human-review-only draft.
+6. If ImageGen is unavailable, fails, or produces an unsafe/misleading result,
+   do not submit that candidate. Record a safe failure checkpoint, move to a
+   different researched candidate, and report the shortfall if the run cannot
+   meet its draft target. Never submit a Codex proposal with `coverMediaId: null`
+   or omit `ai_generated_cover`. On resume, reuse a verified image checkpoint;
+   do not regenerate or upload a second copy after an ambiguous response.
 
 The task can create/update drafts in `review` only. Never approve, schedule,
 publish, or change a human's content.

@@ -72,7 +72,9 @@ export const esquemaPropuestaCodex = z.object({
   socialBrief: z.string().trim().min(10).max(300),
   sourceUrl: esquemaUrlHttps,
   sourceName: z.string().trim().min(2).max(160),
-  coverMediaId: z.string().uuid().nullable(),
+  // Toda propuesta de la tarea Codex debe llegar al CMS con portada persistida.
+  // Otros flujos conservan su capacidad de crear artículos sin imagen.
+  coverMediaId: z.string().uuid(),
   tagIds: z.array(z.string().uuid()).max(12),
   newTopics: z.array(z.object({
     name: z.string().trim().min(2).max(80)
@@ -153,7 +155,7 @@ export const esquemaPropuestaCodex = z.object({
   const tieneFotoLicenciada = propuesta.editorialFlags.includes('licensed_photo_cover')
   const tienePortadaIA = propuesta.editorialFlags.includes('ai_generated_cover')
 
-  if (propuesta.coverMediaId && tieneFotoLicenciada === tienePortadaIA) {
+  if (tieneFotoLicenciada === tienePortadaIA) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['editorialFlags'],
@@ -161,13 +163,6 @@ export const esquemaPropuestaCodex = z.object({
     })
   }
 
-  if (!propuesta.coverMediaId && (tieneFotoLicenciada || tienePortadaIA)) {
-    contexto.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ['editorialFlags'],
-      message: 'No se puede declarar una portada cuando la propuesta no tiene imagen.'
-    })
-  }
 })
 
 const esquemaScoresTendencia = z.object({
