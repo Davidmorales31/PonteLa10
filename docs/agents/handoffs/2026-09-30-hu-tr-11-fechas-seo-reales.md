@@ -42,13 +42,16 @@
   informa aviso upstream de resolución `@vue/shared` (DEP0155). `npm ci`
   informó 15 vulnerabilidades en dependencias existentes (6 moderadas,
   8 altas, 1 crítica); no se cambiaron dependencias.
-- **Pendientes:** checks de PR y revisión de integración. Validar RPC/RLS,
+- **Pendientes:** checks de PR #41 y revisión de integración. Validar RPC/RLS,
   sitemap con artículos/hubs y `dateModified` SSR con datos en un entorno
   Supabase autorizado. No aprobar ni fusionar PR, aplicar migración, desplegar
   producción ni publicar contenido.
-- **Siguiente acción exacta:** abrir PR de `codex/hu-tr-11-real-dates` contra
-  `codex/hu-tr-10-public-hubs`; luego revisar los checks sin aprobar/mergear.
+- **Siguiente acción exacta:** revisar los checks y cambios de estado de
+  https://github.com/Davidmorales31/PonteLa10/pull/41 sin aprobar ni fusionar.
   Antes de la siguiente HU, releer `AGENTS.md`, estado, mapa, memoria y backlog
   v4, y crear/reutilizar un worktree aislado basado en este incremento.
 - **Commit base:** `654d47c` (`codex/hu-tr-10-public-hubs`).
 - **Commit final:** `1ef319c800320f5ea37c9e0033ccf624d44f9b68` (implementación).
+
+PR #41: https://github.com/Davidmorales31/PonteLa10/pull/41 (abierta contra
+`codex/hu-tr-10-public-hubs`; sin aprobación ni merge).

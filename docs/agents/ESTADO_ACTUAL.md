@@ -19,8 +19,8 @@
   conserva aviso upstream `@vue/shared`; `npm ci` reportó 15 vulnerabilidades
   del árbol existente (6 moderadas, 8 altas, 1 crítica), sin cambiar
   dependencias. Rama `codex/hu-tr-11-real-dates`, apilada sobre HU-TR-10;
-  commit `1ef319c`; PR por abrir contra HU-TR-10, sin aprobación ni merge.
-  Handoff:
+  commit `1ef319c`; PR #41 abierta contra `codex/hu-tr-10-public-hubs`, sin
+  aprobación ni merge. Handoff:
   `docs/agents/handoffs/2026-09-30-hu-tr-11-fechas-seo-reales.md`.
 
 - **HU-TR-10 — entidad de hubs públicos (2026-09-30, rama aislada):** se
