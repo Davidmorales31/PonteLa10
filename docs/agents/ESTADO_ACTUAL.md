@@ -1,5 +1,29 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-09 — paginación pública rastreable (2026-09-30, rama aislada):**
+  el listado SSR ahora expone `/articulos/pagina/2` y siguientes, con enlaces
+  accesibles anterior/siguiente; la carga incremental permanece en página 1.
+  El número de página es decimal canónico y acotado al máximo consultable, la
+  página 1 redirige a `/articulos` y páginas posteriores sin resultados
+  responden 404. Los canonicals distinguen página y categoría reconocida;
+  búsqueda, tema y filtros ambiguos quedan `noindex`. Se añaden posiciones
+  JSON-LD por página y eventos `pagination_view`/`pagination_next` protegidos
+  por el consentimiento existente. La API reutiliza el orden estable por fecha
+  e ID de HU-TR-08; no se crea modelo ni migración. Lint, prueba relacionada
+  (13), suite (31 archivos/177 pruebas), typecheck, build y `git diff --check`
+  pasan. HTTP local: `/articulos` 200, `/pagina/1` 301 a `/articulos`, páginas
+  `01` y `5002` 404. La ruta 2 devolvió el estado SSR del listado, pero el
+  backend Supabase no está configurado en esta copia: no se pudieron comprobar
+  noticias, enlaces prev/next con datos, canonical efectivo ni responsive. El
+  navegador integrado mostró contenido significativo y fallback accesible;
+  `agent-browser` no está instalado. Build conserva aviso upstream de
+  `@vue/shared`; `npm ci` informó 15 vulnerabilidades en el árbol instalado,
+  sin modificar dependencias. Commit `aed1595`; PR #39 abierta sobre
+  `codex/hu-tr-08-server-filter`, pendiente de checks y revisión, sin aprobar
+  ni fusionar. Vercel Preview y Vercel Preview Comments pasan; Supabase Preview
+  se omitió por falta de configuración.
+  Handoff: `docs/agents/handoffs/2026-09-30-hu-tr-09-paginacion-rastreable.md`.
+
 - **HU-TR-08 — filtros públicos en servidor (2026-09-30, rama aislada):** la
   ruta `/api/articulos` valida categoría, tema, búsqueda y paginación antes de
   conectar con Supabase; el listado de `/articulos` envía los filtros al

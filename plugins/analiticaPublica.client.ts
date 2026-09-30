@@ -3,6 +3,7 @@ import {
   normalizarCategoriaMedible,
   type EstadoAnaliticaPublica
 } from '~/utils/analiticaPublica'
+import { leerPaginaDesdeRutaArticulos } from '~/utils/paginacionArticulos'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const analitica = useAnaliticaPublica()
@@ -19,12 +20,23 @@ export default defineNuxtPlugin((nuxtApp) => {
     if (ruta.path !== ultimaRutaMedida) {
       ultimaRutaMedida = ruta.path
       await analitica.registrarVistaPagina(ruta.path)
+      if (leerPaginaDesdeRutaArticulos(ruta.path) !== null) {
+        await analitica.registrarEvento('pagination_view')
+      }
     }
   }
 
   router.afterEach(async (destino, origen) => {
     await medirRuta(destino)
-    if (analitica.decision.value !== 'aceptada' || destino.path !== '/articulos') return
+    if (analitica.decision.value !== 'aceptada') return
+
+    const paginaDestino = leerPaginaDesdeRutaArticulos(destino.path)
+    const paginaOrigen = leerPaginaDesdeRutaArticulos(origen.path)
+    if (paginaDestino !== null && paginaOrigen !== null && paginaDestino === paginaOrigen + 1) {
+      await analitica.registrarEvento('pagination_next')
+    }
+
+    if (destino.path !== '/articulos') return
 
     const busquedaNueva = typeof destino.query.buscar === 'string' ? destino.query.buscar.trim() : ''
     const busquedaAnterior = typeof origen.query.buscar === 'string' ? origen.query.buscar.trim() : ''
