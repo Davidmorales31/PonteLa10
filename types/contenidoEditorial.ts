@@ -440,6 +440,7 @@ export interface ArticuloPublicoEditorial {
   seoDescripcion: string
   textoSocial: string
   publicadoEn: string
+  modificadoEn?: string
   autorNombre: string
   categoria: {
     slug: string
@@ -456,6 +457,7 @@ export interface ResumenArticuloPublico {
   resumen: string
   tipo: TipoContenidoEditorial
   publicadoEn: string
+  modificadoEn?: string
   autorNombre: string
   categoria: string
   imagen: string

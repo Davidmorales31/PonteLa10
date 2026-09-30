@@ -8,6 +8,7 @@ import type {
 } from '~/types/contenidoEditorial'
 import {
   construirTituloMetaConMarca,
+  normalizarFechaSeo,
   robotsIndexables,
   robotsNoIndex
 } from '~/utils/seo'
@@ -97,6 +98,12 @@ const autorEstructurado = computed(() => {
     name: nombre
   }
 })
+const fechaPublicacionSeo = computed(() =>
+  normalizarFechaSeo(articuloPublicado.value?.publicadoEn)
+)
+const fechaModificacionSeo = computed(() =>
+  normalizarFechaSeo(articuloPublicado.value?.modificadoEn)
+)
 
 useSeoPont3la10(() => ({
   titulo: tituloMeta.value,
@@ -107,7 +114,8 @@ useSeoPont3la10(() => ({
   imagenAncho: articuloPublicado.value?.portada?.ancho,
   imagenAlto: articuloPublicado.value?.portada?.alto,
   tipoOpenGraph: 'article',
-  fechaPublicacion: articuloPublicado.value?.publicadoEn,
+  fechaPublicacion: fechaPublicacionSeo.value,
+  fechaModificacion: fechaModificacionSeo.value,
   seccion: articuloPublicado.value?.categoria?.nombre,
   robots: articuloPublicado.value ? robotsIndexables : robotsNoIndex,
   datosEstructurados: articuloPublicado.value
@@ -129,8 +137,8 @@ useSeoPont3la10(() => ({
               }
             : undefined,
           thumbnailUrl: articuloPublicado.value.portada?.url,
-          datePublished: articuloPublicado.value.publicadoEn,
-          dateModified: articuloPublicado.value.publicadoEn,
+          datePublished: fechaPublicacionSeo.value,
+          dateModified: fechaModificacionSeo.value,
           articleSection: articuloPublicado.value.categoria?.nombre,
           inLanguage: 'es-CO',
           isAccessibleForFree: true,

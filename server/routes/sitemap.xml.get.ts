@@ -1,12 +1,11 @@
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
 import { listarHubsIndexablesSitemap } from '~/server/utils/repositorioHubsPublicos'
-import { construirUrlAbsoluta, escaparXml } from '~/utils/seo'
+import { construirUrlAbsoluta, escaparXml, normalizarFechaSeo } from '~/utils/seo'
 
 interface EntradaSitemap {
   ruta: string
-  frecuencia: 'daily' | 'weekly' | 'monthly' | 'yearly'
-  prioridad: string
+  ultimaModificacion?: string | null
 }
 
 export default defineEventHandler(async (evento) => {
@@ -14,19 +13,19 @@ export default defineEventHandler(async (evento) => {
   const urlSitio = String(configuracion.public.siteUrl)
 
   const entradas: EntradaSitemap[] = [
-    { ruta: '/', frecuencia: 'daily', prioridad: '1.0' },
-    { ruta: '/articulos', frecuencia: 'daily', prioridad: '0.9' },
-    { ruta: '/partidos-hoy', frecuencia: 'daily', prioridad: '0.9' },
-    { ruta: '/resultados', frecuencia: 'daily', prioridad: '0.9' },
-    { ruta: '/resultados/en-vivo', frecuencia: 'daily', prioridad: '0.8' },
-    { ruta: '/resultados/futbol', frecuencia: 'daily', prioridad: '0.8' },
-    { ruta: '/resultados/baloncesto', frecuencia: 'daily', prioridad: '0.8' },
-    { ruta: '/resultados/tenis', frecuencia: 'daily', prioridad: '0.7' },
-    { ruta: '/resultados/beisbol', frecuencia: 'daily', prioridad: '0.7' },
-    { ruta: '/especiales', frecuencia: 'weekly', prioridad: '0.8' },
-    { ruta: '/privacidad', frecuencia: 'yearly', prioridad: '0.3' },
-    { ruta: '/terminos', frecuencia: 'yearly', prioridad: '0.3' }
-  ]
+    '/',
+    '/articulos',
+    '/partidos-hoy',
+    '/resultados',
+    '/resultados/en-vivo',
+    '/resultados/futbol',
+    '/resultados/baloncesto',
+    '/resultados/tenis',
+    '/resultados/beisbol',
+    '/especiales',
+    '/privacidad',
+    '/terminos'
+  ].map(ruta => ({ ruta }))
 
   try {
     const clienteSupabase = obtenerClienteSupabaseEditorial(evento)
@@ -42,8 +41,7 @@ export default defineEventHandler(async (evento) => {
       )
       entradas.push(...publicaciones.map(publicacion => ({
         ruta: `/articulos/${publicacion.slug}`,
-        frecuencia: 'weekly' as const,
-        prioridad: '0.8'
+        ultimaModificacion: publicacion.modificadoEn
       })))
       desplazamiento += publicaciones.length
     } while (publicaciones.length === tamanoPagina)
@@ -55,20 +53,23 @@ export default defineEventHandler(async (evento) => {
     const hubs = await listarHubsIndexablesSitemap(obtenerClienteSupabaseEditorial(evento))
     entradas.push(...hubs.map(hub => ({
       ruta: `/${hub.slug}`,
-      frecuencia: 'weekly' as const,
-      prioridad: '0.8'
+      ultimaModificacion: hub.actualizadoEn
     })))
   } catch {
     // Los hubs se omiten durante una degradación de Supabase.
   }
 
-  const urls = entradas.map(entrada => [
-    '  <url>',
-    `    <loc>${escaparXml(construirUrlAbsoluta(urlSitio, entrada.ruta))}</loc>`,
-    `    <changefreq>${entrada.frecuencia}</changefreq>`,
-    `    <priority>${entrada.prioridad}</priority>`,
-    '  </url>'
-  ].join('\n')).join('\n')
+  const urls = entradas.map((entrada) => {
+    const ultimaModificacion = normalizarFechaSeo(entrada.ultimaModificacion)
+    return [
+      '  <url>',
+      `    <loc>${escaparXml(construirUrlAbsoluta(urlSitio, entrada.ruta))}</loc>`,
+      ...(ultimaModificacion
+        ? [`    <lastmod>${escaparXml(ultimaModificacion)}</lastmod>`]
+        : []),
+      '  </url>'
+    ].join('\n')
+  }).join('\n')
 
   evento.node?.res?.setHeader('Content-Type', 'application/xml; charset=utf-8')
   evento.node?.res?.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400')

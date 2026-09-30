@@ -31,6 +31,7 @@ import type {
   VersionArticuloEditorial
 } from '~/types/contenidoEditorial'
 import type { PermisoEditorial } from '~/types/editorial'
+import { normalizarFechaSeo } from '~/utils/seo'
 import {
   crearSlugEditorial,
   crearSufijoSlug,
@@ -183,6 +184,7 @@ interface FilaArticuloPublicoRpc {
   seoDescripcion: string
   textoSocial: string
   publicadoEn: string
+  modificadoEn?: string
   autorNombre: string
   categoria: ArticuloPublicoEditorial['categoria']
   portada: null | {
@@ -205,6 +207,7 @@ interface FilaResumenArticuloPublicoRpc {
   resumen: string
   tipo: ResumenArticuloPublico['tipo']
   publicadoEn: string
+  modificadoEn?: string
   autorNombre: string
   categoria: string
   imagenBucket: string
@@ -1395,6 +1398,7 @@ export async function obtenerArticuloPublicoEditorial(
     seoDescripcion: fila.seoDescripcion,
     textoSocial: fila.textoSocial,
     publicadoEn: fila.publicadoEn,
+    modificadoEn: normalizarFechaSeo(fila.modificadoEn),
     autorNombre: fila.autorNombre,
     categoria: fila.categoria,
     portada: fila.portada
@@ -1451,6 +1455,7 @@ export async function listarArticulosPublicosEditoriales(
       resumen: fila.resumen,
       tipo: fila.tipo,
       publicadoEn: fila.publicadoEn,
+      modificadoEn: normalizarFechaSeo(fila.modificadoEn),
       autorNombre: fila.autorNombre,
       categoria: fila.categoria,
       lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,
@@ -1479,6 +1484,7 @@ export async function obtenerUltimaNoticiaPublicaConPortada(
     resumen: fila.resumen,
     tipo: fila.tipo,
     publicadoEn: fila.publicadoEn,
+    modificadoEn: normalizarFechaSeo(fila.modificadoEn),
     autorNombre: fila.autorNombre,
     categoria: fila.categoria,
     lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,

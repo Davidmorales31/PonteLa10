@@ -31,6 +31,20 @@ export function construirUrlAbsoluta(urlSitio: string, ruta: string): string {
   return `${normalizarUrlSitio(urlSitio)}${rutaNormalizada}`
 }
 
+export function normalizarFechaSeo(
+  fecha: string | null | undefined,
+  ahora = new Date()
+): string | undefined {
+  if (!fecha) return undefined
+
+  const fechaNormalizada = new Date(fecha)
+  if (!Number.isFinite(fechaNormalizada.getTime()) || fechaNormalizada > ahora) {
+    return undefined
+  }
+
+  return fechaNormalizada.toISOString()
+}
+
 export function normalizarTextoMeta(valor: string, limite: number): string {
   const texto = valor.replace(/\s+/g, ' ').trim()
   if (texto.length <= limite) return texto
