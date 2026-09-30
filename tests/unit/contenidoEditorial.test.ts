@@ -6,8 +6,10 @@ import {
   esquemaCrearTaxonomia,
   esquemaFiltrosBandeja,
   etiquetasEstadoContenido,
+  etiquetasIntencionContenido,
   etiquetasTipoContenido,
   estadosContenidoEditorial,
+  intencionesContenidoEditorial,
   tiposContenidoEditorial
 } from '~/utils/editorial/contenido'
 
@@ -24,6 +26,7 @@ describe('dominio de contenido editorial', () => {
       titulo: 'Colombia prepara su proximo partido',
       resumen: 'Las claves de la jornada.',
       tipo: 'analisis',
+      contentIntent: 'explainer',
       categoriaId: null
     })
 
@@ -34,6 +37,7 @@ describe('dominio de contenido editorial', () => {
     expect(esquemaCrearBorrador.safeParse({
       titulo: 'Corto',
       tipo: 'video',
+      contentIntent: 'desconocida',
       categoriaId: 'no-es-un-uuid'
     }).success).toBe(false)
   })
@@ -77,6 +81,9 @@ describe('dominio de contenido editorial', () => {
     tiposContenidoEditorial.forEach((tipo) => {
       expect(etiquetasTipoContenido[tipo]).toBeTruthy()
     })
+    intencionesContenidoEditorial.forEach((intencion) => {
+      expect(etiquetasIntencionContenido[intencion]).toBeTruthy()
+    })
   })
 
   it('protege taxonomias, autoguardados y relaciones desde la migracion', () => {
@@ -93,6 +100,20 @@ describe('dominio de contenido editorial', () => {
     expect(migracion).toContain('public.can_edit_article(article_id)')
     expect(migracion).toContain('enable row level security')
     expect(migracion).not.toContain('service_role')
+  })
+
+  it('mantiene las intenciones históricas sin inferirlas y endurece el contrato Codex', () => {
+    const rutaMigracion = new URL(
+      '../../supabase/migrations/20260930003000_hu_tr_01_content_intent.sql',
+      import.meta.url
+    )
+    const migracion = readFileSync(rutaMigracion, 'utf8')
+
+    expect(migracion).toContain('content_intent is null or content_intent in')
+    expect(migracion).toContain("v_content_intent is null or v_content_intent not in")
+    expect(migracion).toContain("has_function_privilege('authenticated', funcion_oid, 'EXECUTE')")
+    expect(migracion).toContain('security invoker')
+    expect(migracion).toContain(') from authenticated;')
   })
 
   it('no reserva un bloque vacio para imagenes ausentes en noticias relacionadas', () => {

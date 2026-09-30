@@ -18,6 +18,18 @@ export type TipoContenidoEditorial =
   | 'opinion'
   | 'especial'
 
+export type IntencionContenidoEditorial =
+  | 'search_utility'
+  | 'breaking'
+  | 'explainer'
+  | 'evergreen'
+  | 'data_story'
+  | 'special'
+  | 'opinion'
+  | 'game_support'
+  | 'social_first'
+  | 'update'
+
 export type OrigenContenidoEditorial =
   | 'manual'
   | 'ingesta'
@@ -77,6 +89,7 @@ export interface ArticuloBandejaEditorial {
   resumen: string
   estado: EstadoContenidoEditorial
   tipo: TipoContenidoEditorial
+  contentIntent: IntencionContenidoEditorial | null
   origen: OrigenContenidoEditorial
   categoria: CategoriaEditorial | null
   autorId: string | null
@@ -207,6 +220,8 @@ export interface DatosEditorArticulo {
   slug: string
   resumen: string
   tipo: TipoContenidoEditorial
+  // Los artículos históricos no reciben una inferencia automática.
+  contentIntent: IntencionContenidoEditorial | null
   categoriaId: string | null
   portadaId: string | null
   temaIds: string[]

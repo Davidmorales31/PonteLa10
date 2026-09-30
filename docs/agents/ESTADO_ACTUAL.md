@@ -1,5 +1,20 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-01 — intención estratégica de contenido (2026-09-29, local):** la
+  rama `codex/hu-tr-01-intencion-contenido` separa `contentIntent` de
+  `contentType` para creación manual, editor, bandeja, filtros, contrato
+  Codex y CLI. La migración conserva los artículos históricos en `NULL` sin
+  inferencias; versiona los cambios, exige el enum cerrado y mantiene las
+  garantías `SECURITY INVOKER`, `search_path` vacío y permisos privados de la
+  RPC Codex. La intención `update` requiere un artículo existente relacionado.
+  La revisión de migración corrigió un riesgo de permisos y una transformación
+  SQL dinámica antes de aplicarse. No se ha aplicado la migración, creado
+  contenido, aprobado, programado ni publicado nada. `git diff --check` y la
+  comprobación directa del contrato CLI pasan; la suite local está pendiente
+  porque este worktree heredó una instalación incompleta de dependencias. Se
+  validará en un checkout limpio antes de abrir PR. Handoff:
+  `docs/agents/handoffs/2026-09-29-hu-tr-01-intencion-contenido.md`.
+
 - **Portada obligatoria en propuestas de la tarea Codex (2026-09-29, Production):** auditoría
   de la corrida `3b39393b-8709-4aa7-b8ae-0d5922fb07eb` encontró cero artefactos
   `portadaIA`/`media`; la corrida previa `bd4ad640-dec7-4560-8720-ba757d89b496`

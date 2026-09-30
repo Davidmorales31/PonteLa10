@@ -8,6 +8,7 @@ import {
 import type { ArticuloBandejaEditorial } from '~/types/contenidoEditorial'
 import {
   etiquetasEstadoContenido,
+  etiquetasIntencionContenido,
   etiquetasOrigenContenido,
   etiquetasTipoContenido
 } from '~/utils/editorial/contenido'
@@ -60,6 +61,10 @@ function formatearFecha(fecha: string): string {
                 </NuxtLink>
                 <span>
                   {{ etiquetasTipoContenido[contenido.tipo] }}
+                  <i aria-hidden="true" />
+                  {{ contenido.contentIntent
+                    ? etiquetasIntencionContenido[contenido.contentIntent]
+                    : 'Intención histórica sin clasificar' }}
                   <i aria-hidden="true" />
                   {{ etiquetasOrigenContenido[contenido.origen] }}
                 </span>

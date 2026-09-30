@@ -1,4 +1,8 @@
 export const PALABRAS_MINIMAS_ARTICULO_CODEX = 660
+export const INTENCIONES_CONTENIDO_CODEX = new Set([
+  'search_utility', 'breaking', 'explainer', 'evergreen', 'data_story',
+  'special', 'opinion', 'game_support', 'social_first', 'update'
+])
 
 export function contarPalabrasEditoriales(texto) {
   const normalizado = String(texto || '').trim()
@@ -18,4 +22,8 @@ export function cumplePortadaPropuestaCodex(propuesta) {
   const esImagenIA = flags.includes('ai_generated_cover')
 
   return tienePortada && esFotoLicenciada !== esImagenIA
+}
+
+export function cumpleIntencionPropuestaCodex(propuesta) {
+  return INTENCIONES_CONTENIDO_CODEX.has(propuesta?.contentIntent)
 }
