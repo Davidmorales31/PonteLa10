@@ -18,7 +18,8 @@
   reporta 15 vulnerabilidades ya existentes. Trabajo en
   `codex/hu-tr-13-direct-answer`, apilado sobre `codex/hu-tr-11-real-dates`;
   implementación `f0fe4b551ef5cb2e77d6cedd3c6f2dd7261adb66`, falta crear
-  PR/checks y revisión humana. Handoff:
+  PR #42 abierta contra HU-TR-11 y mergeable al consultar; Vercel seguía
+  pendiente. No aprobada ni fusionada. Handoff:
   `docs/agents/handoffs/2026-09-30-hu-tr-13-respuesta-directa.md`.
 
 - **HU-TR-11 — fechas SEO verificables (2026-09-30, rama aislada):** las
