@@ -33,6 +33,8 @@ export const permisosEditoriales: PermisoEditorial[] = [
   'equipo.gestionar',
   'configuracion.ver',
   'configuracion.gestionar',
+  'searchConsole.ver',
+  'searchConsole.importar',
   'auditoria.ver'
 ]
 

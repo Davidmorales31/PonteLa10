@@ -34,6 +34,9 @@ describe('seguridad editorial', () => {
     expect(permisosPorRol.editorJefe).toContain('hub.gestionar')
     expect(permisosPorRol.editor).toContain('hub.ver')
     expect(permisosPorRol.editor).not.toContain('hub.gestionar')
+    expect(permisosPorRol.propietario).toContain('searchConsole.importar')
+    expect(permisosPorRol.administrador).toContain('searchConsole.ver')
+    expect(permisosPorRol.editor).not.toContain('searchConsole.ver')
     expect(permisosPorRol.propietario).toContain('contenido.eliminar')
     expect(permisosPorRol.administrador).toContain('contenido.eliminar')
     expect(permisosPorRol.propietario).toContain('ingestas.eliminar')
@@ -77,13 +80,18 @@ describe('seguridad editorial', () => {
       '../../supabase/migrations/20260930060344_hu_tr_10_hubs_publicos.sql',
       import.meta.url
     )
+    const rutaMigracionSearchConsole = new URL(
+      '../../supabase/migrations/20260930112700_hu_tr_15_search_console_metrics.sql',
+      import.meta.url
+    )
     const migraciones = [
       readFileSync(rutaMigracionFundacion, 'utf8'),
       readFileSync(rutaMigracionEliminacion, 'utf8'),
       readFileSync(rutaMigracionIngestaDurable, 'utf8'),
       readFileSync(rutaMigracionEliminarIngestas, 'utf8'),
       readFileSync(rutaMigracionRedaccionIa, 'utf8'),
-      readFileSync(rutaMigracionHubs, 'utf8')
+      readFileSync(rutaMigracionHubs, 'utf8'),
+      readFileSync(rutaMigracionSearchConsole, 'utf8')
     ].join('\n')
 
     permisosEditoriales.forEach((permiso) => {

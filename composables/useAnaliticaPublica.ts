@@ -23,6 +23,7 @@ type EventoAnalitica =
   | 'match_card_click'
   | 'colombians_hub_view'
   | 'colombian_match_click'
+  | 'search_console_import'
 
 declare global {
   interface Window {
