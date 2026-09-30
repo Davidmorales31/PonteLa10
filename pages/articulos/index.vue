@@ -18,8 +18,8 @@ import type { RespuestaResultados } from '~/types/resultados'
 import {
   aumentarNoticiasVisibles,
   combinarArticulosPublicos,
+  construirFiltrosConsultaArticulos,
   normalizarTextoBusqueda,
-  obtenerAliasCategoria,
   obtenerEtiquetaCategoria
 } from '~/utils/articulosLanding'
 import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
@@ -34,17 +34,28 @@ const limitePaginaArticulos = 20
 const incrementoNoticiasVisibles = 6
 
 const rutaActual = useRoute()
+const filtrosConsulta = computed(() => construirFiltrosConsultaArticulos(
+  rutaActual.query as Record<string, unknown>
+))
+const parametrosPaginaInicial = computed(() => ({
+  paginado: 'true',
+  limite: limitePaginaArticulos,
+  ...filtrosConsulta.value
+}))
 const { data: resultados, status: estadoResultados } = await useFetch<RespuestaResultados>('/api/resultados', {
   key: 'resultados-noticias',
   lazy: true
 })
-const { data: paginaInicial } = await useFetch<PaginaArticulosPublicos>(
-  `/api/articulos?paginado=true&limite=${limitePaginaArticulos}`,
-  {
-    default: () => ({ articulos: [], hayMas: false }),
-    ignoreResponseError: true
-  }
-)
+const {
+  data: paginaInicial,
+  refresh: recargarPaginaInicial,
+  status: estadoPaginaInicial
+} = await useFetch<PaginaArticulosPublicos>('/api/articulos', {
+  key: 'pagina-articulos-publicos',
+  query: parametrosPaginaInicial,
+  watch: false,
+  default: () => ({ articulos: [], hayMas: false }),
+})
 
 const articulosCargados = ref(paginaInicial.value?.articulos || [])
 const hayMasDesdeServidor = ref(paginaInicial.value?.hayMas || false)
@@ -54,6 +65,34 @@ const cargandoMasNoticias = ref(false)
 const mensajeCargaNoticias = ref('')
 const errorCargaNoticias = ref('')
 const imagenesFallidas = ref<string[]>([])
+let generacionFiltros = 0
+
+watch(filtrosConsulta, () => {
+  generacionFiltros += 1
+  articulosCargados.value = []
+  hayMasDesdeServidor.value = false
+  desplazamientoSiguiente.value = 0
+  cantidadNoticiasVisibles.value = incrementoNoticiasVisibles
+  mensajeCargaNoticias.value = ''
+  errorCargaNoticias.value = ''
+  void recargarPaginaInicial()
+}, { deep: true })
+
+watch([estadoPaginaInicial, paginaInicial], ([estado, pagina]) => {
+  if (estado === 'pending') return
+
+  if (estado === 'error') {
+    articulosCargados.value = []
+    hayMasDesdeServidor.value = false
+    desplazamientoSiguiente.value = 0
+    errorCargaNoticias.value = 'No se pudieron cargar las noticias. Inténtalo de nuevo.'
+    return
+  }
+
+  articulosCargados.value = pagina?.articulos || []
+  hayMasDesdeServidor.value = pagina?.hayMas || false
+  desplazamientoSiguiente.value = articulosCargados.value.length
+}, { immediate: true })
 
 const articulosPublicados = computed<ArticuloListado[]>(() =>
   articulosCargados.value.map(articulo => ({
@@ -73,16 +112,13 @@ const articulosPublicados = computed<ArticuloListado[]>(() =>
 
 const articulosDisponibles = computed(() => articulosPublicados.value)
 
-const terminoBusqueda = computed(() => normalizarTextoBusqueda(String(rutaActual.query.buscar || '')))
+const terminoBusqueda = computed(() => String(rutaActual.query.buscar || '').trim())
 const categoriaBusqueda = computed(() => normalizarTextoBusqueda(String(rutaActual.query.categoria || '')))
-const aliasCategoriaBusqueda = computed(() => obtenerAliasCategoria(categoriaBusqueda.value))
-
-const articulosFiltrados = computed(() => articulosDisponibles.value.filter((articulo) => {
-  const contenido = normalizarTextoBusqueda(`${articulo.titulo} ${articulo.bajada} ${articulo.categoria}`)
-  const coincideTermino = !terminoBusqueda.value || contenido.includes(terminoBusqueda.value)
-  const coincideCategoria = !categoriaBusqueda.value || aliasCategoriaBusqueda.value.some(alias => contenido.includes(alias))
-  return coincideTermino && coincideCategoria
-}))
+const temaBusqueda = computed(() => String(rutaActual.query.tema || '').trim())
+const filtrosActivos = computed(() => Boolean(
+  filtrosConsulta.value.categoria || filtrosConsulta.value.tema || filtrosConsulta.value.buscar
+))
+const articulosFiltrados = computed(() => articulosDisponibles.value)
 
 const tituloListado = computed(() => {
   if (rutaActual.query.buscar) {
@@ -96,7 +132,7 @@ const tituloListado = computed(() => {
   return 'Noticias'
 })
 const configuracion = useRuntimeConfig()
-const esBusquedaInterna = computed(() => Boolean(rutaActual.query.buscar))
+const esBusquedaInterna = computed(() => Boolean(terminoBusqueda.value || temaBusqueda.value))
 const rutaCanonica = computed(() => rutaActual.query.categoria && !esBusquedaInterna.value
   ? `/articulos?categoria=${encodeURIComponent(String(rutaActual.query.categoria))}`
   : '/articulos')
@@ -118,22 +154,11 @@ const ultimasNoticias = computed(() => todasUltimasNoticias.value
 const hayMasNoticias = computed(() =>
   cantidadNoticiasVisibles.value < todasUltimasNoticias.value.length || hayMasDesdeServidor.value
 )
-const noticiasTendencia = computed(() => {
-  const candidatas = articulosFiltrados.value.length > 1 ? articulosFiltrados.value : articulosDisponibles.value
-  return candidatas
-    .filter(articulo => articulo.slug !== noticiaPrincipal.value?.slug)
-    .slice(0, 5)
-})
-const noticiaLateral = computed(() => noticiasTendencia.value.find(tieneImagen) || noticiasTendencia.value[0] || null)
-
-watch(
-  () => [rutaActual.query.buscar, rutaActual.query.categoria],
-  () => {
-    cantidadNoticiasVisibles.value = incrementoNoticiasVisibles
-    mensajeCargaNoticias.value = ''
-    errorCargaNoticias.value = ''
-  }
+const noticiasTendencia = computed(() => articulosFiltrados.value
+  .filter(articulo => articulo.slug !== noticiaPrincipal.value?.slug)
+  .slice(0, 5)
 )
+const noticiaLateral = computed(() => noticiasTendencia.value.find(tieneImagen) || noticiasTendencia.value[0] || null)
 
 async function cargarMasNoticias() {
   if (cargandoMasNoticias.value || !hayMasNoticias.value) return
@@ -152,6 +177,7 @@ async function cargarMasNoticias() {
   }
 
   cargandoMasNoticias.value = true
+  const generacionSolicitud = generacionFiltros
 
   try {
     let paginasConsultadas = 0
@@ -163,11 +189,12 @@ async function cargarMasNoticias() {
     ) {
       const pagina = await $fetch<PaginaArticulosPublicos>('/api/articulos', {
         query: {
-          paginado: 'true',
-          limite: limitePaginaArticulos,
+          ...parametrosPaginaInicial.value,
           desplazamiento: desplazamientoSiguiente.value
         }
       })
+
+      if (generacionSolicitud !== generacionFiltros) return
 
       articulosCargados.value = combinarArticulosPublicos(
         articulosCargados.value,
@@ -272,9 +299,17 @@ useSeoPont3la10(() => {
           {{ filtro.etiqueta }}
         </NuxtLink>
       </nav>
-      <p v-if="terminoBusqueda" class="contador-resultados">{{ articulosFiltrados.length }} {{ articulosFiltrados.length === 1 ? 'resultado' : 'resultados' }}</p>
+      <p v-if="terminoBusqueda && estadoPaginaInicial !== 'pending' && !errorCargaNoticias" class="contador-resultados">{{ articulosFiltrados.length }} {{ articulosFiltrados.length === 1 ? 'resultado' : 'resultados' }}</p>
 
-      <div v-if="noticiaPrincipal" class="noticias-medio-grid">
+      <p
+        v-if="estadoPaginaInicial === 'pending' && filtrosActivos"
+        class="estado-carga-noticias"
+        role="status"
+        aria-busy="true"
+      >
+        Buscando noticias con esos criterios…
+      </p>
+      <div v-else-if="noticiaPrincipal" class="noticias-medio-grid">
         <main class="noticias-medio-principal">
           <article class="noticia-destacada-medio" :class="{ 'sin-imagen': !tieneImagen(noticiaPrincipal) }">
             <NuxtLink v-if="tieneImagen(noticiaPrincipal)" :to="`/articulos/${noticiaPrincipal.slug}`" class="imagen-noticia-destacada" tabindex="-1" aria-hidden="true">
@@ -387,8 +422,9 @@ useSeoPont3la10(() => {
         </aside>
       </div>
       <div v-else class="estado-vacio-articulos">
-        <h2>{{ articulosCargados.length ? 'No encontramos noticias con esos criterios' : 'Aún no hay noticias publicadas' }}</h2>
-        <p>{{ articulosCargados.length ? 'Prueba con otra palabra o vuelve a todas las noticias.' : 'Las historias aparecerán aquí cuando el equipo editorial las publique.' }}</p>
+        <h2>{{ errorCargaNoticias ? 'No se pudo cargar el listado' : filtrosActivos ? 'No encontramos noticias con esos criterios' : 'Aún no hay noticias publicadas' }}</h2>
+        <p v-if="errorCargaNoticias" role="alert">{{ errorCargaNoticias }}</p>
+        <p v-else>{{ filtrosActivos ? 'Prueba con otra palabra, tema o categoría, o vuelve a todas las noticias.' : 'Las historias aparecerán aquí cuando el equipo editorial las publique.' }}</p>
         <NuxtLink class="boton-primario" to="/articulos">Ver todas las noticias</NuxtLink>
       </div>
     </section>

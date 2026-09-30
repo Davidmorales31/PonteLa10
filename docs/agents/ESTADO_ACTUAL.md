@@ -1,5 +1,27 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-08 — filtros públicos en servidor (2026-09-30, rama aislada):** la
+  ruta `/api/articulos` valida categoría, tema, búsqueda y paginación antes de
+  conectar con Supabase; el listado de `/articulos` envía los filtros al
+  servidor y conserva categoría/búsqueda al cargar más. La migración
+  `20260929035000_hu_tr_08_server_side_article_filters.sql` agrega una RPC
+  pública de solo lectura que filtra snapshots publicados antes del límite y
+  desplazamiento, con argumentos acotados, `SECURITY DEFINER`, `search_path`
+  vacío y grants explícitos a `anon`/`authenticated`; no se aplicó a ninguna
+  base de datos. Revisión independiente de seguridad/migración cerrada sin
+  hallazgos P0–P3 pendientes. Lint, suite (30 archivos/164 pruebas), typecheck,
+  build, prueba relacionada y `git diff --check` pasan. El navegador integrado
+  confirmó la página, los controles de categoría y el estado de error accesible
+  cuando el servidor no dispone de Supabase; `/api/articulos` devuelve 400
+  controlado para filtros malformados. La validación de datos reales y
+  responsive con Supabase queda pendiente: faltan sus variables públicas, y
+  `agent-browser` no está instalado. Commit de implementación `abf4670`;
+  PR #38 sigue abierta contra `main`, sin aprobación ni merge. CI remoto:
+  lint, test, typecheck, build y Vercel Preview pasaron; Preview Comments pasó
+  y Supabase Preview se omitió.
+  Handoff:
+  `docs/agents/handoffs/2026-09-30-hu-tr-08-filtros-articulos.md`.
+
 - **Portada obligatoria en propuestas de la tarea Codex (2026-09-29, Production):** auditoría
   de la corrida `3b39393b-8709-4aa7-b8ae-0d5922fb07eb` encontró cero artefactos
   `portadaIA`/`media`; la corrida previa `bd4ad640-dec7-4560-8720-ba757d89b496`
