@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { FiltrosContenidoPublico } from '~/server/utils/filtrosArticulosPublicos'
 import {
   mapearMedioEditorial,
   type FilaMedioEditorial
@@ -1418,13 +1419,23 @@ export async function obtenerArticuloPublicoEditorial(
 export async function listarArticulosPublicosEditoriales(
   clienteSupabase: SupabaseClient,
   limite = 20,
-  desplazamiento = 0
+  desplazamiento = 0,
+  filtros: FiltrosContenidoPublico = {
+    categoria: null,
+    terminosCategoria: [],
+    tema: null,
+    buscar: null
+  }
 ): Promise<ResumenArticuloPublico[]> {
   const { data, error } = await clienteSupabase.rpc(
-    'list_public_editorial_articles',
+    'list_public_editorial_articles_filtered',
     {
       result_limit: limite,
-      result_offset: desplazamiento
+      result_offset: desplazamiento,
+      filter_category_slug: filtros.categoria,
+      filter_category_terms: filtros.terminosCategoria,
+      filter_topic_slug: filtros.tema,
+      filter_search: filtros.buscar
     }
   )
 

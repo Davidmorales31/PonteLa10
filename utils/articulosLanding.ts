@@ -6,6 +6,33 @@ export function normalizarTextoBusqueda(texto: string): string {
     .trim()
 }
 
+export interface FiltrosConsultaArticulos {
+  categoria?: string
+  tema?: string
+  buscar?: string
+}
+
+function leerFiltroTexto(valor: unknown, normalizar = false): string | undefined {
+  if (typeof valor !== 'string') return undefined
+  const texto = valor.trim()
+  if (!texto) return undefined
+  return normalizar ? texto.toLocaleLowerCase('es-CO') : texto
+}
+
+export function construirFiltrosConsultaArticulos(
+  consulta: Record<string, unknown>
+): FiltrosConsultaArticulos {
+  const categoria = leerFiltroTexto(consulta.categoria, true)
+  const tema = leerFiltroTexto(consulta.tema, true)
+  const buscar = leerFiltroTexto(consulta.buscar)
+
+  return {
+    ...(categoria ? { categoria } : {}),
+    ...(tema ? { tema } : {}),
+    ...(buscar ? { buscar } : {})
+  }
+}
+
 const aliasCategorias: Record<string, string[]> = {
   futbol: ['futbol'],
   'futbol mundial': ['futbol mundial', 'mundial 2026'],
