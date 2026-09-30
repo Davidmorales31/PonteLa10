@@ -59,6 +59,30 @@ const errorCreacion = ref('')
 const mensajeExito = ref('')
 const articuloEliminar = ref<ArticuloBandejaEditorial | null>(null)
 const retornoBandeja = computed(() => route.fullPath)
+const leerParametro = (valor: unknown) => typeof valor === 'string' ? valor : ''
+const tituloOportunidad = computed(() => leerParametro(route.query.tituloOportunidad).trim().slice(0, 160))
+const intencionOportunidad = computed(() => {
+  const valor = leerParametro(route.query.intencionOportunidad)
+  return intencionesContenidoEditorial.includes(valor as IntencionContenidoEditorial)
+    && valor !== 'update'
+    ? valor as IntencionContenidoEditorial
+    : undefined
+})
+const categoriaOportunidad = computed(() => {
+  const valor = leerParametro(route.query.categoriaOportunidad)
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(valor)
+    ? valor
+    : null
+})
+const valoresInicialesOportunidad = computed(() => ({
+  titulo: tituloOportunidad.value,
+  contentIntent: intencionOportunidad.value,
+  categoriaId: categoriaOportunidad.value
+}))
+
+if (route.query.crearDesdeOportunidad === '1' && tienePermiso('contenido.crear')) {
+  modalAbierto.value = true
+}
 
 if (route.query.eliminado === '1') {
   mensajeExito.value = 'El contenido se eliminó definitivamente.'
@@ -334,6 +358,7 @@ async function contenidoEliminado() {
       :categorias="taxonomias?.categorias || []"
       :guardando="guardando"
       :error="errorCreacion"
+      :valores-iniciales="valoresInicialesOportunidad"
       @cerrar="modalAbierto = false"
       @crear="crearBorrador"
     />

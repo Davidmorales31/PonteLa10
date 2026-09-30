@@ -8,6 +8,9 @@ import {
   RefreshCw,
   Server
 } from '@lucide/vue'
+import type { AccionEditorialCodex } from '~/server/utils/esquemasCodexEditorial'
+
+type TipoRecursoObjetivo = 'article' | 'hub'
 
 interface SaludOperativa {
   consultadoEn: string | null
@@ -36,9 +39,43 @@ interface OportunidadEstrategica {
   categoriaId: string
   titulo: string
   intencion: string
+  recommendedAction: AccionEditorialCodex
+  targetResourceId: string | null
+  targetResourceType: TipoRecursoObjetivo | null
+  actionReason: string
   strategicScore: number
   scores: Record<string, number>
   actualizadoEn: string
+  decision: {
+    eventName: string
+    action: AccionEditorialCodex
+    targetResourceId: string | null
+    targetResourceType: TipoRecursoObjetivo | null
+    reason: string
+    occurredAt: string
+  } | null
+}
+
+interface RecursoObjetivo {
+  id: string
+  titulo: string
+  slug?: string
+}
+
+interface PanelOportunidades {
+  oportunidades: OportunidadEstrategica[]
+  articulosObjetivo: RecursoObjetivo[]
+  hubsObjetivo: RecursoObjetivo[]
+}
+
+interface FormularioDecision {
+  accion: AccionEditorialCodex
+  targetResourceId: string
+  targetResourceType: TipoRecursoObjetivo | null
+  razon: string
+  error: string
+  confirmacion: string
+  guardando: boolean
 }
 
 definePageMeta({
@@ -56,7 +93,170 @@ const {
   error,
   refresh
 } = await useFetch<SaludOperativa>('/api/admin/operacion')
-const { data: oportunidades, refresh: recargarOportunidades } = await useFetch<OportunidadEstrategica[]>('/api/admin/operacion/oportunidades')
+const { tienePermiso } = useContextoEditorial()
+const { data: panelOportunidades, refresh: recargarOportunidades } = await useFetch<PanelOportunidades>('/api/admin/operacion/oportunidades')
+const oportunidades = computed(() => panelOportunidades.value?.oportunidades || [])
+const articulosObjetivo = computed(() => panelOportunidades.value?.articulosObjetivo || [])
+const hubsObjetivo = computed(() => panelOportunidades.value?.hubsObjetivo || [])
+const formulariosDecision = reactive<Record<string, FormularioDecision>>({})
+
+const opcionesAccion: { valor: AccionEditorialCodex, etiqueta: string }[] = [
+  { valor: 'create_article', etiqueta: 'Crear artículo' },
+  { valor: 'update_article', etiqueta: 'Actualizar artículo existente' },
+  { valor: 'update_hub', etiqueta: 'Actualizar hub' },
+  { valor: 'create_data_story', etiqueta: 'Crear historia de datos' },
+  { valor: 'create_game_candidate', etiqueta: 'Registrar candidato de juego' },
+  { valor: 'manual_review', etiqueta: 'Revisión manual / posponer' },
+  { valor: 'discard', etiqueta: 'Descartar' }
+]
+
+watch(oportunidades, (lista) => {
+  for (const oportunidad of lista) {
+    if (formulariosDecision[oportunidad.id]) continue
+    const decision = oportunidad.decision
+    formulariosDecision[oportunidad.id] = {
+      accion: decision?.action || oportunidad.recommendedAction,
+      targetResourceId: decision?.targetResourceId || oportunidad.targetResourceId || '',
+      targetResourceType: decision?.targetResourceType || oportunidad.targetResourceType,
+      razon: decision?.reason || oportunidad.actionReason,
+      error: '',
+      confirmacion: '',
+      guardando: false
+    }
+  }
+}, { immediate: true })
+
+function etiquetaAccion(accion: AccionEditorialCodex): string {
+  return opcionesAccion.find(opcion => opcion.valor === accion)?.etiqueta || 'Revisar acción'
+}
+
+function cambiarAccion(oportunidad: OportunidadEstrategica, formulario: FormularioDecision) {
+  if (formulario.accion === 'update_article') {
+    formulario.targetResourceType = 'article'
+    if (!articulosObjetivo.value.some(recurso => recurso.id === formulario.targetResourceId)) {
+      formulario.targetResourceId = ''
+    }
+  } else if (formulario.accion === 'update_hub') {
+    formulario.targetResourceType = 'hub'
+    if (!hubsObjetivo.value.some(recurso => recurso.id === formulario.targetResourceId)) {
+      formulario.targetResourceId = ''
+    }
+  } else {
+    formulario.targetResourceType = null
+    formulario.targetResourceId = ''
+  }
+  formulario.error = ''
+  formulario.confirmacion = ''
+}
+
+function recursosDisponibles(accion: AccionEditorialCodex): RecursoObjetivo[] {
+  if (accion === 'update_article') return articulosObjetivo.value
+  if (accion === 'update_hub') return hubsObjetivo.value
+  return []
+}
+
+function rutaTarget(oportunidad: OportunidadEstrategica): string | null {
+  const formulario = formulariosDecision[oportunidad.id]
+  if (!formulario) return null
+  if (formulario.accion === 'update_article') {
+    const articulo = articulosObjetivo.value.find(recurso => recurso.id === formulario.targetResourceId)
+    return articulo?.slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(articulo.slug)
+      ? `/articulos/${articulo.slug}`
+      : null
+  }
+  if (formulario.accion === 'update_hub') {
+    const hub = hubsObjetivo.value.find(recurso => recurso.id === formulario.targetResourceId)
+    return hub?.slug && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(hub.slug)
+      ? `/${hub.slug}`
+      : null
+  }
+  return null
+}
+
+function etiquetaBotonPrincipal(accion: AccionEditorialCodex): string {
+  if (accion === 'create_article' || accion === 'create_data_story') {
+    return tienePermiso('contenido.crear') ? 'Crear borrador' : 'Confirmar acción'
+  }
+  if (accion === 'create_game_candidate') return 'Registrar candidato de juego'
+  if (accion === 'manual_review') return 'Posponer'
+  if (accion === 'discard') return 'Confirmar descarte'
+  return 'Confirmar actualización'
+}
+
+async function guardarDecision(
+  oportunidad: OportunidadEstrategica,
+  accion: AccionEditorialCodex = formulariosDecision[oportunidad.id].accion
+) {
+  const formulario = formulariosDecision[oportunidad.id]
+  formulario.accion = accion
+  cambiarAccion(oportunidad, formulario)
+  if (formulario.razon.trim().length < 20) {
+    formulario.error = 'Explica la decisión con al menos 20 caracteres.'
+    return
+  }
+  const accionAnterior = oportunidad.decision?.action || oportunidad.recommendedAction
+  const targetAnterior = oportunidad.decision?.targetResourceId || oportunidad.targetResourceId
+  const tipoAnterior = oportunidad.decision?.targetResourceType || oportunidad.targetResourceType
+  const motivoAnterior = oportunidad.decision?.reason || oportunidad.actionReason
+  const cambiaLaDecision = accion !== accionAnterior
+    || formulario.targetResourceId !== (targetAnterior || '')
+    || formulario.targetResourceType !== tipoAnterior
+  if (cambiaLaDecision && formulario.razon.trim() === motivoAnterior.trim()) {
+    formulario.error = 'Explica por qué cambias la acción o el recurso recomendado.'
+    return
+  }
+  if (['update_article', 'update_hub'].includes(accion) && !formulario.targetResourceId) {
+    formulario.error = accion === 'update_hub' && hubsObjetivo.value.length === 0
+      ? 'Aún no existe un catálogo de hubs disponible para elegir un destino válido.'
+      : 'Elige un recurso publicado que exista.'
+    return
+  }
+
+  formulario.error = ''
+  formulario.confirmacion = ''
+  formulario.guardando = true
+  let registrada = false
+  try {
+    await $fetch(`/api/admin/operacion/oportunidades/${oportunidad.id}/decision`, {
+      method: 'PUT',
+      body: {
+        action: accion,
+        targetResourceId: formulario.targetResourceId || null,
+        targetResourceType: formulario.targetResourceType,
+        reason: formulario.razon.trim()
+      }
+    })
+    registrada = true
+    formulario.confirmacion = 'Decisión registrada; no se modificó el estado editorial del contenido.'
+  } catch (errorPeticion: unknown) {
+    const errorConDatos = errorPeticion as { data?: { statusMessage?: string }, statusMessage?: string }
+    formulario.error = errorConDatos.data?.statusMessage
+      || errorConDatos.statusMessage
+      || 'No se pudo registrar la decisión. Revisa el estado y vuelve a intentar.'
+  } finally {
+    formulario.guardando = false
+  }
+
+  if (!registrada) return
+  try {
+    await recargarOportunidades()
+  } catch {
+    formulario.confirmacion = 'Decisión registrada; la lista no pudo actualizarse. Usa Actualizar para verla.'
+  }
+
+  if ((accion === 'create_article' || accion === 'create_data_story')
+    && tienePermiso('contenido.crear')) {
+    await navigateTo({
+      path: '/admin/contenidos',
+      query: {
+        crearDesdeOportunidad: '1',
+        tituloOportunidad: oportunidad.titulo,
+        intencionOportunidad: oportunidad.intencion,
+        categoriaOportunidad: oportunidad.categoriaId
+      }
+    })
+  }
+}
 
 const alertasOperativas = computed(() => {
   if (!salud.value) return []
@@ -142,9 +342,9 @@ async function recargar() {
   <div class="vista-panel-editorial vista-operacion-editorial">
     <header class="titulo-vista-panel">
       <div>
-        <p class="etiqueta-panel">HU-ED-13 · Solo lectura</p>
+        <p class="etiqueta-panel">HU-ED-13 · Operación y decisiones</p>
         <h1>Operación editorial</h1>
-        <p>Worker, ingestas, corridas de Codex y publicaciones. Este panel no reintenta ni modifica contenido.</p>
+        <p>Worker, ingestas, corridas de Codex y recomendaciones. Las decisiones quedan auditadas; nunca aprueban ni publican contenido.</p>
       </div>
       <button class="accion-panel-secundaria" type="button" :disabled="status === 'pending'" @click="recargar">
         <LoaderCircle v-if="status === 'pending'" class="icono-girando" aria-hidden="true" />
@@ -217,14 +417,91 @@ async function recargar() {
           </dl>
         </article>
       </section>
-      <section v-if="oportunidades?.length" class="tarjeta-salud-operativa oportunidades-estrategicas" aria-labelledby="titulo-oportunidades">
+      <section class="tarjeta-salud-operativa oportunidades-estrategicas" aria-labelledby="titulo-oportunidades">
         <header><Activity aria-hidden="true" /><h2 id="titulo-oportunidades">Oportunidades estratégicas</h2></header>
-        <p>Ordenadas por Strategic Opportunity Score; el total se calcula en servidor.</p>
-        <ol>
-          <li v-for="oportunidad in oportunidades" :key="oportunidad.id">
-            <strong>{{ oportunidad.titulo }}</strong>
-            <span>{{ oportunidad.intencion }} · {{ oportunidad.strategicScore }}/100</span>
-            <small>Demanda {{ oportunidad.scores.searchDemand }} · vida útil {{ oportunidad.scores.lifespan }} · competencia {{ oportunidad.scores.competitionOpportunity }}</small>
+        <p>Ordenadas por Strategic Opportunity Score; confirmar una acción no aprueba ni publica contenido.</p>
+        <p v-if="!oportunidades.length" class="estado-oportunidades-vacio">Todavía no hay recomendaciones editoriales registradas.</p>
+        <ol v-else>
+          <li v-for="oportunidad in oportunidades" :key="oportunidad.id" class="oportunidad-editorial">
+            <div class="resumen-oportunidad">
+              <div>
+                <strong>{{ oportunidad.titulo }}</strong>
+                <span>{{ oportunidad.intencion }} · {{ oportunidad.strategicScore }}/100</span>
+                <small>Demanda {{ oportunidad.scores.searchDemand }} · vida útil {{ oportunidad.scores.lifespan }} · competencia {{ oportunidad.scores.competitionOpportunity }}</small>
+              </div>
+              <span v-if="oportunidad.decision" class="estado-accion-tomada" role="status">
+                Acción tomada: {{ etiquetaAccion(oportunidad.decision.action) }}
+              </span>
+              <span v-else class="estado-accion-pendiente">Pendiente de decisión humana</span>
+            </div>
+
+            <p class="razon-recomendada"><strong>Recomendación:</strong> {{ etiquetaAccion(oportunidad.recommendedAction) }}. {{ oportunidad.actionReason }}</p>
+
+            <fieldset v-if="tienePermiso('contenido.revisar') && formulariosDecision[oportunidad.id]" :disabled="formulariosDecision[oportunidad.id].guardando">
+              <legend>Decisión editorial</legend>
+              <label>
+                <span>Acción final</span>
+                <select v-model="formulariosDecision[oportunidad.id].accion" @change="cambiarAccion(oportunidad, formulariosDecision[oportunidad.id])">
+                  <option
+                    v-for="opcion in opcionesAccion"
+                    :key="opcion.valor"
+                    :value="opcion.valor"
+                    :disabled="opcion.valor === 'update_hub' && hubsObjetivo.length === 0"
+                  >
+                    {{ opcion.etiqueta }}{{ opcion.valor === 'update_hub' && hubsObjetivo.length === 0 ? ' · catálogo aún no disponible' : '' }}
+                  </option>
+                </select>
+              </label>
+
+              <label v-if="['update_article', 'update_hub'].includes(formulariosDecision[oportunidad.id].accion)">
+                <span>Recurso objetivo existente</span>
+                <select
+                  v-model="formulariosDecision[oportunidad.id].targetResourceId"
+                  @change="formulariosDecision[oportunidad.id].error = ''; formulariosDecision[oportunidad.id].confirmacion = ''"
+                >
+                  <option value="">Selecciona un destino válido</option>
+                  <option v-for="recurso in recursosDisponibles(formulariosDecision[oportunidad.id].accion)" :key="recurso.id" :value="recurso.id">
+                    {{ recurso.titulo }}
+                  </option>
+                </select>
+                <small v-if="formulariosDecision[oportunidad.id].accion === 'update_hub' && !hubsObjetivo.length">No hay hubs publicados en el catálogo disponible.</small>
+              </label>
+
+              <label>
+                <span>Razón de la decisión</span>
+                <textarea
+                  v-model="formulariosDecision[oportunidad.id].razon"
+                  rows="3"
+                  minlength="20"
+                  maxlength="600"
+                  required
+                  @input="formulariosDecision[oportunidad.id].error = ''; formulariosDecision[oportunidad.id].confirmacion = ''"
+                />
+                <small>De 20 a 600 caracteres. El descarte conserva esta explicación junto con el puntaje.</small>
+              </label>
+
+              <p v-if="formulariosDecision[oportunidad.id].error" class="error-decision-oportunidad" role="alert">
+                {{ formulariosDecision[oportunidad.id].error }}
+              </p>
+              <p v-if="formulariosDecision[oportunidad.id].confirmacion" class="confirmacion-decision-oportunidad" role="status">
+                {{ formulariosDecision[oportunidad.id].confirmacion }}
+              </p>
+              <div class="acciones-oportunidad">
+                <NuxtLink v-if="rutaTarget(oportunidad)" :to="rutaTarget(oportunidad)!" target="_blank" rel="noopener noreferrer">
+                  Abrir target
+                </NuxtLink>
+                <button type="button" class="boton-editorial-principal" @click="guardarDecision(oportunidad)">
+                  {{ etiquetaBotonPrincipal(formulariosDecision[oportunidad.id].accion) }}
+                </button>
+                <button type="button" class="boton-editorial-secundario" @click="guardarDecision(oportunidad, 'discard')">
+                  Descartar
+                </button>
+                <button type="button" class="boton-editorial-secundario" @click="guardarDecision(oportunidad, 'manual_review')">
+                  Posponer
+                </button>
+              </div>
+            </fieldset>
+            <p v-else-if="!tienePermiso('contenido.revisar')" class="nota-solo-lectura">Tu cuenta puede consultar la recomendación, pero no registrar una decisión.</p>
           </li>
         </ol>
       </section>
@@ -242,8 +519,26 @@ async function recargar() {
 .tarjetas-salud-operativa { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .tarjeta-salud-operativa { display: grid; align-content: start; gap: .9rem; padding: 1.1rem; border: 1px solid var(--borde-panel, #cbd5e1); border-radius: 1rem; background: var(--superficie-panel, #fff); }
 .tarjeta-salud-operativa header { display: flex; align-items: center; gap: .65rem; color: var(--texto-panel, #10243e); }
-.oportunidades-estrategicas ol { display: grid; gap: .75rem; margin: 0; padding-left: 1.25rem; }
-.oportunidades-estrategicas li { display: grid; gap: .2rem; }
+.oportunidades-estrategicas ol { display: grid; gap: .75rem; margin: 0; padding: 0; list-style: none; }
+.oportunidades-estrategicas li { display: grid; gap: .8rem; padding: 1rem 0; border-top: 1px solid var(--borde-panel, #e2e8f0); }
+.resumen-oportunidad { display: flex; align-items: flex-start; justify-content: space-between; gap: .8rem; }
+.resumen-oportunidad > div { display: grid; gap: .2rem; }
+.razon-recomendada, .estado-oportunidades-vacio, .nota-solo-lectura { margin: 0; color: var(--texto-secundario-panel, #64748b); }
+.oportunidad-editorial fieldset { display: grid; gap: .75rem; min-width: 0; margin: 0; padding: .85rem; border: 1px solid var(--borde-panel, #cbd5e1); border-radius: .75rem; }
+.oportunidad-editorial legend { padding: 0 .35rem; font-weight: 700; }
+.oportunidad-editorial fieldset label { display: grid; gap: .35rem; }
+.oportunidad-editorial fieldset label > span { font-weight: 650; }
+.oportunidad-editorial fieldset select, .oportunidad-editorial fieldset textarea { width: 100%; border: 1px solid var(--borde-panel, #94a3b8); border-radius: .5rem; padding: .6rem .7rem; color: var(--texto-panel, #10243e); background: var(--superficie-panel, #fff); font: inherit; }
+.oportunidad-editorial fieldset textarea { resize: vertical; }
+.oportunidad-editorial fieldset small { color: var(--texto-secundario-panel, #64748b); }
+.acciones-oportunidad { display: flex; flex-wrap: wrap; align-items: center; gap: .55rem; }
+.acciones-oportunidad a { color: #087bc6; font-weight: 650; }
+.acciones-oportunidad button { min-height: 2.5rem; }
+.estado-accion-tomada, .estado-accion-pendiente { display: inline-flex; width: fit-content; border-radius: 999px; padding: .3rem .65rem; font-size: .8rem; font-weight: 700; }
+.estado-accion-tomada { color: #08713f; background: #e3f6eb; }
+.estado-accion-pendiente { color: #8a4b00; background: #fff1cc; }
+.error-decision-oportunidad { margin: 0; color: #a32121; }
+.confirmacion-decision-oportunidad { margin: 0; color: #08713f; }
 .oportunidades-estrategicas small { color: var(--texto-secundario-panel, #64748b); }
 .tarjeta-salud-operativa header svg { width: 1.2rem; height: 1.2rem; color: #0784dc; }
 .tarjeta-salud-operativa h2 { margin: 0; font-size: 1.05rem; }

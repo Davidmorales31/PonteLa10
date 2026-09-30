@@ -24,8 +24,8 @@ fails before sending a request.
 ## Run and resume safely
 
 1. Load active categories, public topics, recent published coverage, the
-   requested run's `runId` and `runDate`, current-run proposals, and candidate
-   checkpoints using the trend-research skill. Dates and the five-run cap use
+   requested run's `runId` and `runDate`, current-run proposals, candidate
+   checkpoints, and `actionTargets` using the trend-research skill. Dates and the five-run cap use
    `America/Bogota`. Reuse exactly the same `runId` for retries/resumes only
    when its `runDate` is today's Colombia date. A run from a prior date is
    immutable for this workflow: do not reopen it, even if it remains
@@ -41,10 +41,23 @@ fails before sending a request.
    is the run-wide floor. This is never permission to invent, duplicate, or pad
    stories. If evidence cannot support the floor, record the gaps honestly.
    Opinión and Especiales stay flagged for human angle/format review.
-3. Deduplicate before investigation and before image generation using category
+3. Before drafting, classify each opportunity independently from its article
+   format. Emit `recommendedAction` and a specific `actionReason` of 20–600
+   characters in every agenda opportunity. Choose `create_article` only for a
+   genuinely new useful URL; choose `update_article` only with an exact existing
+   ID from `actionTargets.articles`; choose `update_hub` only with an exact ID
+   from `actionTargets.hubs` (currently empty until the hub catalog exists).
+   `create_data_story` needs verifiable first-party or structured data evidence;
+   `create_game_candidate` records an idea but never creates or publishes a
+   game; use `manual_review` when evidence or the target is ambiguous; use
+   `discard` only with a concrete reason. An update action must carry both
+   `targetResourceId` and matching `targetResourceType` (`article` or `hub`);
+   every other action must carry both as `null`. Never invent an ID or substitute
+   a category, tag, draft, or URL for a resource target.
+4. Deduplicate before investigation and before image generation using category
    plus fingerprint. If the API context already contains a proposal for that
    candidate, do not generate or submit another one.
-4. For each candidate, read `pont3la10-seo-editorial` after research and before
+5. For each candidate, read `pont3la10-seo-editorial` after research and before
    submission. Use Codex research for trends and claim verification; call the
    private `borrador` endpoint once per stable idempotency key so the server
    invokes the Codex-only DeepSeek provider, whose article-writing criteria
@@ -54,7 +67,7 @@ fails before sending a request.
    `DEEPSEEK_RESULTADO_INCIERTO`, stop that candidate and report it; do not set
    `retryUncertain: true` unless Juan explicitly authorizes that paid retry.
 
-5. For each candidate, use the checkpoint CLI from the repository root. Save
+6. For each candidate, use the checkpoint CLI from the repository root. Save
    each completed stage as soon as it is ready, and read the checkpoint before
    resuming work:
 
@@ -115,14 +128,19 @@ fails before sending a request.
    Use `exportar` to materialize an exact saved stage to a file inside its
    ignored candidate folder without printing article/source content to terminal.
 
-6. Never repeat completed research or image-search calls on resume. Reuse
+7. Never repeat completed research or image-search calls on resume. Reuse
    stored dossiers, draft, and any verified cover/media ID. For an uncertain API
    outcome, replay the exact saved proposal payload and idempotency key; inspect the API
    context first. Do not create a replacement identity to bypass a conflict.
-7. Submit only through `scripts/codex-editorial-submit.mjs`. The pipeline may
+8. The admin opportunity panel may record a human decision for any candidate;
+   it does not create an article, execute a target update, approve, schedule,
+   publish, or bypass the regular CMS workflow. Only a human editor may open the
+   normal CMS draft form after choosing `create_article` or `create_data_story`.
+   Submit article proposals only through `scripts/codex-editorial-submit.mjs`.
+   The pipeline may
    create or update a private `review` draft only. Never approve, schedule,
    publish, or bypass server-side validation; human approval is the boundary.
-8. Report the run ID, per-category counts, drafts created, skipped duplicates,
+9. Report the run ID, per-category counts, drafts created, skipped duplicates,
    unresolved candidates, and any safe required action. Distinguish partial
    completion from success; do not claim all categories met the target unless
    API receipts prove it.
