@@ -16,6 +16,7 @@ export default defineEventHandler(async (evento) => {
     '/',
     '/articulos',
     '/partidos-hoy',
+    '/colombianos-en-europa',
     '/resultados',
     '/resultados/en-vivo',
     '/resultados/futbol',

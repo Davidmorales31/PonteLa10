@@ -1,5 +1,29 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-19 — hub de colombianos en Europa (2026-09-30, rama aislada):**
+  se añadió `/colombianos-en-europa` con listados de partidos de hoy,
+  resultados y próximos; las tarjetas enlazan a rutas canónicas internas de
+  partido. El repositorio público solo expone jugadores con nacionalidad
+  colombiana verificada, membresía vigente y club europeo, acotando el recorrido
+  por cursor y fallando cerrado ante truncamiento. La fuente de verificación
+  queda privada; solo su fecha es pública. API y página conservan un estado
+  honesto sin Supabase o ante error. SEO, sitemap y analítica respetan el
+  consentimiento existente; no se emiten clics a perfiles inexistentes.
+  Revisión independiente de la migración/regex sin bloqueos. Validado: lint,
+  prueba relacionada (10), suite (38 archivos/213 pruebas), typecheck, build y
+  `git diff --check`; `agent-browser` verificó SSR, estado sin configuración,
+  temas claro/oscuro, Axe sin violaciones y viewports 320/390 px sin overflow.
+  `npm ci` previo no cambió dependencias y reportó 15 vulnerabilidades ya
+  existentes; build conserva aviso upstream DEP0155 de `@vue/shared`. No se
+  aplicó la migración ni se consultó una base remota. Falta poblar datos
+  únicamente con fuentes/licencias aprobadas; el clic de jugador queda para
+  cuando exista una ruta de perfil. Rama `codex/hu-tr-19-colombianos-europa`,
+  basada en `codex/hu-tr-18-partidos-hoy-filtros`, commit
+  `dda15e39f6dc4ed93465caacaad8580788a56ba6`. PR #46 abierta contra HU-TR-18;
+  Vercel Preview pendiente y Supabase Preview omitido; sin aprobación ni
+  fusión. Handoff:
+  `docs/agents/handoffs/2026-09-30-hu-tr-19-colombianos-europa.md`.
+
 - **HU-TR-18 — filtros de partidos de hoy (2026-09-30, rama aislada):**
   `/partidos-hoy` incorpora filtros combinables por deporte, competencia,
   equipo, estado y destacados; competencias y equipos se derivan de los

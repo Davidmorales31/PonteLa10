@@ -397,6 +397,68 @@
 
 .estado-vacio-filtro-partidos-hoy p { margin: 0; }
 
+.pagina-colombianos-europa > .enlaces-seo-resultados p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.secciones-colombianos-europa { display: grid; gap: 24px; }
+.grilla-colombianos-europa { display: grid; gap: 12px; }
+
+.tarjeta-colombiano-europa {
+  display: grid;
+  grid-template-columns: minmax(170px, 0.8fr) minmax(0, 1.5fr) auto;
+  align-items: center;
+  gap: 14px 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 16px;
+}
+
+.tarjeta-colombiano-europa__jugador > span,
+.tarjeta-colombiano-europa__partido dt {
+  color: #5a6d85;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.tarjeta-colombiano-europa__jugador h3 { margin: 4px 0; color: var(--navy); font-size: 1rem; }
+.tarjeta-colombiano-europa__jugador p { margin: 0; color: #42566f; font-size: 0.82rem; }
+.tarjeta-colombiano-europa__partido { display: flex; flex-wrap: wrap; gap: 12px 20px; margin: 0; }
+.tarjeta-colombiano-europa__partido > div { display: grid; gap: 3px; }
+.tarjeta-colombiano-europa__partido dt,
+.tarjeta-colombiano-europa__partido dd { margin: 0; }
+.tarjeta-colombiano-europa__partido dd { color: #203854; font-size: 0.82rem; font-weight: 750; }
+.aviso-titularidad-colombiano { grid-column: 1 / -1; margin: 0; color: #53677e; font-size: 0.75rem; }
+
+.enlace-partido-colombiano {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 9px;
+  background: #12386f;
+  padding: 0 13px;
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.enlace-partido-colombiano:hover { background: #0b2852; text-decoration: underline; }
+.enlace-partido-colombiano:focus-visible { outline: 3px solid #2389dc; outline-offset: 3px; }
+
+@media (max-width: 680px) {
+  .tarjeta-colombiano-europa { grid-template-columns: minmax(0, 1fr); }
+  .tarjeta-colombiano-europa__partido { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .enlace-partido-colombiano { justify-self: start; }
+}
+
 .contador-en-vivo {
   display: inline-flex;
   min-height: 42px;
