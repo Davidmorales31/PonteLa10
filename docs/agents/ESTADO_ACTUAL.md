@@ -1,5 +1,28 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-11 — fechas SEO verificables (2026-09-30, rama aislada):** las
+  cuatro RPC públicas incorporan `publicadoEn` de la primera versión que llegó
+  a estado `published` y `modificadoEn` de la versión publicada vigente. El
+  puntero `published_version_id` también exige que esa versión siga publicada.
+  Sitemap general emite `<lastmod>` solo para fechas reales, válidas y no
+  futuras; se quitaron `changefreq`/`priority`. News sitemap omite fechas
+  futuras o inválidas y el JSON-LD/OG de artículo usa fechas normalizadas.
+  Revisión independiente cerró el hallazgo P2 del estado de la versión, sin
+  otros bloqueos en migración/test. No se aplicó la migración ni se alteraron
+  publicaciones. `npm ci`, lint, prueba relacionada (13), suite (33 archivos/
+  185 pruebas), typecheck, build y `git diff --check` pasan; Nuxt requiere
+  `NUXT_PUBLIC_SITE_URL=https://www.pont3la10.com`. La validación HTTP local
+  confirmó sitemap XML 200 válido y sin frecuencias/prioridades; al faltar
+  configuración Supabase el sitemap de noticias fue válido pero vacío y no se
+  pudieron verificar fechas reales con datos. La página de artículo tampoco
+  pudo probarse: auth sin configurar produce 503 en su API (500 SSR). Build
+  conserva aviso upstream `@vue/shared`; `npm ci` reportó 15 vulnerabilidades
+  del árbol existente (6 moderadas, 8 altas, 1 crítica), sin cambiar
+  dependencias. Rama `codex/hu-tr-11-real-dates`, apilada sobre HU-TR-10;
+  commit `1ef319c`; PR por abrir contra HU-TR-10, sin aprobación ni merge.
+  Handoff:
+  `docs/agents/handoffs/2026-09-30-hu-tr-11-fechas-seo-reales.md`.
+
 - **HU-TR-10 — entidad de hubs públicos (2026-09-30, rama aislada):** se
   incorporó `public_hubs` con cinco tipos, módulos validados y estados
   `draft`/`published`/`archived`; CRUD mínimo protegido, separación de
