@@ -19,8 +19,9 @@
   y Podman no están disponibles; no se aplicó SQL remoto. Persisten las 15
   vulnerabilidades reportadas previamente por `npm ci` y el aviso upstream
   DEP0155 de `@vue/shared`. Sin datos ni activos licenciados nuevos. Trabajo en
-  `codex/hu-tr-17-stable-match-url`, apilado sobre HU-TR-16; PR pendiente de
-  creación, sin aprobar ni fusionar. Handoff:
+  `codex/hu-tr-17-stable-match-url`, apilado sobre HU-TR-16; commit
+  `25b604a`. PR #44 abierta contra `codex/hu-tr-16-sports-entities`, pendiente
+  de checks, sin aprobación ni fusión. Handoff:
   `docs/agents/handoffs/2026-09-30-hu-tr-17-url-canonica-partidos.md`.
 
 - **HU-TR-16 — identidad interna y mappings deportivos (2026-09-30, rama

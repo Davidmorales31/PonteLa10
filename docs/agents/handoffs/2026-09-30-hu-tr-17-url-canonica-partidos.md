@@ -46,13 +46,13 @@
   No hay configuración Supabase pública ni fixtures/mappings aprobados para
   verificar un partido real o su metadata indexable; el endpoint retorna error
   controlado. Se requiere validar el camino de fixture publicado en Supabase
-  Preview cuando exista autorización/datos. PR de HU-TR-17 por crear; no
-  aprobada ni fusionada. HU-TR-16 PR #43 está abierta y mergeable, y su Vercel
-  Preview reporta success.
-- **Siguiente acción exacta:** Revisar el diff final, crear el commit de HU-TR-17,
-  subir `codex/hu-tr-17-stable-match-url` y abrir una PR contra
-  `codex/hu-tr-16-sports-entities`; verificar CI/Vercel sin aprobar ni fusionar.
-  Después comenzar HU-TR-18 en un worktree aislado distinto o recién liberado,
-  releyendo `AGENTS.md`, estado, mapa, memoria y validaciones antes de editar.
+  Preview cuando exista autorización/datos. PR #44 está abierta contra
+  `codex/hu-tr-16-sports-entities`, pendiente de checks, sin aprobación ni
+  fusión. HU-TR-16 PR #43 está abierta y mergeable, y su Vercel Preview reporta
+  success.
+- **Siguiente acción exacta:** Revisar el estado de CI/Vercel de PR #44 sin
+  aprobar ni fusionar. Luego comenzar HU-TR-18 en un worktree aislado distinto
+  o recién liberado, releyendo `AGENTS.md`, estado, mapa, memoria y validaciones
+  antes de editar.
 - **Commit base:** `2b3c005e9329872163744c49202765a906d1669e`.
-- **Commit final:** sin commit | `<sha>`
+- **Commit final:** `25b604af2c0fb9cfc8e9141b8cd2fd3d53a0fdd6`.
