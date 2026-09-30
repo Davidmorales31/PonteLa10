@@ -69,6 +69,7 @@ interface FilaArticulo {
   summary: string
   status: ArticuloBandejaEditorial['estado']
   content_type: ArticuloBandejaEditorial['tipo']
+  content_intent: ArticuloBandejaEditorial['contentIntent']
   source_origin: ArticuloBandejaEditorial['origen']
   author_id: string | null
   updated_at: string
@@ -307,6 +308,7 @@ export async function listarContenidosEditoriales(
       summary,
       status,
       content_type,
+      content_intent,
       source_origin,
       author_id,
       updated_at,
@@ -329,6 +331,7 @@ export async function listarContenidosEditoriales(
 
   if (filtros.estado) consulta = consulta.eq('status', filtros.estado)
   if (filtros.tipo) consulta = consulta.eq('content_type', filtros.tipo)
+  if (filtros.contentIntent) consulta = consulta.eq('content_intent', filtros.contentIntent)
   if (filtros.origen) consulta = consulta.eq('source_origin', filtros.origen)
   if (filtros.categoriaId) consulta = consulta.eq('category_id', filtros.categoriaId)
 
@@ -370,6 +373,7 @@ export async function listarContenidosEditoriales(
     resumen: fila.summary,
     estado: fila.status,
     tipo: fila.content_type,
+    contentIntent: fila.content_intent,
     origen: fila.source_origin,
     categoria: obtenerCategoriaRelacion(fila.categories),
     autorId: fila.author_id,
@@ -445,6 +449,7 @@ export async function obtenerArticuloEditorial(
       summary,
       status,
       content_type,
+      content_intent,
       source_origin,
       author_id,
       updated_at,
@@ -572,6 +577,7 @@ export async function obtenerArticuloEditorial(
     slug: fila.slug,
     resumen: fila.summary,
     tipo: fila.content_type,
+    contentIntent: fila.content_intent,
     categoriaId: obtenerCategoriaRelacion(fila.categories)?.id || null,
     portadaId: fila.cover_media_id,
     temaIds: (fila.article_tags || []).map(relacion => relacion.tag_id),
@@ -775,6 +781,16 @@ export async function guardarArticuloEditorial(
   articuloId: string,
   entrada: EntradaGuardarArticulo
 ): Promise<ResultadoGuardadoEditorial> {
+  if (entrada.contentIntent === 'update' && !entrada.documento.content.some(
+    bloque => bloque.type === 'articuloRelacionado'
+  )) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Una actualización debe enlazar el recurso existente que modifica.',
+      data: { codigo: 'INTENCION_ACTUALIZACION_SIN_DESTINO' }
+    })
+  }
+
   await validarEnlacesInternosEditoriales(
     clienteSupabase,
     articuloId,
@@ -792,6 +808,7 @@ export async function guardarArticuloEditorial(
     next_category_id: entrada.categoriaId,
     next_cover_media_id: entrada.portadaId,
     next_content_type: entrada.tipo,
+    next_content_intent: entrada.contentIntent,
     next_source_url: entrada.fuente.url,
     next_source_name: entrada.fuente.nombre,
     next_source_author: entrada.fuente.autor,
@@ -1234,6 +1251,7 @@ export async function obtenerColaRevisionEditorial(
       summary,
       status,
       content_type,
+      content_intent,
       source_origin,
       author_id,
       updated_at,
@@ -1281,6 +1299,7 @@ export async function obtenerColaRevisionEditorial(
     resumen: fila.summary,
     estado: fila.status,
     tipo: fila.content_type,
+    contentIntent: fila.content_intent,
     origen: fila.source_origin,
     categoria: obtenerCategoriaRelacion(fila.categories),
     autorId: fila.author_id,
@@ -1508,6 +1527,14 @@ export async function crearBorradorEditorial(
   entrada: EntradaBorrador,
   autorId: string
 ): Promise<BorradorCreadoEditorial> {
+  if (entrada.contentIntent === 'update') {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Una actualización debe crearse desde el recurso existente que modifica.',
+      data: { codigo: 'INTENCION_ACTUALIZACION_SIN_DESTINO' }
+    })
+  }
+
   await validarCategoria(clienteSupabase, entrada.categoriaId)
 
   const slugBase = crearSlugEditorial(entrada.titulo)
@@ -1529,6 +1556,7 @@ export async function crearBorradorEditorial(
         category_id: entrada.categoriaId,
         author_id: autorId,
         content_type: entrada.tipo,
+        content_intent: entrada.contentIntent,
         source_origin: 'manual',
         last_saved_by: autorId
       })

@@ -2,6 +2,7 @@ import { z } from 'zod'
 import type {
   AccionFlujoEditorial,
   EstadoContenidoEditorial,
+  IntencionContenidoEditorial,
   OrigenContenidoEditorial,
   TipoContenidoEditorial,
   TipoTaxonomiaEditorial
@@ -27,6 +28,45 @@ export const tiposContenidoEditorial: TipoContenidoEditorial[] = [
   'opinion',
   'especial'
 ]
+
+export const intencionesContenidoEditorial: IntencionContenidoEditorial[] = [
+  'search_utility',
+  'breaking',
+  'explainer',
+  'evergreen',
+  'data_story',
+  'special',
+  'opinion',
+  'game_support',
+  'social_first',
+  'update'
+]
+
+export const etiquetasIntencionContenido: Record<IntencionContenidoEditorial, string> = {
+  search_utility: 'Utilidad de búsqueda',
+  breaking: 'Actualidad inmediata',
+  explainer: 'Explicador',
+  evergreen: 'Evergreen',
+  data_story: 'Historia de datos',
+  special: 'Especial',
+  opinion: 'Opinión',
+  game_support: 'Soporte de juego',
+  social_first: 'Primero social',
+  update: 'Actualización'
+}
+
+export const descripcionesIntencionContenido: Record<IntencionContenidoEditorial, string> = {
+  search_utility: 'Resuelve una consulta concreta que las personas buscan.',
+  breaking: 'Informa un hecho reciente que requiere rapidez y verificación.',
+  explainer: 'Explica contexto, reglas o antecedentes de un tema.',
+  evergreen: 'Conserva valor sostenido y se revisa periódicamente.',
+  data_story: 'Convierte datos verificables en una historia comprensible.',
+  special: 'Desarrolla una cobertura editorial especial.',
+  opinion: 'Presenta una interpretación que requiere revisión humana.',
+  game_support: 'Ayuda a una experiencia o guía de juego.',
+  social_first: 'Prioriza una pieza pensada para distribución social.',
+  update: 'Actualiza un recurso existente y exige enlazarlo.'
+}
 
 export const origenesContenidoEditorial: OrigenContenidoEditorial[] = [
   'manual',
@@ -90,6 +130,10 @@ export const esquemaFiltrosBandeja = z.object({
     .optional(),
   tipo: z.enum(tiposContenidoEditorial as [TipoContenidoEditorial, ...TipoContenidoEditorial[]])
     .optional(),
+  contentIntent: z.enum(intencionesContenidoEditorial as [
+    IntencionContenidoEditorial,
+    ...IntencionContenidoEditorial[]
+  ]).optional(),
   origen: z.enum(origenesContenidoEditorial as [OrigenContenidoEditorial, ...OrigenContenidoEditorial[]])
     .optional(),
   categoriaId: z.string().uuid().optional(),
@@ -105,6 +149,10 @@ export const esquemaCrearBorrador = z.object({
   resumen: z.string().trim().max(320).optional().default(''),
   tipo: z.enum(tiposContenidoEditorial as [TipoContenidoEditorial, ...TipoContenidoEditorial[]])
     .default('noticia'),
+  contentIntent: z.enum(intencionesContenidoEditorial as [
+    IntencionContenidoEditorial,
+    ...IntencionContenidoEditorial[]
+  ]),
   categoriaId: z.string().uuid().nullable().optional().default(null)
 })
 
@@ -224,6 +272,10 @@ export const esquemaDatosEditorArticulo = z.object({
   tipo: z.enum(tiposContenidoEditorial as [
     TipoContenidoEditorial,
     ...TipoContenidoEditorial[]
+  ]),
+  contentIntent: z.enum(intencionesContenidoEditorial as [
+    IntencionContenidoEditorial,
+    ...IntencionContenidoEditorial[]
   ]),
   categoriaId: z.string().uuid().nullable(),
   portadaId: z.string().uuid().nullable().default(null),

@@ -15,6 +15,7 @@ import type {
   BorradorCreadoEditorial,
   ArticuloBandejaEditorial,
   EstadoContenidoEditorial,
+  IntencionContenidoEditorial,
   OrigenContenidoEditorial,
   RespuestaBandejaEditorial,
   TaxonomiasEditoriales,
@@ -22,9 +23,11 @@ import type {
 } from '~/types/contenidoEditorial'
 import {
   etiquetasEstadoContenido,
+  etiquetasIntencionContenido,
   etiquetasOrigenContenido,
   etiquetasTipoContenido,
   estadosContenidoEditorial,
+  intencionesContenidoEditorial,
   origenesContenidoEditorial,
   tiposContenidoEditorial
 } from '~/utils/editorial/contenido'
@@ -46,6 +49,7 @@ const busqueda = ref('')
 const busquedaAplicada = ref('')
 const estado = ref<EstadoContenidoEditorial | ''>('')
 const tipo = ref<TipoContenidoEditorial | ''>('')
+const contentIntent = ref<IntencionContenidoEditorial | ''>('')
 const origen = ref<OrigenContenidoEditorial | ''>('')
 const categoriaId = ref('')
 const pagina = ref(1)
@@ -64,6 +68,7 @@ const consulta = computed(() => ({
   buscar: busquedaAplicada.value || undefined,
   estado: estado.value || undefined,
   tipo: tipo.value || undefined,
+  contentIntent: contentIntent.value || undefined,
   origen: origen.value || undefined,
   categoriaId: categoriaId.value || undefined,
   pagina: pagina.value,
@@ -96,11 +101,12 @@ const hayFiltros = computed(() => Boolean(
   busquedaAplicada.value
   || estado.value
   || tipo.value
+  || contentIntent.value
   || origen.value
   || categoriaId.value
 ))
 
-watch([estado, tipo, origen, categoriaId], () => {
+watch([estado, tipo, contentIntent, origen, categoriaId], () => {
   pagina.value = 1
 })
 
@@ -114,6 +120,7 @@ function limpiarFiltros() {
   busquedaAplicada.value = ''
   estado.value = ''
   tipo.value = ''
+  contentIntent.value = ''
   origen.value = ''
   categoriaId.value = ''
   pagina.value = 1
@@ -129,6 +136,7 @@ async function crearBorrador(entrada: {
   titulo: string
   resumen: string
   tipo: TipoContenidoEditorial
+  contentIntent: IntencionContenidoEditorial
   categoriaId: string | null
 }) {
   guardando.value = true
@@ -215,6 +223,12 @@ async function contenidoEliminado() {
           <option value="">Todos los tipos</option>
           <option v-for="valor in tiposContenidoEditorial" :key="valor" :value="valor">
             {{ etiquetasTipoContenido[valor] }}
+          </option>
+        </select>
+        <select v-model="contentIntent" aria-label="Filtrar por intención estratégica">
+          <option value="">Todas las intenciones</option>
+          <option v-for="valor in intencionesContenidoEditorial" :key="valor" :value="valor">
+            {{ etiquetasIntencionContenido[valor] }}
           </option>
         </select>
         <select v-model="categoriaId" aria-label="Filtrar por sección">

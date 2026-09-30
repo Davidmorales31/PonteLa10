@@ -117,6 +117,7 @@ describe('API privada de propuestas Codex', () => {
       title: 'Una historia deportiva suficientemente clara',
       summary: 'Un resumen editorial de prueba que explica por qué importa esta historia.',
       contentType: 'opinion' as const,
+      contentIntent: 'opinion' as const,
       body: cuerpoPrueba.texto,
       bodyJson: cuerpoPrueba.documento,
       seoTitle: 'Una historia deportiva de prueba',
@@ -137,6 +138,21 @@ describe('API privada de propuestas Codex', () => {
       ...propuesta,
       editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
     }).success).toBe(true)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      contentIntent: 'viral',
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
+    }).success).toBe(false)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      contentIntent: 'update',
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
+    }).success).toBe(false)
+    const { contentIntent: _intencion, ...propuestaSinIntencion } = propuesta
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuestaSinIntencion,
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
+    }).success).toBe(false)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
       editorialFlags: ['needs_angle_review', 'ai_generated_cover']

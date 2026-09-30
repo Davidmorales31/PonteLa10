@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   contarPalabrasEditoriales,
+  cumpleIntencionPropuestaCodex,
   cumplePortadaPropuestaCodex,
   cumpleMinimoLecturaCodex,
   PALABRAS_MINIMAS_ARTICULO_CODEX
@@ -25,5 +26,11 @@ describe('contrato de extensión de propuestas Codex', () => {
     expect(cumplePortadaPropuestaCodex({ ...base, coverMediaId: null, editorialFlags: [] })).toBe(false)
     expect(cumplePortadaPropuestaCodex({ ...base, editorialFlags: [] })).toBe(false)
     expect(cumplePortadaPropuestaCodex({ ...base, editorialFlags: ['ai_generated_cover', 'licensed_photo_cover'] })).toBe(false)
+  })
+
+  it('acepta únicamente intenciones estratégicas explícitas', () => {
+    expect(cumpleIntencionPropuestaCodex({ contentIntent: 'explainer' })).toBe(true)
+    expect(cumpleIntencionPropuestaCodex({ contentIntent: 'desconocida' })).toBe(false)
+    expect(cumpleIntencionPropuestaCodex({})).toBe(false)
   })
 })

@@ -7,6 +7,19 @@ export const PALABRAS_MINIMAS_BORRADOR_CODEX = 660
 export const CREDITO_PORTADA_IA_CODEX = 'Imagen generada con IA'
 export const PIE_PORTADA_IA_CODEX = 'Ilustración editorial generada con IA. No es una fotografía documental del evento.'
 
+const valoresIntencionContenido = [
+  'search_utility',
+  'breaking',
+  'explainer',
+  'evergreen',
+  'data_story',
+  'special',
+  'opinion',
+  'game_support',
+  'social_first',
+  'update'
+] as const
+
 const esquemaUrlHttps = z.string().url().max(2048).refine(
   valor => new URL(valor).protocol === 'https:',
   'Las fuentes deben usar HTTPS.'
@@ -65,6 +78,7 @@ export const esquemaPropuestaCodex = z.object({
   title: z.string().trim().min(8).max(160),
   summary: z.string().trim().min(20).max(320),
   contentType: z.enum(['noticia', 'analisis', 'informe', 'opinion', 'especial']),
+  contentIntent: z.enum(valoresIntencionContenido),
   body: z.string().trim().min(500).max(30_000),
   bodyJson: esquemaDocumentoEditorial,
   seoTitle: z.string().trim().min(8).max(70),
@@ -135,6 +149,14 @@ export const esquemaPropuestaCodex = z.object({
     })
   }
 
+  if (propuesta.contentIntent === 'update' && propuesta.relatedArticleIds.length === 0) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['relatedArticleIds'],
+      message: 'Una actualización debe enlazar el artículo existente que modifica.'
+    })
+  }
+
   if (!propuesta.sources.some(fuente => fuente.url === propuesta.sourceUrl)) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
@@ -195,6 +217,7 @@ export const esquemaBorradorCodex = z.object({
   storyFingerprint: z.string().regex(/^[a-f0-9]{64}$/i),
   titleHint: z.string().trim().min(8).max(220),
   contentType: z.enum(['noticia', 'analisis', 'informe', 'opinion', 'especial']),
+  contentIntent: z.enum(valoresIntencionContenido),
   researchSummary: z.string().trim().min(80).max(6000),
   trend: z.object({
     term: z.string().trim().min(2).max(160),

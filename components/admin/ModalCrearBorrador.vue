@@ -6,10 +6,13 @@ import {
 } from '@lucide/vue'
 import type {
   CategoriaEditorial,
+  IntencionContenidoEditorial,
   TipoContenidoEditorial
 } from '~/types/contenidoEditorial'
 import {
   etiquetasTipoContenido,
+  etiquetasIntencionContenido,
+  intencionesContenidoEditorial,
   tiposContenidoEditorial
 } from '~/utils/editorial/contenido'
 
@@ -17,6 +20,7 @@ interface EntradaBorradorFormulario {
   titulo: string
   resumen: string
   tipo: TipoContenidoEditorial
+  contentIntent: IntencionContenidoEditorial
   categoriaId: string | null
 }
 
@@ -36,6 +40,7 @@ const formulario = reactive<EntradaBorradorFormulario>({
   titulo: '',
   resumen: '',
   tipo: 'noticia',
+  contentIntent: 'breaking',
   categoriaId: null
 })
 
@@ -50,6 +55,7 @@ watch(() => props.abierto, (abierto) => {
   formulario.titulo = ''
   formulario.resumen = ''
   formulario.tipo = 'noticia'
+  formulario.contentIntent = 'breaking'
   formulario.categoriaId = null
 })
 
@@ -63,6 +69,7 @@ function crear() {
     titulo: formulario.titulo.trim(),
     resumen: formulario.resumen.trim(),
     tipo: formulario.tipo,
+    contentIntent: formulario.contentIntent,
     categoriaId: formulario.categoriaId
   })
 }
@@ -136,6 +143,20 @@ onBeforeUnmount(() => window.removeEventListener('keydown', manejarTecla))
                 {{ etiquetasTipoContenido[tipo] }}
               </option>
             </select>
+          </label>
+
+          <label class="campo-editorial">
+            <span>Intención estratégica</span>
+            <select v-model="formulario.contentIntent">
+              <option
+                v-for="intencion in intencionesContenidoEditorial.filter(valor => valor !== 'update')"
+                :key="intencion"
+                :value="intencion"
+              >
+                {{ etiquetasIntencionContenido[intencion] }}
+              </option>
+            </select>
+            <small>Define para qué existe la pieza; no reemplaza el tipo editorial.</small>
           </label>
 
           <label class="campo-editorial">

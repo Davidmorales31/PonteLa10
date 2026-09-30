@@ -9,7 +9,11 @@ import {
   reservarReescrituraIaEditorial
 } from '~/server/utils/repositorioContenidoEditorial'
 import { validarEntradaEditorial } from '~/server/utils/validacionEditorial'
-import { esquemaIdEditorial, esquemaReescrituraIaEditorial } from '~/utils/editorial/contenido'
+import {
+  esquemaDatosEditorArticulo,
+  esquemaIdEditorial,
+  esquemaReescrituraIaEditorial
+} from '~/utils/editorial/contenido'
 
 export default defineEventHandler(async (evento) => {
   const contexto = await exigirPermisoEditorial(evento, 'contenido.revisar')
@@ -25,6 +29,13 @@ export default defineEventHandler(async (evento) => {
   if (!articulo.puedeEditar || articulo.estado !== 'changes_requested') {
     throw createError({ statusCode: 409, statusMessage: 'Solicita cambios antes de pedir una reescritura con IA.', data: { codigo: 'REESCRITURA_IA_ESTADO_INVALIDO' } })
   }
+  if (!articulo.contentIntent) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Selecciona la intención estratégica antes de solicitar una reescritura.',
+      data: { codigo: 'INTENCION_ESTRATEGICA_REQUERIDA' }
+    })
+  }
 
   const requestId = crypto.randomUUID()
   const hash = hashPromptReescritura({
@@ -32,6 +43,7 @@ export default defineEventHandler(async (evento) => {
     slug: articulo.slug,
     resumen: articulo.resumen,
     tipo: articulo.tipo,
+    contentIntent: articulo.contentIntent,
     categoriaId: articulo.categoriaId,
     portadaId: articulo.portadaId,
     temaIds: articulo.temaIds,
@@ -59,6 +71,7 @@ export default defineEventHandler(async (evento) => {
       slug: articulo.slug,
       resumen: articulo.resumen,
       tipo: articulo.tipo,
+      contentIntent: articulo.contentIntent,
       categoriaId: articulo.categoriaId,
       portadaId: articulo.portadaId,
       temaIds: articulo.temaIds,
@@ -68,8 +81,12 @@ export default defineEventHandler(async (evento) => {
       seo: articulo.seo
     }
     const resultadoIa = await reescribirArticuloConDeepSeek(datosActuales, entrada.instruccion)
+    const datosReescritos = validarEntradaEditorial(
+      esquemaDatosEditorArticulo,
+      resultadoIa.datos
+    )
     const guardado = await guardarArticuloEditorial(cliente, articuloId, {
-      ...resultadoIa.datos,
+      ...datosReescritos,
       versionBloqueo: entrada.versionBloqueo,
       notaCambio: 'Cambios solicitados aplicados con IA'
     })
@@ -80,7 +97,7 @@ export default defineEventHandler(async (evento) => {
       resultadoIa.proveedor,
       resultadoIa.modelo,
       resultadoIa.duracionMs,
-      resultadoIa.datos
+      datosReescritos
     )
     return guardado
   } catch (error) {

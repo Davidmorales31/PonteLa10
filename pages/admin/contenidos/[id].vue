@@ -45,9 +45,12 @@ import type {
 import type { MedioEditorial } from '~/types/mediaEditorial'
 import {
   crearSlugEditorial,
+  descripcionesIntencionContenido,
   esEstadoEditableContenido,
   esquemaDatosEditorArticulo,
-  etiquetasEstadoContenido
+  etiquetasEstadoContenido,
+  etiquetasIntencionContenido,
+  intencionesContenidoEditorial
 } from '~/utils/editorial/contenido'
 import {
   convertirBloquesADocumento,
@@ -362,6 +365,7 @@ function extraerDatosDetalle(
     slug: detalle.slug,
     resumen: detalle.resumen,
     tipo: detalle.tipo,
+    contentIntent: detalle.contentIntent,
     categoriaId: detalle.categoriaId,
     portadaId: detalle.portadaId,
     temaIds: [...detalle.temaIds],
@@ -1104,6 +1108,25 @@ function formatearFecha(fecha: string): string {
                 <option value="opinion">Opinión</option>
                 <option value="especial">Especial</option>
               </select>
+            </label>
+            <label>
+              Intención estratégica
+              <select v-model="formulario.contentIntent" :disabled="!puedeEditar">
+                <option :value="null" disabled>
+                  Selecciona la intención estratégica
+                </option>
+                <option
+                  v-for="intencion in intencionesContenidoEditorial"
+                  :key="intencion"
+                  :value="intencion"
+                >
+                  {{ etiquetasIntencionContenido[intencion] }}
+                </option>
+              </select>
+              <small v-if="formulario.contentIntent">
+                {{ descripcionesIntencionContenido[formulario.contentIntent] }}
+              </small>
+              <small v-else>Los contenidos históricos se mantienen sin clasificación hasta que un editor la defina.</small>
             </label>
             <label>
               Sección

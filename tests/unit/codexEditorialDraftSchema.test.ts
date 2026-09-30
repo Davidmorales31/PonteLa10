@@ -13,6 +13,7 @@ const expediente = {
   storyFingerprint: 'a'.repeat(64),
   titleHint: 'La noticia confirmada que cambia el panorama',
   contentType: 'noticia' as const,
+  contentIntent: 'breaking' as const,
   researchSummary: 'Una investigación documentada con contexto, cronología y datos verificables. '.repeat(2),
   trend: {
     term: 'selección Colombia',
@@ -65,6 +66,15 @@ describe('contrato de borrador editorial Codex', () => {
     })
 
     expect(resultado.success).toBe(false)
+  })
+
+  it('rechaza una intención ausente o fuera del enum contractual', () => {
+    const { contentIntent: _intencion, ...sinIntencion } = expediente
+    expect(esquemaBorradorCodex.safeParse(sinIntencion).success).toBe(false)
+    expect(esquemaBorradorCodex.safeParse({
+      ...expediente,
+      contentIntent: 'viral'
+    }).success).toBe(false)
   })
 
   it('rechaza fuentes, temas o artículos repetidos y campos no contratados', () => {

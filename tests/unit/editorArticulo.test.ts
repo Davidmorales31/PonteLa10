@@ -19,6 +19,7 @@ const datosValidos = {
   slug: 'colombia-prepara-nueva-jornada',
   resumen: 'Claves y protagonistas antes del próximo partido.',
   tipo: 'noticia' as const,
+  contentIntent: 'explainer' as const,
   categoriaId: null,
   portadaId: null,
   temaIds: [],

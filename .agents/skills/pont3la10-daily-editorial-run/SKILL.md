@@ -84,6 +84,11 @@ fails before sending a request.
    matches, and propose a deduplicated public topic only when the catalog has no
    equivalent. Never fabricate an internal label, category, or related article.
    Derive human-review flags from the content type and verified photo receipt.
+   Declare `contentIntent` explicitly and choose only one supported value:
+   `search_utility`, `breaking`, `explainer`, `evergreen`, `data_story`,
+   `special`, `opinion`, `game_support`, `social_first` or `update`. It is
+   separate from `contentType`; never infer it from the type. For `update`,
+   include the exact existing related article that is being updated.
 
    Before saving or submitting each proposal, count the words in its plain-text
    `body` after trimming and collapsing whitespace. A complete Codex article
