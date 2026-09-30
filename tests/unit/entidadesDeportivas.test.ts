@@ -19,7 +19,11 @@ const mapeos: MapeoProveedorDeportivo[] = [
   { proveedor: 'api-sports', tipoEntidad: 'team', idExterno: '101', idInterno: 'equipo-interno-1' },
   { proveedor: 'the-sports-db', tipoEntidad: 'team', idExterno: '101', idInterno: 'equipo-interno-2' },
   { proveedor: 'api-sports', tipoEntidad: 'team', idExterno: '202', idInterno: 'equipo-interno-3' },
-  { proveedor: 'api-sports', tipoEntidad: 'competition', idExterno: '9', idInterno: 'competencia-interna-1' }
+  { proveedor: 'api-sports', tipoEntidad: 'competition', idExterno: '9', idInterno: 'competencia-interna-1' },
+  {
+    proveedor: 'api-sports', tipoEntidad: 'fixture', idExterno: '10',
+    idInterno: 'partido-interno-1', slugInterno: 'equipo-local-vs-visitante-2026-09-30'
+  }
 ]
 
 describe('identidades deportivas internas', () => {
@@ -31,6 +35,9 @@ describe('identidades deportivas internas', () => {
     expect(resolver('api-sports', 'competition', '101')).toBeUndefined()
     expect(resolver('api-sports', 'team', 'nombre-parecido')).toBeUndefined()
     expect(resolver('the-sports-db', 'competition', '9')).toBeUndefined()
+    expect(resolver('api-sports', 'fixture', '10')).toBe('partido-interno-1')
+    expect(resolver.slugInterno?.('api-sports', 'fixture', '10')).toBe('equipo-local-vs-visitante-2026-09-30')
+    expect(resolver.slugInterno?.('the-sports-db', 'fixture', '10')).toBeUndefined()
   })
 
   it('añade IDs internos estables sin sustituir los identificadores ni nombres del proveedor', () => {
@@ -46,6 +53,8 @@ describe('identidades deportivas internas', () => {
 
     expect(partidoOriginal).toMatchObject({
       competenciaIdInterno: 'competencia-interna-1',
+      idInterno: 'partido-interno-1',
+      slugInterno: 'equipo-local-vs-visitante-2026-09-30',
       equipoLocal: { id: '101', idInterno: 'equipo-interno-1' },
       equipoVisitante: { id: '202', idInterno: 'equipo-interno-3' }
     })

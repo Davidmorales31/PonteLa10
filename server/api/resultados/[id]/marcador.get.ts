@@ -26,6 +26,7 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaMarcado
     const deporte = (coincidenciaTheSportsDb[1] || 'futbol') as RespuestaMarcadorPartido['partido']['deporte']
     const resolverIdentidad = deporte === 'futbol'
       ? await obtenerResolverIdentidadDeportiva(configuracion.public, 'the-sports-db', [
+          eventoGratuito.idEvent,
           eventoGratuito.idLeague,
           eventoGratuito.idHomeTeam,
           eventoGratuito.idAwayTeam
@@ -80,6 +81,7 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaMarcado
   }
 
   const resolverIdentidad = await obtenerResolverIdentidadDeportiva(configuracion.public, 'api-sports', [
+    fixture.fixture.id,
     fixture.league.id,
     fixture.teams.home.id,
     fixture.teams.away.id

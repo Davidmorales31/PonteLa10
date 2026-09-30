@@ -2,6 +2,7 @@
 import { ArrowUpRight, Clock3 } from '@lucide/vue'
 import type { EstadoPartido, RespuestaResultados } from '~/types/resultados'
 import { seleccionarPartidoRespuestaDirecta } from '~/utils/resultadosDeportivos'
+import { construirRutaPartido } from '~/utils/rutasPartidos'
 import { construirUrlAbsoluta } from '~/utils/seo'
 
 const configuracion = useRuntimeConfig()
@@ -54,7 +55,7 @@ useSeoPont3la10(() => ({
         itemListElement: partidos.value.map((partido, posicion) => ({
           '@type': 'ListItem', position: posicion + 1,
           name: `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}`,
-          url: construirUrlAbsoluta(String(configuracion.public.siteUrl), `/resultados/${partido.id}`)
+          url: construirUrlAbsoluta(String(configuracion.public.siteUrl), construirRutaPartido(partido))
         }))
       }
     }]

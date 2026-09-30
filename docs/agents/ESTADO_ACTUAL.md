@@ -1,5 +1,28 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-17 — URL canónica estable de partidos (2026-09-30, rama aislada):**
+  se agregó identidad persistente de fixtures (`sports_fixtures`) con UUID,
+  slug público y marca de primera publicación; el slug queda inmutable tras
+  exponerse. Los mappings se resuelven exactamente por proveedor, tipo e ID
+  externo, con unicidad por fixture/proveedor y RLS/grants por columna. La ruta
+  `/partidos/{slug}` comparte detalle, estados, SEO y analítica consentida con
+  `/resultados/{id}`, que se conserva por compatibilidad. Tarjetas, respuesta
+  directa y listados enlazan al slug solo cuando hay mapping aprobado; no se
+  inventan URLs a partir de nombres o fechas. Revisión de seguridad detectó y
+  cerró ambigüedades de mapping y edición del slug tras despublicar. Validado:
+  lint, prueba relacionada (10), suite (36 archivos/198 pruebas), typecheck,
+  build y `git diff --check`. `agent-browser` confirmó ambas rutas, un H1,
+  viewport móvil de 390 px sin desbordamiento y cero violaciones Axe; el
+  análisis deja contraste/diferenciación de enlaces del shell en revisión
+  manual. No se pudo probar un fixture real: falta configuración pública de
+  Supabase y datos aprobados. pgTAP (15 aserciones) no se ejecutó porque Docker
+  y Podman no están disponibles; no se aplicó SQL remoto. Persisten las 15
+  vulnerabilidades reportadas previamente por `npm ci` y el aviso upstream
+  DEP0155 de `@vue/shared`. Sin datos ni activos licenciados nuevos. Trabajo en
+  `codex/hu-tr-17-stable-match-url`, apilado sobre HU-TR-16; PR pendiente de
+  creación, sin aprobar ni fusionar. Handoff:
+  `docs/agents/handoffs/2026-09-30-hu-tr-17-url-canonica-partidos.md`.
+
 - **HU-TR-16 — identidad interna y mappings deportivos (2026-09-30, rama
   aislada):** se añadieron las cinco tablas del primer corte de fútbol:
   competencias, equipos, jugadores, membresías y mappings por proveedor/tipo/ID
@@ -20,7 +43,7 @@
   `@vue/shared`. Sigue pendiente confirmar derechos/licencia escrita antes de
   poblar o exponer datos/activos licenciados. Rama
   `codex/hu-tr-16-sports-entities`, commit `ba579b8`; PR #43 abierta y
-  mergeable contra `codex/hu-tr-13-direct-answer`, Vercel pendiente, sin
+  mergeable contra `codex/hu-tr-13-direct-answer`, Vercel Preview exitoso, sin
   aprobar ni fusionar. Handoff:
   `docs/agents/handoffs/2026-09-30-hu-tr-16-identidades-deportivas.md`.
 

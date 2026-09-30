@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { Bell, RefreshCw, Star } from '@lucide/vue'
 import type { DetallePartidoResultado, EquipoResultado, RespuestaMarcadorPartido } from '~/types/resultados'
+import { construirEndpointDetallePartido, construirRutaCanonicaDetallePartido } from '~/utils/rutasPartidos'
 import { construirUrlAbsoluta, imagenSeoPredeterminada, robotsNoIndex } from '~/utils/seo'
 
+definePageMeta({ alias: ['/partidos/:id'] })
+
 const ruta = useRoute()
+const idRuta = computed(() => String(ruta.params.id || ''))
+const endpointDetalle = computed(() => construirEndpointDetallePartido(
+  idRuta.value,
+  String(ruta.path).startsWith('/partidos/')
+))
 const pestanaActiva = ref<'resumen' | 'estadisticas' | 'alineaciones' | 'minuto'>('resumen')
 const actualizandoMarcador = ref(false)
 const errorActualizacion = ref(false)
@@ -11,11 +19,18 @@ const zonaHoraria = ref('America/Bogota')
 const { estaSiguiendo, alternarSeguimiento, notificarCambioMarcador } = useSeguimientoPartidos()
 const analitica = useAnaliticaPublica()
 let identificadorIntervalo: ReturnType<typeof setInterval> | undefined
+let ultimoPartidoMedido = ''
 
 const { data: detalle, status, error, refresh } = await useFetch<DetallePartidoResultado>(
-  () => `/api/resultados/${ruta.params.id}`,
-  { key: `detalle-resultado-${String(ruta.params.id)}`, lazy: true }
+  () => endpointDetalle.value,
+  { key: computed(() => `detalle-resultado-${idRuta.value}`) }
 )
+
+watch(() => detalle.value?.partido.id, (id) => {
+  if (!import.meta.client || !id || id === ultimoPartidoMedido) return
+  ultimoPartidoMedido = id
+  void analitica.registrarEvento('match_view')
+}, { immediate: true })
 
 const pestanas = computed(() => {
   const opciones: Array<{
@@ -72,7 +87,7 @@ async function actualizarMarcador() {
   actualizandoMarcador.value = true
   errorActualizacion.value = false
   try {
-    const respuesta = await $fetch<RespuestaMarcadorPartido>(`/api/resultados/${ruta.params.id}/marcador`)
+    const respuesta = await $fetch<RespuestaMarcadorPartido>(`/api/resultados/${encodeURIComponent(detalle.value.partido.id)}/marcador`)
     const partidoAnterior = detalle.value.partido
     detalle.value = { ...detalle.value, partido: respuesta.partido, actualizadoEn: respuesta.actualizadoEn }
     notificarCambioMarcador(partidoAnterior, respuesta.partido)
@@ -85,7 +100,7 @@ async function actualizarMarcador() {
 
 async function alternarSeguimientoActual() {
   if (!detalle.value) return
-  void analitica.registrarEvento('direct_answer_action')
+  void analitica.registrarEvento('match_follow_toggle')
   await alternarSeguimiento(detalle.value.partido)
 }
 
@@ -105,7 +120,9 @@ useSeoPont3la10(() => {
   const descripcion = partido
     ? `${nombrePartido}${marcador}: marcador, resumen, estadísticas, eventos y alineaciones disponibles en Pont3la10.`
     : 'Marcador, resumen, estadísticas, eventos y alineaciones disponibles del partido.'
-  const rutaCanonica = `/resultados/${String(ruta.params.id)}`
+  const rutaCanonica = partido
+    ? construirRutaCanonicaDetallePartido(partido)
+    : `/resultados/${encodeURIComponent(idRuta.value)}`
   const urlCanonica = construirUrlAbsoluta(String(configuracion.public.siteUrl), rutaCanonica)
 
   return {
@@ -193,12 +210,20 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
 <template>
   <div class="pagina-detalle-resultado">
     <EsqueletoResultados v-if="status === 'pending'" tipo="detalle" />
-    <EstadoDatosResultados
-      v-else-if="error"
-      descripcion="No fue posible consultar el partido. El proveedor no entregó datos disponibles."
-      :permitir-reintento="true"
-      @reintentar="refresh"
-    />
+    <template v-else-if="error">
+      <header class="cabecera-detalle-partido">
+        <div>
+          <p>Resultados</p>
+          <h1>Detalle del partido</h1>
+        </div>
+      </header>
+      <EstadoDatosResultados
+        titulo="No pudimos cargar este partido"
+        descripcion="No fue posible consultar el partido. El proveedor no entregó datos disponibles."
+        :permitir-reintento="true"
+        @reintentar="refresh"
+      />
+    </template>
     <template v-else-if="detalle">
       <header class="cabecera-detalle-partido">
         <div>

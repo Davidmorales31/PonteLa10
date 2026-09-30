@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { MapPin } from '@lucide/vue'
 import type { PartidoResultado } from '~/types/resultados'
+import { construirRutaPartido } from '~/utils/rutasPartidos'
 
 withDefaults(defineProps<{ partido: PartidoResultado; mostrarEnlace?: boolean }>(), { mostrarEnlace: true })
 </script>
@@ -32,6 +33,6 @@ withDefaults(defineProps<{ partido: PartidoResultado; mostrarEnlace?: boolean }>
       <MapPin aria-hidden="true" />
       {{ [partido.estadio, partido.ciudad].filter(Boolean).join(', ') }}
     </footer>
-    <NuxtLink v-if="mostrarEnlace" class="enlace-detalle-partido" :to="`/resultados/${partido.id}`">Ver detalles del partido</NuxtLink>
+    <NuxtLink v-if="mostrarEnlace" class="enlace-detalle-partido" :to="construirRutaPartido(partido)">Ver detalles del partido</NuxtLink>
   </article>
 </template>

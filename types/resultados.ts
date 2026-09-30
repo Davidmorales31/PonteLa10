@@ -13,6 +13,8 @@ export interface EquipoResultado {
 
 export interface PartidoResultado {
   id: string
+  idInterno?: string
+  slugInterno?: string
   deporte: DeporteResultado
   competenciaIdInterno?: string
   competencia: string

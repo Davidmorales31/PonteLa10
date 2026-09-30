@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue'
 import type { PartidoResultado } from '~/types/resultados'
+import { construirRutaPartido } from '~/utils/rutasPartidos'
 import { crearDatosRespuestaDirectaDeportiva } from '~/utils/respuestaDirectaDeportiva'
 import { zonaHorariaColombia } from '~/utils/zonasHorarias'
 
@@ -74,7 +75,7 @@ function registrarAccion() {
     <NuxtLink
       v-if="mostrarEnlaceDetalle"
       class="enlace-detalle-partido"
-      :to="`/resultados/${partido.id}`"
+      :to="construirRutaPartido(partido)"
       @click="registrarAccion"
     >Ver detalles del partido</NuxtLink>
   </article>

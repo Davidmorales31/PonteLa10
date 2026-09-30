@@ -62,7 +62,16 @@ interface ClasificacionApiFootball {
 
 export default defineCachedEventHandler(async (evento): Promise<DetallePartidoResultado> => {
   const idPartido = getRouterParam(evento, 'id') || ''
-  const configuracion = useRuntimeConfig()
+  return consultarDetalleResultadoPorId(idPartido, useRuntimeConfig())
+}, {
+  maxAge: 300,
+  getKey: evento => `detalle-partido-real-${getRouterParam(evento, 'id') || 'invalido'}`
+})
+
+export async function consultarDetalleResultadoPorId(
+  idPartido: string,
+  configuracion: ReturnType<typeof useRuntimeConfig>
+): Promise<DetallePartidoResultado> {
   const apiSportsKey = String(configuracion.apiSportsKey || '')
   const coincidenciaTheSportsDb = idPartido.match(/^tsdb-(?:(futbol|baloncesto|tenis|beisbol)-)?(\d+)$/)
 
@@ -121,6 +130,7 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
     configuracion.public,
     'api-sports',
     [
+      fixture.fixture.id,
       fixture.league.id,
       fixture.teams.home.id,
       fixture.teams.away.id,
@@ -139,10 +149,7 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
     actualizadoEn: new Date().toISOString(),
     origen: 'api-sports'
   }
-}, {
-  maxAge: 300,
-  getKey: evento => `detalle-partido-real-${getRouterParam(evento, 'id') || 'invalido'}`
-})
+}
 
 async function consultarDetalleGratuito(
   idPartido: string,
@@ -161,6 +168,7 @@ async function consultarDetalleGratuito(
     consultarDetalleAdicionalTheSportsDb(configuracion, idPartido),
     deporte === 'futbol'
       ? obtenerResolverIdentidadDeportiva(configuracionPublica, 'the-sports-db', [
+          evento.idEvent,
           evento.idLeague,
           evento.idHomeTeam,
           evento.idAwayTeam

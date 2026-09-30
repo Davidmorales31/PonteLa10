@@ -54,6 +54,7 @@ export function mapearFixtureApiFootball(
   }
 
   return aplicarIdentidadesInternasPartido(partido, resolverIdentidad, 'api-sports', {
+    partido: String(fixture.fixture.id),
     competencia: String(fixture.league.id),
     equipoLocal: String(fixture.teams.home.id),
     equipoVisitante: String(fixture.teams.away.id)

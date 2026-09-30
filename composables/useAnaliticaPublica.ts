@@ -16,6 +16,8 @@ type EventoAnalitica =
   | 'hub_module_click'
   | 'direct_answer_view'
   | 'direct_answer_action'
+  | 'match_view'
+  | 'match_follow_toggle'
 
 declare global {
   interface Window {
