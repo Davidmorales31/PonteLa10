@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RespuestaResultados } from '~/types/resultados'
+import { construirRutaPartido } from '~/utils/rutasPartidos'
 import { construirUrlAbsoluta } from '~/utils/seo'
 
 const configuracion = useRuntimeConfig()
@@ -16,7 +17,7 @@ useSeoPont3la10(() => ({
     '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Resultados en vivo',
     mainEntity: { '@type': 'ItemList', itemListElement: partidosEnVivo.value.map((partido, posicion) => ({
       '@type': 'ListItem', position: posicion + 1, name: `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}`,
-      url: construirUrlAbsoluta(String(configuracion.public.siteUrl), `/resultados/${partido.id}`)
+      url: construirUrlAbsoluta(String(configuracion.public.siteUrl), construirRutaPartido(partido))
     })) }
   }
 }))

@@ -103,7 +103,7 @@ async function consultarDeporte(
       ? await obtenerResolverIdentidadDeportiva(
           configuracion.public,
           'the-sports-db',
-          eventos.flatMap(evento => [evento.idLeague, evento.idHomeTeam, evento.idAwayTeam])
+          eventos.flatMap(evento => [evento.idEvent, evento.idLeague, evento.idHomeTeam, evento.idAwayTeam])
         )
       : undefined
     const partidos = ordenarPartidosRelevantes(
@@ -137,6 +137,7 @@ async function consultarApiFootball(
     configuracionPublica,
     'api-sports',
     respuesta.response.flatMap(fixture => [
+      fixture.fixture.id,
       fixture.league.id,
       fixture.teams.home.id,
       fixture.teams.away.id

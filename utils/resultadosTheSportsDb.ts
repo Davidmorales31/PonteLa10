@@ -69,6 +69,7 @@ export function mapearEventoTheSportsDb(
     deporte === 'futbol' ? resolverIdentidad : undefined,
     'the-sports-db',
     {
+      partido: evento.idEvent,
       competencia: evento.idLeague,
       equipoLocal: evento.idHomeTeam,
       equipoVisitante: evento.idAwayTeam

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ChevronRight } from '@lucide/vue'
 import type { PartidoResultado } from '~/types/resultados'
+import { construirRutaPartido } from '~/utils/rutasPartidos'
 
 defineProps<{ partido: PartidoResultado, zonaHoraria?: string }>()
 </script>
@@ -9,7 +10,7 @@ defineProps<{ partido: PartidoResultado, zonaHoraria?: string }>()
   <NuxtLink
     class="tarjeta-marcador-compacto"
     :class="{ 'partido-en-vivo': partido.estado === 'en-vivo' }"
-    :to="`/resultados/${partido.id}`"
+    :to="construirRutaPartido(partido)"
     :aria-label="`Ver ${partido.equipoLocal.nombre} contra ${partido.equipoVisitante.nombre}`"
   >
     <header>
