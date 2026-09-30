@@ -203,6 +203,7 @@
 }
 
 .cabecera-resultados p svg { width: 14px; height: 14px; fill: var(--yellow); }
+.pagina-seo-resultados .cabecera-resultados > div > p { color: #775600; }
 .cabecera-resultados h1,
 .cabecera-detalle-partido h1 { font-size: clamp(2rem, 3.5vw, 3.1rem); }
 .cabecera-resultados > div > span { display: block; margin-top: 9px; color: var(--muted); font-weight: 650; }
@@ -293,6 +294,108 @@
   color: #123e70;
   outline: none;
 }
+
+.filtros-partidos-hoy {
+  min-width: 0;
+  margin: 0 0 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fff;
+  padding: 14px 16px;
+  color: var(--navy);
+}
+
+.filtros-partidos-hoy legend {
+  padding: 0 5px;
+  color: #334761;
+  font-size: 0.9rem;
+  font-weight: 850;
+}
+
+.controles-filtros-partidos-hoy {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  align-items: end;
+  gap: 12px;
+}
+
+.controles-filtros-partidos-hoy > label:not(.filtro-destacados-partidos-hoy) {
+  display: grid;
+  min-width: 0;
+  gap: 6px;
+  color: #45566e;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.controles-filtros-partidos-hoy select {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 1px solid #cbd8e8;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0 10px;
+  color: #203854;
+  font: inherit;
+}
+
+.controles-filtros-partidos-hoy select:focus-visible,
+.filtro-destacados-partidos-hoy input:focus-visible,
+.boton-limpiar-filtros-partidos-hoy:focus-visible,
+.estado-vacio-filtro-partidos-hoy button:focus-visible {
+  outline: 3px solid #2389dc;
+  outline-offset: 2px;
+}
+
+.filtro-destacados-partidos-hoy {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 9px;
+  color: #334761;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.filtro-destacados-partidos-hoy input { width: 18px; height: 18px; accent-color: #1675c2; }
+
+.boton-limpiar-filtros-partidos-hoy,
+.estado-vacio-filtro-partidos-hoy button {
+  min-height: 44px;
+  border: 1px solid #cbd8e8;
+  border-radius: 10px;
+  background: #f4f7fb;
+  padding: 0 14px;
+  color: #29435f;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.boton-limpiar-filtros-partidos-hoy:hover,
+.estado-vacio-filtro-partidos-hoy button:hover {
+  border-color: #2389dc;
+  background: #edf6ff;
+}
+
+.resumen-filtros-partidos-hoy {
+  margin: 11px 0 0;
+  color: #60738d;
+  font-size: 0.76rem;
+}
+
+.estado-vacio-filtro-partidos-hoy {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.estado-vacio-filtro-partidos-hoy p { margin: 0; }
 
 .contador-en-vivo {
   display: inline-flex;
@@ -406,6 +509,7 @@
 .partido-destacado-resultados > header > div { display: flex; align-items: center; gap: 9px; }
 .respuesta-directa-deportiva > header > div { min-width: 0; flex-wrap: wrap; }
 .respuesta-directa-deportiva > header h2 { margin: 0; color: var(--navy); font-size: 0.78rem; font-weight: 950; text-transform: uppercase; }
+.respuesta-directa-deportiva > header > div > small { color: #45566e; font-size: 0.72rem; }
 .partido-destacado-resultados > header span { color: var(--navy); font-size: 0.74rem; font-weight: 950; text-transform: uppercase; }
 .partido-destacado-resultados > header small { color: var(--muted); font-size: 0.7rem; }
 .respuesta-directa-deportiva .estado-respuesta-directa { border-radius: 999px; background: #e9f6ee; padding: 6px 10px; color: #14623a; font-size: 0.68rem; }

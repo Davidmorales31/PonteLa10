@@ -2532,6 +2532,10 @@ body.tema-publico-azul .cabecera-resultados p {
   color: #ffd800;
 }
 
+body.tema-publico-azul .pagina-seo-resultados .cabecera-resultados > div > p {
+  color: #ffd800;
+}
+
 .layout-listado-medio {
   grid-template-columns: minmax(0, 1fr);
 }
@@ -2566,6 +2570,7 @@ body.tema-publico-azul .lista-articulos .tarjeta-articulo,
 body.tema-publico-azul .grilla-especiales-publicos article,
 body.tema-publico-azul .filtros-deporte,
 body.tema-publico-azul .filtros-estado,
+body.tema-publico-azul .filtros-partidos-hoy,
 body.tema-publico-azul .partido-destacado-resultados,
 body.tema-publico-azul .panel-resultados,
 body.tema-publico-azul .seccion-lista-resultados,
@@ -2575,6 +2580,36 @@ body.tema-publico-azul .acciones-seguimiento-partido {
   background: #0c2443;
   color: #edf3ff;
   box-shadow: none;
+}
+
+body.tema-publico-azul .filtros-partidos-hoy legend,
+body.tema-publico-azul .controles-filtros-partidos-hoy > label,
+body.tema-publico-azul .filtro-destacados-partidos-hoy {
+  color: #edf3ff;
+}
+
+body.tema-publico-azul .controles-filtros-partidos-hoy select {
+  border-color: #355473;
+  background: #102c51;
+  color: #edf3ff;
+}
+
+body.tema-publico-azul .resumen-filtros-partidos-hoy {
+  color: #a8bbd5;
+}
+
+body.tema-publico-azul .boton-limpiar-filtros-partidos-hoy,
+body.tema-publico-azul .estado-vacio-filtro-partidos-hoy button {
+  border-color: #355473;
+  background: #102c51;
+  color: #dbe6f5;
+}
+
+body.tema-publico-azul .boton-limpiar-filtros-partidos-hoy:hover,
+body.tema-publico-azul .estado-vacio-filtro-partidos-hoy button:hover {
+  border-color: #ffd800;
+  background: #ffd800;
+  color: #08204a;
 }
 
 body.tema-publico-azul .lista-articulos .tarjeta-articulo:hover,
@@ -2593,6 +2628,7 @@ body.tema-publico-azul .partido-destacado-resultados > header span,
 body.tema-publico-azul .equipo-destacado strong,
 body.tema-publico-azul .resultado-destacado b,
 body.tema-publico-azul .respuesta-directa-deportiva > header h2,
+body.tema-publico-azul .respuesta-directa-deportiva > header > div > small,
 body.tema-publico-azul .datos-clave-respuesta-directa dd,
 body.tema-publico-azul .fila-equipo-marcador strong,
 body.tema-publico-azul .fila-equipo-marcador b,
