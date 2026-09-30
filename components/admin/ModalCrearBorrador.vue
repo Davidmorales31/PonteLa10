@@ -29,6 +29,7 @@ const props = defineProps<{
   categorias: CategoriaEditorial[]
   guardando: boolean
   error: string
+  valoresIniciales?: Partial<EntradaBorradorFormulario>
 }>()
 
 const emit = defineEmits<{
@@ -52,12 +53,16 @@ const formularioValido = computed(() =>
 
 watch(() => props.abierto, (abierto) => {
   if (!abierto) return
-  formulario.titulo = ''
+  const iniciales = props.valoresIniciales
+  formulario.titulo = iniciales?.titulo || ''
   formulario.resumen = ''
   formulario.tipo = 'noticia'
-  formulario.contentIntent = 'breaking'
-  formulario.categoriaId = null
-})
+  const intencionInicial = iniciales?.contentIntent
+  formulario.contentIntent = intencionInicial && intencionInicial !== 'update'
+    ? intencionInicial
+    : 'breaking'
+  formulario.categoriaId = iniciales?.categoriaId || null
+}, { immediate: true })
 
 function cerrar() {
   if (!props.guardando) emit('cerrar')

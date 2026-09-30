@@ -13,7 +13,7 @@ export interface ScoresOportunidadEstrategica {
 
 export const VERSION_SCORE_ESTRATEGICO = 'v1'
 
-const pesosBase = {
+const pesosBase: Record<keyof ScoresOportunidadEstrategica, number> = {
   recency: 0.05,
   relevance: 0.14,
   novelty: 0.06,
@@ -24,7 +24,7 @@ const pesosBase = {
   interactivePotential: 0.06,
   firstPartyData: 0.06,
   competitionOpportunity: 0.07
-} as const
+}
 
 export function calcularStrategicOpportunityScore(
   scores: ScoresOportunidadEstrategica,

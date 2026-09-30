@@ -25,7 +25,8 @@ export default defineEventHandler(async (evento) => {
     })
   }
 
-  const { data, error } = await obtenerClienteCodexPrivado(evento)
+  const cliente = obtenerClienteCodexPrivado(evento)
+  const { data, error } = await cliente
     .rpc('get_codex_editorial_context', { p_run_id: resultado.data.runId })
   if (error || !data || typeof data !== 'object') {
     const problema = clasificarErrorContextoCodex(error)
@@ -36,5 +37,26 @@ export default defineEventHandler(async (evento) => {
     })
   }
 
-  return data
+  const { data: hubs, error: errorHubs } = await cliente
+    .rpc('get_codex_editorial_hub_targets')
+  if (errorHubs) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'No se pudo cargar el catálogo seguro de hubs editoriales.',
+      data: { codigo: 'CATALOGO_HUBS_CODEX_NO_DISPONIBLE' }
+    })
+  }
+
+  const contexto = data as Record<string, unknown>
+  const publicacionesRecientes = Array.isArray(contexto.recentPublished)
+    ? contexto.recentPublished
+    : []
+
+  return {
+    ...contexto,
+    actionTargets: {
+      articles: publicacionesRecientes,
+      hubs: Array.isArray(hubs) ? hubs : []
+    }
+  }
 })

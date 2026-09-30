@@ -200,7 +200,16 @@ const esquemaScoresTendencia = z.object({
   competitionOpportunity: z.number().int().min(0).max(100)
 }).strict()
 
-const esquemaOportunidadCodex = z.object({
+export const accionesEditorialesCodex = [
+  'create_article', 'update_article', 'update_hub', 'create_data_story',
+  'create_game_candidate', 'manual_review', 'discard'
+] as const
+
+export type AccionEditorialCodex = typeof accionesEditorialesCodex[number]
+
+const tiposRecursoObjetivoEditorial = ['article', 'hub'] as const
+
+export const esquemaOportunidadCodex = z.object({
   fingerprint: z.string().regex(/^[a-f0-9]{64}$/i),
   term: z.string().trim().min(2).max(160),
   titleHint: z.string().trim().min(8).max(220),
@@ -209,8 +218,43 @@ const esquemaOportunidadCodex = z.object({
   observedAt: z.string().datetime({ offset: true }),
   relevanceReason: z.string().trim().min(30).max(600),
   contentIntent: z.enum(valoresIntencionContenido),
+  recommendedAction: z.enum(accionesEditorialesCodex),
+  targetResourceId: z.string().uuid().nullable().optional().default(null),
+  targetResourceType: z.enum(tiposRecursoObjetivoEditorial).nullable().optional().default(null),
+  actionReason: z.string().trim().min(20).max(600),
   scores: esquemaScoresTendencia
-}).strict()
+}).strict().superRefine((oportunidad, contexto) => {
+  const requiereTarget = ['update_article', 'update_hub'].includes(oportunidad.recommendedAction)
+  if (requiereTarget && (!oportunidad.targetResourceId || !oportunidad.targetResourceType)) {
+    contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['targetResourceId'], message: 'Una actualización requiere un recurso objetivo válido.' })
+  }
+  if (oportunidad.recommendedAction === 'update_article' && oportunidad.targetResourceType !== 'article'
+    || oportunidad.recommendedAction === 'update_hub' && oportunidad.targetResourceType !== 'hub') {
+    contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['targetResourceType'], message: 'El tipo de recurso debe coincidir con la acción recomendada.' })
+  }
+  if (!requiereTarget && (oportunidad.targetResourceId || oportunidad.targetResourceType)) {
+    contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['targetResourceId'], message: 'Solo las actualizaciones pueden declarar un recurso objetivo.' })
+  }
+})
+
+export const esquemaDecisionOportunidadCodex = z.object({
+  action: z.enum(accionesEditorialesCodex),
+  targetResourceId: z.string().uuid().nullable().optional().default(null),
+  targetResourceType: z.enum(tiposRecursoObjetivoEditorial).nullable().optional().default(null),
+  reason: z.string().trim().min(20).max(600)
+}).strict().superRefine((decision, contexto) => {
+  const requiereTarget = ['update_article', 'update_hub'].includes(decision.action)
+  if (requiereTarget && (!decision.targetResourceId || !decision.targetResourceType)) {
+    contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['targetResourceId'], message: 'Una actualización requiere un recurso objetivo.' })
+  }
+  if (decision.action === 'update_article' && decision.targetResourceType !== 'article'
+    || decision.action === 'update_hub' && decision.targetResourceType !== 'hub') {
+    contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['targetResourceType'], message: 'El tipo de recurso debe coincidir con la acción elegida.' })
+  }
+  if (!requiereTarget && (decision.targetResourceId || decision.targetResourceType)) {
+    contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['targetResourceId'], message: 'Solo las actualizaciones admiten recurso objetivo.' })
+  }
+})
 
 export const esquemaContextoCodex = z.object({
   runId: z.string().uuid()

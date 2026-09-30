@@ -5,6 +5,7 @@ import { firmaCodexEsValida } from '~/server/utils/codexEditorialPrivado'
 import {
   esquemaAgendaCodex,
   esquemaConsultaSaludCodex,
+  esquemaDecisionOportunidadCodex,
   esquemaPortadaCodex,
   esquemaPortadaIACodex,
   esquemaPropuestaCodex
@@ -289,6 +290,10 @@ describe('API privada de propuestas Codex', () => {
       observedAt: '2026-09-26T12:00:00Z',
       relevanceReason: 'La tendencia conecta con actividad deportiva y merece investigarse antes de redactar.',
       contentIntent: 'explainer' as const,
+      recommendedAction: 'create_article' as const,
+      targetResourceId: null,
+      targetResourceType: null,
+      actionReason: 'La evidencia muestra una consulta nueva sin un recurso publicado que convenga actualizar.',
       scores: { recency: 90, relevance: 82, novelty: 75, editorialFit: 88, searchDemand: 80, lifespan: 76, socialPotential: 60, interactivePotential: 35, firstPartyData: 20, competitionOpportunity: 70 }
     }
     const agenda = {
@@ -320,10 +325,109 @@ describe('API privada de propuestas Codex', () => {
         ...agenda.categories[0],
         opportunities: [{
           ...oportunidad,
+          recommendedAction: 'update_article',
+          targetResourceId: 'bc34038f-fbac-4604-ae0c-d13bc6ad8027',
+          targetResourceType: 'article'
+        }]
+      }]
+    }).success).toBe(true)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{
+          ...oportunidad,
+          recommendedAction: 'update_hub',
+          targetResourceId: 'bc34038f-fbac-4604-ae0c-d13bc6ad8027',
+          targetResourceType: 'hub'
+        }]
+      }]
+    }).success).toBe(true)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{
+          ...oportunidad,
           scores: { ...oportunidad.scores, searchDemand: 101 }
         }]
       }]
     }).success).toBe(false)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{
+          ...oportunidad,
+          recommendedAction: 'update_article',
+          targetResourceId: null,
+          targetResourceType: null
+        }]
+      }]
+    }).success).toBe(false)
+  })
+
+  it('valida decisiones humanas y obliga a enlazar targets compatibles', () => {
+    const articuloId = 'bc34038f-fbac-4604-ae0c-d13bc6ad8027'
+    const razon = 'La búsqueda coincide con este recurso y la actualización mantiene una sola URL canónica.'
+    const acciones = [
+      'create_article', 'create_data_story', 'create_game_candidate', 'manual_review', 'discard'
+    ] as const
+
+    for (const action of acciones) {
+      expect(esquemaDecisionOportunidadCodex.safeParse({ action, reason: razon }).success).toBe(true)
+    }
+    expect(esquemaDecisionOportunidadCodex.safeParse({
+      action: 'update_article', targetResourceId: articuloId,
+      targetResourceType: 'article', reason: razon
+    }).success).toBe(true)
+    expect(esquemaDecisionOportunidadCodex.safeParse({
+      action: 'update_hub', targetResourceId: articuloId,
+      targetResourceType: 'hub', reason: razon
+    }).success).toBe(true)
+    expect(esquemaDecisionOportunidadCodex.safeParse({
+      action: 'update_article', reason: razon
+    }).success).toBe(false)
+    expect(esquemaDecisionOportunidadCodex.safeParse({
+      action: 'update_hub', targetResourceId: articuloId,
+      targetResourceType: 'article', reason: razon
+    }).success).toBe(false)
+    expect(esquemaDecisionOportunidadCodex.safeParse({
+      action: 'discard', targetResourceId: articuloId,
+      targetResourceType: 'article', reason: razon
+    }).success).toBe(false)
+    expect(esquemaDecisionOportunidadCodex.safeParse({
+      action: 'discard', reason: 'No es suficiente.'
+    }).success).toBe(false)
+  })
+
+  it('persiste recomendaciones y decisiones en un registro privado append-only', () => {
+    const migracion = readFileSync(new URL(
+      '../../supabase/migrations/20260930005000_hu_tr_03_editorial_actions.sql',
+      import.meta.url
+    ), 'utf8')
+    const endpointDecision = readFileSync(new URL(
+      '../../server/api/admin/operacion/oportunidades/[id]/decision.put.ts',
+      import.meta.url
+    ), 'utf8')
+
+    expect(migracion).toContain("'editorial_action_recommended'")
+    expect(migracion).toContain("'editorial_action_confirmed'")
+    expect(migracion).toContain("'editorial_action_overridden'")
+    expect(migracion).toContain('on delete restrict')
+    expect(migracion).toContain('enable row level security')
+    expect(migracion).toContain('from public, anon, authenticated')
+    expect(migracion).toContain('grant select, insert on public.editorial_opportunity_action_events to service_role')
+    expect(migracion).toContain('set search_path = \'\'')
+    expect(migracion).toContain('security invoker')
+    expect(migracion).toContain("pg_catalog.to_regclass('public.public_hubs')")
+    expect(migracion).toContain('public.get_codex_editorial_hub_targets()')
+    expect(migracion).toContain("'targetResourceId'")
+    expect(migracion).toContain("article.status = 'published'")
+    expect(migracion).not.toMatch(/update\s+public\.articles/i)
+    expect(migracion).not.toMatch(/set\s+status\s*=\s*'(?:approved|scheduled|published)'/i)
+    expect(endpointDecision).toContain("'contenido.revisar'")
+    expect(endpointDecision).toContain("record_editorial_opportunity_decision")
   })
 
   it('mantiene la consulta de salud privada, vacía y solo de lectura', () => {
