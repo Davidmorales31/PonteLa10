@@ -30,8 +30,9 @@
   preexistentes de dependencias: 6 moderados, 8 altos, 1 crítico; lockfile sin
   cambios); `npm.cmd run lint` correcto; `npm.cmd run test:unit` correcto (30
   archivos, 153 pruebas); `npm.cmd run typecheck` correcto; `npm.cmd run build`
-  correcto; `git diff --check` correcto. Revisor de migración/seguridad confirmó
-  que no quedan hallazgos P0/P1.
+  correcto; `git diff --check` correcto; `gh pr checks 37 --watch` terminó con
+  Vercel y Vercel Preview Comments en pass, Supabase Preview en skipped. Revisor
+  de migración/seguridad confirmó que no quedan hallazgos P0/P1.
 - **Fallos:** no está disponible el binario `agent-browser`; la prueba manual con
   navegador alterno llegó al login y confirmó contenido útil, pero no pudo abrir
   Operación porque faltan `NUXT_PUBLIC_SUPABASE_URL` y

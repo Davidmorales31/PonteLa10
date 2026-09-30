@@ -16,8 +16,9 @@
   La migración añade historial de eventos append-only y RPC privadas; no se ha
   aplicado a ninguna base de datos. Revisión de migración/seguridad sin hallazgos
   P0/P1 pendientes tras endurecer la ruta administrativa. `npm ci`, lint,
-  `test:unit` (30 archivos, 153 pruebas), typecheck, build y `git diff --check`
-  pasan. La validación manual de Operación queda pendiente: el entorno local no
+  `test:unit` (30 archivos, 153 pruebas), typecheck, build, `git diff --check` y
+  deployment de Vercel para PR #37 pasan; Supabase Preview se omite. La
+  validación manual de Operación queda pendiente: el entorno local no
   tiene `NUXT_PUBLIC_SUPABASE_URL`/`NUXT_PUBLIC_SUPABASE_KEY` y redirige al login
   deshabilitado. No aprobar ni integrar desde la cuenta autora.
   Handoff: `docs/agents/handoffs/2026-09-30-hu-tr-03-accion-editorial.md`.
