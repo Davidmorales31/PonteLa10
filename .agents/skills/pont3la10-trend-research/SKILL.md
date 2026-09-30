@@ -54,8 +54,11 @@ authorized private API. Use the versioned local client from the repository root:
    another cover for a candidate whose proposal already exists.
 3. For each active category, submit at most seven researched trend opportunities
    using the contract fields `fingerprint`, `term`, `titleHint`, `trendUrl`,
-   `trendTitle`, `observedAt`, `relevanceReason`, and four scores (`recency`,
-   `relevance`, `novelty`, `editorialFit`, each 0–100). If fewer than five
+   `trendTitle`, `observedAt`, `relevanceReason`, `contentIntent`, and ten
+   scores 0–100: `recency`, `relevance`, `novelty`, `editorialFit`,
+   `searchDemand`, `lifespan`, `socialPotential`, `interactivePotential`,
+   `firstPartyData` and `competitionOpportunity`. Never send a total score:
+   the server calculates it. If fewer than five
    survive, include a concrete `omittedReason`.
    Use only category/topic IDs from context; never infer or hard-code UUIDs.
 4. Write the agenda payload using the same authoritative `runId`, the set of

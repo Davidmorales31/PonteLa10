@@ -1,5 +1,16 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-02 — Strategic Opportunity Score (2026-09-29, PR #36):** añade diez
+  señales, cálculo total exclusivamente en servidor y pesos según intención;
+  persiste el desglose en el JSON de agenda existente y muestra oportunidades
+  ordenadas en Operación mediante endpoint administrativo autorizado. La
+  migración `20260930004000` conserva RLS, deduplicación y acceso de agenda
+  solo por `service_role`. `git diff --check` y Vercel pasan. El workflow CI
+  no se dispara sobre la base encadenada `codex/hu-tr-01-intencion-contenido`
+  porque sólo escucha PR hacia `main`; falta validación completa tras integrar
+  la dependencia. No se aplicó migración ni se publicó contenido. Handoff:
+  `docs/agents/handoffs/2026-09-29-hu-tr-02-strategic-score.md`.
+
 - **HU-TR-01 — intención estratégica de contenido (2026-09-29, local):** la
   rama `codex/hu-tr-01-intencion-contenido` separa `contentIntent` de
   `contentType` para creación manual, editor, bandeja, filtros, contrato

@@ -31,6 +31,15 @@ interface SaludOperativa {
   publicacion: { programadasVencidas: number, atrasoMasAntiguoSegundos: number | null }
   cron: { estado: string, disponible: boolean, configurado: boolean | null, iniciadaEn: string | null, terminadaEn: string | null }
 }
+interface OportunidadEstrategica {
+  id: string
+  categoriaId: string
+  titulo: string
+  intencion: string
+  strategicScore: number
+  scores: Record<string, number>
+  actualizadoEn: string
+}
 
 definePageMeta({
   layout: 'admin',
@@ -47,6 +56,7 @@ const {
   error,
   refresh
 } = await useFetch<SaludOperativa>('/api/admin/operacion')
+const { data: oportunidades, refresh: recargarOportunidades } = await useFetch<OportunidadEstrategica[]>('/api/admin/operacion/oportunidades')
 
 const alertasOperativas = computed(() => {
   if (!salud.value) return []
@@ -124,7 +134,7 @@ function formatearEdad(segundos: number | null): string {
 }
 
 async function recargar() {
-  await refresh()
+  await Promise.all([refresh(), recargarOportunidades()])
 }
 </script>
 
@@ -207,6 +217,17 @@ async function recargar() {
           </dl>
         </article>
       </section>
+      <section v-if="oportunidades?.length" class="tarjeta-salud-operativa oportunidades-estrategicas" aria-labelledby="titulo-oportunidades">
+        <header><Activity aria-hidden="true" /><h2 id="titulo-oportunidades">Oportunidades estratégicas</h2></header>
+        <p>Ordenadas por Strategic Opportunity Score; el total se calcula en servidor.</p>
+        <ol>
+          <li v-for="oportunidad in oportunidades" :key="oportunidad.id">
+            <strong>{{ oportunidad.titulo }}</strong>
+            <span>{{ oportunidad.intencion }} · {{ oportunidad.strategicScore }}/100</span>
+            <small>Demanda {{ oportunidad.scores.searchDemand }} · vida útil {{ oportunidad.scores.lifespan }} · competencia {{ oportunidad.scores.competitionOpportunity }}</small>
+          </li>
+        </ol>
+      </section>
       <p class="nota-operacion-editorial">Las horas se muestran en America/Bogota. La consulta no revela mensajes internos del Cron, IDs de instancia ni contenido de artículos.</p>
     </template>
   </div>
@@ -221,6 +242,9 @@ async function recargar() {
 .tarjetas-salud-operativa { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .tarjeta-salud-operativa { display: grid; align-content: start; gap: .9rem; padding: 1.1rem; border: 1px solid var(--borde-panel, #cbd5e1); border-radius: 1rem; background: var(--superficie-panel, #fff); }
 .tarjeta-salud-operativa header { display: flex; align-items: center; gap: .65rem; color: var(--texto-panel, #10243e); }
+.oportunidades-estrategicas ol { display: grid; gap: .75rem; margin: 0; padding-left: 1.25rem; }
+.oportunidades-estrategicas li { display: grid; gap: .2rem; }
+.oportunidades-estrategicas small { color: var(--texto-secundario-panel, #64748b); }
 .tarjeta-salud-operativa header svg { width: 1.2rem; height: 1.2rem; color: #0784dc; }
 .tarjeta-salud-operativa h2 { margin: 0; font-size: 1.05rem; }
 .tarjeta-salud-operativa dl { display: grid; gap: .55rem; margin: 0; }

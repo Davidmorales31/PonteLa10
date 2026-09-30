@@ -191,7 +191,13 @@ const esquemaScoresTendencia = z.object({
   recency: z.number().int().min(0).max(100),
   relevance: z.number().int().min(0).max(100),
   novelty: z.number().int().min(0).max(100),
-  editorialFit: z.number().int().min(0).max(100)
+  editorialFit: z.number().int().min(0).max(100),
+  searchDemand: z.number().int().min(0).max(100),
+  lifespan: z.number().int().min(0).max(100),
+  socialPotential: z.number().int().min(0).max(100),
+  interactivePotential: z.number().int().min(0).max(100),
+  firstPartyData: z.number().int().min(0).max(100),
+  competitionOpportunity: z.number().int().min(0).max(100)
 }).strict()
 
 const esquemaOportunidadCodex = z.object({
@@ -202,6 +208,7 @@ const esquemaOportunidadCodex = z.object({
   trendTitle: z.string().trim().min(3).max(240),
   observedAt: z.string().datetime({ offset: true }),
   relevanceReason: z.string().trim().min(30).max(600),
+  contentIntent: z.enum(valoresIntencionContenido),
   scores: esquemaScoresTendencia
 }).strict()
 
