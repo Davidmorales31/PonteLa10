@@ -19,7 +19,7 @@
   basada en `codex/hu-tr-17-stable-match-url`; commit `285dc42`. PR #45 abierta
   contra HU-TR-17, Vercel Preview pendiente en la consulta inicial, sin
   aprobación ni fusión. Handoff:
-  Handoff: `docs/agents/handoffs/2026-09-30-hu-tr-18-filtros-partidos-hoy.md`.
+  `docs/agents/handoffs/2026-09-30-hu-tr-18-filtros-partidos-hoy.md`.
 
 - **HU-TR-17 — URL canónica estable de partidos (2026-09-30, rama aislada):**
   se agregó identidad persistente de fixtures (`sports_fixtures`) con UUID,
