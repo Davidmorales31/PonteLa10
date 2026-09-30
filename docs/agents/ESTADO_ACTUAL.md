@@ -18,8 +18,10 @@
   aplicó la migración ni se consultó una base remota. Falta poblar datos
   únicamente con fuentes/licencias aprobadas; el clic de jugador queda para
   cuando exista una ruta de perfil. Rama `codex/hu-tr-19-colombianos-europa`,
-  basada en `codex/hu-tr-18-partidos-hoy-filtros`, implementación aún sin
-  publicar y PR pendiente; sin aprobación ni fusión. Handoff:
+  basada en `codex/hu-tr-18-partidos-hoy-filtros`, commit
+  `dda15e39f6dc4ed93465caacaad8580788a56ba6`. PR #46 abierta contra HU-TR-18;
+  Vercel Preview pendiente y Supabase Preview omitido; sin aprobación ni
+  fusión. Handoff:
   `docs/agents/handoffs/2026-09-30-hu-tr-19-colombianos-europa.md`.
 
 - **HU-TR-18 — filtros de partidos de hoy (2026-09-30, rama aislada):**

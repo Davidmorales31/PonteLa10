@@ -37,14 +37,17 @@
 - **Fallos:** El primer intento de prueba necesitaba la URL pública de Nuxt y
   no llegó a correr Vitest. Se repitió con la configuración correcta. El build
   conserva la advertencia upstream DEP0155 de `@vue/shared`.
-- **Pendientes:** No se ejecutaron pruebas pgTAP porque el contenedor local
-  PostgreSQL no está disponible y no se aplicó ni consultó una base remota. El
+- **Pendientes:** PR #46 abierta contra `codex/hu-tr-18-partidos-hoy-filtros`;
+  Vercel Preview está pendiente y Supabase Preview fue omitido. No se
+  ejecutaron pruebas pgTAP porque el contenedor local PostgreSQL no está
+  disponible y no se aplicó ni consultó una base remota. El
   hub permanece vacío si falta configuración/datos verificados. Usar fuentes y
   derechos aprobados antes de poblarlo. Una ruta de perfil futura podrá añadir
   su evento de clic. Sin cambios de estado editorial, sin aprobación ni fusión.
-- **Siguiente acción exacta:** Crear PR de `codex/hu-tr-19-colombianos-europa`
-  contra `codex/hu-tr-18-partidos-hoy-filtros`; conservarla abierta sin
-  aprobación/fusión y continuar con la siguiente HU priorizada del backlog v4
-  en otro worktree aislado tras revisar el estado e instrucciones.
+- **Siguiente acción exacta:** Continuar la siguiente HU priorizada del
+  backlog v4 en otro worktree aislado tras releer las instrucciones, estado,
+  mapa, memoria y matriz; dejar esta PR abierta sin aprobación/fusión y
+  consultar Vercel Preview en el siguiente seguimiento.
 - **Commit base:** `7d573de37dd4733b41d2af21dd12a69f1322a3ad`.
-- **Commit final:** sin commit.
+- **Commit final de implementación:** `dda15e39f6dc4ed93465caacaad8580788a56ba6`.
+- **PR:** #46 abierta; Vercel Preview pendiente; sin aprobación ni fusión.
