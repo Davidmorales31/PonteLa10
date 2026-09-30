@@ -1,5 +1,26 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-13 — bloque de respuesta directa (2026-09-30, rama aislada):**
+  se añadió el componente reutilizable `RespuestaDirectaDeportiva.vue` y se
+  integró al inicio de `/partidos-hoy` y en el detalle de resultados. Prioriza
+  un partido en vivo, luego el programado más próximo y, si no hay otros, el
+  finalizado más reciente. Presenta solo fecha/hora interpretables, zona
+  horaria IANA explícita, competición, estadio disponible, marcador confirmado
+  y estado; no se inventan canales ni streaming. Los eventos
+  `direct_answer_view`/`direct_answer_action` pasan por el control de
+  consentimiento existente. No requiere ni crea migraciones. Validado:
+  `npm ci` (sin cambios de dependencias), lint, prueba relacionada (11), suite
+  (33 archivos/188 pruebas), typecheck, build con
+  `NUXT_PUBLIC_SITE_URL=https://www.pont3la10.com` y `git diff --check`.
+  Inspección accesible del navegador confirmó contenido y enlace; en viewport
+  móvil simulado de 390 px la página mantuvo `scrollWidth=390` y el bloque cupo sin
+  desbordamiento. Build conserva aviso upstream `@vue/shared`; instalación
+  reporta 15 vulnerabilidades ya existentes. Trabajo en
+  `codex/hu-tr-13-direct-answer`, apilado sobre `codex/hu-tr-11-real-dates`;
+  implementación `f0fe4b551ef5cb2e77d6cedd3c6f2dd7261adb66`, falta crear
+  PR/checks y revisión humana. Handoff:
+  `docs/agents/handoffs/2026-09-30-hu-tr-13-respuesta-directa.md`.
+
 - **HU-TR-11 — fechas SEO verificables (2026-09-30, rama aislada):** las
   cuatro RPC públicas incorporan `publicadoEn` de la primera versión que llegó
   a estado `published` y `modificadoEn` de la versión publicada vigente. El
