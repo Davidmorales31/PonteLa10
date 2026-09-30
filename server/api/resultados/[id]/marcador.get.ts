@@ -1,6 +1,7 @@
 import type { FixtureApiFootball, RespuestaApiFootball, RespuestaMarcadorPartido } from '~/types/resultados'
 import { consultarPartidoApiBasketball } from '~/server/utils/clienteApiBasketball'
 import { consultarEventoTheSportsDb } from '~/server/utils/clienteTheSportsDb'
+import { obtenerResolverIdentidadDeportiva } from '~/server/utils/repositorioEntidadesDeportivasPublicas'
 import { mapearPartidoApiBasketball } from '~/utils/resultadosBasketball'
 import { mapearFixtureApiFootball } from '~/utils/resultadosDeportivos'
 import { mapearEventoTheSportsDb } from '~/utils/resultadosTheSportsDb'
@@ -22,11 +23,17 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaMarcado
       throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })
     }
 
+    const deporte = (coincidenciaTheSportsDb[1] || 'futbol') as RespuestaMarcadorPartido['partido']['deporte']
+    const resolverIdentidad = deporte === 'futbol'
+      ? await obtenerResolverIdentidadDeportiva(configuracion.public, 'the-sports-db', [
+          eventoGratuito.idLeague,
+          eventoGratuito.idHomeTeam,
+          eventoGratuito.idAwayTeam
+        ])
+      : undefined
+
     return {
-      partido: mapearEventoTheSportsDb(
-        eventoGratuito,
-        (coincidenciaTheSportsDb[1] || 'futbol') as RespuestaMarcadorPartido['partido']['deporte']
-      ),
+      partido: mapearEventoTheSportsDb(eventoGratuito, deporte, resolverIdentidad),
       actualizadoEn: new Date().toISOString(),
       origen: 'the-sports-db'
     }
@@ -72,7 +79,17 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaMarcado
     throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })
   }
 
-  return { partido: mapearFixtureApiFootball(fixture), actualizadoEn: new Date().toISOString(), origen: 'api-sports' }
+  const resolverIdentidad = await obtenerResolverIdentidadDeportiva(configuracion.public, 'api-sports', [
+    fixture.league.id,
+    fixture.teams.home.id,
+    fixture.teams.away.id
+  ])
+
+  return {
+    partido: mapearFixtureApiFootball(fixture, resolverIdentidad),
+    actualizadoEn: new Date().toISOString(),
+    origen: 'api-sports'
+  }
 }, {
   maxAge: 55,
   getKey: evento => `marcador-partido-${getRouterParam(evento, 'id') || 'invalido'}`

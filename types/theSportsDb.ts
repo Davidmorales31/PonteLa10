@@ -7,6 +7,7 @@ export interface EventoTheSportsDb {
   strTime?: string | null
   strStatus?: string | null
   strProgress?: string | null
+  idLeague?: string | null
   strLeague?: string | null
   strSeason?: string | null
   intRound?: string | number | null

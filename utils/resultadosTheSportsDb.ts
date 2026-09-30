@@ -6,6 +6,8 @@ import type {
   EventoPartido,
   PartidoResultado
 } from '~/types/resultados'
+import type { ResolverIdentidadDeportiva } from '~/utils/entidadesDeportivas'
+import { aplicarIdentidadesInternasPartido } from '~/utils/entidadesDeportivas'
 import type {
   EstadisticaTheSportsDb,
   EventoLineaTiempoTheSportsDb,
@@ -24,14 +26,15 @@ const estadosFinalizados = new Set([
 
 export function mapearEventoTheSportsDb(
   evento: EventoTheSportsDb,
-  deportePredeterminado: DeporteResultado = 'futbol'
+  deportePredeterminado: DeporteResultado = 'futbol',
+  resolverIdentidad?: ResolverIdentidadDeportiva
 ): PartidoResultado {
   const estado = obtenerEstadoTheSportsDb(evento.strStatus, evento.strProgress)
   const fechaIso = obtenerFechaIsoTheSportsDb(evento)
   const deporte = obtenerDeporteTheSportsDb(evento.strSport) || deportePredeterminado
   const prefijo = deporte === 'futbol' ? 'tsdb' : `tsdb-${deporte}`
 
-  return {
+  const partido: PartidoResultado = {
     id: `${prefijo}-${evento.idEvent}`,
     deporte,
     competencia: evento.strLeague || `Competencia de ${obtenerEtiquetaDeporte(deporte)}`,
@@ -60,6 +63,17 @@ export function mapearEventoTheSportsDb(
     ciudad: evento.strCity || undefined,
     destacado: esEventoDestacado(evento)
   }
+
+  return aplicarIdentidadesInternasPartido(
+    partido,
+    deporte === 'futbol' ? resolverIdentidad : undefined,
+    'the-sports-db',
+    {
+      competencia: evento.idLeague,
+      equipoLocal: evento.idHomeTeam,
+      equipoVisitante: evento.idAwayTeam
+    }
+  )
 }
 
 export function mapearLineaTiempoTheSportsDb(lineaTiempo: EventoLineaTiempoTheSportsDb[]): EventoPartido[] {
