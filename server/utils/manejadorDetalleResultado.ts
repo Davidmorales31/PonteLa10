@@ -12,12 +12,14 @@ import {
   consultarPartidoApiBasketball
 } from '~/server/utils/clienteApiBasketball'
 import { consultarDetalleAdicionalTheSportsDb, consultarEventoTheSportsDb } from '~/server/utils/clienteTheSportsDb'
+import { obtenerResolverIdentidadDeportiva } from '~/server/utils/repositorioEntidadesDeportivasPublicas'
 import {
   mapearClasificacionApiBasketball,
   mapearEstadisticasApiBasketball,
   mapearPartidoApiBasketball
 } from '~/utils/resultadosBasketball'
 import { crearNombreCorto, mapearFixtureApiFootball } from '~/utils/resultadosDeportivos'
+import type { ResolverIdentidadDeportiva } from '~/utils/entidadesDeportivas'
 import {
   mapearAlineacionesTheSportsDb,
   mapearEstadisticasTheSportsDb,
@@ -68,7 +70,7 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
     return consultarDetalleGratuito(coincidenciaTheSportsDb[2]!, {
       baseUrl: configuracion.theSportsDbBaseUrl,
       apiKey: configuracion.theSportsDbApiKey
-    }, (coincidenciaTheSportsDb[1] || 'futbol') as DetallePartidoResultado['partido']['deporte'])
+    }, (coincidenciaTheSportsDb[1] || 'futbol') as DetallePartidoResultado['partido']['deporte'], configuracion.public)
   }
 
   if (/^basket-\d+$/.test(idPartido)) {
@@ -115,13 +117,25 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
       season: fixture.league.season ?? new Date(fixture.fixture.date).getFullYear()
     }, headers)
   ])
+  const resolverIdentidad = await obtenerResolverIdentidadDeportiva(
+    configuracion.public,
+    'api-sports',
+    [
+      fixture.league.id,
+      fixture.teams.home.id,
+      fixture.teams.away.id,
+      ...clasificacion.flatMap(respuesta => respuesta.league.standings.flatMap(grupo => (
+        grupo.map(fila => fila.team.id)
+      )))
+    ]
+  )
 
   return {
-    partido: mapearFixtureApiFootball(fixture),
+    partido: mapearFixtureApiFootball(fixture, resolverIdentidad),
     eventos: mapearEventos(eventos),
     estadisticas: mapearEstadisticas(estadisticas),
     alineaciones: mapearAlineaciones(alineaciones),
-    clasificacion: mapearClasificacion(clasificacion),
+    clasificacion: mapearClasificacion(clasificacion, resolverIdentidad),
     actualizadoEn: new Date().toISOString(),
     origen: 'api-sports'
   }
@@ -133,7 +147,8 @@ export default defineCachedEventHandler(async (evento): Promise<DetallePartidoRe
 async function consultarDetalleGratuito(
   idPartido: string,
   configuracion: { baseUrl: string; apiKey: string },
-  deporte: DetallePartidoResultado['partido']['deporte']
+  deporte: DetallePartidoResultado['partido']['deporte'],
+  configuracionPublica: ReturnType<typeof useRuntimeConfig>['public']
 ): Promise<DetallePartidoResultado> {
   const respuestaEvento = await consultarEventoTheSportsDb(configuracion, idPartido)
   const evento = respuestaEvento.events?.[0]
@@ -142,10 +157,19 @@ async function consultarDetalleGratuito(
     throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })
   }
 
-  const detalleAdicional = await consultarDetalleAdicionalTheSportsDb(configuracion, idPartido)
+  const [detalleAdicional, resolverIdentidad] = await Promise.all([
+    consultarDetalleAdicionalTheSportsDb(configuracion, idPartido),
+    deporte === 'futbol'
+      ? obtenerResolverIdentidadDeportiva(configuracionPublica, 'the-sports-db', [
+          evento.idLeague,
+          evento.idHomeTeam,
+          evento.idAwayTeam
+        ])
+      : Promise.resolve(undefined)
+  ])
 
   return {
-    partido: mapearEventoTheSportsDb(evento, deporte),
+    partido: mapearEventoTheSportsDb(evento, deporte, resolverIdentidad),
     eventos: mapearLineaTiempoTheSportsDb(detalleAdicional.lineaTiempo.timeline || []),
     estadisticas: mapearEstadisticasTheSportsDb(detalleAdicional.estadisticas.eventstats || []),
     alineaciones: mapearAlineacionesTheSportsDb(detalleAdicional.alineaciones.lineup || []),
@@ -258,14 +282,28 @@ function mapearAlineaciones(alineaciones: AlineacionApiFootball[]): AlineacionPa
   }))
 }
 
-function mapearClasificacion(respuestas: ClasificacionApiFootball[]): PosicionClasificacion[] {
+function mapearClasificacion(
+  respuestas: ClasificacionApiFootball[],
+  resolverIdentidad?: ResolverIdentidadDeportiva
+): PosicionClasificacion[] {
   const filas = respuestas[0]?.league.standings[0] || []
-  return filas.slice(0, 8).map(fila => ({
-    posicion: fila.rank,
-    equipo: { id: String(fila.team.id), nombre: fila.team.name, nombreCorto: crearNombreCorto(fila.team.name), logo: fila.team.logo },
-    jugados: fila.all.played, ganados: fila.all.win, empatados: fila.all.draw, perdidos: fila.all.lose,
-    diferencia: fila.goalsDiff, puntos: fila.points
-  }))
+  return filas.slice(0, 8).map((fila) => {
+    const idProveedor = String(fila.team.id)
+    const idInterno = resolverIdentidad?.('api-sports', 'team', idProveedor)
+
+    return {
+      posicion: fila.rank,
+      equipo: {
+        id: idProveedor,
+        nombre: fila.team.name,
+        nombreCorto: crearNombreCorto(fila.team.name),
+        logo: fila.team.logo,
+        ...(idInterno ? { idInterno } : {})
+      },
+      jugados: fila.all.played, ganados: fila.all.win, empatados: fila.all.draw, perdidos: fila.all.lose,
+      diferencia: fila.goalsDiff, puntos: fila.points
+    }
+  })
 }
 
 function obtenerValorEstadistica(equipo: EstadisticaEquipoApi, tipo: string) {

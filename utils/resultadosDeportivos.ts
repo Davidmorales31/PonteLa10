@@ -1,4 +1,6 @@
 import type { EstadoPartido, FixtureApiFootball, PartidoResultado } from '~/types/resultados'
+import type { ResolverIdentidadDeportiva } from '~/utils/entidadesDeportivas'
+import { aplicarIdentidadesInternasPartido } from '~/utils/entidadesDeportivas'
 import { normalizarZonaHoraria, zonaHorariaColombia } from '~/utils/zonasHorarias'
 
 const estadosEnVivo = new Set(['1H', 'HT', '2H', 'ET', 'BT', 'P', 'SUSP', 'INT', 'LIVE'])
@@ -16,10 +18,13 @@ export function obtenerEstadoPartidoApi(codigo: string): EstadoPartido {
   return 'programado'
 }
 
-export function mapearFixtureApiFootball(fixture: FixtureApiFootball): PartidoResultado {
+export function mapearFixtureApiFootball(
+  fixture: FixtureApiFootball,
+  resolverIdentidad?: ResolverIdentidadDeportiva
+): PartidoResultado {
   const estado = obtenerEstadoPartidoApi(fixture.fixture.status.short)
 
-  return {
+  const partido: PartidoResultado = {
     id: String(fixture.fixture.id),
     deporte: 'futbol',
     competencia: fixture.league.name,
@@ -47,6 +52,12 @@ export function mapearFixtureApiFootball(fixture: FixtureApiFootball): PartidoRe
     ciudad: fixture.fixture.venue?.city ?? undefined,
     destacado: esPartidoDestacado(fixture)
   }
+
+  return aplicarIdentidadesInternasPartido(partido, resolverIdentidad, 'api-sports', {
+    competencia: String(fixture.league.id),
+    equipoLocal: String(fixture.teams.home.id),
+    equipoVisitante: String(fixture.teams.away.id)
+  })
 }
 
 export function ordenarPartidosRelevantes(partidos: PartidoResultado[]): PartidoResultado[] {

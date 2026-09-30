@@ -4,6 +4,7 @@ export type OrigenResultados = 'api-sports' | 'api-basketball' | 'the-sports-db'
 
 export interface EquipoResultado {
   id: string
+  idInterno?: string
   nombre: string
   nombreCorto: string
   logo?: string
@@ -13,6 +14,7 @@ export interface EquipoResultado {
 export interface PartidoResultado {
   id: string
   deporte: DeporteResultado
+  competenciaIdInterno?: string
   competencia: string
   paisCompetencia?: string
   jornada?: string

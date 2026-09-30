@@ -8,6 +8,7 @@ import type {
 } from '~/types/resultados'
 import { consultarPartidosFechaApiBasketball } from '~/server/utils/clienteApiBasketball'
 import { consultarEventosDiaTheSportsDb } from '~/server/utils/clienteTheSportsDb'
+import { obtenerResolverIdentidadDeportiva } from '~/server/utils/repositorioEntidadesDeportivasPublicas'
 import { mapearPartidoApiBasketball } from '~/utils/resultadosBasketball'
 import { mapearFixtureApiFootball, ordenarPartidosRelevantes } from '~/utils/resultadosDeportivos'
 import { mapearEventoTheSportsDb } from '~/utils/resultadosTheSportsDb'
@@ -70,7 +71,8 @@ async function consultarDeporte(
         String(configuracion.apiSportsBaseUrl),
         String(configuracion.apiSportsKey),
         fecha,
-        zonaHoraria
+        zonaHoraria,
+        configuracion.public
       )
       if (partidos.length) return { partidos, origen: 'api-sports' }
     } catch {
@@ -96,8 +98,16 @@ async function consultarDeporte(
       baseUrl: String(configuracion.theSportsDbBaseUrl),
       apiKey: String(configuracion.theSportsDbApiKey)
     }, fecha, nombresTheSportsDb[deporte])
+    const eventos = respuestaGratuita.events || []
+    const resolverIdentidad = deporte === 'futbol'
+      ? await obtenerResolverIdentidadDeportiva(
+          configuracion.public,
+          'the-sports-db',
+          eventos.flatMap(evento => [evento.idLeague, evento.idHomeTeam, evento.idAwayTeam])
+        )
+      : undefined
     const partidos = ordenarPartidosRelevantes(
-      (respuestaGratuita.events || []).map(evento => mapearEventoTheSportsDb(evento, deporte))
+      eventos.map(evento => mapearEventoTheSportsDb(evento, deporte, resolverIdentidad))
     ).slice(0, 12)
     return { partidos, origen: 'the-sports-db' }
   } catch {
@@ -105,7 +115,13 @@ async function consultarDeporte(
   }
 }
 
-async function consultarApiFootball(baseUrl: string, apiKey: string, fecha: string, zonaHoraria: string) {
+async function consultarApiFootball(
+  baseUrl: string,
+  apiKey: string,
+  fecha: string,
+  zonaHoraria: string,
+  configuracionPublica: ReturnType<typeof useRuntimeConfig>['public']
+) {
   const respuesta = await $fetch<RespuestaApiFootball<FixtureApiFootball>>(`${baseUrl}/fixtures`, {
     query: { date: fecha, timezone: zonaHoraria },
     headers: { 'x-apisports-key': apiKey },
@@ -117,7 +133,19 @@ async function consultarApiFootball(baseUrl: string, apiKey: string, fecha: stri
     throw new Error('API-Sports rechazó la solicitud.')
   }
 
-  return ordenarPartidosRelevantes(respuesta.response.map(mapearFixtureApiFootball)).slice(0, 24)
+  const resolverIdentidad = await obtenerResolverIdentidadDeportiva(
+    configuracionPublica,
+    'api-sports',
+    respuesta.response.flatMap(fixture => [
+      fixture.league.id,
+      fixture.teams.home.id,
+      fixture.teams.away.id
+    ])
+  )
+
+  return ordenarPartidosRelevantes(
+    respuesta.response.map(fixture => mapearFixtureApiFootball(fixture, resolverIdentidad))
+  ).slice(0, 24)
 }
 
 function normalizarDeporte(valor: unknown): DeporteResultado | undefined {
