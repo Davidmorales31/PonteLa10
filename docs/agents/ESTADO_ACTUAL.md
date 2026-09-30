@@ -14,8 +14,9 @@
   y sus filtros; sin variables de Supabase, el slug de hub devuelve 404 y no
   fue posible comprobar contenido publicado, permisos/RLS en runtime ni
   responsive autenticado. Quedan pendientes Supabase Preview/DB y CI de PR.
-  Rama `codex/hu-tr-10-public-hubs`, basada en HU-TR-09; PR pendiente de crear,
-  sin aprobación ni merge. Handoff:
+  Rama `codex/hu-tr-10-public-hubs`, basada en HU-TR-09; commit `e0a451f`.
+  PR #40 abierta y mergeable contra `codex/hu-tr-09-traceable-pagination`;
+  Vercel Preview pasa, sin aprobación ni merge. Handoff:
   `docs/agents/handoffs/2026-09-30-hu-tr-10-hubs-publicos.md`.
 
 - **HU-TR-09 — paginación pública rastreable (2026-09-30, rama aislada):**

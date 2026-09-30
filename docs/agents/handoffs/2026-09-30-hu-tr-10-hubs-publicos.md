@@ -45,13 +45,15 @@
   las referencias de las pruebas; suite final completa verde. `npm ci` informó
   15 vulnerabilidades en dependencias existentes (6 moderadas, 8 altas,
   1 crítica); no se modificaron dependencias.
-- **Pendientes:** crear la PR apilada contra la rama HU-TR-09;
-  revisar CI/Preview cuando estén disponibles. Aplicar/verificar la migración,
+- **Pendientes:** revisar los checks restantes de PR cuando estén disponibles.
+  Vercel Preview está en verde. Aplicar/verificar la migración,
   hacer pruebas RLS con roles reales y validar visualmente datos publicados
   solo con configuración/entorno autorizados. No aprobar ni fusionar la PR,
   desplegar producción ni publicar hubs.
-- **Siguiente acción exacta:** abrir PR de `codex/hu-tr-10-public-hubs` hacia
-  `codex/hu-tr-09-traceable-pagination`; después continuar HU-TR-11 en otro
-  worktree basado en esta rama, releyendo instrucciones, estado, mapa y Memento.
+- **Siguiente acción exacta:** continuar HU-TR-11 (P1) en un worktree aislado
+  basado en este incremento, releyendo instrucciones, estado, mapa y Memento.
 - **Commit base:** `9eca004` (`codex/hu-tr-09-traceable-pagination`).
-- **Commit final:** pendiente de crear.
+- **Commit final:** `e0a451f` (implementación HU-TR-10).
+
+PR #40: https://github.com/Davidmorales31/PonteLa10/pull/40 (abierta y
+mergeable sobre HU-TR-09; Vercel Preview pasa; sin aprobación ni merge).
