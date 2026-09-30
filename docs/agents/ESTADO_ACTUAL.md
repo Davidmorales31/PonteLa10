@@ -1,5 +1,29 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-16 — identidad interna y mappings deportivos (2026-09-30, rama
+  aislada):** se añadieron las cinco tablas del primer corte de fútbol:
+  competencias, equipos, jugadores, membresías y mappings por proveedor/tipo/ID
+  externo. Los UUID y slugs internos no dependen del nombre externo; IDs
+  parecidos o iguales de proveedores distintos no se fusionan. RLS limita la
+  lectura pública a entidades/membresías aprobadas y grants por columna; las
+  escrituras quedan para `service_role` en servidor. Los adaptadores añaden IDs
+  internos opcionales a fixture, detalle, marcador y clasificación sin cambiar
+  los IDs externos ni usar coincidencias de nombre. La consulta usa solo la
+  llave pública, máximo 100 IDs y timeout de 2,5 s; falta de configuración o
+  error de Supabase conserva el contrato actual. No se guardan payloads ni
+  escudos. Revisión estática independiente de migración/RLS: sin bloqueos.
+  `npm ci`, lint, pruebas relacionadas (14), suite (34 archivos/191 pruebas),
+  typecheck, build y `git diff --check` pasan. pgTAP tiene 12 aserciones con
+  plan consistente, pero no se ejecutó: Docker/PostgreSQL local no está
+  disponible; no se aplicó migración remota. `npm ci` reportó 15
+  vulnerabilidades preexistentes y build el aviso upstream DEP0155 de
+  `@vue/shared`. Sigue pendiente confirmar derechos/licencia escrita antes de
+  poblar o exponer datos/activos licenciados. Rama
+  `codex/hu-tr-16-sports-entities`, commit `ba579b8`; PR #43 abierta y
+  mergeable contra `codex/hu-tr-13-direct-answer`, Vercel pendiente, sin
+  aprobar ni fusionar. Handoff:
+  `docs/agents/handoffs/2026-09-30-hu-tr-16-identidades-deportivas.md`.
+
 - **HU-TR-13 — bloque de respuesta directa (2026-09-30, rama aislada):**
   se añadió el componente reutilizable `RespuestaDirectaDeportiva.vue` y se
   integró al inicio de `/partidos-hoy` y en el detalle de resultados. Prioriza
