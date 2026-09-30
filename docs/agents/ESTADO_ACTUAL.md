@@ -16,7 +16,9 @@
   controlado para filtros malformados. La validación de datos reales y
   responsive con Supabase queda pendiente: faltan sus variables públicas, y
   `agent-browser` no está instalado. Commit de implementación `abf4670`;
-  PR #38 está abierta contra `main`, sin aprobación ni merge, con CI pendiente.
+  PR #38 sigue abierta contra `main`, sin aprobación ni merge. CI remoto:
+  lint, test, typecheck, build y Vercel Preview pasaron; Preview Comments pasó
+  y Supabase Preview se omitió.
   Handoff:
   `docs/agents/handoffs/2026-09-30-hu-tr-08-filtros-articulos.md`.
 
