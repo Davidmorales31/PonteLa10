@@ -16,7 +16,9 @@
   reportó 15 vulnerabilidades del árbol existente; build conserva el aviso
   upstream DEP0155 de `@vue/shared`. No hay cambios de API, dependencias,
   migraciones ni base de datos. Rama `codex/hu-tr-18-partidos-hoy-filtros`,
-  basada en `codex/hu-tr-17-stable-match-url`; PR por registrar tras el push.
+  basada en `codex/hu-tr-17-stable-match-url`; commit `285dc42`. PR #45 abierta
+  contra HU-TR-17, Vercel Preview pendiente en la consulta inicial, sin
+  aprobación ni fusión. Handoff:
   Handoff: `docs/agents/handoffs/2026-09-30-hu-tr-18-filtros-partidos-hoy.md`.
 
 - **HU-TR-17 — URL canónica estable de partidos (2026-09-30, rama aislada):**

@@ -35,13 +35,13 @@
 - **Fallos:** En un intento inicial de prueba y otro de lint faltó
   `NUXT_PUBLIC_SITE_URL`, requerido por `nuxt.config.ts`; ambos se repitieron
   con `http://localhost:3101` y pasaron.
-- **Pendientes:** Abrir PR contra `codex/hu-tr-17-stable-match-url` después del
-  push y registrar su número/checks. No aprobar ni fusionar PR. No hay cambios
-  de Supabase y no se aplicó SQL. HU-TR-17 PR #44 permanece abierta; su Vercel
-  Preview reporta success. Los hallazgos manuales del shell son compartidos y
-  quedan fuera de alcance de esta HU.
-- **Siguiente acción exacta:** Crear commit, subir la rama y abrir una PR
-  apilada sobre HU-TR-17. Después continuar HU-TR-19 en otro worktree aislado,
-  repasando instrucciones, estado, mapa, memoria y validaciones.
+- **Pendientes:** PR #45 abierta contra `codex/hu-tr-17-stable-match-url`; el
+  primer estado de Vercel consultado estaba pendiente. No aprobar ni fusionar.
+  No hay cambios de Supabase y no se aplicó SQL. HU-TR-17 PR #44 permanece
+  abierta; su Vercel Preview reporta success. Los hallazgos manuales del shell
+  son compartidos y quedan fuera de alcance de esta HU.
+- **Siguiente acción exacta:** Continuar HU-TR-19 en un worktree aislado,
+  repasando instrucciones, estado, mapa, memoria y validaciones antes de editar.
 - **Commit base:** `8e76e6b2eef96e21caac8802a0994e57acc28a3e`.
-- **Commit final:** sin commit | `<sha>`
+- **Commit final de implementación:**
+  `285dc425cd166228342f8a8e3f2f3473f930bd06` (HU-TR-18).
