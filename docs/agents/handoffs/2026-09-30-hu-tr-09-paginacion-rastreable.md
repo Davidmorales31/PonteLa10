@@ -45,15 +45,16 @@
   advertencia deprecada upstream de `@vue/shared`; `npm ci` informó 15
   vulnerabilidades (6 moderadas, 8 altas, 1 crítica) en dependencias instaladas;
   no se cambió el manifiesto/lockfile ni se intentó una actualización masiva.
-- **Pendientes:** abrir una PR apilada sobre `codex/hu-tr-08-server-filter`,
-  verificar sus checks remotos y mantenerla abierta, sin aprobación ni merge.
+- **Pendientes:** verificar checks de PR #39 y mantenerla abierta, sin
+  aprobación ni merge.
   Completar la verificación visual responsive y con Supabase disponible antes
   de integrar/desplegar. Después continuar con HU-TR-10 en otro worktree y
   releer instrucciones, estado, mapa y Memento.
-- **Siguiente acción exacta:** crear la PR de esta rama contra
-  `codex/hu-tr-08-server-filter`; luego esperar CI/Preview, sin cambiar estados
+- **Siguiente acción exacta:** esperar CI/Preview de PR #39; si queda verde,
+  abrir HU-TR-10 en worktree aislado basado en esta rama, sin cambiar estados
   editoriales, desplegar producción, aprobar o fusionar.
 - **Commit base:** `6b8e2b7` (`codex/hu-tr-08-server-filter`).
-- **Commit final:** pendiente de commit | `<sha>`.
+- **Commit final:** `aed1595` (implementación HU-TR-09).
 
-PR: pendiente de creación.
+PR: https://github.com/Davidmorales31/PonteLa10/pull/39 (abierta contra
+`codex/hu-tr-08-server-filter`, checks pendientes; sin aprobación ni merge).
