@@ -65,6 +65,8 @@ export type PermisoEditorial =
   | 'equipo.gestionar'
   | 'configuracion.ver'
   | 'configuracion.gestionar'
+  | 'searchConsole.ver'
+  | 'searchConsole.importar'
   | 'auditoria.ver'
 
 export type NivelAal = 'aal1' | 'aal2' | null

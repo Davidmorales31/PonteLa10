@@ -1,5 +1,26 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-15 — importación de Search Console (2026-09-30, rama aislada):**
+  `/admin/operacion` permite importar exports CSV validados (5 MB/10.000 filas),
+  normaliza y deduplica por fecha/consulta/página, rechaza lotes con errores o
+  señales de datos personales y muestra oportunidades con ≥100 impresiones y
+  CTR <2 %. No consulta Google API ni crea artículos. Las escrituras quedan
+  centralizadas en una RPC transaccional con permiso y MFA, sin DML directo
+  para `authenticated`; lectura y auditoría omiten nombres de archivo y
+  consultas crudas. Revisión independiente de autorización/RLS sin bloqueos.
+  Validado: lint, pruebas relacionadas (24), suite (40 archivos/231 pruebas),
+  typecheck, build y `git diff --check`. `npm ci` previo no modificó
+  dependencias y reportó 15 vulnerabilidades existentes; build conserva aviso
+  upstream DEP0155 de `@vue/shared`. El navegador confirmó la protección de la
+  ruta, que redirige a configuración de login cuando falta auth; no se pudo
+  validar el panel autenticado/responsive. pgTAP (18 aserciones) no se ejecutó
+  por falta de PostgreSQL/psql, Docker y Podman; no se consultó ni modificó una
+  base remota. Rama `codex/hu-tr-15-search-console`, basada en
+  `codex/hu-tr-19-colombianos-europa`, implementación `9f8988a`. PR #47 abierta
+  contra HU-TR-19; Supabase Preview omitido, Vercel aún no reportado al cierre,
+  sin aprobación ni fusión. Handoff:
+  `docs/agents/handoffs/2026-09-30-hu-tr-15-search-console.md`.
+
 - **HU-TR-19 — hub de colombianos en Europa (2026-09-30, rama aislada):**
   se añadió `/colombianos-en-europa` con listados de partidos de hoy,
   resultados y próximos; las tarjetas enlazan a rutas canónicas internas de
