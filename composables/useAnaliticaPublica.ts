@@ -18,6 +18,9 @@ type EventoAnalitica =
   | 'direct_answer_action'
   | 'match_view'
   | 'match_follow_toggle'
+  | 'matches_today_view'
+  | 'matches_today_filter'
+  | 'match_card_click'
 
 declare global {
   interface Window {

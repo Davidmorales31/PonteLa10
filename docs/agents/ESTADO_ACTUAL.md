@@ -1,5 +1,26 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-18 — filtros de partidos de hoy (2026-09-30, rama aislada):**
+  `/partidos-hoy` incorpora filtros combinables por deporte, competencia,
+  equipo, estado y destacados; competencias y equipos se derivan de los
+  partidos disponibles. La filtración es solo del lado cliente, conserva la
+  fecha original para la hora local, no modifica la URL/canonical ni el
+  `ItemList` SSR, e incluye reinicio y estado vacío con alternativa de
+  navegación. Los eventos `matches_today_view`, `matches_today_filter` y
+  `match_card_click` respetan el consentimiento existente. Validado: lint,
+  pruebas relacionadas (5), suite (37 archivos/203 pruebas), typecheck, build
+  y `git diff --check`; navegador verificó filtro de competencia, filtros
+  combinados sin resultados, reinicio, canonical estable y viewports de 320 y
+  390 px sin overflow; axe no reporta violaciones en temas claro y oscuro.
+  Sigue una revisión manual del shell compartido/enlaces del pie. `npm ci`
+  reportó 15 vulnerabilidades del árbol existente; build conserva el aviso
+  upstream DEP0155 de `@vue/shared`. No hay cambios de API, dependencias,
+  migraciones ni base de datos. Rama `codex/hu-tr-18-partidos-hoy-filtros`,
+  basada en `codex/hu-tr-17-stable-match-url`; commit `285dc42`. PR #45 abierta
+  contra HU-TR-17, Vercel Preview pendiente en la consulta inicial, sin
+  aprobación ni fusión. Handoff:
+  `docs/agents/handoffs/2026-09-30-hu-tr-18-filtros-partidos-hoy.md`.
+
 - **HU-TR-17 — URL canónica estable de partidos (2026-09-30, rama aislada):**
   se agregó identidad persistente de fixtures (`sports_fixtures`) con UUID,
   slug público y marca de primera publicación; el slug queda inmutable tras
@@ -20,8 +41,8 @@
   vulnerabilidades reportadas previamente por `npm ci` y el aviso upstream
   DEP0155 de `@vue/shared`. Sin datos ni activos licenciados nuevos. Trabajo en
   `codex/hu-tr-17-stable-match-url`, apilado sobre HU-TR-16; commit
-  `25b604a`. PR #44 abierta contra `codex/hu-tr-16-sports-entities`, pendiente
-  de checks, sin aprobación ni fusión. Handoff:
+  `25b604a`. PR #44 abierta contra `codex/hu-tr-16-sports-entities`, Vercel
+  Preview exitoso, sin aprobación ni fusión. Handoff:
   `docs/agents/handoffs/2026-09-30-hu-tr-17-url-canonica-partidos.md`.
 
 - **HU-TR-16 — identidad interna y mappings deportivos (2026-09-30, rama
