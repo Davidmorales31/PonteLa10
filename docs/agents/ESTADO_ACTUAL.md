@@ -10,9 +10,11 @@
   La revisión de migración corrigió un riesgo de permisos y una transformación
   SQL dinámica antes de aplicarse. No se ha aplicado la migración, creado
   contenido, aprobado, programado ni publicado nada. `git diff --check` y la
-  comprobación directa del contrato CLI pasan; la suite local está pendiente
-  porque este worktree heredó una instalación incompleta de dependencias. Se
-  validará en un checkout limpio antes de abrir PR. Handoff:
+  comprobación directa del contrato CLI pasan. En CI de PR #35 también pasan
+  lint, 149 pruebas unitarias, typecheck, build y Vercel. La instalación local
+  de Windows falló con `ENOTEMPTY`, pero CI instaló limpio correctamente. La
+  PR queda abierta; GitHub no permite aprobarla con la cuenta que la creó.
+  Handoff:
   `docs/agents/handoffs/2026-09-29-hu-tr-01-intencion-contenido.md`.
 
 - **Portada obligatoria en propuestas de la tarea Codex (2026-09-29, Production):** auditoría
