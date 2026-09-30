@@ -1,5 +1,23 @@
 # Estado actual de Pont3la10
 
+- **HU-TR-10 — entidad de hubs públicos (2026-09-30, rama aislada):** se
+  incorporó `public_hubs` con cinco tipos, módulos validados y estados
+  `draft`/`published`/`archived`; CRUD mínimo protegido, separación de
+  columnas/metadatos, RLS, auditoría y MFA para publicar/retirar/archivar.
+  La página SSR resuelve slugs públicos, metadata/canonical, breadcrumbs,
+  JSON-LD, módulos de texto/enlaces/feed y analítica con consentimiento; el
+  sitemap solo incluye hubs publicados e indexables con artículos disponibles.
+  No se creó ni publicó ningún hub y no se aplicó la migración a una base.
+  Revisión independiente de seguridad/migración: sin hallazgos bloqueantes.
+  `npm ci`, lint, prueba relacionada (4), suite (32 archivos/181 pruebas),
+  typecheck, build y `git diff --check` pasan. HTTP local conserva `/articulos`
+  y sus filtros; sin variables de Supabase, el slug de hub devuelve 404 y no
+  fue posible comprobar contenido publicado, permisos/RLS en runtime ni
+  responsive autenticado. Quedan pendientes Supabase Preview/DB y CI de PR.
+  Rama `codex/hu-tr-10-public-hubs`, basada en HU-TR-09; PR pendiente de crear,
+  sin aprobación ni merge. Handoff:
+  `docs/agents/handoffs/2026-09-30-hu-tr-10-hubs-publicos.md`.
+
 - **HU-TR-09 — paginación pública rastreable (2026-09-30, rama aislada):**
   el listado SSR ahora expone `/articulos/pagina/2` y siguientes, con enlaces
   accesibles anterior/siguiente; la carga incremental permanece en página 1.

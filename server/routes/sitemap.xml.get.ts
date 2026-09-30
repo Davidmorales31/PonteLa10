@@ -1,5 +1,6 @@
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
+import { listarHubsIndexablesSitemap } from '~/server/utils/repositorioHubsPublicos'
 import { construirUrlAbsoluta, escaparXml } from '~/utils/seo'
 
 interface EntradaSitemap {
@@ -48,6 +49,17 @@ export default defineEventHandler(async (evento) => {
     } while (publicaciones.length === tamanoPagina)
   } catch {
     // El sitemap base sigue disponible durante una degradación de Supabase.
+  }
+
+  try {
+    const hubs = await listarHubsIndexablesSitemap(obtenerClienteSupabaseEditorial(evento))
+    entradas.push(...hubs.map(hub => ({
+      ruta: `/${hub.slug}`,
+      frecuencia: 'weekly' as const,
+      prioridad: '0.8'
+    })))
+  } catch {
+    // Los hubs se omiten durante una degradación de Supabase.
   }
 
   const urls = entradas.map(entrada => [
