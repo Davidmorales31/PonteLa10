@@ -3,7 +3,8 @@
 # Estado actual de backlog TR
 
 - **HU-TR-03 — Decidir acción editorial antes de crear contenido (2026-09-30,
-  rama `codex/hu-tr-03-editorial-action`; PR pendiente):** la bandeja muestra la
+  rama `codex/hu-tr-03-editorial-action`; [PR #37](https://github.com/Davidmorales31/PonteLa10/pull/37),
+  abierta y encadenada sobre PR #36):** la bandeja muestra la
   acción sugerida y permite que un editor la confirme o cambie con motivo. La
   decisión se persiste con puntaje y eventos auditables; la API exige permiso
   `contenido.revisar` y valida los destinos existentes. `create_article` y
@@ -18,7 +19,7 @@
   `test:unit` (30 archivos, 153 pruebas), typecheck, build y `git diff --check`
   pasan. La validación manual de Operación queda pendiente: el entorno local no
   tiene `NUXT_PUBLIC_SUPABASE_URL`/`NUXT_PUBLIC_SUPABASE_KEY` y redirige al login
-  deshabilitado. PR pendiente de crear sobre HU-TR-02 (#36), sin integrar.
+  deshabilitado. No aprobar ni integrar desde la cuenta autora.
   Handoff: `docs/agents/handoffs/2026-09-30-hu-tr-03-accion-editorial.md`.
 
 - **HU-TR-02 — Strategic Opportunity Score (2026-09-29, PR #36):** añade diez

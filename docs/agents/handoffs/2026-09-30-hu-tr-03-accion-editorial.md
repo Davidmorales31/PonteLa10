@@ -41,12 +41,12 @@
   de `@vue/shared`, sin impedir compilación.
 - **Pendientes:** revisión manual responsive/accesible de Operación con sesión
   local configurada; prueba SQL en un entorno autorizado; disponibilidad de hubs
-  depende de `public_hubs` en HU posterior; crear PR encadenada contra la rama de
-  HU-TR-02 y esperar revisión humana. No autoaprobar ni fusionar.
-- **Siguiente acción exacta:** ejecutar `git diff --check`, inspeccionar el diff
-  final, crear commit en `codex/hu-tr-03-editorial-action`, enviar la rama y
-  crear PR contra `codex/hu-tr-02-strategic-score` (PR #36). Añadir el número de
-  PR a este handoff/estado en el mismo incremento y continuar luego con la HU P0
-  siguiente del backlog, volviendo a leer estado/contexto y memoria.
+  depende de `public_hubs` en HU posterior; revisión humana de la
+  [PR #37](https://github.com/Davidmorales31/PonteLa10/pull/37), encadenada contra
+  la rama de HU-TR-02 (#36). No autoaprobar ni fusionar.
+- **Siguiente acción exacta:** revisar el estado de PR #37 y sus validaciones,
+  sin aprobarla ni fusionarla; luego continuar con la siguiente HU P0 aplicable
+  del backlog en un worktree aislado, volviendo a leer estado/contexto y memoria.
 - **Commit base:** `47f4ff304c02302a3c382e8b8b8f8654fddb53c6` (HU-TR-02, PR #36).
-- **Commit final:** sin commit | `<sha>`
+- **Commit final de implementación:** `49d6f1f` (seguimiento y handoff quedan
+  versionados en este commit documental del mismo PR).
