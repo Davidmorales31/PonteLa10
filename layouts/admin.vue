@@ -13,6 +13,7 @@ import {
   Server,
   ShieldCheck,
   Tags,
+  Layers,
   X
 } from '@lucide/vue'
 import type { PermisoEditorial } from '~/types/editorial'
@@ -72,6 +73,12 @@ const entradasPanel: EntradaPanel[] = [
     ruta: '/admin/taxonomias',
     icono: Tags,
     permiso: 'taxonomia.ver'
+  },
+  {
+    etiqueta: 'Hubs públicos',
+    ruta: '/admin/hubs',
+    icono: Layers,
+    permiso: 'hub.ver'
   },
   {
     etiqueta: 'Seguridad',

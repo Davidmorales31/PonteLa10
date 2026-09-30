@@ -12,6 +12,8 @@ type EventoAnalitica =
   | 'category_filter'
   | 'pagination_view'
   | 'pagination_next'
+  | 'hub_view'
+  | 'hub_module_click'
 
 declare global {
   interface Window {

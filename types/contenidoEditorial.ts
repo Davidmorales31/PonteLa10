@@ -26,6 +26,69 @@ export type OrigenContenidoEditorial =
 
 export type TipoTaxonomiaEditorial = 'categoria' | 'tema' | 'etiqueta'
 
+export type TipoHubPublicoEditorial =
+  | 'topic'
+  | 'competition'
+  | 'player_collection'
+  | 'technology'
+  | 'gaming'
+
+export type EstadoHubPublicoEditorial = 'draft' | 'published' | 'archived'
+
+export interface ArticuloModuloHubEditorial {
+  id: string
+  slug: string
+  titulo: string
+  resumen: string
+  imagen: string
+}
+
+export interface ModuloTextoHubEditorial {
+  id: string
+  tipo: 'texto'
+  titulo: string
+  contenido: string
+}
+
+export interface ModuloEnlacesHubEditorial {
+  id: string
+  tipo: 'enlaces'
+  titulo: string
+  enlaces: Array<{ etiqueta: string, ruta: string }>
+}
+
+export interface ModuloArticulosHubEditorial {
+  id: string
+  tipo: 'articulos'
+  titulo: string
+  filtro: { tipo: 'categoria' | 'tema', slug: string }
+  limite: number
+  articulos?: ArticuloModuloHubEditorial[]
+}
+
+export type ModuloHubEditorial =
+  | ModuloTextoHubEditorial
+  | ModuloEnlacesHubEditorial
+  | ModuloArticulosHubEditorial
+
+export interface HubPublicoEditorial {
+  id: string
+  slug: string
+  tipo: TipoHubPublicoEditorial
+  titulo: string
+  descripcion: string
+  cuerpo: string
+  modulos: ModuloHubEditorial[]
+  tituloSeo: string
+  descripcionSeo: string
+  publicadoEn: string
+}
+
+export interface HubEditorialResumen extends HubPublicoEditorial {
+  estado: EstadoHubPublicoEditorial
+  actualizadoEn: string
+}
+
 export type IdPasoEditorEditorial =
   | 'contenido'
   | 'presentacion'

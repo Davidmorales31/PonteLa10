@@ -8,18 +8,108 @@ import {
   MapPin,
   Trophy
 } from '@lucide/vue'
+import type { HubPublicoEditorial } from '~/types/contenidoEditorial'
+import type { EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
+import { construirTituloMetaConMarca, robotsIndexables, robotsNoIndex } from '~/utils/seo'
 
 definePageMeta({ layout: false })
 
-useSeoPont3la10({
-  titulo: 'Página no encontrada | Pont3la10',
-  descripcion: 'La página que buscas no está disponible. Vuelve al inicio o explora las últimas noticias de Pont3la10.',
-  robots: 'noindex, follow'
+const ruta = useRoute()
+const segmentosRuta = computed(() => Array.isArray(ruta.params.slug)
+  ? ruta.params.slug.map(String)
+  : [String(ruta.params.slug || '')])
+const slugHub = computed(() => segmentosRuta.value.length === 1
+  && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(segmentosRuta.value[0] || '')
+  ? segmentosRuta.value[0]!
+  : '')
+const { data: respuestaHub } = await useFetch<HubPublicoEditorial>(
+  () => `/api/hubs/${slugHub.value || 'no-disponible'}`,
+  { key: `hub-publico-${slugHub.value}`, ignoreResponseError: true }
+)
+const hubPublico = computed<HubPublicoEditorial | null>(() => {
+  const valor = respuestaHub.value as (HubPublicoEditorial & { modulos?: unknown }) | null | undefined
+  return valor && typeof valor.slug === 'string' && Array.isArray(valor.modulos)
+    ? valor as HubPublicoEditorial
+    : null
 })
+
+const analitica = useAnaliticaPublica()
+let hubVisitado = ''
+watch(
+  [() => hubPublico.value?.id, slugHub, analitica.decision],
+  ([id, slug, decision]: [string | undefined, string, EstadoAnaliticaPublica]) => {
+    const hub = hubPublico.value
+    if (!id || !hub || hub.slug !== slug || decision !== 'aceptada') {
+      if (hub?.slug !== slug) hubVisitado = ''
+      return
+    }
+    if (hubVisitado === slug) return
+    hubVisitado = slug
+    void analitica.registrarEvento('hub_view')
+  },
+  { immediate: true }
+)
+
+const configuracion = useRuntimeConfig()
+const urlCanonica = computed(() =>
+  `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/${slugHub.value}`
+)
+const tipoHubEtiqueta = computed(() => ({
+  topic: 'Tema',
+  competition: 'Competición',
+  player_collection: 'Colección de jugadores',
+  technology: 'Tecnología deportiva',
+  gaming: 'Gaming'
+}[hubPublico.value?.tipo || 'topic']))
+
+useSeoPont3la10(() => ({
+  titulo: construirTituloMetaConMarca(hubPublico.value?.tituloSeo || hubPublico.value?.titulo || 'Página no encontrada'),
+  descripcion: hubPublico.value?.descripcionSeo || hubPublico.value?.descripcion
+    || 'La página que buscas no está disponible. Vuelve al inicio o explora las últimas noticias de Pont3la10.',
+  rutaCanonica: `/${slugHub.value}`,
+  robots: hubPublico.value ? robotsIndexables : robotsNoIndex,
+  datosEstructurados: hubPublico.value
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': ['topic', 'competition', 'player_collection'].includes(hubPublico.value.tipo)
+            ? 'CollectionPage'
+            : 'WebPage',
+          '@id': `${urlCanonica.value}#pagina`,
+          url: urlCanonica.value,
+          name: hubPublico.value.titulo,
+          description: hubPublico.value.descripcion,
+          inLanguage: 'es-CO',
+          mainEntity: {
+            '@type': 'ItemList',
+            itemListElement: hubPublico.value.modulos.flatMap(modulo =>
+              modulo.tipo === 'articulos'
+                ? (modulo.articulos || []).map((articulo, indice) => ({
+                    '@type': 'ListItem',
+                    position: indice + 1,
+                    name: articulo.titulo,
+                    url: `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/articulos/${articulo.slug}`
+                  }))
+                : []
+            )
+          }
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Inicio', item: String(configuracion.public.siteUrl).replace(/\/+$/, '') },
+            { '@type': 'ListItem', position: 2, name: 'Noticias', item: `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/articulos` },
+            { '@type': 'ListItem', position: 3, name: hubPublico.value.titulo, item: urlCanonica.value }
+          ]
+        }
+      ]
+    : undefined
+}))
 
 if (import.meta.server) {
   const eventoSolicitud = useRequestEvent()
-  if (eventoSolicitud) {
+  if (eventoSolicitud && !hubPublico.value) {
     setResponseStatus(eventoSolicitud, 404, 'Pagina no encontrada')
     eventoSolicitud.node?.res?.setHeader('X-Robots-Tag', 'noindex, follow')
   }
@@ -34,7 +124,37 @@ const enlacesAyuda = [
 </script>
 
 <template>
-  <div class="sitio-error">
+  <div v-if="hubPublico" class="sitio-hub-publico">
+    <CabeceraPrincipal />
+
+    <main class="pagina-hub-publico" aria-labelledby="titulo-hub-publico">
+      <MigasNavegacion
+        :elementos="[
+          { etiqueta: 'Inicio', ruta: '/' },
+          { etiqueta: 'Noticias', ruta: '/articulos' },
+          { etiqueta: hubPublico.titulo }
+        ]"
+      />
+
+      <header class="cabecera-hub-publico">
+        <p class="etiqueta-seccion">{{ tipoHubEtiqueta }}</p>
+        <h1 id="titulo-hub-publico">{{ hubPublico.titulo }}</h1>
+        <p class="resumen-hub-publico">{{ hubPublico.descripcion }}</p>
+      </header>
+
+      <section v-if="hubPublico.cuerpo" class="cuerpo-hub-publico" aria-label="Introducción">
+        <p v-for="(parrafo, indice) in hubPublico.cuerpo.split(/\n{2,}/)" :key="indice">
+          {{ parrafo }}
+        </p>
+      </section>
+
+      <RenderizadorHubPublico :modulos="hubPublico.modulos" />
+    </main>
+
+    <PiePaginaPrincipal />
+  </div>
+
+  <div v-else class="sitio-error">
     <CabeceraPrincipal />
 
     <main class="pagina-error" aria-labelledby="titulo-error">

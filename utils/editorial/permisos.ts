@@ -19,6 +19,8 @@ export const permisosEditoriales: PermisoEditorial[] = [
   'media.eliminar',
   'taxonomia.ver',
   'taxonomia.gestionar',
+  'hub.ver',
+  'hub.gestionar',
   'ingestas.ver',
   'ingestas.registrar',
   'ingestas.gestionar',
@@ -80,6 +82,8 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'media.editar',
     'taxonomia.ver',
     'taxonomia.gestionar',
+    'hub.ver',
+    'hub.gestionar',
     'ingestas.ver',
     'ingestas.registrar',
     'ingestas.redactar'
@@ -97,6 +101,7 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'media.editar',
     'taxonomia.ver',
     'ingestas.ver',
+    'hub.ver',
     'ingestas.registrar',
     'ingestas.redactar'
   ],
@@ -110,6 +115,7 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'media.subir',
     'taxonomia.ver',
     'ingestas.registrar',
+    'hub.ver',
     'ingestas.redactar'
   ],
   colaborador: [
@@ -121,6 +127,7 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'media.ver',
     'media.subir',
     'taxonomia.ver',
+    'hub.ver',
     'ingestas.registrar'
   ],
   workerIngesta: [
