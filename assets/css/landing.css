@@ -2592,6 +2592,8 @@ body.tema-publico-azul .panel-resultados h2,
 body.tema-publico-azul .partido-destacado-resultados > header span,
 body.tema-publico-azul .equipo-destacado strong,
 body.tema-publico-azul .resultado-destacado b,
+body.tema-publico-azul .respuesta-directa-deportiva > header h2,
+body.tema-publico-azul .datos-clave-respuesta-directa dd,
 body.tema-publico-azul .fila-equipo-marcador strong,
 body.tema-publico-azul .fila-equipo-marcador b,
 body.tema-publico-azul .tabla-clasificacion-resultados td,
@@ -2603,6 +2605,9 @@ body.tema-publico-azul .tarjeta-articulo .texto-apoyo,
 body.tema-publico-azul .tarjeta-articulo .meta-articulo,
 body.tema-publico-azul .titulo-panel-resultados span,
 body.tema-publico-azul .resultado-destacado small,
+body.tema-publico-azul .resultado-destacado > strong,
+body.tema-publico-azul .datos-clave-respuesta-directa dt,
+body.tema-publico-azul .datos-clave-respuesta-directa dd small,
 body.tema-publico-azul .partido-destacado-resultados > footer,
 body.tema-publico-azul .aviso-fuente-resultados p {
   color: #a8bbd5;
@@ -2636,6 +2641,7 @@ body.tema-publico-azul .pestanas-detalle-partido button.activo {
 body.tema-publico-azul .tabla-clasificacion-resultados td,
 body.tema-publico-azul .partido-destacado-resultados > header,
 body.tema-publico-azul .partido-destacado-resultados > footer,
+body.tema-publico-azul .datos-clave-respuesta-directa,
 body.tema-publico-azul .enlace-detalle-partido {
   border-color: #294467;
 }

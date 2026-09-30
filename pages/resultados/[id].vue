@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Bell, CalendarDays, MapPin, RefreshCw, Star } from '@lucide/vue'
+import { Bell, RefreshCw, Star } from '@lucide/vue'
 import type { DetallePartidoResultado, EquipoResultado, RespuestaMarcadorPartido } from '~/types/resultados'
 import { construirUrlAbsoluta, imagenSeoPredeterminada, robotsNoIndex } from '~/utils/seo'
 
@@ -7,7 +7,9 @@ const ruta = useRoute()
 const pestanaActiva = ref<'resumen' | 'estadisticas' | 'alineaciones' | 'minuto'>('resumen')
 const actualizandoMarcador = ref(false)
 const errorActualizacion = ref(false)
+const zonaHoraria = ref('America/Bogota')
 const { estaSiguiendo, alternarSeguimiento, notificarCambioMarcador } = useSeguimientoPartidos()
+const analitica = useAnaliticaPublica()
 let identificadorIntervalo: ReturnType<typeof setInterval> | undefined
 
 const { data: detalle, status, error, refresh } = await useFetch<DetallePartidoResultado>(
@@ -56,6 +58,8 @@ const textoActualizacion = computed(() => {
 
 onMounted(() => {
   identificadorIntervalo = setInterval(actualizarMarcador, 60_000)
+  const zonaDetectada = Intl.DateTimeFormat().resolvedOptions().timeZone
+  if (zonaDetectada) zonaHoraria.value = zonaDetectada
 })
 
 onBeforeUnmount(() => {
@@ -80,7 +84,9 @@ async function actualizarMarcador() {
 }
 
 async function alternarSeguimientoActual() {
-  if (detalle.value) await alternarSeguimiento(detalle.value.partido)
+  if (!detalle.value) return
+  void analitica.registrarEvento('direct_answer_action')
+  await alternarSeguimiento(detalle.value.partido)
 }
 
 function obtenerEquipoAlineacion(equipoId: string): EquipoResultado {
@@ -198,17 +204,9 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
         <div>
           <p>Resultados {{ detalle.partido.estado === 'en-vivo' ? 'en vivo' : 'del partido' }}</p>
           <h1>{{ detalle.partido.equipoLocal.nombre }} vs {{ detalle.partido.equipoVisitante.nombre }}</h1>
-          <div class="metadatos-partido">
-            <span><CalendarDays aria-hidden="true" /> {{ new Intl.DateTimeFormat('es-CO', { dateStyle: 'long' }).format(new Date(detalle.partido.fechaIso)) }}</span>
-            <span>{{ detalle.partido.competencia }}</span>
-            <span v-if="detalle.partido.estadio || detalle.partido.ciudad">
-              <MapPin aria-hidden="true" />
-              {{ [detalle.partido.estadio, detalle.partido.ciudad].filter(Boolean).join(', ') }}
-            </span>
-          </div>
         </div>
         <div class="estado-detalle-en-vivo">
-          <EtiquetaEstadoPartido :partido="detalle.partido" />
+          <EtiquetaEstadoPartido :partido="detalle.partido" :zona-horaria="zonaHoraria" />
           <span :class="{ error: errorActualizacion }">
             <RefreshCw v-if="actualizandoMarcador" class="icono-girando" aria-hidden="true" />
             {{ textoActualizacion }}
@@ -216,7 +214,7 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
         </div>
       </header>
 
-      <PartidoDestacadoResultados :partido="detalle.partido" :mostrar-enlace="false" />
+      <RespuestaDirectaDeportiva :partido="detalle.partido" :zona-horaria="zonaHoraria" titulo="Datos clave del encuentro" />
 
       <nav class="pestanas-detalle-partido" aria-label="Información del partido">
         <button

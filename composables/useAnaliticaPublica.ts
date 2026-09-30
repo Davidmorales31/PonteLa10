@@ -14,6 +14,8 @@ type EventoAnalitica =
   | 'pagination_next'
   | 'hub_view'
   | 'hub_module_click'
+  | 'direct_answer_view'
+  | 'direct_answer_action'
 
 declare global {
   interface Window {

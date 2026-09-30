@@ -392,6 +392,7 @@
 }
 
 .partido-destacado-resultados { position: relative; overflow: hidden; }
+.respuesta-directa-deportiva { box-sizing: border-box; min-width: 0; max-width: 100%; }
 .partido-destacado-resultados > header {
   display: flex;
   min-height: 48px;
@@ -403,8 +404,14 @@
 }
 
 .partido-destacado-resultados > header > div { display: flex; align-items: center; gap: 9px; }
+.respuesta-directa-deportiva > header > div { min-width: 0; flex-wrap: wrap; }
+.respuesta-directa-deportiva > header h2 { margin: 0; color: var(--navy); font-size: 0.78rem; font-weight: 950; text-transform: uppercase; }
 .partido-destacado-resultados > header span { color: var(--navy); font-size: 0.74rem; font-weight: 950; text-transform: uppercase; }
 .partido-destacado-resultados > header small { color: var(--muted); font-size: 0.7rem; }
+.respuesta-directa-deportiva .estado-respuesta-directa { border-radius: 999px; background: #e9f6ee; padding: 6px 10px; color: #14623a; font-size: 0.68rem; }
+.respuesta-directa-deportiva .equipo-destacado,
+.respuesta-directa-deportiva .resultado-destacado { min-width: 0; }
+.respuesta-directa-deportiva .equipo-destacado strong { overflow-wrap: anywhere; }
 
 .marcador-destacado {
   display: grid;
@@ -422,9 +429,16 @@
 .resultado-destacado b { color: var(--navy); font-size: clamp(2.7rem, 6vw, 4.5rem); line-height: 1; }
 .resultado-destacado b span { color: #9aa6b8; font-size: 0.65em; }
 .resultado-destacado small { color: var(--muted); font-weight: 700; }
+.resultado-destacado > strong { color: var(--muted); font-size: 0.85rem; }
+.datos-clave-respuesta-directa { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; border-top: 1px solid var(--line); padding: 15px 22px; }
+.datos-clave-respuesta-directa > div { display: grid; align-content: start; gap: 5px; min-width: 0; }
+.datos-clave-respuesta-directa dt { color: var(--muted); font-size: 0.63rem; font-weight: 900; text-transform: uppercase; }
+.datos-clave-respuesta-directa dd { margin: 0; color: var(--navy); font-size: 0.76rem; font-weight: 800; overflow-wrap: anywhere; }
+.datos-clave-respuesta-directa dd small { display: block; margin-top: 4px; color: var(--muted); font-size: 0.66rem; font-weight: 650; }
 .partido-destacado-resultados > footer { display: flex; min-height: 42px; align-items: center; justify-content: center; gap: 7px; border-top: 1px solid var(--line); color: var(--muted); font-size: 0.72rem; font-weight: 700; }
 .partido-destacado-resultados > footer svg { width: 15px; }
 .enlace-detalle-partido { display: block; border-top: 1px solid var(--line); padding: 13px; color: var(--blue); font-size: 0.72rem; font-weight: 950; text-align: center; text-transform: uppercase; }
+.enlace-detalle-partido:focus-visible { outline: 3px solid var(--blue); outline-offset: -4px; }
 
 .seccion-lista-resultados,
 .panel-resultados { padding: 18px; }
@@ -670,6 +684,10 @@
   .esqueleto-columnas { grid-template-columns: 1fr; }
 }
 
+@media (max-width: 600px) {
+  .datos-clave-respuesta-directa { grid-template-columns: 1fr; padding-inline: 16px; }
+}
+
 @media (max-width: 680px) {
   .franja-marcadores-contenido { width: 100%; min-height: 118px; grid-template-columns: 1fr; gap: 7px; padding: 9px 12px; }
   .encabezado-franja-marcadores { display: flex; align-items: center; justify-content: space-between; }
@@ -683,6 +701,10 @@
   .pagina-detalle-resultado { width: calc(100% - 24px); padding-top: 20px; }
   .cabecera-resultados,
   .cabecera-detalle-partido { align-items: flex-start; flex-direction: column; }
+  .respuesta-directa-deportiva > header { align-items: flex-start; flex-wrap: wrap; }
+  .respuesta-directa-deportiva > header > div { align-items: flex-start; flex: 1 1 100%; flex-direction: column; gap: 5px; }
+  .respuesta-directa-deportiva > header .estado-respuesta-directa { margin-left: auto; }
+  .respuesta-directa-deportiva .marcador-destacado { min-width: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1fr); }
   .cabecera-resultados h1,
   .cabecera-detalle-partido h1 { font-size: 1.85rem; }
   .contador-en-vivo { min-height: 34px; padding-inline: 13px; }
