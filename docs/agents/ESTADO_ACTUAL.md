@@ -20,7 +20,8 @@
   `@vue/shared`; `npm ci` informó 15 vulnerabilidades en el árbol instalado,
   sin modificar dependencias. Commit `aed1595`; PR #39 abierta sobre
   `codex/hu-tr-08-server-filter`, pendiente de checks y revisión, sin aprobar
-  ni fusionar.
+  ni fusionar. Vercel Preview y Vercel Preview Comments pasan; Supabase Preview
+  se omitió por falta de configuración.
   Handoff: `docs/agents/handoffs/2026-09-30-hu-tr-09-paginacion-rastreable.md`.
 
 - **HU-TR-08 — filtros públicos en servidor (2026-09-30, rama aislada):** la
