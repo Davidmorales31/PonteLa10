@@ -288,7 +288,8 @@ describe('API privada de propuestas Codex', () => {
       trendTitle: 'Tendencias actuales de Colombia',
       observedAt: '2026-09-26T12:00:00Z',
       relevanceReason: 'La tendencia conecta con actividad deportiva y merece investigarse antes de redactar.',
-      scores: { recency: 90, relevance: 82, novelty: 75, editorialFit: 88 }
+      contentIntent: 'explainer' as const,
+      scores: { recency: 90, relevance: 82, novelty: 75, editorialFit: 88, searchDemand: 80, lifespan: 76, socialPotential: 60, interactivePotential: 35, firstPartyData: 20, competitionOpportunity: 70 }
     }
     const agenda = {
       runId,
@@ -311,6 +312,16 @@ describe('API privada de propuestas Codex', () => {
           ...oportunidad,
           fingerprint: indice.toString(16).padStart(64, '0')
         }))
+      }]
+    }).success).toBe(false)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{
+          ...oportunidad,
+          scores: { ...oportunidad.scores, searchDemand: 101 }
+        }]
       }]
     }).success).toBe(false)
   })

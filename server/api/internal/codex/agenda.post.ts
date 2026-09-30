@@ -5,6 +5,10 @@ import {
   verificarFirmaCodex
 } from '~/server/utils/codexEditorialPrivado'
 import { esquemaAgendaCodex } from '~/server/utils/esquemasCodexEditorial'
+import {
+  calcularStrategicOpportunityScore,
+  VERSION_SCORE_ESTRATEGICO
+} from '~/server/utils/strategicOpportunityScore'
 
 const limiteAgendaBytes = 1_000_000
 
@@ -27,10 +31,22 @@ export default defineEventHandler(async (evento) => {
     })
   }
 
+  const categoriasConScore = resultado.data.categories.map(categoria => ({
+    ...categoria,
+    opportunities: categoria.opportunities.map(oportunidad => ({
+      ...oportunidad,
+      strategicScore: calcularStrategicOpportunityScore(
+        oportunidad.scores,
+        oportunidad.contentIntent
+      ),
+      strategicScoreVersion: VERSION_SCORE_ESTRATEGICO
+    }))
+  }))
+
   const { data, error } = await obtenerClienteCodexPrivado(evento)
     .rpc('save_codex_editorial_agenda', {
       p_run_id: resultado.data.runId,
-      p_categories: resultado.data.categories,
+      p_categories: categoriasConScore,
       p_status: resultado.data.status
     })
   if (error) {
