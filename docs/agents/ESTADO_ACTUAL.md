@@ -15,7 +15,9 @@
   cuando el servidor no dispone de Supabase; `/api/articulos` devuelve 400
   controlado para filtros malformados. La validación de datos reales y
   responsive con Supabase queda pendiente: faltan sus variables públicas, y
-  `agent-browser` no está instalado. Handoff:
+  `agent-browser` no está instalado. Commit de implementación `abf4670`;
+  PR #38 está abierta contra `main`, sin aprobación ni merge, con CI pendiente.
+  Handoff:
   `docs/agents/handoffs/2026-09-30-hu-tr-08-filtros-articulos.md`.
 
 - **Portada obligatoria en propuestas de la tarea Codex (2026-09-29, Production):** auditoría
