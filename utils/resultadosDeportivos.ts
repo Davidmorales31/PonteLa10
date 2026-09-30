@@ -59,6 +59,25 @@ export function ordenarPartidosRelevantes(partidos: PartidoResultado[]): Partido
   })
 }
 
+export function seleccionarPartidoRespuestaDirecta(partidos: PartidoResultado[]): PartidoResultado | null {
+  const partidoEnVivo = partidos.find(partido => partido.estado === 'en-vivo')
+  if (partidoEnVivo) return partidoEnVivo
+
+  const programados = partidos.filter(partido => partido.estado === 'programado')
+  const programadosConFecha = programados
+    .filter(partido => Number.isFinite(Date.parse(partido.fechaIso)))
+    .sort((primero, segundo) => Date.parse(primero.fechaIso) - Date.parse(segundo.fechaIso))
+  if (programadosConFecha[0]) return programadosConFecha[0]
+  if (programados[0]) return programados[0]
+
+  const finalizados = partidos.filter(partido => partido.estado === 'finalizado')
+  const finalizadosConFecha = finalizados
+    .filter(partido => Number.isFinite(Date.parse(partido.fechaIso)))
+    .sort((primero, segundo) => Date.parse(segundo.fechaIso) - Date.parse(primero.fechaIso))
+
+  return finalizadosConFecha[0] || finalizados[0] || null
+}
+
 export function obtenerEtiquetaEstado(partido: PartidoResultado, zonaHoraria = zonaHorariaColombia): string {
   if (partido.estado === 'en-vivo') {
     return partido.minuto ? `${partido.minuto}′` : partido.periodo || 'En vivo'

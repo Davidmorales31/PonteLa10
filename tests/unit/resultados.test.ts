@@ -6,8 +6,10 @@ import {
   mapearFixtureApiFootball,
   obtenerEstadoPartidoApi,
   obtenerEtiquetaEstado,
-  ordenarPartidosRelevantes
+  ordenarPartidosRelevantes,
+  seleccionarPartidoRespuestaDirecta
 } from '../../utils/resultadosDeportivos'
+import { crearDatosRespuestaDirectaDeportiva } from '../../utils/respuestaDirectaDeportiva'
 import {
   mapearAlineacionesTheSportsDb,
   mapearEventoTheSportsDb,
@@ -38,6 +40,75 @@ describe('resultados deportivos', () => {
     const partidoFinalizado = { ...mapearFixtureApiFootball(fixtureBase), id: 'final', estado: 'finalizado' as const }
     const partidoEnVivo = { ...mapearFixtureApiFootball(fixtureBase), id: 'vivo', destacado: false }
     expect(ordenarPartidosRelevantes([partidoFinalizado, partidoEnVivo])[0]?.id).toBe('vivo')
+  })
+
+  it('selecciona la respuesta de jornada en vivo, próxima o recién finalizada', () => {
+    const finalizado = { ...mapearFixtureApiFootball(fixtureBase), id: 'final', estado: 'finalizado' as const }
+    const programadoTarde = {
+      ...mapearFixtureApiFootball(fixtureBase), id: 'tarde', estado: 'programado' as const,
+      fechaIso: '2026-07-22T23:00:00Z'
+    }
+    const programadoTemprano = {
+      ...mapearFixtureApiFootball(fixtureBase), id: 'temprano', estado: 'programado' as const,
+      fechaIso: '2026-07-22T18:00:00Z'
+    }
+    const finalizadoReciente = {
+      ...finalizado, id: 'final-reciente', fechaIso: '2026-07-23T18:00:00Z'
+    }
+    const enVivo = { ...finalizado, id: 'vivo', estado: 'en-vivo' as const }
+
+    expect(seleccionarPartidoRespuestaDirecta([finalizado, programadoTarde, programadoTemprano])?.id).toBe('temprano')
+    expect(seleccionarPartidoRespuestaDirecta([programadoTemprano, enVivo])?.id).toBe('vivo')
+    expect(seleccionarPartidoRespuestaDirecta([finalizado, finalizadoReciente])?.id).toBe('final-reciente')
+    expect(seleccionarPartidoRespuestaDirecta([])).toBeNull()
+  })
+
+  it('expone fechas, estadio, resultado y zona horaria solo con datos válidos', () => {
+    const partido = mapearFixtureApiFootball(fixtureBase)
+    const datos = crearDatosRespuestaDirectaDeportiva(partido, 'America/Bogota')
+
+    expect(datos).toMatchObject({
+      fecha: expect.stringContaining('22 de julio de 2026'),
+      hora: '20:00',
+      referenciaZonaHoraria: expect.stringContaining('America/Bogota'),
+      competencia: 'Liga BetPlay',
+      estadio: 'Metropolitano, Barranquilla',
+      estado: 'En vivo',
+      resultado: '2–1'
+    })
+  })
+
+  it('convierte la hora a la zona elegida y omite marcadores no confirmados', () => {
+    const programado = {
+      ...mapearFixtureApiFootball(fixtureBase), estado: 'programado' as const,
+      marcadorLocal: 2, marcadorVisitante: 1, estadio: undefined, ciudad: undefined
+    }
+    const datos = crearDatosRespuestaDirectaDeportiva(programado, 'Asia/Tokyo')
+    const datosInvalidos = crearDatosRespuestaDirectaDeportiva({
+      ...programado, fechaIso: 'fecha-no-valida', competencia: '   '
+    }, 'zona-no-valida')
+    const datosSoloFecha = crearDatosRespuestaDirectaDeportiva({ ...programado, fechaIso: '2026-07-22' }, 'Asia/Tokyo')
+
+    expect(datos).toMatchObject({
+      fecha: expect.stringContaining('23 de julio de 2026'),
+      hora: '10:00',
+      referenciaZonaHoraria: expect.stringContaining('Asia/Tokyo'),
+      estadio: null,
+      resultado: null,
+      descripcionMarcador: 'Por jugar'
+    })
+    expect(datosInvalidos).toMatchObject({
+      fecha: null,
+      hora: null,
+      referenciaZonaHoraria: null,
+      competencia: null,
+      resultado: null
+    })
+    expect(datosSoloFecha).toMatchObject({
+      fecha: expect.stringContaining('22 de julio de 2026'),
+      hora: null,
+      referenciaZonaHoraria: null
+    })
   })
 
   it('genera etiquetas legibles y abreviaciones estables', () => {

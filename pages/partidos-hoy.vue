@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ArrowUpRight, Clock3 } from '@lucide/vue'
 import type { EstadoPartido, RespuestaResultados } from '~/types/resultados'
+import { seleccionarPartidoRespuestaDirecta } from '~/utils/resultadosDeportivos'
 import { construirUrlAbsoluta } from '~/utils/seo'
 
 const configuracion = useRuntimeConfig()
@@ -26,6 +27,7 @@ const partidosPorEstado = (estado: EstadoPartido) => computed(() =>
   (respuesta.value?.partidos || []).filter(partido => partido.estado === estado)
 )
 const partidos = computed(() => respuesta.value?.partidos || [])
+const partidoRespuestaDirecta = computed(() => seleccionarPartidoRespuestaDirecta(partidos.value))
 
 onMounted(() => {
   const zonaDetectada = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -81,6 +83,13 @@ useSeoPont3la10(() => ({
         <NuxtLink to="/resultados">Todos los deportes <ArrowUpRight aria-hidden="true" /></NuxtLink>
       </div>
     </nav>
+    <RespuestaDirectaDeportiva
+      v-if="!error && partidoRespuestaDirecta"
+      :partido="partidoRespuestaDirecta"
+      :zona-horaria="zonaHoraria"
+      titulo="Respuesta rápida de la jornada"
+      :mostrar-enlace-detalle="true"
+    />
     <EstadoDatosResultados v-if="error" descripcion="No fue posible consultar los partidos de hoy. Intenta actualizar la jornada." :permitir-reintento="true" @reintentar="refresh" />
     <EstadoDatosResultados v-else-if="!partidos.length" descripcion="No hay partidos disponibles para hoy. Consulta los resultados en vivo o vuelve más tarde." />
     <template v-else>
