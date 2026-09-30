@@ -2571,6 +2571,7 @@ body.tema-publico-azul .grilla-especiales-publicos article,
 body.tema-publico-azul .filtros-deporte,
 body.tema-publico-azul .filtros-estado,
 body.tema-publico-azul .filtros-partidos-hoy,
+body.tema-publico-azul .tarjeta-colombiano-europa,
 body.tema-publico-azul .partido-destacado-resultados,
 body.tema-publico-azul .panel-resultados,
 body.tema-publico-azul .seccion-lista-resultados,
@@ -2596,6 +2597,26 @@ body.tema-publico-azul .controles-filtros-partidos-hoy select {
 
 body.tema-publico-azul .resumen-filtros-partidos-hoy {
   color: #a8bbd5;
+}
+
+body.tema-publico-azul .tarjeta-colombiano-europa__jugador h3,
+body.tema-publico-azul .tarjeta-colombiano-europa__partido dd {
+  color: #edf3ff;
+}
+
+body.tema-publico-azul .tarjeta-colombiano-europa__jugador p,
+body.tema-publico-azul .tarjeta-colombiano-europa__jugador > span,
+body.tema-publico-azul .tarjeta-colombiano-europa__partido dt,
+body.tema-publico-azul .aviso-titularidad-colombiano {
+  color: #c4d3e8;
+}
+
+body.tema-publico-azul .pagina-colombianos-europa > .enlaces-seo-resultados p {
+  color: #a8bbd5;
+}
+
+body.tema-publico-blanco .pagina-colombianos-europa > .enlaces-seo-resultados p {
+  color: #526177;
 }
 
 body.tema-publico-azul .boton-limpiar-filtros-partidos-hoy,

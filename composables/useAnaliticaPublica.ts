@@ -21,6 +21,8 @@ type EventoAnalitica =
   | 'matches_today_view'
   | 'matches_today_filter'
   | 'match_card_click'
+  | 'colombians_hub_view'
+  | 'colombian_match_click'
 
 declare global {
   interface Window {
