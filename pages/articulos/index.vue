@@ -22,6 +22,13 @@ import {
   normalizarTextoBusqueda,
   obtenerEtiquetaCategoria
 } from '~/utils/articulosLanding'
+import {
+  construirRutaPaginaArticulos,
+  esPaginaArticulosSinResultados,
+  esCategoriaArticulosIndexable,
+  leerPaginaArticulosPublica,
+  limiteArticulosPorPagina
+} from '~/utils/paginacionArticulos'
 import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
 
 type ArticuloListado = ArticuloResumen & { fechaPublicacion: string }
@@ -30,16 +37,19 @@ type PaginaArticulosPublicos = {
   hayMas: boolean
 }
 
-const limitePaginaArticulos = 20
 const incrementoNoticiasVisibles = 6
 
 const rutaActual = useRoute()
+const paginaActual = computed(() => rutaActual.params.pagina === undefined
+  ? 1
+  : leerPaginaArticulosPublica(rutaActual.params.pagina) || 1)
 const filtrosConsulta = computed(() => construirFiltrosConsultaArticulos(
   rutaActual.query as Record<string, unknown>
 ))
 const parametrosPaginaInicial = computed(() => ({
   paginado: 'true',
-  limite: limitePaginaArticulos,
+  limite: limiteArticulosPorPagina,
+  pagina: paginaActual.value,
   ...filtrosConsulta.value
 }))
 const { data: resultados, status: estadoResultados } = await useFetch<RespuestaResultados>('/api/resultados', {
@@ -51,7 +61,7 @@ const {
   refresh: recargarPaginaInicial,
   status: estadoPaginaInicial
 } = await useFetch<PaginaArticulosPublicos>('/api/articulos', {
-  key: 'pagina-articulos-publicos',
+  key: `pagina-articulos-publicos:${paginaActual.value}:${JSON.stringify(filtrosConsulta.value)}`,
   query: parametrosPaginaInicial,
   watch: false,
   default: () => ({ articulos: [], hayMas: false }),
@@ -67,7 +77,18 @@ const errorCargaNoticias = ref('')
 const imagenesFallidas = ref<string[]>([])
 let generacionFiltros = 0
 
-watch(filtrosConsulta, () => {
+if (
+  import.meta.server
+  && esPaginaArticulosSinResultados(
+    paginaActual.value,
+    paginaInicial.value?.articulos.length || 0,
+    estadoPaginaInicial.value
+  )
+) {
+  throw createError({ statusCode: 404, message: 'Página de noticias no encontrada' })
+}
+
+watch([filtrosConsulta, paginaActual], () => {
   generacionFiltros += 1
   articulosCargados.value = []
   hayMasDesdeServidor.value = false
@@ -86,6 +107,17 @@ watch([estadoPaginaInicial, paginaInicial], ([estado, pagina]) => {
     hayMasDesdeServidor.value = false
     desplazamientoSiguiente.value = 0
     errorCargaNoticias.value = 'No se pudieron cargar las noticias. Inténtalo de nuevo.'
+    return
+  }
+
+  if (esPaginaArticulosSinResultados(
+    paginaActual.value,
+    pagina?.articulos.length || 0,
+    estado
+  )) {
+    if (import.meta.client) {
+      showError({ statusCode: 404, message: 'Página de noticias no encontrada' })
+    }
     return
   }
 
@@ -115,6 +147,16 @@ const articulosDisponibles = computed(() => articulosPublicados.value)
 const terminoBusqueda = computed(() => String(rutaActual.query.buscar || '').trim())
 const categoriaBusqueda = computed(() => normalizarTextoBusqueda(String(rutaActual.query.categoria || '')))
 const temaBusqueda = computed(() => String(rutaActual.query.tema || '').trim())
+const categoriaCanonica = computed(() => {
+  const categoria = rutaActual.query.categoria
+  if (!esCategoriaArticulosIndexable(categoria)) return null
+  return categoria.trim().toLocaleLowerCase('es-CO')
+})
+const consultaTieneFiltrosNoIndexables = computed(() =>
+  'buscar' in rutaActual.query
+  || 'tema' in rutaActual.query
+  || ('categoria' in rutaActual.query && !categoriaCanonica.value)
+)
 const filtrosActivos = computed(() => Boolean(
   filtrosConsulta.value.categoria || filtrosConsulta.value.tema || filtrosConsulta.value.buscar
 ))
@@ -132,10 +174,13 @@ const tituloListado = computed(() => {
   return 'Noticias'
 })
 const configuracion = useRuntimeConfig()
-const esBusquedaInterna = computed(() => Boolean(terminoBusqueda.value || temaBusqueda.value))
-const rutaCanonica = computed(() => rutaActual.query.categoria && !esBusquedaInterna.value
-  ? `/articulos?categoria=${encodeURIComponent(String(rutaActual.query.categoria))}`
-  : '/articulos')
+const esBusquedaInterna = computed(() => Boolean(
+  terminoBusqueda.value || temaBusqueda.value || consultaTieneFiltrosNoIndexables.value
+))
+const rutaCanonica = computed(() => construirRutaPaginaArticulos(
+  paginaActual.value,
+  categoriaCanonica.value ? { categoria: categoriaCanonica.value } : {}
+))
 const filtrosRapidos = [
   { etiqueta: 'Todos', ruta: '/articulos', categoria: '', icono: LayoutGrid },
   { etiqueta: 'Selección Colombia', ruta: '/articulos?categoria=colombia', categoria: 'colombia', icono: Flag },
@@ -148,8 +193,9 @@ const noticiaPrincipal = computed(() => articulosFiltrados.value[0] || null)
 const todasUltimasNoticias = computed(() => articulosFiltrados.value
   .filter(articulo => articulo.slug !== noticiaPrincipal.value?.slug)
 )
-const ultimasNoticias = computed(() => todasUltimasNoticias.value
-  .slice(0, cantidadNoticiasVisibles.value)
+const ultimasNoticias = computed(() => paginaActual.value > 1
+  ? todasUltimasNoticias.value
+  : todasUltimasNoticias.value.slice(0, cantidadNoticiasVisibles.value)
 )
 const hayMasNoticias = computed(() =>
   cantidadNoticiasVisibles.value < todasUltimasNoticias.value.length || hayMasDesdeServidor.value
@@ -160,8 +206,12 @@ const noticiasTendencia = computed(() => articulosFiltrados.value
 )
 const noticiaLateral = computed(() => noticiasTendencia.value.find(tieneImagen) || noticiasTendencia.value[0] || null)
 
+function rutaPagina(pagina: number) {
+  return construirRutaPaginaArticulos(pagina, filtrosConsulta.value)
+}
+
 async function cargarMasNoticias() {
-  if (cargandoMasNoticias.value || !hayMasNoticias.value) return
+  if (paginaActual.value > 1 || cargandoMasNoticias.value || !hayMasNoticias.value) return
 
   mensajeCargaNoticias.value = ''
   errorCargaNoticias.value = ''
@@ -189,7 +239,9 @@ async function cargarMasNoticias() {
     ) {
       const pagina = await $fetch<PaginaArticulosPublicos>('/api/articulos', {
         query: {
-          ...parametrosPaginaInicial.value,
+          paginado: 'true',
+          limite: limiteArticulosPorPagina,
+          ...filtrosConsulta.value,
           desplazamiento: desplazamientoSiguiente.value
         }
       })
@@ -240,18 +292,26 @@ function registrarImagenFallida(imagen?: string) {
 }
 
 useSeoPont3la10(() => {
-  const titulo = rutaActual.query.categoria && !esBusquedaInterna.value
-    ? `${tituloListado.value} | Pont3la10`
+  const sufijoPagina = paginaActual.value > 1 ? ` | Página ${paginaActual.value}` : ''
+  const titulo = categoriaCanonica.value && !esBusquedaInterna.value
+    ? `${tituloListado.value}${sufijoPagina} | Pont3la10`
+    : paginaActual.value > 1
+      ? `Noticias | Página ${paginaActual.value} | Pont3la10`
     : 'Noticias y análisis deportivo | Pont3la10'
-  const descripcion = rutaActual.query.categoria && !esBusquedaInterna.value
-    ? `Noticias, análisis y actualidad de ${obtenerEtiquetaCategoria(String(rutaActual.query.categoria))} en Pont3la10.`
+  const descripcionBase = categoriaCanonica.value && !esBusquedaInterna.value
+    ? `Noticias, análisis y actualidad de ${obtenerEtiquetaCategoria(categoriaCanonica.value)} en Pont3la10.`
     : 'Noticias y análisis de fútbol, tecnología deportiva, gaming y tendencias con contexto claro y criterio editorial.'
+  const descripcion = paginaActual.value > 1
+    ? `${descripcionBase} Página ${paginaActual.value}.`
+    : descripcionBase
 
   return {
     titulo,
     descripcion,
     rutaCanonica: rutaCanonica.value,
-    robots: esBusquedaInterna.value ? robotsNoIndex : undefined,
+    robots: esBusquedaInterna.value || estadoPaginaInicial.value === 'error'
+      ? robotsNoIndex
+      : undefined,
     datosEstructurados: esBusquedaInterna.value
       ? undefined
       : {
@@ -264,7 +324,7 @@ useSeoPont3la10(() => {
             '@type': 'ItemList',
             itemListElement: articulosFiltrados.value.map((articulo, indice) => ({
               '@type': 'ListItem',
-              position: indice + 1,
+              position: ((paginaActual.value - 1) * limiteArticulosPorPagina) + indice + 1,
               name: articulo.titulo,
               url: construirUrlAbsoluta(
                 String(configuracion.public.siteUrl),
@@ -352,7 +412,7 @@ useSeoPont3la10(() => {
               </article>
             </div>
             <button
-              v-if="hayMasNoticias"
+              v-if="paginaActual === 1 && hayMasNoticias"
               class="boton-cargar-noticias"
               type="button"
               aria-controls="lista-ultimas-noticias"
@@ -366,6 +426,29 @@ useSeoPont3la10(() => {
             </button>
             <p v-if="errorCargaNoticias" class="estado-carga-noticias error" role="alert">{{ errorCargaNoticias }}</p>
             <p v-else-if="mensajeCargaNoticias" class="estado-carga-noticias" role="status">{{ mensajeCargaNoticias }}</p>
+            <nav
+              v-if="paginaActual > 1 || hayMasDesdeServidor"
+              class="paginacion-noticias"
+              aria-label="Paginación de noticias"
+            >
+              <NuxtLink
+                v-if="paginaActual > 1"
+                :to="rutaPagina(paginaActual - 1)"
+                rel="prev"
+                aria-label="Ver la página anterior de noticias"
+              >
+                Anterior
+              </NuxtLink>
+              <span aria-current="page">Página {{ paginaActual }}</span>
+              <NuxtLink
+                v-if="hayMasDesdeServidor"
+                :to="rutaPagina(paginaActual + 1)"
+                rel="next"
+                aria-label="Ver la página siguiente de noticias"
+              >
+                Siguiente
+              </NuxtLink>
+            </nav>
           </section>
         </main>
 
