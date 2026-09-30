@@ -1,12 +1,13 @@
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
-import { construirUrlAbsoluta, escaparXml } from '~/utils/seo'
+import { construirUrlAbsoluta, escaparXml, normalizarFechaSeo } from '~/utils/seo'
 
 const horasNoticiasGoogle = 48
 
 export default defineEventHandler(async (evento) => {
   const urlSitio = String(useRuntimeConfig().public.siteUrl)
-  const limite = new Date(Date.now() - horasNoticiasGoogle * 60 * 60 * 1000)
+  const ahora = new Date()
+  const limite = new Date(ahora.getTime() - horasNoticiasGoogle * 60 * 60 * 1000)
   const publicaciones: Awaited<ReturnType<typeof listarArticulosPublicosEditoriales>> = []
 
   try {
@@ -22,13 +23,22 @@ export default defineEventHandler(async (evento) => {
       )
       if (!pagina.length) break
 
-      const recientes = pagina.filter(articulo => new Date(articulo.publicadoEn) >= limite)
+      let encontroAnteriorAlLimite = false
+      const recientes = pagina.flatMap((articulo) => {
+        const fechaPublicacion = normalizarFechaSeo(articulo.publicadoEn, ahora)
+        const marcaTiempoPublicacion = Date.parse(articulo.publicadoEn)
+        if (!Number.isFinite(marcaTiempoPublicacion) || marcaTiempoPublicacion < limite.getTime()) {
+          encontroAnteriorAlLimite = true
+        }
+        if (!fechaPublicacion || marcaTiempoPublicacion < limite.getTime()) return []
+        return [{ ...articulo, publicadoEn: fechaPublicacion }]
+      })
       publicaciones.push(...recientes)
       desplazamiento += pagina.length
 
       // La RPC entrega primero lo más reciente; una vez superadas las 48 h,
       // no hay artículos posteriores que debamos incluir.
-      if (recientes.length !== pagina.length || pagina.length < tamanoPagina) break
+      if (encontroAnteriorAlLimite || pagina.length < tamanoPagina) break
     }
   } catch {
     // Un sitemap vacío es válido durante una degradación del catálogo público.

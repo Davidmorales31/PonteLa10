@@ -6,6 +6,7 @@ import {
   escaparXml,
   inferirTipoMimeImagen,
   normalizarUrlSitio,
+  normalizarFechaSeo,
   normalizarTextoMeta,
   serializarJsonLd
 } from '../../utils/seo'
@@ -22,6 +23,17 @@ describe('utilidades SEO', () => {
     expect(construirUrlAbsoluta('https://pont3la10.com', 'https://cdn.example.com/equipo.png')).toBe(
       'https://cdn.example.com/equipo.png'
     )
+  })
+
+  it('normaliza fechas SEO válidas y omite valores inválidos o futuros', () => {
+    const ahora = new Date('2026-09-30T12:00:00.000Z')
+
+    expect(normalizarFechaSeo('2026-09-29T18:15:00-05:00', ahora)).toBe(
+      '2026-09-29T23:15:00.000Z'
+    )
+    expect(normalizarFechaSeo('no-es-una-fecha', ahora)).toBeUndefined()
+    expect(normalizarFechaSeo('2026-10-01T00:00:00.000Z', ahora)).toBeUndefined()
+    expect(normalizarFechaSeo(null, ahora)).toBeUndefined()
   })
 
   it('serializa JSON-LD sin permitir cierres de script', () => {

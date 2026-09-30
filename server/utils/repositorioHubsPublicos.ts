@@ -223,31 +223,33 @@ export async function obtenerHubPublico(
 
 export async function listarHubsIndexablesSitemap(
   clienteSupabase: SupabaseClient
-): Promise<Array<{ slug: string }>> {
-  const slugs: string[] = []
+): Promise<Array<{ slug: string, actualizadoEn: string }>> {
+  const hubsIndexables: Array<{ slug: string, actualizadoEn: string }> = []
   const tamanoPagina = 100
   let desplazamiento = 0
-  let filas: Array<{ slug: string }>
+  let filas: Array<{ slug: string, updated_at: string }>
 
   do {
     const { data, error } = await clienteSupabase
       .from('public_hubs')
-      .select('slug')
+      .select('slug, updated_at')
       .eq('status', 'published')
       .order('published_at', { ascending: false })
       .range(desplazamiento, desplazamiento + tamanoPagina - 1)
 
     if (error) throw crearErrorRepositorioHubs(error.message)
-    filas = (data || []) as Array<{ slug: string }>
+    filas = (data || []) as Array<{ slug: string, updated_at: string }>
     const hubs = await Promise.all(filas.map(async (fila) => {
       const hub = await obtenerHubPublico(clienteSupabase, fila.slug)
-      return hub ? hub.slug : null
+      return hub
+        ? { slug: hub.slug, actualizadoEn: fila.updated_at }
+        : null
     }))
-    slugs.push(...hubs.filter((slug): slug is string => slug !== null))
+    hubsIndexables.push(...hubs.filter((hub): hub is { slug: string, actualizadoEn: string } => hub !== null))
     desplazamiento += filas.length
   } while (filas.length === tamanoPagina)
 
-  return slugs.map(slug => ({ slug }))
+  return hubsIndexables
 }
 
 export async function cambiarEstadoHubEditorial(
