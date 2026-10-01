@@ -1,5 +1,7 @@
 # Estado actual de Pont3la10
 
+- **Flujo fútbol con worker local (2026-10-01, base Production `5b57f734`):** en la rama aislada `codex/football-flow-release` quedó implementado el ciclo de fútbol dentro del worker durable local existente. Su llamada es opt-in (`PONT3LA10_FUTBOL_WORKER_ENABLED=false` por defecto), firma solicitudes sólo hacia el Nuxt local en `127.0.0.1:3001` y no agrega Vercel Cron. El worker consulta API-Football y usa Goal API como respaldo; lista, marcador y detalle público de fútbol leen snapshots Supabase y exigen mapping canónico y derechos humanos documentados antes de mostrarlos. Supabase Production ya recibió las migraciones `20261001192209`, `20261001192210` y `20261001192504`; la verificación confirmó tablas vacías, RLS activo, campos seguros permitidos a clientes, IDs externos privados y claim de lease exclusivo de `service_role`. Ningún proveedor se consultó ni se cargaron mappings/derechos. El código aún no se ha desplegado a Vercel ni se ha activado el worker. Lint, 45 archivos/219 pruebas, typecheck, build, `git diff --check`, smoke HTTP local y revisión independiente de seguridad pasan; pgTAP no se pudo ejecutar porque Supabase CLI/Docker no están disponibles. Handoff: `docs/agents/handoffs/2026-10-01-flujo-futbol-worker-local.md`.
+
 - **Portada obligatoria en propuestas de la tarea Codex (2026-09-29, Production):** auditoría
   de la corrida `3b39393b-8709-4aa7-b8ae-0d5922fb07eb` encontró cero artefactos
   `portadaIA`/`media`; la corrida previa `bd4ad640-dec7-4560-8720-ba757d89b496`

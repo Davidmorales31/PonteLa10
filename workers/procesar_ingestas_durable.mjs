@@ -2,6 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import { spawn } from 'node:child_process'
 import { createClient } from '@supabase/supabase-js'
 import { crearLatidoWorker } from './latido_worker.mjs'
+import { crearSincronizadorFutbolLocal } from './sincronizar_futbol_local.mjs'
 
 const espera = milisegundos => new Promise(resolve => setTimeout(resolve, milisegundos))
 const unaVez = process.argv.includes('--once')
@@ -561,6 +562,7 @@ async function iniciar() {
   await verificarDependenciasPython()
   console.log('Worker listo: Supabase y dependencias de TikTok verificadas.')
   const heartbeatWorker = crearLatidoWorker({ cliente, workerInstanceId: instancia })
+  const sincronizadorFutbol = crearSincronizadorFutbolLocal()
   await heartbeatWorker.iniciar()
   try {
     if (ingestaParaRedactar) {
@@ -575,6 +577,7 @@ async function iniciar() {
 
     do {
       try {
+        await sincronizadorFutbol.ejecutarSiCorresponde()
         const asignacion = await rpc(cliente, 'claim_next_editorial_ingestion', {
           p_worker_instance_id: instancia,
           p_request_id: randomUUID()
