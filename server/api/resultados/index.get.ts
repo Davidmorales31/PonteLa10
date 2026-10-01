@@ -1,17 +1,19 @@
 import type {
   DeporteResultado,
-  FixtureApiFootball,
   OrigenResultados,
   PartidoResultado,
-  RespuestaApiFootball,
   RespuestaResultados
 } from '~/types/resultados'
 import { consultarPartidosFechaApiBasketball } from '~/server/utils/clienteApiBasketball'
 import { consultarEventosDiaTheSportsDb } from '~/server/utils/clienteTheSportsDb'
+import { obtenerClienteSupabasePrivado } from '~/server/utils/clienteSupabasePrivado'
+import { leerSnapshotsFutbolPublicos } from '~/server/utils/lecturaSnapshotsFutbol'
 import { mapearPartidoApiBasketball } from '~/utils/resultadosBasketball'
-import { mapearFixtureApiFootball, ordenarPartidosRelevantes } from '~/utils/resultadosDeportivos'
+import { ordenarPartidosRelevantes } from '~/utils/resultadosDeportivos'
 import { mapearEventoTheSportsDb } from '~/utils/resultadosTheSportsDb'
+import { mapearFixtureFutbolAResultado } from '~/utils/resultadosFutbolPublicos'
 import { obtenerFechaEnZonaHoraria, normalizarZonaHoraria, zonaHorariaColombia } from '~/utils/zonasHorarias'
+import type { H3Event } from 'h3'
 
 const deportesDisponibles: DeporteResultado[] = ['futbol', 'baloncesto', 'tenis', 'beisbol']
 const nombresTheSportsDb: Record<DeporteResultado, string> = {
@@ -37,7 +39,7 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaResulta
   const zonaHoraria = obtenerZonaHorariaDesdeUrl(evento.node?.req?.url)
   const fechaLocal = obtenerFechaEnZonaHoraria(new Date(), zonaHoraria)
   const resultados = await Promise.all(
-    deportesAConsultar.map(deporte => consultarDeporte(deporte, fechaLocal, zonaHoraria, configuracion))
+    deportesAConsultar.map(deporte => consultarDeporte(deporte, fechaLocal, zonaHoraria, configuracion, evento))
   )
   const partidos = ordenarPartidosRelevantes(
     resultados.flatMap(resultado => resultado.partidos)
@@ -62,19 +64,16 @@ async function consultarDeporte(
   deporte: DeporteResultado,
   fecha: string,
   zonaHoraria: string,
-  configuracion: ReturnType<typeof useRuntimeConfig>
+  configuracion: ReturnType<typeof useRuntimeConfig>,
+  evento: H3Event
 ): Promise<ResultadoProveedor> {
-  if (deporte === 'futbol' && configuracion.apiSportsKey) {
-    try {
-      const partidos = await consultarApiFootball(
-        String(configuracion.apiSportsBaseUrl),
-        String(configuracion.apiSportsKey),
-        fecha,
-        zonaHoraria
-      )
-      if (partidos.length) return { partidos, origen: 'api-sports' }
-    } catch {
-      // El proveedor gratuito toma el relevo sin exponer detalles internos.
+  if (deporte === 'futbol') {
+    const cliente = obtenerClienteSupabasePrivado(evento)
+    if (!cliente) return { partidos: [], origen: 'base-datos' }
+    const fixtures = await leerSnapshotsFutbolPublicos(cliente, { fechaNegocio: fecha, limite: 32 })
+    return {
+      partidos: fixtures.map(mapearFixtureFutbolAResultado),
+      origen: 'base-datos'
     }
   }
 
@@ -103,21 +102,6 @@ async function consultarDeporte(
   } catch {
     return { partidos: [], origen: 'the-sports-db' }
   }
-}
-
-async function consultarApiFootball(baseUrl: string, apiKey: string, fecha: string, zonaHoraria: string) {
-  const respuesta = await $fetch<RespuestaApiFootball<FixtureApiFootball>>(`${baseUrl}/fixtures`, {
-    query: { date: fecha, timezone: zonaHoraria },
-    headers: { 'x-apisports-key': apiKey },
-    timeout: 8_000,
-    retry: 1
-  })
-
-  if (respuesta.errors && Object.keys(respuesta.errors).length) {
-    throw new Error('API-Sports rechazó la solicitud.')
-  }
-
-  return ordenarPartidosRelevantes(respuesta.response.map(mapearFixtureApiFootball)).slice(0, 24)
 }
 
 function normalizarDeporte(valor: unknown): DeporteResultado | undefined {
@@ -149,5 +133,6 @@ function obtenerOrigenConsolidado(resultados: ResultadoProveedor[]): OrigenResul
   )
   if (origenesConDatos.size === 1) return [...origenesConDatos][0]!
   if (origenesConDatos.size > 1) return 'mixto'
+  if (resultados.length === 1) return resultados[0]!.origen
   return 'the-sports-db'
 }
