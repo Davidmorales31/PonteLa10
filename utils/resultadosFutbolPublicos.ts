@@ -19,8 +19,18 @@ export function mapearFixtureFutbolAResultado(fixture: FixtureFutbolPublico): Pa
     fechaIso: fixture.kickoffAt,
     estado,
     ...(fixture.elapsed !== null ? { minuto: fixture.elapsed } : {}),
-    equipoLocal: { id: 'local', nombre: fixture.homeTeam.name, nombreCorto: crearNombreCorto(fixture.homeTeam.name) },
-    equipoVisitante: { id: 'visitante', nombre: fixture.awayTeam.name, nombreCorto: crearNombreCorto(fixture.awayTeam.name) },
+    equipoLocal: {
+      id: 'local',
+      nombre: fixture.homeTeam.name,
+      nombreCorto: crearNombreCorto(fixture.homeTeam.name),
+      ...(fixture.homeTeam.logo ? { logo: fixture.homeTeam.logo } : {})
+    },
+    equipoVisitante: {
+      id: 'visitante',
+      nombre: fixture.awayTeam.name,
+      nombreCorto: crearNombreCorto(fixture.awayTeam.name),
+      ...(fixture.awayTeam.logo ? { logo: fixture.awayTeam.logo } : {})
+    },
     ...(fixture.goalsHome !== null ? { marcadorLocal: fixture.goalsHome } : {}),
     ...(fixture.goalsAway !== null ? { marcadorVisitante: fixture.goalsAway } : {}),
     ...(fixture.venue.name ? { estadio: fixture.venue.name } : {}),

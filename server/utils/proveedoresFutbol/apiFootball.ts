@@ -107,7 +107,8 @@ export function crearProveedorApiFootball(configuracion: ConfiguracionApiFootbal
         headers: { 'x-apisports-key': apiKey, Accept: 'application/json' },
         signal: AbortSignal.timeout(TIEMPO_LIMITE_MS)
       })
-    } catch {
+    } catch (error) {
+      if (error instanceof ErrorProveedorFutbol) throw error
       throw new ErrorProveedorFutbol('RED')
     }
 

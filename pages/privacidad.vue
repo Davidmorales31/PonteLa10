@@ -15,7 +15,7 @@ useSeoPont3la10({
   }
 })
 
-const fechaActualizacion = '28 de septiembre de 2026'
+const fechaActualizacion = '2 de octubre de 2026'
 </script>
 
 <template>
@@ -24,7 +24,7 @@ const fechaActualizacion = '28 de septiembre de 2026'
       <span class="insignia-legal"><ShieldCheck aria-hidden="true" /> Privacidad y datos</span>
       <h1 id="titulo-legal">Tu privacidad importa.</h1>
       <p class="introduccion-legal">Esta página explica, en lenguaje claro, qué información puede tratar Pont3la10 cuando navegas por el sitio o utilizas sus funciones.</p>
-      <p class="fecha-legal">Última actualización: <time datetime="2026-09-28">{{ fechaActualizacion }}</time></p>
+      <p class="fecha-legal">Última actualización: <time datetime="2026-10-02">{{ fechaActualizacion }}</time></p>
     </header>
 
     <div class="contenido-legal">
@@ -52,6 +52,7 @@ const fechaActualizacion = '28 de septiembre de 2026'
         <h2>Finalidades y proveedores</h2>
         <p>La información se utiliza para entregar las páginas y funciones solicitadas, mantener sesiones autorizadas, proteger el servicio, recordar ajustes locales y gestionar el flujo editorial. El sitio puede usar cookies técnicas o almacenamiento local para mantener una sesión y recordar preferencias; no se presentan como cookies publicitarias.</p>
         <p>Pont3la10 usa Google Analytics 4 para medir por defecto visitas y uso general de sus páginas públicas. Puedes desactivar esta medición desde “Preferencias de privacidad” en el pie de página; tu decisión se guarda en este navegador. Se registran páginas públicas y eventos generales de lectura, búsqueda y filtros; no enviamos a Analytics el texto buscado, correos electrónicos, identificadores de cuenta ni rutas del panel administrativo. Google puede tratar datos técnicos de medición según sus propias condiciones y políticas.</p>
+        <p>Los anuncios de Adsterra son opcionales y no se cargan hasta que los permitas desde “Preferencias de privacidad”; esa elección se guarda por separado en este navegador y puedes revocarla. Al permitirlos, sus espacios se ejecutan aislados en un marco del navegador y la red publicitaria puede recibir datos técnicos como la dirección IP, el dispositivo y la página que solicita el anuncio, además de usar tecnologías de almacenamiento según sus políticas. El enlace patrocinado solo visita al tercero si lo pulsas. Consulta la <a href="https://adsterra.com/privacy-policy-managed" target="_blank" rel="noreferrer noopener">política de privacidad de Adsterra</a>.</p>
         <p>En el flujo editorial interno, el equipo puede enviar transcripciones y evidencia a DeepSeek para preparar borradores. Esa función no es necesaria para leer el sitio. El equipo debe evitar incluir datos personales de terceros que no sean indispensables; el tratamiento por el proveedor también está sujeto a sus condiciones.</p>
         <p>La infraestructura de autenticación, base de datos y almacenamiento puede ser prestada por proveedores como Supabase. Los proveedores técnicos estrictamente necesarios tratan información por cuenta del servicio según la función que prestan y sus propias condiciones.</p>
         <p>El sitio puede enlazar a plataformas externas. Al abrirlas, su tratamiento de datos se rige por las políticas de cada plataforma.</p>

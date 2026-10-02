@@ -141,6 +141,7 @@ useSeoPont3la10(() => ({
         <div class="medio-resultados">
           <TarjetaMarcadorCompacto v-for="partido in resultados.partidos.slice(0, 3)" :key="partido.id" :partido="partido" />
         </div>
+        <PublicidadAdsterraSlot formato="nativo" contexto="portada y resultados" />
       </section>
 
       <section class="medio-explora" aria-label="Explora categorías">

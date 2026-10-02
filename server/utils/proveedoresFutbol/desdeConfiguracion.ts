@@ -1,7 +1,12 @@
 import type { IdentificadorProveedorFutbol } from '~/types/futbolProveedor'
 import { crearProveedorApiFootball } from './apiFootball'
 import { crearProveedorGoalApi } from './goalApi'
+import { LIGAS_PRIORITARIAS_GOAL } from './ligasPrioritariasGoal'
 import type { ProveedorFutbol } from './contrato'
+import {
+  crearTransporteConPresupuestoDiario,
+  type ReservaPeticionProveedorFutbol
+} from './transporteConPresupuestoDiario'
 
 export interface ConfiguracionProveedoresFutbol {
   footballPrimaryProvider?: unknown
@@ -17,12 +22,18 @@ export interface ProveedoresFutbolConfigurados {
   secundario?: ProveedorFutbol
 }
 
+export interface OpcionesTransporteProveedoresFutbol {
+  fechaNegocio?: string
+  reservarPeticion?: ReservaPeticionProveedorFutbol
+}
+
 /**
  * Construye proveedores exclusivamente desde configuración privada de Nitro.
  * No realiza peticiones de red; las claves permanecen cerradas en cada adapter.
  */
 export function crearProveedoresFutbolConfigurados(
-  configuracion: ConfiguracionProveedoresFutbol
+  configuracion: ConfiguracionProveedoresFutbol,
+  opciones: OpcionesTransporteProveedoresFutbol = {}
 ): ProveedoresFutbolConfigurados {
   const principalId = leerIdProveedor(configuracion.footballPrimaryProvider, 'api-football')
   const secundarioId = configuracion.footballFallbackProvider === ''
@@ -33,8 +44,11 @@ export function crearProveedoresFutbolConfigurados(
     throw new Error('El proveedor de fallback debe ser distinto del principal.')
   }
 
-  const principal = crearProveedor(principalId, configuracion)
-  const secundario = secundarioId ? crearProveedor(secundarioId, configuracion) : undefined
+  if (opciones.reservarPeticion && !opciones.fechaNegocio) {
+    throw new Error('El presupuesto diario requiere una fecha de negocio.')
+  }
+  const principal = crearProveedor(principalId, configuracion, opciones)
+  const secundario = secundarioId ? crearProveedor(secundarioId, configuracion, opciones) : undefined
   return { principal, ...(secundario ? { secundario } : {}) }
 }
 
@@ -53,17 +67,26 @@ function leerIdProveedor(
 
 function crearProveedor(
   id: IdentificadorProveedorFutbol,
-  configuracion: ConfiguracionProveedoresFutbol
+  configuracion: ConfiguracionProveedoresFutbol,
+  opciones: OpcionesTransporteProveedoresFutbol
 ): ProveedorFutbol {
+  const transporte = opciones.reservarPeticion && opciones.fechaNegocio
+    ? crearTransporteConPresupuestoDiario(id, opciones.fechaNegocio, opciones.reservarPeticion)
+    : undefined
   if (id === 'goal-api') {
     const apiKey = leerClave(configuracion.goalApiKey, 'Goal API')
     const baseUrl = leerBaseUrl(configuracion.goalApiBaseUrl)
-    return crearProveedorGoalApi({ apiKey, baseUrl })
+    return crearProveedorGoalApi({
+      apiKey,
+      baseUrl,
+      ligasPrioritarias: LIGAS_PRIORITARIAS_GOAL,
+      ...(transporte ? { transporte } : {})
+    })
   }
 
   const apiKey = leerClave(configuracion.apiSportsKey, 'API-Football')
   const baseUrl = leerBaseUrl(configuracion.apiSportsBaseUrl)
-  return crearProveedorApiFootball({ apiKey, baseUrl })
+  return crearProveedorApiFootball({ apiKey, baseUrl, ...(transporte ? { transporte } : {}) })
 }
 
 function leerClave(valor: unknown, nombre: string): string {

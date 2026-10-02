@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ProveedorFutbol } from '~/server/utils/proveedoresFutbol/contrato'
 import { crearFallbackProveedorFutbol } from '~/server/utils/proveedoresFutbol/fallback'
+import { crearGateReservaClasificaciones } from '~/server/utils/proveedoresFutbol/configuracionWorkerClasificaciones'
 
 function crearProveedor(id: 'goal-api' | 'api-football'): ProveedorFutbol {
   return {
@@ -85,5 +86,17 @@ describe('fallback de proveedor de fútbol', () => {
       .consultar('live', ejecutar)).rejects.toThrow('El proveedor secundario no tiene cuota')
 
     expect(ejecutar).toHaveBeenCalledTimes(1)
+  })
+
+  it('no consume cuota secundaria si otra activación ya tiene el lease del proveedor principal', async () => {
+    const principal = crearProveedor('api-football')
+    const secundario = crearProveedor('goal-api')
+    const ejecutar = vi.fn()
+    const puedeConsumir = crearGateReservaClasificaciones(vi.fn(async () => false))
+
+    await expect(crearFallbackProveedorFutbol({ principal, secundario, puedeConsumir })
+      .consultar('fixtures', ejecutar)).rejects.toMatchObject({ code: 'WORKER_WINDOW_BUSY' })
+
+    expect(ejecutar).not.toHaveBeenCalled()
   })
 })

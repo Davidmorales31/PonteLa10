@@ -15,6 +15,12 @@ import type {
 export interface ProveedorFutbol {
   readonly id: IdentificadorProveedorFutbol
   readonly capacidades: Readonly<CapacidadesProveedorFutbol>
+  /** Permite el bootstrap privado cuando el catálogo canónico aún no existe. */
+  readonly permiteDescubrimientoFixturesDiarios?: boolean
+  /** Indica si esta activación llamó al listado externo, no si leyó Supabase. */
+  seConsultoListadoDiario?(): boolean
+  /** Fechas UTC cuya carga quedó descargada en esta activación. */
+  fechasListadoDiario?(): string[]
   obtenerPartidosPorFecha(
     consulta: ConsultaPartidosPorFecha
   ): Promise<RespuestaProveedorFutbol<PartidoFutbolProveedor>>
