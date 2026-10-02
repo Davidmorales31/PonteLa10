@@ -23,7 +23,8 @@ type Mapping = {
 const columnasSnapshot = [
   'fixture_id', 'provider', 'provider_fixture_id', 'business_date', 'kickoff_at',
   'league_id', 'league_name', 'league_country', 'season', 'round', 'phase', 'group_name',
-  'home_team_provider_id', 'home_team_name', 'away_team_provider_id', 'away_team_name',
+  'home_team_provider_id', 'home_team_name', 'home_team_logo',
+  'away_team_provider_id', 'away_team_name', 'away_team_logo',
   'status', 'status_external', 'elapsed', 'goals_home', 'goals_away', 'venue_name',
   'venue_city', 'events', 'lineups', 'statistics', 'provider_fetched_at', 'is_public',
   'publication_rights_confirmed'

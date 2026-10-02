@@ -6,6 +6,7 @@ import type {
   LadoPartidoFutbol
 } from '~/types/futbolPublico'
 import type { EstadoFixtureFutbol, TipoEventoFutbol } from '~/types/futbolProveedor'
+import { normalizarUrlInsigniaFutbol } from '~/utils/insigniasFutbol'
 
 interface FilaFixturePrivada {
   id: string
@@ -20,8 +21,11 @@ interface FilaFixturePrivada {
   group_name: string | null
   home_team_provider_id: string
   home_team_name: string
+  home_team_logo?: string | null
   away_team_provider_id: string
   away_team_name: string
+  away_team_logo?: string | null
+  provider?: string
   status: EstadoFixtureFutbol
   status_external: string | null
   elapsed: number | null
@@ -191,6 +195,9 @@ export function proyectarFixtureFutbolPublico(fila: FilaFixturePrivada): Fixture
   if (!fila.is_public || !fila.publication_rights_confirmed) {
     throw new Error('El fixture no está aprobado para publicación.')
   }
+  const proveedor = esProveedorFutbol(fila.provider) ? fila.provider : null
+  const logoLocal = proveedor ? normalizarUrlInsigniaFutbol(fila.home_team_logo, proveedor) : null
+  const logoVisitante = proveedor ? normalizarUrlInsigniaFutbol(fila.away_team_logo, proveedor) : null
   return {
     id: fila.fixture_id,
     businessDate: fila.business_date,
@@ -203,8 +210,14 @@ export function proyectarFixtureFutbolPublico(fila: FilaFixturePrivada): Fixture
       phase: fila.phase,
       group: fila.group_name
     },
-    homeTeam: { name: fila.home_team_name },
-    awayTeam: { name: fila.away_team_name },
+    homeTeam: {
+      name: fila.home_team_name,
+      ...(logoLocal ? { logo: logoLocal } : {})
+    },
+    awayTeam: {
+      name: fila.away_team_name,
+      ...(logoVisitante ? { logo: logoVisitante } : {})
+    },
     status: fila.status,
     externalStatus: fila.status_external,
     elapsed: fila.elapsed,
@@ -216,6 +229,10 @@ export function proyectarFixtureFutbolPublico(fila: FilaFixturePrivada): Fixture
     lineups: proyectarAlineaciones(fila.lineups, fila.home_team_provider_id, fila.away_team_provider_id),
     statistics: proyectarEstadisticas(fila.statistics, fila.home_team_provider_id, fila.away_team_provider_id)
   }
+}
+
+function esProveedorFutbol(valor: unknown): valor is 'api-football' | 'goal-api' {
+  return valor === 'api-football' || valor === 'goal-api'
 }
 
 export function proyectarStandingsFutbolPublicos(fila: FilaStandingsPrivada): ClasificacionFutbolPublica {

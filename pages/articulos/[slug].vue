@@ -234,6 +234,7 @@ function formatearFecha(fecha: string): string {
       </figcaption>
     </figure>
 
+    <PublicidadAdsterraSlot formato="nativo" contexto="artículo deportivo" />
     <ContenidoArticuloPublico :documento="articuloPublicado.documento" />
 
     <footer
@@ -260,6 +261,8 @@ function formatearFecha(fecha: string): string {
       :texto="articuloPublicado.textoSocial || articuloPublicado.resumen"
       :url="urlCanonica"
     />
+
+    <PublicidadAdsterraEnlacePatrocinado />
 
     <SeccionArticulosRelacionados :articulos="articulosRelacionados" />
   </article>

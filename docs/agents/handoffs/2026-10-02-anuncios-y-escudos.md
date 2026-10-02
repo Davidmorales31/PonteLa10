@@ -1,0 +1,12 @@
+# Handoff
+
+- **Objetivo de la sesión:** integrar los tags publicitarios Adsterra que proporcionó el usuario, equilibrar ingresos y experiencia, añadir escudos autorizados a las vistas de fútbol y desplegar directamente a Production sin PR.
+- **Completado:** integración en portada, noticias, artículos, resultados, partidos de hoy y detalle; consentimiento separado para anuncios; Smartlink manual y etiquetado; aislamiento de creatividades sin popups; allowlist HTTPS para CDN de logos; propagación del logo proveedor → snapshot → API pública → tarjeta. Revisor independiente no encontró P1; quedó como riesgo P2 la ausencia de CSP global en páginas públicas.
+- **Archivos modificados:** componentes de publicidad y privacidad, portada, noticias, páginas de resultados y artículos, proyección/lectura de snapshots, DTO público, utilidades y pruebas. Sin migración ni dependencia nuevas.
+- **Decisiones:** máximo un slot display por sección/página salvo el artículo, donde se prueba nativo y Smartlink; ningún recurso de Adsterra carga antes del consentimiento; sin popups; enlaces externos patrocinados abren solo tras clic. Usar solo logos HTTPS de los hosts oficiales admitidos y omitir el logo si el host no se valida. El usuario confirmó que tiene autorizaciones aplicables; no se verificaron licencias de forma independiente.
+- **Validaciones ejecutadas:** `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run test:unit` (47 archivos/235 pruebas) y `git diff --check` pasan.
+- **Fallos:** `npm.cmd run build` local se detuvo antes de compilar porque Nuxt detectó otro servidor activo en el mismo worktree (PID 29268, puerto 3001). No se terminó ese proceso para no interrumpir el worker. El build de Production queda delegado a Vercel remoto.
+- **Pendientes:** build/deploy remoto Vercel y smoke de rutas públicas, API y visual de consentimiento/anuncio. Los 8 snapshots existentes tenían logos nulos; el código permite que se guarden en el próximo sync del worker con un listado proveedor nuevo, así que no asumir que los partidos actuales tendrán escudos inmediatamente.
+- **Siguiente acción exacta:** verificar cuenta GitHub `DavidMorales31`/Vercel, crear commit acotado con la identidad no-reply ya vinculada, ejecutar `vercel deploy --prod --yes` desde este checkout, esperar READY, validar producción y actualizar este handoff con IDs/resultados.
+- **Commit base:** `1d84c1e docs(futbol): registrar despliegue production`.
+- **Commit final:** sin commit | `<sha>`

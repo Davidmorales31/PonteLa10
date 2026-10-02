@@ -1,9 +1,12 @@
 <script setup lang="ts">
 const {
   decision,
+  decisionPublicidad,
   mostrarAviso,
   aceptarAnalitica,
   rechazarAnalitica,
+  aceptarPublicidad,
+  rechazarPublicidad,
   cerrarPreferencias
 } = useAnaliticaPublica()
 const { modoBlancoActivo } = useTemaPublico()
@@ -15,24 +18,34 @@ const { modoBlancoActivo } = useTemaPublico()
     class="aviso-analitica"
     :class="{ 'aviso-analitica--tema-blanco': modoBlancoActivo }"
     role="dialog"
-    aria-labelledby="titulo-aviso-analitica"
-    aria-describedby="descripcion-aviso-analitica"
+    aria-labelledby="titulo-aviso-privacidad"
+    aria-describedby="descripcion-aviso-privacidad"
   >
     <div class="aviso-analitica__texto">
-      <h2 id="titulo-aviso-analitica">Preferencias de analítica</h2>
-      <p id="descripcion-aviso-analitica">
-        Google Analytics mide por defecto visitas y uso general de las páginas públicas. No enviamos el texto que buscas, tu correo ni datos de cuenta. Puedes desactivar esta medición aquí.
+      <h2 id="titulo-aviso-privacidad">Preferencias de privacidad</h2>
+      <p id="descripcion-aviso-privacidad">
+        La analítica de Google es independiente de los anuncios. Los espacios de Adsterra solo se cargan si los permites; la red puede recibir datos técnicos del dispositivo y usar cookies. Consulta la <NuxtLink to="/privacidad">política de privacidad</NuxtLink>.
       </p>
     </div>
     <div class="aviso-analitica__acciones">
+      <button type="button" class="aviso-analitica__secundario" @click="rechazarPublicidad">
+        Rechazar anuncios
+      </button>
+      <button type="button" class="aviso-analitica__primario" @click="aceptarPublicidad">
+        Permitir anuncios de Adsterra
+      </button>
       <button type="button" class="aviso-analitica__secundario" @click="rechazarAnalitica">
         Desactivar analítica
       </button>
-      <button type="button" class="aviso-analitica__primario" @click="aceptarAnalitica">
+      <button type="button" class="aviso-analitica__secundario" @click="aceptarAnalitica">
         Activar analítica
       </button>
+      <p class="aviso-analitica__estado" aria-live="polite">
+        Anuncios externos: {{ decisionPublicidad === 'aceptada' ? 'permitidos' : decisionPublicidad === 'rechazada' ? 'rechazados' : 'sin elegir' }}.
+        Analítica: {{ decision === 'aceptada' ? 'activa' : decision === 'rechazada' ? 'desactivada' : 'sin elegir' }}.
+      </p>
       <button
-        v-if="decision !== null"
+        v-if="decision !== null && decisionPublicidad !== null"
         type="button"
         class="aviso-analitica__cerrar"
         aria-label="Cerrar preferencias de privacidad"
@@ -79,6 +92,11 @@ const { modoBlancoActivo } = useTemaPublico()
   line-height: 1.5;
 }
 
+.aviso-analitica__texto a {
+  color: #7ce6f5;
+  text-decoration: underline;
+}
+
 .aviso-analitica__acciones {
   display: flex;
   flex: 0 0 auto;
@@ -112,6 +130,13 @@ const { modoBlancoActivo } = useTemaPublico()
   border-color: #19d6ff;
 }
 
+.aviso-analitica__estado {
+  margin: 0;
+  color: #d7e5f5;
+  font-size: .72rem;
+  line-height: 1.35;
+}
+
 .aviso-analitica__acciones .aviso-analitica__cerrar {
   border-color: transparent;
 }
@@ -124,6 +149,14 @@ const { modoBlancoActivo } = useTemaPublico()
 }
 
 .aviso-analitica--tema-blanco .aviso-analitica__texto p {
+  color: #43556b;
+}
+
+.aviso-analitica--tema-blanco .aviso-analitica__texto a {
+  color: #086ce0;
+}
+
+.aviso-analitica--tema-blanco .aviso-analitica__estado {
   color: #43556b;
 }
 

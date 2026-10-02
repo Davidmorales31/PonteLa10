@@ -6,6 +6,10 @@ export function resolverDecisionAnalitica(valorGuardado: unknown): DecisionAnali
   return valorGuardado === 'rechazada' ? 'rechazada' : 'aceptada'
 }
 
+export function resolverDecisionPublicidad(valorGuardado: unknown): DecisionAnaliticaPublica | null {
+  return valorGuardado === 'aceptada' || valorGuardado === 'rechazada' ? valorGuardado : null
+}
+
 const CATEGORIAS_MEDIBLES = new Set([
   'colombia',
   'futbol',

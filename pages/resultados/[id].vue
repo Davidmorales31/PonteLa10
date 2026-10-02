@@ -217,6 +217,7 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
       </header>
 
       <PartidoDestacadoResultados :partido="detalle.partido" :mostrar-enlace="false" />
+      <PublicidadAdsterraSlot formato="leaderboard" contexto="detalle del partido" />
 
       <nav class="pestanas-detalle-partido" aria-label="Información del partido">
         <button

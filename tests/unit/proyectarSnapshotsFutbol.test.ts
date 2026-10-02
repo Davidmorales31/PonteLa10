@@ -18,8 +18,8 @@ const partido: PartidoFutbolProveedor = {
   estado: 'live',
   estadoProveedor: '2H',
   minutoTranscurrido: 62,
-  local: { idProveedor: 'equipo-local-ext', nombre: 'Atlético Nacional', insigniaUrl: 'https://provider.test/home.svg' },
-  visitante: { idProveedor: 'equipo-visitante-ext', nombre: 'Millonarios', insigniaUrl: 'https://provider.test/away.svg' },
+  local: { idProveedor: 'equipo-local-ext', nombre: 'Atlético Nacional', insigniaUrl: 'https://api.goal-api.com/assets/home.svg' },
+  visitante: { idProveedor: 'equipo-visitante-ext', nombre: 'Millonarios', insigniaUrl: 'https://api.goal-api.com/assets/away.svg' },
   golesLocal: 1,
   golesVisitante: 0,
   sede: 'Atanasio Girardot',
@@ -69,8 +69,8 @@ describe('proyección privada de fixtures de fútbol', () => {
       group_name: 'Grupo A', status: 'live', elapsed: 62, goals_home: 1, goals_away: 0,
       is_public: false, publication_rights_confirmed: false
     })
-    expect(JSON.stringify(snapshot)).not.toContain('provider.test')
-    expect(snapshot?.home_team_logo).toBeNull()
+    expect(snapshot?.home_team_logo).toBe('https://api.goal-api.com/assets/home.svg')
+    expect(snapshot?.away_team_logo).toBe('https://api.goal-api.com/assets/away.svg')
     expect(snapshot?.events).toEqual([])
     expect(snapshot?.publication_rights_reference).toBeNull()
   })
@@ -84,6 +84,16 @@ describe('proyección privada de fixtures de fútbol', () => {
     const { snapshots, omitidos } = proyectar([{ ...partido, competencia: { ...partido.competencia, idProveedor: 'nueva-liga' } }])
     expect(snapshots).toEqual([])
     expect(omitidos.competencia_no_mapeada).toBe(1)
+  })
+
+  it('omite insignias fuera de HTTPS o del dominio del proveedor', () => {
+    const resultado = proyectar([{
+      ...partido,
+      local: { ...partido.local, insigniaUrl: 'https://api.goal-api.com.evil.test/logo.svg' },
+      visitante: { ...partido.visitante, insigniaUrl: 'http://api.goal-api.com/logo.svg' }
+    }])
+    expect(resultado.snapshots[0]?.home_team_logo).toBeNull()
+    expect(resultado.snapshots[0]?.away_team_logo).toBeNull()
   })
 
   it('no autocrea fixtures ni equipos cuando falta un mapping', () => {

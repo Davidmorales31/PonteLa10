@@ -3,6 +3,7 @@ import { proyectarFixtureFutbolPublico, proyectarStandingsFutbolPublicos } from 
 
 const fixturePublico = {
   id: 'snapshot-id',
+  provider: 'goal-api',
   fixture_id: 'canonical-fixture-uuid',
   business_date: '2026-10-01',
   kickoff_at: '2026-10-01T18:00:00.000Z',
@@ -14,8 +15,10 @@ const fixturePublico = {
   group_name: null,
   home_team_provider_id: 'home-private-provider-id',
   home_team_name: 'Atlético Nacional',
+  home_team_logo: 'https://api.goal-api.com/assets/home.svg',
   away_team_provider_id: 'away-private-provider-id',
   away_team_name: 'Millonarios',
+  away_team_logo: 'https://api.goal-api.com/assets/away.svg',
   status: 'live' as const,
   status_external: '2H',
   elapsed: 60,
@@ -43,11 +46,13 @@ const fixturePublico = {
 }
 
 describe('proyección pública de snapshots de fútbol', () => {
-  it('expone solo campos allowlisted y elimina IDs, logos y claves imprevistas', () => {
+  it('expone solo campos allowlisted, publica escudos permitidos y elimina IDs y claves imprevistas', () => {
     const result = proyectarFixtureFutbolPublico(fixturePublico)
     const serializado = JSON.stringify(result)
 
     expect(result.id).toBe('canonical-fixture-uuid')
+    expect(result.homeTeam.logo).toBe('https://api.goal-api.com/assets/home.svg')
+    expect(result.awayTeam.logo).toBe('https://api.goal-api.com/assets/away.svg')
     expect(result.events[0]).toMatchObject({ minuto: 22, lado: 'local', tipo: 'goal', jugador: 'Jugador' })
     expect(result.lineups[0]?.lado).toBe('visitante')
     expect(result.statistics[0]).toMatchObject({ local: '54%', visitante: '46%' })
@@ -57,6 +62,16 @@ describe('proyección pública de snapshots de fútbol', () => {
     expect(serializado).not.toContain('private.example')
     expect(serializado).not.toContain('NO_EXPOSE')
     expect(serializado).not.toContain('providerPayload')
+  })
+
+  it('no publica una URL de insignia arbitraria aunque el snapshot esté aprobado', () => {
+    const result = proyectarFixtureFutbolPublico({
+      ...fixturePublico,
+      home_team_logo: 'https://api.goal-api.com.evil.test/logo.svg',
+      away_team_logo: 'javascript:alert(1)'
+    })
+    expect(result.homeTeam.logo).toBeUndefined()
+    expect(result.awayTeam.logo).toBeUndefined()
   })
 
   it('descarta alineaciones cuyo equipo no corresponde al fixture', () => {

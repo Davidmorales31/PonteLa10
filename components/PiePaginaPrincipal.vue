@@ -3,7 +3,7 @@ import { ShieldCheck } from '@lucide/vue'
 import { pieSitio } from '~/data/sitioPublico'
 
 const anioActual = new Date().getFullYear()
-const { disponible: analiticaDisponible, abrirPreferencias } = useAnaliticaPublica()
+const { abrirPreferencias } = useAnaliticaPublica()
 </script>
 
 <template>
@@ -45,7 +45,6 @@ const { disponible: analiticaDisponible, abrirPreferencias } = useAnaliticaPubli
       </section>
 
       <button
-        v-if="analiticaDisponible"
         class="enlace-preferencias-analitica"
         type="button"
         @click="abrirPreferencias"
@@ -53,7 +52,7 @@ const { disponible: analiticaDisponible, abrirPreferencias } = useAnaliticaPubli
         <ShieldCheck aria-hidden="true" />
         <span>
           <strong>Preferencias de privacidad</strong>
-          <small>La analítica está activa por defecto; puedes desactivarla</small>
+          <small>Controla la analítica y los anuncios externos</small>
         </span>
       </button>
 

@@ -26,6 +26,9 @@ const partidosPorEstado = (estado: EstadoPartido) => computed(() =>
   (respuesta.value?.partidos || []).filter(partido => partido.estado === estado)
 )
 const partidos = computed(() => respuesta.value?.partidos || [])
+const primerGrupoConPartidos = computed(() =>
+  grupos.find(grupo => partidos.value.some(partido => partido.estado === grupo.id))?.id || null
+)
 
 onMounted(() => {
   const zonaDetectada = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -87,9 +90,23 @@ useSeoPont3la10(() => ({
       <section v-for="grupo in grupos" :key="grupo.id" class="seccion-lista-resultados" :aria-labelledby="`partidos-${grupo.id}`">
       <div class="titulo-panel-resultados"><div><h2 :id="`partidos-${grupo.id}`">{{ grupo.titulo }}</h2></div><span>{{ grupo.descripcion }}</span></div>
       <div v-if="partidosPorEstado(grupo.id).value.length" class="grilla-marcadores-resultados">
-        <TarjetaMarcadorCompacto v-for="partido in partidosPorEstado(grupo.id).value" :key="partido.id" :partido="partido" :zona-horaria="zonaHoraria" />
+        <template v-for="(partido, indice) in partidosPorEstado(grupo.id).value" :key="partido.id">
+          <TarjetaMarcadorCompacto :partido="partido" :zona-horaria="zonaHoraria" />
+          <div
+            v-if="grupo.id === primerGrupoConPartidos && indice === 2"
+            class="publicidad-en-linea-resultados"
+            style="grid-column: 1 / -1"
+          >
+            <PublicidadAdsterraSlot formato="leaderboard" contexto="partidos de hoy" />
+          </div>
+        </template>
       </div>
       <p v-else class="estado-vacio-resultados">No hay partidos {{ grupo.titulo.toLocaleLowerCase('es-CO') }} en este momento.</p>
+      <PublicidadAdsterraSlot
+        v-if="grupo.id === primerGrupoConPartidos && partidosPorEstado(grupo.id).value.length < 3"
+        formato="leaderboard"
+        contexto="partidos de hoy"
+      />
       </section>
     </template>
   </main>

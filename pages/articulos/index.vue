@@ -358,6 +358,8 @@ useSeoPont3la10(() => {
             </ol>
           </section>
 
+          <PublicidadAdsterraSlot formato="nativo" contexto="noticias y artículos" />
+
           <section class="boletin-noticias-medio">
             <div>
               <p>Boletín Pont3la10</p>
