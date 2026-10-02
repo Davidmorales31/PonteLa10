@@ -4,6 +4,7 @@ import type { DetallePartidoResultado, EquipoResultado, RespuestaMarcadorPartido
 import { construirUrlAbsoluta, imagenSeoPredeterminada, robotsNoIndex } from '~/utils/seo'
 
 const ruta = useRoute()
+const zonaHoraria = ref('America/Bogota')
 const pestanaActiva = ref<'resumen' | 'estadisticas' | 'alineaciones' | 'minuto'>('resumen')
 const actualizandoMarcador = ref(false)
 const errorActualizacion = ref(false)
@@ -49,12 +50,16 @@ const textoActualizacion = computed(() => {
   if (actualizandoMarcador.value) return 'Actualizando marcador'
   if (errorActualizacion.value) return 'No fue posible actualizar'
   if (!detalle.value) return ''
-  const hora = new Intl.DateTimeFormat('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  const hora = new Intl.DateTimeFormat('es-CO', {
+    hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: zonaHoraria.value
+  })
     .format(new Date(detalle.value.actualizadoEn))
   return `Actualizado a las ${hora}`
 })
 
 onMounted(() => {
+  const zonaDetectada = Intl.DateTimeFormat().resolvedOptions().timeZone
+  if (zonaDetectada) zonaHoraria.value = zonaDetectada
   identificadorIntervalo = setInterval(actualizarMarcador, 60_000)
 })
 
@@ -199,7 +204,7 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
           <p>Resultados {{ detalle.partido.estado === 'en-vivo' ? 'en vivo' : 'del partido' }}</p>
           <h1>{{ detalle.partido.equipoLocal.nombre }} vs {{ detalle.partido.equipoVisitante.nombre }}</h1>
           <div class="metadatos-partido">
-            <span><CalendarDays aria-hidden="true" /> {{ new Intl.DateTimeFormat('es-CO', { dateStyle: 'long' }).format(new Date(detalle.partido.fechaIso)) }}</span>
+            <span><CalendarDays aria-hidden="true" /> {{ new Intl.DateTimeFormat('es-CO', { dateStyle: 'long', timeZone: zonaHoraria }).format(new Date(detalle.partido.fechaIso)) }}</span>
             <span>{{ detalle.partido.competencia }}</span>
             <span v-if="detalle.partido.estadio || detalle.partido.ciudad">
               <MapPin aria-hidden="true" />

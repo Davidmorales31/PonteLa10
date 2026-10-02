@@ -29,7 +29,7 @@ interface ResultadoProveedor {
 }
 
 export default defineCachedEventHandler(async (evento): Promise<RespuestaResultados> => {
-  const configuracion = useRuntimeConfig()
+  const configuracion = useRuntimeConfig(evento)
   const deporteRecibido = obtenerDeporteDesdeUrl(evento.node?.req?.url)
   const deporteSolicitado = normalizarDeporte(deporteRecibido)
   if (deporteRecibido !== undefined && !deporteSolicitado) {
@@ -70,7 +70,11 @@ async function consultarDeporte(
   if (deporte === 'futbol') {
     const cliente = obtenerClienteSupabasePrivado(evento)
     if (!cliente) return { partidos: [], origen: 'base-datos' }
-    const fixtures = await leerSnapshotsFutbolPublicos(cliente, { fechaNegocio: fecha, limite: 32 })
+    const fixtures = await leerSnapshotsFutbolPublicos(cliente, {
+      fechaNegocio: fecha,
+      derechosPublicacionConfirmados: configuracion.futbolDerechosPublicacionConfirmados === true,
+      limite: 32
+    })
     return {
       partidos: fixtures.map(mapearFixtureFutbolAResultado),
       origen: 'base-datos'

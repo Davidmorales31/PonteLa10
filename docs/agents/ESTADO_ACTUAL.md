@@ -1,5 +1,26 @@
 # Estado actual de Pont3la10
 
+## Base canónica alineada con Production (2026-10-02)
+
+- La fuente del deployment activo `dpl_64hECvYHAArmLsgXP9pv9NBUek58` se
+  recuperó del worktree local que produjo el despliegue. Vercel lo etiqueta
+  como `vercel deploy` (sin SHA Git); la base de ese worktree era `07aca0a`, más
+  14 archivos versionados modificados y 4 archivos nuevos. Los hashes SHA-256
+  de esos 18 archivos se compararon con la copia importada en este checkout y
+  coinciden. No se copiaron `.env` ni archivos ignorados.
+- El checkout dejó atrás los 42 commits de backlog del antiguo `HEAD=e42b57b`
+  y ahora parte de la fuente exacta del deployment. Para recuperación local se
+  conserva `archive/pre-production-reset-2026-10-02-e42b57b` (commit anterior)
+  y un stash llamado `respaldo pre-reset 2026-10-02; rama e42b57b` (cambios no
+  ignorados). No aplicar ni publicar esos respaldos salvo pedido explícito.
+- Se preservaron las demás ramas/worktrees, el contenido ignorado y el proceso
+  local ya activo en el puerto 3001. No hubo push, PR ni nuevo deployment.
+- Guía para instancias futuras:
+  `docs/agents/BASE_PRODUCCION_Y_CONTINUIDAD.md`; detalle de esta operación:
+  `docs/agents/handoffs/2026-10-02-base-produccion-y-reset-42-commits.md`.
+
+- **SSR de fechas, slots Adsterra y publicación de fixtures de hoy (Production, 2026-10-02):** deployment `dpl_64hECvYHAArmLsgXP9pv9NBUek58` (`READY`), alias `https://www.pont3la10.com`, desplegado desde CLI como `vercel deploy` sin SHA Git asociado. El source exacto usado fue recuperado desde el worktree local basado en `07aca0a` y ahora está importado en este checkout. No hubo PR ni push; el despliegue original no incluyó los otros 42 commits del checkout principal. En Vercel Production se agregó `NUXT_FUTBOL_DERECHOS_PUBLICACION_CONFIRMADOS=true`; sigue siendo configuración privada del servidor, no parámetro de URL. `/api/resultados?deporte=futbol&timeZone=America/Bogota` ya devuelve 22 fixtures de `base-datos`; portada, `/partidos-hoy`, `/resultados/futbol` y `/privacidad` responden HTTP 200. El detalle probado es El Salvador–Jamaica, programado; los 22 snapshots aún no tienen `details_fetched_at`, eventos, alineaciones ni estadísticas. En el PC `PONT3LA10_FUTBOL_WORKER_ENABLED=false` y su `.env` no contiene la clave exclusiva `NUXT_FUTBOL_WORKER_API_SECRET`; no fue posible activar otro ciclo sin configurarlo. Los intentos de arranque fallaron antes de contactar el endpoint local; no se consumieron cuotas. El flujo conserva API-Football/Goal API, prioridad/ventana de 90 minutos y cuotas existentes, pero el refresco autónomo de detalles queda pendiente de habilitar el worker local. El iframe Adsterra conserva sandbox opaco y presenta una capa local de `document.cookie` vacía para evitar `SecurityError`; el espacio ya no tiene fondo azul. Se conserva el consentimiento publicitario existente porque el tag consulta cookies; no se promete impresión para usuarios que no autorizaron publicidad. Las fechas SSR/client usan instante serializado y zona horaria explícita Bogotá, luego zona del dispositivo en cliente. Lint, 49 archivos/241 pruebas, typecheck y build pasan; smoke HTTP y árbol accesible de las páginas pasan. No se capturó la consola del navegador, por lo que el warning de hidratación queda pendiente de certificación manual. Handoff: `docs/agents/handoffs/2026-10-02-hidratacion-publicidad-y-flujo-futbol.md`.
+
 - **Publicidad consentida y escudos de fútbol (Production, 2026-10-02):** el commit `1a5078c` publicó los tags Adsterra suministrados por el usuario en portada, noticias, artículos, resultados/partidos de hoy y detalle. Los espacios no cargan hasta consentimiento explícito separado de Analytics; el Smartlink es patrocinado y requiere clic. La creatividad va en iframe aislado, sin popups. Los escudos HTTPS pasan allowlist del host oficial, se guardan en snapshots y se proyectan a tarjetas; no requirió migración. Vercel Production deployment `dpl_HwLkWibJUbvEMZfcM5JwVh4pKZLR`, `READY`, alias `https://www.pont3la10.com`; build remoto OK. Smoke: portada, artículos, partidos de hoy, resultados y privacidad HTTP 200; detalle de partido accesible. El API de fútbol respondió `base-datos` con 0 fixtures para el 2-oct: no hubo escudos en esas páginas y no se consumieron llamadas de proveedor para fabricar una prueba. Cuando el worker obtenga un nuevo listado de fútbol, los logos permitidos pasarán por el mismo flujo de snapshots. Lint, typecheck y 47 archivos/235 pruebas pasan. Build local omitido por Nuxt activo en el mismo worktree; no se detuvo el worker. Sin push ni PR. Revisión independiente: sin P1; P2 residual: falta CSP pública global. Handoff: `docs/agents/handoffs/2026-10-02-anuncios-y-escudos.md`.
 
 - **Corrección del dominio canónico (2026-10-02):** el canonical servido se verificó como https://www.pont3la10.com/partidos-hoy. Se reemplazó en Vercel Production la variable NUXT_PUBLIC_SITE_URL por https://www.pont3la10.com; sustituye el alias ponte-la10.vercel.app usado al compilar el deployment bloqueado. El valor aplica a builds futuros; no modifica la versión activa.

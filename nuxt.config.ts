@@ -66,6 +66,7 @@ export default defineNuxtConfig({
     goalApiBaseUrl: process.env.NUXT_GOAL_API_BASE_URL || 'https://api.goal-api.com/v1',
     footballPrimaryProvider: process.env.NUXT_FUTBOL_PRIMARY_PROVIDER || 'api-football',
     footballFallbackProvider: process.env.NUXT_FUTBOL_FALLBACK_PROVIDER || 'goal-api',
+    futbolDerechosPublicacionConfirmados: process.env.NUXT_FUTBOL_DERECHOS_PUBLICACION_CONFIRMADOS === 'true',
     footballWorkerApiSecret: process.env.NUXT_FUTBOL_WORKER_API_SECRET || '',
     footballStandingsAllowlist: process.env.NUXT_FUTBOL_STANDINGS_ALLOWLIST || '',
     footballMaxDetailsPerSync: process.env.NUXT_FUTBOL_MAX_DETALLES_POR_CICLO || '20',

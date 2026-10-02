@@ -180,7 +180,8 @@ useSeoPont3la10(() => ({
 function formatearFecha(fecha: string): string {
   return new Intl.DateTimeFormat('es-CO', {
     dateStyle: 'long',
-    timeStyle: 'short'
+    timeStyle: 'short',
+    timeZone: 'America/Bogota'
   }).format(new Date(fecha)).replace(/[\u00a0\u202f]/g, ' ')
 }
 </script>

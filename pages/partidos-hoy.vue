@@ -5,6 +5,9 @@ import { construirUrlAbsoluta } from '~/utils/seo'
 
 const configuracion = useRuntimeConfig()
 const zonaHoraria = ref('America/Bogota')
+// Se serializa para que servidor y cliente formateen el mismo instante durante
+// la hidratación, incluso si el render cruza la medianoche de Bogotá.
+const instanteRenderizado = useState('partidos-hoy-instante-renderizado', () => new Date().toISOString())
 const { data: respuesta, error, refresh } = await useFetch<RespuestaResultados>('/api/resultados', {
   key: 'seo-partidos-hoy',
   query: computed(() => ({ timeZone: zonaHoraria.value }))
@@ -12,11 +15,11 @@ const { data: respuesta, error, refresh } = await useFetch<RespuestaResultados>(
 
 const fechaLocal = computed(() => new Intl.DateTimeFormat('es-CO', {
   weekday: 'long', day: 'numeric', month: 'long', timeZone: zonaHoraria.value
-}).format(new Date()))
+}).format(new Date(instanteRenderizado.value)))
 const nombreZonaHoraria = computed(() => new Intl.DateTimeFormat('es-CO', {
   timeZone: zonaHoraria.value,
   timeZoneName: 'longGeneric'
-}).formatToParts(new Date()).find(parte => parte.type === 'timeZoneName')?.value || 'tu hora local')
+}).formatToParts(new Date(instanteRenderizado.value)).find(parte => parte.type === 'timeZoneName')?.value || 'tu hora local')
 const grupos: Array<{ id: EstadoPartido, titulo: string, descripcion: string }> = [
   { id: 'en-vivo', titulo: 'En vivo', descripcion: 'Partidos que se están jugando ahora.' },
   { id: 'programado', titulo: 'Próximos', descripcion: 'Encuentros pendientes de la jornada.' },
@@ -31,6 +34,7 @@ const primerGrupoConPartidos = computed(() =>
 )
 
 onMounted(() => {
+  instanteRenderizado.value = new Date().toISOString()
   const zonaDetectada = Intl.DateTimeFormat().resolvedOptions().timeZone
   if (zonaDetectada) zonaHoraria.value = zonaDetectada
 })

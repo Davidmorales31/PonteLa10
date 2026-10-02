@@ -40,7 +40,11 @@ export async function consultarDetalleResultadoPorId(
     if (!cliente) {
       throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })
     }
-    const fixtures = await leerSnapshotsFutbolPublicos(cliente, { fixtureId: idPartido, limite: 1 })
+    const fixtures = await leerSnapshotsFutbolPublicos(cliente, {
+      fixtureId: idPartido,
+      derechosPublicacionConfirmados: configuracion.futbolDerechosPublicacionConfirmados === true,
+      limite: 1
+    })
     if (!fixtures.length) {
       throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })
     }

@@ -2,7 +2,7 @@
 import { ShieldCheck } from '@lucide/vue'
 import { pieSitio } from '~/data/sitioPublico'
 
-const anioActual = new Date().getFullYear()
+const anioActual = Number(new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: 'America/Bogota' }).format(new Date()))
 const { abrirPreferencias } = useAnaliticaPublica()
 </script>
 

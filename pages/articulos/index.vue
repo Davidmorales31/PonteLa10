@@ -63,7 +63,8 @@ const articulosPublicados = computed<ArticuloListado[]>(() =>
     categoria: articulo.categoria,
     autor: articulo.autorNombre,
     publicadoHace: new Intl.DateTimeFormat('es-CO', {
-      dateStyle: 'medium'
+      dateStyle: 'medium',
+      timeZone: 'America/Bogota'
     }).format(new Date(articulo.publicadoEn)),
     fechaPublicacion: articulo.publicadoEn,
     lecturaMinutos: articulo.lecturaMinutos,

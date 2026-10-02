@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { crearDocumentoAdsterra } from '~/utils/publicidad/crearDocumentoAdsterra'
 
 const propiedades = withDefaults(defineProps<{
   formato: 'nativo' | 'leaderboard'
   contexto: string
 }>(), {})
 
-const ID_NATIVO = '30c3ea809a63209ce30a1e8d211f79c5'
-const ID_LEADERBOARD = '14896f35681798666057f1b5f17aded7'
-const cierreScript = '<' + '/script>'
 const { publicidadAutorizada } = useAnaliticaPublica()
 const espacio = ref<HTMLElement | null>(null)
 const visible = ref(false)
@@ -18,12 +16,7 @@ let observadorAncho: ResizeObserver | null = null
 
 const documentoAnuncio = computed(() => {
   if (!publicidadAutorizada.value || !visible.value) return ''
-
-  if (propiedades.formato === 'nativo') {
-    return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>html,body{margin:0;min-width:0;width:100%;font-family:Arial,sans-serif;background:transparent}#container-${ID_NATIVO}{width:100%;min-height:250px;overflow:hidden}</style></head><body><div id="container-${ID_NATIVO}"></div><script async="async" data-cfasync="false" src="https://czernik.org/21/${ID_NATIVO}">${cierreScript}</body></html>`
-  }
-
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=728,initial-scale=1"><style>html,body{margin:0;width:728px;height:90px;overflow:hidden;background:transparent}</style></head><body><script>window.atOptions={key:'${ID_LEADERBOARD}',format:'iframe',height:90,width:728,params:{}};${cierreScript}<script src="https://czernik.org/22/${ID_LEADERBOARD}">${cierreScript}</body></html>`
+  return crearDocumentoAdsterra(propiedades.formato)
 })
 
 const altoMarco = computed(() => propiedades.formato === 'leaderboard' ? 90 * escala.value : 280)
@@ -105,16 +98,16 @@ onBeforeUnmount(() => {
   min-width: 0;
   margin: 1.25rem 0;
   overflow: hidden;
-  border: 1px solid #294467;
-  border-radius: 10px;
-  background: #071a36;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
 }
 
 .espacio-adsterra__rotulo {
   margin: 0;
   padding: .45rem .7rem;
-  color: #c9d6e8;
-  background: #183556;
+  color: #52647a;
+  background: transparent;
   font-size: .62rem;
   font-weight: 700;
   letter-spacing: .08em;
