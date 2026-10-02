@@ -3,6 +3,7 @@ import type {
   ClasificacionFutbolProveedor,
   CompetenciaFutbolProveedor,
   ConsultaPartidosPorFecha,
+  CuotaProveedorFutbol,
   EstadisticaFutbolProveedor,
   EventoFutbolProveedor,
   FilaClasificacionFutbolProveedor,
@@ -24,6 +25,7 @@ type TransporteGoalApi = (url: string, init: RequestInit) => Promise<Response>
 export interface ConfiguracionGoalApi {
   apiKey: string
   baseUrl?: string
+  ligasPrioritarias?: readonly string[]
   transporte?: TransporteGoalApi
 }
 
@@ -37,6 +39,10 @@ export function crearProveedorGoalApi(configuracion: ConfiguracionGoalApi): Prov
 
   const baseUrl = (configuracion.baseUrl || BASE_URL_GOAL_API).replace(/\/+$/, '')
   const transporte = configuracion.transporte || ((url, init) => fetch(url, init))
+  const ligasPrioritarias = [...new Set((configuracion.ligasPrioritarias || []).map(id => id.trim()))]
+  if (ligasPrioritarias.length > 40 || ligasPrioritarias.some(id => !id || id.length > 128)) {
+    throw new Error('La lista de ligas prioritarias de GOAL API no es válida.')
+  }
 
   async function solicitar(ruta: string, parametros: Record<string, string | number> = {}) {
     const url = new URL(`${baseUrl}${ruta}`)
@@ -49,7 +55,8 @@ export function crearProveedorGoalApi(configuracion: ConfiguracionGoalApi): Prov
         headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' },
         signal: AbortSignal.timeout(TIEMPO_LIMITE_MS)
       })
-    } catch {
+    } catch (error) {
+      if (error instanceof ErrorProveedorFutbol) throw error
       throw new ErrorProveedorFutbol('RED')
     }
 
@@ -111,6 +118,83 @@ export function crearProveedorGoalApi(configuracion: ConfiguracionGoalApi): Prov
     }
   }
 
+  async function obtenerFixturesDeLigasPrioritarias(
+    consulta: ConsultaPartidosPorFecha
+  ): Promise<RespuestaProveedorFutbol<PartidoFutbolProveedor>> {
+    const partidosPorId = new Map<string, PartidoFutbolProveedor>()
+    const cuotas: CuotaProveedorFutbol[] = []
+    let solicitudes = 0
+
+    try {
+      // El proveedor documenta un leagueId por solicitud. Cada liga se pagina
+      // completa y en serie para no disparar ráfagas contra la API.
+      for (const leagueId of ligasPrioritarias) {
+        let offset = 0
+        const offsetsVisitados = new Set<number>()
+
+        while (true) {
+          const respuesta = await obtenerLista(
+            `/fixtures/date/${encodeURIComponent(consulta.fecha)}`,
+            { leagueId, limit: limitar(consulta.limite ?? 100, 1, 100), offset },
+            ['fixtures', 'matches'],
+            valor => mapearPartido(valor)
+          )
+          solicitudes += respuesta.solicitudes ?? 1
+          if (respuesta.cuota) cuotas.push(respuesta.cuota)
+          for (const partido of respuesta.elementos) partidosPorId.set(partido.idProveedor, partido)
+
+          if (!respuesta.siguienteCursor) break
+          const siguienteOffset = leerEntero(respuesta.siguienteCursor)
+          if (siguienteOffset === undefined || siguienteOffset <= offset || offsetsVisitados.has(siguienteOffset)) {
+            throw new ErrorProveedorFutbol('RESPUESTA_INVALIDA')
+          }
+          offsetsVisitados.add(siguienteOffset)
+          offset = siguienteOffset
+        }
+      }
+    } catch (error) {
+      const adicionales = leerSolicitudesError(error)
+      if (error && typeof error === 'object') {
+        Object.assign(error, { solicitudesConsumidas: solicitudes + adicionales })
+      }
+      throw error
+    }
+
+    const cuota = combinarCuotas(cuotas)
+    return {
+      elementos: [...partidosPorId.values()],
+      consultadoEn: new Date().toISOString(),
+      solicitudes,
+      ...(cuota ? { cuota } : {})
+    }
+  }
+
+  async function obtenerActualizacionFixture(idFixture: string) {
+    try {
+      const respuesta = await solicitar(`/fixtures/${encodeURIComponent(idFixture)}`)
+      if (respuesta.datos === null) {
+        return { paquete: null, cuota: respuesta.cuota, solicitudes: respuesta.solicitudes }
+      }
+
+      const objeto = comoObjeto(obtenerPrimerElemento(respuesta.datos, ['fixture', 'match']))
+      if (!objeto) throw new ErrorProveedorFutbol('RESPUESTA_INVALIDA')
+      const partido = mapearPartido(objeto)
+      const eventos = mapearEventosDesdeFixture(objeto)
+      const alineaciones = mapearAlineacionesDesdeFixture(objeto, partido)
+      const estadisticas = mapearEstadisticasDesdeFixture(objeto, partido)
+      return {
+        paquete: { partido, eventos, alineaciones, estadisticas },
+        cuota: respuesta.cuota,
+        solicitudes: respuesta.solicitudes
+      }
+    } catch (error) {
+      if (error && typeof error === 'object') {
+        Object.assign(error, { solicitudesConsumidas: leerSolicitudesError(error) })
+      }
+      throw error
+    }
+  }
+
   const proveedor: ProveedorFutbol = {
     id: 'goal-api',
     capacidades: {
@@ -126,6 +210,7 @@ export function crearProveedorGoalApi(configuracion: ConfiguracionGoalApi): Prov
 
     async obtenerPartidosPorFecha(consulta: ConsultaPartidosPorFecha) {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(consulta.fecha)) throw new ErrorProveedorFutbol('RESPUESTA_INVALIDA')
+      if (ligasPrioritarias.length) return obtenerFixturesDeLigasPrioritarias(consulta)
       const parametros: Record<string, string | number> = {
         limit: limitar(consulta.limite ?? 100, 1, 100)
       }
@@ -146,35 +231,42 @@ export function crearProveedorGoalApi(configuracion: ConfiguracionGoalApi): Prov
     },
 
     async obtenerDetalleFixture(idFixture: string) {
-      if (!idFixture.trim()) throw new ErrorProveedorFutbol('RESPUESTA_INVALIDA')
-      const respuesta = await solicitar(`/fixtures/${encodeURIComponent(idFixture)}`)
-      if (respuesta.datos === null) return null
-      const valor = obtenerPrimerElemento(respuesta.datos, ['fixture', 'match'])
-      return mapearPartido(valor)
+      validarId(idFixture)
+      const respuesta = await obtenerActualizacionFixture(idFixture)
+      return respuesta.paquete?.partido ?? null
     },
 
     async obtenerEventos(idFixture: string) {
       validarId(idFixture)
-      return obtenerLista(
-        `/fixtures/${encodeURIComponent(idFixture)}/events`, {}, ['events', 'items'],
-        (valor, indice) => mapearEvento(valor, indice)
-      )
+      const respuesta = await obtenerActualizacionFixture(idFixture)
+      return {
+        elementos: respuesta.paquete?.eventos ?? [],
+        consultadoEn: new Date().toISOString(),
+        solicitudes: respuesta.solicitudes,
+        ...(respuesta.cuota ? { cuota: respuesta.cuota } : {})
+      }
     },
 
     async obtenerAlineaciones(idFixture: string) {
       validarId(idFixture)
-      return obtenerLista(
-        `/fixtures/${encodeURIComponent(idFixture)}/lineups`, {}, ['lineups', 'teams', 'items'],
-        valor => mapearAlineacion(valor)
-      )
+      const respuesta = await obtenerActualizacionFixture(idFixture)
+      return {
+        elementos: respuesta.paquete?.alineaciones ?? [],
+        consultadoEn: new Date().toISOString(),
+        solicitudes: respuesta.solicitudes,
+        ...(respuesta.cuota ? { cuota: respuesta.cuota } : {})
+      }
     },
 
     async obtenerEstadisticas(idFixture: string) {
       validarId(idFixture)
-      return obtenerLista(
-        `/fixtures/${encodeURIComponent(idFixture)}/statistics`, {}, ['statistics', 'stats', 'teams', 'items'],
-        valor => valor as EstadisticaFutbolProveedor
-      ).then(respuesta => ({ ...respuesta, elementos: normalizarEstadisticas(respuesta.elementos as unknown[]) }))
+      const respuesta = await obtenerActualizacionFixture(idFixture)
+      return {
+        elementos: respuesta.paquete?.estadisticas ?? [],
+        consultadoEn: new Date().toISOString(),
+        solicitudes: respuesta.solicitudes,
+        ...(respuesta.cuota ? { cuota: respuesta.cuota } : {})
+      }
     },
 
     async obtenerActualizacionesPorLote(idsFixture: string[]) {
@@ -185,48 +277,13 @@ export function crearProveedorGoalApi(configuracion: ConfiguracionGoalApi): Prov
 
       const elementos: PaqueteActualizacionFutbolProveedor[] = []
       let solicitudes = 0
-      let limite: number | undefined
-      let restante: number | undefined
+      const cuotas: CuotaProveedorFutbol[] = []
       const consultadoEn = new Date().toISOString()
 
-      // Cuatro endpoints por partido; dos partidos a la vez acotan la latencia
-      // sin abrir una ráfaga ilimitada contra la cuota de GOAL API.
+      // El endpoint de fixture ya entrega eventos, alineaciones y estadísticas.
+      // Dos partidos simultáneos reducen latencia con una solicitud por partido.
       for (const grupo of agrupar(ids, 2)) {
-        const resultados = await Promise.allSettled(grupo.map(async (idFixture) => {
-          let solicitudesDelFixture = 0
-          const solicitarDetalle = async (consulta: () => Promise<unknown>) => {
-            solicitudesDelFixture += 1
-            return consulta()
-          }
-          try {
-            const partido = await solicitarDetalle(() => proveedor.obtenerDetalleFixture(idFixture)) as PartidoFutbolProveedor | null
-            if (!partido) return { paquete: null, solicitudes: solicitudesDelFixture, cuotas: [] }
-            const [eventos, alineaciones, estadisticas] = await Promise.all([
-              solicitarDetalle(() => proveedor.obtenerEventos(idFixture)),
-              solicitarDetalle(() => proveedor.obtenerAlineaciones(idFixture)),
-              solicitarDetalle(() => proveedor.obtenerEstadisticas(idFixture))
-            ]) as [
-              RespuestaProveedorFutbol<EventoFutbolProveedor>,
-              RespuestaProveedorFutbol<AlineacionFutbolProveedor>,
-              RespuestaProveedorFutbol<EstadisticaFutbolProveedor>
-            ]
-            return {
-              paquete: {
-                partido,
-                eventos: eventos.elementos,
-                alineaciones: alineaciones.elementos,
-                estadisticas: estadisticas.elementos
-              },
-              solicitudes: solicitudesDelFixture,
-              cuotas: [eventos.cuota, alineaciones.cuota, estadisticas.cuota]
-            }
-          } catch (error) {
-            if (error && typeof error === 'object') {
-              Object.assign(error, { solicitudesConsumidas: solicitudesDelFixture })
-            }
-            throw error
-          }
-        }))
+        const resultados = await Promise.allSettled(grupo.map(idFixture => obtenerActualizacionFixture(idFixture)))
 
         const fallos: unknown[] = []
         for (const resultado of resultados) {
@@ -237,10 +294,7 @@ export function crearProveedorGoalApi(configuracion: ConfiguracionGoalApi): Prov
           }
           solicitudes += resultado.value.solicitudes
           if (resultado.value.paquete) elementos.push(resultado.value.paquete)
-          for (const cuota of resultado.value.cuotas) {
-            if (cuota?.limite !== undefined) limite = limite === undefined ? cuota.limite : Math.min(limite, cuota.limite)
-            if (cuota?.restante !== undefined) restante = restante === undefined ? cuota.restante : Math.min(restante, cuota.restante)
-          }
+          if (resultado.value.cuota) cuotas.push(resultado.value.cuota)
         }
         if (fallos.length) {
           const error = new ErrorProveedorFutbol('RESPUESTA_INVALIDA')
@@ -253,9 +307,7 @@ export function crearProveedorGoalApi(configuracion: ConfiguracionGoalApi): Prov
         elementos,
         consultadoEn,
         solicitudes,
-        ...(limite !== undefined || restante !== undefined
-          ? { cuota: { ...(limite !== undefined ? { limite } : {}), ...(restante !== undefined ? { restante } : {}) } }
-          : {})
+        ...(combinarCuotas(cuotas) ? { cuota: combinarCuotas(cuotas) } : {})
       }
     },
 
@@ -290,9 +342,9 @@ function mapearPartido(valor: unknown): PartidoFutbolProveedor {
   if (!idProveedor || !inicioUtc) throw new ErrorProveedorFutbol('RESPUESTA_INVALIDA')
 
   const marcador = comoObjeto(leerValor(objeto, 'score', 'goals'))
-  const golesLocal = leerNumero(objeto, 'homeScore', 'home_score', 'match_hometeam_score')
+  const golesLocal = leerNumero(objeto, 'homeTeamScore', 'homeTeamFtScore', 'homeScore', 'home_score', 'match_hometeam_score')
     ?? leerNumero(marcador, 'home', 'local')
-  const golesVisitante = leerNumero(objeto, 'awayScore', 'away_score', 'match_awayteam_score')
+  const golesVisitante = leerNumero(objeto, 'awayTeamScore', 'awayTeamFtScore', 'awayScore', 'away_score', 'match_awayteam_score')
     ?? leerNumero(marcador, 'away', 'visitante')
   const estadoProveedor = leerCadena(objeto, 'matchStatus', 'match_status', 'status', 'state')
   const reloj = comoObjeto(objeto.clock)
@@ -317,6 +369,101 @@ function mapearPartido(valor: unknown): PartidoFutbolProveedor {
   }
 }
 
+function mapearEventosDesdeFixture(fixture: ObjetoJson): EventoFutbolProveedor[] {
+  const valores = leerLista(leerValor(fixture, 'events', 'eventos'), ['events', 'items']) || []
+  return valores.map((valor, indice) => mapearEvento(valor, indice))
+}
+
+function mapearAlineacionesDesdeFixture(
+  fixture: ObjetoJson,
+  partido: PartidoFutbolProveedor
+): AlineacionFutbolProveedor[] {
+  const valores = leerLista(leerValor(fixture, 'lineups', 'alineaciones'), ['lineups', 'teams', 'items']) || []
+  if (valores.some(valor => {
+    const alineacion = comoObjeto(valor)
+    return Boolean(alineacion && ['startXI', 'substitutes', 'players'].some(clave => Array.isArray(alineacion[clave])))
+  })) {
+    return valores.map(valor => mapearAlineacion(valor))
+  }
+
+  const porEquipo = new Map<string, AlineacionFutbolProveedor>([
+    [partido.local.idProveedor, {
+      equipoIdProveedor: partido.local.idProveedor,
+      ...(leerCadena(fixture, 'homeTeamSystem', 'homeFormation')
+        ? { formacion: leerCadena(fixture, 'homeTeamSystem', 'homeFormation') }
+        : {}),
+      jugadores: []
+    }],
+    [partido.visitante.idProveedor, {
+      equipoIdProveedor: partido.visitante.idProveedor,
+      ...(leerCadena(fixture, 'awayTeamSystem', 'awayFormation')
+        ? { formacion: leerCadena(fixture, 'awayTeamSystem', 'awayFormation') }
+        : {}),
+      jugadores: []
+    }]
+  ])
+
+  for (const valor of valores) {
+    const fila = comoObjeto(valor)
+    if (!fila) continue
+    const equipoTexto = (leerCadena(fila, 'team', 'side', 'teamSide') || '').toLowerCase()
+    const equipoIdProveedor = equipoTexto === 'home' || equipoTexto === partido.local.idProveedor.toLowerCase()
+      ? partido.local.idProveedor
+      : equipoTexto === 'away' || equipoTexto === partido.visitante.idProveedor.toLowerCase()
+        ? partido.visitante.idProveedor
+        : undefined
+    if (!equipoIdProveedor) continue
+    const alineacion = porEquipo.get(equipoIdProveedor)!
+    const tipo = (leerCadena(fila, 'type', 'lineupType') || '').toLowerCase()
+    const jugadorAnidado = comoObjeto(leerValor(fila, 'player', 'athlete'))
+    const nombre = leerCadena(fila, 'lineupPlayer', 'playerName', 'name')
+      || leerCadena(jugadorAnidado, 'name', 'playerName')
+    if (tipo.includes('coach')) {
+      if (nombre) alineacion.entrenador = nombre
+      continue
+    }
+    if (!nombre) continue
+
+    const idProveedor = leerCadena(fila, 'playerKey')
+      || leerCadena(comoObjeto(leerValor(fila, 'playerId')), 'id', 'playerId')
+      || leerCadena(jugadorAnidado, 'id', 'playerId')
+    const numeroAnidado = comoObjeto(leerValor(fila, 'lineupNumber'))
+    const numero = leerEntero(leerValor(fila, 'lineupNumber', 'number', 'shirtNumber'))
+      ?? leerEntero(leerValor(numeroAnidado, 'number', 'value', 'id'))
+    const posicion = leerCadena(fila, 'lineupPosition', 'position', 'pos')
+      || leerCadena(comoObjeto(leerValor(fila, 'playerPosition')), 'name', 'position')
+      || leerCadena(jugadorAnidado, 'position', 'pos')
+    const titular = !/(substitute|bench|reserve)/.test(tipo)
+    alineacion.jugadores.push(mapearJugadorAlineacion({
+      player: { id: idProveedor, name: nombre, number: numero, position: posicion },
+      starter: titular
+    }, alineacion.jugadores.length, titular))
+  }
+
+  return [...porEquipo.values()].filter(alineacion => alineacion.jugadores.length > 0 || alineacion.entrenador)
+}
+
+function mapearEstadisticasDesdeFixture(
+  fixture: ObjetoJson,
+  partido: PartidoFutbolProveedor
+): EstadisticaFutbolProveedor[] {
+  const fuente = leerValor(fixture, 'statistics', 'stats')
+  const objeto = comoObjeto(fuente)
+  const valores = leerLista(fuente, ['statistics', 'stats', 'items'])
+    || (objeto ? leerLista(objeto.fullTime, []) : undefined)
+    || []
+  return normalizarEstadisticas(valores.map(valor => {
+    const estadistica = comoObjeto(valor)
+    return estadistica
+      ? {
+          ...estadistica,
+          homeTeamId: partido.local.idProveedor,
+          awayTeamId: partido.visitante.idProveedor
+        }
+      : valor
+  }))
+}
+
 function mapearCompetencia(
   valor: unknown,
   idAlterno?: string,
@@ -333,8 +480,8 @@ function mapearCompetencia(
   if (!idProveedor || !nombre) throw new ErrorProveedorFutbol('RESPUESTA_INVALIDA')
 
   const pais = leerCadena(comoObjeto(liga?.country), 'name') || leerCadena(liga, 'country', 'countryName')
-  const temporada = leerEscalar(liga, 'season', 'seasonYear')
-    ?? leerEscalar(objeto, 'season', 'seasonYear')
+  const temporada = leerEscalar(liga, 'season', 'seasonYear', 'leagueYear')
+    ?? leerEscalar(objeto, 'season', 'seasonYear', 'leagueYear')
     ?? temporadaAlterna
   const etapa = leerCadena(objeto, 'stage', 'stageName', 'phase', 'phaseName')
     || leerCadena(liga, 'stage', 'stageName', 'phase', 'phaseName')
@@ -563,6 +710,18 @@ function obtenerCuota(headers: Headers) {
     ...(limite !== undefined ? { limite } : {}),
     ...(restante !== undefined ? { restante } : {}),
     ...(reinicio !== undefined ? { reiniciaEn: new Date(reinicio * 1000).toISOString() } : {})
+  }
+}
+
+function combinarCuotas(cuotas: CuotaProveedorFutbol[]): CuotaProveedorFutbol | undefined {
+  if (!cuotas.length) return undefined
+  const limites = cuotas.flatMap(cuota => cuota.limite === undefined ? [] : [cuota.limite])
+  const restantes = cuotas.flatMap(cuota => cuota.restante === undefined ? [] : [cuota.restante])
+  const reinicios = cuotas.flatMap(cuota => cuota.reiniciaEn ? [cuota.reiniciaEn] : [])
+  return {
+    ...(limites.length ? { limite: Math.min(...limites) } : {}),
+    ...(restantes.length ? { restante: Math.min(...restantes) } : {}),
+    ...(reinicios.length ? { reiniciaEn: reinicios.sort()[0] } : {})
   }
 }
 

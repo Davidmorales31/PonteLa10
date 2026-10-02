@@ -150,6 +150,7 @@ onMounted(() => {
     <div v-else-if="partidoDestacado && respuesta" class="contenido-resultados">
       <div class="columna-principal-resultados">
         <PartidoDestacadoResultados :partido="partidoDestacado" />
+        <PublicidadAdsterraSlot formato="leaderboard" contexto="resultados y marcadores" />
         <section class="seccion-lista-resultados" aria-labelledby="titulo-partidos-resultados">
           <div class="titulo-panel-resultados">
             <div>

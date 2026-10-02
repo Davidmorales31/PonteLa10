@@ -180,7 +180,8 @@ useSeoPont3la10(() => ({
 function formatearFecha(fecha: string): string {
   return new Intl.DateTimeFormat('es-CO', {
     dateStyle: 'long',
-    timeStyle: 'short'
+    timeStyle: 'short',
+    timeZone: 'America/Bogota'
   }).format(new Date(fecha)).replace(/[\u00a0\u202f]/g, ' ')
 }
 </script>
@@ -234,6 +235,7 @@ function formatearFecha(fecha: string): string {
       </figcaption>
     </figure>
 
+    <PublicidadAdsterraSlot formato="nativo" contexto="artículo deportivo" />
     <ContenidoArticuloPublico :documento="articuloPublicado.documento" />
 
     <footer
@@ -260,6 +262,8 @@ function formatearFecha(fecha: string): string {
       :texto="articuloPublicado.textoSocial || articuloPublicado.resumen"
       :url="urlCanonica"
     />
+
+    <PublicidadAdsterraEnlacePatrocinado />
 
     <SeccionArticulosRelacionados :articulos="articulosRelacionados" />
   </article>

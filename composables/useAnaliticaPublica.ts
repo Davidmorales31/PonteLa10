@@ -2,7 +2,8 @@ import {
   esRutaPublicaMedible,
   ID_MEDICION_GA4,
   normalizarCategoriaMedible,
-  resolverDecisionAnalitica
+  resolverDecisionAnalitica,
+  resolverDecisionPublicidad
 } from '~/utils/analiticaPublica'
 import type { EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
 
@@ -16,6 +17,7 @@ declare global {
 }
 
 const CLAVE_CONSENTIMIENTO = 'pont3la10:consentimiento-analitica:v1'
+const CLAVE_CONSENTIMIENTO_PUBLICIDAD = 'pont3la10:consentimiento-publicidad:v1'
 const CATEGORIAS_CONSENTIMIENTO = {
   analytics_storage: 'denied',
   ad_storage: 'denied',
@@ -45,6 +47,7 @@ export function useAnaliticaPublica() {
   const idMedicion = ID_MEDICION_GA4
   const disponible = computed(() => Boolean(idMedicion))
   const decision = useState<EstadoAnaliticaPublica>('decision-analitica-publica', () => null)
+  const decisionPublicidad = useState<EstadoAnaliticaPublica>('decision-publicidad-publica', () => null)
   const listo = useState('consentimiento-analitica-listo', () => false)
   const preferenciasAbiertas = useState('preferencias-analitica-abiertas', () => false)
   const etiquetaLista = useState('google-analytics-etiqueta-lista', () => false)
@@ -55,8 +58,11 @@ export function useAnaliticaPublica() {
     try {
       const valorGuardado = window.localStorage.getItem(CLAVE_CONSENTIMIENTO)
       decision.value = resolverDecisionAnalitica(valorGuardado)
+      const publicidadGuardada = window.localStorage.getItem(CLAVE_CONSENTIMIENTO_PUBLICIDAD)
+      decisionPublicidad.value = resolverDecisionPublicidad(publicidadGuardada)
     } catch {
       // Si el almacenamiento está bloqueado, la medición rige solo esta sesión.
+      decisionPublicidad.value = null
     }
 
     listo.value = true
@@ -69,6 +75,16 @@ export function useAnaliticaPublica() {
       window.localStorage.setItem(CLAVE_CONSENTIMIENTO, nuevaDecision)
     } catch {
       // La elección explícita rige la sesión actual aunque no pueda persistirse.
+    }
+  }
+
+  function guardarDecisionPublicidad(nuevaDecision: Exclude<EstadoAnaliticaPublica, null>) {
+    decisionPublicidad.value = nuevaDecision
+    preferenciasAbiertas.value = false
+    try {
+      window.localStorage.setItem(CLAVE_CONSENTIMIENTO_PUBLICIDAD, nuevaDecision)
+    } catch {
+      // Sin almacenamiento disponible, el permiso rige solo esta sesión.
     }
   }
 
@@ -178,27 +194,43 @@ export function useAnaliticaPublica() {
     revocarEtiqueta()
   }
 
+  function aceptarPublicidad() {
+    guardarDecisionPublicidad('aceptada')
+  }
+
+  function rechazarPublicidad() {
+    guardarDecisionPublicidad('rechazada')
+  }
+
   function abrirPreferencias() {
     preferenciasAbiertas.value = true
   }
 
   function cerrarPreferencias() {
+    if (decisionPublicidad.value === null) {
+      guardarDecisionPublicidad('rechazada')
+      return
+    }
     preferenciasAbiertas.value = false
   }
 
   const mostrarAviso = computed(() =>
     listo.value
-    && disponible.value
-    && (decision.value === null || preferenciasAbiertas.value)
+    && (decision.value === null || decisionPublicidad.value === null || preferenciasAbiertas.value)
   )
+  const publicidadAutorizada = computed(() => decisionPublicidad.value === 'aceptada')
 
   return {
     disponible,
     decision,
+    decisionPublicidad,
+    publicidadAutorizada,
     listo,
     mostrarAviso,
     aceptarAnalitica,
     rechazarAnalitica,
+    aceptarPublicidad,
+    rechazarPublicidad,
     abrirPreferencias,
     cerrarPreferencias,
     inicializarConsentimiento,

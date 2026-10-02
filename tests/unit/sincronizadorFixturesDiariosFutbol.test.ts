@@ -125,6 +125,26 @@ describe('sincronizador diario privado de fixtures', () => {
     expect(repo.upsertSnapshots).toHaveBeenCalledOnce()
   })
 
+  it('mantiene el proveedor fallback para el resto del día tras crear sus mappings', async () => {
+    const principal: ProveedorFutbol = {
+      ...proveedor('api-football', async () => respuesta([partido])),
+      permiteDescubrimientoFixturesDiarios: true
+    }
+    const secundario: ProveedorFutbol = {
+      ...proveedor('goal-api', async () => respuesta([partido])),
+      permiteDescubrimientoFixturesDiarios: true
+    }
+    const repo = repositorio(mappings, mappingsVacios)
+
+    const resultado = await sincronizarFixturesDiariosFutbol({
+      principal, secundario, repositorio: repo, fechaNegocio: '2026-10-01', ahora
+    })
+
+    expect(resultado).toMatchObject({ estado: 'completado', provider: 'goal-api', fixturesGuardados: 1 })
+    expect(secundario.obtenerPartidosPorFecha).toHaveBeenCalledOnce()
+    expect(principal.obtenerPartidosPorFecha).not.toHaveBeenCalled()
+  })
+
   it('usa fallback solo si falla el principal; no ante una respuesta vacía válida', async () => {
     const principal = proveedor('goal-api', async () => respuesta([]))
     const secundario = proveedor('api-football', async () => respuesta([partido]))
@@ -178,6 +198,24 @@ describe('sincronizador diario privado de fixtures', () => {
       provider: 'api-football', provider_fixture_id: 'fixture-ext',
       events: actualizacion.eventos, lineups: actualizacion.alineaciones, statistics: actualizacion.estadisticas
     })])
+  })
+
+  it('no pide detalles de partidos fuera de las competiciones prioritarias', async () => {
+    const partidoNoPrioritario = {
+      ...partido,
+      competencia: { idProveedor: 'liga-irrelevante', nombre: 'Liga no prioritaria', pais: 'Argentina' },
+      estado: 'live' as const
+    }
+    const principal = proveedor('api-football', async () => respuesta([partidoNoPrioritario]), [])
+    const repo = repositorio()
+
+    const resultado = await sincronizarFixturesDiariosFutbol({
+      principal, repositorio: repo, fechaNegocio: '2026-10-01', ahora
+    })
+
+    expect(resultado.estado).toBe('completado')
+    expect(principal.obtenerActualizacionesPorLote).not.toHaveBeenCalled()
+    expect(repo.upsertDetalles).not.toHaveBeenCalled()
   })
 
   it('usa Goal API como respaldo cuando API-Football falla al traer el detalle', async () => {

@@ -6,6 +6,7 @@ import { z } from 'zod'
 const esquemaFecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 
 export default defineCachedEventHandler(async (evento) => {
+  const configuracion = useRuntimeConfig(evento)
   const query = getQuery(evento)
   let fechaNegocio = fechaNegocioBogota()
   if (query.fecha !== undefined) {
@@ -21,6 +22,7 @@ export default defineCachedEventHandler(async (evento) => {
 
   const fixtures = await leerSnapshotsFutbolPublicos(cliente, {
     fechaNegocio,
+    derechosPublicacionConfirmados: configuracion.futbolDerechosPublicacionConfirmados === true,
     limite: 100
   })
   return fixtures.length

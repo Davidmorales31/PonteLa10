@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
+  calcularSiguienteEjecucionWorkerFutbol,
   clasificarPrioridadFixtureFutbol,
   configuracionSchedulerFutbolPredeterminada,
+  debeDiferirCargaInicialFutbol,
   debeConsultarWorkerFutbol,
+  esperaHastaLasSeisBogota,
   determinarModoCuotaFutbol
 } from '~/utils/politicaWorkerFutbol'
 import type { EstadoFixtureFutbol } from '~/types/futbolProveedor'
@@ -59,5 +62,56 @@ describe('política del worker de fútbol', () => {
     const actualizadoEn = new Date(ahora - (configuracionSchedulerFutbolPredeterminada.intervalosSegundos.en_vivo! + 1) * 1000).toISOString()
     expect(debeConsultarWorkerFutbol({ prioridad: 'en_vivo', operacion: 'fixture', modo: 'NORMAL', actualizadoEn }, ahora).permitido).toBe(true)
     expect(debeConsultarWorkerFutbol({ prioridad: 'lejano', operacion: 'fixture', modo: 'NORMAL' }, ahora).permitido).toBe(true)
+  })
+
+  it('difiere la carga inicial nocturna hasta las seis de Bogotá', () => {
+    const unaBogota = new Date('2026-10-02T06:00:00.000Z')
+    const seisBogota = new Date('2026-10-02T11:00:00.000Z')
+    expect(debeDiferirCargaInicialFutbol(unaBogota)).toBe(true)
+    expect(esperaHastaLasSeisBogota(unaBogota)).toBe(5 * 60 * 60_000)
+    expect(debeDiferirCargaInicialFutbol(seisBogota)).toBe(false)
+  })
+
+  it('ajusta la siguiente activación a la vigencia de cada proveedor', () => {
+    const instante = Date.parse('2026-10-02T20:00:00.000Z')
+    const goalVivo = calcularSiguienteEjecucionWorkerFutbol([{
+      provider: 'goal-api', estado: 'live', inicioUtc: '2026-10-02T19:00:00.000Z',
+      detallesActualizadosEn: new Date(instante - 60_000).toISOString()
+    }], instante)
+    const apiVivo = calcularSiguienteEjecucionWorkerFutbol([{
+      provider: 'api-football', estado: 'live', inicioUtc: '2026-10-02T19:00:00.000Z',
+      detallesActualizadosEn: new Date(instante - 60_000).toISOString()
+    }], instante)
+
+    expect(goalVivo.esperaMs).toBe(60_000)
+    expect(apiVivo.esperaMs).toBe(2 * 60_000)
+  })
+
+  it('no sondea una madrugada vacía y duerme hasta la próxima ventana', () => {
+    const instante = Date.parse('2026-10-02T06:00:00.000Z')
+    const resultado = calcularSiguienteEjecucionWorkerFutbol([], instante)
+    expect(resultado.esperaMs).toBe(5 * 60 * 60_000)
+    expect(resultado.motivo).toBe('franja_nocturna_sin_partidos')
+  })
+
+  it('difiere los prepartidos posteriores a las seis y conserva los partidos nocturnos y en vivo', () => {
+    const cincoBogota = Date.parse('2026-10-02T10:00:00.000Z')
+    const partidoDeLasSeisYMedia = calcularSiguienteEjecucionWorkerFutbol([{
+      provider: 'goal-api', estado: 'scheduled', inicioUtc: '2026-10-02T11:30:00.000Z',
+      detallesActualizadosEn: '2026-10-02T09:55:00.000Z'
+    }], cincoBogota)
+    expect(partidoDeLasSeisYMedia).toEqual({ esperaMs: 60 * 60_000, motivo: 'franja_nocturna_sin_partidos' })
+
+    const partidoDeLasCincoYMedia = calcularSiguienteEjecucionWorkerFutbol([{
+      provider: 'goal-api', estado: 'scheduled', inicioUtc: '2026-10-02T10:30:00.000Z',
+      detallesActualizadosEn: '2026-10-02T09:55:00.000Z'
+    }], cincoBogota)
+    expect(partidoDeLasCincoYMedia.esperaMs).toBe(60_000)
+
+    const partidoEnVivo = calcularSiguienteEjecucionWorkerFutbol([{
+      provider: 'goal-api', estado: 'live', inicioUtc: '2026-10-02T09:30:00.000Z',
+      detallesActualizadosEn: '2026-10-02T09:58:00.000Z'
+    }], cincoBogota)
+    expect(partidoEnVivo.esperaMs).toBe(60_000)
   })
 })

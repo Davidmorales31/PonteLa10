@@ -39,8 +39,8 @@ export interface FixtureFutbolPublico {
   businessDate: string
   kickoffAt: string
   competition: { name: string; country: string | null; season: string; round: string | null; phase: string | null; group: string | null }
-  homeTeam: { name: string }
-  awayTeam: { name: string }
+  homeTeam: { name: string; logo?: string }
+  awayTeam: { name: string; logo?: string }
   status: EstadoFixtureFutbol
   externalStatus: string | null
   elapsed: number | null

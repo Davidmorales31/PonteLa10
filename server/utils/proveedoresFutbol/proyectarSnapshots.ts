@@ -5,6 +5,7 @@ import type {
   PartidoFutbolProveedor,
   PaqueteActualizacionFutbolProveedor
 } from '~/types/futbolProveedor'
+import { normalizarUrlInsigniaFutbol } from '~/utils/insigniasFutbol'
 
 /** Identidad canónica cargada desde sports_fixtures, no desde nombres externos. */
 export interface IdentidadFixtureCanonicaFutbol {
@@ -52,10 +53,10 @@ export interface SnapshotFixtureFutbolPrivado {
   group_name: string | null
   home_team_provider_id: string
   home_team_name: string
-  home_team_logo: null
+  home_team_logo: string | null
   away_team_provider_id: string
   away_team_name: string
-  away_team_logo: null
+  away_team_logo: string | null
   status: EstadoFixtureFutbol
   status_external: string | null
   elapsed: number | null
@@ -362,10 +363,10 @@ function crearSnapshot(
     group_name: texto(partido.competencia.grupo, 120),
     home_team_provider_id: homeProviderId,
     home_team_name: homeName,
-    home_team_logo: null,
+    home_team_logo: normalizarUrlInsigniaFutbol(partido.local.insigniaUrl, identidad.proveedor),
     away_team_provider_id: awayProviderId,
     away_team_name: awayName,
-    away_team_logo: null,
+    away_team_logo: normalizarUrlInsigniaFutbol(partido.visitante.insigniaUrl, identidad.proveedor),
     status: partido.estado,
     status_external: texto(partido.estadoProveedor, 64),
     elapsed,

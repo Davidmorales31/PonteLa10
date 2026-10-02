@@ -14,7 +14,11 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaMarcado
   if (/^[0-9a-f-]{36}$/i.test(idPartido)) {
     const cliente = obtenerClienteSupabasePrivado(evento)
     const fixtures = cliente
-      ? await leerSnapshotsFutbolPublicos(cliente, { fixtureId: idPartido, limite: 1 })
+      ? await leerSnapshotsFutbolPublicos(cliente, {
+          fixtureId: idPartido,
+          derechosPublicacionConfirmados: configuracion.futbolDerechosPublicacionConfirmados === true,
+          limite: 1
+        })
       : []
     const fixture = fixtures[0]
     if (!fixture) throw createError({ statusCode: 404, statusMessage: 'No hay datos disponibles para este partido.' })

@@ -29,7 +29,7 @@ interface ResultadoProveedor {
 }
 
 export default defineCachedEventHandler(async (evento): Promise<RespuestaResultados> => {
-  const configuracion = useRuntimeConfig()
+  const configuracion = useRuntimeConfig(evento)
   const deporteRecibido = obtenerDeporteDesdeUrl(evento.node?.req?.url)
   const deporteSolicitado = normalizarDeporte(deporteRecibido)
   if (deporteRecibido !== undefined && !deporteSolicitado) {
@@ -37,13 +37,16 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaResulta
   }
   const deportesAConsultar = deporteSolicitado ? [deporteSolicitado] : deportesDisponibles
   const zonaHoraria = obtenerZonaHorariaDesdeUrl(evento.node?.req?.url)
-  const fechaLocal = obtenerFechaEnZonaHoraria(new Date(), zonaHoraria)
+  const fechaLocal = obtenerFechaEnZonaHoraria(new Date(), deporteSolicitado === 'futbol'
+    ? zonaHorariaColombia
+    : zonaHoraria)
   const resultados = await Promise.all(
     deportesAConsultar.map(deporte => consultarDeporte(deporte, fechaLocal, zonaHoraria, configuracion, evento))
   )
-  const partidos = ordenarPartidosRelevantes(
-    resultados.flatMap(resultado => resultado.partidos)
-  ).slice(0, 32)
+  const partidosSinLimite = resultados.flatMap(resultado => resultado.partidos)
+  const partidos = deporteSolicitado === 'futbol'
+    ? partidosSinLimite.sort((primero, segundo) => Date.parse(primero.fechaIso) - Date.parse(segundo.fechaIso))
+    : ordenarPartidosRelevantes(partidosSinLimite).slice(0, 32)
 
   return {
     partidos,
@@ -70,7 +73,11 @@ async function consultarDeporte(
   if (deporte === 'futbol') {
     const cliente = obtenerClienteSupabasePrivado(evento)
     if (!cliente) return { partidos: [], origen: 'base-datos' }
-    const fixtures = await leerSnapshotsFutbolPublicos(cliente, { fechaNegocio: fecha, limite: 32 })
+    const fixtures = await leerSnapshotsFutbolPublicos(cliente, {
+      fechaNegocio: fecha,
+      derechosPublicacionConfirmados: configuracion.futbolDerechosPublicacionConfirmados === true,
+      limite: 1000
+    })
     return {
       partidos: fixtures.map(mapearFixtureFutbolAResultado),
       origen: 'base-datos'

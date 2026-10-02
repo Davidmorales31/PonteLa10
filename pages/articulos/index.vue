@@ -63,7 +63,8 @@ const articulosPublicados = computed<ArticuloListado[]>(() =>
     categoria: articulo.categoria,
     autor: articulo.autorNombre,
     publicadoHace: new Intl.DateTimeFormat('es-CO', {
-      dateStyle: 'medium'
+      dateStyle: 'medium',
+      timeZone: 'America/Bogota'
     }).format(new Date(articulo.publicadoEn)),
     fechaPublicacion: articulo.publicadoEn,
     lecturaMinutos: articulo.lecturaMinutos,
@@ -357,6 +358,8 @@ useSeoPont3la10(() => {
               </li>
             </ol>
           </section>
+
+          <PublicidadAdsterraSlot formato="nativo" contexto="noticias y artículos" />
 
           <section class="boletin-noticias-medio">
             <div>

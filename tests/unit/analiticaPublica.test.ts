@@ -3,7 +3,8 @@ import {
   esRutaPublicaMedible,
   ID_MEDICION_GA4,
   normalizarCategoriaMedible,
-  resolverDecisionAnalitica
+  resolverDecisionAnalitica,
+  resolverDecisionPublicidad
 } from '../../utils/analiticaPublica'
 
 describe('analítica pública', () => {
@@ -15,6 +16,14 @@ describe('analítica pública', () => {
     expect(resolverDecisionAnalitica(null)).toBe('aceptada')
     expect(resolverDecisionAnalitica(undefined)).toBe('aceptada')
     expect(resolverDecisionAnalitica('rechazada')).toBe('rechazada')
+  })
+
+  it('no habilita anuncios externos sin una decisión explícita guardada', () => {
+    expect(resolverDecisionPublicidad(null)).toBeNull()
+    expect(resolverDecisionPublicidad(undefined)).toBeNull()
+    expect(resolverDecisionPublicidad('aceptada')).toBe('aceptada')
+    expect(resolverDecisionPublicidad('rechazada')).toBe('rechazada')
+    expect(resolverDecisionPublicidad('cualquier-valor')).toBeNull()
   })
 
   it('excluye rutas privadas y no acepta rutas que no sean relativas al sitio', () => {
