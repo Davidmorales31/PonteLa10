@@ -18,6 +18,7 @@ import {
   type MappingsProveedorFutbol,
   type SnapshotFixtureFutbolPrivado
 } from './proyectarSnapshots'
+import { prioridadCompetenciaFutbol } from './prioridadFixturesDiarios'
 
 export interface RegistroCorridaFixturesFutbol {
   provider: IdentificadorProveedorFutbol
@@ -36,6 +37,8 @@ export interface RegistroCorridaFixturesFutbol {
 
 export interface RepositorioWorkerFixturesFutbol {
   cargarMappings(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<MappingsProveedorFutbol>
+  asegurarMappingsIniciales?(provider: IdentificadorProveedorFutbol, partidos: PartidoFutbolProveedor[]): Promise<void>
+  marcarFixturesDiariosCargados?(provider: IdentificadorProveedorFutbol, fechaNegocio: string, fechasListado: string[]): Promise<void>
   upsertSnapshots(fixtures: SnapshotFixtureFutbolPrivado[]): Promise<void>
   upsertDetalles(fixtures: DetalleFixtureFutbolPrivado[]): Promise<void>
   registrarCorrida(corrida: RegistroCorridaFixturesFutbol): Promise<void>
@@ -82,9 +85,9 @@ export type ResultadoSincronizacionFixturesFutbol =
   }
 
 /**
- * Sincroniza solo fixtures del día lógico de Bogotá. No llama al proveedor
- * hasta tener mappings de competencia/equipos/fixtures, nunca borra datos y
- * el fallback se intenta solo ante cuota o error real del proveedor.
+ * Sincroniza el catálogo privado de fútbol del día lógico de Bogotá. Descubre
+ * mappings al cargar por primera vez y el fallback se intenta solo ante cuota
+ * o error real del proveedor.
  */
 export async function sincronizarFixturesDiariosFutbol(
   opciones: OpcionesSincronizadorFixturesFutbol
@@ -119,15 +122,20 @@ export async function sincronizarFixturesDiariosFutbol(
       && mappings.equipos.length >= 2
       && mappings.fixtures.length > 0)
   })
-  if (mapeados.length === 0) {
+  const elegibles = proveedores.filter(proveedor => mapeados.includes(proveedor)
+    || proveedor.permiteDescubrimientoFixturesDiarios === true)
+  if (elegibles.length === 0) {
     return {
       estado: 'sin_mappings', provider: opciones.principal.id, solicitudes: 0,
       fixturesRecibidos: 0, fixturesGuardados: 0, detallesActualizados: 0, omitidos: null
     }
   }
 
-  const proveedorConMapeosPrincipal = mapeados[0]!
-  const proveedorConMapeosSecundario = mapeados.find(proveedor => proveedor.id !== proveedorConMapeosPrincipal.id)
+  const proveedorConMapeosPrincipal = mapeados.find(proveedor => proveedor.id === opciones.principal.id)
+    ?? mapeados[0]
+    ?? elegibles.find(proveedor => proveedor.id === opciones.principal.id)
+    ?? elegibles[0]!
+  const proveedorConMapeosSecundario = elegibles.find(proveedor => proveedor.id !== proveedorConMapeosPrincipal.id)
   const eventosFallback: RegistroFallbackFutbol[] = []
   const fallback = crearFallbackProveedorFutbol({
     principal: proveedorConMapeosPrincipal,
@@ -152,9 +160,9 @@ export async function sincronizarFixturesDiariosFutbol(
         const maxActualizaciones = limitarEntero(opciones.maxActualizacionesPorCiclo ?? 20, 0, 100)
         const ahoraMs = ahora().getTime()
         const candidatos = partidos.elementos
-          .filter(partido => esCandidatoDetalle(partido, ahoraMs))
+          .filter(partido => prioridadCompetenciaFutbol(partido) > 0 && esCandidatoDetalle(partido, ahoraMs))
           .sort((a, b) => prioridadDetalle(b, ahoraMs) - prioridadDetalle(a, ahoraMs)
-            || Date.parse(b.inicioUtc) - Date.parse(a.inicioUtc))
+            || Date.parse(a.inicioUtc) - Date.parse(b.inicioUtc))
           .slice(0, maxActualizaciones)
         let actualizaciones: PaqueteActualizacionFutbolProveedor[] = []
         let solicitudes = partidos.solicitudes ?? 1
@@ -209,10 +217,49 @@ export async function sincronizarFixturesDiariosFutbol(
       errorCode: sinCuota ? null : 'PROVIDER_FAILURE'
     }
   }
-  const mappings = mappingsPorProveedor.get(consulta.proveedor)
-  if (!mappings) throw new Error('No están disponibles los mappings del proveedor seleccionado.')
+  const proveedorSeleccionado = proveedores.find(proveedor => proveedor.id === consulta.proveedor)
+  if (proveedorSeleccionado?.seConsultoListadoDiario?.()) {
+    try {
+      await opciones.repositorio.asegurarMappingsIniciales?.(consulta.proveedor, consulta.datos.elementos)
+      const mappingsActualizados = await opciones.repositorio.cargarMappings(consulta.proveedor, opciones.fechaNegocio)
+      mappingsPorProveedor.set(consulta.proveedor, mappingsActualizados)
+    } catch {
+      return {
+        estado: 'fallido', provider: consulta.proveedor, solicitudes: sumarSolicitudes(eventosFallback),
+        fixturesRecibidos: consulta.datos.elementos.length, fixturesGuardados: 0,
+        detallesActualizados: 0, omitidos: null, errorCode: 'MAPPINGS_UNAVAILABLE'
+      }
+    }
+  }
 
-  const proyeccion = proyectarSnapshotsFixturesFutbol(consulta.datos.elementos, {
+  const mappingsCargados = mappingsPorProveedor.get(consulta.proveedor)
+  const mappingsCompletos = Boolean(mappingsCargados && mappingsCargados.competencias.length > 0
+    && mappingsCargados.equipos.length >= 2 && mappingsCargados.fixtures.length > 0)
+  if (!mappingsCompletos && consulta.datos.elementos.length > 0) {
+    return {
+      estado: 'fallido', provider: consulta.proveedor, solicitudes: sumarSolicitudes(eventosFallback),
+      fixturesRecibidos: consulta.datos.elementos.length, fixturesGuardados: 0,
+      detallesActualizados: 0, omitidos: null, errorCode: 'MAPPINGS_UNAVAILABLE'
+    }
+  }
+
+  if (consulta.datos.elementos.length === 0 && consulta.datos.solicitudes === 0 && !consulta.usoFallback) {
+    return {
+      estado: 'completado', provider: consulta.proveedor, solicitudes: 0,
+      fixturesRecibidos: 0, fixturesGuardados: 0, detallesActualizados: 0,
+      omitidos: { competencia_no_mapeada: 0, equipo_no_mapeado: 0, fixture_no_mapeado: 0,
+        identidad_canonica_inconsistente: 0, datos_invalidos: 0 }
+    }
+  }
+
+  const mappings = mappingsCargados ?? { competencias: [], equipos: [], fixtures: [] }
+
+  const partidosConActualizaciones = new Map(consulta.datos.actualizaciones
+    .map(actualizacion => [actualizacion.partido.idProveedor, actualizacion.partido] as const))
+  const partidosParaProyeccion = consulta.datos.elementos.map(partido =>
+    partidosConActualizaciones.get(partido.idProveedor) ?? partido)
+
+  const proyeccion = proyectarSnapshotsFixturesFutbol(partidosParaProyeccion, {
     proveedor: consulta.proveedor,
     fechaNegocio: opciones.fechaNegocio,
     consultadoEn: consulta.datos.consultadoEn,
@@ -273,6 +320,20 @@ export async function sincronizarFixturesDiariosFutbol(
     }
   }
 
+  if (proveedorSeleccionado?.seConsultoListadoDiario?.()) {
+    try {
+      const fechasListado = proveedorSeleccionado.fechasListadoDiario?.() ?? []
+      await opciones.repositorio.marcarFixturesDiariosCargados?.(consulta.proveedor, opciones.fechaNegocio, fechasListado)
+    } catch {
+      return {
+        estado: 'fallido', provider: consulta.proveedor, solicitudes: sumarSolicitudes(eventosFallback),
+        fixturesRecibidos: consulta.datos.elementos.length, fixturesGuardados: proyeccion.snapshots.length,
+        detallesActualizados: detalles.length, omitidos: proyeccion.omitidos,
+        errorCode: 'SNAPSHOT_PERSISTENCE_FAILED'
+      }
+    }
+  }
+
   const terminado = ahora()
   const solicitudesUsadas = sumarSolicitudes(eventosFallback)
   const registro = crearRegistroCorrida({
@@ -311,16 +372,17 @@ function esCandidatoDetalle(partido: PartidoFutbolProveedor, ahoraMs: number): b
   if (['live', 'halftime', 'finished', 'suspended', 'pre-match'].includes(partido.estado)) return true
   if (partido.estado !== 'scheduled') return false
   const inicioMs = Date.parse(partido.inicioUtc)
-  return Number.isFinite(inicioMs) && inicioMs >= ahoraMs - 30 * 60_000 && inicioMs <= ahoraMs + 2 * 60 * 60_000
+  return Number.isFinite(inicioMs) && inicioMs >= ahoraMs - 2 * 60 * 60_000 && inicioMs <= ahoraMs + 90 * 60_000
 }
 
 function prioridadDetalle(partido: PartidoFutbolProveedor, ahoraMs: number): number {
+  const prioridadCompetencia = prioridadCompetenciaFutbol(partido)
   switch (partido.estado) {
-    case 'live': return 4
-    case 'halftime': return 3
-    case 'pre-match': return 2
-    case 'scheduled': return esCandidatoDetalle(partido, ahoraMs) ? 2 : 0
-    case 'finished': case 'suspended': return 1
+    case 'live': return prioridadCompetencia * 100 + 40
+    case 'halftime': return prioridadCompetencia * 100 + 30
+    case 'pre-match': return prioridadCompetencia * 100 + 20
+    case 'scheduled': return esCandidatoDetalle(partido, ahoraMs) ? prioridadCompetencia * 100 + 20 : 0
+    case 'finished': case 'suspended': return prioridadCompetencia * 100 + 10
     default: return 0
   }
 }

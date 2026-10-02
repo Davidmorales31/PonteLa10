@@ -1,11 +1,10 @@
 import { createHmac, randomUUID } from 'node:crypto'
 
 const rutas = [
-  { nombre: 'fixtures', ruta: '/api/internal/futbol/fixtures' },
-  { nombre: 'clasificaciones', ruta: '/api/internal/futbol/clasificaciones' }
+  { nombre: 'fixtures', ruta: '/api/internal/futbol/fixtures' }
 ]
-const intervaloPredeterminadoMs = 60 * 60 * 1000
-const intervaloMinimoMs = 15 * 60 * 1000
+const intervaloPredeterminadoMs = 5 * 60 * 1000
+const intervaloMinimoMs = 5 * 60 * 1000
 const intervaloMaximoMs = 24 * 60 * 60 * 1000
 
 /** Programa la sincronización de fútbol dentro del worker local existente. */
@@ -106,13 +105,25 @@ function resumir(resultado) {
     return { estado: 'respuesta_invalida' }
   }
   const campos = ['estado', 'provider', 'solicitudes', 'fixturesRecibidos', 'fixturesGuardados',
-    'detallesActualizados', 'clasificacionesRecibidas', 'clasificacionesGuardadas', 'errorCode']
-  return Object.fromEntries(campos.flatMap(campo => {
+    'detallesActualizados', 'omitidos', 'clasificacionesRecibidas', 'clasificacionesGuardadas', 'errorCode']
+  const resumen = Object.fromEntries(campos.flatMap(campo => {
     const valor = resultado[campo]
     return typeof valor === 'string' || (typeof valor === 'number' && Number.isFinite(valor))
       ? [[campo, valor]]
       : []
   }))
+  const omitidos = resumirOmitidos(resultado.omitidos)
+  if (omitidos) resumen.omitidos = omitidos
+  return resumen
+}
+
+function resumirOmitidos(valor) {
+  if (!valor || typeof valor !== 'object' || Array.isArray(valor)) return null
+  const entradas = Object.entries(valor)
+    .filter(([motivo, cantidad]) => /^[a-z_]{1,48}$/.test(motivo)
+      && Number.isInteger(cantidad) && cantidad >= 0)
+    .slice(0, 8)
+  return entradas.length ? Object.fromEntries(entradas) : null
 }
 
 function leerUrlLocal(valor) {

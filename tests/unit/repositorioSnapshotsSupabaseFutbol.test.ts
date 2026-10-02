@@ -27,7 +27,7 @@ function crearClienteMock(respuestas: Record<string, Array<{ data: unknown; erro
       const consulta: Record<string, (...args: unknown[]) => unknown> & {
         then?: (resolve: (valor: unknown) => unknown, reject: (error: unknown) => unknown) => unknown
       } = {}
-      for (const metodo of ['select', 'eq', 'in', 'gte', 'lt', 'range', 'upsert', 'insert', 'update']) {
+      for (const metodo of ['select', 'eq', 'in', 'gte', 'lt', 'range', 'order', 'upsert', 'insert', 'update']) {
         consulta[metodo] = vi.fn((...args: unknown[]) => {
           llamadas.push({ tabla, metodo, args })
           return consulta
@@ -94,6 +94,32 @@ describe('repositorio privado de snapshots de fútbol en Supabase', () => {
     expect(cliente.from).toHaveBeenCalledOnce()
   })
 
+  it('solo reutiliza el calendario de Goal cuando se confirmaron las dos fechas UTC', async () => {
+    const incompleto = crearClienteMock({
+      football_provider_fixture_lists: [{
+        data: [{ fixture_date: '2026-10-01', loaded_at: '2026-10-01T06:00:00.000Z' }], error: null
+      }]
+    })
+    const repositorioIncompleto = crearRepositorioSnapshotsSupabase(incompleto.cliente)
+    await expect(repositorioIncompleto.cargarFixturesDiarios('goal-api', '2026-10-01')).resolves.toBeNull()
+    expect(incompleto.cliente.from).toHaveBeenCalledOnce()
+
+    const completo = crearClienteMock({
+      football_provider_fixture_lists: [{
+        data: [
+          { fixture_date: '2026-10-01', loaded_at: '2026-10-01T06:00:00.000Z' },
+          { fixture_date: '2026-10-02', loaded_at: '2026-10-01T06:00:00.000Z' }
+        ], error: null
+      }],
+      football_fixtures_today: [{ data: [], error: null }]
+    })
+    const repositorioCompleto = crearRepositorioSnapshotsSupabase(completo.cliente)
+    await expect(repositorioCompleto.cargarFixturesDiarios('goal-api', '2026-10-01')).resolves.toEqual([])
+    expect(completo.llamadas).toContainEqual({
+      tabla: 'football_provider_fixture_lists', metodo: 'in', args: ['fixture_date', ['2026-10-01', '2026-10-02']]
+    })
+  })
+
   it('carga mappings de clasificación sólo para la allowlist y todos los equipos canónicos del proveedor', async () => {
     const { cliente, llamadas } = crearClienteMock({
       sports_provider_mappings: [
@@ -146,7 +172,7 @@ describe('repositorio privado de snapshots de fútbol en Supabase', () => {
     })
     expect(llamadas).toContainEqual({
       tabla: 'football_fixtures_today', metodo: 'update',
-      args: [{ events: [], lineups: [], statistics: [], provider_fetched_at: '2026-10-01T18:00:00.000Z' }]
+      args: [{ events: [], lineups: [], statistics: [], provider_fetched_at: '2026-10-01T18:00:00.000Z', details_fetched_at: '2026-10-01T18:00:00.000Z' }]
     })
     expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['provider', 'goal-api'] })
     expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['provider_fixture_id', 'external-fixture'] })

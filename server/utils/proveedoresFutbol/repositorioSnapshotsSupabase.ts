@@ -1,5 +1,6 @@
+import { createHash } from 'node:crypto'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { IdentificadorProveedorFutbol } from '~/types/futbolProveedor'
+import type { EstadoFixtureFutbol, IdentificadorProveedorFutbol, PartidoFutbolProveedor } from '~/types/futbolProveedor'
 import type {
   MappingCompetenciaFutbol,
   MappingEquipoFutbol,
@@ -15,6 +16,13 @@ const milisegundosDia = 24 * 60 * 60 * 1000
 const diferenciaBogotaUtc = 5 * 60 * 60 * 1000
 
 export interface RepositorioSnapshotsSupabaseFutbol extends RepositorioWorkerFixturesFutbol {
+  cargarFixturesDiarios(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<PartidoFutbolProveedor[] | null>
+  asegurarMappingsIniciales(
+    provider: IdentificadorProveedorFutbol,
+    partidos: PartidoFutbolProveedor[]
+  ): Promise<void>
+  marcarFixturesDiariosCargados(provider: IdentificadorProveedorFutbol, fechaNegocio: string, fechasListado: string[]): Promise<void>
+  limpiarDatosFutbolCaducados(): Promise<void>
   cargarMappingsClasificacion(
     provider: IdentificadorProveedorFutbol,
     competenciasExternas: string[]
@@ -41,6 +49,25 @@ interface FilaFixtureCanonico {
   scheduled_at: string
 }
 
+interface FilaFixtureDiario {
+  provider_fixture_id: string
+  kickoff_at: string
+  league_id: string
+  league_name: string
+  league_country: string | null
+  season: string
+  status: EstadoFixtureFutbol
+  status_external: string | null
+  elapsed: number | null
+  goals_home: number | null
+  goals_away: number | null
+  home_team_provider_id: string
+  home_team_name: string
+  away_team_provider_id: string
+  away_team_name: string
+  details_fetched_at: string | null
+}
+
 /**
  * Adaptador privado del worker. Recibe el cliente desde Nitro; no crea clientes,
  * no lee credenciales y nunca publica automáticamente los snapshots.
@@ -49,6 +76,20 @@ export function crearRepositorioSnapshotsSupabase(
   cliente: SupabaseClient
 ): RepositorioSnapshotsSupabaseFutbol {
   return {
+    cargarFixturesDiarios: async (provider, fechaNegocio) => cargarFixturesDiarios(cliente, provider, fechaNegocio),
+    asegurarMappingsIniciales: async (provider, partidos) => asegurarMappingsIniciales(cliente, provider, partidos),
+    marcarFixturesDiariosCargados: async (provider, fechaNegocio, fechasListado) => {
+      const { error } = await cliente.rpc('mark_football_provider_fixture_list_loaded', {
+        p_provider: provider,
+        p_business_date: fechaNegocio,
+        p_fixture_list_dates: fechasListado
+      })
+      if (error) throw new Error('No fue posible marcar la carga diaria de partidos.')
+    },
+    limpiarDatosFutbolCaducados: async () => {
+      const { error } = await cliente.rpc('purge_old_football_daily_data')
+      if (error) throw new Error('No fue posible limpiar los datos diarios de fútbol caducados.')
+    },
     cargarMappings: async (provider, fechaNegocio) => cargarMappingsDelDia(cliente, provider, fechaNegocio),
     cargarMappingsClasificacion: async (provider, competenciasExternas) => {
       const ids = [...new Set(competenciasExternas.filter(id => typeof id === 'string' && id.trim()))]
@@ -66,7 +107,7 @@ export function crearRepositorioSnapshotsSupabase(
       const { data, error } = await cliente.rpc('claim_football_sync_lease', {
         p_provider: provider,
         p_operation: operation,
-        p_window_seconds: 900
+        p_window_seconds: operation === 'fixtures_diarios' ? 300 : 900
       })
       if (error || typeof data !== 'boolean') {
         throw new Error('No fue posible reservar la ventana de clasificación.')
@@ -105,7 +146,8 @@ export function crearRepositorioSnapshotsSupabase(
             events: detalle.events,
             lineups: detalle.lineups,
             statistics: detalle.statistics,
-            provider_fetched_at: detalle.provider_fetched_at
+            provider_fetched_at: detalle.provider_fetched_at,
+            details_fetched_at: detalle.provider_fetched_at
           })
           .eq('provider', detalle.provider)
           .eq('provider_fixture_id', detalle.provider_fixture_id)
@@ -133,6 +175,222 @@ export function crearRepositorioSnapshotsSupabase(
       if (error) throw new Error('No fue posible registrar la corrida del worker de fútbol.')
     }
   }
+}
+
+async function cargarFixturesDiarios(
+  cliente: SupabaseClient,
+  provider: IdentificadorProveedorFutbol,
+  fechaNegocio: string
+): Promise<PartidoFutbolProveedor[] | null> {
+  const fechasEsperadas = provider === 'goal-api'
+    ? [fechaNegocio, sumarDias(fechaNegocio, 1)]
+    : [fechaNegocio]
+  const { data: listas, error: errorListas } = await cliente
+    .from('football_provider_fixture_lists')
+    .select('fixture_date,loaded_at')
+    .eq('provider', provider)
+    .eq('business_date', fechaNegocio)
+    .in('fixture_date', fechasEsperadas)
+  if (errorListas || !listas) throw new Error('No fue posible leer el estado diario de fútbol.')
+  const fechasCargadas = new Set(listas
+    .filter((fila: { fixture_date: string; loaded_at: string | null }) => fila.loaded_at)
+    .map((fila: { fixture_date: string }) => fila.fixture_date))
+  if (fechasEsperadas.some(fecha => !fechasCargadas.has(fecha))) return null
+
+  const { data, error } = await cliente
+    .from('football_fixtures_today')
+    .select('provider_fixture_id,kickoff_at,league_id,league_name,league_country,season,status,status_external,elapsed,goals_home,goals_away,home_team_provider_id,home_team_name,away_team_provider_id,away_team_name,details_fetched_at')
+    .eq('provider', provider)
+    .eq('business_date', fechaNegocio)
+    .order('kickoff_at', { ascending: true })
+  if (error || !data) throw new Error('No fue posible leer los partidos privados de hoy.')
+
+  const ahora = Date.now()
+  return (data as FilaFixtureDiario[])
+    .filter(fila => requiereActualizarDetalle(fila, ahora))
+    .map(fila => ({
+      idProveedor: fila.provider_fixture_id,
+      competencia: {
+        idProveedor: fila.league_id,
+        nombre: fila.league_name,
+        ...(fila.league_country ? { pais: fila.league_country } : {}),
+        temporada: fila.season
+      },
+      inicioUtc: fila.kickoff_at,
+      estado: fila.status,
+      ...(fila.status_external ? { estadoProveedor: fila.status_external } : {}),
+      ...(fila.elapsed !== null ? { minutoTranscurrido: fila.elapsed } : {}),
+      local: { idProveedor: fila.home_team_provider_id, nombre: fila.home_team_name },
+      visitante: { idProveedor: fila.away_team_provider_id, nombre: fila.away_team_name },
+      golesLocal: fila.goals_home,
+      golesVisitante: fila.goals_away
+  }))
+}
+
+function sumarDias(fecha: string, dias: number): string {
+  const inicio = Date.parse(`${fecha}T00:00:00Z`)
+  if (!Number.isFinite(inicio)) throw new Error('La fecha diaria del proveedor no es válida.')
+  return new Date(inicio + dias * milisegundosDia).toISOString().slice(0, 10)
+}
+
+function requiereActualizarDetalle(fila: FilaFixtureDiario, ahora: number): boolean {
+  const ultimoDetalle = fila.details_fetched_at ? Date.parse(fila.details_fetched_at) : Number.NaN
+  const transcurrido = Number.isFinite(ultimoDetalle) ? ahora - ultimoDetalle : Number.POSITIVE_INFINITY
+  const inicio = Date.parse(fila.kickoff_at)
+  const distanciaAlInicio = inicio - ahora
+
+  if (fila.status === 'live' || fila.status === 'halftime') return transcurrido >= 5 * 60_000
+  if (fila.status === 'finished' || fila.status === 'cancelled' || fila.status === 'abandoned') {
+    return !Number.isFinite(ultimoDetalle)
+  }
+  if (fila.status === 'suspended' || fila.status === 'postponed') return transcurrido >= 30 * 60_000
+  if (fila.status === 'scheduled' || fila.status === 'pre-match') {
+    return distanciaAlInicio >= -2 * 60 * 60_000
+      && distanciaAlInicio <= 90 * 60_000
+      && transcurrido >= 15 * 60_000
+  }
+  return false
+}
+
+async function asegurarMappingsIniciales(
+  cliente: SupabaseClient,
+  provider: IdentificadorProveedorFutbol,
+  partidos: PartidoFutbolProveedor[]
+): Promise<void> {
+  if (!partidos.length) return
+  const validos = partidos.filter(partido => esPartidoMapeable(partido))
+  if (!validos.length) return
+
+  const idsCompetencia = [...new Set(validos.map(partido => partido.competencia.idProveedor))]
+  const idsEquipo = [...new Set(validos.flatMap(partido => [partido.local.idProveedor, partido.visitante.idProveedor]))]
+  const idsFixture = [...new Set(validos.map(partido => partido.idProveedor))]
+  const [mappingCompetencia, mappingEquipo, mappingFixture] = await Promise.all([
+    cargarMappingsExternos(cliente, provider, 'competition', idsCompetencia),
+    cargarMappingsExternos(cliente, provider, 'team', idsEquipo),
+    cargarMappingsExternos(cliente, provider, 'fixture', idsFixture)
+  ])
+  const competencias = new Map(mappingCompetencia.flatMap(fila => fila.competition_id
+    ? [[fila.external_id, fila.competition_id] as const] : []))
+  const equipos = new Map(mappingEquipo.flatMap(fila => fila.team_id
+    ? [[fila.external_id, fila.team_id] as const] : []))
+  const fixturesExistentes = new Set(mappingFixture.flatMap(fila => fila.fixture_id ? [fila.external_id] : []))
+
+  const nuevasCompetencias = [...new Map(validos
+    .filter(partido => !competencias.has(partido.competencia.idProveedor))
+    .map(partido => [partido.competencia.idProveedor, partido] as const)).values()]
+  if (nuevasCompetencias.length) {
+    const filas = [...new Map(nuevasCompetencias.map(partido => {
+      const slug = slugCanonico('competition', `${partido.competencia.pais || ''}|${partido.competencia.nombre}`)
+      return [slug, { sport_code: 'futbol', slug, name: limitarTexto(partido.competencia.nombre, 160) }] as const
+    })).values()]
+    const { data, error } = await cliente.from('sports_competitions')
+      .upsert(filas, { onConflict: 'sport_code,slug' }).select('id,slug')
+    if (error || !data) throw new Error('No fue posible inicializar las competencias privadas de fútbol.')
+    const idPorSlug = new Map(data.map(fila => [fila.slug, fila.id]))
+    for (const partido of nuevasCompetencias) {
+      const id = idPorSlug.get(slugCanonico('competition', `${partido.competencia.pais || ''}|${partido.competencia.nombre}`))
+      if (id) competencias.set(partido.competencia.idProveedor, id)
+    }
+  }
+
+  const nuevosEquipos = [...new Map(validos
+    .flatMap(partido => [
+      ...(!equipos.has(partido.local.idProveedor) ? [[partido.local.idProveedor, partido.local.nombre, partido.competencia.pais || ''] as const] : []),
+      ...(!equipos.has(partido.visitante.idProveedor) ? [[partido.visitante.idProveedor, partido.visitante.nombre, partido.competencia.pais || ''] as const] : [])
+    ])
+    .map(item => [item[0], item] as const)).values()]
+  if (nuevosEquipos.length) {
+    const filas = [...new Map(nuevosEquipos.map(([, nombre, pais]) => {
+      const slug = slugCanonico('team', `${pais}|${nombre}`)
+      return [slug, { sport_code: 'futbol', slug, name: limitarTexto(nombre, 160) }] as const
+    })).values()]
+    const { data, error } = await cliente.from('sports_teams')
+      .upsert(filas, { onConflict: 'sport_code,slug' }).select('id,slug')
+    if (error || !data) throw new Error('No fue posible inicializar los equipos privados de fútbol.')
+    const idPorSlug = new Map(data.map(fila => [fila.slug, fila.id]))
+    for (const [externalId, nombre, pais] of nuevosEquipos) {
+      const id = idPorSlug.get(slugCanonico('team', `${pais}|${nombre}`))
+      if (id) equipos.set(externalId, id)
+    }
+  }
+
+  const mappingsNuevos: Record<string, unknown>[] = []
+  for (const [externalId, competitionId] of competencias) {
+    if (!mappingCompetencia.some(fila => fila.external_id === externalId)) {
+      mappingsNuevos.push({ provider, entity_type: 'competition', external_id: externalId, competition_id: competitionId })
+    }
+  }
+  for (const [externalId, teamId] of equipos) {
+    if (!mappingEquipo.some(fila => fila.external_id === externalId)) {
+      mappingsNuevos.push({ provider, entity_type: 'team', external_id: externalId, team_id: teamId })
+    }
+  }
+  if (mappingsNuevos.length) {
+    const { error } = await cliente.from('sports_provider_mappings').upsert(mappingsNuevos, {
+      onConflict: 'provider,entity_type,external_id', ignoreDuplicates: true
+    })
+    if (error) throw new Error('No fue posible guardar los mappings privados de fútbol.')
+  }
+
+  const fixturesNuevos = validos.filter(partido => !fixturesExistentes.has(partido.idProveedor))
+    .flatMap(partido => {
+      const competitionId = competencias.get(partido.competencia.idProveedor)
+      const homeTeamId = equipos.get(partido.local.idProveedor)
+      const awayTeamId = equipos.get(partido.visitante.idProveedor)
+      if (!competitionId || !homeTeamId || !awayTeamId) return []
+      const minutoUtc = Math.floor(Date.parse(partido.inicioUtc) / 60_000)
+      const slug = slugCanonico('fixture', `${competitionId}|${homeTeamId}|${awayTeamId}|${minutoUtc}`)
+      return [{ partido, competitionId, homeTeamId, awayTeamId, slug }]
+    })
+  if (fixturesNuevos.length) {
+    const filasFixture = [...new Map(fixturesNuevos.map(({ partido, competitionId, homeTeamId, awayTeamId, slug }) => [slug, {
+      sport_code: 'futbol', slug, competition_id: competitionId,
+      home_team_id: homeTeamId, away_team_id: awayTeamId, scheduled_at: partido.inicioUtc
+    }] as const)).values()]
+    const { data, error } = await cliente.from('sports_fixtures').upsert(filasFixture, { onConflict: 'slug' }).select('id,slug')
+    if (error || !data) throw new Error('No fue posible inicializar los partidos canónicos privados de fútbol.')
+    const idPorSlug = new Map(data.map(fila => [fila.slug, fila.id]))
+    const mappingsFixture = fixturesNuevos.flatMap(({ partido, slug }) => {
+      const fixtureId = idPorSlug.get(slug)
+      return fixtureId ? [{ provider, entity_type: 'fixture', external_id: partido.idProveedor, fixture_id: fixtureId }] : []
+    })
+    if (mappingsFixture.length) {
+      const { error: errorMapping } = await cliente.from('sports_provider_mappings').upsert(mappingsFixture, {
+        onConflict: 'provider,entity_type,external_id', ignoreDuplicates: true
+      })
+      if (errorMapping) throw new Error('No fue posible guardar los mappings privados de partidos.')
+    }
+  }
+}
+
+async function cargarMappingsExternos(
+  cliente: SupabaseClient,
+  provider: IdentificadorProveedorFutbol,
+  entityType: 'competition' | 'team' | 'fixture',
+  externalIds: string[]
+): Promise<FilaMappingSupabase[]> {
+  if (!externalIds.length) return []
+  const { data, error } = await cliente.from('sports_provider_mappings')
+    .select('provider,entity_type,external_id,competition_id,team_id,fixture_id')
+    .eq('provider', provider).eq('entity_type', entityType).in('external_id', externalIds)
+  if (error || !data) throw new Error('No fue posible cargar los mappings iniciales de fútbol.')
+  return data as unknown as FilaMappingSupabase[]
+}
+
+function esPartidoMapeable(partido: PartidoFutbolProveedor): boolean {
+  const ids = [partido.idProveedor, partido.competencia.idProveedor, partido.local.idProveedor, partido.visitante.idProveedor]
+  const nombres = [partido.competencia.nombre, partido.local.nombre, partido.visitante.nombre]
+  return ids.every(valor => typeof valor === 'string' && valor.trim().length > 0 && valor.length <= 128)
+    && nombres.every(valor => typeof valor === 'string' && valor.trim().length > 0 && valor.length <= 160)
+    && Number.isFinite(Date.parse(partido.inicioUtc))
+}
+
+function slugCanonico(tipo: 'competition' | 'team' | 'fixture', clave: string): string {
+  return `worker-futbol-${tipo}-${createHash('sha256').update(clave).digest('hex').slice(0, 32)}`
+}
+
+function limitarTexto(valor: string, limite: number): string {
+  return valor.trim().slice(0, limite)
 }
 
 async function cargarMappingsDelDia(

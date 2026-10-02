@@ -2,6 +2,8 @@ import { decodificarJsonFirmado, leerCuerpoFirmado, verificarFirmaCodex } from '
 import { obtenerClienteSupabasePrivado } from '~/server/utils/clienteSupabasePrivado'
 import { crearProveedoresFutbolConfigurados } from '~/server/utils/proveedoresFutbol/desdeConfiguracion'
 import { crearGateReservaClasificaciones, fechaNegocioBogota } from '~/server/utils/proveedoresFutbol/configuracionWorkerClasificaciones'
+import { crearReservaDiariaSupabaseFutbol } from '~/server/utils/proveedoresFutbol/presupuestoDiarioSupabase'
+import { crearProveedorFixturesDiariosPersistidos } from '~/server/utils/proveedoresFutbol/proveedorFixturesDiariosPersistidos'
 import { crearRepositorioSnapshotsSupabase } from '~/server/utils/proveedoresFutbol/repositorioSnapshotsSupabase'
 import { sincronizarFixturesDiariosFutbol } from '~/server/utils/proveedoresFutbol/sincronizadorFixturesDiarios'
 
@@ -15,16 +17,27 @@ export default defineEventHandler(async (evento) => {
   }
   const cliente = obtenerClienteSupabasePrivado(evento)
   if (!cliente) throw createError({ statusCode: 503, statusMessage: 'El worker privado de fútbol no está configurado.', data: { codigo: 'WORKER_FUTBOL_NO_CONFIGURADO' } })
+  const fechaNegocio = fechaNegocioBogota()
+  const repositorio = crearRepositorioSnapshotsSupabase(cliente)
   let proveedores
-  try { proveedores = crearProveedoresFutbolConfigurados(config) } catch {
+  try {
+    proveedores = crearProveedoresFutbolConfigurados(config, {
+      fechaNegocio,
+      reservarPeticion: crearReservaDiariaSupabaseFutbol(cliente)
+    })
+  } catch {
     throw createError({ statusCode: 503, statusMessage: 'El proveedor privado de fútbol no está configurado.', data: { codigo: 'PROVEEDOR_FUTBOL_NO_CONFIGURADO' } })
   }
   const maxActualizaciones = Number(config.footballMaxDetailsPerSync || 20)
   if (!Number.isInteger(maxActualizaciones) || maxActualizaciones < 0 || maxActualizaciones > 100) {
     throw createError({ statusCode: 503, statusMessage: 'El límite de detalles de fútbol no es válido.', data: { codigo: 'LIMITE_DETALLES_FUTBOL_INVALIDO' } })
   }
-  const repositorio = crearRepositorioSnapshotsSupabase(cliente)
-  return sincronizarFixturesDiariosFutbol({ ...proveedores, repositorio, fechaNegocio: fechaNegocioBogota(),
+  await repositorio.limpiarDatosFutbolCaducados()
+  const principal = crearProveedorFixturesDiariosPersistidos(proveedores.principal, repositorio, fechaNegocio)
+  const secundario = proveedores.secundario
+    ? crearProveedorFixturesDiariosPersistidos(proveedores.secundario, repositorio, fechaNegocio)
+    : undefined
+  return sincronizarFixturesDiariosFutbol({ principal, ...(secundario ? { secundario } : {}), repositorio, fechaNegocio,
     maxActualizacionesPorCiclo: maxActualizaciones,
     puedeConsumir: crearGateReservaClasificaciones(provider => repositorio.reclamarVentanaWorker(provider, 'fixtures_diarios')) })
 })

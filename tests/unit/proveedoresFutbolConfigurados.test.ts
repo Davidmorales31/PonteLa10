@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { crearProveedoresFutbolConfigurados } from '~/server/utils/proveedoresFutbol/desdeConfiguracion'
 
 describe('configuración privada de proveedores de fútbol', () => {
@@ -33,6 +33,35 @@ describe('configuración privada de proveedores de fútbol', () => {
 
     expect(proveedores.principal.id).toBe('goal-api')
     expect(proveedores.secundario?.id).toBe('api-football')
+  })
+
+  it('configura Goal API para consultar solo las ligas prioritarias y en el servidor del proveedor', async () => {
+    const fetchOriginal = globalThis.fetch
+    const fetchSimulado = vi.fn<(input: RequestInfo | URL, init?: RequestInit) => Promise<Response>>(
+      async () => new Response(JSON.stringify({ success: true, data: [] }), {
+        status: 200,
+        headers: { 'content-type': 'application/json' }
+      })
+    )
+    vi.stubGlobal('fetch', fetchSimulado)
+
+    try {
+      const proveedores = crearProveedoresFutbolConfigurados({
+        apiSportsKey: 'football-secret',
+        goalApiKey: 'goal-secret'
+      })
+      await proveedores.secundario!.obtenerPartidosPorFecha({
+        fecha: '2026-10-01', zonaHoraria: 'America/Bogota'
+      })
+
+      const urls = fetchSimulado.mock.calls.map(([url]) => new URL(String(url)))
+      expect(urls).toHaveLength(15)
+      expect(urls.every(url => url.pathname === '/v1/fixtures/date/2026-10-01'
+        && Boolean(url.searchParams.get('leagueId')))).toBe(true)
+      expect(new Set(urls.map(url => url.searchParams.get('leagueId'))).size).toBe(15)
+    } finally {
+      vi.stubGlobal('fetch', fetchOriginal)
+    }
   })
 
   it('falla cerrado si falta la clave del proveedor principal o fallback elegido', () => {

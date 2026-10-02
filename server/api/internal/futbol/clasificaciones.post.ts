@@ -11,6 +11,7 @@ import {
   leerAllowlistClasificacionesFutbol
 } from '~/server/utils/proveedoresFutbol/configuracionWorkerClasificaciones'
 import { crearRepositorioSnapshotsSupabase } from '~/server/utils/proveedoresFutbol/repositorioSnapshotsSupabase'
+import { crearReservaDiariaSupabaseFutbol } from '~/server/utils/proveedoresFutbol/presupuestoDiarioSupabase'
 import { sincronizarClasificacionesFutbol } from '~/server/utils/proveedoresFutbol/sincronizadorClasificaciones'
 
 const limiteCuerpoBytes = 1_024
@@ -55,7 +56,10 @@ export default defineEventHandler(async (evento) => {
 
   let proveedores
   try {
-    proveedores = crearProveedoresFutbolConfigurados(config)
+    proveedores = crearProveedoresFutbolConfigurados(config, {
+      fechaNegocio: fechaNegocioBogota(),
+      reservarPeticion: crearReservaDiariaSupabaseFutbol(cliente)
+    })
   } catch {
     throw createError({
       statusCode: 503,
