@@ -42,10 +42,13 @@ export function crearSincronizadorFutbolLocal({
       for (const endpoint of rutas) {
         try {
           const resultado = await solicitar(endpoint.ruta, secreto, baseUrl, transporte, ahora)
+          const esperaSugerida = leerEsperaSugerida(resultado, intervaloMs)
+          proximaEjecucion = ahora() + esperaSugerida
           const resumen = resumir(resultado)
           resultados.push({ nombre: endpoint.nombre, ...resumen })
           registrar(`Fútbol local ${endpoint.nombre}: ${JSON.stringify(resumen)}`)
         } catch (error) {
+          proximaEjecucion = ahora() + Math.min(intervaloMs, 5 * intervaloMinimoMs)
           const estadoHttp = Number.isInteger(error?.estadoHttp) ? error.estadoHttp : null
           const resumen = { estado: 'fallido', estadoHttp }
           resultados.push({ nombre: endpoint.nombre, ...resumen })
@@ -105,7 +108,8 @@ function resumir(resultado) {
     return { estado: 'respuesta_invalida' }
   }
   const campos = ['estado', 'provider', 'solicitudes', 'fixturesRecibidos', 'fixturesGuardados',
-    'detallesActualizados', 'omitidos', 'clasificacionesRecibidas', 'clasificacionesGuardadas', 'errorCode']
+    'detallesActualizados', 'siguienteEjecucionMs', 'siguienteEjecucionMotivo', 'omitidos',
+    'clasificacionesRecibidas', 'clasificacionesGuardadas', 'errorCode']
   const resumen = Object.fromEntries(campos.flatMap(campo => {
     const valor = resultado[campo]
     return typeof valor === 'string' || (typeof valor === 'number' && Number.isFinite(valor))
@@ -142,4 +146,11 @@ function leerIntervalo(valor) {
   const numero = Number(valor)
   if (!Number.isFinite(numero) || numero <= 0) return intervaloPredeterminadoMs
   return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, Math.trunc(numero)))
+}
+
+function leerEsperaSugerida(resultado, intervaloPredeterminado) {
+  if (!resultado || typeof resultado !== 'object' || Array.isArray(resultado)) return intervaloPredeterminado
+  const sugerido = resultado.siguienteEjecucionMs
+  if (!Number.isFinite(sugerido) || sugerido <= 0) return intervaloPredeterminado
+  return Math.min(intervaloMaximoMs, Math.max(60_000, Math.trunc(sugerido)))
 }

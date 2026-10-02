@@ -80,20 +80,35 @@ describe('presupuesto y calendario del worker de fútbol', () => {
     expect(enviar).toHaveBeenCalledTimes(4)
   })
 
-  it('prioriza Colombia, las cinco ligas top y torneos europeos, dentro del día de Bogotá', () => {
+  it('prioriza Colombia, torneos europeos y luego las cinco ligas top, dentro del día de Bogotá', () => {
     const partidos = [
       partido('colombia', '2026-10-01T05:00:00.000Z', 'Colombia', 'Liga BetPlay'),
       partido('colombia-antes', '2026-10-01T04:59:59.000Z', 'Colombia', 'Copa Colombia'),
       partido('inglaterra', '2026-10-02T04:59:59.000Z', 'England', 'Premier League'),
       partido('uefa', '2026-10-01T22:00:00.000Z', 'Europe', 'UEFA Champions League'),
-      partido('argentina', '2026-10-01T22:00:00.000Z', 'Argentina', 'Primera División')
+      partido('argentina', '2026-10-01T22:00:00.000Z', 'Argentina', 'Primera División'),
+      { ...partido('seleccion', '2026-10-01T21:00:00.000Z', 'World', 'FIFA World Cup Qualifiers'),
+        local: { idProveedor: 'col', nombre: 'Colombia' }, visitante: { idProveedor: 'otro', nombre: 'Perú' } }
     ]
 
-    expect(prioridadCompetenciaFutbol(partidos[0]!)).toBe(3)
+    expect(prioridadCompetenciaFutbol(partidos[0]!)).toBe(4)
     expect(prioridadCompetenciaFutbol(partidos[2]!)).toBe(2)
-    expect(prioridadCompetenciaFutbol(partidos[3]!)).toBe(1)
+    expect(prioridadCompetenciaFutbol(partidos[3]!)).toBe(3)
+    expect(prioridadCompetenciaFutbol(partidos[5]!)).toBe(4)
     expect(filtrarFixturesPrioritariosDelDia(partidos, '2026-10-01').map(item => item.idProveedor))
-      .toEqual(['colombia', 'inglaterra', 'uefa'])
+      .toEqual(['colombia', 'inglaterra', 'uefa', 'seleccion'])
+  })
+
+  it('reconoce la selección Colombia en clasificatorias sin priorizar otras selecciones por el nombre del torneo', () => {
+    const clasificacion = partido('colombia-wc', '2026-10-01T21:00:00.000Z', 'World', 'WC Qualification South America')
+    clasificacion.local = { idProveedor: 'colombia', nombre: 'Colombia' }
+    clasificacion.visitante = { idProveedor: 'peru', nombre: 'Perú' }
+    const otraSeleccion = partido('otra-seleccion', '2026-10-01T21:00:00.000Z', 'World', 'FIFA World Cup Qualifiers')
+    otraSeleccion.local = { idProveedor: 'argentina', nombre: 'Argentina' }
+    otraSeleccion.visitante = { idProveedor: 'peru', nombre: 'Perú' }
+
+    expect(prioridadCompetenciaFutbol(clasificacion)).toBe(4)
+    expect(prioridadCompetenciaFutbol(otraSeleccion)).toBe(0)
   })
 
   it('lee una sola carga del día y hace dos consultas UTC a Goal API en el bootstrap', async () => {

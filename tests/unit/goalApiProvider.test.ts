@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { crearProveedorGoalApi } from '../../server/utils/proveedoresFutbol/goalApi'
 import type { ConfiguracionGoalApi } from '../../server/utils/proveedoresFutbol/goalApi'
+import { LIGAS_PRIORITARIAS_GOAL } from '../../server/utils/proveedoresFutbol/ligasPrioritariasGoal'
 
 type TransporteGoalApi = NonNullable<ConfiguracionGoalApi['transporte']>
 
@@ -34,6 +35,19 @@ function respuestaApi(datos: unknown, opciones: { pagination?: unknown; status?:
 }
 
 describe('adaptador privado GOAL API', () => {
+  it('incluye amistosos internacionales en la consulta de respaldo para detectar a Colombia', async () => {
+    const transporte = vi.fn<TransporteGoalApi>(async () => respuestaApi([]))
+    const proveedor = crearProveedorGoalApi({
+      apiKey: 'secreto-de-prueba',
+      ligasPrioritarias: LIGAS_PRIORITARIAS_GOAL,
+      transporte
+    })
+
+    await proveedor.obtenerPartidosPorFecha({ fecha: '2026-10-02', zonaHoraria: 'America/Bogota' })
+
+    expect(transporte.mock.calls.some(([url]) => new URL(url).searchParams.get('leagueId') === '356')).toBe(true)
+  })
+
   it('normaliza fixtures y conserva kickoff UTC y cuota', async () => {
     const transporte = vi.fn<TransporteGoalApi>(async () => respuestaApi([fixtureGoal]))
     const proveedor = crearProveedorGoalApi({ apiKey: 'secreto-de-prueba', transporte })

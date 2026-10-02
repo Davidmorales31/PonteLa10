@@ -37,13 +37,16 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaResulta
   }
   const deportesAConsultar = deporteSolicitado ? [deporteSolicitado] : deportesDisponibles
   const zonaHoraria = obtenerZonaHorariaDesdeUrl(evento.node?.req?.url)
-  const fechaLocal = obtenerFechaEnZonaHoraria(new Date(), zonaHoraria)
+  const fechaLocal = obtenerFechaEnZonaHoraria(new Date(), deporteSolicitado === 'futbol'
+    ? zonaHorariaColombia
+    : zonaHoraria)
   const resultados = await Promise.all(
     deportesAConsultar.map(deporte => consultarDeporte(deporte, fechaLocal, zonaHoraria, configuracion, evento))
   )
-  const partidos = ordenarPartidosRelevantes(
-    resultados.flatMap(resultado => resultado.partidos)
-  ).slice(0, 32)
+  const partidosSinLimite = resultados.flatMap(resultado => resultado.partidos)
+  const partidos = deporteSolicitado === 'futbol'
+    ? partidosSinLimite.sort((primero, segundo) => Date.parse(primero.fechaIso) - Date.parse(segundo.fechaIso))
+    : ordenarPartidosRelevantes(partidosSinLimite).slice(0, 32)
 
   return {
     partidos,
@@ -73,7 +76,7 @@ async function consultarDeporte(
     const fixtures = await leerSnapshotsFutbolPublicos(cliente, {
       fechaNegocio: fecha,
       derechosPublicacionConfirmados: configuracion.futbolDerechosPublicacionConfirmados === true,
-      limite: 32
+      limite: 1000
     })
     return {
       partidos: fixtures.map(mapearFixtureFutbolAResultado),

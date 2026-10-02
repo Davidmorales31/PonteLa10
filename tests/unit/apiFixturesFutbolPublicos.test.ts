@@ -15,5 +15,13 @@ describe('API SSR pública de fixtures', () => {
     expect(lectura).toContain('validarIdentidadesPublicas(cliente, filas, exigirAutorizacionPorRegistro)')
     expect(lectura).toContain('proyectarFixtureFutbolPublico(')
     expect(lectura).toContain("tieneMapping(mappingsPorClave, proveedor, 'fixture'")
+    expect(lectura).toContain('.limit(limiteLecturaSnapshots)')
+  })
+
+  it('no trunca la agenda de fútbol al límite histórico de 32 resultados', () => {
+    const ruta = readFileSync(new URL('../../server/api/resultados/index.get.ts', import.meta.url), 'utf8')
+    expect(ruta).toContain('limite: 1000')
+    expect(ruta).toContain('partidosSinLimite.sort((primero, segundo) => Date.parse(primero.fechaIso) - Date.parse(segundo.fechaIso))')
+    expect(ruta).toContain(': ordenarPartidosRelevantes(partidosSinLimite).slice(0, 32)')
   })
 })

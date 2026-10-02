@@ -39,7 +39,7 @@ export function fechaNegocioBogota(ahora = new Date()): string {
   return `${anio}-${mes}-${dia}`
 }
 
-/** Comparte una reserva ya concedida únicamente dentro de una activación. */
+/** Comparte el lease concedido dentro de una activación; un lease ocupado no es falta de cuota. */
 export function crearGateReservaClasificaciones(
   reclamar: (provider: IdentificadorProveedorFutbol) => Promise<boolean>
 ): (provider: IdentificadorProveedorFutbol) => Promise<boolean> {
@@ -48,6 +48,12 @@ export function crearGateReservaClasificaciones(
     if (concedidos.has(provider)) return true
     const concedido = await reclamar(provider)
     if (concedido) concedidos.add(provider)
+    else throw Object.assign(new Error('WORKER_WINDOW_BUSY'), { code: 'WORKER_WINDOW_BUSY' })
     return concedido
   }
+}
+
+export function esVentanaWorkerOcupada(error: unknown): boolean {
+  return Boolean(error && typeof error === 'object'
+    && (error as { code?: unknown }).code === 'WORKER_WINDOW_BUSY')
 }

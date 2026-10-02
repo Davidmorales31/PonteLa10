@@ -19,6 +19,7 @@ import {
   type SnapshotFixtureFutbolPrivado
 } from './proyectarSnapshots'
 import { prioridadCompetenciaFutbol } from './prioridadFixturesDiarios'
+import { esVentanaWorkerOcupada } from './configuracionWorkerClasificaciones'
 
 export interface RegistroCorridaFixturesFutbol {
   provider: IdentificadorProveedorFutbol
@@ -74,14 +75,14 @@ export type ResultadoSincronizacionFixturesFutbol =
     omitidos: ReturnType<typeof proyectarSnapshotsFixturesFutbol>['omitidos']
   }
   | {
-    estado: 'fallido' | 'sin_cuota'
+    estado: 'fallido' | 'sin_cuota' | 'ocupado'
     provider: IdentificadorProveedorFutbol
     solicitudes: number
     fixturesRecibidos: number
     fixturesGuardados: number
     detallesActualizados: number
     omitidos: null | ReturnType<typeof proyectarSnapshotsFixturesFutbol>['omitidos']
-    errorCode: 'MAPPINGS_UNAVAILABLE' | 'PROVIDER_FAILURE' | 'SNAPSHOT_PERSISTENCE_FAILED' | 'AUDIT_WRITE_FAILED' | null
+    errorCode: 'MAPPINGS_UNAVAILABLE' | 'PROVIDER_FAILURE' | 'SNAPSHOT_PERSISTENCE_FAILED' | 'AUDIT_WRITE_FAILED' | 'WORKER_WINDOW_BUSY' | null
   }
 
 /**
@@ -190,31 +191,33 @@ export async function sincronizarFixturesDiariosFutbol(
         return { ...partidos, cuota, solicitudes, actualizaciones }
       }
     )
-  } catch {
+  } catch (error) {
     const eventosConSolicitud = eventosFallback.filter(evento => evento.resultado !== 'cuota')
     const solicitudesUsadas = sumarSolicitudes(eventosConSolicitud)
-    const sinCuota = eventosFallback.length > 0 && eventosConSolicitud.length === 0
+    const ventanaOcupada = esVentanaWorkerOcupada(error)
+    const sinCuota = !ventanaOcupada && eventosFallback.length > 0 && eventosConSolicitud.length === 0
     const proveedor = eventosFallback.at(-1)?.proveedor ?? proveedorConMapeosPrincipal.id
     const terminado = ahora()
+    const errorCode = ventanaOcupada ? 'WORKER_WINDOW_BUSY' : sinCuota ? null : 'PROVIDER_FAILURE'
     const corrida = crearRegistroCorrida({
       provider: proveedor,
       iniciado,
       terminado,
       requestsUsed: solicitudesUsadas,
       success: false,
-      errorCode: sinCuota ? null : 'PROVIDER_FAILURE',
-      reason: sinCuota ? 'cuota_no_disponible' : 'proveedor_no_disponible'
+      errorCode,
+      reason: ventanaOcupada ? 'ventana_worker_ocupada' : sinCuota ? 'cuota_no_disponible' : 'proveedor_no_disponible'
     })
     try { await opciones.repositorio.registrarCorrida(corrida) } catch { /* Error de auditoría no debe filtrar datos del proveedor. */ }
     return {
-      estado: sinCuota ? 'sin_cuota' : 'fallido',
+      estado: ventanaOcupada ? 'ocupado' : sinCuota ? 'sin_cuota' : 'fallido',
       provider: proveedor,
       solicitudes: solicitudesUsadas,
       fixturesRecibidos: 0,
       fixturesGuardados: 0,
       detallesActualizados: 0,
       omitidos: null,
-      errorCode: sinCuota ? null : 'PROVIDER_FAILURE'
+      errorCode
     }
   }
   const proveedorSeleccionado = proveedores.find(proveedor => proveedor.id === consulta.proveedor)

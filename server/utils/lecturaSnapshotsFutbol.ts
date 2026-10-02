@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import type { IdentificadorProveedorFutbol } from '~/types/futbolProveedor'
 import type { FixtureFutbolPublico } from '~/types/futbolPublico'
 import { proyectarFixtureFutbolPublico } from '~/utils/proyeccionFutbolPublico'
+import { deduplicarFixturesFutbol } from '~/utils/deduplicarFixturesFutbol'
 
 type Fila = Record<string, unknown>
 type FixtureCanonico = {
@@ -29,6 +30,7 @@ const columnasSnapshot = [
   'venue_city', 'events', 'lineups', 'statistics', 'provider_fetched_at', 'is_public',
   'publication_rights_confirmed'
 ].join(',')
+const limiteLecturaSnapshots = 1000
 
 // service_role omite RLS; esta lectura repite explícitamente sus puertas de publicación.
 export async function leerSnapshotsFutbolPublicos(
@@ -48,7 +50,7 @@ export async function leerSnapshotsFutbolPublicos(
     .from('football_fixtures_today')
     .select(columnasSnapshot)
     .order('kickoff_at', { ascending: true })
-    .limit(Math.min(Math.max(filtros.limite ?? 32, 1), 100))
+    .limit(limiteLecturaSnapshots)
   if (exigirAutorizacionPorRegistro) {
     consulta = consulta.eq('is_public', true).eq('publication_rights_confirmed', true)
   }
@@ -78,7 +80,7 @@ export async function leerSnapshotsFutbolPublicos(
       // Un registro inválido se omite; nunca se devuelve su payload crudo.
     }
   }
-  return salida
+  return deduplicarFixturesFutbol(salida).slice(0, Math.min(Math.max(filtros.limite ?? 1000, 1), limiteLecturaSnapshots))
 }
 
 async function validarIdentidadesPublicas(

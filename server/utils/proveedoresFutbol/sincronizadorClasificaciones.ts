@@ -8,6 +8,7 @@ import {
   type SnapshotClasificacionFutbolPrivado
 } from './proyectarSnapshots'
 import type { RegistroCorridaFixturesFutbol } from './sincronizadorFixturesDiarios'
+import { esVentanaWorkerOcupada } from './configuracionWorkerClasificaciones'
 
 export interface ObjetivoClasificacionFutbol {
   competenciaExterna: string
@@ -34,13 +35,13 @@ export interface OpcionesSincronizadorClasificacionesFutbol {
 }
 
 export type ResultadoSincronizacionClasificacionesFutbol = {
-  estado: 'sin_objetivos' | 'sin_mappings' | 'sin_cuota' | 'completado' | 'fallido'
+  estado: 'sin_objetivos' | 'sin_mappings' | 'sin_cuota' | 'completado' | 'fallido' | 'ocupado'
   provider: IdentificadorProveedorFutbol
   solicitudes: number
   clasificacionesRecibidas: number
   clasificacionesGuardadas: number
   omitidos: Record<'competencia_no_mapeada' | 'equipo_no_mapeado' | 'clasificacion_invalida', number> | null
-  errorCode?: 'MAPPINGS_UNAVAILABLE' | 'PROVIDER_FAILURE' | 'SNAPSHOT_PERSISTENCE_FAILED' | 'AUDIT_WRITE_FAILED' | null
+  errorCode?: 'MAPPINGS_UNAVAILABLE' | 'PROVIDER_FAILURE' | 'SNAPSHOT_PERSISTENCE_FAILED' | 'AUDIT_WRITE_FAILED' | 'WORKER_WINDOW_BUSY' | null
 }
 
 /**
@@ -123,13 +124,15 @@ export async function sincronizarClasificacionesFutbol(
       }
       guardadas += 1
     }
-  } catch {
+  } catch (error) {
     const solicitudes = eventos.filter(evento => evento.resultado !== 'cuota').length
-    const sinCuota = eventos.length > 0 && solicitudes === 0
-    const errorCode = sinCuota ? null : 'PROVIDER_FAILURE'
-    const estado = sinCuota ? 'sin_cuota' : 'fallido'
+    const ventanaOcupada = esVentanaWorkerOcupada(error)
+    const sinCuota = !ventanaOcupada && eventos.length > 0 && solicitudes === 0
+    const errorCode = ventanaOcupada ? 'WORKER_WINDOW_BUSY' : sinCuota ? null : 'PROVIDER_FAILURE'
+    const estado = ventanaOcupada ? 'ocupado' : sinCuota ? 'sin_cuota' : 'fallido'
     const definitivo = persistenciaFallida ? 'SNAPSHOT_PERSISTENCE_FAILED' : errorCode
-    await registrarSinOcultarError(opciones.repositorio, crearRegistro(proveedorFinal, iniciado, ahora(), solicitudes, guardadas, false, definitivo))
+    await registrarSinOcultarError(opciones.repositorio, crearRegistro(proveedorFinal, iniciado, ahora(), solicitudes, guardadas, false, definitivo,
+      ventanaOcupada ? 'ventana_worker_ocupada' : undefined))
     return { estado, provider: proveedorFinal, solicitudes, clasificacionesRecibidas: recibidas,
       clasificacionesGuardadas: guardadas, omitidos, errorCode: definitivo }
   }
@@ -163,10 +166,10 @@ function vacio(estado: 'sin_objetivos' | 'sin_mappings' | 'fallido', provider: I
   return { estado, provider, solicitudes: 0, clasificacionesRecibidas: 0, clasificacionesGuardadas: 0, omitidos: null }
 }
 
-function crearRegistro(provider: IdentificadorProveedorFutbol, iniciado: Date, terminado: Date, solicitudes: number, guardadas: number, success: boolean, errorCode: RegistroCorridaFixturesFutbol['error_code']): RegistroCorridaFixturesFutbol {
+function crearRegistro(provider: IdentificadorProveedorFutbol, iniciado: Date, terminado: Date, solicitudes: number, guardadas: number, success: boolean, errorCode: RegistroCorridaFixturesFutbol['error_code'], reason?: string): RegistroCorridaFixturesFutbol {
   return { provider, operation: 'standings', started_at: iniciado.toISOString(), finished_at: terminado.toISOString(),
     fixture_count: guardadas, requests_used: solicitudes, quota_limit: null, quota_remaining: null,
-    success, error_code: errorCode, duration_ms: Math.max(0, terminado.getTime() - iniciado.getTime()), reason: null }
+    success, error_code: errorCode, duration_ms: Math.max(0, terminado.getTime() - iniciado.getTime()), reason: reason ?? null }
 }
 
 async function registrarSinOcultarError(repositorio: RepositorioWorkerClasificacionesFutbol, corrida: RegistroCorridaFixturesFutbol): Promise<void> {

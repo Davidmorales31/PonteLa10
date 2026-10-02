@@ -10,6 +10,10 @@ import type {
   DetalleFixtureFutbolPrivado
 } from './proyectarSnapshots'
 import type { RepositorioWorkerFixturesFutbol } from './sincronizadorFixturesDiarios'
+import {
+  calcularSiguienteEjecucionWorkerFutbol,
+  type SnapshotParaSchedulerFutbol
+} from '~/utils/politicaWorkerFutbol'
 
 const filasPorPagina = 500
 const milisegundosDia = 24 * 60 * 60 * 1000
@@ -17,6 +21,8 @@ const diferenciaBogotaUtc = 5 * 60 * 60 * 1000
 
 export interface RepositorioSnapshotsSupabaseFutbol extends RepositorioWorkerFixturesFutbol {
   cargarFixturesDiarios(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<PartidoFutbolProveedor[] | null>
+  calendarioDiarioCompleto(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<boolean>
+  calcularEsperaSiguienteEjecucion(provider: IdentificadorProveedorFutbol, fechaNegocio: string, ahora?: Date): Promise<{ esperaMs: number; motivo: string }>
   asegurarMappingsIniciales(
     provider: IdentificadorProveedorFutbol,
     partidos: PartidoFutbolProveedor[]
@@ -77,6 +83,28 @@ export function crearRepositorioSnapshotsSupabase(
 ): RepositorioSnapshotsSupabaseFutbol {
   return {
     cargarFixturesDiarios: async (provider, fechaNegocio) => cargarFixturesDiarios(cliente, provider, fechaNegocio),
+    calendarioDiarioCompleto: async (provider, fechaNegocio) => calendarioDiarioCompleto(cliente, provider, fechaNegocio),
+    calcularEsperaSiguienteEjecucion: async (provider, fechaNegocio, ahora = new Date()) => {
+      const { data, error } = await cliente
+        .from('football_fixtures_today')
+        .select('provider,status,kickoff_at,details_fetched_at')
+        .eq('provider', provider)
+        .eq('business_date', fechaNegocio)
+        .order('kickoff_at', { ascending: true })
+      if (error || !data) throw new Error('No fue posible consultar el calendario para el worker.')
+      const snapshots: SnapshotParaSchedulerFutbol[] = (data as Array<{
+        provider: IdentificadorProveedorFutbol
+        status: EstadoFixtureFutbol
+        kickoff_at: string
+        details_fetched_at: string | null
+      }>).map(fila => ({
+        provider: fila.provider,
+        estado: fila.status,
+        inicioUtc: fila.kickoff_at,
+        detallesActualizadosEn: fila.details_fetched_at
+      }))
+      return calcularSiguienteEjecucionWorkerFutbol(snapshots, ahora.getTime())
+    },
     asegurarMappingsIniciales: async (provider, partidos) => asegurarMappingsIniciales(cliente, provider, partidos),
     marcarFixturesDiariosCargados: async (provider, fechaNegocio, fechasListado) => {
       const { error } = await cliente.rpc('mark_football_provider_fixture_list_loaded', {
@@ -107,7 +135,9 @@ export function crearRepositorioSnapshotsSupabase(
       const { data, error } = await cliente.rpc('claim_football_sync_lease', {
         p_provider: provider,
         p_operation: operation,
-        p_window_seconds: operation === 'fixtures_diarios' ? 300 : 900
+        p_window_seconds: operation === 'fixtures_diarios'
+          ? provider === 'goal-api' ? 60 : 180
+          : 900
       })
       if (error || typeof data !== 'boolean') {
         throw new Error('No fue posible reservar la ventana de clasificación.')
@@ -207,7 +237,7 @@ async function cargarFixturesDiarios(
 
   const ahora = Date.now()
   return (data as FilaFixtureDiario[])
-    .filter(fila => requiereActualizarDetalle(fila, ahora))
+    .filter(fila => requiereActualizarDetalle(fila, ahora, provider))
     .map(fila => ({
       idProveedor: fila.provider_fixture_id,
       competencia: {
@@ -227,19 +257,43 @@ async function cargarFixturesDiarios(
   }))
 }
 
+async function calendarioDiarioCompleto(
+  cliente: SupabaseClient,
+  provider: IdentificadorProveedorFutbol,
+  fechaNegocio: string
+): Promise<boolean> {
+  const fechasEsperadas = provider === 'goal-api'
+    ? [fechaNegocio, sumarDias(fechaNegocio, 1)]
+    : [fechaNegocio]
+  const { data, error } = await cliente
+    .from('football_provider_fixture_lists')
+    .select('fixture_date,loaded_at')
+    .eq('provider', provider)
+    .eq('business_date', fechaNegocio)
+    .in('fixture_date', fechasEsperadas)
+  if (error || !data) throw new Error('No fue posible leer el estado diario de fútbol.')
+  const cargadas = new Set(data
+    .filter((fila: { fixture_date: string; loaded_at: string | null }) => Boolean(fila.loaded_at))
+    .map((fila: { fixture_date: string }) => fila.fixture_date))
+  return fechasEsperadas.every(fecha => cargadas.has(fecha))
+}
+
 function sumarDias(fecha: string, dias: number): string {
   const inicio = Date.parse(`${fecha}T00:00:00Z`)
   if (!Number.isFinite(inicio)) throw new Error('La fecha diaria del proveedor no es válida.')
   return new Date(inicio + dias * milisegundosDia).toISOString().slice(0, 10)
 }
 
-function requiereActualizarDetalle(fila: FilaFixtureDiario, ahora: number): boolean {
+function requiereActualizarDetalle(fila: FilaFixtureDiario, ahora: number, provider: IdentificadorProveedorFutbol): boolean {
   const ultimoDetalle = fila.details_fetched_at ? Date.parse(fila.details_fetched_at) : Number.NaN
   const transcurrido = Number.isFinite(ultimoDetalle) ? ahora - ultimoDetalle : Number.POSITIVE_INFINITY
   const inicio = Date.parse(fila.kickoff_at)
   const distanciaAlInicio = inicio - ahora
 
-  if (fila.status === 'live' || fila.status === 'halftime') return transcurrido >= 5 * 60_000
+  if (fila.status === 'live' || fila.status === 'halftime') {
+    const cadencia = provider === 'goal-api' ? 60_000 : 3 * 60_000
+    return transcurrido >= cadencia
+  }
   if (fila.status === 'finished' || fila.status === 'cancelled' || fila.status === 'abandoned') {
     return !Number.isFinite(ultimoDetalle)
   }
@@ -247,7 +301,7 @@ function requiereActualizarDetalle(fila: FilaFixtureDiario, ahora: number): bool
   if (fila.status === 'scheduled' || fila.status === 'pre-match') {
     return distanciaAlInicio >= -2 * 60 * 60_000
       && distanciaAlInicio <= 90 * 60_000
-      && transcurrido >= 15 * 60_000
+      && transcurrido >= (provider === 'goal-api' ? 3 : 10) * 60_000
   }
   return false
 }

@@ -1,26 +1,19 @@
 import type { PartidoFutbolProveedor } from '~/types/futbolProveedor'
+import { clasificarCategoriaFutbol } from '~/utils/clasificacionFutbol'
 
-const ligasTopCinco: Record<string, string[]> = {
-  england: ['premier league'],
-  spain: ['la liga', 'laliga', 'primera division'],
-  italy: ['serie a'],
-  germany: ['bundesliga'],
-  france: ['ligue 1']
-}
-const competicionesEuropeasClave = [
-  'uefa champions league', 'champions league', 'uefa europa league', 'europa league',
-  'uefa conference league', 'conference league', 'uefa nations league', 'nations league',
-  'european championship', 'uefa european championship', 'euro cup', 'uefa super cup'
-]
-
-/** 3 = Colombia, 2 = cinco ligas top, 1 = torneos europeos clave, 0 = fuera del foco. */
+/** 4 = Colombia, 3 = torneos europeos clave, 2 = cinco ligas top, 0 = fuera del foco. */
 export function prioridadCompetenciaFutbol(partido: PartidoFutbolProveedor): number {
-  const pais = normalizar(partido.competencia.pais || '')
-  const nombre = normalizar(partido.competencia.nombre)
-
-  if (pais.includes('colombia') || /\b(liga betplay|copa colombia|superliga colombiana)\b/.test(nombre)) return 3
-  if (ligasTopCinco[pais]?.some(liga => nombre.includes(liga))) return 2
-  if (competicionesEuropeasClave.some(competencia => nombre.includes(competencia))) return 1
+  const categoria = clasificarCategoriaFutbol({
+    competencia: partido.competencia.nombre,
+    paisCompetencia: partido.competencia.pais,
+    equipoLocal: partido.local.nombre,
+    equipoVisitante: partido.visitante.nombre,
+    paisEquipoLocal: partido.local.pais,
+    paisEquipoVisitante: partido.visitante.pais
+  })
+  if (categoria === 'colombia') return 4
+  if (categoria === 'europa') return 3
+  if (categoria === 'cinco-grandes') return 2
   return 0
 }
 
@@ -39,8 +32,4 @@ export function filtrarFixturesPrioritariosDelDia(
       && inicioUtc >= inicio
       && inicioUtc < fin
   })
-}
-
-function normalizar(valor: string): string {
-  return valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 }
