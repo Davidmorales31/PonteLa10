@@ -21,7 +21,9 @@ identificadores de proveedores distintos representen partidos diferentes.
 ## Reglas
 
 - La identidad compara deporte, competencia, equipos local/visitante y hora de
-  inicio normalizada; usa mappings canónicos cuando están disponibles.
+  inicio normalizada; usa mappings canónicos cuando están disponibles. La
+  etiqueta de temporada no separa una misma identidad: los proveedores pueden
+  representar el mismo ciclo como `2026` o `2026/2027`.
 - Los alias conocidos de equipos y competencias se normalizan sin cambiar el
   texto que se muestra a las personas.
 - Si hay dos snapshots del mismo encuentro, se devuelve uno: una diferencia de

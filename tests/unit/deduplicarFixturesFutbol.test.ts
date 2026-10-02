@@ -41,6 +41,19 @@ describe('identidad pública de fixtures de fútbol', () => {
     expect(deduplicarFixturesFutbol([programado, enVivo])).toEqual([enVivo])
   })
 
+  it('une etiquetas de temporada anual y de rango para el mismo encuentro', () => {
+    const temporadaAnual = fixture({ id: 'season-2026' })
+    const temporadaRango = fixture({
+      id: 'season-2026-2027',
+      competition: { ...temporadaAnual.competition, season: '2026/2027' },
+      status: 'live',
+      elapsed: 12,
+      providerFetchedAt: '2026-10-02T18:44:00.000Z'
+    })
+
+    expect(deduplicarFixturesFutbol([temporadaAnual, temporadaRango])).toEqual([temporadaRango])
+  })
+
   it('no deja que un snapshot en vivo viejo oculte un final más reciente', () => {
     const enVivoAntiguo = fixture({
       id: 'api-id', status: 'live', providerFetchedAt: '2026-10-02T18:00:00.000Z'
