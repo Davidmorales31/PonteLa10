@@ -26,8 +26,10 @@ sustituye `AGENTS.md`, `ESTADO_ACTUAL.md`, Git, migraciones ni el código.
   en el stash `respaldo pre-reset 2026-10-02; rama e42b57b`. No aplicar ni
   publicar esos respaldos salvo que el usuario lo pida.
 - La rama de trabajo se llama `codex/production-baseline-2026-10-02` y ya no
-  sigue el upstream antiguo del backlog. El respaldo remoto/etiquetado sigue
-  separado de la base activa.
+  sigue el upstream antiguo del backlog. El snapshot importado quedó fijado en
+  el commit local `ccebe0d` (`chore(production): establish exact deployed
+  source baseline`). El respaldo remoto/etiquetado sigue separado de la base
+  activa.
 - Se preservaron las demás ramas/worktrees, `.codex/`, archivos ignorados y el
   proceso local que ya escuchaba en `127.0.0.1:3001`. No se tocaron credenciales.
 

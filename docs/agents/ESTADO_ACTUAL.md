@@ -13,6 +13,8 @@
   conserva `archive/pre-production-reset-2026-10-02-e42b57b` (commit anterior)
   y un stash llamado `respaldo pre-reset 2026-10-02; rama e42b57b` (cambios no
   ignorados). No aplicar ni publicar esos respaldos salvo pedido explícito.
+- El snapshot importado se fijó en el commit local `ccebe0d` sobre la rama
+  `codex/production-baseline-2026-10-02`, sin upstream del backlog.
 - Se preservaron las demás ramas/worktrees, el contenido ignorado y el proceso
   local ya activo en el puerto 3001. No hubo push, PR ni nuevo deployment.
 - Guía para instancias futuras:
