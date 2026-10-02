@@ -25,8 +25,9 @@ function crearClaveIdentidad(fixture: FixtureFutbolPublico): string | null {
   const visitante = normalizarIdentidad(fixture.awayTeam.name)
   if (!Number.isFinite(fecha) || !competencia || !local || !visitante) return null
   const minuto = Math.floor(fecha / 60_000)
-  const temporada = normalizarIdentidad(fixture.competition.season)
-  return [competencia, temporada, local, visitante, String(minuto)].join('\u0000')
+  // Los proveedores etiquetan la misma temporada como "2026" o "2026/2027";
+  // la fecha completa del partido ya identifica el día y evita ese falso split.
+  return [competencia, local, visitante, String(minuto)].join('\u0000')
 }
 
 function compararFixture(primero: FixtureFutbolPublico, segundo: FixtureFutbolPublico): number {
