@@ -216,7 +216,7 @@ export function useAnaliticaPublica() {
 
   const mostrarAviso = computed(() =>
     listo.value
-    && (decision.value === null || decisionPublicidad.value === null || preferenciasAbiertas.value)
+    && (decisionPublicidad.value === null || preferenciasAbiertas.value)
   )
   const publicidadAutorizada = computed(() => decisionPublicidad.value === 'aceptada')
 
@@ -227,6 +227,7 @@ export function useAnaliticaPublica() {
     publicidadAutorizada,
     listo,
     mostrarAviso,
+    preferenciasAbiertas,
     aceptarAnalitica,
     rechazarAnalitica,
     aceptarPublicidad,
