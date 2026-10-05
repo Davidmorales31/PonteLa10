@@ -6,7 +6,7 @@ import { normalizarEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 const columnasFixtures = [
   'provider', 'provider_fixture_id', 'competition_slug', 'season', 'round_name', 'scheduled_at',
   'home_team', 'away_team', 'status', 'goals_home', 'goals_away', 'venue', 'city', 'checked_at',
-  'official_source_url',
+  'official_source_url', 'created_at',
   'is_public', 'publication_rights_confirmed'
 ].join(',')
 
@@ -26,6 +26,7 @@ interface FilaPartidoSeo {
   city: string | null
   checked_at: string
   official_source_url: string | null
+  created_at: string
   is_public: boolean
   publication_rights_confirmed: boolean
 }
@@ -43,6 +44,7 @@ let cargaPartidosPublicos: Promise<PartidoSeoPublico[]> | null = null
 
 export interface PartidoSeoPublico {
   slug: string
+  slugsAlternos?: string[]
   competencia: string
   temporada: string
   jornada: string | null
@@ -101,6 +103,7 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
 
     return slugs.map(fila => ({
       slug: fila.slug,
+      slugsAlternos: fila.slugsAlternos,
       competencia: fila.competition_slug,
       temporada: fila.season,
       jornada: fila.round_name,
@@ -135,9 +138,24 @@ export function deduplicarFixturesSeo(filas: FilaPartidoSeo[]): FilaPartidoSeo[]
   for (const fila of filas) {
     const identidad = claveIdentidadFixture(fila)
     const actual = porIdentidad.get(identidad)
-    if (!actual || compararCalidadFixture(fila, actual) > 0) porIdentidad.set(identidad, fila)
+    if (!actual) {
+      porIdentidad.set(identidad, fila)
+      continue
+    }
+
+    const prioritaria = compararCalidadFixture(fila, actual) > 0 ? fila : actual
+    porIdentidad.set(identidad, {
+      ...prioritaria,
+      created_at: primeraCreacion(actual.created_at, fila.created_at)
+    })
   }
   return [...porIdentidad.values()].sort((a, b) => Date.parse(a.scheduled_at) - Date.parse(b.scheduled_at))
+}
+
+function primeraCreacion(a: string, b: string): string {
+  if (!a) return b
+  if (!b) return a
+  return Date.parse(a) <= Date.parse(b) ? a : b
 }
 
 function claveIdentidadFixture(fila: FilaPartidoSeo): string {

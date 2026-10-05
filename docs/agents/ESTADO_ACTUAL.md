@@ -1,47 +1,43 @@
 # Estado actual de Pont3la10
 
-## Liga/Europa, carteles y protección de cuota (2026-10-05)
+## Liga colombiana, SEO de partidos y cuota (2026-10-05)
 
-- Los PR #55 (`cbc0200590a082ca6a26c578f857a9219b49aa52`) y #56
-  (`6eeb0ca3bd751fc980d9e71befb2bc164ed49986`) están integrados en `main` y
-  Production. Las páginas `/partidos-hoy`, `/liga-colombiana`,
-  `/colombianos-en-europa`, las dos rutas SEO de Deportivo Pasto–Fortaleza y el
-  sitemap respondieron HTTP 200 en el smoke público de esta sesión. Tras el
-  PR #56 también se verificaron las rutas de imagen OG/horizontal/vertical como
-  PNG 200. Liga y Europa comparten el sistema visual existente y usan datos
-  persistidos; los nombres LOC/VIS de la imagen de referencia nunca se usan
-  como un fixture real.
-- El consumo del 2026-10-04 llegó a 950/950 Goal API a las 14:00 COT; 636 de
-  804 leases estaban alineados a un minuto. La migración
-  `20261005093735_hu_fut_presupuesto_seguro_ventanas` ya se aplicó a Supabase
-  Production (`ykjithahavncswlfgsqa`): topes operativos 80 API-Football / 900
-  Goal API y barreras de 5 minutos para fixtures / 15 para clasificaciones.
-  `SECURITY DEFINER`, `search_path` vacío, RLS y permisos sólo para
-  `service_role` se verificaron con SQL; cinco entradas nulas se rechazaron.
-  Un revisor estático no halló defectos bloqueantes. No se llamó a proveedores
-  durante esas comprobaciones.
-- La suite local pasó (59 archivos / 291 pruebas), junto con lint, typecheck,
-  build y `git diff --check`; el build conserva el aviso upstream `DEP0155` de
-  `@vue/shared`. El archivo pgTAP tiene 28 aserciones ampliadas, pero no se pudo
-  ejecutar sin Docker. El smoke de Supabase confirmó la migración aplicada y
-  los permisos/caps en Production.
-- El servidor local del build validado está escuchando en `127.0.0.1:3001` y
-  corre un loop dedicado sólo a fútbol (no inició el worker editorial). Su
-  primera activación firmada terminó correctamente y se difirió hasta las 06:00
-  COT; esa ejecución consumió cero peticiones. El proceso depende de que el PC y
-  esta sesión sigan activos; no existe una tarea de Windows configurada para
-  recuperarlo tras un reinicio.
-- **La automatización del calendario de Liga/Copa desde DIMAYOR aún no está
-  hecha.** La tabla `colombian_league_fixtures` tenía 8 filas y su última
-  actualización era del 2026-10-04; el worker actual sólo sincroniza fixtures
-  diarios, no esa tabla. Además, Supabase registra tres migraciones aplicadas
-  el 2026-10-04 que no aparecen en el árbol Git de `origin/main`, así que hay
-  deriva de esquema que debe resolverse antes de construir el upsert semanal.
-  El MP4 desplegado es ambiente genérico y no una pieza de video personalizada
-  por partido. Mantener aprobación humana antes de publicar contenido editorial.
-- Estado de este cambio: la migración y el test están en la rama local
-  `codex/dimayor-calendar-worker`; la migración de Production ya se aplicó, pero
-  falta versionar/abrir PR y comprobar su CI. Handoff:
+- PR #55 (`cbc0200`), #56 (`6eeb0ca`) y #57 (`9066d53`) están integrados en
+  `main`. El deployment Vercel `dpl_FEKYqQPWRRpe9hyCTWi2riMAqVuK` está
+  `READY` en Production y sirve `www.pont3la10.com`. Las páginas de Liga,
+  Colombianos en Europa, resultados, páginas pareadas de partidos, sitemap y
+  sus formatos de imagen respondieron en los smoke descritos en sus handoffs.
+  La imagen con `LOC`/`VIS` sigue siendo sólo una referencia; no se publicó
+  como fixture.
+- Las migraciones `20261005093735_hu_fut_presupuesto_seguro_ventanas` y
+  `20261005101132_hu_fut_calendario_colombiano` están aplicadas a Supabase
+  Production. El tope operativo ahora es 80 solicitudes de API-Football y 900
+  de Goal API, dejando margen respecto de los planes 90/950; además, la base
+  impone ventanas mínimas de 5 minutos para fixtures y 15 para clasificaciones.
+  RLS, ACL y las funciones de reserva privilegiadas se verificaron en Production.
+- El worker de este PC completó la carga DIMAYOR/Goal API del 2026-10-05 con 11
+  solicitudes, 1.100 fixtures recibidos y 748 insertados/actualizados. La tabla
+  quedó con 756 filas: 400 Liga A, 265 Torneo B y 91 Copa Colombia. Es una
+  ejecución diaria confirmada; todavía no equivale a observar varios días.
+  `/api/liga-colombiana` respondió 80 fixtures el 2026-10-05 a las 12:05 UTC.
+- Uso agregado leído de Supabase: el 2026-10-04 llegó a 950/950 Goal API y
+  35/80 API-Football; el 2026-10-05 a las 11:55 UTC figuraban 46/900 Goal API
+  (incluidas 11 llamadas de calendario) y 1/80 API-Football. La barrera impide
+  volver a consumir el tope anterior, pero el uso diario requiere seguimiento.
+- El servidor de la versión desplegada corre localmente en
+  `127.0.0.1:3003`; un proceso aislado de fútbol usa ese endpoint y no la cola
+  editorial. Sigue activo durante esta sesión/PC, pero no existe una tarea de
+  Windows que lo reinicie automáticamente después de apagar o reiniciar.
+  Vercel no ejecuta un Cron para este flujo.
+- La promoción de partidos usa el GIF ambiental existente con datos/escudos
+  reales superpuestos y genera PNG OpenGraph/formatos sociales; aún no genera un
+  MP4 personalizado de 6–10 s por fixture. No se afirma que el sitio transmita
+  partidos. La aprobación de cualquier artículo continúa siendo humana.
+- La suite del PR #57 pasó (60 archivos / 298 pruebas), junto con lint,
+  typecheck y build. El aviso upstream `DEP0155` de `@vue/shared` permanece.
+  pgTAP no se ejecutó localmente porque faltan Docker y Supabase CLI; sus
+  permisos, límites y caminos nulos se verificaron con SQL en Production.
+- Handoff operativo:
   `docs/agents/handoffs/2026-10-05-calendario-y-cuota-production.md`.
 
 ## Base canónica alineada con Production (2026-10-02)
