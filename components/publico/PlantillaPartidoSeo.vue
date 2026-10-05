@@ -29,6 +29,8 @@ const { modo, partido, noticias } = toRefs(props)
 
 const { registrarEvento } = useAnaliticaPublica()
 const escudosFallidos = ref<string[]>([])
+const videoFondo = ref<HTMLVideoElement | null>(null)
+const videoFallo = ref(false)
 const marcadorDisponible = computed(() => props.partido.golesLocal !== null
   && props.partido.golesVisitante !== null)
 const marcador = computed(() => `${props.partido.golesLocal ?? '—'}–${props.partido.golesVisitante ?? '—'}`)
@@ -75,6 +77,7 @@ function escudoFallido(url: string | null) {
 }
 
 onMounted(() => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) videoFondo.value?.pause()
   void registrarEvento(props.modo === 'donde-ver' ? 'match_page_view' : 'result_page_view')
 })
 </script>
@@ -98,7 +101,35 @@ onMounted(() => {
     </header>
 
     <section class="cartel-partido-seo" :class="{ 'cartel-resultado': modo === 'como-quedo' }" aria-label="Datos del partido">
-      <img class="fondo-animado-partido" src="/editorial/liga-betplay-ambiente.gif" alt="" aria-hidden="true">
+      <img
+        class="fondo-estatico-partido"
+        src="/editorial/estadio-nocturno-neutral-pont3la10.webp"
+        alt=""
+        aria-hidden="true"
+      >
+      <video
+        v-if="!videoFallo"
+        ref="videoFondo"
+        class="fondo-animado-partido"
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        poster="/editorial/estadio-nocturno-neutral-pont3la10.webp"
+        aria-hidden="true"
+        tabindex="-1"
+        @error="videoFallo = true"
+      >
+        <source src="/videos/liga-betplay-fondo-16x9.mp4" type="video/mp4">
+      </video>
+      <img
+        v-else
+        class="fondo-animado-partido"
+        src="/editorial/estadio-nocturno-neutral-pont3la10.webp"
+        alt=""
+        aria-hidden="true"
+      >
       <div class="capa-cartel-partido" aria-hidden="true" />
       <div class="marca-cartel-partido"><span>Pont3la10</span><span class="competencia-cartel-partido">{{ nombreCompetencia }}</span></div>
       <span class="estado-cartel-partido" :class="{ 'estado-en-vivo': estadoPartido === 'EN VIVO' }">{{ etiquetaPartido }}</span>
@@ -203,8 +234,9 @@ onMounted(() => {
 .encabezado-partido-seo h1 { margin: 8px 0; color: #f5f8ff; font-size: clamp(1.8rem, 4vw, 3rem); }
 .encabezado-partido-seo > p:last-child { color: #afc2db; line-height: 1.6; }
 .cartel-partido-seo { position: relative; display: grid; min-height: 450px; overflow: hidden; align-content: center; justify-items: center; gap: 18px; border: 1px solid #28708b; border-radius: 18px; background: #061b35; padding: 28px; isolation: isolate; }
-.fondo-animado-partido, .capa-cartel-partido { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.fondo-animado-partido { opacity: .32; }
+.fondo-animado-partido, .fondo-estatico-partido, .capa-cartel-partido { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.fondo-animado-partido { opacity: .4; }
+.fondo-estatico-partido { display: none; opacity: .4; }
 .capa-cartel-partido { z-index: -1; background: linear-gradient(120deg, rgba(3,17,37,.88), rgba(4,35,66,.75) 50%, rgba(3,17,37,.9)); }
 .marca-cartel-partido { display: flex; width: 100%; align-items: center; justify-content: space-between; color: #fff; font-size: 1.4rem; font-weight: 900; }
 .competencia-cartel-partido { border-radius: 999px; background: #0c3c60; color: #7ce8ff; padding: 8px 14px; font-size: .82rem; }
@@ -248,6 +280,7 @@ body.tema-publico-blanco .bloque-datos-partido-seo, body.tema-publico-blanco .pr
 body.tema-publico-blanco .bloque-datos-partido-seo dl div, body.tema-publico-blanco .estado-marcador-partido { background: #f1f5f9; }
 body.tema-publico-blanco .bloque-datos-partido-seo dt, body.tema-publico-blanco .preguntas-partido-seo a, body.tema-publico-blanco .enlaces-mutua-partido a { color: #145996; }
 body.tema-publico-blanco .bloque-datos-partido-seo > p, body.tema-publico-blanco .contexto-partido-seo p, body.tema-publico-blanco .preguntas-partido-seo p, body.tema-publico-blanco .noticias-relacionadas-partido > p, body.tema-publico-blanco .noticias-relacionadas-partido li p { color: #586980; }
+@media (prefers-reduced-motion: reduce) { .fondo-animado-partido { display: none; } .fondo-estatico-partido { display: block; } }
 body.tema-publico-blanco .noticias-relacionadas-partido li a { color: #13253d; }
 @media (max-width: 760px) { .contenido-partido-seo-grid { grid-template-columns: minmax(0, 1fr); } .cartel-partido-seo { min-height: 390px; padding: 18px; } .bloque-datos-partido-seo dl { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 500px) { .equipos-cartel-partido { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; } .equipo-cartel-partido strong { font-size: .88rem; } .equipo-cartel-partido img, .escudo-cartel-fallback { width: 68px; height: 68px; border-width: 4px; padding: 9px; } .centro-cartel-partido span { font-size: .82rem; } .marca-cartel-partido { font-size: 1.1rem; } .detalles-cartel-partido { font-size: .84rem; } }
