@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import sharp from 'sharp'
 import { describe, expect, it } from 'vitest'
 import type { PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
@@ -23,7 +24,11 @@ const partidoBase: PartidoSeoPublico = {
 
 describe('carteles sociales de partido', () => {
   it('renderiza las dimensiones OpenGraph e incrusta escudos locales reales', async () => {
-    const svg = crearCartelSvg(partidoBase, 1200, 628)
+    const escudoWebp = readFileSync(new URL('../../server/assets/escudos-liga-colombiana/atletico-nacional.webp', import.meta.url))
+    const svg = await crearCartelSvg(partidoBase, 1200, 628, async (nombre) => {
+      if (nombre === 'Atlético Nacional') return `data:image/webp;base64,${escudoWebp.toString('base64')}`
+      return null
+    })
     const imagen = await sharp(Buffer.from(svg)).png().toBuffer()
     const metadata = await sharp(imagen).metadata()
 
@@ -34,9 +39,10 @@ describe('carteles sociales de partido', () => {
   })
 
   it('mantiene iniciales seguras cuando no existe escudo local mapeado', () => {
-    const svg = crearCartelSvg({ ...partidoBase, local: 'Club inventado' }, 1200, 628)
-
-    expect(svg).toContain('>CI</text>')
-    expect(svg).not.toContain('onerror=')
+    return crearCartelSvg({ ...partidoBase, local: 'Club inventado' }, 1200, 628, async () => null)
+      .then((svg) => {
+        expect(svg).toContain('>CI</text>')
+        expect(svg).not.toContain('onerror=')
+      })
   })
 })
