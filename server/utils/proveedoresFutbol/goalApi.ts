@@ -226,6 +226,20 @@ export function crearProveedorGoalApi(configuracion: ConfiguracionGoalApi): Prov
       )
     },
 
+    async obtenerFixturesLiga(idLiga: string, limite: number, offset: number) {
+      validarId(idLiga)
+      if (!Number.isInteger(limite) || limite < 1 || limite > 100
+        || !Number.isInteger(offset) || offset < 0 || offset > 10_000) {
+        throw new ErrorProveedorFutbol('RESPUESTA_INVALIDA')
+      }
+      return obtenerLista(
+        `/leagues/${encodeURIComponent(idLiga)}/fixtures`,
+        { limit: limite, offset },
+        ['fixtures', 'matches'],
+        valor => mapearPartido(valor)
+      )
+    },
+
     async obtenerPartidosEnVivo() {
       return obtenerLista('/fixtures/live', { limit: 100 }, ['fixtures', 'matches'], valor => mapearPartido(valor))
     },
@@ -486,6 +500,7 @@ function mapearCompetencia(
   const etapa = leerCadena(objeto, 'stage', 'stageName', 'phase', 'phaseName')
     || leerCadena(liga, 'stage', 'stageName', 'phase', 'phaseName')
   const grupo = obtenerNombreGrupo(leerValor(objeto, 'group', 'groupName', 'group_name'))
+  const jornada = leerCadena(objeto, 'matchRound', 'round', 'roundName', 'matchday', 'matchDay', 'matchweek')
 
   return {
     idProveedor,
@@ -493,7 +508,8 @@ function mapearCompetencia(
     ...(pais ? { pais } : {}),
     ...(temporada !== undefined ? { temporada } : {}),
     ...(etapa ? { etapa } : {}),
-    ...(grupo ? { grupo } : {})
+    ...(grupo ? { grupo } : {}),
+    ...(jornada ? { jornada } : {})
   }
 }
 

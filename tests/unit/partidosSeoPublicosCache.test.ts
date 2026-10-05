@@ -19,13 +19,22 @@ describe('caché del calendario público para páginas SEO', () => {
       venue: null,
       city: null,
       checked_at: '2026-10-05T00:00:00Z',
+      official_source_url: 'https://dimayor.com.co/programaciones-competencias-dimayor-2026-ii/',
       is_public: true,
       publication_rights_confirmed: true
+    }
+    const copiaGoalApi = {
+      ...fixture,
+      provider: 'goal-api',
+      provider_fixture_id: 'goal-fixture-77',
+      round_name: 'Matchday 13',
+      checked_at: '2026-10-05T01:00:00Z',
+      goals_home: 2
     }
     const filtrosAplicados: Array<[string, unknown, unknown]> = []
     const desdeTabla = vi.fn((tabla: string) => {
       const respuesta = tabla === 'colombian_league_fixtures'
-        ? { data: [fixture], error: null }
+        ? { data: [fixture, copiaGoalApi], error: null }
         : { data: [], error: null }
       const consulta = {
         select: () => consulta,
@@ -51,8 +60,11 @@ describe('caché del calendario público para páginas SEO', () => {
     expect(primera[0]).toMatchObject({
       slug: 'cucuta-deportivo-vs-deportivo-pereira',
       local: 'Cúcuta Deportivo',
-      visitante: 'Deportivo Pereira'
+      visitante: 'Deportivo Pereira',
+      golesLocal: 2,
+      fuenteOficialUrl: fixture.official_source_url
     })
+    expect(primera).toHaveLength(1)
     expect(desdeTabla).toHaveBeenCalledTimes(2)
     expect(filtrosAplicados).toContainEqual(['colombian_league_fixtures', 'is_public', true])
     expect(filtrosAplicados).toContainEqual(['colombian_league_fixtures', 'publication_rights_confirmed', true])

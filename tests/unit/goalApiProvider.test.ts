@@ -104,6 +104,30 @@ describe('adaptador privado GOAL API', () => {
     expect(respuesta.elementos[0]).toMatchObject({ golesLocal: 0, golesVisitante: 0 })
   })
 
+  it('consulta fixtures de una liga por páginas y conserva la jornada', async () => {
+    const fixtureConJornada = {
+      ...fixtureGoal,
+      matchRound: 'Matchday 13',
+      league: { ...fixtureGoal.league, leagueYear: '2026' }
+    }
+    const transporte = vi.fn<TransporteGoalApi>(async () => respuestaApi([fixtureConJornada], {
+      pagination: { total: 201, limit: 100, offset: 100, hasMore: true }
+    }))
+    const proveedor = crearProveedorGoalApi({ apiKey: 'secreto-de-prueba', transporte })
+
+    const respuesta = await proveedor.obtenerFixturesLiga!('liga-colombia', 100, 100)
+
+    expect(respuesta).toMatchObject({ siguienteCursor: '200', solicitudes: 1 })
+    expect(respuesta.elementos[0]).toMatchObject({
+      idProveedor: 'fixture-77',
+      competencia: { temporada: 2026, jornada: 'Matchday 13' }
+    })
+    const url = new URL(transporte.mock.calls[0]![0] as string)
+    expect(url.pathname).toBe('/v1/leagues/liga-colombia/fixtures')
+    expect(url.searchParams.get('limit')).toBe('100')
+    expect(url.searchParams.get('offset')).toBe('100')
+  })
+
   it('expone el siguiente offset sin recorrer páginas ni gastar cuota automáticamente', async () => {
     const transporte = vi.fn<TransporteGoalApi>(async () => respuestaApi([fixtureGoal], {
       pagination: { total: 250, limit: 100, offset: 0, hasMore: true }

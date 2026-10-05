@@ -24,6 +24,11 @@ export interface ProveedorFutbol {
   obtenerPartidosPorFecha(
     consulta: ConsultaPartidosPorFecha
   ): Promise<RespuestaProveedorFutbol<PartidoFutbolProveedor>>
+  obtenerFixturesLiga?(
+    idLiga: string,
+    limite: number,
+    offset: number
+  ): Promise<RespuestaProveedorFutbol<PartidoFutbolProveedor>>
   obtenerPartidosEnVivo(): Promise<RespuestaProveedorFutbol<PartidoFutbolProveedor>>
   obtenerDetalleFixture(idFixture: string): Promise<PartidoFutbolProveedor | null>
   obtenerEventos(idFixture: string): Promise<RespuestaProveedorFutbol<EventoFutbolProveedor>>

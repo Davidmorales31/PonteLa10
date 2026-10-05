@@ -15,6 +15,7 @@ interface PartidoSeoVista {
   golesVisitante: number | null
   estadio: string | null
   ciudad: string | null
+  fuenteOficialUrl: string | null
   escudoLocal: string | null
   escudoVisitante: string | null
   verificadoEn: string
@@ -29,8 +30,7 @@ const { modo, partido, noticias } = toRefs(props)
 
 const { registrarEvento } = useAnaliticaPublica()
 const escudosFallidos = ref<string[]>([])
-const videoFondo = ref<HTMLVideoElement | null>(null)
-const videoFallo = ref(false)
+const gifFondoFallido = ref(false)
 const marcadorDisponible = computed(() => props.partido.golesLocal !== null
   && props.partido.golesVisitante !== null)
 const marcador = computed(() => `${props.partido.golesLocal ?? '—'}–${props.partido.golesVisitante ?? '—'}`)
@@ -47,6 +47,8 @@ const nombreCompetencia = computed(() => {
   return 'Liga BetPlay'
 })
 const etiquetaPartido = computed(() => modoEstadoParaEtiqueta(estadoPartido.value, props.modo))
+const urlProgramacionOficial = computed(() => props.partido.fuenteOficialUrl
+  || `https://dimayor.com.co/programaciones-competencias-dimayor-${props.partido.temporada.slice(0, 4)}/`)
 
 function fechaPartido(valor: string, incluirHora = true) {
   return new Intl.DateTimeFormat('es-CO', {
@@ -77,7 +79,6 @@ function escudoFallido(url: string | null) {
 }
 
 onMounted(() => {
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) videoFondo.value?.pause()
   void registrarEvento(props.modo === 'donde-ver' ? 'match_page_view' : 'result_page_view')
 })
 </script>
@@ -107,22 +108,14 @@ onMounted(() => {
         alt=""
         aria-hidden="true"
       >
-      <video
-        v-if="!videoFallo"
-        ref="videoFondo"
+      <img
+        v-if="!gifFondoFallido"
         class="fondo-animado-partido"
-        autoplay
-        muted
-        loop
-        playsinline
-        preload="metadata"
-        poster="/editorial/estadio-nocturno-neutral-pont3la10.webp"
+        src="/editorial/liga-betplay-ambiente.gif"
         aria-hidden="true"
-        tabindex="-1"
-        @error="videoFallo = true"
+        alt=""
+        @error="gifFondoFallido = true"
       >
-        <source src="/videos/liga-betplay-fondo-16x9.mp4" type="video/mp4">
-      </video>
       <img
         v-else
         class="fondo-animado-partido"
@@ -159,7 +152,7 @@ onMounted(() => {
       <a
         v-if="modo === 'donde-ver'"
         class="boton-programacion-oficial"
-        href="https://dimayor.com.co/programaciones-competencias-dimayor-2026/"
+        :href="urlProgramacionOficial"
         target="_blank"
         rel="noopener noreferrer"
         @click="registrarEvento('channel_click')"
@@ -192,7 +185,7 @@ onMounted(() => {
         <section v-if="modo === 'donde-ver'" class="preguntas-partido-seo" aria-labelledby="faq-partido-seo">
           <h2 id="faq-partido-seo">Preguntas frecuentes</h2>
           <details open><summary>¿A qué hora juega {{ partido.local }} vs {{ partido.visitante }}?</summary><p>El horario publicado es {{ fechaPartido(partido.fechaIso) }}, hora de Colombia. Si la organización anuncia un cambio, esta ficha se actualizará.</p></details>
-          <details><summary>¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</summary><p>El canal o plataforma no está confirmado en los datos públicos disponibles. Consulta la <a href="https://dimayor.com.co/programaciones-competencias-dimayor-2026/" target="_blank" rel="noopener noreferrer" @click="registrarEvento('channel_click')">programación oficial de DIMAYOR</a>.</p></details>
+          <details><summary>¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</summary><p>El canal o plataforma no está confirmado en los datos públicos disponibles. Consulta la <a :href="urlProgramacionOficial" target="_blank" rel="noopener noreferrer" @click="registrarEvento('channel_click')">programación oficial de DIMAYOR</a>.</p></details>
         </section>
         <section v-else class="contexto-partido-seo">
           <h2>Información del partido</h2>
