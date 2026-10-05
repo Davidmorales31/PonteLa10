@@ -1,12 +1,12 @@
 import type { PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
-import { obtenerEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 
-export function crearCartelSvg(
+export async function crearCartelSvg(
   partido: PartidoSeoPublico,
   ancho: number,
-  alto: number
-): string {
+  alto: number,
+  obtenerEscudo: (nombreEquipo: string) => Promise<string | null> = async () => null
+): Promise<string> {
   const vertical = alto > ancho
   const competencia = partido.competencia === 'torneo-betplay'
     ? 'TORNEO BETPLAY'
@@ -34,8 +34,10 @@ export function crearCartelSvg(
   const posicionTextoEstado = ancho / 2 + (esEnVivo ? 25 : 0)
   const inicialesLocal = escaparSvg(iniciales(partido.local))
   const inicialesVisitante = escaparSvg(iniciales(partido.visitante))
-  const escudoLocal = obtenerEscudoPartidoSeo(partido.local)
-  const escudoVisitante = obtenerEscudoPartidoSeo(partido.visitante)
+  const [escudoLocal, escudoVisitante] = await Promise.all([
+    obtenerEscudo(partido.local),
+    obtenerEscudo(partido.visitante)
+  ])
   const logoLocal = escudoLocal
     ? `<image href="${escudoLocal}" x="${lateralLocal - radio + 12}" y="${centroY - radio + 12}" width="${(radio - 12) * 2}" height="${(radio - 12) * 2}" preserveAspectRatio="xMidYMid meet" clip-path="url(#mascara-local)"/>`
     : `<text x="${lateralLocal}" y="${centroY + 15}" text-anchor="middle" class="iniciales" font-size="${Math.min(radio * .55, 58)}">${inicialesLocal}</text>`

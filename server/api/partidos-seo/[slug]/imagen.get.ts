@@ -2,6 +2,7 @@ import { createError, getQuery, getRouterParam, send } from 'h3'
 import sharp from 'sharp'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { crearCartelSvg } from '~/server/utils/cartelPartidoSeo'
+import { obtenerEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
 import { obtenerPartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
 
 const formatos = {
@@ -33,9 +34,10 @@ export default defineEventHandler(async (evento) => {
   if (!imagen || imagen.venceEn <= ahora) {
     let renderizado = renderizadosPendientes.get(clave)
     if (!renderizado) {
-      renderizado = sharp(Buffer.from(crearCartelSvg(partido, dimensiones.ancho, dimensiones.alto)))
-        .png({ compressionLevel: 9 })
-        .toBuffer()
+      const almacenamientoEscudos = useStorage('assets:server')
+      renderizado = crearCartelSvg(partido, dimensiones.ancho, dimensiones.alto,
+        nombreEquipo => obtenerEscudoPartidoSeo(nombreEquipo, almacenamientoEscudos))
+        .then(svg => sharp(Buffer.from(svg)).png({ compressionLevel: 9 }).toBuffer())
       renderizadosPendientes.set(clave, renderizado)
     }
     try {

@@ -1,39 +1,38 @@
 # Estado actual de Pont3la10
 
-## Release visual de páginas SEO por partido (2026-10-05)
+## Hotfix de carteles SEO y diagnóstico de cuota (2026-10-05)
 
-- Rama aislada `codex/futbol-cuota-pacing`, basada en `origin/main`
-  (`f9bd75fed1fa92bb704d4e3c12219b95a4ffb763`). El código base de Liga
-  Colombiana, Colombianos en Europa, páginas SEO por partido y la protección de
-  cuotas ya está integrado en Production; esta entrega añade medios y escudos
-  reales a las páginas SEO. No incorpora los commits del backlog ni cambios del
-  checkout principal.
-- Cambios candidatos: fondo neutral generado para uso editorial; MP4 ambiente
-  genérico de 8 s en 16:9 y 9:16; poster de respaldo, reproducción reducida
-  cuando el sistema lo solicita y fallback estático si falla el video. El
-  renderizador social ahora incrusta los escudos locales mapeados en los PNG
-  dinámicos (OpenGraph 1200×628 y los formatos existentes); mantiene iniciales
-  para equipos sin escudo mapeado. Se retiraron dos MP4 de prueba anteriores que
-  tenían nombres de fixture específicos y no deben servir de fondo universal.
-- La causa del agotamiento del 4-oct quedó mitigada en la versión ya desplegada:
-  cadencia local mínima de 5 minutos, máximo 3 detalles por ciclo, listados
-  diarios persistidos y tope duro de 950 solicitudes Goal API / 90 API-Football.
-  Supabase registró Goal API 950/950 y API-Football 35/90 ese día; la reserva
-  impide sobrepasar el límite. Al corte actual no había proceso local escuchando
-  en 3001 ni worker fútbol activo, así que la actualización automática del PC no
-  está corriendo en este momento.
-- No hay sincronización semanal/diaria de la programación DIMAYOR hacia
-  `colombian_league_fixtures`; el worker actual mantiene snapshots diarios de
-  fútbol en otra tabla. El MP4 es solo ambiente y no un video promocional
-  personalizado por fixture. No se publica automáticamente contenido editorial:
-  se conserva su aprobación humana.
-- Validación de este candidato: lint completo, 59 archivos/291 pruebas, typecheck
-  y build pasan; `git diff --check` pendiente tras documentación final. El build
-  mantiene el aviso upstream `DEP0155` de `@vue/shared`. No se consumieron
-  llamadas de proveedor ni se modificaron datos/migraciones de Production.
-  Deployment y smoke de esta entrega siguen pendientes; el API de Vercel devolvió
-  403 al consultar la lista de deployments.
-- Handoff: `docs/agents/handoffs/2026-10-05-futbol-hero-y-escudos.md`.
+- El PR #55 (`cbc0200590a082ca6a26c578f857a9219b49aa52`) ya se integró a
+  `main`/Production. Incluye el hero con ambiente visual neutral y escudos
+  optimizados. El smoke posterior detectó que las rutas PNG sociales del partido
+  responden 500, aunque páginas y assets sí responden 200.
+- Causa verificada en el bundle Nitro de Vercel: el renderizador dependía de
+  `import.meta.glob`, que no está disponible en ese runtime. El hotfix aislado
+  `codex/futbol-poster-runtime-fix` lee `server/assets` de Nitro mediante una
+  allowlist cerrada, conserva iniciales de fallback y evita URLs externas.
+  En una ejecución local del build de producción, el fixture público
+  `deportivo-pasto-vs-fortaleza` devolvió PNG 200 en formatos OG (142808 bytes),
+  horizontal (218500) y vertical (251177). Production aún necesita el hotfix.
+- Diagnóstico de cuota, solo lectura de Supabase para 2026-10-04: Goal API llegó
+  a 950/950 a las 14:00 COT. De 804 reservas registradas para Goal API, 636
+  quedaron en ventanas de un minuto; el antiguo checkout local reservaba 60 s
+  para Goal API y 180 s para API-Football. El `main` actual ya fija ventanas de
+  cinco minutos y el worker también impone un mínimo de cinco minutos. Por tanto,
+  el agotamiento observado provino de que el servidor local llamado por el
+  worker seguía usando el checkout/código anterior. No hay listener en 3001 ni
+  3002 ahora; la actualización automática del PC no está activa y requiere
+  reactivar el servicio local con su secreto privado configurado.
+- Esta entrega no cambia cuotas, mappings, datos, migraciones ni llama APIs de
+  proveedores. El código mantiene topes diarios de 950 Goal API / 90
+  API-Football, sin garantizar recargas cuando el worker del PC está apagado.
+  No existe sincronización DIMAYOR a `colombian_league_fixtures`; el MP4 es
+  ambiente genérico, no video social personalizado. La aprobación humana de
+  contenido editorial sigue siendo obligatoria.
+- Validación del hotfix: lint, suite (59 archivos/291 pruebas), typecheck, build,
+  smoke local del build de producción (tres formatos) y `git diff --check` pasan.
+  Build con aviso upstream `DEP0155` de `@vue/shared`. PR/preview, merge y smoke
+  de Production siguen pendientes.
+- Handoff: `docs/agents/handoffs/2026-10-05-hotfix-carteles-y-cuota.md`.
 
 ## Base canónica alineada con Production (2026-10-02)
 
