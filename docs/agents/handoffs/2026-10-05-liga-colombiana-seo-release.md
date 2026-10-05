@@ -42,4 +42,5 @@
   sitemap y deployment de Production antes de declarar éxito. Después planear
   el flujo DIMAYOR y la generación de video/derivados como HU explícitas.
 - **Commit base:** `344eb2f3638bd5df5a8eedda5ed137e1ec07ad5e` (`origin/main`).
-- **Commit final:** sin commit; pendiente de validación/PR.
+- **Commit final:** `ead152c` (`feat(futbol): Liga Colombiana y SEO de partidos`);
+  push, PR, merge y verificación de Production siguen pendientes.
