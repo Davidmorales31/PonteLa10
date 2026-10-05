@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { listarPartidosSeoPublicos } from '../../server/utils/partidosSeoPublicos'
+import { deduplicarFixturesSeo, listarPartidosSeoPublicos } from '../../server/utils/partidosSeoPublicos'
 
 describe('caché del calendario público para páginas SEO', () => {
   it('agrupa lecturas concurrentes y reutiliza el resultado durante un minuto', async () => {
@@ -83,5 +83,50 @@ describe('caché del calendario público para páginas SEO', () => {
     expect(desdeTabla).toHaveBeenCalledTimes(2)
     expect(filtrosAplicados).toContainEqual(['colombian_league_fixtures', 'is_public', true])
     expect(filtrosAplicados).toContainEqual(['colombian_league_fixtures', 'publication_rights_confirmed', true])
+  })
+
+  it('no colapsa IDs del mismo proveedor cuando la ronda es desconocida y la fecha difiere', () => {
+    const goalApi = {
+      provider: 'goal-api',
+      provider_fixture_id: 'goal-fixture-a',
+      competition_slug: 'copa-colombia',
+      season: '2026-I',
+      round_name: 'Por confirmar',
+      scheduled_at: '2026-05-15T21:00:00Z',
+      home_team: 'Boca Juniors de Cali',
+      away_team: 'Deportivo Cali',
+      status: 'scheduled',
+      goals_home: null,
+      goals_away: null,
+      venue: null,
+      city: null,
+      checked_at: '2026-05-01T00:00:00Z',
+      official_source_url: null,
+      created_at: '2026-01-01T00:00:00Z',
+      is_public: true,
+      publication_rights_confirmed: true
+    }
+    const segundaFechaGoalApi = {
+      ...goalApi,
+      provider_fixture_id: 'goal-fixture-b',
+      scheduled_at: '2026-05-17T20:30:00Z',
+      created_at: '2026-01-02T00:00:00Z'
+    }
+    const copiaDimayorMismaFecha = {
+      ...goalApi,
+      provider: 'dimayor',
+      provider_fixture_id: 'dimayor-fixture-a',
+      round_name: 'Fecha 3',
+      checked_at: '2026-05-02T00:00:00Z',
+      created_at: '2026-01-03T00:00:00Z'
+    }
+
+    const deduplicados = deduplicarFixturesSeo([goalApi, segundaFechaGoalApi, copiaDimayorMismaFecha])
+
+    expect(deduplicados).toHaveLength(2)
+    expect(deduplicados.map(fila => fila.provider_fixture_id)).toContain('goal-fixture-b')
+    expect(deduplicados.map(fila => fila.provider_fixture_id)).toContain('dimayor-fixture-a')
+    expect(deduplicados.find(fila => fila.provider_fixture_id === 'dimayor-fixture-a')?.created_at)
+      .toBe(goalApi.created_at)
   })
 })

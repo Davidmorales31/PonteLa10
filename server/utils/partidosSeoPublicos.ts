@@ -134,22 +134,27 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
 
 /** Agrupa copias del mismo fixture importadas desde DIMAYOR y los proveedores. */
 export function deduplicarFixturesSeo(filas: FilaPartidoSeo[]): FilaPartidoSeo[] {
-  const porIdentidad = new Map<string, FilaPartidoSeo>()
+  const porCruce = new Map<string, FilaPartidoSeo[]>()
   for (const fila of filas) {
-    const identidad = claveIdentidadFixture(fila)
-    const actual = porIdentidad.get(identidad)
-    if (!actual) {
-      porIdentidad.set(identidad, fila)
+    const cruce = claveCruceFixture(fila)
+    const grupo = porCruce.get(cruce) || []
+    const indiceCoincidente = grupo.findIndex(actual => esMismoFixtureSeo(actual, fila))
+    if (indiceCoincidente < 0) {
+      grupo.push(fila)
+      porCruce.set(cruce, grupo)
       continue
     }
 
+    const actual = grupo[indiceCoincidente]!
     const prioritaria = compararCalidadFixture(fila, actual) > 0 ? fila : actual
-    porIdentidad.set(identidad, {
+    grupo[indiceCoincidente] = {
       ...prioritaria,
       created_at: primeraCreacion(actual.created_at, fila.created_at)
-    })
+    }
+    porCruce.set(cruce, grupo)
   }
-  return [...porIdentidad.values()].sort((a, b) => Date.parse(a.scheduled_at) - Date.parse(b.scheduled_at))
+  return [...porCruce.values()].flat()
+    .sort((a, b) => Date.parse(a.scheduled_at) - Date.parse(b.scheduled_at))
 }
 
 function primeraCreacion(a: string, b: string): string {
@@ -158,20 +163,41 @@ function primeraCreacion(a: string, b: string): string {
   return Date.parse(a) <= Date.parse(b) ? a : b
 }
 
-function claveIdentidadFixture(fila: FilaPartidoSeo): string {
-  const jornada = normalizarJornada(fila.round_name)
-    || `fecha:${new Date(fila.scheduled_at).toISOString().slice(0, 10)}`
+function claveCruceFixture(fila: FilaPartidoSeo): string {
   return [fila.competition_slug, fila.season, normalizarNombreEquipo(fila.home_team),
-    normalizarNombreEquipo(fila.away_team), jornada].join('|')
+    normalizarNombreEquipo(fila.away_team)].join('|')
+}
+
+function esMismoFixtureSeo(a: FilaPartidoSeo, b: FilaPartidoSeo): boolean {
+  if (a.provider === b.provider) return a.provider_fixture_id === b.provider_fixture_id
+
+  const jornadaA = normalizarJornada(a.round_name)
+  const jornadaB = normalizarJornada(b.round_name)
+  if (jornadaA && jornadaB && jornadaA === jornadaB) return true
+
+  const fechaA = fechaPartidoBogota(a.scheduled_at)
+  return Boolean(fechaA && fechaA === fechaPartidoBogota(b.scheduled_at))
 }
 
 function normalizarJornada(valor: string | null): string {
   const jornada = valor?.trim()
   if (!jornada) return ''
   const numeros = /\d+/.exec(jornada)?.[0]
-  if (numeros) return `jornada:${Number(numeros)}`
-  return jornada.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('es-CO').replace(/[^a-z0-9]+/g, ' ').trim()
+  return numeros ? `jornada:${Number(numeros)}` : ''
+}
+
+function fechaPartidoBogota(fechaIso: string): string {
+  const fecha = new Date(fechaIso)
+  if (Number.isNaN(fecha.getTime())) return ''
+
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(fecha)
+  const parte = (tipo: string) => partes.find(valor => valor.type === tipo)?.value || ''
+  return `${parte('year')}-${parte('month')}-${parte('day')}`
 }
 
 function compararCalidadFixture(a: FilaPartidoSeo, b: FilaPartidoSeo): number {
