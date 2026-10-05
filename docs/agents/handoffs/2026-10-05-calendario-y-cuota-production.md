@@ -11,7 +11,7 @@
   Goal API, 1.100 fixtures recibidos y 748 insertados/actualizados; la tabla
   quedó con 756 filas (400 Liga A, 265 Torneo B, 91 Copa Colombia). A las
   12:05 UTC, `/api/liga-colombiana` devolvió 80 encuentros desde DB.
-- **Trabajo en esta continuación:** una consulta SEO de Production confirmó
+- **Trabajo y release:** una consulta SEO de Production confirmó
   cruces repetidos hasta tres veces por temporada y con jornadas “Por
   confirmar” distintas. La solución mantiene separados los IDs distintos del
   mismo proveedor cuando ronda desconocida y fecha difieren; solo fusiona
@@ -19,9 +19,9 @@
   local. Conserva el slug base del fixture más antiguo, usa
   competencia/temporada para las revanchas, añade una clave compacta estable
   si hay más colisiones y resuelve los slugs largos anteriores. Las páginas
-  301 canonizan aliases a la URL estable. El cambio está validado localmente;
-  falta actualizar el PR #58, probar la build contra el calendario real y
-  verificar Production tras integrar.
+  301 canonizan aliases a la URL estable. PR #58 se integró por squash como
+  `d2ad599`; Vercel Production `dpl_bLF8cVbKpGrQMvwXWitfMb93ccZd` quedó
+  `READY` con alias `www.pont3la10.com` y dominio raíz.
 - **Archivos del seguimiento:** `utils/partidosSeo.ts`,
   `server/utils/partidosSeoPublicos.ts`, `pages/donde-ver/[slug].vue`,
   `pages/como-quedo/[slug].vue`, `tests/unit/partidosSeo.test.ts`,
@@ -57,15 +57,20 @@
   canónico sin publicar los IDs de las URL legacy. Las lecturas fueron de solo
   lectura. Preview Vercel está `READY` pero su SSR muestra 503 por configuración
   de datos ausente; no se cambió ni se evitó la protección de Preview.
-- **Pendientes:** actualizar los tres archivos del seguimiento en PR #58 y
-  revisar CI; luego integrar y repetir en el dominio público de Production el
-  smoke de redirect, páginas, cartel y sitemap. La
-  automatización local no sobrevive un reinicio del PC porque no hay tarea de
-  Windows registrada. Observar el límite durante varias jornadas y evaluar por
-  separado el MP4 por fixture y los advisories de dependencias.
-- **Siguiente acción exacta:** revisar `git diff --check`, commitear únicamente
-  `server/utils/partidosSeoPublicos.ts`,
-  `tests/unit/partidosSeoPublicosCache.test.ts` y este handoff; subirlos al PR
-  #58. Si los checks pasan, integrar a `main` y repetir el smoke en Production.
+- **Smoke después de desplegar:** tres URL históricas redirigen con 301 a
+  slugs distintos; las rutas canónicas de ambas páginas responden 200; el cartel
+  OG devuelve `image/png` (98.006 bytes); `/partidos-hoy`, `/liga-colombiana` y
+  `/colombianos-en-europa` responden 200; el sitemap 200 incluye el canónico y
+  excluye IDs legacy. No hubo escrituras en Supabase, consultas a proveedores ni
+  reinicio del worker.
+- **Pendientes fuera del release:** la automatización del PC no sobrevive un
+  reinicio porque no hay tarea de Windows registrada; aún no hay MP4
+  personalizado de 6–10 s por fixture; se debe observar el límite durante
+  varias jornadas y evaluar aparte las advisories de dependencias. La integración
+  no permitió leer el resumen de logs runtime de Vercel (403), así que no se
+  certifica ausencia de errores runtime.
+- **Siguiente acción:** no queda trabajo de código de PR #58 pendiente. En una
+  revisión operativa aparte, observar una jornada completa y decidir si se
+  automatiza el arranque local de Windows y se genera MP4 personalizado.
 - **Commit base:** `9066d53ed5626b33d2b92c94b6d5ccc5819fbe9e` (PR #57 Production).
-- **Commit final:** pendiente.
+- **Commit de release:** `d2ad59922e8f13468f4dca52d248f2068b1a3a4f`.
