@@ -159,7 +159,12 @@ export async function sincronizarFixturesDiariosFutbol(
           zonaHoraria: 'America/Bogota',
           limite: 100
         })
-        const maxActualizaciones = limitarEntero(opciones.maxActualizacionesPorCiclo ?? 3, 0, 3)
+        const maxConfigurado = limitarEntero(opciones.maxActualizacionesPorCiclo ?? 3, 0, 3)
+        // Goal factura cada fixture individualmente; limita su coste aunque una
+        // configuración antigua pida tres. API-Football conserva su lote normal.
+        const maxActualizaciones = proveedor.id === 'goal-api'
+          ? Math.min(maxConfigurado, 2)
+          : maxConfigurado
         const ahoraMs = ahora().getTime()
         const candidatos = partidos.elementos
           .filter(partido => prioridadCompetenciaFutbol(partido) > 0 && esCandidatoDetalle(partido, ahoraMs))

@@ -30,10 +30,12 @@ actualizaciones en jornadas activas sin superar las cuotas.
   en vivo recibe más frecuencia; prepartido recibe frecuencia intermedia;
   partidos lejanos, finalizados y franjas sin partidos no generan sondeo
   innecesario.
-- Las reservas diarias siguen siendo atómicas y nunca exceden 90 peticiones de
-  API-Football ni 950 de Goal API. Las bandas operativas buscadas son 60–90 y
-  900–950 cuando el calendario y la cuota lo justifiquen; no se gastan llamadas
-  solo para alcanzar un mínimo.
+- Las reservas diarias son atómicas y el worker se detiene en 80 peticiones de
+  API-Football y 900 de Goal API. Quedan 10/50 solicitudes de margen respecto de
+  los máximos operativos de 90/950; no se gastan llamadas para alcanzar mínimos.
+- La base rechaza reservas de fixtures con ventanas menores a cinco minutos y de
+  clasificaciones menores a quince minutos, incluso si queda vivo un worker
+  antiguo con la cadencia previa.
 - Se contabiliza el coste real por proveedor: API-Football agrupa fixtures;
   Goal API consulta cada fixture y limita la concurrencia. El fallback no
   duplica llamadas ni saltan las reservas.

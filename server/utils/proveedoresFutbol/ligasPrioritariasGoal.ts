@@ -3,6 +3,12 @@
  * GET /leagues. La consulta por leagueId evita depender de la primera página
  * mundial y no vuelve a descubrir estos IDs en cada corrida.
  */
+export const LIGAS_CALENDARIO_COLOMBIANO_GOAL = [
+  { id: 'cmr77dvv600aprx06o7y7lnfu', competencia: 'liga-betplay' },
+  { id: 'cmr77dvv600asrx06y051mw74', competencia: 'torneo-betplay' },
+  { id: 'cmr77dvv600aqrx068v1tyhd0', competencia: 'copa-colombia' }
+] as const
+
 export const LIGAS_PRIORITARIAS_GOAL = [
   // Colombia
   'cmr77dvv600aprx06o7y7lnfu', // Primera A

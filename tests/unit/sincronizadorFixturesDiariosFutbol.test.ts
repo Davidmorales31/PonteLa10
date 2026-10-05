@@ -183,8 +183,19 @@ describe('sincronizador diario privado de fixtures', () => {
       maxActualizacionesPorCiclo: 100
     })
 
-    expect(resultado).toMatchObject({ estado: 'completado', detallesActualizados: 3 })
+    expect(resultado).toMatchObject({ estado: 'completado', detallesActualizados: 2 })
     expect(principal.obtenerActualizacionesPorLote).toHaveBeenCalledWith([
+      'fixture-5', 'fixture-4'
+    ])
+
+    const apiFootball: ProveedorFutbol = { ...principal, id: 'api-football' }
+    vi.mocked(repo.cargarMappings).mockImplementation(async () => mappingsLote)
+    const resultadoApiFootball = await sincronizarFixturesDiariosFutbol({
+      principal: apiFootball, repositorio: repo, fechaNegocio: '2026-10-01', ahora,
+      maxActualizacionesPorCiclo: 100
+    })
+    expect(resultadoApiFootball).toMatchObject({ estado: 'completado', detallesActualizados: 3 })
+    expect(principal.obtenerActualizacionesPorLote).toHaveBeenNthCalledWith(2, [
       'fixture-5', 'fixture-4', 'fixture-3'
     ])
   })

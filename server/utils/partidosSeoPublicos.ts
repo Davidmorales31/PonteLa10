@@ -6,6 +6,7 @@ import { normalizarEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 const columnasFixtures = [
   'provider', 'provider_fixture_id', 'competition_slug', 'season', 'round_name', 'scheduled_at',
   'home_team', 'away_team', 'status', 'goals_home', 'goals_away', 'venue', 'city', 'checked_at',
+  'official_source_url',
   'is_public', 'publication_rights_confirmed'
 ].join(',')
 
@@ -24,6 +25,7 @@ interface FilaPartidoSeo {
   venue: string | null
   city: string | null
   checked_at: string
+  official_source_url: string | null
   is_public: boolean
   publication_rights_confirmed: boolean
 }
@@ -52,6 +54,7 @@ export interface PartidoSeoPublico {
   golesVisitante: number | null
   estadio: string | null
   ciudad: string | null
+  fuenteOficialUrl: string | null
   escudoLocal: string | null
   escudoVisitante: string | null
   verificadoEn: string
@@ -83,9 +86,9 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
       throw createError({ statusCode: 503, statusMessage: 'El calendario público no está disponible.' })
     }
 
-    const filas = (respuestaFixtures.data as unknown as FilaPartidoSeo[])
+    const filas = deduplicarFixturesSeo((respuestaFixtures.data as unknown as FilaPartidoSeo[])
       .filter(fila => fila.is_public === true && fila.publication_rights_confirmed === true
-        && fila.provider_fixture_id.trim() && fila.home_team.trim() && fila.away_team.trim())
+        && fila.provider_fixture_id.trim() && fila.home_team.trim() && fila.away_team.trim()))
     const slugs = asignarSlugsPartidosSeo(filas)
     const escudosPorEquipo = new Map<string, string>()
     if (!respuestaEscudos.error && respuestaEscudos.data) {
@@ -109,6 +112,7 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
       golesVisitante: fila.goals_away,
       estadio: fila.venue,
       ciudad: fila.city,
+      fuenteOficialUrl: normalizarFuenteOficial(fila.official_source_url),
       escudoLocal: escudosPorEquipo.get(normalizarNombreEquipo(fila.home_team)) || null,
       escudoVisitante: escudosPorEquipo.get(normalizarNombreEquipo(fila.away_team)) || null,
       verificadoEn: fila.checked_at
@@ -123,6 +127,40 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
   } finally {
     if (cargaPartidosPublicos === carga) cargaPartidosPublicos = null
   }
+}
+
+/** Agrupa copias del mismo fixture importadas desde DIMAYOR y los proveedores. */
+export function deduplicarFixturesSeo(filas: FilaPartidoSeo[]): FilaPartidoSeo[] {
+  const porIdentidad = new Map<string, FilaPartidoSeo>()
+  for (const fila of filas) {
+    const identidad = claveIdentidadFixture(fila)
+    const actual = porIdentidad.get(identidad)
+    if (!actual || compararCalidadFixture(fila, actual) > 0) porIdentidad.set(identidad, fila)
+  }
+  return [...porIdentidad.values()].sort((a, b) => Date.parse(a.scheduled_at) - Date.parse(b.scheduled_at))
+}
+
+function claveIdentidadFixture(fila: FilaPartidoSeo): string {
+  const jornada = normalizarJornada(fila.round_name)
+    || `fecha:${new Date(fila.scheduled_at).toISOString().slice(0, 10)}`
+  return [fila.competition_slug, fila.season, normalizarNombreEquipo(fila.home_team),
+    normalizarNombreEquipo(fila.away_team), jornada].join('|')
+}
+
+function normalizarJornada(valor: string | null): string {
+  const jornada = valor?.trim()
+  if (!jornada) return ''
+  const numeros = /\d+/.exec(jornada)?.[0]
+  if (numeros) return `jornada:${Number(numeros)}`
+  return jornada.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('es-CO').replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
+function compararCalidadFixture(a: FilaPartidoSeo, b: FilaPartidoSeo): number {
+  const frescura = Date.parse(a.checked_at) - Date.parse(b.checked_at)
+  if (frescura) return frescura
+  const prioridad = (proveedor: string) => proveedor === 'dimayor' ? 3 : proveedor === 'goal-api' ? 2 : 1
+  return prioridad(a.provider) - prioridad(b.provider)
 }
 
 export async function obtenerPartidoSeoPublico(
@@ -143,6 +181,12 @@ function normalizarNombreEquipo(nombre: string): string {
 function normalizarRutaEscudo(valor: unknown): string | null {
   return typeof valor === 'string'
     && /^\/images\/escudos\/liga-colombiana\/[a-z0-9-]+\.png$/.test(valor)
+    ? valor
+    : null
+}
+
+function normalizarFuenteOficial(valor: unknown): string | null {
+  return typeof valor === 'string' && /^https:\/\/dimayor\.com\.co\/[a-z0-9/_-]+\/?$/i.test(valor)
     ? valor
     : null
 }

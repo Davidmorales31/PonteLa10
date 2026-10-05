@@ -1,6 +1,7 @@
 import { createHmac, randomUUID } from 'node:crypto'
 
 const rutas = [
+  { nombre: 'calendario', ruta: '/api/internal/futbol/calendario', timeoutMs: 20 * 60 * 1000, esperaFalloMs: 30 * 60 * 1000 },
   { nombre: 'fixtures', ruta: '/api/internal/futbol/fixtures' }
 ]
 const intervaloPredeterminadoMs = 5 * 60 * 1000
@@ -22,7 +23,8 @@ export function crearSincronizadorFutbolLocal({
   const secreto = entorno.NUXT_FUTBOL_WORKER_API_SECRET || ''
   const baseUrl = leerUrlLocal(entorno.PONT3LA10_CODEX_API_BASE_URL || 'http://127.0.0.1:3001')
   let proximaEjecucion = 0
-  let fallosConsecutivos = 0
+  const proximasEjecuciones = new Map(rutas.map(ruta => [ruta.nombre, 0]))
+  const fallosPorRuta = new Map(rutas.map(ruta => [ruta.nombre, 0]))
 
   return {
     async ejecutarSiCorresponde() {
@@ -43,17 +45,25 @@ export function crearSincronizadorFutbolLocal({
 
       const resultados = []
       for (const endpoint of rutas) {
+        if (ahora() < (proximasEjecuciones.get(endpoint.nombre) || 0)) continue
         try {
-          const resultado = await solicitar(endpoint.ruta, secreto, baseUrl, transporte, ahora)
+          const resultado = await solicitar(endpoint.ruta, secreto, baseUrl, transporte, ahora, endpoint.timeoutMs)
           const resumen = resumir(resultado)
-          if (resumen.estado === 'fallido') fallosConsecutivos += 1
-          else if (resumen.estado === 'completado') fallosConsecutivos = 0
-          const esperaSugerida = leerEsperaSugerida(resultado, intervaloMs, ahora(), fallosConsecutivos)
-          proximaEjecucion = ahora() + esperaSugerida
+          const fallos = resumen.estado === 'fallido'
+            ? (fallosPorRuta.get(endpoint.nombre) || 0) + 1
+            : 0
+          fallosPorRuta.set(endpoint.nombre, fallos)
+          const esperaSugerida = leerEsperaSugerida(
+            resultado, intervaloMs, ahora(), fallos, endpoint.esperaFalloMs || esperaBaseFalloMs
+          )
+          proximasEjecuciones.set(endpoint.nombre, ahora() + esperaSugerida)
           resultados.push({ nombre: endpoint.nombre, ...resumen })
           registrar(`Fútbol local ${endpoint.nombre}: ${JSON.stringify(resumen)}`)
         } catch (error) {
-          proximaEjecucion = ahora() + Math.min(intervaloMs, 5 * intervaloMinimoMs)
+          const fallos = (fallosPorRuta.get(endpoint.nombre) || 0) + 1
+          fallosPorRuta.set(endpoint.nombre, fallos)
+          const esperaFallo = endpoint.esperaFalloMs || Math.min(intervaloMs, 5 * intervaloMinimoMs)
+          proximasEjecuciones.set(endpoint.nombre, ahora() + esperaFallo)
           const estadoHttp = Number.isInteger(error?.estadoHttp) ? error.estadoHttp : null
           const resumen = { estado: 'fallido', estadoHttp }
           resultados.push({ nombre: endpoint.nombre, ...resumen })
@@ -61,12 +71,14 @@ export function crearSincronizadorFutbolLocal({
         }
       }
 
+      proximaEjecucion = Math.min(...[...proximasEjecuciones.values()].filter(fecha => fecha > 0))
+
       return { estado: resultados.some(resultado => resultado.estado === 'fallido') ? 'parcial' : 'completado', resultados }
     }
   }
 }
 
-async function solicitar(ruta, secreto, baseUrl, transporte, ahora) {
+async function solicitar(ruta, secreto, baseUrl, transporte, ahora, timeoutMs = 180_000) {
   if (typeof transporte !== 'function') throw new Error('TRANSPORTE_NO_DISPONIBLE')
   const cuerpo = '{}'
   const timestamp = String(Math.floor(ahora() / 1000))
@@ -88,7 +100,7 @@ async function solicitar(ruta, secreto, baseUrl, transporte, ahora) {
         'x-pont3la10-signature': firma
       },
       body: cuerpo,
-      signal: AbortSignal.timeout(180_000)
+      signal: AbortSignal.timeout(timeoutMs)
     })
   } catch {
     const error = new Error('SERVIDOR_LOCAL_NO_DISPONIBLE')
@@ -153,7 +165,13 @@ function leerIntervalo(valor) {
   return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, Math.trunc(numero)))
 }
 
-function leerEsperaSugerida(resultado, intervaloPredeterminado, ahoraMs = Date.now(), fallosConsecutivos = 0) {
+function leerEsperaSugerida(
+  resultado,
+  intervaloPredeterminado,
+  ahoraMs = Date.now(),
+  fallosConsecutivos = 0,
+  esperaBaseFallo = esperaBaseFalloMs
+) {
   if (!resultado || typeof resultado !== 'object' || Array.isArray(resultado)) return intervaloPredeterminado
   if (resultado.estado === 'sin_cuota') return esperaHastaMantenimientoBogota(ahoraMs)
 
@@ -163,7 +181,7 @@ function leerEsperaSugerida(resultado, intervaloPredeterminado, ahoraMs = Date.n
   if (resultado.estado === 'ocupado') return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, sugerido))
   if (resultado.estado === 'fallido') {
     const nivel = Math.min(4, Math.max(0, fallosConsecutivos - 1))
-    const esperaPorFallo = Math.min(esperaMaximaFalloMs, esperaBaseFalloMs * (2 ** nivel))
+    const esperaPorFallo = Math.min(esperaMaximaFalloMs, esperaBaseFallo * (2 ** nivel))
     return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, sugerido, esperaPorFallo))
   }
   return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, sugerido))

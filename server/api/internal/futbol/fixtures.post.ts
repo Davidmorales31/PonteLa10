@@ -38,8 +38,8 @@ export default defineEventHandler(async (evento) => {
   if (!Number.isInteger(maxConfigurado) || maxConfigurado < 0 || maxConfigurado > 100) {
     throw createError({ statusCode: 503, statusMessage: 'El límite de detalles de fútbol no es válido.', data: { codigo: 'LIMITE_DETALLES_FUTBOL_INVALIDO' } })
   }
-  // Goal API cobra una solicitud por fixture en vivo; impedir lotes amplios
-  // evita vaciar la cuota cuando coinciden muchos partidos.
+  // El sincronizador limita Goal API a dos fixtures por ciclo incluso si una
+  // configuración antigua pide tres. API-Football mantiene el lote de hasta 3.
   const maxActualizaciones = Math.min(maxConfigurado, 3)
   const principal = crearProveedorFixturesDiariosPersistidos(proveedores.principal, repositorio, fechaNegocio)
   const secundario = proveedores.secundario

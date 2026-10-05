@@ -62,6 +62,7 @@ export default defineCachedEventHandler(async (evento) => {
       golesVisitante: partido.golesVisitante,
       estadio: partido.estadio,
       ciudad: partido.ciudad,
+      fuenteOficialUrl: partido.fuenteOficialUrl,
       escudoLocal: partido.escudoLocal,
       escudoVisitante: partido.escudoVisitante,
       verificadoEn: partido.verificadoEn

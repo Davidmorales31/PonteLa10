@@ -17,6 +17,7 @@ const partidoBase: PartidoSeoPublico = {
   golesVisitante: null,
   estadio: 'Atanasio Girardot',
   ciudad: 'Medellín',
+  fuenteOficialUrl: null,
   escudoLocal: null,
   escudoVisitante: null,
   verificadoEn: '2026-10-05T12:00:00.000Z'

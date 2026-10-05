@@ -33,8 +33,8 @@ describe('integración de fútbol en el worker local', () => {
 
     const resultado = await sincronizador.ejecutarSiCorresponde()
     expect(resultado.estado).toBe('completado')
-    expect(transporte).toHaveBeenCalledTimes(1)
-    expect(registrar.mock.calls[0]?.[0]).toContain('"omitidos":{"datos_invalidos":0,"competencia_no_mapeada":0}')
+    expect(transporte).toHaveBeenCalledTimes(2)
+    expect(registrar.mock.calls.some(([mensaje]) => String(mensaje).includes('"omitidos":{"datos_invalidos":0,"competencia_no_mapeada":0}'))).toBe(true)
     for (const [url, init] of llamadas) {
       const ruta = url.pathname
       const encabezados = init?.headers as Record<string, string>
@@ -45,14 +45,14 @@ describe('integración de fútbol en el worker local', () => {
         .digest('hex')
       expect(encabezados['x-pont3la10-signature']).toBe(esperada)
       expect(cuerpo).toBe('{}')
-      expect(ruta.endsWith('/fixtures')).toBe(true)
+      expect(['/api/internal/futbol/calendario', '/api/internal/futbol/fixtures']).toContain(ruta)
     }
 
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
-    expect(transporte).toHaveBeenCalledTimes(1)
+    expect(transporte).toHaveBeenCalledTimes(2)
     ahora += 5 * 60 * 1000
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(2)
+    expect(transporte).toHaveBeenCalledTimes(4)
   })
 
   it('no hace llamadas por omisión y rechaza destinos ajenos al PC', async () => {
@@ -100,7 +100,7 @@ describe('integración de fútbol en el worker local', () => {
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('completado')
-    expect(transporte).toHaveBeenCalledTimes(2)
+    expect(transporte).toHaveBeenCalledTimes(4)
   })
 
   it('espacia ventanas ocupadas para evitar que workers duplicados se golpeen cada minuto', async () => {
@@ -121,7 +121,7 @@ describe('integración de fútbol en el worker local', () => {
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(2)
+    expect(transporte).toHaveBeenCalledTimes(4)
   })
 
   it('duerme hasta el siguiente mantenimiento de Bogotá al agotar la cuota diaria', async () => {
@@ -142,6 +142,34 @@ describe('integración de fútbol en el worker local', () => {
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     await sincronizador.ejecutarSiCorresponde()
+    expect(transporte).toHaveBeenCalledTimes(4)
+  })
+
+  it('mantiene el ciclo corto de fixtures aunque el calendario ya haya quedado programado para mañana', async () => {
+    let ahora = Date.parse('2026-10-01T20:00:00.000Z')
+    const transporte = vi.fn(async (input: URL | RequestInfo) => {
+      const url = input instanceof URL ? input : new URL(input instanceof Request ? input.url : String(input))
+      const calendario = url.pathname.endsWith('/calendario')
+      return new Response(JSON.stringify({
+        estado: calendario ? 'completado' : 'completado',
+        siguienteEjecucionMs: calendario ? 24 * 60 * 60_000 : 8 * 60_000
+      }), { status: 200, headers: { 'content-type': 'application/json' } })
+    })
+    const sincronizador = crearSincronizadorFutbolLocal({
+      entorno: {
+        PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
+        PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3001',
+        NUXT_FUTBOL_WORKER_API_SECRET: secreto
+      }, transporte, ahora: () => ahora, registrar: vi.fn(), avisar: vi.fn()
+    })
+
+    await sincronizador.ejecutarSiCorresponde()
     expect(transporte).toHaveBeenCalledTimes(2)
+    ahora += 8 * 60_000
+    expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('completado')
+    expect(transporte).toHaveBeenCalledTimes(3)
+    const ruta = transporte.mock.calls[2]?.[0]
+    const url = ruta instanceof URL ? ruta : new URL(ruta instanceof Request ? ruta.url : String(ruta))
+    expect(url.pathname).toBe('/api/internal/futbol/fixtures')
   })
 })

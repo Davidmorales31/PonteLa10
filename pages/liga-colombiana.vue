@@ -15,6 +15,7 @@ interface PartidoLiga {
   golesVisitante: number | null
   estadio: string | null
   ciudad: string | null
+  fuenteOficialUrl: string | null
   escudoLocal: string | null
   escudoVisitante: string | null
   verificadoEn: string
@@ -224,6 +225,7 @@ useSeoPont3la10(() => ({
               <nav class="enlaces-partido-liga" :aria-label="`Páginas de ${partido.local} vs ${partido.visitante}`">
                 <NuxtLink :to="`/donde-ver/${partido.slug}`">Dónde ver</NuxtLink>
                 <NuxtLink :to="`/como-quedo/${partido.slug}`">Cómo quedó</NuxtLink>
+                <a v-if="partido.fuenteOficialUrl" :href="partido.fuenteOficialUrl" target="_blank" rel="noopener noreferrer">Programación DIMAYOR</a>
               </nav>
               <p v-if="partido.estadio || partido.ciudad" class="sede-partido-liga">{{ [partido.estadio, partido.ciudad].filter(Boolean).join(' · ') }}</p>
             </article>
