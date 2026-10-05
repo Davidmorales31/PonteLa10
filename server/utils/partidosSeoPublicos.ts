@@ -6,7 +6,7 @@ import { normalizarEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 const columnasFixtures = [
   'provider', 'provider_fixture_id', 'competition_slug', 'season', 'round_name', 'scheduled_at',
   'home_team', 'away_team', 'status', 'goals_home', 'goals_away', 'venue', 'city', 'checked_at',
-  'official_source_url',
+  'official_source_url', 'created_at',
   'is_public', 'publication_rights_confirmed'
 ].join(',')
 
@@ -26,6 +26,7 @@ interface FilaPartidoSeo {
   city: string | null
   checked_at: string
   official_source_url: string | null
+  created_at: string
   is_public: boolean
   publication_rights_confirmed: boolean
 }
@@ -43,6 +44,7 @@ let cargaPartidosPublicos: Promise<PartidoSeoPublico[]> | null = null
 
 export interface PartidoSeoPublico {
   slug: string
+  slugsAlternos?: string[]
   competencia: string
   temporada: string
   jornada: string | null
@@ -101,6 +103,7 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
 
     return slugs.map(fila => ({
       slug: fila.slug,
+      slugsAlternos: fila.slugsAlternos,
       competencia: fila.competition_slug,
       temporada: fila.season,
       jornada: fila.round_name,
@@ -131,29 +134,70 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
 
 /** Agrupa copias del mismo fixture importadas desde DIMAYOR y los proveedores. */
 export function deduplicarFixturesSeo(filas: FilaPartidoSeo[]): FilaPartidoSeo[] {
-  const porIdentidad = new Map<string, FilaPartidoSeo>()
+  const porCruce = new Map<string, FilaPartidoSeo[]>()
   for (const fila of filas) {
-    const identidad = claveIdentidadFixture(fila)
-    const actual = porIdentidad.get(identidad)
-    if (!actual || compararCalidadFixture(fila, actual) > 0) porIdentidad.set(identidad, fila)
+    const cruce = claveCruceFixture(fila)
+    const grupo = porCruce.get(cruce) || []
+    const indiceCoincidente = grupo.findIndex(actual => esMismoFixtureSeo(actual, fila))
+    if (indiceCoincidente < 0) {
+      grupo.push(fila)
+      porCruce.set(cruce, grupo)
+      continue
+    }
+
+    const actual = grupo[indiceCoincidente]!
+    const prioritaria = compararCalidadFixture(fila, actual) > 0 ? fila : actual
+    grupo[indiceCoincidente] = {
+      ...prioritaria,
+      created_at: primeraCreacion(actual.created_at, fila.created_at)
+    }
+    porCruce.set(cruce, grupo)
   }
-  return [...porIdentidad.values()].sort((a, b) => Date.parse(a.scheduled_at) - Date.parse(b.scheduled_at))
+  return [...porCruce.values()].flat()
+    .sort((a, b) => Date.parse(a.scheduled_at) - Date.parse(b.scheduled_at))
 }
 
-function claveIdentidadFixture(fila: FilaPartidoSeo): string {
-  const jornada = normalizarJornada(fila.round_name)
-    || `fecha:${new Date(fila.scheduled_at).toISOString().slice(0, 10)}`
+function primeraCreacion(a: string, b: string): string {
+  if (!a) return b
+  if (!b) return a
+  return Date.parse(a) <= Date.parse(b) ? a : b
+}
+
+function claveCruceFixture(fila: FilaPartidoSeo): string {
   return [fila.competition_slug, fila.season, normalizarNombreEquipo(fila.home_team),
-    normalizarNombreEquipo(fila.away_team), jornada].join('|')
+    normalizarNombreEquipo(fila.away_team)].join('|')
+}
+
+function esMismoFixtureSeo(a: FilaPartidoSeo, b: FilaPartidoSeo): boolean {
+  if (a.provider === b.provider) return a.provider_fixture_id === b.provider_fixture_id
+
+  const jornadaA = normalizarJornada(a.round_name)
+  const jornadaB = normalizarJornada(b.round_name)
+  if (jornadaA && jornadaB && jornadaA === jornadaB) return true
+
+  const fechaA = fechaPartidoBogota(a.scheduled_at)
+  return Boolean(fechaA && fechaA === fechaPartidoBogota(b.scheduled_at))
 }
 
 function normalizarJornada(valor: string | null): string {
   const jornada = valor?.trim()
   if (!jornada) return ''
   const numeros = /\d+/.exec(jornada)?.[0]
-  if (numeros) return `jornada:${Number(numeros)}`
-  return jornada.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('es-CO').replace(/[^a-z0-9]+/g, ' ').trim()
+  return numeros ? `jornada:${Number(numeros)}` : ''
+}
+
+function fechaPartidoBogota(fechaIso: string): string {
+  const fecha = new Date(fechaIso)
+  if (Number.isNaN(fecha.getTime())) return ''
+
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).formatToParts(fecha)
+  const parte = (tipo: string) => partes.find(valor => valor.type === tipo)?.value || ''
+  return `${parte('year')}-${parte('month')}-${parte('day')}`
 }
 
 function compararCalidadFixture(a: FilaPartidoSeo, b: FilaPartidoSeo): number {

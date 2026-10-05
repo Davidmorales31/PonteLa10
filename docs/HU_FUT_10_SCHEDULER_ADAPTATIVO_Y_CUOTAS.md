@@ -2,12 +2,25 @@
 
 ## Estado
 
-La versión anterior está desplegada en Production (`main`, `fc13d9e`,
-2026-10-02). Los ajustes del worker en esta rama son candidatos a release, no
-desplegados aún. Las pruebas cubren presupuesto y cálculo de próxima ejecución;
-siguen pendientes una ventana operativa en vivo y el cambio de fecha con el
-worker real. La automatización semanal del calendario DIMAYOR hacia la tabla
-pública de Liga es un flujo distinto y todavía no está implementado.
+La protección del presupuesto y la sincronización diaria del calendario
+colombiano están desplegadas en Production (`main`, `9066d53`, PR #57). La
+migración de calendario carga Liga BetPlay, Torneo BetPlay y Copa Colombia una
+vez por día de negocio; el 2026-10-05 guardó 748 fixtures con 11 llamadas de
+Goal API. El endpoint público leyó 80 encuentros desde la base de datos.
+
+El 2026-10-04 Goal API llegó al tope previo de 950; el 2026-10-05 a las 06:55
+COT el registro agregado marcaba 46/900 Goal API y 1/80 API-Football con los
+nuevos topes. Esta medición confirma el límite en funcionamiento, no una
+tendencia de varios días ni la cadencia en una jornada completa en vivo. El
+worker lo ejecuta el PC del responsable; Vercel no tiene Cron para este flujo.
+Los procesos del PC deben arrancarse otra vez manualmente después de reiniciar.
+
+Las pruebas unitarias, lint, typecheck y build del release pasaron. No se pudo
+ejecutar pgTAP localmente porque faltan Docker y Supabase CLI; las funciones,
+ACL, límites y casos nulos se comprobaron con SQL en la base Production. Queda
+pendiente observar varias jornadas y, si se exige por pieza, generar un MP4
+personalizado de 6–10 segundos: hoy se sirve el GIF ambiental existente y
+posters PNG programáticos.
 
 ## Objetivo
 

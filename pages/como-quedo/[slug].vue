@@ -13,6 +13,9 @@ if (error.value || !data.value?.partido) {
   throw createError({ statusCode, statusMessage: statusCode === 404 ? 'No encontramos ese partido.' : 'No se pudo cargar la información verificada del partido.' })
 }
 const partido = data.value.partido
+if (partido.slug !== slug) {
+  await navigateTo(`/como-quedo/${partido.slug}`, { redirectCode: 301, replace: true })
+}
 const { data: noticias } = await useFetch<ResumenArticuloPublico[]>('/api/articulos', {
   query: { tema: 'liga-betplay', buscar: partido.local, limite: '4' },
   default: () => []

@@ -1,70 +1,71 @@
 # Handoff
 
-- **Objetivo de la sesión:** unir el estado de Liga/Europa/carteles con el
-  diagnóstico del agotamiento de Goal API, limitar el gasto y dejar el worker
-  local de fútbol activo sin tocar la cola editorial.
-- **Completado:** PR #55 y PR #56 están en Production; el smoke HTTP público de
-  `/partidos-hoy`, `/liga-colombiana`, `/colombianos-en-europa`,
-  `/donde-ver/deportivo-pasto-vs-fortaleza`,
-  `/como-quedo/deportivo-pasto-vs-fortaleza` y `/sitemap.xml` respondió 200.
-  Las rutas de imagen OG/horizontal/vertical respondieron PNG 200 después del
-  PR #56. Se aplicó la migración `20261005093735_hu_fut_presupuesto_seguro_ventanas`
-  en Supabase Production: topes 80 API-Football / 900 Goal API, lease mínimo
-  300 s para fixtures y 900 s para clasificaciones. Las dos funciones conservan
-  `SECURITY DEFINER`, `search_path` vacío y ejecución sólo por `service_role`.
-  El servidor local del build validado está en `127.0.0.1:3001`; un loop
-  dedicado a fútbol recibió HTTP 200 y se difirió hasta las 06:00 COT con cero
-  llamadas externas. El worker editorial no se inició.
-- **Archivos modificados:**
-  `supabase/migrations/20261005092319_hu_fut_presupuesto_seguro_ventanas.sql`,
-  `supabase/tests/hu_fut_presupuesto_seguro_ventanas_test.sql`,
+- **Objetivo de la sesión:** integrar el límite de peticiones, el calendario
+  colombiano y las dos páginas SEO por fixture en Production; mantener activo
+  el worker de fútbol local sin tocar la cola editorial; evitar perder URLs
+  históricas cuando existan revancha o fixtures repetidos.
+- **Completado:** PR #57 quedó integrado en `main` (`9066d53`) y Vercel marcó
+  `dpl_FEKYqQPWRRpe9hyCTWi2riMAqVuK` como `READY` para Production. Las
+  migraciones de presupuesto y calendario se aplicaron en Supabase Production.
+  El worker local completó la carga colombiana de 2026-10-05 con 11 llamadas de
+  Goal API, 1.100 fixtures recibidos y 748 insertados/actualizados; la tabla
+  quedó con 756 filas (400 Liga A, 265 Torneo B, 91 Copa Colombia). A las
+  12:05 UTC, `/api/liga-colombiana` devolvió 80 encuentros desde DB.
+- **Trabajo en esta continuación:** una consulta SEO de Production confirmó
+  cruces repetidos hasta tres veces por temporada y con jornadas “Por
+  confirmar” distintas. La solución mantiene separados los IDs distintos del
+  mismo proveedor cuando ronda desconocida y fecha difieren; solo fusiona
+  copias de proveedores distintos si coincide la jornada numérica o el día
+  local. Conserva el slug base del fixture más antiguo, usa
+  competencia/temporada para las revanchas, añade una clave compacta estable
+  si hay más colisiones y resuelve los slugs largos anteriores. Las páginas
+  301 canonizan aliases a la URL estable. El cambio está validado localmente;
+  falta actualizar el PR #58, probar la build contra el calendario real y
+  verificar Production tras integrar.
+- **Archivos del seguimiento:** `utils/partidosSeo.ts`,
+  `server/utils/partidosSeoPublicos.ts`, `pages/donde-ver/[slug].vue`,
+  `pages/como-quedo/[slug].vue`, `tests/unit/partidosSeo.test.ts`,
+  `tests/unit/partidosSeoPublicosCache.test.ts`,
   `docs/HU_FUT_10_SCHEDULER_ADAPTATIVO_Y_CUOTAS.md`,
-  `docs/agents/ESTADO_ACTUAL.md` y este handoff. La migración y la prueba aún
-  deben llegar a GitHub mediante PR.
-- **Decisiones:** el límite de trabajo deja 10 peticiones libres en
-  API-Football y 50 en Goal API respecto de 90/950. El worker se mantuvo en el
-  PC, sin Vercel Cron y separado de la cola editorial. No se empezó a poblar
-  `colombian_league_fixtures`: faltan en Git tres migraciones ya presentes en
-  Supabase Production, y el importador debe respetar identidad/duplicados antes
-  de escribir el calendario. El MP4 publicado sigue siendo ambiente genérico,
-  no un video 6–10 s personalizado por fixture. La imagen de referencia con
-  `LOC`/`VIS` es conceptual, no un partido real. El contenido editorial conserva
-  aprobación humana.
-- **Validaciones ejecutadas:** `npm.cmd run lint`,
-  `npm.cmd run test:unit` (59 archivos / 291 pruebas), `npm.cmd run typecheck`,
-  `npm.cmd run build` y `git diff --check` pasan; el build emite la advertencia
-  upstream `DEP0155` de `@vue/shared`. Las pruebas SQL verificadas en Production
-  confirmaron migration version, límites, `search_path`, atributos de seguridad,
-  ACL, RLS y rechazo de cinco combinaciones con argumentos nulos. Smoke público
-  de seis rutas respondió HTTP 200. Revisión estática independiente de la
-  migración: sin defecto bloqueante.
-- **Fallos:** el primer `npm run lint` no tenía `NUXT_PUBLIC_SITE_URL` y falló
-  al cargar la configuración; la matriz completa pasó al repetir con el
-  canonical `https://www.pont3la10.com`. La primera activación firmada local
-  recibió 401 porque el servidor del build necesitaba el alias de runtime
-  `NUXT_FOOTBALL_WORKER_API_SECRET`; al arrancarlo con el alias en el proceso,
-  el worker obtuvo respuesta correcta y diferida, sin consumo de proveedor.
-  `supabase test db`/pgTAP no se pudo correr localmente porque no hay Docker.
-- **Pendientes:**
-  1. Revisar el diff, commitear sólo los cinco archivos del release y hacer
-     push/PR; comprobar CI/preview, integrar a `main` y verificar el build que
-     Vercel asigne. La lista de deployments de Vercel MCP respondió 403, por lo
-     que se usó smoke HTTP directo del dominio.
-  2. Tras las 06:00 COT, revisar el primer ciclo externo del worker y el
-     presupuesto diario agregado. No anunciar recuperación de cuota completa
-     hasta observar una jornada entera.
-  3. Implementar el flujo semanal/diario que alimente
-     `colombian_league_fixtures` desde datos estructurados de proveedor con
-     atribución oficial DIMAYOR, idempotencia, fallback, actualización de
-     cambios de fecha/estado y prioridad Liga A/B + Copa.
-  4. Conciliar las migraciones de Supabase aplicadas el 2026-10-04 que no están
-     en el árbol Git, sin duplicar ni reconstruir a ciegas el esquema.
-  5. Generar una pieza de video por fixture; mientras falte, conservar poster
-     PNG real y video ambiental genérico como fallback.
-  6. El proceso local actual no sobrevive al reinicio del PC; no se registró
-     todavía una tarea de Windows de arranque.
-- **Siguiente acción exacta:** validar el diff de la rama
-  `codex/dimayor-calendar-worker`, commitearlo y abrir el PR del presupuesto;
-  luego completar el importador de calendario antes de afirmar terminada la HU.
-- **Commit base:** `6eeb0ca3bd751fc980d9e71befb2bc164ed49986` (PR #56 integrado).
+  `docs/agents/ESTADO_ACTUAL.md` y este handoff.
+- **Decisiones:** worker de fútbol ejecutado desde el PC y separado de la
+  cola editorial; sin Vercel Cron. La cuota diaria 2026-10-04 llegó a 950/950
+  Goal API y 35 API-Football; el 2026-10-05 a las 11:55 UTC registraba
+  46/900 Goal API (incluidas 11 peticiones de calendario) y 1/80
+  API-Football. No afirmar recuperación sostenida hasta observar más días.
+  Se reutiliza el GIF ambiental autorizado y los posters PNG; todavía no existe
+  un MP4 personalizado de 6–10 s por fixture. El mockup LOC/VIS no es un partido
+  real. No se afirma tener derechos para retransmitir partidos y la publicación
+  de noticias sigue requiriendo aprobación humana.
+- **Validaciones ejecutadas en el seguimiento:** `npm.cmd ci`; lint; pruebas
+  focalizadas (3 archivos / 7 pruebas); suite completa (60 archivos / 300
+  pruebas); typecheck; build de Production y `git diff --check` pasan. Build
+  conserva el aviso upstream `DEP0155` de `@vue/shared`. `npm ci` informó 24
+  advisories y `npm audit --omit=dev` 22 (3 moderados, 18 altos, 1 crítico); no
+  se actualizaron dependencias ajenas al arreglo SEO. pgTAP no se pudo ejecutar
+  localmente por falta de Docker y Supabase CLI; se comprobaron en Production
+  límites, funciones, ACL, RLS y rechazos por argumentos nulos.
+- **Fallos:** el primer test de Nuxt no tenía `NUXT_PUBLIC_SITE_URL` y abortó
+  antes de ejecutar pruebas; todas las validaciones posteriores se ejecutaron
+  con `https://www.pont3la10.com` en el entorno temporal del proceso, sin editar
+  `.env`.
+- **Smoke antes de integrar:** con el build de producción local en el puerto
+  3010 y el entorno de servidor del PC (sin mostrar sus valores), las tres URL
+  históricas devuelven su slug canónico y ambas páginas responden 301 al
+  canónico. `/donde-ver` y `/como-quedo` canónicas responden 200; el cartel OG
+  devuelve `image/png` (142.436 bytes); sitemap responde 200 e incluye el
+  canónico sin publicar los IDs de las URL legacy. Las lecturas fueron de solo
+  lectura. Preview Vercel está `READY` pero su SSR muestra 503 por configuración
+  de datos ausente; no se cambió ni se evitó la protección de Preview.
+- **Pendientes:** actualizar los tres archivos del seguimiento en PR #58 y
+  revisar CI; luego integrar y repetir en el dominio público de Production el
+  smoke de redirect, páginas, cartel y sitemap. La
+  automatización local no sobrevive un reinicio del PC porque no hay tarea de
+  Windows registrada. Observar el límite durante varias jornadas y evaluar por
+  separado el MP4 por fixture y los advisories de dependencias.
+- **Siguiente acción exacta:** revisar `git diff --check`, commitear únicamente
+  `server/utils/partidosSeoPublicos.ts`,
+  `tests/unit/partidosSeoPublicosCache.test.ts` y este handoff; subirlos al PR
+  #58. Si los checks pasan, integrar a `main` y repetir el smoke en Production.
+- **Commit base:** `9066d53ed5626b33d2b92c94b6d5ccc5819fbe9e` (PR #57 Production).
 - **Commit final:** pendiente.
