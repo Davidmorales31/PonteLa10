@@ -2,6 +2,13 @@
 
 ## Estado
 
+PR #58 (`d2ad599`, Production `READY` el 2026-10-05) corrigió la identidad
+estable de cruces repetidos: conserva el primer slug simple, agrega
+competición/temporada en revancha y preserva URL previas con redirección 301.
+La lectura pública ya no fusiona IDs distintos del mismo proveedor con jornada
+desconocida y fechas diferentes. No añade llamadas a proveedores ni modifica
+las cuotas o el worker.
+
 La protección del presupuesto y la sincronización diaria del calendario
 colombiano están desplegadas en Production (`main`, `9066d53`, PR #57). La
 migración de calendario carga Liga BetPlay, Torneo BetPlay y Copa Colombia una

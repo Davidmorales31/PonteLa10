@@ -9,6 +9,23 @@
   sus formatos de imagen respondieron en los smoke descritos en sus handoffs.
   La imagen con `LOC`/`VIS` sigue siendo sólo una referencia; no se publicó
   como fixture.
+- PR #58 se integró por squash como `d2ad599` y Vercel desplegó
+  `dpl_bLF8cVbKpGrQMvwXWitfMb93ccZd` (`READY`) en los dominios raíz y `www`.
+  El slug más antiguo se conserva; las revanchas se diferencian con
+  competición/temporada y las URL anteriores se conservan como alias 301. El
+  deduplicador ya no fusiona IDs distintos del mismo proveedor si la jornada
+  está “Por confirmar” y las fechas difieren; entre proveedores exige jornada
+  numérica igual o mismo día `America/Bogota`.
+- Smoke posterior en Production (2026-10-05): tres URL históricas redirigen a
+  tres slugs canónicos distintos; las páginas `/donde-ver` y `/como-quedo`
+  canónicas responden 200; el cartel OpenGraph responde PNG; sitemap responde
+  200, incluye el canónico y excluye IDs legacy. `/partidos-hoy`,
+  `/liga-colombiana` y `/colombianos-en-europa` responden 200. Fueron lecturas
+  HTTP: no hubo escrituras en Supabase, consumo de cuotas de proveedores ni
+  reinicio del worker.
+- No se pudo consultar el resumen de logs runtime de Vercel: la integración
+  devolvió 403. El estado `READY` y los smoke HTTP están confirmados, pero no se
+  certifica aquí la ausencia de errores runtime.
 - Las migraciones `20261005093735_hu_fut_presupuesto_seguro_ventanas` y
   `20261005101132_hu_fut_calendario_colombiano` están aplicadas a Supabase
   Production. El tope operativo ahora es 80 solicitudes de API-Football y 900
