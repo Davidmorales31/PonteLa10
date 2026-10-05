@@ -302,6 +302,8 @@ useSeoPont3la10(() => ({
 .liga-colombia-ambiente { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .32; }
 .cabecera-liga-colombia > div, .navegacion-liga-colombia { position: relative; z-index: 1; }
 .cabecera-liga-colombia h1, .cabecera-liga-colombia p:not(.etiqueta-seccion) { color: #fff; }
+body.tema-publico-azul main.modulo-futbol-colombia .cabecera-liga-colombia h1,
+body.tema-publico-blanco main.modulo-futbol-colombia .cabecera-liga-colombia h1 { color: #fff; }
 .cabecera-liga-colombia .etiqueta-seccion { color: #ffd343; }
 body.tema-publico-azul main.modulo-futbol-colombia :is(h2, h3) { color: #edf3ff; }
 body.tema-publico-blanco main.modulo-futbol-colombia :is(h2, h3) { color: #08204a; }
