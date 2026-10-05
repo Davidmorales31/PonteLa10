@@ -57,6 +57,10 @@ export default defineCachedEventHandler(async (evento): Promise<RespuestaResulta
   }
 }, {
   maxAge: 60,
+  // Para resultados deportivos no se sirve una respuesta obsoleta mientras la
+  // revalidación corre en segundo plano: el worker modifica estos snapshots.
+  swr: false,
+  staleMaxAge: 0,
   getKey: evento => {
     const zonaHoraria = obtenerZonaHorariaDesdeUrl(evento.node?.req?.url)
     return `resultados-${obtenerClaveCache(evento.node?.req?.url)}-${zonaHoraria}-${obtenerFechaEnZonaHoraria(new Date(), zonaHoraria)}`

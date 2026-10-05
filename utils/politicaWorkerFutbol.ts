@@ -5,8 +5,8 @@ export type ModoCuotaFutbol = 'NORMAL' | 'CONSERVADOR' | 'CRITICO' | 'RESERVA'
 
 export const configuracionSchedulerFutbolPredeterminada = {
   intervalosSegundos: {
-    en_vivo: 60,
-    prepartido: 120,
+    en_vivo: 300,
+    prepartido: 300,
     proximo: 900,
     recien_finalizado: 300,
     lejano: 21_600
@@ -72,11 +72,21 @@ export function esperaHastaLasSeisBogota(ahora = new Date()): number {
   return Math.max(minimoReintentoMs, hastaHoraBogota(ahoraMs, 6, 0))
 }
 
+/** Espera al mantenimiento del siguiente día de negocio cuando se agota la cuota. */
+export function esperaHastaMantenimientoDiarioBogota(ahora = new Date()): number {
+  return Math.max(minimoReintentoMs, hastaHoraBogota(ahora.getTime(), 0, 5))
+}
+
 function vencimientoSnapshot(snapshot: SnapshotParaSchedulerFutbol, ahoraMs: number): number | null {
   const inicio = Date.parse(snapshot.inicioUtc)
   const actualizado = snapshot.detallesActualizadosEn ? Date.parse(snapshot.detallesActualizadosEn) : Number.NaN
-  const cadenciaViva = snapshot.provider === 'goal-api' ? 60_000 : 3 * 60_000
-  const cadenciaPrevia = snapshot.provider === 'goal-api' ? 3 * 60_000 : 10 * 60_000
+  const minutosDesdeInicio = Number.isFinite(inicio) ? (ahoraMs - inicio) / 60_000 : 0
+  const cadenciaViva = minutosDesdeInicio >= 240
+    ? 30 * 60_000
+    : minutosDesdeInicio >= 180
+      ? 15 * 60_000
+      : snapshot.provider === 'goal-api' ? 5 * 60_000 : 3 * 60_000
+  const cadenciaPrevia = snapshot.provider === 'goal-api' ? 5 * 60_000 : 10 * 60_000
 
   if (snapshot.estado === 'live' || snapshot.estado === 'halftime') {
     return Number.isFinite(actualizado) ? actualizado + cadenciaViva : ahoraMs
@@ -88,7 +98,15 @@ function vencimientoSnapshot(snapshot: SnapshotParaSchedulerFutbol, ahoraMs: num
     return Number.isFinite(actualizado) ? actualizado + 30 * 60_000 : ahoraMs
   }
   if (snapshot.estado !== 'scheduled' && snapshot.estado !== 'pre-match') return null
-  if (!Number.isFinite(inicio) || inicio < ahoraMs - 2 * 60 * 60_000) return null
+  if (!Number.isFinite(inicio)) return null
+
+  // Un fixture que sigue "programado" después de su hora no se puede descartar:
+  // puede haber empezado o terminado mientras el PC estaba apagado. Se intenta
+  // confirmar de inmediato si no hay detalle y, si el proveedor aún no corrige
+  // el estado, se revisa con cadencia moderada en vez de dormir seis horas.
+  if (inicio < ahoraMs - 2 * 60 * 60_000) {
+    return Number.isFinite(actualizado) ? actualizado + 30 * 60_000 : ahoraMs
+  }
 
   const empiezaVentana = inicio - 90 * 60_000
   if (empiezaVentana > ahoraMs) return empiezaVentana

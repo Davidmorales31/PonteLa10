@@ -5,6 +5,7 @@ import {
   configuracionSchedulerFutbolPredeterminada,
   debeDiferirCargaInicialFutbol,
   debeConsultarWorkerFutbol,
+  esperaHastaMantenimientoDiarioBogota,
   esperaHastaLasSeisBogota,
   determinarModoCuotaFutbol
 } from '~/utils/politicaWorkerFutbol'
@@ -83,8 +84,43 @@ describe('política del worker de fútbol', () => {
       detallesActualizadosEn: new Date(instante - 60_000).toISOString()
     }], instante)
 
-    expect(goalVivo.esperaMs).toBe(60_000)
+    expect(goalVivo.esperaMs).toBe(4 * 60_000)
     expect(apiVivo.esperaMs).toBe(2 * 60_000)
+  })
+
+  it('reduce la frecuencia de un estado en vivo que lleva horas sin confirmación', () => {
+    const instante = Date.parse('2026-10-02T20:00:00.000Z')
+    const resultado = calcularSiguienteEjecucionWorkerFutbol([{
+      provider: 'goal-api', estado: 'live', inicioUtc: '2026-10-02T16:00:00.000Z',
+      detallesActualizadosEn: new Date(instante - 10 * 60_000).toISOString()
+    }], instante)
+
+    expect(resultado.esperaMs).toBe(20 * 60_000)
+  })
+
+  it('espera el cambio del día de Bogotá para reanudar tras agotar la cuota', () => {
+    const instante = new Date('2026-10-01T20:00:00.000Z')
+    expect(esperaHastaMantenimientoDiarioBogota(instante)).toBe(9 * 60 * 60_000 + 5 * 60_000)
+  })
+
+  it('reactiva un programado vencido sin detalles en vez de dormir hasta mantenimiento', () => {
+    const instante = Date.parse('2026-10-03T02:00:00.000Z')
+    const resultado = calcularSiguienteEjecucionWorkerFutbol([{
+      provider: 'api-football', estado: 'scheduled', inicioUtc: '2026-10-02T22:00:00.000Z',
+      detallesActualizadosEn: null
+    }], instante)
+
+    expect(resultado).toEqual({ esperaMs: 60_000, motivo: 'fixture_debe_actualizarse' })
+  })
+
+  it('limita a treinta minutos la repetición si el proveedor mantiene un estado programado vencido', () => {
+    const instante = Date.parse('2026-10-03T02:00:00.000Z')
+    const resultado = calcularSiguienteEjecucionWorkerFutbol([{
+      provider: 'goal-api', estado: 'scheduled', inicioUtc: '2026-10-02T22:00:00.000Z',
+      detallesActualizadosEn: new Date(instante - 10 * 60_000).toISOString()
+    }], instante)
+
+    expect(resultado).toEqual({ esperaMs: 20 * 60_000, motivo: 'espera_fixture' })
   })
 
   it('no sondea una madrugada vacía y duerme hasta la próxima ventana', () => {
@@ -112,6 +148,6 @@ describe('política del worker de fútbol', () => {
       provider: 'goal-api', estado: 'live', inicioUtc: '2026-10-02T09:30:00.000Z',
       detallesActualizadosEn: '2026-10-02T09:58:00.000Z'
     }], cincoBogota)
-    expect(partidoEnVivo.esperaMs).toBe(60_000)
+    expect(partidoEnVivo.esperaMs).toBe(3 * 60_000)
   })
 })

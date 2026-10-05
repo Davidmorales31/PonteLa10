@@ -23,6 +23,8 @@ describe('configuración de la landing', () => {
   it('normaliza tildes y mayúsculas para filtros', () => {
     expect(normalizarTextoBusqueda('  FÚTBOL Colombiano  ')).toBe('futbol colombiano')
     expect(obtenerAliasCategoria('tecnologia')).toContain('tech deportiva')
+    expect(obtenerAliasCategoria('futbol-colombiano')).toContain('liga betplay')
+    expect(obtenerAliasCategoria('futbol-colombiano')).toContain('copa colombia')
     expect(obtenerEtiquetaCategoria('futbol-colombiano')).toBe('fútbol colombiano')
   })
 

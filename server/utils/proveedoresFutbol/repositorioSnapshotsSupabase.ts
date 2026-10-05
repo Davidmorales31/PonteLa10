@@ -22,7 +22,8 @@ const diferenciaBogotaUtc = 5 * 60 * 60 * 1000
 export interface RepositorioSnapshotsSupabaseFutbol extends RepositorioWorkerFixturesFutbol {
   cargarFixturesDiarios(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<PartidoFutbolProveedor[] | null>
   calendarioDiarioCompleto(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<boolean>
-  calcularEsperaSiguienteEjecucion(provider: IdentificadorProveedorFutbol, fechaNegocio: string, ahora?: Date): Promise<{ esperaMs: number; motivo: string }>
+  calcularEsperaSiguienteEjecucion(providers: IdentificadorProveedorFutbol[], fechaNegocio: string, ahora?: Date): Promise<{ esperaMs: number; motivo: string }>
+  cargarTiemposDetalle(provider: IdentificadorProveedorFutbol, fechaNegocio: string, idsFixture: string[]): Promise<Map<string, string | null>>
   asegurarMappingsIniciales(
     provider: IdentificadorProveedorFutbol,
     partidos: PartidoFutbolProveedor[]
@@ -84,11 +85,13 @@ export function crearRepositorioSnapshotsSupabase(
   return {
     cargarFixturesDiarios: async (provider, fechaNegocio) => cargarFixturesDiarios(cliente, provider, fechaNegocio),
     calendarioDiarioCompleto: async (provider, fechaNegocio) => calendarioDiarioCompleto(cliente, provider, fechaNegocio),
-    calcularEsperaSiguienteEjecucion: async (provider, fechaNegocio, ahora = new Date()) => {
+    calcularEsperaSiguienteEjecucion: async (providers, fechaNegocio, ahora = new Date()) => {
+      const proveedores = [...new Set(providers)]
+      if (!proveedores.length) return calcularSiguienteEjecucionWorkerFutbol([], ahora.getTime())
       const { data, error } = await cliente
         .from('football_fixtures_today')
         .select('provider,status,kickoff_at,details_fetched_at')
-        .eq('provider', provider)
+        .in('provider', proveedores)
         .eq('business_date', fechaNegocio)
         .order('kickoff_at', { ascending: true })
       if (error || !data) throw new Error('No fue posible consultar el calendario para el worker.')
@@ -104,6 +107,19 @@ export function crearRepositorioSnapshotsSupabase(
         detallesActualizadosEn: fila.details_fetched_at
       }))
       return calcularSiguienteEjecucionWorkerFutbol(snapshots, ahora.getTime())
+    },
+    cargarTiemposDetalle: async (provider, fechaNegocio, idsFixture) => {
+      const ids = [...new Set(idsFixture.filter(id => typeof id === 'string' && id.trim()))]
+      if (!ids.length) return new Map()
+      const { data, error } = await cliente
+        .from('football_fixtures_today')
+        .select('provider_fixture_id,details_fetched_at')
+        .eq('provider', provider)
+        .eq('business_date', fechaNegocio)
+        .in('provider_fixture_id', ids)
+      if (error || !data) throw new Error('No fue posible priorizar los detalles de fútbol.')
+      return new Map((data as Array<{ provider_fixture_id: string; details_fetched_at: string | null }>)
+        .map(fila => [fila.provider_fixture_id, fila.details_fetched_at]))
     },
     asegurarMappingsIniciales: async (provider, partidos) => asegurarMappingsIniciales(cliente, provider, partidos),
     marcarFixturesDiariosCargados: async (provider, fechaNegocio, fechasListado) => {
@@ -136,7 +152,7 @@ export function crearRepositorioSnapshotsSupabase(
         p_provider: provider,
         p_operation: operation,
         p_window_seconds: operation === 'fixtures_diarios'
-          ? provider === 'goal-api' ? 60 : 180
+          ? 300
           : 900
       })
       if (error || typeof data !== 'boolean') {
@@ -291,7 +307,12 @@ function requiereActualizarDetalle(fila: FilaFixtureDiario, ahora: number, provi
   const distanciaAlInicio = inicio - ahora
 
   if (fila.status === 'live' || fila.status === 'halftime') {
-    const cadencia = provider === 'goal-api' ? 60_000 : 3 * 60_000
+    const minutosDesdeInicio = Number.isFinite(inicio) ? (ahora - inicio) / 60_000 : 0
+    const cadencia = minutosDesdeInicio >= 240
+      ? 30 * 60_000
+      : minutosDesdeInicio >= 180
+        ? 15 * 60_000
+        : provider === 'goal-api' ? 5 * 60_000 : 3 * 60_000
     return transcurrido >= cadencia
   }
   if (fila.status === 'finished' || fila.status === 'cancelled' || fila.status === 'abandoned') {
@@ -299,9 +320,9 @@ function requiereActualizarDetalle(fila: FilaFixtureDiario, ahora: number, provi
   }
   if (fila.status === 'suspended' || fila.status === 'postponed') return transcurrido >= 30 * 60_000
   if (fila.status === 'scheduled' || fila.status === 'pre-match') {
-    return distanciaAlInicio >= -2 * 60 * 60_000
-      && distanciaAlInicio <= 90 * 60_000
-      && transcurrido >= (provider === 'goal-api' ? 3 : 10) * 60_000
+    if (distanciaAlInicio < -2 * 60 * 60_000) return transcurrido >= 30 * 60_000
+    return distanciaAlInicio <= 90 * 60_000
+      && transcurrido >= (provider === 'goal-api' ? 5 : 10) * 60_000
   }
   return false
 }

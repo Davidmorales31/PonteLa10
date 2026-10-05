@@ -6,7 +6,11 @@ import { crearReservaDiariaSupabaseFutbol } from '~/server/utils/proveedoresFutb
 import { crearProveedorFixturesDiariosPersistidos } from '~/server/utils/proveedoresFutbol/proveedorFixturesDiariosPersistidos'
 import { crearRepositorioSnapshotsSupabase } from '~/server/utils/proveedoresFutbol/repositorioSnapshotsSupabase'
 import { sincronizarFixturesDiariosFutbol } from '~/server/utils/proveedoresFutbol/sincronizadorFixturesDiarios'
-import { debeDiferirCargaInicialFutbol, esperaHastaLasSeisBogota } from '~/utils/politicaWorkerFutbol'
+import {
+  debeDiferirCargaInicialFutbol,
+  esperaHastaLasSeisBogota,
+  esperaHastaMantenimientoDiarioBogota
+} from '~/utils/politicaWorkerFutbol'
 
 export default defineEventHandler(async (evento) => {
   const config = useRuntimeConfig(evento)
@@ -30,10 +34,13 @@ export default defineEventHandler(async (evento) => {
     throw createError({ statusCode: 503, statusMessage: 'El proveedor privado de fútbol no está configurado.', data: { codigo: 'PROVEEDOR_FUTBOL_NO_CONFIGURADO' } })
   }
   await repositorio.limpiarDatosFutbolCaducados()
-  const maxActualizaciones = Number(config.footballMaxDetailsPerSync || 20)
-  if (!Number.isInteger(maxActualizaciones) || maxActualizaciones < 0 || maxActualizaciones > 100) {
+  const maxConfigurado = Number(config.footballMaxDetailsPerSync || 3)
+  if (!Number.isInteger(maxConfigurado) || maxConfigurado < 0 || maxConfigurado > 100) {
     throw createError({ statusCode: 503, statusMessage: 'El límite de detalles de fútbol no es válido.', data: { codigo: 'LIMITE_DETALLES_FUTBOL_INVALIDO' } })
   }
+  // Goal API cobra una solicitud por fixture en vivo; impedir lotes amplios
+  // evita vaciar la cuota cuando coinciden muchos partidos.
+  const maxActualizaciones = Math.min(maxConfigurado, 3)
   const principal = crearProveedorFixturesDiariosPersistidos(proveedores.principal, repositorio, fechaNegocio)
   const secundario = proveedores.secundario
     ? crearProveedorFixturesDiariosPersistidos(proveedores.secundario, repositorio, fechaNegocio)
@@ -63,13 +70,25 @@ export default defineEventHandler(async (evento) => {
     puedeConsumir: crearGateReservaClasificaciones(provider => repositorio.reclamarVentanaWorker(provider, 'fixtures_diarios')) })
   let proxima = { esperaMs: 5 * 60_000, motivo: 'intervalo_seguro_por_defecto' }
   try {
-    proxima = await repositorio.calcularEsperaSiguienteEjecucion(resultado.provider, fechaNegocio)
+    // El resultado puede venir del fallback; planear solo con ese proveedor
+    // ocultaba snapshots vencidos del primario y dejaba dormido al worker.
+    proxima = await repositorio.calcularEsperaSiguienteEjecucion(
+      [principal.id, ...(secundario ? [secundario.id] : [])],
+      fechaNegocio
+    )
   } catch {
     // Si el cálculo de la próxima ventana falla, se conserva un ritmo moderado.
   }
+  const siguienteEjecucionMs = resultado.estado === 'sin_cuota'
+    ? esperaHastaMantenimientoDiarioBogota(ahora)
+    : resultado.estado === 'ocupado'
+      ? Math.max(proxima.esperaMs, 5 * 60_000)
+      : proxima.esperaMs
   return {
     ...resultado,
-    siguienteEjecucionMs: proxima.esperaMs,
-    siguienteEjecucionMotivo: proxima.motivo
+    siguienteEjecucionMs,
+    siguienteEjecucionMotivo: resultado.estado === 'sin_cuota'
+      ? 'cuota_agotada_hasta_mantenimiento_bogota'
+      : resultado.estado === 'ocupado' ? 'ventana_ocupada_reintento_5m' : proxima.motivo
   }
 })

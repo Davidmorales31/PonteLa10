@@ -1,5 +1,6 @@
 import type { IdentificadorProveedorFutbol } from '~/types/futbolProveedor'
 import { validarProveedorFutbol, type ProveedorFutbol } from './contrato'
+import { ErrorProveedorFutbol } from './errores'
 
 export interface RegistroFallbackFutbol {
   operacion: string
@@ -70,9 +71,9 @@ export function crearFallbackProveedorFutbol(opciones: OpcionesFallbackFutbol) {
           await registrar({
             operacion,
             proveedor: opciones.principal.id,
-            resultado: 'error',
+            resultado: esCuotaAgotada(error) ? 'cuota' : 'error',
             usoFallback: false,
-            solicitudes: leerSolicitudesError(error)
+            solicitudes: esCuotaAgotada(error) ? 0 : leerSolicitudesError(error)
           })
         }
       } else {
@@ -110,9 +111,9 @@ export function crearFallbackProveedorFutbol(opciones: OpcionesFallbackFutbol) {
         await registrar({
           operacion,
           proveedor: opciones.secundario.id,
-          resultado: 'error',
+          resultado: esCuotaAgotada(error) ? 'cuota' : 'error',
           usoFallback: true,
-          solicitudes: leerSolicitudesError(error)
+          solicitudes: esCuotaAgotada(error) ? 0 : leerSolicitudesError(error)
         })
         // No propagar el cuerpo de error del proveedor, que podría incluir datos sensibles.
         const solicitudes = leerSolicitudesError(error)
@@ -140,4 +141,8 @@ function leerSolicitudesError(error: unknown): number {
     if (Number.isInteger(valor) && typeof valor === 'number' && valor >= 0) return valor
   }
   return 1
+}
+
+function esCuotaAgotada(error: unknown): boolean {
+  return error instanceof ErrorProveedorFutbol && error.codigo === 'LIMITE_CUOTA'
 }

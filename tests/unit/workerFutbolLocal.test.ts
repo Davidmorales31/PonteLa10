@@ -77,10 +77,10 @@ describe('integración de fútbol en el worker local', () => {
     expect(avisar).toHaveBeenCalledOnce()
   })
 
-  it('usa la próxima ventana adaptativa sugerida por Production', async () => {
+  it('respeta la ventana adaptativa y no sondea más rápido de cada cinco minutos', async () => {
     let ahora = Date.parse('2026-10-01T20:00:00.000Z')
     const transporte = vi.fn(async () => new Response(JSON.stringify({
-      estado: 'completado', siguienteEjecucionMs: 60_000, siguienteEjecucionMotivo: 'fixture_debe_actualizarse'
+      estado: 'completado', siguienteEjecucionMs: 8 * 60_000, siguienteEjecucionMotivo: 'fixture_debe_actualizarse'
     }), { status: 200, headers: { 'content-type': 'application/json' } }))
     const sincronizador = crearSincronizadorFutbolLocal({
       entorno: {
@@ -96,10 +96,52 @@ describe('integración de fútbol en el worker local', () => {
     })
 
     await sincronizador.ejecutarSiCorresponde()
-    ahora += 59_999
+    ahora += 7 * 60_000 + 59_999
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('completado')
+    expect(transporte).toHaveBeenCalledTimes(2)
+  })
+
+  it('espacia ventanas ocupadas para evitar que workers duplicados se golpeen cada minuto', async () => {
+    let ahora = Date.parse('2026-10-01T20:00:00.000Z')
+    const transporte = vi.fn(async () => new Response(JSON.stringify({
+      estado: 'ocupado', siguienteEjecucionMs: 60_000
+    }), { status: 200, headers: { 'content-type': 'application/json' } }))
+    const sincronizador = crearSincronizadorFutbolLocal({
+      entorno: {
+        PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
+        PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3001',
+        NUXT_FUTBOL_WORKER_API_SECRET: secreto
+      }, transporte, ahora: () => ahora, registrar: vi.fn(), avisar: vi.fn()
+    })
+
+    await sincronizador.ejecutarSiCorresponde()
+    ahora += 5 * 60_000 - 1
+    expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
+    ahora += 1
+    await sincronizador.ejecutarSiCorresponde()
+    expect(transporte).toHaveBeenCalledTimes(2)
+  })
+
+  it('duerme hasta el siguiente mantenimiento de Bogotá al agotar la cuota diaria', async () => {
+    let ahora = Date.parse('2026-10-01T20:00:00.000Z')
+    const transporte = vi.fn(async () => new Response(JSON.stringify({
+      estado: 'sin_cuota', siguienteEjecucionMs: 60_000
+    }), { status: 200, headers: { 'content-type': 'application/json' } }))
+    const sincronizador = crearSincronizadorFutbolLocal({
+      entorno: {
+        PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
+        PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3001',
+        NUXT_FUTBOL_WORKER_API_SECRET: secreto
+      }, transporte, ahora: () => ahora, registrar: vi.fn(), avisar: vi.fn()
+    })
+
+    await sincronizador.ejecutarSiCorresponde()
+    ahora = Date.parse('2026-10-02T05:04:59.999Z')
+    expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
+    ahora += 1
+    await sincronizador.ejecutarSiCorresponde()
     expect(transporte).toHaveBeenCalledTimes(2)
   })
 })
