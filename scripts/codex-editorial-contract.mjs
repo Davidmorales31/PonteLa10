@@ -12,10 +12,15 @@ export function cumpleMinimoLecturaCodex(texto) {
 export function cumplePortadaPropuestaCodex(propuesta) {
   const mediaId = propuesta?.coverMediaId
   const flags = Array.isArray(propuesta?.editorialFlags) ? propuesta.editorialFlags : []
-  const tienePortada = typeof mediaId === 'string'
-    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(mediaId)
   const esFotoLicenciada = flags.includes('licensed_photo_cover')
   const esImagenIA = flags.includes('ai_generated_cover')
+
+  if (mediaId === null) {
+    return !esFotoLicenciada && !esImagenIA
+  }
+
+  const tienePortada = typeof mediaId === 'string'
+    && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(mediaId)
 
   return tienePortada && esFotoLicenciada !== esImagenIA
 }

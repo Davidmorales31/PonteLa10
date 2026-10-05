@@ -7,7 +7,15 @@ import {
 } from '~/utils/analiticaPublica'
 import type { EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
 
-type EventoAnalitica = 'article_view' | 'search' | 'category_filter'
+type EventoAnalitica =
+  | 'article_view'
+  | 'search'
+  | 'category_filter'
+  | 'match_page_view'
+  | 'result_page_view'
+  | 'watch_live_click'
+  | 'channel_click'
+  | 'internal_match_link_click'
 
 declare global {
   interface Window {

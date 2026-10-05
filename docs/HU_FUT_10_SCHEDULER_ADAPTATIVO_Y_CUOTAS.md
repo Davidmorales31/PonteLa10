@@ -2,7 +2,12 @@
 
 ## Estado
 
-En desarrollo.
+La versión anterior está desplegada en Production (`main`, `fc13d9e`,
+2026-10-02). Los ajustes del worker en esta rama son candidatos a release, no
+desplegados aún. Las pruebas cubren presupuesto y cálculo de próxima ejecución;
+siguen pendientes una ventana operativa en vivo y el cambio de fecha con el
+worker real. La automatización semanal del calendario DIMAYOR hacia la tabla
+pública de Liga es un flujo distinto y todavía no está implementado.
 
 ## Objetivo
 

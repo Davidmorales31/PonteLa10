@@ -69,7 +69,7 @@ export default defineNuxtConfig({
     futbolDerechosPublicacionConfirmados: process.env.NUXT_FUTBOL_DERECHOS_PUBLICACION_CONFIRMADOS === 'true',
     footballWorkerApiSecret: process.env.NUXT_FUTBOL_WORKER_API_SECRET || '',
     footballStandingsAllowlist: process.env.NUXT_FUTBOL_STANDINGS_ALLOWLIST || '',
-    footballMaxDetailsPerSync: process.env.NUXT_FUTBOL_MAX_DETALLES_POR_CICLO || '20',
+    footballMaxDetailsPerSync: process.env.NUXT_FUTBOL_MAX_DETALLES_POR_CICLO || '3',
     futbolLigaBetplayCompetitionId: process.env.NUXT_FUTBOL_LIGA_BETPLAY_COMPETITION_ID || '',
     apiBasketballKey: process.env.NUXT_API_BASKETBALL_KEY || '',
     apiBasketballBaseUrl: process.env.NUXT_API_BASKETBALL_BASE_URL || 'https://v1.basketball.api-sports.io',

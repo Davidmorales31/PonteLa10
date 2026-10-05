@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { ProveedorFutbol } from '~/server/utils/proveedoresFutbol/contrato'
 import { crearFallbackProveedorFutbol } from '~/server/utils/proveedoresFutbol/fallback'
 import { crearGateReservaClasificaciones } from '~/server/utils/proveedoresFutbol/configuracionWorkerClasificaciones'
+import { ErrorProveedorFutbol } from '~/server/utils/proveedoresFutbol/errores'
 
 function crearProveedor(id: 'goal-api' | 'api-football'): ProveedorFutbol {
   return {
@@ -58,6 +59,24 @@ describe('fallback de proveedor de fútbol', () => {
     expect(eventos).toEqual([
       { operacion: 'fixtures', proveedor: 'api-football', resultado: 'error', usoFallback: false, solicitudes: 1 },
       { operacion: 'fixtures', proveedor: 'goal-api', resultado: 'exito', usoFallback: true, solicitudes: 1 }
+    ])
+  })
+
+  it('distingue una cuota agotada de una falla temporal y la registra sin requests extra', async () => {
+    const principal = crearProveedor('api-football')
+    const secundario = crearProveedor('goal-api')
+    const eventos: unknown[] = []
+    const ejecutar = vi.fn()
+      .mockRejectedValueOnce(new ErrorProveedorFutbol('LIMITE_CUOTA'))
+      .mockRejectedValueOnce(new ErrorProveedorFutbol('LIMITE_CUOTA'))
+
+    await expect(crearFallbackProveedorFutbol({
+      principal, secundario, registrar: evento => { eventos.push(evento) }
+    }).consultar('fixtures', ejecutar)).rejects.toThrow('Fallaron el proveedor principal y el fallback')
+
+    expect(eventos).toEqual([
+      { operacion: 'fixtures', proveedor: 'api-football', resultado: 'cuota', usoFallback: false, solicitudes: 0 },
+      { operacion: 'fixtures', proveedor: 'goal-api', resultado: 'cuota', usoFallback: true, solicitudes: 0 }
     ])
   })
 

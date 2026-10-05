@@ -13,6 +13,18 @@ const { data: respuesta, error, refresh } = await useFetch<RespuestaResultados>(
   key: 'seo-partidos-hoy',
   query: computed(() => ({ deporte: 'futbol', timeZone: zonaHoraria.value }))
 })
+let intervaloActualizacion: ReturnType<typeof setInterval> | undefined
+
+onMounted(() => {
+  intervaloActualizacion = setInterval(() => {
+    instanteRenderizado.value = new Date().toISOString()
+    void refresh()
+  }, 60_000)
+})
+
+onUnmounted(() => {
+  if (intervaloActualizacion) clearInterval(intervaloActualizacion)
+})
 
 const fechaLocal = computed(() => new Intl.DateTimeFormat('es-CO', {
   weekday: 'long', day: 'numeric', month: 'long', timeZone: zonaHoraria.value
@@ -21,9 +33,10 @@ const nombreZonaHoraria = computed(() => new Intl.DateTimeFormat('es-CO', {
   timeZone: zonaHoraria.value,
   timeZoneName: 'longGeneric'
 }).formatToParts(new Date(instanteRenderizado.value)).find(parte => parte.type === 'timeZoneName')?.value || 'tu hora local')
-const grupos: Array<{ id: EstadoPartido, titulo: string, descripcion: string }> = [
+const grupos: Array<{ id: EstadoPartido | 'por-confirmar', titulo: string, descripcion: string }> = [
   { id: 'en-vivo', titulo: 'En vivo', descripcion: 'Partidos que se están jugando ahora.' },
-  { id: 'programado', titulo: 'Próximos', descripcion: 'Encuentros pendientes de la jornada.' },
+  { id: 'por-confirmar', titulo: 'Estado por confirmar', descripcion: 'La hora programada ya pasó; su resultado todavía no está confirmado.' },
+  { id: 'programado', titulo: 'Próximos', descripcion: 'Encuentros que aún no comienzan.' },
   { id: 'finalizado', titulo: 'Finalizados', descripcion: 'Marcadores confirmados de hoy.' }
 ]
 const partidos = computed(() => respuesta.value?.partidos || [])
@@ -50,8 +63,18 @@ const partidosFiltrados = computed(() => partidos.value.filter(partido => {
   if (filtroSeleccionado.value === 'en-vivo') return partido.estado === 'en-vivo'
   return clasificarPartido(partido) === filtroSeleccionado.value
 }).sort((primero, segundo) => Date.parse(primero.fechaIso) - Date.parse(segundo.fechaIso)))
+const instanteActual = computed(() => Date.parse(instanteRenderizado.value))
+function perteneceAlGrupo(partido: RespuestaResultados['partidos'][number], grupo: typeof grupos[number]): boolean {
+  if (grupo.id === 'por-confirmar') {
+    return partido.estado === 'programado' && Date.parse(partido.fechaIso) <= instanteActual.value
+  }
+  if (grupo.id === 'programado') {
+    return partido.estado === 'programado' && Date.parse(partido.fechaIso) > instanteActual.value
+  }
+  return partido.estado === grupo.id
+}
 const gruposVisibles = computed(() => grupos.flatMap(grupo => {
-  const encuentros = partidosFiltrados.value.filter(partido => partido.estado === grupo.id)
+  const encuentros = partidosFiltrados.value.filter(partido => perteneceAlGrupo(partido, grupo))
   return encuentros.length ? [{ ...grupo, partidos: encuentros }] : []
 }))
 const primerGrupoConPartidos = computed(() => gruposVisibles.value[0]?.id || null)

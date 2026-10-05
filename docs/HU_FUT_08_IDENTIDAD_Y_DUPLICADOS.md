@@ -2,7 +2,11 @@
 
 ## Estado
 
-En desarrollo.
+La versión anterior está desplegada en Production (`main`, `fc13d9e`,
+2026-10-02). La actualización de identidad/deduplicación de esta rama es
+candidata a release, no desplegada aún. Tiene pruebas unitarias de colisiones,
+precedencia/frescura y rutas SEO; el smoke de Production posterior a merge queda
+pendiente.
 
 ## Objetivo
 

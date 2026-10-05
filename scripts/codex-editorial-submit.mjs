@@ -83,7 +83,7 @@ if (recurso === 'propuesta') {
   }
 
   if (!cumplePortadaPropuestaCodex(payload)) {
-    terminar('La propuesta no se envió: requiere una portada persistida y exactamente una marca de tipo de imagen.')
+    terminar('La propuesta no se envió: una portada persistida requiere una marca compatible; sin portada, no debe incluir marcas de imagen.')
   }
 }
 
@@ -122,7 +122,19 @@ if (!respuesta.ok) {
   const codigo = typeof resultado?.data?.codigo === 'string'
     ? ` (${resultado.data.codigo})`
     : ''
-  terminar(`La API privada rechazó la solicitud: HTTP ${respuesta.status}${codigo}.`)
+  const campos = resultado?.data?.campos
+  const diagnosticoCampos = campos && typeof campos === 'object' && !Array.isArray(campos)
+    ? Object.entries(campos)
+      .slice(0, 12)
+      .map(([campo, errores]) => {
+        const mensajes = Array.isArray(errores)
+          ? errores.slice(0, 3).map(error => String(error).replace(/\s+/g, ' ').slice(0, 180)).join(' / ')
+          : ''
+        return mensajes ? `${campo}: ${mensajes}` : campo
+      })
+      .join('; ')
+    : ''
+  terminar(`La API privada rechazó la solicitud: HTTP ${respuesta.status}${codigo}.${diagnosticoCampos ? ` Campos: ${diagnosticoCampos}.` : ''}`)
 }
 
 if (['media', 'media-ia'].includes(recurso)) {

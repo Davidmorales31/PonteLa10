@@ -38,6 +38,7 @@ export interface RegistroCorridaFixturesFutbol {
 
 export interface RepositorioWorkerFixturesFutbol {
   cargarMappings(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<MappingsProveedorFutbol>
+  cargarTiemposDetalle?(provider: IdentificadorProveedorFutbol, fechaNegocio: string, idsFixture: string[]): Promise<Map<string, string | null>>
   asegurarMappingsIniciales?(provider: IdentificadorProveedorFutbol, partidos: PartidoFutbolProveedor[]): Promise<void>
   marcarFixturesDiariosCargados?(provider: IdentificadorProveedorFutbol, fechaNegocio: string, fechasListado: string[]): Promise<void>
   upsertSnapshots(fixtures: SnapshotFixtureFutbolPrivado[]): Promise<void>
@@ -158,21 +159,34 @@ export async function sincronizarFixturesDiariosFutbol(
           zonaHoraria: 'America/Bogota',
           limite: 100
         })
-        const maxActualizaciones = limitarEntero(opciones.maxActualizacionesPorCiclo ?? 20, 0, 100)
+        const maxActualizaciones = limitarEntero(opciones.maxActualizacionesPorCiclo ?? 3, 0, 3)
         const ahoraMs = ahora().getTime()
         const candidatos = partidos.elementos
           .filter(partido => prioridadCompetenciaFutbol(partido) > 0 && esCandidatoDetalle(partido, ahoraMs))
-          .sort((a, b) => prioridadDetalle(b, ahoraMs) - prioridadDetalle(a, ahoraMs)
-            || Date.parse(a.inicioUtc) - Date.parse(b.inicioUtc))
-          .slice(0, maxActualizaciones)
+        let tiemposDetalle = new Map<string, string | null>()
+        if (candidatos.length && opciones.repositorio.cargarTiemposDetalle) {
+          try {
+            tiemposDetalle = await opciones.repositorio.cargarTiemposDetalle(
+              proveedor.id,
+              opciones.fechaNegocio,
+              candidatos.map(partido => partido.idProveedor)
+            )
+          } catch {
+            // El lote sigue acotado aunque falle esta lectura auxiliar.
+          }
+        }
+        candidatos.sort((a, b) => prioridadDetalle(b, ahoraMs) - prioridadDetalle(a, ahoraMs)
+          || antiguedadDetalle(a, tiemposDetalle) - antiguedadDetalle(b, tiemposDetalle)
+          || Date.parse(a.inicioUtc) - Date.parse(b.inicioUtc))
+        const candidatosLimitados = candidatos.slice(0, maxActualizaciones)
         let actualizaciones: PaqueteActualizacionFutbolProveedor[] = []
         let solicitudes = partidos.solicitudes ?? 1
         let cuota = partidos.cuota
 
-        if (candidatos.length && proveedor.capacidades.actualizacionPorLote
+        if (candidatosLimitados.length && proveedor.capacidades.actualizacionPorLote
           && proveedor.obtenerActualizacionesPorLote) {
           try {
-            const lotes = gruposDe(candidatos.map(partido => partido.idProveedor), 20)
+            const lotes = gruposDe(candidatosLimitados.map(partido => partido.idProveedor), 20)
             const respuestas: RespuestaProveedorFutbol<PaqueteActualizacionFutbolProveedor>[] = []
             for (const ids of lotes) respuestas.push(await proveedor.obtenerActualizacionesPorLote(ids))
             actualizaciones = respuestas.flatMap(respuesta => respuesta.elementos)
@@ -195,7 +209,9 @@ export async function sincronizarFixturesDiariosFutbol(
     const eventosConSolicitud = eventosFallback.filter(evento => evento.resultado !== 'cuota')
     const solicitudesUsadas = sumarSolicitudes(eventosConSolicitud)
     const ventanaOcupada = esVentanaWorkerOcupada(error)
-    const sinCuota = !ventanaOcupada && eventosFallback.length > 0 && eventosConSolicitud.length === 0
+    // El principal pudo gastar una llamada y fallar antes de que el fallback
+    // quedara bloqueado por cuota. En ese caso también hay que dormir hasta mañana.
+    const sinCuota = !ventanaOcupada && eventosFallback.some(evento => evento.resultado === 'cuota')
     const proveedor = eventosFallback.at(-1)?.proveedor ?? proveedorConMapeosPrincipal.id
     const terminado = ahora()
     const errorCode = ventanaOcupada ? 'WORKER_WINDOW_BUSY' : sinCuota ? null : 'PROVIDER_FAILURE'
@@ -375,7 +391,9 @@ function esCandidatoDetalle(partido: PartidoFutbolProveedor, ahoraMs: number): b
   if (['live', 'halftime', 'finished', 'suspended', 'pre-match'].includes(partido.estado)) return true
   if (partido.estado !== 'scheduled') return false
   const inicioMs = Date.parse(partido.inicioUtc)
-  return Number.isFinite(inicioMs) && inicioMs >= ahoraMs - 2 * 60 * 60_000 && inicioMs <= ahoraMs + 90 * 60_000
+  // El calendario persistido solo contiene la fecha de negocio vigente. No
+  // excluir los programados vencidos: deben recibir una consulta de confirmación.
+  return Number.isFinite(inicioMs) && inicioMs <= ahoraMs + 90 * 60_000
 }
 
 function prioridadDetalle(partido: PartidoFutbolProveedor, ahoraMs: number): number {
@@ -384,10 +402,21 @@ function prioridadDetalle(partido: PartidoFutbolProveedor, ahoraMs: number): num
     case 'live': return prioridadCompetencia * 100 + 40
     case 'halftime': return prioridadCompetencia * 100 + 30
     case 'pre-match': return prioridadCompetencia * 100 + 20
-    case 'scheduled': return esCandidatoDetalle(partido, ahoraMs) ? prioridadCompetencia * 100 + 20 : 0
+    case 'scheduled': {
+      if (!esCandidatoDetalle(partido, ahoraMs)) return 0
+      const vencido = Date.parse(partido.inicioUtc) < ahoraMs - 2 * 60 * 60_000
+      return prioridadCompetencia * 100 + (vencido ? 5 : 20)
+    }
     case 'finished': case 'suspended': return prioridadCompetencia * 100 + 10
     default: return 0
   }
+}
+
+function antiguedadDetalle(partido: PartidoFutbolProveedor, tiempos: Map<string, string | null>): number {
+  const marca = tiempos.get(partido.idProveedor)
+  if (!marca) return Number.NEGATIVE_INFINITY
+  const instante = Date.parse(marca)
+  return Number.isFinite(instante) ? instante : Number.NEGATIVE_INFINITY
 }
 
 function limitarEntero(valor: number, minimo: number, maximo: number): number {

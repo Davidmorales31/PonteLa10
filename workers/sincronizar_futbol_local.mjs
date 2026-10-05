@@ -6,6 +6,8 @@ const rutas = [
 const intervaloPredeterminadoMs = 5 * 60 * 1000
 const intervaloMinimoMs = 5 * 60 * 1000
 const intervaloMaximoMs = 24 * 60 * 60 * 1000
+const esperaBaseFalloMs = 5 * 60 * 1000
+const esperaMaximaFalloMs = 60 * 60 * 1000
 
 /** Programa la sincronización de fútbol dentro del worker local existente. */
 export function crearSincronizadorFutbolLocal({
@@ -20,6 +22,7 @@ export function crearSincronizadorFutbolLocal({
   const secreto = entorno.NUXT_FUTBOL_WORKER_API_SECRET || ''
   const baseUrl = leerUrlLocal(entorno.PONT3LA10_CODEX_API_BASE_URL || 'http://127.0.0.1:3001')
   let proximaEjecucion = 0
+  let fallosConsecutivos = 0
 
   return {
     async ejecutarSiCorresponde() {
@@ -42,9 +45,11 @@ export function crearSincronizadorFutbolLocal({
       for (const endpoint of rutas) {
         try {
           const resultado = await solicitar(endpoint.ruta, secreto, baseUrl, transporte, ahora)
-          const esperaSugerida = leerEsperaSugerida(resultado, intervaloMs)
-          proximaEjecucion = ahora() + esperaSugerida
           const resumen = resumir(resultado)
+          if (resumen.estado === 'fallido') fallosConsecutivos += 1
+          else if (resumen.estado === 'completado') fallosConsecutivos = 0
+          const esperaSugerida = leerEsperaSugerida(resultado, intervaloMs, ahora(), fallosConsecutivos)
+          proximaEjecucion = ahora() + esperaSugerida
           resultados.push({ nombre: endpoint.nombre, ...resumen })
           registrar(`Fútbol local ${endpoint.nombre}: ${JSON.stringify(resumen)}`)
         } catch (error) {
@@ -148,9 +153,28 @@ function leerIntervalo(valor) {
   return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, Math.trunc(numero)))
 }
 
-function leerEsperaSugerida(resultado, intervaloPredeterminado) {
+function leerEsperaSugerida(resultado, intervaloPredeterminado, ahoraMs = Date.now(), fallosConsecutivos = 0) {
   if (!resultado || typeof resultado !== 'object' || Array.isArray(resultado)) return intervaloPredeterminado
-  const sugerido = resultado.siguienteEjecucionMs
-  if (!Number.isFinite(sugerido) || sugerido <= 0) return intervaloPredeterminado
-  return Math.min(intervaloMaximoMs, Math.max(60_000, Math.trunc(sugerido)))
+  if (resultado.estado === 'sin_cuota') return esperaHastaMantenimientoBogota(ahoraMs)
+
+  const sugerido = Number.isFinite(resultado.siguienteEjecucionMs) && resultado.siguienteEjecucionMs > 0
+    ? Math.trunc(resultado.siguienteEjecucionMs)
+    : intervaloPredeterminado
+  if (resultado.estado === 'ocupado') return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, sugerido))
+  if (resultado.estado === 'fallido') {
+    const nivel = Math.min(4, Math.max(0, fallosConsecutivos - 1))
+    const esperaPorFallo = Math.min(esperaMaximaFalloMs, esperaBaseFalloMs * (2 ** nivel))
+    return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, sugerido, esperaPorFallo))
+  }
+  return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, sugerido))
+}
+
+function esperaHastaMantenimientoBogota(ahoraMs) {
+  const fechaBogota = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date(ahoraMs))
+  let proximoMantenimiento = Date.parse(`${fechaBogota}T05:05:00.000Z`)
+  if (!Number.isFinite(proximoMantenimiento)) return intervaloPredeterminadoMs
+  if (proximoMantenimiento <= ahoraMs) proximoMantenimiento += 24 * 60 * 60 * 1000
+  return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, proximoMantenimiento - ahoraMs))
 }

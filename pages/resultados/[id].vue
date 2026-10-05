@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Bell, CalendarDays, MapPin, RefreshCw, Star } from '@lucide/vue'
 import type { DetallePartidoResultado, EquipoResultado, RespuestaMarcadorPartido } from '~/types/resultados'
+import { agruparGoleadoresPartido } from '~/utils/goleadoresPartido'
 import { construirUrlAbsoluta, imagenSeoPredeterminada, robotsNoIndex } from '~/utils/seo'
 
 const ruta = useRoute()
 const zonaHoraria = ref('America/Bogota')
-const pestanaActiva = ref<'resumen' | 'estadisticas' | 'alineaciones' | 'minuto'>('resumen')
+const pestanaActiva = ref<'estadisticas' | 'alineaciones'>('estadisticas')
+type PestanaDetallePartido = { id: 'estadisticas' | 'alineaciones'; etiqueta: string }
 const actualizandoMarcador = ref(false)
 const errorActualizacion = ref(false)
 const { estaSiguiendo, alternarSeguimiento, notificarCambioMarcador } = useSeguimientoPartidos()
@@ -16,18 +18,13 @@ const { data: detalle, status, error, refresh } = await useFetch<DetallePartidoR
   { key: `detalle-resultado-${String(ruta.params.id)}`, lazy: true }
 )
 
-const pestanas = computed(() => {
-  const opciones: Array<{
-    id: 'resumen' | 'estadisticas' | 'alineaciones' | 'minuto'
-    etiqueta: string
-  }> = [{ id: 'resumen', etiqueta: 'Resumen' }]
+const pestanas = computed<PestanaDetallePartido[]>(() => {
+  const opciones: PestanaDetallePartido[] = []
 
   if (detalle.value?.partido.deporte === 'futbol') {
     return [
-      ...opciones,
-      { id: 'estadisticas' as const, etiqueta: 'Estadísticas' },
-      { id: 'alineaciones' as const, etiqueta: 'Alineaciones' },
-      { id: 'minuto' as const, etiqueta: 'Minuto a minuto' }
+      { id: 'estadisticas', etiqueta: 'Estadísticas' },
+      { id: 'alineaciones', etiqueta: 'Alineaciones' }
     ]
   }
 
@@ -38,11 +35,14 @@ const pestanas = computed(() => {
     })
   }
   if (detalle.value?.alineaciones.length) opciones.push({ id: 'alineaciones', etiqueta: 'Alineaciones' })
-  if (detalle.value?.eventos.length) opciones.push({ id: 'minuto', etiqueta: 'Minuto a minuto' })
 
   return opciones
 })
 
+const pestanaSeleccionada = computed(() => pestanas.value.some(pestana => pestana.id === pestanaActiva.value)
+  ? pestanaActiva.value
+  : pestanas.value[0]?.id)
+const goleadores = computed(() => agruparGoleadoresPartido(detalle.value))
 const siguiendoPartido = computed(() => detalle.value ? estaSiguiendo(detalle.value.partido.id) : false)
 const configuracion = useRuntimeConfig()
 
@@ -222,24 +222,38 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
       </header>
 
       <PartidoDestacadoResultados :partido="detalle.partido" :mostrar-enlace="false" />
+      <section v-if="goleadores.length" class="goleadores-detalle-partido" aria-label="Goleadores">
+        <div v-for="grupo in goleadores" :key="grupo.equipoId" class="grupo-goleadores-detalle">
+          <strong>{{ grupo.equipo }}</strong>
+          <ul>
+            <li v-for="(goleador, indice) in grupo.goleadores" :key="`${goleador.minuto}-${goleador.jugador}-${indice}`">
+              <span>{{ goleador.jugador }}</span>
+              <time>{{ goleador.minuto }}</time>
+            </li>
+          </ul>
+        </div>
+      </section>
       <PublicidadAdsterraSlot formato="leaderboard" contexto="detalle del partido" />
 
-      <nav class="pestanas-detalle-partido" aria-label="Información del partido">
+      <nav v-if="pestanas.length" class="pestanas-detalle-partido" aria-label="Información del partido">
         <button
           v-for="pestana in pestanas"
           :key="pestana.id"
           type="button"
-          :class="{ activo: pestanaActiva === pestana.id }"
-          :aria-pressed="pestanaActiva === pestana.id"
+          :class="{ activo: pestanaSeleccionada === pestana.id }"
+          :aria-pressed="pestanaSeleccionada === pestana.id"
           @click="pestanaActiva = pestana.id"
         >{{ pestana.etiqueta }}</button>
       </nav>
 
       <div class="grilla-detalle-partido">
         <main class="contenido-principal-detalle">
-          <PanelResumenPartido v-if="pestanaActiva === 'resumen'" :detalle="detalle" />
+          <EstadoDatosResultados
+            v-if="!pestanas.length"
+            descripcion="No hay estadísticas ni alineaciones detalladas disponibles para este partido."
+          />
 
-          <template v-else-if="pestanaActiva === 'estadisticas'">
+          <template v-else-if="pestanaSeleccionada === 'estadisticas'">
             <PanelEstadisticasPartido
               v-if="detalle.estadisticas.length"
               :estadisticas="detalle.estadisticas"
@@ -249,12 +263,7 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
             <EstadoDatosResultados v-else descripcion="Las estadísticas todavía no están disponibles para este partido." />
           </template>
 
-          <template v-else-if="pestanaActiva === 'minuto'">
-            <LineaTiempoPartido v-if="detalle.eventos.length" :eventos="detalle.eventos" />
-            <EstadoDatosResultados v-else descripcion="No hay eventos disponibles para este partido." />
-          </template>
-
-          <section v-else class="panel-resultados panel-alineaciones">
+          <section v-else-if="pestanaSeleccionada === 'alineaciones'" class="panel-resultados panel-alineaciones">
             <h2>Alineaciones</h2>
             <div v-if="detalle.alineaciones.length" class="grilla-alineaciones">
               <article v-for="alineacion in detalle.alineaciones" :key="alineacion.equipoId">
@@ -289,10 +298,7 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
           v-if="detalle.eventos.length || detalle.clasificacion.length"
           class="contenido-lateral-detalle"
         >
-          <template v-if="pestanaActiva !== 'minuto'">
-            <LineaTiempoPartido v-if="detalle.eventos.length" :eventos="detalle.eventos" />
-            <EstadoDatosResultados v-else descripcion="No hay eventos disponibles para este partido." />
-          </template>
+          <LineaTiempoPartido v-if="detalle.eventos.length" :eventos="detalle.eventos" />
           <section v-if="detalle.clasificacion.length" class="panel-resultados panel-tabla-rapida">
             <div class="titulo-panel-resultados"><h2>Clasificación</h2><span>{{ detalle.partido.competencia }}</span></div>
             <TablaClasificacionResultados :posiciones="detalle.clasificacion" />
@@ -303,3 +309,22 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
     <EstadoDatosResultados v-else :permitir-reintento="true" @reintentar="refresh" />
   </div>
 </template>
+
+<style scoped>
+.goleadores-detalle-partido {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 28px;
+  margin: 12px 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface, #fff);
+  padding: 13px 16px;
+}
+
+.grupo-goleadores-detalle { min-width: min(100%, 220px); }
+.grupo-goleadores-detalle > strong { color: var(--muted); font-size: .76rem; }
+.grupo-goleadores-detalle ul { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 6px 0 0; padding: 0; list-style: none; }
+.grupo-goleadores-detalle li { display: inline-flex; align-items: baseline; gap: 6px; font-size: .84rem; font-weight: 750; }
+.grupo-goleadores-detalle time { color: var(--muted); font-size: .74rem; font-weight: 650; }
+</style>

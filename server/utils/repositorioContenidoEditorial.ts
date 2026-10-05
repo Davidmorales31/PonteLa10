@@ -1418,15 +1418,27 @@ export async function obtenerArticuloPublicoEditorial(
 export async function listarArticulosPublicosEditoriales(
   clienteSupabase: SupabaseClient,
   limite = 20,
-  desplazamiento = 0
+  desplazamiento = 0,
+  filtros?: {
+    categoria: string | null
+    terminosCategoria: string[]
+    tema: string | null
+    buscar: string | null
+  }
 ): Promise<ResumenArticuloPublico[]> {
-  const { data, error } = await clienteSupabase.rpc(
-    'list_public_editorial_articles',
-    {
-      result_limit: limite,
-      result_offset: desplazamiento
-    }
-  )
+  const { data, error } = filtros
+    ? await clienteSupabase.rpc('list_public_editorial_articles_filtered', {
+        result_limit: limite,
+        result_offset: desplazamiento,
+        filter_category_slug: filtros.categoria,
+        filter_category_terms: filtros.terminosCategoria,
+        filter_topic_slug: filtros.tema,
+        filter_search: filtros.buscar
+      })
+    : await clienteSupabase.rpc('list_public_editorial_articles', {
+        result_limit: limite,
+        result_offset: desplazamiento
+      })
 
   if (error) {
     throw crearErrorRepositorio('No se pudieron cargar las publicaciones.')

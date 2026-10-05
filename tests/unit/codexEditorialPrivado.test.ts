@@ -156,7 +156,7 @@ describe('API privada de propuestas Codex', () => {
       ...propuesta,
       coverMediaId: null,
       editorialFlags: ['needs_angle_review']
-    }).success).toBe(false)
+    }).success).toBe(true)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
       coverMediaId: null,

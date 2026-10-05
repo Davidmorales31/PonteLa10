@@ -135,20 +135,41 @@ describe('repositorio privado de snapshots de fútbol en Supabase', () => {
     })
   })
 
-  it('calcula el siguiente sondeo leyendo solo el calendario privado del proveedor activo', async () => {
-    const instante = new Date('2026-10-02T20:00:00.000Z')
+  it('calcula el siguiente sondeo sobre primario y fallback para no ignorar snapshots vencidos', async () => {
+    const instante = new Date('2026-10-03T02:00:00.000Z')
     const { cliente, llamadas } = crearClienteMock({
-      football_fixtures_today: [{ data: [{
-        provider: 'goal-api', status: 'live', kickoff_at: '2026-10-02T19:00:00.000Z',
-        details_fetched_at: '2026-10-02T19:59:30.000Z'
-      }], error: null }]
+      football_fixtures_today: [{ data: [
+        { provider: 'api-football', status: 'scheduled', kickoff_at: '2026-10-02T22:00:00.000Z', details_fetched_at: null },
+        { provider: 'goal-api', status: 'finished', kickoff_at: '2026-10-02T20:00:00.000Z', details_fetched_at: '2026-10-02T22:40:00.000Z' }
+      ], error: null }]
     })
     const repositorio = crearRepositorioSnapshotsSupabase(cliente)
 
-    await expect(repositorio.calcularEsperaSiguienteEjecucion('goal-api', '2026-10-02', instante))
-      .resolves.toEqual({ esperaMs: 60_000, motivo: 'espera_fixture' })
-    expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['provider', 'goal-api'] })
+    await expect(repositorio.calcularEsperaSiguienteEjecucion(['api-football', 'goal-api'], '2026-10-02', instante))
+      .resolves.toEqual({ esperaMs: 60_000, motivo: 'fixture_debe_actualizarse' })
+    expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'in', args: ['provider', ['api-football', 'goal-api']] })
     expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['business_date', '2026-10-02'] })
+  })
+
+  it('lee la última actualización por proveedor para rotar detalles con justicia', async () => {
+    const { cliente, llamadas } = crearClienteMock({
+      football_fixtures_today: [{ data: [
+        { provider_fixture_id: 'fixture-1', details_fetched_at: null },
+        { provider_fixture_id: 'fixture-2', details_fetched_at: '2026-10-01T19:30:00.000Z' }
+      ], error: null }]
+    })
+    const repositorio = crearRepositorioSnapshotsSupabase(cliente)
+
+    await expect(repositorio.cargarTiemposDetalle('goal-api', '2026-10-01', ['fixture-1', 'fixture-2']))
+      .resolves.toEqual(new Map([
+        ['fixture-1', null], ['fixture-2', '2026-10-01T19:30:00.000Z']
+      ]))
+    expect(llamadas).toContainEqual({
+      tabla: 'football_fixtures_today', metodo: 'select', args: ['provider_fixture_id,details_fetched_at']
+    })
+    expect(llamadas).toContainEqual({
+      tabla: 'football_fixtures_today', metodo: 'in', args: ['provider_fixture_id', ['fixture-1', 'fixture-2']]
+    })
   })
 
   it('carga mappings de clasificación sólo para la allowlist y todos los equipos canónicos del proveedor', async () => {
@@ -224,11 +245,11 @@ describe('repositorio privado de snapshots de fútbol en Supabase', () => {
     })
     await repositorio.reclamarVentanaWorker('goal-api', 'fixtures_diarios')
     expect(cliente.rpc).toHaveBeenLastCalledWith('claim_football_sync_lease', {
-      p_provider: 'goal-api', p_operation: 'fixtures_diarios', p_window_seconds: 60
+      p_provider: 'goal-api', p_operation: 'fixtures_diarios', p_window_seconds: 300
     })
     await repositorio.reclamarVentanaWorker('api-football', 'fixtures_diarios')
     expect(cliente.rpc).toHaveBeenLastCalledWith('claim_football_sync_lease', {
-      p_provider: 'api-football', p_operation: 'fixtures_diarios', p_window_seconds: 180
+      p_provider: 'api-football', p_operation: 'fixtures_diarios', p_window_seconds: 300
     })
   })
 

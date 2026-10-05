@@ -2,7 +2,11 @@
 
 ## Estado
 
-En desarrollo.
+La versión anterior está desplegada en Production (`main`, `fc13d9e`,
+2026-10-02). Las mejoras de esta rama son candidatas a release y todavía no
+están desplegadas. La validación actual cubre suites, typecheck y build; no se
+pudo repetir el smoke local en esta sesión porque el servidor en 3001 no estaba
+activo. La revisión responsive manual sigue pendiente.
 
 ## Objetivo
 

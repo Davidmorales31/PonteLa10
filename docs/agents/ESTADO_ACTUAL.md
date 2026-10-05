@@ -1,5 +1,32 @@
 # Estado actual de Pont3la10
 
+## Candidato de release: Liga Colombiana y SEO de partidos (2026-10-05)
+
+- Rama aislada `codex/liga-colombiana-seo-release`, basada directamente en
+  `origin/main` (`344eb2f3638bd5df5a8eedda5ed137e1ec07ad5e`). Agrupa el trabajo
+  actual de `/liga-colombiana`, `/colombianos-en-europa`, páginas SEO por
+  partido, deduplicación/prioridad y ajustes del worker/editorial. No incorpora
+  los commits de backlog ni los archivos locales ignorados.
+- La UI y endpoints se apoyan en tablas públicas ya existentes con RLS y gates
+  de publicación. Este candidato no contiene una migración ni modifica datos de
+  Production; no se hicieron llamadas nuevas a API-Football o Goal API.
+- Verificación registrada en esta rama: lint, suite completa (57 archivos, 287
+  pruebas), typecheck, build y `git diff --check` pasaron. El build mantiene una
+  advertencia upstream de `@vue/shared` sobre resolución de export con barra
+  final. El smoke HTTP local de `/liga-colombiana` respondió 200 y el navegador
+  mostró ambas páginas en modo azul y blanco; al no tener variables locales de
+  Supabase, la vista enseña sus estados vacíos seguros. La consola del navegador
+  y el viewport móvil no quedaron certificados. No se tocó el puerto 3002.
+- Alcance aún incompleto frente a `INSTRUCCIONES_CODEX_PONT3LA10.md`: no hay
+  sincronización automática semanal/diaria del calendario oficial DIMAYOR hacia
+  `colombian_league_fixtures`; el scheduler de fútbol PC administra snapshots
+  diarios separados. Tampoco se genera un video MP4 de 6–10 segundos ni
+  derivados sociales 9:16; la imagen OpenGraph dinámica usa iniciales y no los
+  escudos reales. El GIF de ambiente es una imagen de apoyo, no un reproductor.
+- No afirmar que este candidato está en Production hasta verificar merge,
+  deployment y smoke público. Handoff de esta entrega:
+  `docs/agents/handoffs/2026-10-05-liga-colombiana-seo-release.md`.
+
 ## Base canónica alineada con Production (2026-10-02)
 
 - La fuente del deployment activo `dpl_64hECvYHAArmLsgXP9pv9NBUek58` se

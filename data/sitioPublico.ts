@@ -9,11 +9,13 @@ export const navegacionSitio: ItemNavegacionLanding[] = [
   { etiqueta: 'Noticias', ruta: '/articulos' },
   { etiqueta: 'Resultados', ruta: '/resultados' },
   { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' },
+  { etiqueta: 'Liga colombiana', ruta: '/liga-colombiana' },
   { etiqueta: 'Especiales', ruta: '/especiales' },
   { etiqueta: 'Fútbol', ruta: '/articulos?categoria=futbol' },
 ]
 
 export const navegacionMasSitio: ItemNavegacionLanding[] = [
+  { etiqueta: 'Colombianos en Europa', ruta: '/colombianos-en-europa' },
   { etiqueta: 'Tech deportiva', ruta: '/articulos?categoria=tecnologia' },
   { etiqueta: 'Gaming', ruta: '/articulos?categoria=gaming' },
   { etiqueta: 'Tendencias', ruta: '/articulos?categoria=tendencias' },
