@@ -2,6 +2,8 @@
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import { resolverDestinoPromocionalReproductor } from '~/utils/publicidad/destinoPromocionalReproductor'
+import type { ProgramacionTransmisionPublica } from '~/utils/partidos/programacion'
+import { etiquetasDistribucionProgramacion } from '~/utils/partidos/programacion'
 
 interface PartidoSeoVista {
   slug: string
@@ -20,10 +22,11 @@ interface PartidoSeoVista {
   escudoLocal: string | null
   escudoVisitante: string | null
   verificadoEn: string
+  transmisiones?: ProgramacionTransmisionPublica[]
 }
 
 const props = defineProps<{
-  modo: 'donde-ver' | 'como-quedo'
+  modo: 'donde-ver' | 'como-quedo' | 'partido'
   partido: PartidoSeoVista
   noticias: ResumenArticuloPublico[]
 }>()
@@ -50,6 +53,10 @@ const marcadorDisponible = computed(() => props.partido.golesLocal !== null
   && props.partido.golesVisitante !== null)
 const marcador = computed(() => `${props.partido.golesLocal ?? '—'}–${props.partido.golesVisitante ?? '—'}`)
 const estadoPartido = computed(() => etiquetaEstadoSeoPartido(props.partido.estado))
+const transmisionesConfirmadas = computed(() => (props.partido.transmisiones || [])
+  .filter(transmision => transmision.status === 'confirmed'
+    && Boolean(transmision.verifiedAt)
+    && transmision.sourceUrl.startsWith('https://')))
 const textoMarcador = computed(() => {
   if (!marcadorDisponible.value) return 'El marcador oficial todavía no está publicado.'
   if (estadoPartido.value === 'EN VIVO') return `Marcador actualizado: ${marcador.value}`
@@ -61,11 +68,12 @@ const nombreCompetencia = computed(() => {
   if (props.partido.competencia === 'copa-colombia') return 'Copa Colombia'
   return 'Liga BetPlay'
 })
-const etiquetaPartido = computed(() => modoEstadoParaEtiqueta(estadoPartido.value, props.modo))
+const etiquetaPartido = computed(() => modoEstadoParaEtiqueta(estadoPartido.value, props.modo === 'como-quedo' ? 'como-quedo' : 'donde-ver'))
 const urlProgramacionOficial = computed(() => props.partido.fuenteOficialUrl
   || `https://dimayor.com.co/programaciones-competencias-dimayor-${props.partido.temporada.slice(0, 4)}/`)
 
 function fechaPartido(valor: string, incluirHora = true) {
+  if (!Number.isFinite(Date.parse(valor))) return 'Fecha por confirmar'
   return new Intl.DateTimeFormat('es-CO', {
     dateStyle: 'full',
     ...(incluirHora ? { timeStyle: 'short' as const } : {}),
@@ -75,6 +83,16 @@ function fechaPartido(valor: string, incluirHora = true) {
 
 function iniciales(nombre: string) {
   return nombre.split(/\s+/).filter(Boolean).slice(0, 2).map(parte => parte[0]).join('').toLocaleUpperCase('es-CO')
+}
+
+function nombrePais(codigo: string) {
+  return new Intl.DisplayNames(['es'], { type: 'region' }).of(codigo) || codigo
+}
+
+function fechaVerificacion(valor: string) {
+  const fecha = new Date(valor)
+  if (!Number.isFinite(fecha.getTime())) return 'Verificada'
+  return `Verificada el ${new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'America/Bogota' }).format(fecha)}`
 }
 
 function modoEstadoParaEtiqueta(estado: string, modo: 'donde-ver' | 'como-quedo') {
@@ -114,8 +132,8 @@ function gestionarClicReproductor() {
 }
 
 onMounted(() => {
-  void registrarEvento(props.modo === 'donde-ver' ? 'match_page_view' : 'result_page_view')
-  if (props.modo !== 'donde-ver') return
+  void registrarEvento(props.modo === 'como-quedo' ? 'result_page_view' : 'match_page_view')
+  if (props.modo === 'como-quedo') return
   const mesBogota = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Bogota', year: 'numeric', month: '2-digit'
   }).format(new Date(props.partido.fechaIso))
@@ -133,21 +151,23 @@ onMounted(() => {
       <ol>
         <li><NuxtLink to="/">Inicio</NuxtLink></li>
         <li><NuxtLink to="/liga-colombiana">Liga colombiana</NuxtLink></li>
-        <li><span class="miga-actual" aria-current="page">{{ modo === 'donde-ver' ? 'Dónde ver' : 'Cómo quedó' }} {{ partido.local }} vs {{ partido.visitante }}</span></li>
+        <li><span class="miga-actual" aria-current="page">{{ modo === 'partido' ? `${partido.local} vs ${partido.visitante}` : `${modo === 'donde-ver' ? 'Dónde ver' : 'Cómo quedó'} ${partido.local} vs ${partido.visitante}` }}</span></li>
       </ol>
     </nav>
 
     <header class="encabezado-partido-seo">
       <p class="etiqueta-seccion">{{ nombreCompetencia }}<template v-if="partido.jornada"> · {{ partido.jornada }}</template></p>
-      <h1 v-if="modo === 'donde-ver'">¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</h1>
+      <h1 v-if="modo === 'partido'">{{ partido.local }} vs {{ partido.visitante }}: fecha, hora y resultado</h1>
+      <h1 v-else-if="modo === 'donde-ver'">¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</h1>
       <h1 v-else>Cómo quedó {{ partido.local }} vs {{ partido.visitante }}</h1>
-      <p v-if="modo === 'donde-ver'">Horario de Colombia, estadio y canales oficiales disponibles para el partido.</p>
+      <p v-if="modo === 'partido'">Horario de Colombia, estado y marcador verificado en una sola ficha. La programación de transmisión solo se muestra cuando tiene confirmación oficial.</p>
+      <p v-else-if="modo === 'donde-ver'">Horario de Colombia, estadio y canales oficiales disponibles para el partido.</p>
       <p v-else>Consulta el estado del encuentro y el marcador publicado para {{ partido.local }} y {{ partido.visitante }}.</p>
     </header>
 
     <section class="cartel-partido-seo" :class="{ 'cartel-resultado': modo === 'como-quedo' }" aria-label="Datos del partido">
       <video
-        v-if="modo === 'donde-ver'"
+        v-if="modo !== 'como-quedo'"
         class="reproductor-partido-seo"
         :poster="posterVideoUrl"
         controls
@@ -168,7 +188,7 @@ onMounted(() => {
         :src="cartelPartidoUrl"
         :alt="`Cartel del resultado: ${partido.local} ${marcadorDisponible ? marcador : 'vs'} ${partido.visitante}, ${etiquetaPartido}`"
       >
-      <div v-if="modo === 'donde-ver'" class="capa-datos-reproductor" aria-hidden="true">
+      <div v-if="modo !== 'como-quedo'" class="capa-datos-reproductor" aria-hidden="true">
         <div class="marca-cartel-partido"><span>Pont3la10</span><span class="competencia-cartel-partido">{{ nombreCompetencia }}</span></div>
         <span class="estado-cartel-partido" :class="{ 'estado-en-vivo': estadoPartido === 'EN VIVO' }">{{ etiquetaPartido }}</span>
         <div class="equipos-cartel-partido">
@@ -197,7 +217,7 @@ onMounted(() => {
         <span v-if="partido.ciudad">{{ partido.ciudad }}</span>
       </p>
       <a
-        v-if="modo === 'donde-ver'"
+        v-if="modo !== 'como-quedo'"
         class="boton-programacion-oficial"
         :href="urlProgramacionOficial"
         target="_blank"
@@ -208,19 +228,37 @@ onMounted(() => {
       <p v-if="modo === 'donde-ver'" class="nota-clic-promocional">Con anuncios autorizados, el primer clic en el reproductor y luego cada cuatro clics adicionales abre un enlace patrocinado.</p>
     </section>
 
-    <PublicidadAdsterraSlot formato="leaderboard" contexto="página SEO de partido" />
-
     <div class="contenido-partido-seo-grid">
       <article class="articulo-partido-seo">
-        <section v-if="modo === 'donde-ver'" class="bloque-datos-partido-seo">
+        <section v-if="modo !== 'como-quedo'" class="bloque-datos-partido-seo">
           <h2>Horario y dónde ver {{ partido.local }} vs {{ partido.visitante }}</h2>
           <dl>
             <div><dt>Fecha y hora</dt><dd>{{ fechaPartido(partido.fechaIso) }} (hora de Colombia)</dd></div>
             <div><dt>Competición</dt><dd>{{ nombreCompetencia }} · {{ partido.temporada }}<template v-if="partido.jornada"> · {{ partido.jornada }}</template></dd></div>
-            <div><dt>Canal o plataforma</dt><dd>Por confirmar en una programación oficial para este partido.</dd></div>
+            <div>
+              <dt>Canal o plataforma</dt>
+              <dd v-if="transmisionesConfirmadas.length">
+                <ul class="lista-transmisiones-partido">
+                  <li v-for="transmision in transmisionesConfirmadas" :key="transmision.id">
+                    <strong>{{ transmision.channel }}</strong> · {{ transmision.platform }}
+                    <span> · {{ nombrePais(transmision.countryCode) }} · {{ etiquetasDistribucionProgramacion[transmision.distributionType] }}</span>
+                    <a :href="transmision.sourceUrl" target="_blank" rel="noopener noreferrer">Ver fuente</a>
+                    <small>{{ fechaVerificacion(transmision.verifiedAt || '') }}</small>
+                    <span v-if="transmision.notes">{{ transmision.notes }}</span>
+                  </li>
+                </ul>
+              </dd>
+              <dd v-else>Por confirmar. No tenemos una fuente verificada para este partido.</dd>
+            </div>
             <div><dt>Estadio</dt><dd>{{ partido.estadio || 'No publicado' }}<template v-if="partido.ciudad"> · {{ partido.ciudad }}</template></dd></div>
           </dl>
-          <p>Consulta la programación oficial antes del encuentro. No enlazamos retransmisiones no autorizadas ni afirmamos que Pont3la10 transmita el partido.</p>
+          <p>Verificamos las opciones de transmisión para el país indicado y enlazamos su fuente. Pont3la10 no transmite el partido.</p>
+          <template v-if="modo === 'partido'">
+            <h2>{{ marcadorDisponible ? 'Marcador y estado' : 'Estado del encuentro' }}</h2>
+            <p class="estado-marcador-partido"><strong>{{ estadoPartido }}</strong><span>{{ marcadorDisponible ? marcador : 'Marcador pendiente' }}</span></p>
+            <p>{{ textoMarcador }}</p>
+            <p v-if="marcadorDisponible">Los goleadores y eventos se mostrarán cuando estén presentes en una fuente publicada y verificada.</p>
+          </template>
         </section>
         <section v-else class="bloque-datos-partido-seo">
           <h2>{{ marcadorDisponible ? 'Marcador y estado' : 'Estado del encuentro' }}</h2>
@@ -230,10 +268,10 @@ onMounted(() => {
           <p>Fecha: {{ fechaPartido(partido.fechaIso) }}<template v-if="partido.estadio"> · Estadio: {{ partido.estadio }}</template></p>
         </section>
 
-        <section v-if="modo === 'donde-ver'" class="preguntas-partido-seo" aria-labelledby="faq-partido-seo">
+        <section v-if="modo !== 'como-quedo'" class="preguntas-partido-seo" aria-labelledby="faq-partido-seo">
           <h2 id="faq-partido-seo">Preguntas frecuentes</h2>
           <details open><summary>¿A qué hora juega {{ partido.local }} vs {{ partido.visitante }}?</summary><p>El horario publicado es {{ fechaPartido(partido.fechaIso) }}, hora de Colombia. Si la organización anuncia un cambio, esta ficha se actualizará.</p></details>
-          <details><summary>¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</summary><p>El canal o plataforma no está confirmado en los datos públicos disponibles. Consulta la <a :href="urlProgramacionOficial" target="_blank" rel="noopener noreferrer" @click="registrarEvento('channel_click')">programación oficial de DIMAYOR</a>.</p></details>
+          <details><summary>¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</summary><p v-if="transmisionesConfirmadas.length">{{ transmisionesConfirmadas.map(item => `${item.channel} (${nombrePais(item.countryCode)})`).join(', ') }}. Revisa la fuente enlazada junto a cada opción porque la disponibilidad puede variar según el país.</p><p v-else>El canal o la plataforma no está confirmado. Revisa la <a :href="urlProgramacionOficial" target="_blank" rel="noopener noreferrer" @click="registrarEvento('channel_click')">programación de DIMAYOR</a>.</p></details>
         </section>
         <section v-else class="contexto-partido-seo">
           <h2>Información del partido</h2>
@@ -242,17 +280,13 @@ onMounted(() => {
 
         <nav class="enlaces-mutua-partido" aria-label="Más información del encuentro">
           <NuxtLink
-            v-if="modo === 'donde-ver'"
-            :to="`/como-quedo/${partido.slug}`"
+            v-if="modo !== 'partido'"
+            :to="`/partidos/${partido.slug}`"
             @click="registrarEvento('internal_match_link_click')"
-          >Ver resultado y cómo quedó <span aria-hidden="true">→</span></NuxtLink>
-          <NuxtLink
-            v-else
-            :to="`/donde-ver/${partido.slug}`"
-            @click="registrarEvento('internal_match_link_click')"
-          >Horario y dónde ver el partido <span aria-hidden="true">→</span></NuxtLink>
+          >Ficha completa del partido <span aria-hidden="true">→</span></NuxtLink>
           <NuxtLink to="/liga-colombiana">Liga colombiana <span aria-hidden="true">→</span></NuxtLink>
         </nav>
+        <PublicidadAdsterraSlot formato="leaderboard" contexto="página SEO de partido" />
       </article>
 
       <aside class="lateral-partido-seo">
@@ -305,6 +339,10 @@ onMounted(() => {
 .bloque-datos-partido-seo dl div { border-radius: 8px; background: rgba(4, 18, 36, .45); padding: 12px; }
 .bloque-datos-partido-seo dt { color: #83dff6; font-size: .8rem; font-weight: 900; }
 .bloque-datos-partido-seo dd { margin: 5px 0 0; line-height: 1.5; }
+.lista-transmisiones-partido { display: grid; gap: 8px; margin: 0; padding-left: 18px; }
+.lista-transmisiones-partido li { padding-left: 2px; }
+.lista-transmisiones-partido a { display: inline-block; margin-left: 7px; color: #83dff6; font-weight: 850; }
+.lista-transmisiones-partido small { display: block; margin-top: 3px; color: #a9bdd4; font-size: .7rem; }
 .bloque-datos-partido-seo > p, .contexto-partido-seo p, .preguntas-partido-seo p, .noticias-relacionadas-partido > p { color: #b4c7dd; line-height: 1.7; }
 .estado-marcador-partido { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; border-radius: 10px; background: #07192e; padding: 15px; font-size: 1.2rem; }
 .estado-marcador-partido strong { color: #83dff6; }

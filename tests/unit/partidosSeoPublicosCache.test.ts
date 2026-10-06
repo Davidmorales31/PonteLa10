@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { deduplicarFixturesSeo, listarPartidosSeoPublicos } from '../../server/utils/partidosSeoPublicos'
+import {
+  deduplicarFixturesSeo,
+  listarPartidosSeoAdministrables,
+  listarPartidosSeoPublicos
+} from '../../server/utils/partidosSeoPublicos'
 
 describe('caché del calendario público para páginas SEO', () => {
   it('agrupa lecturas concurrentes y reutiliza el resultado durante un minuto', async () => {
@@ -58,9 +62,10 @@ describe('caché del calendario público para páginas SEO', () => {
     })
     const cliente = { from: desdeTabla } as unknown as SupabaseClient
 
-    const [primera, concurrente] = await Promise.all([
+    const [primera, concurrente, administrable] = await Promise.all([
       listarPartidosSeoPublicos(cliente),
-      listarPartidosSeoPublicos(cliente)
+      listarPartidosSeoPublicos(cliente),
+      listarPartidosSeoAdministrables(cliente)
     ])
     const reutilizada = await listarPartidosSeoPublicos(cliente)
 
@@ -73,6 +78,13 @@ describe('caché del calendario público para páginas SEO', () => {
       golesLocal: 2,
       fuenteOficialUrl: fixture.official_source_url
     })
+    expect(administrable[0]?.identidadFuente).toEqual({
+      competenciaSlug: 'liga-betplay',
+      temporada: '2026-II',
+      proveedor: 'goal-api',
+      idProveedor: 'goal-fixture-77'
+    })
+    expect(primera[0]).not.toHaveProperty('identidadFuente')
     expect(primera[1]).toMatchObject({
       slug: 'cucuta-deportivo-vs-deportivo-pereira-liga-betplay-2027-i',
       slugsAlternos: [

@@ -1,11 +1,12 @@
 import {
   esRutaPublicaMedible,
+  construirDimensionesVistaPagina,
   ID_MEDICION_GA4,
   normalizarCategoriaMedible,
   resolverDecisionAnalitica,
   resolverDecisionPublicidad
 } from '~/utils/analiticaPublica'
-import type { EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
+import type { ContextoAnaliticaPagina, EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
 
 type EventoAnalitica =
   | 'article_view'
@@ -168,14 +169,20 @@ export function useAnaliticaPublica() {
     return promesaCargaEtiqueta
   }
 
-  async function registrarVistaPagina(ruta: string) {
+  async function registrarVistaPagina(
+    ruta: string,
+    consulta: Record<string, unknown> = {},
+    contexto?: ContextoAnaliticaPagina | null
+  ) {
     if (!idMedicion || !esRutaPublicaMedible(ruta) || !(await cargarEtiqueta())) return
     if (decision.value !== 'aceptada') return
 
     const rutaSinParametros = ruta.split(/[?#]/, 1)[0] || '/'
+    const contextoSeguro = contexto?.ruta === rutaSinParametros ? contexto : null
     encolarGtag('event', 'page_view', {
       page_location: `${window.location.origin}${rutaSinParametros}`,
-      page_path: rutaSinParametros
+      page_path: rutaSinParametros,
+      ...construirDimensionesVistaPagina(rutaSinParametros, consulta, contextoSeguro)
     })
   }
 

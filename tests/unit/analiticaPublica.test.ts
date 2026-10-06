@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   esRutaPublicaMedible,
+  construirDimensionesVistaPagina,
   ID_MEDICION_GA4,
   normalizarCategoriaMedible,
   resolverDecisionAnalitica,
@@ -41,5 +42,60 @@ describe('analítica pública', () => {
     expect(normalizarCategoriaMedible('opinion')).toBe('opinion')
     expect(normalizarCategoriaMedible('buscar=correo@ejemplo.com')).toBeNull()
     expect(normalizarCategoriaMedible(['gaming'])).toBeNull()
+  })
+
+  it('clasifica vistas públicas por tipo y no agrega el texto de búsqueda al evento', () => {
+    expect(construirDimensionesVistaPagina('/')).toEqual({ page_type: 'home' })
+    expect(construirDimensionesVistaPagina('/articulos/analisis-liga')).toEqual({
+      content_id: 'analisis-liga',
+      page_type: 'article'
+    })
+    expect(construirDimensionesVistaPagina('/articulos/analisis-liga', {}, {
+      ruta: '/articulos/analisis-liga',
+      category: 'futbol-colombiano',
+      primary_entity: 'liga-betplay'
+    })).toEqual({
+      content_id: 'analisis-liga',
+      category: 'futbol-colombiano',
+      primary_entity: 'liga-betplay',
+      page_type: 'article'
+    })
+    expect(construirDimensionesVistaPagina('/articulos', { buscar: 'correo@ejemplo.com' })).toEqual({
+      page_type: 'search'
+    })
+    expect(construirDimensionesVistaPagina('/articulos', { categoria: 'futbol-colombiano' })).toEqual({
+      category: 'futbol-colombiano',
+      page_type: 'hub'
+    })
+    expect(construirDimensionesVistaPagina('/partidos/nacional-vs-millonarios')).toEqual({
+      match_id: 'nacional-vs-millonarios',
+      page_type: 'match'
+    })
+    expect(construirDimensionesVistaPagina('/resultados/123')).toEqual({ page_type: 'results' })
+    expect(construirDimensionesVistaPagina('/seleccion-colombia')).toEqual({
+      hub_type: 'seleccion_colombia',
+      page_type: 'hub'
+    })
+  })
+
+  it('admite solo contexto de entidad con forma segura y estado conocido', () => {
+    expect(construirDimensionesVistaPagina('/partidos/nacional-vs-millonarios', {}, {
+      ruta: '/partidos/nacional-vs-millonarios',
+      competition: 'liga-betplay',
+      match_status: 'EN VIVO'
+    })).toEqual({
+      match_id: 'nacional-vs-millonarios',
+      competition: 'liga-betplay',
+      match_status: 'live',
+      page_type: 'match'
+    })
+    expect(construirDimensionesVistaPagina('/partidos/nacional-vs-millonarios', {}, {
+      ruta: '/partidos/nacional-vs-millonarios',
+      competition: 'liga-betplay?correo=privado',
+      match_status: 'dato no validado'
+    })).toEqual({
+      match_id: 'nacional-vs-millonarios',
+      page_type: 'match'
+    })
   })
 })

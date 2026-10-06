@@ -1,5 +1,5 @@
 import { getRouterParam } from 'h3'
-import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
+import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { obtenerPartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
 
 export default defineCachedEventHandler(async (evento) => {
@@ -9,7 +9,7 @@ export default defineCachedEventHandler(async (evento) => {
   }
 
   setResponseHeader(evento, 'Cache-Control', 'public, max-age=15, s-maxage=30')
-  return { partido: await obtenerPartidoSeoPublico(obtenerClienteSupabaseEditorial(evento), slug) }
+  return { partido: await obtenerPartidoSeoPublico(obtenerClienteSupabaseAnonimo(evento), slug) }
 }, {
   maxAge: 30,
   swr: false,

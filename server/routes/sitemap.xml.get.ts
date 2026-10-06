@@ -1,7 +1,9 @@
 import { setResponseHeader, setResponseStatus } from 'h3'
-import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
-import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
+import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
+import { listarPartidosSeoPublicos, listarSlugsConTransmisionVerificada } from '~/server/utils/partidosSeoPublicos'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
+import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
+import { analizarConsultaArticulosPublicos } from '~/server/utils/filtrosArticulosPublicos'
 import { construirUrlAbsoluta, escaparXml } from '~/utils/seo'
 
 interface EntradaSitemap {
@@ -22,7 +24,6 @@ export default defineEventHandler(async (evento) => {
     { ruta: '/articulos', frecuencia: 'daily', prioridad: '0.9' },
     { ruta: '/partidos-hoy', frecuencia: 'daily', prioridad: '0.9' },
     { ruta: '/liga-colombiana', frecuencia: 'daily', prioridad: '0.9' },
-    { ruta: '/colombianos-en-europa', frecuencia: 'daily', prioridad: '0.8' },
     { ruta: '/resultados', frecuencia: 'daily', prioridad: '0.9' },
     { ruta: '/resultados/en-vivo', frecuencia: 'daily', prioridad: '0.8' },
     { ruta: '/resultados/futbol', frecuencia: 'daily', prioridad: '0.8' },
@@ -37,13 +38,34 @@ export default defineEventHandler(async (evento) => {
   setResponseHeader(evento, 'Content-Type', 'application/xml; charset=utf-8')
 
   try {
-    const clienteSupabase = obtenerClienteSupabaseEditorial(evento)
+    const clienteSupabase = obtenerClienteSupabaseAnonimo(evento)
     const partidos = await listarPartidosSeoPublicos(clienteSupabase)
+    const partidosConTransmisionVerificada = await listarSlugsConTransmisionVerificada(clienteSupabase)
     for (const partido of partidos) {
-      entradas.push(
-        { ruta: `/donde-ver/${partido.slug}`, frecuencia: 'daily', prioridad: '0.8', modificadoEn: partido.verificadoEn },
-        { ruta: `/como-quedo/${partido.slug}`, frecuencia: 'daily', prioridad: '0.8', modificadoEn: partido.verificadoEn }
-      )
+      if (!evaluarIndexabilidad({
+        ...partido,
+        transmisionVerificada: partidosConTransmisionVerificada.has(partido.slug)
+      })) continue
+      entradas.push({
+        ruta: `/partidos/${partido.slug}`,
+        frecuencia: 'daily',
+        prioridad: '0.8',
+        modificadoEn: partido.verificadoEn
+      })
+    }
+
+    const hubsEditoriales: Array<{ ruta: string, categoria: string, prioridad: EntradaSitemap['prioridad'] }> = [
+      { ruta: '/futbol-colombiano', categoria: 'futbol-colombiano', prioridad: '0.9' },
+      { ruta: '/seleccion-colombia', categoria: 'colombia', prioridad: '0.9' },
+      { ruta: '/futbol-internacional', categoria: 'futbol-mundial', prioridad: '0.8' },
+      { ruta: '/colombianos-en-europa', categoria: 'colombianos-en-europa', prioridad: '0.8' }
+    ]
+    for (const hub of hubsEditoriales) {
+      const consulta = analizarConsultaArticulosPublicos({ categoria: hub.categoria, limite: '3' })
+      if (!consulta) continue
+      const articulosHub = await listarArticulosPublicosEditoriales(clienteSupabase, 3, 0, consulta)
+      if (!evaluarIndexabilidad({ tipo: 'hub', articulosDisponibles: articulosHub.length, fuenteDisponible: true })) continue
+      entradas.push({ ruta: hub.ruta, frecuencia: 'daily', prioridad: hub.prioridad })
     }
 
     let desplazamiento = 0

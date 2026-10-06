@@ -269,7 +269,7 @@ useSeoPont3la10(() => ({
                   <p class="fecha-partido-liga">{{ fechaPartido(partido.fechaIso) }}</p>
                   <div class="equipos-partido-liga">
                     <span class="equipo-liga">
-                      <NuxtLink v-if="hayEscudo(partido.escudoLocal)" :to="`/donde-ver/${partido.slug}`" :aria-label="`Dónde ver ${partido.local} vs ${partido.visitante}`">
+                      <NuxtLink v-if="hayEscudo(partido.escudoLocal)" :to="`/partidos/${partido.slug}`" :aria-label="`Ficha de ${partido.local} vs ${partido.visitante}`">
                         <img :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" loading="lazy" @error="escudoFallido(partido.escudoLocal)">
                       </NuxtLink>
                       <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.local) }}</b>
@@ -277,16 +277,15 @@ useSeoPont3la10(() => ({
                     </span>
                     <span class="versus-liga">{{ partido.golesLocal !== null && partido.golesVisitante !== null ? `${partido.golesLocal}–${partido.golesVisitante}` : 'vs' }}</span>
                     <span class="equipo-liga visitante">
-                      <NuxtLink v-if="hayEscudo(partido.escudoVisitante)" :to="`/donde-ver/${partido.slug}`" :aria-label="`Dónde ver ${partido.local} vs ${partido.visitante}`">
+                      <NuxtLink v-if="hayEscudo(partido.escudoVisitante)" :to="`/partidos/${partido.slug}`" :aria-label="`Ficha de ${partido.local} vs ${partido.visitante}`">
                         <img :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" loading="lazy" @error="escudoFallido(partido.escudoVisitante)">
                       </NuxtLink>
                       <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.visitante) }}</b>
                       <strong>{{ partido.visitante }}</strong>
                     </span>
                   </div>
-                  <nav class="enlaces-partido-liga" :aria-label="`Páginas de ${partido.local} vs ${partido.visitante}`">
-                    <NuxtLink :to="`/donde-ver/${partido.slug}`">Dónde ver</NuxtLink>
-                    <NuxtLink :to="`/como-quedo/${partido.slug}`">Cómo quedó</NuxtLink>
+                  <nav class="enlaces-partido-liga" :aria-label="`Ficha de ${partido.local} vs ${partido.visitante}`">
+                    <NuxtLink :to="`/partidos/${partido.slug}`">Ficha del partido</NuxtLink>
                     <a v-if="partido.fuenteOficialUrl" :href="partido.fuenteOficialUrl" target="_blank" rel="noopener noreferrer">Programación DIMAYOR</a>
                   </nav>
                   <p v-if="partido.estadio || partido.ciudad" class="sede-partido-liga">{{ [partido.estadio, partido.ciudad].filter(Boolean).join(' · ') }}</p>
@@ -319,7 +318,7 @@ useSeoPont3la10(() => ({
                 </span>
               </div>
               <nav class="enlaces-partido-liga" :aria-label="`Más información de ${partido.local} vs ${partido.visitante}`">
-                <NuxtLink :to="`/como-quedo/${partido.slug}`">Ver resultado</NuxtLink>
+                <NuxtLink :to="`/partidos/${partido.slug}`">Ver partido y resultado</NuxtLink>
               </nav>
             </article>
           </div>

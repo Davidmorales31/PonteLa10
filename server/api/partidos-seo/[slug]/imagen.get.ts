@@ -1,6 +1,6 @@
 import { createError, getQuery, getRouterParam, send } from 'h3'
 import sharp from 'sharp'
-import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
+import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { crearCartelSvg } from '~/server/utils/cartelPartidoSeo'
 import { obtenerEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
 import { obtenerPartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
@@ -26,7 +26,7 @@ export default defineEventHandler(async (evento) => {
     throw createError({ statusCode: 400, statusMessage: 'El formato de imagen solicitado no es válido.' })
   }
 
-  const partido = await obtenerPartidoSeoPublico(obtenerClienteSupabaseEditorial(evento), slug)
+  const partido = await obtenerPartidoSeoPublico(obtenerClienteSupabaseAnonimo(evento), slug)
   const dimensiones = formatos[formato as keyof typeof formatos]
   const clave = `${slug}-${formato}-${partido.verificadoEn}`
   const ahora = Date.now()

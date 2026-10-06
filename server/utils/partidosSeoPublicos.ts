@@ -3,6 +3,7 @@ import { createError } from 'h3'
 import { asignarSlugsPartidosSeo, buscarPartidoSeoPorSlug } from '~/utils/partidosSeo'
 import { normalizarEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import { obtenerRutaPublicaEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
+import type { ProgramacionTransmisionPublica } from '~/utils/partidos/programacion'
 
 const columnasFixtures = [
   'provider', 'provider_fixture_id', 'competition_slug', 'season', 'round_name', 'scheduled_at',
@@ -40,8 +41,8 @@ interface FilaEscudoEquipo {
 }
 
 const DURACION_CACHE_PARTIDOS_MS = 60_000
-let cachePartidosPublicos: { venceEn: number, partidos: PartidoSeoPublico[] } | null = null
-let cargaPartidosPublicos: Promise<PartidoSeoPublico[]> | null = null
+let cachePartidosPublicos: { venceEn: number, partidos: PartidoSeoAdministrable[] } | null = null
+let cargaPartidosPublicos: Promise<PartidoSeoAdministrable[]> | null = null
 
 export interface PartidoSeoPublico {
   slug: string
@@ -61,9 +62,23 @@ export interface PartidoSeoPublico {
   escudoLocal: string | null
   escudoVisitante: string | null
   verificadoEn: string
+  transmisiones?: ProgramacionTransmisionPublica[]
+}
+
+export interface PartidoSeoAdministrable extends PartidoSeoPublico {
+  identidadFuente: {
+    competenciaSlug: string
+    temporada: string
+    proveedor: string
+    idProveedor: string
+  }
 }
 
 export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promise<PartidoSeoPublico[]> {
+  return (await listarPartidosSeoAdministrables(cliente)).map(presentarPartidoSeoPublico)
+}
+
+export async function listarPartidosSeoAdministrables(cliente: SupabaseClient): Promise<PartidoSeoAdministrable[]> {
   const ahora = Date.now()
   if (cachePartidosPublicos && cachePartidosPublicos.venceEn > ahora) {
     return cachePartidosPublicos.partidos
@@ -102,8 +117,8 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
       }
     }
 
-    return slugs.map(fila => ({
-      slug: fila.slug,
+      return slugs.map(fila => ({
+        slug: fila.slug,
       slugsAlternos: fila.slugsAlternos,
       competencia: fila.competition_slug,
       temporada: fila.season,
@@ -121,8 +136,14 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
         || obtenerRutaPublicaEscudoPartidoSeo(fila.home_team),
       escudoVisitante: escudosPorEquipo.get(normalizarClaveEquipoLiga(fila.away_team))
         || obtenerRutaPublicaEscudoPartidoSeo(fila.away_team),
-      verificadoEn: fila.checked_at
-    }))
+        verificadoEn: fila.checked_at,
+        identidadFuente: {
+          competenciaSlug: fila.competition_slug,
+          temporada: fila.season,
+          proveedor: fila.provider,
+          idProveedor: fila.provider_fixture_id
+        }
+      }))
   })()
 
   cargaPartidosPublicos = carga
@@ -132,6 +153,29 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
     return partidos
   } finally {
     if (cargaPartidosPublicos === carga) cargaPartidosPublicos = null
+  }
+}
+
+function presentarPartidoSeoPublico(partido: PartidoSeoAdministrable): PartidoSeoPublico {
+  return {
+    slug: partido.slug,
+    slugsAlternos: partido.slugsAlternos,
+    competencia: partido.competencia,
+    temporada: partido.temporada,
+    jornada: partido.jornada,
+    fechaIso: partido.fechaIso,
+    local: partido.local,
+    visitante: partido.visitante,
+    estado: partido.estado,
+    golesLocal: partido.golesLocal,
+    golesVisitante: partido.golesVisitante,
+    estadio: partido.estadio,
+    ciudad: partido.ciudad,
+    fuenteOficialUrl: partido.fuenteOficialUrl,
+    escudoLocal: partido.escudoLocal,
+    escudoVisitante: partido.escudoVisitante,
+    verificadoEn: partido.verificadoEn,
+    transmisiones: partido.transmisiones
   }
 }
 
@@ -218,7 +262,64 @@ export async function obtenerPartidoSeoPublico(
   const partido = buscarPartidoSeoPorSlug(partidos, slugSolicitado)
 
   if (!partido) throw createError({ statusCode: 404, statusMessage: 'No encontramos ese partido.' })
-  return partido
+  return {
+    ...partido,
+    transmisiones: await listarProgramacionesTransmisionPublicas(cliente, partido.slug)
+  }
+}
+
+export async function listarProgramacionesTransmisionPublicas(
+  cliente: SupabaseClient,
+  matchSlug: string
+): Promise<ProgramacionTransmisionPublica[]> {
+  const { data, error } = await cliente
+    .from('colombian_match_broadcast_options')
+    .select('id,match_slug,country_code,channel,platform,distribution_type,source_url,status,verified_at,notes')
+    .eq('match_slug', matchSlug)
+    .eq('status', 'confirmed')
+    .not('verified_at', 'is', null)
+    .order('country_code', { ascending: true })
+    .order('channel', { ascending: true })
+    .limit(30)
+
+  if (error) {
+    // La ficha de partido puede desplegarse antes que esta ampliación de esquema.
+    if (error.code === '42P01' || error.code === 'PGRST205') return []
+    throw createError({ statusCode: 503, statusMessage: 'La programación pública no está disponible.' })
+  }
+
+  return (data || []).flatMap((fila) => {
+    if (fila.status !== 'confirmed' || !fila.verified_at || !fila.source_url) return []
+    return [{
+      id: fila.id,
+      matchSlug: fila.match_slug,
+      countryCode: fila.country_code,
+      channel: fila.channel,
+      platform: fila.platform,
+      distributionType: fila.distribution_type,
+      sourceUrl: fila.source_url,
+      status: fila.status,
+      verifiedAt: fila.verified_at,
+      notes: fila.notes
+    }]
+  })
+}
+
+export async function listarSlugsConTransmisionVerificada(
+  cliente: SupabaseClient
+): Promise<Set<string>> {
+  const { data, error } = await cliente
+    .from('colombian_match_broadcast_options')
+    .select('match_slug')
+    .eq('status', 'confirmed')
+    .not('verified_at', 'is', null)
+    .limit(5000)
+
+  if (error) {
+    if (error.code === '42P01' || error.code === 'PGRST205') return new Set()
+    throw createError({ statusCode: 503, statusMessage: 'No se pudo validar el sitemap de partidos.' })
+  }
+  return new Set((data || []).map(fila => fila.match_slug))
 }
 
 function normalizarNombreEquipo(nombre: string): string {
@@ -278,6 +379,7 @@ export function normalizarClaveEquipoLiga(nombre: string): string {
     'leones f c': 'leones',
     'leones': 'leones',
     'millonarios f c': 'millonarios',
+    'millonarios fc': 'millonarios',
     'millonarios': 'millonarios',
     'once caldas daf': 'once caldas',
     'once caldas': 'once caldas',

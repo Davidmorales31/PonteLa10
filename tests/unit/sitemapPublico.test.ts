@@ -16,4 +16,15 @@ describe('disponibilidad del sitemap público', () => {
     expect(ruta).toContain('s-maxage=300, stale-while-revalidate=300')
     expect(ruta).toContain("setResponseHeader(evento, 'Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=300')")
   })
+
+  it('publica una sola URL canónica por partido y excluye fichas incompletas', () => {
+    expect(ruta).toContain('transmisionVerificada: partidosConTransmisionVerificada.has(partido.slug)')
+    expect(ruta).toContain('if (!evaluarIndexabilidad({')
+    expect(ruta).toContain('`/partidos/${partido.slug}`')
+    expect(ruta).not.toContain('`/donde-ver/${partido.slug}`')
+    expect(ruta).not.toContain('`/como-quedo/${partido.slug}`')
+    expect(ruta).toContain("{ ruta: '/seleccion-colombia'")
+    expect(ruta).toContain("{ ruta: '/futbol-colombiano'")
+    expect(ruta).toContain("{ ruta: '/futbol-internacional'")
+  })
 })

@@ -19,6 +19,7 @@ export const permisosEditoriales: PermisoEditorial[] = [
   'media.eliminar',
   'taxonomia.ver',
   'taxonomia.gestionar',
+  'partidos.programacion.gestionar',
   'ingestas.ver',
   'ingestas.registrar',
   'ingestas.gestionar',
@@ -80,6 +81,7 @@ export const permisosPorRol: Record<RolEditorial, readonly PermisoEditorial[]> =
     'media.editar',
     'taxonomia.ver',
     'taxonomia.gestionar',
+    'partidos.programacion.gestionar',
     'ingestas.ver',
     'ingestas.registrar',
     'ingestas.redactar'

@@ -1,20 +1,28 @@
 <script setup lang="ts">
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
-import { construirUrlAbsoluta } from '~/utils/seo'
+import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
+import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
 
 const configuracion = useRuntimeConfig()
-const { data: noticias } = await useFetch<ResumenArticuloPublico[]>(
+const { data: respuestaNoticias, error } = await useFetch<ResumenArticuloPublico[]>(
   '/api/articulos?tema=colombianos-en-europa&limite=24',
   { default: () => [], key: 'noticias-colombianos-europa' }
 )
-const noticiaPrincipal = computed(() => noticias.value?.[0] || null)
-const ultimasNoticias = computed(() => noticias.value?.slice(1) || [])
+const noticias = computed(() => Array.isArray(respuestaNoticias.value) ? respuestaNoticias.value : [])
+const noticiaPrincipal = computed(() => noticias.value[0] || null)
+const ultimasNoticias = computed(() => noticias.value.slice(1))
+const indexable = computed(() => evaluarIndexabilidad({
+  tipo: 'hub',
+  articulosDisponibles: noticias.value.length,
+  fuenteDisponible: !error.value
+}))
 
 useSeoPont3la10(() => ({
   titulo: 'Colombianos en Europa: noticias, goles y actualidad | Pont3la10',
   descripcion: 'Noticias y actualidad de los futbolistas colombianos en Europa: actuaciones, goles, competiciones continentales y ligas nacionales.',
   rutaCanonica: '/colombianos-en-europa',
   seccion: 'Colombianos en Europa',
+  robots: indexable.value ? undefined : robotsNoIndex,
   datosEstructurados: [{
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
@@ -72,7 +80,7 @@ useSeoPont3la10(() => ({
       </aside>
     </section>
 
-    <PublicidadAdsterraSlot formato="leaderboard" contexto="colombianos en europa" />
+    <PublicidadAdsterraSlot v-if="noticias.length >= 3" formato="leaderboard" contexto="colombianos en europa" />
 
     <section class="bloque-noticias-europa" aria-labelledby="titulo-noticias-europa">
       <div class="encabezado-noticias-listado"><div><p class="etiqueta-seccion">SEGUIMIENTO EDITORIAL</p><h2 id="titulo-noticias-europa">Últimas noticias de colombianos en Europa</h2></div><span>{{ noticias.length }} {{ noticias.length === 1 ? 'publicación' : 'publicaciones' }}</span></div>

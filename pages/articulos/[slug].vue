@@ -12,7 +12,7 @@ import {
   robotsNoIndex
 } from '~/utils/seo'
 import { seleccionarArticulosRelacionados } from '~/utils/editorial/distribucion'
-import type { EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
+import type { ContextoAnaliticaPagina, EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
 
 const ruta = useRoute()
 const slugActual = computed(() => String(ruta.params.slug || ''))
@@ -23,6 +23,16 @@ const { data: articuloPublicado } = await useFetch<ArticuloPublicoEditorial>(
     ignoreResponseError: true
   }
 )
+const contextoAnalitica = useState<ContextoAnaliticaPagina | null>('contexto-analitica-pagina', () => null)
+watchEffect(() => {
+  const articulo = articuloPublicado.value
+  contextoAnalitica.value = articulo
+    ? {
+        ruta: `/articulos/${articulo.slug}`,
+        category: articulo.categoria?.slug
+      }
+    : null
+})
 
 const { data: publicacionesDisponibles } = await useFetch<ResumenArticuloPublico[]>(
   '/api/articulos',
