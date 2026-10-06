@@ -9,7 +9,12 @@ release; no se instaló una tarea persistente de Windows. Si el PC se suspende o
 los procesos se detienen, el trabajo se pausa y debe reiniciarse.
 
 Las cuotas duras de Production permanecen en 80 API-Football/900 Goal API y la
-base rechaza intervalos menores de 5/15 minutos. La medición agregada del
+base rechaza intervalos menores de 5/15 minutos. La página `/liga-colombiana`
+recibe posiciones desde DIMAYOR; el último ciclo observado dejó 20+16 equipos,
+36/36 con escudo y `checked_at=2026-10-06 12:59:50 UTC`. PR #62 eliminó la doble
+caché del API público, dejando caché CDN de 60 segundos más SWR de 60 segundos;
+las lecturas posteriores al merge comprobaron MISS fresco y HIT de 3 segundos.
+La medición agregada del
 2026-10-06 cerca de las 00:55 COT fue 1/80 y 44/900, sin atribuirla a un proceso
 concreto. Para Liga A/B se añadió una ruta DIMAYOR separada que lee las tablas
 oficiales, exige cobertura exacta de todos los equipos/fases autorizados de la

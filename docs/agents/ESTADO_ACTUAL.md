@@ -3,14 +3,17 @@
 ## Liga, partidos SEO y tabla DIMAYOR en Production (2026-10-06)
 
 - PR #60 se integró a `main` como `aeb3124e8bcc7c0bb89f286e74c66dc542a79b76`
-  (`feat(futbol): actualizar Liga BetPlay desde DIMAYOR`). GitHub reportó los
-  checks requeridos aprobados, incluido Vercel; después del merge Production se
-  verificó por HTTP. `/partidos-hoy`, `/liga-colombiana`, `/api/liga-colombiana`
-  y `/api/resultados?deporte=futbol&timeZone=America%2FBogota` respondieron 200.
+  (`feat(futbol): actualizar Liga BetPlay desde DIMAYOR`). PR #61 alineó
+  documentación y versión de migración (`d1021f75`); PR #62 corrigió el doble
+  caché del API (`da0fce0b`). Todos los checks requeridos, incluido Vercel,
+  pasaron. Production se verificó por HTTP: `/partidos-hoy`, `/liga-colombiana`,
+  `/api/liga-colombiana` y `/api/resultados?deporte=futbol&timeZone=America%2FBogota`
+  respondieron 200.
 - `/api/liga-colombiana` sirve 36 posiciones públicas de la temporada 2026-II:
   20 de Liga A y 16 de Liga B, con escudo para cada equipo. Las 36 filas tienen
-  `source_name=DIMAYOR` y `checked_at=2026-10-06 12:29:09 UTC` (07:29 COT).
-  El calendario público sigue sirviendo sus fixtures desde la base de datos.
+  `source_name=DIMAYOR` y `checked_at=2026-10-06 12:59:50 UTC` (07:59:50 COT).
+  La lectura SQL posterior confirmó 36/36 con escudo. El calendario público
+  sigue sirviendo sus fixtures desde la base de datos.
 - La migración aplicada en Supabase Production quedó registrada por el servidor
   como versión `20261006115906` (`hu_fut_tabla_dimayor_atomica`). Se alinea el
   nombre local de su archivo a esa versión. La función privada refresca el
@@ -22,26 +25,34 @@
   de rendimiento relacionados con esta tabla. pgTAP está disponible pero no
   instalado en Production; las pruebas se validaron con consultas directas de
   ACL/RLS y la escritura real del worker.
-- El worker local completó el primer refresco DIMAYOR de Production: 36 filas
-  actualizadas, `fuente=DIMAYOR`, `solicitudes=0`. Ese refresco no cambió los
-  contadores de APIs. En un ciclo independiente posterior, el flujo de fixtures
-  hizo 1 solicitud a Goal API (1 fixture recibido/guardado y su detalle
-  actualizado); la tabla vuelve a consultarse con cooldown protegido de 15
-  minutos. La ruta genérica de snapshots/proveedores no se reemplazó.
+- El worker local actualiza la tabla DIMAYOR en ciclos con cooldown protegido de
+  15 minutos: el último ciclo observado completó 36 posiciones, `solicitudes=0`,
+  sin cambiar cuotas de APIs. El worker genérico de clasificaciones respondió
+  `sin_objetivos`/0 solicitudes en el mismo ciclo. En un ciclo independiente
+  anterior, fixtures sí usó 1 llamada Goal API para guardar un partido y su
+  detalle; la ruta genérica de snapshots/proveedores no se reemplazó.
+- El API público antes combinaba caché Nitro de 5 min + SWR con caché Vercel de
+  5 min + SWR, y una revalidación de CDN podía recibir de nuevo una respuesta
+  vieja. PR #62 eliminó el caché interno duplicado y dejó la caché compartida de
+  Vercel en 60 s + SWR 60 s. Smoke en Production: una respuesta MISS devolvió
+  36 filas y `actualizadoEn=07:59:50 COT`; la lectura siguiente fue HIT en 3 s y
+  otra lectura, tras vencer el TTL, volvió a MISS consultando origen. No se
+  consumió cuota de proveedores para estas verificaciones.
 - El servidor local y el worker siguen activos en `127.0.0.1:3011` dentro del
   worktree `.codex-release-dimayor-runtime`. No se instaló una tarea persistente
   de Windows: el PC debe permanecer despierto y los procesos deben seguir vivos;
   tras suspensión, reinicio o cierre de los procesos hay que arrancarlos de
   nuevo. Se dejó intacto el servicio preexistente del puerto 3001.
-- El deploy actual es el posterior al merge de PR #60; el identificador de
+- El deploy actual es el posterior al merge de PR #62; el identificador de
   deployment no se pudo leer por el conector Vercel (403/404). El estado de CI
   de Vercel fue exitoso y la URL pública devolvió las rutas y datos anteriores.
   No se accedió al preview protegido. Se conserva el trabajo de Liga, páginas
   SEO, 80 carteles WebP de octubre y reproductor promocional incluidos en PR #60.
-- Validación previa al merge: lint, typecheck, suite completa (67 archivos/326
-  pruebas), build y pruebas focalizadas (17/17); continúa el aviso upstream
-  `DEP0155` de `@vue/shared`. La migración fue revisada estáticamente y luego
-  verificada/escrita en Production. Handoff:
+- Validación: PR #60 pasó lint, typecheck, suite completa (67 archivos/326
+  pruebas), build y pruebas focalizadas (17/17); PR #62 pasó lint, typecheck,
+  suite (67/326) y build. El aviso upstream `DEP0155` de `@vue/shared` permanece.
+  La migración se revisó estáticamente y luego se verificó/escribió en
+  Production. Handoff:
   `docs/agents/handoffs/2026-10-06-liga-colombiana-produccion.md`.
 
 ## Liga colombiana, SEO de partidos y cuota (2026-10-05)
