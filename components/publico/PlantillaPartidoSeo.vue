@@ -21,6 +21,8 @@ interface PartidoSeoVista {
   fuenteOficialUrl: string | null
   escudoLocal: string | null
   escudoVisitante: string | null
+  equipoLocalSlug?: string
+  equipoVisitanteSlug?: string
   verificadoEn: string
   transmisiones?: ProgramacionTransmisionPublica[]
 }
@@ -279,6 +281,8 @@ onMounted(() => {
         </section>
 
         <nav class="enlaces-mutua-partido" aria-label="Más información del encuentro">
+          <NuxtLink v-if="partido.equipoLocalSlug" :to="`/equipos/${partido.equipoLocalSlug}`">{{ partido.local }} <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink v-if="partido.equipoVisitanteSlug" :to="`/equipos/${partido.equipoVisitanteSlug}`">{{ partido.visitante }} <span aria-hidden="true">→</span></NuxtLink>
           <NuxtLink
             v-if="modo !== 'partido'"
             :to="`/partidos/${partido.slug}`"

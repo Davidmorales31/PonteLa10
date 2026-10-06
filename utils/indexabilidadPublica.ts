@@ -19,13 +19,35 @@ export interface DatosIndexabilidadHub {
   fuenteDisponible: boolean
 }
 
+export interface DatosIndexabilidadEquipo {
+  tipo: 'equipo'
+  slug: string
+  nombre: string
+  competencia: string
+  temporada: string
+  escudo: string | null
+  posicionVerificadaEn: string | null
+  partidosPublicos: number
+}
+
 export function evaluarIndexabilidad(
-  contenido: DatosIndexabilidadPartido | DatosIndexabilidadHub
+  contenido: DatosIndexabilidadPartido | DatosIndexabilidadHub | DatosIndexabilidadEquipo
 ): boolean {
   if ('articulosDisponibles' in contenido) {
     return contenido.fuenteDisponible
       && Number.isInteger(contenido.articulosDisponibles)
       && contenido.articulosDisponibles >= 3
+  }
+
+  if ('tipo' in contenido && contenido.tipo === 'equipo') {
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(contenido.slug)
+      && contenido.nombre.trim().length >= 2
+      && /^(?:liga|torneo)-betplay$/.test(contenido.competencia)
+      && /^20\d{2}(?:-[A-Za-z0-9]+)?$/.test(contenido.temporada)
+      && Boolean(contenido.escudo && /^\/images\/escudos\/liga-colombiana\/[a-z0-9-]+\.png$/.test(contenido.escudo))
+      && Boolean(contenido.posicionVerificadaEn && Number.isFinite(Date.parse(contenido.posicionVerificadaEn)))
+      && Number.isInteger(contenido.partidosPublicos)
+      && contenido.partidosPublicos >= 3
   }
 
   const partido = contenido

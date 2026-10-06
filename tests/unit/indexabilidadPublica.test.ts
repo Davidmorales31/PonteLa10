@@ -43,4 +43,21 @@ describe('indexabilidad de fichas de partido', () => {
     expect(evaluarIndexabilidad({ tipo: 'hub', articulosDisponibles: 2, fuenteDisponible: true })).toBe(false)
     expect(evaluarIndexabilidad({ tipo: 'hub', articulosDisponibles: 24, fuenteDisponible: false })).toBe(false)
   })
+
+  it('solo indexa fichas de equipo con escudo, clasificación verificada y tres partidos', () => {
+    const equipo = {
+      tipo: 'equipo' as const,
+      slug: 'atletico-nacional',
+      nombre: 'Atlético Nacional',
+      competencia: 'liga-betplay',
+      temporada: '2026-II',
+      escudo: '/images/escudos/liga-colombiana/atletico-nacional.png',
+      posicionVerificadaEn: '2026-10-06T12:00:00.000Z',
+      partidosPublicos: 3
+    }
+    expect(evaluarIndexabilidad(equipo)).toBe(true)
+    expect(evaluarIndexabilidad({ ...equipo, escudo: null })).toBe(false)
+    expect(evaluarIndexabilidad({ ...equipo, posicionVerificadaEn: null })).toBe(false)
+    expect(evaluarIndexabilidad({ ...equipo, partidosPublicos: 2 })).toBe(false)
+  })
 })

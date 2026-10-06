@@ -14,6 +14,7 @@ const paginas = leerRuta('sitemap-pages.xml.get.ts')
 const competencias = leerRuta('sitemap-competitions.xml.get.ts')
 const articulos = leerRuta('sitemap-articles.xml.get.ts')
 const partidos = leerRuta('sitemap-matches.xml.get.ts')
+const equipos = leerRuta('sitemap-teams.xml.get.ts')
 const hubs = leerRuta('sitemap-hubs.xml.get.ts')
 const news = leerRuta('news-sitemap.xml.get.ts')
 const robots = leerRuta('robots.txt.get.ts')
@@ -109,6 +110,16 @@ describe('sitemaps públicos por entidad', () => {
     expect(hubs).toContain('modificadoEn: articulosHub[0]?.publicadoEn')
     expect(hubs).toContain('obtenerClienteSupabaseAnonimo')
     expect(hubs).not.toContain('obtenerClienteSupabaseEditorial')
+  })
+
+  it('incluye solo fichas de equipo indexables derivadas de datos públicos autorizados', () => {
+    expect(equipos).toContain('obtenerClienteSupabaseAnonimo')
+    expect(equipos).toContain('listarEquiposLigaPublicos')
+    expect(equipos).toContain('listarPartidosSeoPublicos')
+    expect(equipos).toContain('evaluarIndexabilidad({')
+    expect(equipos).toContain('`/equipos/${equipo.slug}`')
+    expect(equipos).toContain("registrarFalloSitemap(evento, 'teams')")
+    expect(equipos).not.toContain('obtenerClienteSupabaseEditorial')
   })
 
   it('conserva los 48 h de Google News, el tope de 1000 y expone errores', () => {

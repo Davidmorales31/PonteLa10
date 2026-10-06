@@ -19,6 +19,8 @@ interface PartidoLiga {
   fuenteOficialUrl: string | null
   escudoLocal: string | null
   escudoVisitante: string | null
+  equipoLocalSlug?: string
+  equipoVisitanteSlug?: string
   verificadoEn: string
 }
 
@@ -166,6 +168,10 @@ function escudoFallido(url: string | null) {
   if (url && !escudosFallidos.value.includes(url)) escudosFallidos.value = [...escudosFallidos.value, url]
 }
 
+function rutaFichaEquipo(slug: string) {
+  return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? `/equipos/${slug}` : null
+}
+
 useSeoPont3la10(() => ({
   titulo: 'Liga Colombiana: Liga BetPlay, Torneo y Copa Colombia | Pont3la10',
   descripcion: 'Sigue la Liga BetPlay y el fútbol colombiano: tabla de posiciones, calendario, resultados y noticias actualizadas de Liga A, Torneo B y Copa Colombia.',
@@ -273,7 +279,7 @@ useSeoPont3la10(() => ({
                         <img :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" loading="lazy" @error="escudoFallido(partido.escudoLocal)">
                       </NuxtLink>
                       <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.local) }}</b>
-                      <strong>{{ partido.local }}</strong>
+                      <strong><NuxtLink v-if="partido.equipoLocalSlug" :to="`/equipos/${partido.equipoLocalSlug}`">{{ partido.local }}</NuxtLink><template v-else>{{ partido.local }}</template></strong>
                     </span>
                     <span class="versus-liga">{{ partido.golesLocal !== null && partido.golesVisitante !== null ? `${partido.golesLocal}–${partido.golesVisitante}` : 'vs' }}</span>
                     <span class="equipo-liga visitante">
@@ -281,7 +287,7 @@ useSeoPont3la10(() => ({
                         <img :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" loading="lazy" @error="escudoFallido(partido.escudoVisitante)">
                       </NuxtLink>
                       <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.visitante) }}</b>
-                      <strong>{{ partido.visitante }}</strong>
+                      <strong><NuxtLink v-if="partido.equipoVisitanteSlug" :to="`/equipos/${partido.equipoVisitanteSlug}`">{{ partido.visitante }}</NuxtLink><template v-else>{{ partido.visitante }}</template></strong>
                     </span>
                   </div>
                   <nav class="enlaces-partido-liga" :aria-label="`Ficha de ${partido.local} vs ${partido.visitante}`">
@@ -308,13 +314,13 @@ useSeoPont3la10(() => ({
                 <span class="equipo-liga">
                   <img v-if="hayEscudo(partido.escudoLocal)" :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" loading="lazy" @error="escudoFallido(partido.escudoLocal)">
                   <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.local) }}</b>
-                  <strong>{{ partido.local }}</strong>
+                  <strong><NuxtLink v-if="partido.equipoLocalSlug" :to="`/equipos/${partido.equipoLocalSlug}`">{{ partido.local }}</NuxtLink><template v-else>{{ partido.local }}</template></strong>
                 </span>
                 <span class="versus-liga">{{ partido.golesLocal ?? '—' }}–{{ partido.golesVisitante ?? '—' }}</span>
                 <span class="equipo-liga visitante">
                   <img v-if="hayEscudo(partido.escudoVisitante)" :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" loading="lazy" @error="escudoFallido(partido.escudoVisitante)">
                   <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.visitante) }}</b>
-                  <strong>{{ partido.visitante }}</strong>
+                  <strong><NuxtLink v-if="partido.equipoVisitanteSlug" :to="`/equipos/${partido.equipoVisitanteSlug}`">{{ partido.visitante }}</NuxtLink><template v-else>{{ partido.visitante }}</template></strong>
                 </span>
               </div>
               <nav class="enlaces-partido-liga" :aria-label="`Más información de ${partido.local} vs ${partido.visitante}`">
@@ -340,7 +346,7 @@ useSeoPont3la10(() => ({
                   <tbody>
                     <tr v-for="fila in grupo.filas" :key="`${fila.fase}-${fila.equipoClave}`">
                       <td>{{ fila.posicion }}</td>
-                      <th scope="row"><span class="equipo-tabla-liga"><img v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" loading="lazy" @error="escudoFallido(fila.escudo)"><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b>{{ fila.equipo }}</span></th>
+                      <th scope="row"><span class="equipo-tabla-liga"><img v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" loading="lazy" @error="escudoFallido(fila.escudo)"><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b><NuxtLink v-if="rutaFichaEquipo(fila.equipoClave)" :to="rutaFichaEquipo(fila.equipoClave) || '/liga-colombiana'">{{ fila.equipo }}</NuxtLink><template v-else>{{ fila.equipo }}</template></span></th>
                       <td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td>
                     </tr>
                   </tbody>
@@ -363,7 +369,7 @@ useSeoPont3la10(() => ({
                 <table>
                   <caption>{{ grupo.fase }} · {{ grupo.temporada }}</caption>
                   <thead><tr><th scope="col">Pos.</th><th scope="col">Equipo</th><th scope="col">PJ</th><th scope="col">DG</th><th scope="col">Pts</th></tr></thead>
-                  <tbody><tr v-for="fila in grupo.filas" :key="`${fila.fase}-${fila.equipoClave}`"><td>{{ fila.posicion }}</td><th scope="row"><span class="equipo-tabla-liga"><img v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" loading="lazy" @error="escudoFallido(fila.escudo)"><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b>{{ fila.equipo }}</span></th><td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td></tr></tbody>
+                  <tbody><tr v-for="fila in grupo.filas" :key="`${fila.fase}-${fila.equipoClave}`"><td>{{ fila.posicion }}</td><th scope="row"><span class="equipo-tabla-liga"><img v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" loading="lazy" @error="escudoFallido(fila.escudo)"><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b><NuxtLink v-if="rutaFichaEquipo(fila.equipoClave)" :to="rutaFichaEquipo(fila.equipoClave) || '/liga-colombiana'">{{ fila.equipo }}</NuxtLink><template v-else>{{ fila.equipo }}</template></span></th><td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td></tr></tbody>
                 </table>
               </div>
             </section>

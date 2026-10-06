@@ -34,6 +34,7 @@ interface FilaPartidoSeo {
 }
 
 interface FilaEscudoEquipo {
+  team_key: string
   team_name: string
   team_logo_url: string | null
   is_public: boolean
@@ -61,6 +62,8 @@ export interface PartidoSeoPublico {
   fuenteOficialUrl: string | null
   escudoLocal: string | null
   escudoVisitante: string | null
+  equipoLocalSlug?: string
+  equipoVisitanteSlug?: string
   verificadoEn: string
   transmisiones?: ProgramacionTransmisionPublica[]
 }
@@ -94,7 +97,7 @@ export async function listarPartidosSeoAdministrables(cliente: SupabaseClient): 
         .order('scheduled_at', { ascending: true })
         .limit(1000),
       cliente.from('colombian_league_standings')
-        .select('team_name,team_logo_url,is_public,publication_rights_confirmed')
+        .select('team_key,team_name,team_logo_url,is_public,publication_rights_confirmed')
         .eq('is_public', true)
         .eq('publication_rights_confirmed', true)
         .limit(500)
@@ -109,6 +112,11 @@ export async function listarPartidosSeoAdministrables(cliente: SupabaseClient): 
         && fila.provider_fixture_id.trim() && fila.home_team.trim() && fila.away_team.trim()))
     const slugs = asignarSlugsPartidosSeo(filas)
     const escudosPorEquipo = new Map<string, string>()
+    const slugsPorEquipo = crearMapaSlugsEquiposPublicos(
+      respuestaEscudos.error || !respuestaEscudos.data
+        ? []
+        : respuestaEscudos.data as unknown as FilaEscudoEquipo[]
+    )
     if (!respuestaEscudos.error && respuestaEscudos.data) {
       for (const fila of respuestaEscudos.data as unknown as FilaEscudoEquipo[]) {
         if (fila.is_public !== true || fila.publication_rights_confirmed !== true) continue
@@ -136,6 +144,8 @@ export async function listarPartidosSeoAdministrables(cliente: SupabaseClient): 
         || obtenerRutaPublicaEscudoPartidoSeo(fila.home_team),
       escudoVisitante: escudosPorEquipo.get(normalizarClaveEquipoLiga(fila.away_team))
         || obtenerRutaPublicaEscudoPartidoSeo(fila.away_team),
+      equipoLocalSlug: slugsPorEquipo.get(normalizarClaveEquipoLiga(fila.home_team)),
+      equipoVisitanteSlug: slugsPorEquipo.get(normalizarClaveEquipoLiga(fila.away_team)),
         verificadoEn: fila.checked_at,
         identidadFuente: {
           competenciaSlug: fila.competition_slug,
@@ -174,6 +184,8 @@ function presentarPartidoSeoPublico(partido: PartidoSeoAdministrable): PartidoSe
     fuenteOficialUrl: partido.fuenteOficialUrl,
     escudoLocal: partido.escudoLocal,
     escudoVisitante: partido.escudoVisitante,
+    equipoLocalSlug: partido.equipoLocalSlug,
+    equipoVisitanteSlug: partido.equipoVisitanteSlug,
     verificadoEn: partido.verificadoEn,
     transmisiones: partido.transmisiones
   }
@@ -327,6 +339,26 @@ function normalizarNombreEquipo(nombre: string): string {
     .replace(/[^a-z0-9]+/g, ' ').trim()
 }
 
+/** Solo resuelve enlaces cuando el slug procede de una fila pública y autorizada. */
+export function crearMapaSlugsEquiposPublicos(filas: FilaEscudoEquipo[]): Map<string, string> {
+  const slugsPorClave = new Map<string, string | null>()
+  for (const fila of filas) {
+    if (fila.is_public !== true || fila.publication_rights_confirmed !== true
+      || typeof fila.team_name !== 'string' || !fila.team_name.trim()
+      || typeof fila.team_key !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(fila.team_key)) continue
+
+    const clave = normalizarClaveEquipoLiga(fila.team_name)
+    if (!clave) continue
+    const previo = slugsPorClave.get(clave)
+    if (previo === undefined) slugsPorClave.set(clave, fila.team_key)
+    else if (previo !== fila.team_key) slugsPorClave.set(clave, null)
+  }
+
+  return new Map([...slugsPorClave.entries()].flatMap(([clave, slug]) =>
+    slug ? [[clave, slug] as const] : []
+  ))
+}
+
 /** Nombres documentados que los feeds oficiales usan indistintamente para el mismo club. */
 export function normalizarClaveEquipoLiga(nombre: string): string {
   const normalizado = normalizarNombreEquipo(nombre)
@@ -377,6 +409,7 @@ export function normalizarClaveEquipoLiga(nombre: string): string {
     'junior f c': 'junior',
     'junior': 'junior',
     'leones f c': 'leones',
+    'leones fc': 'leones',
     'leones': 'leones',
     'millonarios f c': 'millonarios',
     'millonarios fc': 'millonarios',
