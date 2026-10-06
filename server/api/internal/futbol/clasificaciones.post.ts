@@ -13,11 +13,10 @@ import {
 import { crearRepositorioSnapshotsSupabase } from '~/server/utils/proveedoresFutbol/repositorioSnapshotsSupabase'
 import { crearReservaDiariaSupabaseFutbol } from '~/server/utils/proveedoresFutbol/presupuestoDiarioSupabase'
 import { sincronizarClasificacionesFutbol } from '~/server/utils/proveedoresFutbol/sincronizadorClasificaciones'
-import { proyectarClasificacionLigaPublica, type FilaClasificacionLigaBase, type SnapshotClasificacionLigaPrivada } from '~/server/utils/clasificacionLigaPublica'
 
 const limiteCuerpoBytes = 1_024
 
-/** Activación interna firmada; no configura cron ni acepta objetivos del cliente. */
+/** Sincroniza snapshots privados de la allowlist; no escribe la tabla pública DIMAYOR. */
 export default defineEventHandler(async (evento) => {
   const config = useRuntimeConfig(evento)
   const cuerpo = await leerCuerpoFirmado(evento, limiteCuerpoBytes)
@@ -70,60 +69,16 @@ export default defineEventHandler(async (evento) => {
   }
 
   const repositorio = crearRepositorioSnapshotsSupabase(cliente)
-  const fechaNegocio = fechaNegocioBogota()
   const resultado = await sincronizarClasificacionesFutbol({
     ...proveedores,
     repositorio,
-    fechaNegocio,
+    fechaNegocio: fechaNegocioBogota(),
     objetivos,
     // Reserva atómica por proveedor antes de cada llamada, incluso en fallback.
     puedeConsumir: crearGateReservaClasificaciones(provider => repositorio.reclamarVentanaWorker(provider, 'standings'))
   })
-  if (resultado.estado !== 'completado' || config.futbolDerechosPublicacionConfirmados !== true) return resultado
-  const posicionesPublicasActualizadas = await actualizarTablaLigaPublica(cliente, fechaNegocio)
-  return { ...resultado, posicionesPublicasActualizadas }
+  return resultado
 })
-
-async function actualizarTablaLigaPublica(cliente: ReturnType<typeof obtenerClienteSupabasePrivado> & {}, fechaNegocio: string): Promise<number> {
-  const [respuestaSnapshots, respuestaBase] = await Promise.all([
-    cliente.from('football_standings_today')
-      .select('provider,league_name,season,standings,provider_fetched_at')
-      .eq('business_date', fechaNegocio)
-      .order('provider_fetched_at', { ascending: false })
-      .limit(40),
-    cliente.from('colombian_league_standings')
-      .select('competition_slug,season,phase,team_key,team_name,team_logo_url,is_public,publication_rights_confirmed')
-      .in('competition_slug', ['liga-betplay', 'torneo-betplay'])
-      .eq('is_public', true).eq('publication_rights_confirmed', true)
-      .limit(200)
-  ])
-  if (respuestaSnapshots.error || !respuestaSnapshots.data || respuestaBase.error || !respuestaBase.data) {
-    throw createError({ statusCode: 503, statusMessage: 'No se pudo sincronizar la tabla colombiana autorizada.' })
-  }
-  const filas = proyectarClasificacionLigaPublica(
-    respuestaSnapshots.data as unknown as SnapshotClasificacionLigaPrivada[],
-    respuestaBase.data as unknown as FilaClasificacionLigaBase[],
-    fechaNegocio
-  )
-  if (!filas.length) return 0
-  const actualizaciones = await Promise.all(filas.map(async (fila) => {
-    const { competition_slug, season, phase, team_key, position, played, won, drawn, lost,
-      goals_for, goals_against, goal_difference, points, source_name, source_url, checked_at } = fila
-    const { data, error } = await cliente.from('colombian_league_standings')
-      .update({ position, played, won, drawn, lost, goals_for, goals_against,
-        goal_difference, points, source_name, source_url, checked_at })
-      .eq('competition_slug', competition_slug).eq('season', season).eq('phase', phase).eq('team_key', team_key)
-      // Revalida el permiso dentro de la misma escritura para respetar una revocación concurrente.
-      .eq('is_public', true).eq('publication_rights_confirmed', true)
-      .select('team_key')
-    if (error) throw error
-    return data?.length || 0
-  }))
-  if (actualizaciones.some(resultado => resultado > 1)) {
-    throw createError({ statusCode: 503, statusMessage: 'La sincronización encontró filas públicas duplicadas.' })
-  }
-  return actualizaciones.reduce((total, cantidad) => total + cantidad, 0)
-}
 
 function esObjetoVacio(valor: unknown): valor is Record<string, never> {
   return typeof valor === 'object' && valor !== null && !Array.isArray(valor) && Object.keys(valor).length === 0

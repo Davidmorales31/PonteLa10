@@ -4,7 +4,8 @@ const rutas = [
   { nombre: 'calendario', ruta: '/api/internal/futbol/calendario', timeoutMs: 20 * 60 * 1000, esperaFalloMs: 30 * 60 * 1000 },
   { nombre: 'fixtures', ruta: '/api/internal/futbol/fixtures' },
   { nombre: 'resultados_liga', ruta: '/api/internal/futbol/liga-resultados' },
-  { nombre: 'clasificaciones', ruta: '/api/internal/futbol/clasificaciones', intervaloMs: 15 * 60 * 1000 }
+  { nombre: 'clasificaciones', ruta: '/api/internal/futbol/clasificaciones', intervaloMs: 15 * 60 * 1000 },
+  { nombre: 'tabla_liga', ruta: '/api/internal/futbol/tabla-dimayor', intervaloMs: 15 * 60 * 1000 }
 ]
 const intervaloPredeterminadoMs = 5 * 60 * 1000
 const intervaloMinimoMs = 5 * 60 * 1000
@@ -137,7 +138,8 @@ function resumir(resultado) {
   }
   const campos = ['estado', 'provider', 'solicitudes', 'fixturesRecibidos', 'fixturesGuardados',
     'detallesActualizados', 'siguienteEjecucionMs', 'siguienteEjecucionMotivo', 'omitidos',
-    'clasificacionesRecibidas', 'clasificacionesGuardadas', 'marcadoresActualizados', 'partidosRevisados', 'errorCode']
+    'clasificacionesRecibidas', 'clasificacionesGuardadas', 'posicionesPublicasActualizadas',
+    'fuente', 'marcadoresActualizados', 'partidosRevisados', 'errorCode']
   const resumen = Object.fromEntries(campos.flatMap(campo => {
     const valor = resultado[campo]
     return typeof valor === 'string' || (typeof valor === 'number' && Number.isFinite(valor))

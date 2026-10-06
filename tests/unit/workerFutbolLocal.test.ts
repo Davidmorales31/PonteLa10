@@ -5,7 +5,7 @@ import { crearSincronizadorFutbolLocal } from '../../workers/sincronizar_futbol_
 const secreto = 'secreto-local-de-prueba'
 
 describe('integración de fútbol en el worker local', () => {
-  it('firma cada cinco minutos el calendario, fixtures y resultados, y clasificaciones cada quince', async () => {
+  it('firma los cinco endpoints locales y ejecuta clasificaciones colombianas cada quince minutos', async () => {
     let ahora = Date.parse('2026-10-01T20:00:00.000Z')
     const llamadas: Array<[URL, RequestInit]> = []
     const registrar = vi.fn()
@@ -15,6 +15,8 @@ describe('integración de fútbol en el worker local', () => {
       llamadas.push([url, opciones])
       return Promise.resolve(new Response(JSON.stringify({
         estado: 'completado', provider: 'api-football', solicitudes: 2, fixturesGuardados: 1,
+        fuente: url.pathname.endsWith('/tabla-dimayor') ? 'DIMAYOR' : undefined,
+        posicionesPublicasActualizadas: url.pathname.endsWith('/tabla-dimayor') ? 36 : undefined,
         omitidos: { datos_invalidos: 0, competencia_no_mapeada: 0 }
       }), { status: 200, headers: { 'content-type': 'application/json' } }))
     })
@@ -33,8 +35,9 @@ describe('integración de fútbol en el worker local', () => {
 
     const resultado = await sincronizador.ejecutarSiCorresponde()
     expect(resultado.estado).toBe('completado')
-    expect(transporte).toHaveBeenCalledTimes(4)
+    expect(transporte).toHaveBeenCalledTimes(5)
     expect(registrar.mock.calls.some(([mensaje]) => String(mensaje).includes('"omitidos":{"datos_invalidos":0,"competencia_no_mapeada":0}'))).toBe(true)
+    expect(registrar.mock.calls.some(([mensaje]) => String(mensaje).includes('"posicionesPublicasActualizadas":36'))).toBe(true)
     for (const [url, init] of llamadas) {
       const ruta = url.pathname
       const encabezados = init?.headers as Record<string, string>
@@ -49,18 +52,19 @@ describe('integración de fútbol en el worker local', () => {
         '/api/internal/futbol/calendario',
         '/api/internal/futbol/fixtures',
         '/api/internal/futbol/liga-resultados',
-        '/api/internal/futbol/clasificaciones'
+        '/api/internal/futbol/clasificaciones',
+        '/api/internal/futbol/tabla-dimayor'
       ]).toContain(ruta)
     }
 
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
-    expect(transporte).toHaveBeenCalledTimes(4)
+    expect(transporte).toHaveBeenCalledTimes(5)
     ahora += 5 * 60 * 1000
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(7)
+    expect(transporte).toHaveBeenCalledTimes(8)
     ahora += 10 * 60 * 1000
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(11)
+    expect(transporte).toHaveBeenCalledTimes(13)
   })
 
   it('no hace llamadas por omisión y rechaza destinos ajenos al PC', async () => {
@@ -108,7 +112,7 @@ describe('integración de fútbol en el worker local', () => {
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('completado')
-    expect(transporte).toHaveBeenCalledTimes(7)
+    expect(transporte).toHaveBeenCalledTimes(8)
   })
 
   it('espacia ventanas ocupadas para evitar que workers duplicados se golpeen cada minuto', async () => {
@@ -129,7 +133,7 @@ describe('integración de fútbol en el worker local', () => {
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(7)
+    expect(transporte).toHaveBeenCalledTimes(8)
   })
 
   it('duerme hasta el siguiente mantenimiento de Bogotá al agotar la cuota diaria', async () => {
@@ -150,7 +154,7 @@ describe('integración de fútbol en el worker local', () => {
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(8)
+    expect(transporte).toHaveBeenCalledTimes(10)
   })
 
   it('mantiene el ciclo corto de fixtures aunque el calendario ya haya quedado programado para mañana', async () => {
@@ -172,11 +176,14 @@ describe('integración de fútbol en el worker local', () => {
     })
 
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(4)
+    expect(transporte).toHaveBeenCalledTimes(5)
     ahora += 8 * 60_000
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('completado')
-    expect(transporte).toHaveBeenCalledTimes(6)
-    const ruta = transporte.mock.calls[4]?.[0]
+    expect(transporte).toHaveBeenCalledTimes(7)
+    const ruta = transporte.mock.calls.find(([entrada]) => {
+      const llamada = entrada instanceof URL ? entrada : new URL(entrada instanceof Request ? entrada.url : String(entrada))
+      return llamada.pathname.endsWith('/fixtures')
+    })?.[0]
     const url = ruta instanceof URL ? ruta : new URL(ruta instanceof Request ? ruta.url : String(ruta))
     expect(url.pathname).toBe('/api/internal/futbol/fixtures')
   })
