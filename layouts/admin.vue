@@ -10,6 +10,7 @@ import {
   LogOut,
   Menu,
   RadioTower,
+  Tv,
   Server,
   ShieldCheck,
   Tags,
@@ -54,6 +55,12 @@ const entradasPanel: EntradaPanel[] = [
     ruta: '/admin/ingestas',
     icono: RadioTower,
     permiso: 'ingestas.ver'
+  },
+  {
+    etiqueta: 'Programación de partidos',
+    ruta: '/admin/programacion',
+    icono: Tv,
+    permiso: 'partidos.programacion.gestionar'
   },
   {
     etiqueta: 'Revisión',

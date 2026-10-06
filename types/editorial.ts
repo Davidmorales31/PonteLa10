@@ -51,6 +51,7 @@ export type PermisoEditorial =
   | 'media.eliminar'
   | 'taxonomia.ver'
   | 'taxonomia.gestionar'
+  | 'partidos.programacion.gestionar'
   | 'ingestas.ver'
   | 'ingestas.registrar'
   | 'ingestas.gestionar'

@@ -2,6 +2,18 @@ export const ID_MEDICION_GA4 = 'G-PHNWBM2D7X'
 export type DecisionAnaliticaPublica = 'aceptada' | 'rechazada'
 export type EstadoAnaliticaPublica = DecisionAnaliticaPublica | null
 
+export type TipoPaginaPublica = 'home' | 'article' | 'match' | 'team' | 'competition' | 'player' | 'hub' | 'results' | 'search'
+
+export interface ContextoAnaliticaPagina {
+  ruta: string
+  competition?: unknown
+  match_status?: unknown
+  category?: unknown
+  primary_entity?: unknown
+}
+
+type ConsultaAnaliticaPagina = Record<string, unknown>
+
 export function resolverDecisionAnalitica(valorGuardado: unknown): DecisionAnaliticaPublica {
   return valorGuardado === 'rechazada' ? 'rechazada' : 'aceptada'
 }
@@ -21,6 +33,16 @@ const CATEGORIAS_MEDIBLES = new Set([
   'tendencias'
 ])
 
+const RUTAS_HUB = new Map<string, string>([
+  ['/futbol-colombiano', 'futbol_colombiano'],
+  ['/seleccion-colombia', 'seleccion_colombia'],
+  ['/futbol-internacional', 'futbol_internacional'],
+  ['/colombianos-en-europa', 'colombianos_en_europa'],
+  ['/liga-colombiana', 'liga_colombiana'],
+  ['/partidos-hoy', 'partidos_hoy']
+])
+const ESTADOS_PARTIDO_MEDIBLES = new Set(['scheduled', 'live', 'finished', 'cancelled', 'postponed', 'suspended'])
+
 export function esRutaPublicaMedible(ruta: string): boolean {
   if (!ruta.startsWith('/') || ruta.startsWith('//')) return false
   const rutaNormalizada = ruta.replace(/\/+$/, '') || '/'
@@ -31,4 +53,85 @@ export function normalizarCategoriaMedible(valor: unknown): string | null {
   if (typeof valor !== 'string') return null
   const categoria = valor.trim().toLocaleLowerCase('en-US')
   return CATEGORIAS_MEDIBLES.has(categoria) ? categoria : null
+}
+
+export function construirDimensionesVistaPagina(
+  ruta: string,
+  consulta: ConsultaAnaliticaPagina = {},
+  contexto?: ContextoAnaliticaPagina | null
+): Record<string, string> {
+  const rutaNormalizada = ruta.replace(/\/+$/, '') || '/'
+  let tipoPagina: TipoPaginaPublica = 'hub'
+  const dimensiones: Record<string, string> = {}
+
+  if (rutaNormalizada === '/') {
+    tipoPagina = 'home'
+  } else if (rutaNormalizada === '/articulos' && obtenerConsultaTexto(consulta.buscar)) {
+    tipoPagina = 'search'
+  } else if (rutaNormalizada === '/articulos') {
+    tipoPagina = 'hub'
+    const categoria = normalizarCategoriaMedible(contexto?.category) || normalizarCategoriaMedible(consulta.categoria)
+    if (categoria) dimensiones.category = categoria
+    if (obtenerSlugAnalitico(consulta.tema)) dimensiones.topic = obtenerSlugAnalitico(consulta.tema)!
+  } else if (rutaNormalizada.startsWith('/articulos/')) {
+    tipoPagina = 'article'
+    asignarIdentidad(dimensiones, 'content_id', rutaNormalizada.slice('/articulos/'.length))
+    const categoria = normalizarCategoriaMedible(contexto?.category) || normalizarCategoriaMedible(consulta.categoria)
+    if (categoria) dimensiones.category = categoria
+    asignarIdentidad(dimensiones, 'primary_entity', contexto?.primary_entity)
+  } else if (rutaNormalizada.startsWith('/partidos/')) {
+    tipoPagina = 'match'
+    asignarIdentidad(dimensiones, 'match_id', rutaNormalizada.slice('/partidos/'.length))
+    asignarIdentidad(dimensiones, 'competition', contexto?.competition)
+    const estado = normalizarEstadoPartidoMedible(contexto?.match_status)
+    if (estado) dimensiones.match_status = estado
+  } else if (rutaNormalizada.startsWith('/equipos/')) {
+    tipoPagina = 'team'
+    asignarIdentidad(dimensiones, 'team_id', rutaNormalizada.slice('/equipos/'.length))
+  } else if (rutaNormalizada.startsWith('/competiciones/')) {
+    tipoPagina = 'competition'
+    asignarIdentidad(dimensiones, 'competition_id', rutaNormalizada.slice('/competiciones/'.length))
+  } else if (rutaNormalizada.startsWith('/jugadores/')) {
+    tipoPagina = 'player'
+    asignarIdentidad(dimensiones, 'player_id', rutaNormalizada.slice('/jugadores/'.length))
+  } else if (rutaNormalizada === '/resultados' || rutaNormalizada.startsWith('/resultados/')) {
+    tipoPagina = 'results'
+  } else if (RUTAS_HUB.has(rutaNormalizada)) {
+    tipoPagina = 'hub'
+    dimensiones.hub_type = RUTAS_HUB.get(rutaNormalizada)!
+  }
+
+  dimensiones.page_type = tipoPagina
+  return dimensiones
+}
+
+function obtenerConsultaTexto(valor: unknown): boolean {
+  return typeof valor === 'string' && Boolean(valor.trim())
+}
+
+function asignarIdentidad(destino: Record<string, string>, nombre: string, valor: unknown) {
+  if (typeof valor !== 'string') return
+  const identidad = valor.trim().toLocaleLowerCase('en-US')
+  if (/^[a-z0-9][a-z0-9-]{0,79}$/.test(identidad)) destino[nombre] = identidad
+}
+
+function obtenerSlugAnalitico(valor: unknown): string | null {
+  if (typeof valor !== 'string') return null
+  const slug = valor.trim().toLocaleLowerCase('en-US')
+  return /^[a-z0-9][a-z0-9-]{0,79}$/.test(slug) ? slug : null
+}
+
+function normalizarEstadoPartidoMedible(valor: unknown): string | null {
+  if (typeof valor !== 'string') return null
+  const estado = valor.trim().toLocaleLowerCase('en-US')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[ -]+/g, '_')
+  if (['en_vivo', 'in_progress', 'live'].includes(estado)) return 'live'
+  if (['finalizado', 'finished', 'full_time'].includes(estado)) return 'finished'
+  if (['programado', 'scheduled', 'not_started'].includes(estado)) return 'scheduled'
+  if (['cancelado', 'cancelled'].includes(estado)) return 'cancelled'
+  if (['aplazado', 'postponed', 'reprogramado'].includes(estado)) return 'postponed'
+  if (['suspendido', 'suspended'].includes(estado)) return 'suspended'
+  return ESTADOS_PARTIDO_MEDIBLES.has(estado) ? estado : null
 }

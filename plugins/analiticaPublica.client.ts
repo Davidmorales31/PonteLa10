@@ -1,12 +1,14 @@
 import {
   esRutaPublicaMedible,
   normalizarCategoriaMedible,
+  type ContextoAnaliticaPagina,
   type EstadoAnaliticaPublica
 } from '~/utils/analiticaPublica'
 
 export default defineNuxtPlugin((nuxtApp) => {
   const analitica = useAnaliticaPublica()
   const router = useRouter()
+  const contextoPagina = useState<ContextoAnaliticaPagina | null>('contexto-analitica-pagina', () => null)
   let ultimaRutaMedida = ''
 
   async function medirRuta(ruta: typeof router.currentRoute.value) {
@@ -16,9 +18,17 @@ export default defineNuxtPlugin((nuxtApp) => {
       return
     }
 
+    const contextoActual = contextoPagina.value
+    const requiereContexto = /^\/(?:partidos|articulos)\//.test(ruta.path)
+    if (requiereContexto && contextoActual?.ruta !== ruta.path) return
+
     if (ruta.path !== ultimaRutaMedida) {
       ultimaRutaMedida = ruta.path
-      await analitica.registrarVistaPagina(ruta.path)
+      await analitica.registrarVistaPagina(
+        ruta.path,
+        ruta.query,
+        contextoActual?.ruta === ruta.path ? contextoActual : null
+      )
     }
   }
 
@@ -44,6 +54,13 @@ export default defineNuxtPlugin((nuxtApp) => {
       void medirRuta(router.currentRoute.value)
     } else {
       ultimaRutaMedida = ''
+    }
+  })
+
+  watch(contextoPagina, (contexto) => {
+    const rutaActual = router.currentRoute.value
+    if (contexto?.ruta === rutaActual.path) {
+      void medirRuta(rutaActual)
     }
   })
 

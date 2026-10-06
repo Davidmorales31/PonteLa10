@@ -19,9 +19,9 @@ import {
   aumentarNoticiasVisibles,
   combinarArticulosPublicos,
   normalizarTextoBusqueda,
-  obtenerAliasCategoria,
   obtenerEtiquetaCategoria
 } from '~/utils/articulosLanding'
+import { construirConsultaArticulosPublicos } from '~/utils/consultaArticulosPublicos'
 import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
 
 type ArticuloListado = ArticuloResumen & { fechaPublicacion: string }
@@ -30,7 +30,6 @@ type PaginaArticulosPublicos = {
   hayMas: boolean
 }
 
-const limitePaginaArticulos = 20
 const incrementoNoticiasVisibles = 6
 
 const rutaActual = useRoute()
@@ -39,8 +38,9 @@ const { data: resultados, status: estadoResultados } = await useFetch<RespuestaR
   lazy: true
 })
 const { data: paginaInicial } = await useFetch<PaginaArticulosPublicos>(
-  `/api/articulos?paginado=true&limite=${limitePaginaArticulos}`,
+  '/api/articulos',
   {
+    query: computed(() => construirConsultaArticulosPublicos(rutaActual.query)),
     default: () => ({ articulos: [], hayMas: false }),
     ignoreResponseError: true
   }
@@ -76,14 +76,9 @@ const articulosDisponibles = computed(() => articulosPublicados.value)
 
 const terminoBusqueda = computed(() => normalizarTextoBusqueda(String(rutaActual.query.buscar || '')))
 const categoriaBusqueda = computed(() => normalizarTextoBusqueda(String(rutaActual.query.categoria || '')))
-const aliasCategoriaBusqueda = computed(() => obtenerAliasCategoria(categoriaBusqueda.value))
 
-const articulosFiltrados = computed(() => articulosDisponibles.value.filter((articulo) => {
-  const contenido = normalizarTextoBusqueda(`${articulo.titulo} ${articulo.bajada} ${articulo.categoria}`)
-  const coincideTermino = !terminoBusqueda.value || contenido.includes(terminoBusqueda.value)
-  const coincideCategoria = !categoriaBusqueda.value || aliasCategoriaBusqueda.value.some(alias => contenido.includes(alias))
-  return coincideTermino && coincideCategoria
-}))
+// La API aplica categoría, tema y búsqueda antes de paginar, también durante SSR.
+const articulosFiltrados = computed(() => articulosDisponibles.value)
 
 const tituloListado = computed(() => {
   if (rutaActual.query.buscar) {
@@ -94,13 +89,28 @@ const tituloListado = computed(() => {
     return `Noticias de ${obtenerEtiquetaCategoria(String(rutaActual.query.categoria))}`
   }
 
+  if (rutaActual.query.tema) {
+    return `Noticias: ${String(rutaActual.query.tema).replaceAll('-', ' ')}`
+  }
+
   return 'Noticias'
 })
 const configuracion = useRuntimeConfig()
 const esBusquedaInterna = computed(() => Boolean(rutaActual.query.buscar))
-const rutaCanonica = computed(() => rutaActual.query.categoria && !esBusquedaInterna.value
-  ? `/articulos?categoria=${encodeURIComponent(String(rutaActual.query.categoria))}`
-  : '/articulos')
+const rutasCanonicasCategoria: Record<string, string> = {
+  colombia: '/seleccion-colombia',
+  'futbol-colombiano': '/futbol-colombiano',
+  'futbol-mundial': '/futbol-internacional',
+  'colombianos-en-europa': '/colombianos-en-europa'
+}
+const rutaCanonica = computed(() => {
+  if (esBusquedaInterna.value) return '/articulos'
+  const categoria = String(rutaActual.query.categoria || '')
+  if (categoria && rutasCanonicasCategoria[categoria]) return rutasCanonicasCategoria[categoria]!
+  if (categoria) return `/articulos?categoria=${encodeURIComponent(categoria)}`
+  if (rutaActual.query.tema) return `/articulos?tema=${encodeURIComponent(String(rutaActual.query.tema))}`
+  return '/articulos'
+})
 const filtrosRapidos = [
   { etiqueta: 'Todos', ruta: '/articulos', categoria: '', icono: LayoutGrid },
   { etiqueta: 'Selección Colombia', ruta: '/articulos?categoria=colombia', categoria: 'colombia', icono: Flag },
@@ -128,13 +138,22 @@ const noticiasTendencia = computed(() => {
 const noticiaLateral = computed(() => noticiasTendencia.value.find(tieneImagen) || noticiasTendencia.value[0] || null)
 
 watch(
-  () => [rutaActual.query.buscar, rutaActual.query.categoria],
+  () => [rutaActual.query.buscar, rutaActual.query.categoria, rutaActual.query.tema],
   () => {
+    articulosCargados.value = []
+    hayMasDesdeServidor.value = false
+    desplazamientoSiguiente.value = 0
     cantidadNoticiasVisibles.value = incrementoNoticiasVisibles
     mensajeCargaNoticias.value = ''
     errorCargaNoticias.value = ''
   }
 )
+
+watch(paginaInicial, (pagina) => {
+  articulosCargados.value = pagina?.articulos || []
+  hayMasDesdeServidor.value = pagina?.hayMas || false
+  desplazamientoSiguiente.value = articulosCargados.value.length
+}, { deep: true })
 
 async function cargarMasNoticias() {
   if (cargandoMasNoticias.value || !hayMasNoticias.value) return
@@ -163,11 +182,7 @@ async function cargarMasNoticias() {
       && paginasConsultadas < 3
     ) {
       const pagina = await $fetch<PaginaArticulosPublicos>('/api/articulos', {
-        query: {
-          paginado: 'true',
-          limite: limitePaginaArticulos,
-          desplazamiento: desplazamientoSiguiente.value
-        }
+        query: construirConsultaArticulosPublicos(rutaActual.query, desplazamientoSiguiente.value)
       })
 
       articulosCargados.value = combinarArticulosPublicos(

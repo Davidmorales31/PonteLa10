@@ -15,8 +15,26 @@ let identificadorIntervalo: ReturnType<typeof setInterval> | undefined
 
 const { data: detalle, status, error, refresh } = await useFetch<DetallePartidoResultado>(
   () => `/api/resultados/${ruta.params.id}`,
-  { key: `detalle-resultado-${String(ruta.params.id)}`, lazy: true }
+  { key: `detalle-resultado-${String(ruta.params.id)}` }
 )
+
+if (detalle.value?.partido.deporte === 'futbol') {
+  try {
+    const correspondencia = await $fetch<{ slug: string | null }>('/api/partidos-seo/correspondencia', {
+      query: {
+        competencia: detalle.value.partido.competencia,
+        fechaIso: detalle.value.partido.fechaIso,
+        local: detalle.value.partido.equipoLocal.nombre,
+        visitante: detalle.value.partido.equipoVisitante.nombre
+      }
+    })
+    if (correspondencia.slug) {
+      await navigateTo(`/partidos/${correspondencia.slug}`, { redirectCode: 301, replace: true })
+    }
+  } catch {
+    // La página de resultados sigue disponible si el mapeo canónico se degrada.
+  }
+}
 
 const pestanas = computed<PestanaDetallePartido[]>(() => {
   const opciones: PestanaDetallePartido[] = []
