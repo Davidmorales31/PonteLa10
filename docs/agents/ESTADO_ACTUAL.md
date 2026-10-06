@@ -1,5 +1,32 @@
 # Estado actual de Pont3la10
 
+## Reenfoque maestro — seguimiento P0 (2026-10-06)
+
+- **HU-GRO-01 — medición por tipo de página:** el código ya clasifica `page_type`
+  y dimensiones seguras para artículos, partidos, equipos, competiciones,
+  jugadores, hubs, resultados y búsquedas. La implementación evita enviar el
+  término de búsqueda. Falta demostrar el flujo de Pont3la10 desde GA4
+  DebugView; la propiedad abierta actualmente no muestra datos del sitio.
+- **HU-GRO-02 — baseline de Search Console:** pendiente. La cuenta Google
+  disponible abre Search Console sin propiedades, así que todavía no se pueden
+  extraer impresiones, clics, consultas, páginas ni cobertura de los últimos 28
+  días. No se inventó ni fechó retrospectivamente un baseline. Próximo paso:
+  verificar/agregar la propiedad de Pont3la10 y guardar la primera extracción con
+  fecha.
+- **HU-GRO-03 — filtros SSR:** se confirmó en Production que la categoría
+  `futbol-colombiano` regresaba vacía aunque había artículos. La lista de cinco
+  alias del cliente excedía el máximo de cuatro validado por la RPC SQL. La
+  corrección conserva cuatro alias específicos (Liga BetPlay, Torneo BetPlay,
+  Copa Colombia y Selección); el `slug` exacto incluye todos los artículos de la
+  categoría canónica. La base Production ya demuestra páginas de 20 resultados
+  al invocar la RPC con esos cuatro términos; queda validar el endpoint tras el
+  despliegue. No se modificó el esquema ni se consumió cuota deportiva.
+- El listado de noticias ya incluye un slot nativo de Adsterra condicionado al
+  consentimiento de publicidad. Se conserva una sola ubicación en este hub para
+  no repetir anuncios ni interrumpir la intención de lectura.
+- Handoff de la reparación y validación pendiente:
+  `docs/agents/handoffs/2026-10-06-hu-gro03-alias-limit.md`.
+
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
 
 - PR #68 integró las páginas públicas de competición en `main` como
