@@ -14,7 +14,7 @@ const edicion = readFileSync(new URL('../../server/api/admin/programacion/[id].p
 const lecturaPublica = readFileSync(new URL('../../server/api/partidos-seo/[slug].get.ts', import.meta.url), 'utf8')
 const imagenPublica = readFileSync(new URL('../../server/api/partidos-seo/[slug]/imagen.get.ts', import.meta.url), 'utf8')
 const correspondenciaPublica = readFileSync(new URL('../../server/api/partidos-seo/correspondencia.get.ts', import.meta.url), 'utf8')
-const sitemapPublico = readFileSync(new URL('../../server/routes/sitemap.xml.get.ts', import.meta.url), 'utf8')
+const sitemapPartidosPublico = readFileSync(new URL('../../server/routes/sitemap-matches.xml.get.ts', import.meta.url), 'utf8')
 
 describe('controles de seguridad para la programación de partidos', () => {
   it('habilita RLS, limita columnas públicas y exige MFA + permiso al modificar', () => {
@@ -41,7 +41,7 @@ describe('controles de seguridad para la programación de partidos', () => {
     const grantPublico = /grant select\s*\(([^)]*)\) on public\.colombian_match_broadcast_options to anon, authenticated/s.exec(migracion)?.[1] || ''
     expect(grantPublico).not.toContain('fixture_competition_slug')
     expect(grantPublico).not.toContain('provider_fixture_id')
-    for (const ruta of [lecturaPublica, imagenPublica, correspondenciaPublica, sitemapPublico]) {
+    for (const ruta of [lecturaPublica, imagenPublica, correspondenciaPublica, sitemapPartidosPublico]) {
       expect(ruta).toContain('obtenerClienteSupabaseAnonimo')
       expect(ruta).not.toContain('obtenerClienteSupabaseEditorial')
     }
