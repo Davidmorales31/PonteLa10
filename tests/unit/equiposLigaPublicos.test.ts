@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { crearMapaSlugsEquiposPublicos, normalizarClaveEquipoLiga } from '../../server/utils/partidosSeoPublicos'
-import { proyectarEquiposLigaPublicos, seleccionarSedeVerificada } from '../../server/utils/equiposLigaPublicos'
+import {
+  proyectarEquiposLigaPublicos,
+  seleccionarPartidosEnVivoEquipo,
+  seleccionarResultadosRecientesEquipo,
+  seleccionarSedeVerificada
+} from '../../server/utils/equiposLigaPublicos'
 import type { PartidoSeoPublico } from '../../server/utils/partidosSeoPublicos'
 
 interface FilaClasificacionPrueba {
@@ -147,5 +152,23 @@ describe('entidades públicas de equipos colombianos', () => {
     expect(seleccionarSedeVerificada([
       partidoPrueba({ verificadoEn: '2026-10-07T15:00:00.000Z' })
     ], 'atletico nacional', Date.parse('2026-10-06T16:00:00.000Z'))).toBeNull()
+  })
+
+  it('reconoce estados del proveedor para resultados recientes y partidos en vivo', () => {
+    const resultados = seleccionarResultadosRecientesEquipo([
+      partidoPrueba({ estado: 'finished', fechaIso: '2026-09-30T20:00:00.000Z', golesLocal: 3, golesVisitante: 1 }),
+      partidoPrueba({ estado: 'scheduled', fechaIso: '2026-09-29T20:00:00.000Z', golesLocal: 2, golesVisitante: 0 }),
+      partidoPrueba({ estado: 'finished', fechaIso: '2026-09-28T20:00:00.000Z', golesLocal: null, golesVisitante: 0 }),
+      partidoPrueba({ estado: 'finished', fechaIso: '2026-10-07T20:00:00.000Z' })
+    ], 'atletico nacional', Date.parse('2026-10-06T16:00:00.000Z'))
+    const enVivo = seleccionarPartidosEnVivoEquipo([
+      partidoPrueba({ estado: '2H' }),
+      partidoPrueba({ estado: 'finished' }),
+      partidoPrueba({ estado: 'actualizacion_pendiente' })
+    ], 'atletico nacional')
+
+    expect(resultados.map(partido => [partido.estado, partido.golesLocal, partido.golesVisitante]))
+      .toEqual([['finished', 3, 1]])
+    expect(enVivo.map(partido => partido.estado)).toEqual(['2H'])
   })
 })
