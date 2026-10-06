@@ -129,4 +129,27 @@ describe('caché del calendario público para páginas SEO', () => {
     expect(deduplicados.find(fila => fila.provider_fixture_id === 'dimayor-fixture-a')?.created_at)
       .toBe(goalApi.created_at)
   })
+
+  it('reconoce alias de equipos colombianos al deduplicar proveedores y buscar escudos', () => {
+    const base = {
+      competition_slug: 'liga-betplay', season: '2026-II', round_name: 'Fecha 14',
+      scheduled_at: '2026-10-06T01:00:00.000Z', status: 'scheduled', goals_home: null,
+      goals_away: null, venue: null, city: null, checked_at: '2026-10-05T20:00:00.000Z',
+      created_at: '2026-10-01T00:00:00.000Z', official_source_url: null,
+      is_public: true, publication_rights_confirmed: true
+    }
+    const dimayor = {
+      ...base, provider: 'dimayor', provider_fixture_id: 'dimayor-14-bogota-envigado',
+      home_team: 'Bogotá FC', away_team: 'Envigado FC'
+    }
+    const goalApi = {
+      ...base, provider: 'goal-api', provider_fixture_id: 'goal-14-bogota-envigado',
+      home_team: 'Bogotá', away_team: 'Envigado', checked_at: '2026-10-05T21:00:00.000Z'
+    }
+
+    expect(deduplicarFixturesSeo([dimayor, goalApi])).toHaveLength(1)
+    expect(deduplicarFixturesSeo([dimayor, goalApi])[0]).toMatchObject({
+      provider: 'goal-api', home_team: 'Bogotá', away_team: 'Envigado'
+    })
+  })
 })

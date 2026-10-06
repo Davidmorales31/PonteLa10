@@ -8,6 +8,7 @@
     "generate": "nuxt generate",
     "lint": "nuxt prepare && eslint .",
     "preview": "nuxt preview",
+    "posters:liga": "node scripts/generar-carteles-mensuales.mjs",
     "test": "npm run test:unit",
     "test:unit": "nuxt prepare && vitest run",
     "typecheck": "nuxt typecheck",

@@ -2,32 +2,32 @@
 
 ## Estado
 
-PR #58 (`d2ad599`, Production `READY` el 2026-10-05) corrigió la identidad
-estable de cruces repetidos: conserva el primer slug simple, agrega
-competición/temporada en revancha y preserva URL previas con redirección 301.
-La lectura pública ya no fusiona IDs distintos del mismo proveedor con jornada
-desconocida y fechas diferentes. No añade llamadas a proveedores ni modifica
-las cuotas o el worker.
+La implementación adaptativa, la prioridad horaria y la publicación de
+resultados están desplegadas desde `049849b` (2026-10-06). En el primer ciclo
+correcto del worker local no había partidos en la franja: calendario y fixtures
+se aplazaron hasta las 06:00 COT con cero llamadas externas. Esto verifica el
+camino de inactividad, no la cadencia en una jornada en vivo. El worker local
+y su servidor se detuvieron para liberar archivos del build y deben reanudarse
+al finalizar la publicación.
 
-La protección del presupuesto y la sincronización diaria del calendario
-colombiano están desplegadas en Production (`main`, `9066d53`, PR #57). La
-migración de calendario carga Liga BetPlay, Torneo BetPlay y Copa Colombia una
-vez por día de negocio; el 2026-10-05 guardó 748 fixtures con 11 llamadas de
-Goal API. El endpoint público leyó 80 encuentros desde la base de datos.
+Las cuotas duras de Production permanecen en 80 API-Football/900 Goal API y la
+base rechaza intervalos menores de 5/15 minutos. La medición agregada del
+2026-10-06 cerca de las 00:55 COT fue 1/80 y 44/900, sin atribuirla a un proceso
+concreto. Para Liga A/B se añadió una ruta DIMAYOR separada que lee las tablas
+oficiales, exige cobertura exacta de todos los equipos/fases autorizados de la
+temporada activa y los escribe en una sola transacción. No llama API-Football ni
+Goal API. El worker la programa cada 15 minutos; una lease con token descarta
+ejecuciones superpuestas o vencidas. DIMAYOR devolvió 20 filas para Liga A y 16
+para Liga B; el proyector local cubrió las 36 filas autorizadas de Production.
+La migración `20261006064139_hu_fut_tabla_dimayor_atomica.sql` y la ruta pasaron
+revisión estática, lint, typecheck, suite y build locales, pero aún no se
+desplegaron: el conector Supabase devolvió `Unauthorized` y requiere
+reautorización. pgTAP remoto, actualización inicial y observación de jornada
+activa siguen pendientes.
 
-El 2026-10-04 Goal API llegó al tope previo de 950; el 2026-10-05 a las 06:55
-COT el registro agregado marcaba 46/900 Goal API y 1/80 API-Football con los
-nuevos topes. Esta medición confirma el límite en funcionamiento, no una
-tendencia de varios días ni la cadencia en una jornada completa en vivo. El
-worker lo ejecuta el PC del responsable; Vercel no tiene Cron para este flujo.
-Los procesos del PC deben arrancarse otra vez manualmente después de reiniciar.
-
-Las pruebas unitarias, lint, typecheck y build del release pasaron. No se pudo
-ejecutar pgTAP localmente porque faltan Docker y Supabase CLI; las funciones,
-ACL, límites y casos nulos se comprobaron con SQL en la base Production. Queda
-pendiente observar varias jornadas y, si se exige por pieza, generar un MP4
-personalizado de 6–10 segundos: hoy se sirve el GIF ambiental existente y
-posters PNG programáticos.
+La versión desplegada sirve carteles mensuales pre-generados (80 WebP de
+octubre). La generación sigue siendo manual y no hay un MP4 personalizado por
+encuentro.
 
 ## Objetivo
 

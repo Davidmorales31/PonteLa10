@@ -1,0 +1,492 @@
+{
+  "mes": "2026-10",
+  "generadoEn": "2026-10-06T05:43:10.133Z",
+  "origenCalendario": "http://127.0.0.1:3011/api/liga-colombiana?mes=2026-10",
+  "partidosEncontrados": 80,
+  "limiteMensual": 80,
+  "imagenesGeneradas": 80,
+  "imagenesReutilizadas": 0,
+  "imagenesFallidas": 0,
+  "carteles": [
+    {
+      "slug": "envigado-fc-vs-orsomarso",
+      "fechaIso": "2026-10-01T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/envigado-fc-vs-orsomarso.webp"
+    },
+    {
+      "slug": "atletico-fc-vs-real-cundinamarca",
+      "fechaIso": "2026-10-02T22:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/atletico-fc-vs-real-cundinamarca.webp"
+    },
+    {
+      "slug": "deportivo-cali-vs-alianza-liga-betplay-2026-ii",
+      "fechaIso": "2026-10-03T00:45:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/deportivo-cali-vs-alianza-liga-betplay-2026-ii.webp"
+    },
+    {
+      "slug": "aguilas-doradas-vs-jaguares-de-cordoba-fc-liga-betplay-2026-ii",
+      "fechaIso": "2026-10-03T19:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/aguilas-doradas-vs-jaguares-de-cordoba-fc-liga-betplay-2026-ii.webp"
+    },
+    {
+      "slug": "patriotas-boyaca-vs-ind-yumbo",
+      "fechaIso": "2026-10-03T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/patriotas-boyaca-vs-ind-yumbo.webp"
+    },
+    {
+      "slug": "real-santander-vs-union-magdalena",
+      "fechaIso": "2026-10-03T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/real-santander-vs-union-magdalena.webp"
+    },
+    {
+      "slug": "deportes-tolima-vs-boyaca-chico",
+      "fechaIso": "2026-10-03T21:05:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/deportes-tolima-vs-boyaca-chico.webp"
+    },
+    {
+      "slug": "barranquilla-vs-millonarios",
+      "fechaIso": "2026-10-03T23:10:00+00:00",
+      "competencia": "copa-colombia",
+      "url": "/partidos/2026-10/barranquilla-vs-millonarios.webp"
+    },
+    {
+      "slug": "real-cartagena-vs-boca-juniors-de-cali",
+      "fechaIso": "2026-10-04T01:20:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/real-cartagena-vs-boca-juniors-de-cali.webp"
+    },
+    {
+      "slug": "deportivo-pasto-vs-fortaleza-ceif",
+      "fechaIso": "2026-10-04T19:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/deportivo-pasto-vs-fortaleza-ceif.webp"
+    },
+    {
+      "slug": "tigres-fc-vs-internacional-palmira",
+      "fechaIso": "2026-10-04T21:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/tigres-fc-vs-internacional-palmira.webp"
+    },
+    {
+      "slug": "internacional-de-bogota-vs-once-caldas",
+      "fechaIso": "2026-10-04T21:05:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/internacional-de-bogota-vs-once-caldas.webp"
+    },
+    {
+      "slug": "cucuta-deportivo-vs-deportivo-pereira-fc",
+      "fechaIso": "2026-10-04T21:05:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/cucuta-deportivo-vs-deportivo-pereira-fc.webp"
+    },
+    {
+      "slug": "la-equidad-vs-once-caldas",
+      "fechaIso": "2026-10-04T21:05:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/la-equidad-vs-once-caldas.webp"
+    },
+    {
+      "slug": "atletico-bucaramanga-vs-junior",
+      "fechaIso": "2026-10-04T23:10:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/atletico-bucaramanga-vs-junior.webp"
+    },
+    {
+      "slug": "llaneros-vs-america-de-cali",
+      "fechaIso": "2026-10-05T01:15:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/llaneros-vs-america-de-cali.webp"
+    },
+    {
+      "slug": "bogota-vs-envigado-fc",
+      "fechaIso": "2026-10-05T22:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/bogota-vs-envigado-fc.webp"
+    },
+    {
+      "slug": "independiente-medellin-vs-independiente-santa-fe",
+      "fechaIso": "2026-10-06T00:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/independiente-medellin-vs-independiente-santa-fe.webp"
+    },
+    {
+      "slug": "orsomarso-vs-deportes-quindio",
+      "fechaIso": "2026-10-06T00:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/orsomarso-vs-deportes-quindio.webp"
+    },
+    {
+      "slug": "leones-fc-vs-barranquilla",
+      "fechaIso": "2026-10-07T21:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/leones-fc-vs-barranquilla.webp"
+    },
+    {
+      "slug": "boca-juniors-de-cali-vs-union-magdalena",
+      "fechaIso": "2026-10-07T22:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/boca-juniors-de-cali-vs-union-magdalena.webp"
+    },
+    {
+      "slug": "ind-yumbo-vs-tigres-fc",
+      "fechaIso": "2026-10-08T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/ind-yumbo-vs-tigres-fc.webp"
+    },
+    {
+      "slug": "atletico-fc-vs-real-cartagena",
+      "fechaIso": "2026-10-08T22:45:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/atletico-fc-vs-real-cartagena.webp"
+    },
+    {
+      "slug": "atletico-nacional-vs-deportes-tolima-liga-betplay-2026-ii",
+      "fechaIso": "2026-10-08T23:05:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/atletico-nacional-vs-deportes-tolima-liga-betplay-2026-ii.webp"
+    },
+    {
+      "slug": "fortaleza-ceif-vs-millonarios",
+      "fechaIso": "2026-10-09T01:10:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/fortaleza-ceif-vs-millonarios.webp"
+    },
+    {
+      "slug": "real-cundinamarca-vs-real-santander",
+      "fechaIso": "2026-10-09T20:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/real-cundinamarca-vs-real-santander.webp"
+    },
+    {
+      "slug": "bogota-vs-patriotas-boyaca",
+      "fechaIso": "2026-10-09T22:15:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/bogota-vs-patriotas-boyaca.webp"
+    },
+    {
+      "slug": "alianza-vs-aguilas-doradas",
+      "fechaIso": "2026-10-09T23:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/alianza-vs-aguilas-doradas.webp"
+    },
+    {
+      "slug": "once-caldas-vs-llaneros",
+      "fechaIso": "2026-10-10T01:10:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/once-caldas-vs-llaneros.webp"
+    },
+    {
+      "slug": "junior-vs-la-equidad",
+      "fechaIso": "2026-10-10T23:10:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/junior-vs-la-equidad.webp"
+    },
+    {
+      "slug": "atletico-nacional-vs-deportivo-pasto",
+      "fechaIso": "2026-10-11T01:15:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/atletico-nacional-vs-deportivo-pasto.webp"
+    },
+    {
+      "slug": "deportivo-pereira-fc-vs-deportivo-cali",
+      "fechaIso": "2026-10-11T19:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/deportivo-pereira-fc-vs-deportivo-cali.webp"
+    },
+    {
+      "slug": "independiente-santa-fe-vs-fortaleza-ceif-copa-colombia-2026-ii",
+      "fechaIso": "2026-10-11T19:00:00+00:00",
+      "competencia": "copa-colombia",
+      "url": "/partidos/2026-10/independiente-santa-fe-vs-fortaleza-ceif-copa-colombia-2026-ii.webp"
+    },
+    {
+      "slug": "envigado-fc-vs-internacional-palmira-torneo-betplay-2026-ii",
+      "fechaIso": "2026-10-11T20:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/envigado-fc-vs-internacional-palmira-torneo-betplay-2026-ii.webp"
+    },
+    {
+      "slug": "jaguares-de-cordoba-fc-vs-deportes-tolima",
+      "fechaIso": "2026-10-11T21:05:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/jaguares-de-cordoba-fc-vs-deportes-tolima.webp"
+    },
+    {
+      "slug": "union-magdalena-vs-leones-fc",
+      "fechaIso": "2026-10-11T22:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/union-magdalena-vs-leones-fc.webp"
+    },
+    {
+      "slug": "barranquilla-vs-deportes-quindio",
+      "fechaIso": "2026-10-11T22:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/barranquilla-vs-deportes-quindio.webp"
+    },
+    {
+      "slug": "america-de-cali-vs-independiente-medellin",
+      "fechaIso": "2026-10-12T01:15:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/america-de-cali-vs-independiente-medellin.webp"
+    },
+    {
+      "slug": "orsomarso-vs-boca-juniors-de-cali",
+      "fechaIso": "2026-10-12T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/orsomarso-vs-boca-juniors-de-cali.webp"
+    },
+    {
+      "slug": "boyaca-chico-vs-cucuta-deportivo",
+      "fechaIso": "2026-10-13T01:10:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/boyaca-chico-vs-cucuta-deportivo.webp"
+    },
+    {
+      "slug": "atletico-bucaramanga-vs-aguilas-doradas",
+      "fechaIso": "2026-10-13T23:30:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/atletico-bucaramanga-vs-aguilas-doradas.webp"
+    },
+    {
+      "slug": "millonarios-vs-once-caldas",
+      "fechaIso": "2026-10-14T01:30:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/millonarios-vs-once-caldas.webp"
+    },
+    {
+      "slug": "junior-vs-deportivo-pereira-fc",
+      "fechaIso": "2026-10-14T21:30:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/junior-vs-deportivo-pereira-fc.webp"
+    },
+    {
+      "slug": "real-cundinamarca-vs-bogota",
+      "fechaIso": "2026-10-14T22:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/real-cundinamarca-vs-bogota.webp"
+    },
+    {
+      "slug": "independiente-santa-fe-vs-jaguares-de-cordoba-fc",
+      "fechaIso": "2026-10-14T23:30:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/independiente-santa-fe-vs-jaguares-de-cordoba-fc.webp"
+    },
+    {
+      "slug": "envigado-fc-vs-real-santander",
+      "fechaIso": "2026-10-15T20:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/envigado-fc-vs-real-santander.webp"
+    },
+    {
+      "slug": "union-magdalena-vs-ind-yumbo",
+      "fechaIso": "2026-10-15T22:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/union-magdalena-vs-ind-yumbo.webp"
+    },
+    {
+      "slug": "leones-fc-vs-patriotas-boyaca",
+      "fechaIso": "2026-10-15T22:15:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/leones-fc-vs-patriotas-boyaca.webp"
+    },
+    {
+      "slug": "internacional-palmira-vs-orsomarso",
+      "fechaIso": "2026-10-15T23:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/internacional-palmira-vs-orsomarso.webp"
+    },
+    {
+      "slug": "deportes-quindio-vs-real-cartagena",
+      "fechaIso": "2026-10-16T01:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/deportes-quindio-vs-real-cartagena.webp"
+    },
+    {
+      "slug": "boca-juniors-de-cali-vs-atletico-fc",
+      "fechaIso": "2026-10-16T22:15:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/boca-juniors-de-cali-vs-atletico-fc.webp"
+    },
+    {
+      "slug": "barranquilla-vs-tigres-fc",
+      "fechaIso": "2026-10-17T00:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/barranquilla-vs-tigres-fc.webp"
+    },
+    {
+      "slug": "boyaca-chico-vs-atletico-nacional",
+      "fechaIso": "2026-10-17T20:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/boyaca-chico-vs-atletico-nacional.webp"
+    },
+    {
+      "slug": "millonarios-vs-jaguares-de-cordoba-fc",
+      "fechaIso": "2026-10-17T23:05:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/millonarios-vs-jaguares-de-cordoba-fc.webp"
+    },
+    {
+      "slug": "independiente-medellin-vs-once-caldas",
+      "fechaIso": "2026-10-18T01:10:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/independiente-medellin-vs-once-caldas.webp"
+    },
+    {
+      "slug": "aguilas-doradas-vs-deportes-tolima",
+      "fechaIso": "2026-10-18T19:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/aguilas-doradas-vs-deportes-tolima.webp"
+    },
+    {
+      "slug": "atletico-bucaramanga-vs-america-de-cali",
+      "fechaIso": "2026-10-18T20:30:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/atletico-bucaramanga-vs-america-de-cali.webp"
+    },
+    {
+      "slug": "llaneros-vs-independiente-santa-fe",
+      "fechaIso": "2026-10-18T22:45:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/llaneros-vs-independiente-santa-fe.webp"
+    },
+    {
+      "slug": "deportivo-cali-vs-junior",
+      "fechaIso": "2026-10-19T01:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/deportivo-cali-vs-junior.webp"
+    },
+    {
+      "slug": "real-santander-vs-leones-fc",
+      "fechaIso": "2026-10-19T19:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/real-santander-vs-leones-fc.webp"
+    },
+    {
+      "slug": "internacional-palmira-vs-union-magdalena",
+      "fechaIso": "2026-10-19T21:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/internacional-palmira-vs-union-magdalena.webp"
+    },
+    {
+      "slug": "orsomarso-vs-bogota",
+      "fechaIso": "2026-10-19T22:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/orsomarso-vs-bogota.webp"
+    },
+    {
+      "slug": "real-cartagena-vs-patriotas-boyaca",
+      "fechaIso": "2026-10-19T23:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/real-cartagena-vs-patriotas-boyaca.webp"
+    },
+    {
+      "slug": "deportivo-pasto-vs-alianza",
+      "fechaIso": "2026-10-20T01:05:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/deportivo-pasto-vs-alianza.webp"
+    },
+    {
+      "slug": "tigres-fc-vs-real-cundinamarca",
+      "fechaIso": "2026-10-20T19:15:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/tigres-fc-vs-real-cundinamarca.webp"
+    },
+    {
+      "slug": "ind-yumbo-vs-boca-juniors-de-cali",
+      "fechaIso": "2026-10-20T20:00:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/ind-yumbo-vs-boca-juniors-de-cali.webp"
+    },
+    {
+      "slug": "envigado-fc-vs-barranquilla",
+      "fechaIso": "2026-10-20T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/envigado-fc-vs-barranquilla.webp"
+    },
+    {
+      "slug": "atletico-fc-vs-deportes-quindio",
+      "fechaIso": "2026-10-20T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/atletico-fc-vs-deportes-quindio.webp"
+    },
+    {
+      "slug": "deportivo-pereira-fc-vs-boyaca-chico",
+      "fechaIso": "2026-10-20T21:30:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/deportivo-pereira-fc-vs-boyaca-chico.webp"
+    },
+    {
+      "slug": "la-equidad-vs-fortaleza-ceif",
+      "fechaIso": "2026-10-20T23:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/la-equidad-vs-fortaleza-ceif.webp"
+    },
+    {
+      "slug": "cucuta-deportivo-vs-atletico-nacional",
+      "fechaIso": "2026-10-21T01:30:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/cucuta-deportivo-vs-atletico-nacional.webp"
+    },
+    {
+      "slug": "llaneros-vs-deportivo-cali",
+      "fechaIso": "2026-10-21T23:15:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/llaneros-vs-deportivo-cali.webp"
+    },
+    {
+      "slug": "boyaca-chico-vs-atletico-bucaramanga",
+      "fechaIso": "2026-10-23T23:00:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/boyaca-chico-vs-atletico-bucaramanga.webp"
+    },
+    {
+      "slug": "junior-vs-aguilas-doradas",
+      "fechaIso": "2026-10-24T01:10:00+00:00",
+      "competencia": "liga-betplay",
+      "url": "/partidos/2026-10/junior-vs-aguilas-doradas.webp"
+    },
+    {
+      "slug": "barranquilla-vs-real-cartagena-torneo-betplay-2026-ii",
+      "fechaIso": "2026-10-24T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/barranquilla-vs-real-cartagena-torneo-betplay-2026-ii.webp"
+    },
+    {
+      "slug": "deportes-quindio-vs-tigres-fc-torneo-betplay-2026-ii",
+      "fechaIso": "2026-10-24T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/deportes-quindio-vs-tigres-fc-torneo-betplay-2026-ii.webp"
+    },
+    {
+      "slug": "leones-fc-vs-orsomarso-torneo-betplay-2026-ii",
+      "fechaIso": "2026-10-24T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/leones-fc-vs-orsomarso-torneo-betplay-2026-ii.webp"
+    },
+    {
+      "slug": "real-cundinamarca-vs-ind-yumbo-torneo-betplay-2026-ii",
+      "fechaIso": "2026-10-24T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/real-cundinamarca-vs-ind-yumbo-torneo-betplay-2026-ii.webp"
+    },
+    {
+      "slug": "union-magdalena-vs-atletico-fc",
+      "fechaIso": "2026-10-24T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/union-magdalena-vs-atletico-fc.webp"
+    },
+    {
+      "slug": "patriotas-boyaca-vs-envigado-fc",
+      "fechaIso": "2026-10-24T20:30:00+00:00",
+      "competencia": "torneo-betplay",
+      "url": "/partidos/2026-10/patriotas-boyaca-vs-envigado-fc.webp"
+    }
+  ]
+}

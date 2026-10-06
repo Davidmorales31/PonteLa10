@@ -78,7 +78,9 @@ export default defineNuxtConfig({
     public: {
       siteUrl: urlPublica || 'http://localhost:3001',
       supabaseUrl,
-      supabaseKey
+      supabaseKey,
+      adsterraMatchPromoUrls: process.env.NUXT_PUBLIC_ADSTERRA_MATCH_PROMO_URLS
+        || 'https://budgetezy.org/4/ea2fc1af1fb9d19f8a8abcfdf7309692'
     }
   },
   typescript: {

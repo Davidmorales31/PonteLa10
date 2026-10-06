@@ -1,28 +1,32 @@
-import { describe, expect, it } from 'vitest'
-import { obtenerEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
+import { readFileSync } from 'node:fs'
+import { describe, expect, it, vi } from 'vitest'
+import sharp from 'sharp'
+import { obtenerEscudoPartidoSeo, obtenerRutaPublicaEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
 
-describe('escudos de las creatividades SEO de partido', () => {
-  it('lee logos permitidos del almacenamiento de assets sin consultar URLs externas', async () => {
-    const almacenamiento = {
-      getItemRaw: async (ruta: string) => ruta.endsWith('/atletico-nacional.webp')
-        ? Buffer.from('webp-atletico-nacional')
-        : ruta.endsWith('/fortaleza-ceif.webp')
-          ? Buffer.from('webp-fortaleza')
-          : ruta.endsWith('/deportivo-pasto.webp')
-            ? Buffer.from('webp-pasto')
-            : null
-    }
+describe('escudos para carteles de Liga', () => {
+  it('resuelve alias habituales de fixtures al archivo local del equipo', async () => {
+    const webpEscudo = readFileSync(new URL('../../server/assets/escudos-liga-colombiana/leones.webp', import.meta.url))
+    const getItem = vi.fn(async (_clave: string) => webpEscudo)
+    const almacen = { getItem }
 
-    await expect(obtenerEscudoPartidoSeo('Atlético Nacional', almacenamiento))
-      .resolves.toBe(`data:image/webp;base64,${Buffer.from('webp-atletico-nacional').toString('base64')}`)
-    await expect(obtenerEscudoPartidoSeo('Fortaleza', almacenamiento))
-      .resolves.toBe(`data:image/webp;base64,${Buffer.from('webp-fortaleza').toString('base64')}`)
-    await expect(obtenerEscudoPartidoSeo('Deportivo Pasto', almacenamiento))
-      .resolves.toBe(`data:image/webp;base64,${Buffer.from('webp-pasto').toString('base64')}`)
+    const escudoBogota = await obtenerEscudoPartidoSeo('Bogotá', almacen)
+    expect(escudoBogota).toContain('data:image/png;base64,')
+    const imagenConvertida = Buffer.from(escudoBogota!.split(',')[1]!, 'base64')
+    expect((await sharp(imagenConvertida).metadata()).format).toBe('png')
+    expect(await obtenerEscudoPartidoSeo('Envigado FC', almacen)).toContain('data:image/png;base64,')
+    expect(await obtenerEscudoPartidoSeo('Ind. Medellín', almacen)).toContain('data:image/png;base64,')
+    expect(await obtenerEscudoPartidoSeo('Leones FC', almacen)).toContain('data:image/png;base64,')
+    expect(getItem.mock.calls.map(([clave]) => clave)).toEqual([
+      'escudos-liga-colombiana/bogota-fc.webp',
+      'escudos-liga-colombiana/envigado.webp',
+      'escudos-liga-colombiana/independiente-medellin.webp',
+      'escudos-liga-colombiana/leones.webp'
+    ])
   })
 
-  it('deja iniciales como fallback si el nombre no tiene una imagen local', async () => {
-    const almacenamiento = { getItemRaw: async () => null }
-    await expect(obtenerEscudoPartidoSeo('Club sin escudo disponible', almacenamiento)).resolves.toBeNull()
+  it('expone un fallback público únicamente para escudos locales aprobados del torneo', () => {
+    expect(obtenerRutaPublicaEscudoPartidoSeo('Leones FC'))
+      .toBe('/images/escudos/liga-colombiana/leones.png')
+    expect(obtenerRutaPublicaEscudoPartidoSeo('Equipo desconocido')).toBeNull()
   })
 })

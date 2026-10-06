@@ -1,5 +1,7 @@
+import { getQuery } from 'h3'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
+import { obtenerRangoMesBogota } from '~/server/utils/rangoMesBogota'
 
 const competiciones = ['liga-betplay', 'torneo-betplay', 'copa-colombia']
 const columnasTabla = [
@@ -28,10 +30,21 @@ interface FilaTablaLiga {
 }
 
 export default defineCachedEventHandler(async (evento) => {
+  const consultaMes = getQuery(evento).mes
+  const mesSolicitado = consultaMes === undefined ? null : typeof consultaMes === 'string' ? consultaMes : ''
+  const rangoMes = mesSolicitado === null ? null : obtenerRangoMesBogota(mesSolicitado)
+  if (mesSolicitado !== null && !rangoMes) {
+    throw createError({ statusCode: 400, statusMessage: 'El mes debe usar el formato AAAA-MM.' })
+  }
+
   const cliente = obtenerClienteSupabaseEditorial(evento)
   const ahora = new Date()
   const desde = ahora.getTime() - 45 * 24 * 60 * 60 * 1000
   const hasta = ahora.getTime() + 90 * 24 * 60 * 60 * 1000
+  const hoy = fechaEnBogota(ahora)
+  const inicioHoy = Date.parse(`${hoy}T05:00:00.000Z`)
+  const inicioManana = inicioHoy + 24 * 60 * 60 * 1000
+  const inicioOctavoDia = inicioHoy + 8 * 24 * 60 * 60 * 1000
   const [todosLosPartidos, posiciones] = await Promise.all([
     listarPartidosSeoPublicos(cliente),
     cliente.from('colombian_league_standings')
@@ -46,28 +59,53 @@ export default defineCachedEventHandler(async (evento) => {
   ])
 
   const filasPosiciones = (posiciones.data || []) as unknown as FilaTablaLiga[]
-  const fixtures = todosLosPartidos
+  const mapearPartido = (partido: (typeof todosLosPartidos)[number]) => ({
+    slug: partido.slug,
+    competencia: partido.competencia,
+    temporada: partido.temporada,
+    jornada: partido.jornada,
+    fechaIso: partido.fechaIso,
+    local: partido.local,
+    visitante: partido.visitante,
+    estado: partido.estado,
+    golesLocal: partido.golesLocal,
+    golesVisitante: partido.golesVisitante,
+    estadio: partido.estadio,
+    ciudad: partido.ciudad,
+    fuenteOficialUrl: partido.fuenteOficialUrl,
+    escudoLocal: partido.escudoLocal,
+    escudoVisitante: partido.escudoVisitante,
+    verificadoEn: partido.verificadoEn
+  })
+  const fixturesEnVentana = todosLosPartidos
     .filter(partido => Date.parse(partido.fechaIso) >= desde && Date.parse(partido.fechaIso) <= hasta
       && competiciones.includes(partido.competencia))
-    .map(partido => ({
-      slug: partido.slug,
-      competencia: partido.competencia,
-      temporada: partido.temporada,
-      jornada: partido.jornada,
-      fechaIso: partido.fechaIso,
-      local: partido.local,
-      visitante: partido.visitante,
-      estado: partido.estado,
-      golesLocal: partido.golesLocal,
-      golesVisitante: partido.golesVisitante,
-      estadio: partido.estadio,
-      ciudad: partido.ciudad,
-      fuenteOficialUrl: partido.fuenteOficialUrl,
-      escudoLocal: partido.escudoLocal,
-      escudoVisitante: partido.escudoVisitante,
-      verificadoEn: partido.verificadoEn
-    }))
-    .slice(0, 80)
+    .map(mapearPartido)
+  const fixturesDelMes = rangoMes
+    ? todosLosPartidos.filter(partido => {
+      const inicio = Date.parse(partido.fechaIso)
+      return inicio >= rangoMes.desde && inicio < rangoMes.hasta && competiciones.includes(partido.competencia)
+    }).sort(ordenarPorFecha).slice(0, 120).map(mapearPartido)
+    : null
+  const fixturesHoy = fixturesEnVentana.filter(partido => {
+    const inicio = Date.parse(partido.fechaIso)
+    return inicio >= inicioHoy && inicio < inicioManana
+  })
+  const recientes = fixturesEnVentana
+    .filter(partido => Date.parse(partido.fechaIso) < inicioHoy && /finish|full.?time|\bft\b|final/i.test(partido.estado || ''))
+    .sort((a, b) => Date.parse(b.fechaIso) - Date.parse(a.fechaIso))
+    .slice(0, 24)
+  const proximos = fixturesEnVentana
+    .filter(partido => Date.parse(partido.fechaIso) >= inicioManana && Date.parse(partido.fechaIso) < inicioOctavoDia)
+    .sort(ordenarPorFecha)
+    .slice(0, 32)
+  const masAdelante = fixturesEnVentana
+    .filter(partido => Date.parse(partido.fechaIso) >= inicioOctavoDia)
+    .sort(ordenarPorFecha)
+    .slice(0, 24)
+  const fixtures = fixturesDelMes || [...new Map([...recientes, ...fixturesHoy, ...proximos, ...masAdelante]
+    .map(partido => [`${partido.competencia}|${partido.temporada}|${partido.slug}`, partido])).values()]
+    .sort(ordenarPorFecha)
 
   const tabla = posiciones.error ? [] : filasPosiciones.map((fila) => ({
     competencia: fila.competition_slug,
@@ -104,7 +142,12 @@ export default defineCachedEventHandler(async (evento) => {
 }, {
   maxAge: 300,
   swr: true,
-  getKey: () => 'liga-colombiana-publica-v1'
+  getKey: evento => {
+    const mes = getQuery(evento).mes
+    return typeof mes === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(mes)
+      ? `liga-colombiana-publica-mes-${mes}`
+      : 'liga-colombiana-publica-v1'
+  }
 })
 
 function normalizarRutaEscudo(valor: unknown): string | null {
@@ -112,4 +155,19 @@ function normalizarRutaEscudo(valor: unknown): string | null {
     return null
   }
   return valor
+}
+
+function fechaEnBogota(fecha: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(fecha)
+}
+
+function prioridadCompetencia(competencia: string): number {
+  return competencia === 'liga-betplay' ? 0 : competencia === 'copa-colombia' ? 1 : 2
+}
+
+function ordenarPorFecha(a: { fechaIso: string, competencia: string }, b: { fechaIso: string, competencia: string }): number {
+  return Date.parse(a.fechaIso) - Date.parse(b.fechaIso)
+    || prioridadCompetencia(a.competencia) - prioridadCompetencia(b.competencia)
 }

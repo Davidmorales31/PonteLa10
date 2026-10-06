@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
+import { resolverDestinoPromocionalReproductor } from '~/utils/publicidad/destinoPromocionalReproductor'
 
 interface PartidoSeoVista {
   slug: string
@@ -28,9 +29,23 @@ const props = defineProps<{
 }>()
 const { modo, partido, noticias } = toRefs(props)
 
-const { registrarEvento } = useAnaliticaPublica()
+const configuracion = useRuntimeConfig()
+const { registrarEvento, publicidadAutorizada } = useAnaliticaPublica()
 const escudosFallidos = ref<string[]>([])
-const gifFondoFallido = ref(false)
+const urlsPromocionales = computed(() => String(configuracion.public.adsterraMatchPromoUrls || '')
+  .split(',')
+  .map(valor => {
+    try {
+      const url = new URL(valor.trim())
+      return url.protocol === 'https:' && !url.username && !url.password ? url.toString() : ''
+    } catch {
+      return ''
+    }
+  })
+  .filter(Boolean))
+const cartelPartidoUrl = computed(() => `/api/partidos-seo/${encodeURIComponent(props.partido.slug)}/imagen?formato=wide`)
+const posterVideoUrl = ref(cartelPartidoUrl.value)
+let clicsReproductorEnMemoria = 0
 const marcadorDisponible = computed(() => props.partido.golesLocal !== null
   && props.partido.golesVisitante !== null)
 const marcador = computed(() => `${props.partido.golesLocal ?? '—'}–${props.partido.golesVisitante ?? '—'}`)
@@ -78,8 +93,37 @@ function escudoFallido(url: string | null) {
   if (url && !escudosFallidos.value.includes(url)) escudosFallidos.value = [...escudosFallidos.value, url]
 }
 
+function gestionarClicReproductor() {
+  if (!import.meta.client || !publicidadAutorizada.value || !urlsPromocionales.value.length) return
+
+  const clave = 'pont3la10:clics-reproductor-partido:v1'
+  let clics = 0
+  try {
+    const guardados = Number.parseInt(window.sessionStorage.getItem(clave) || '0', 10)
+    clics = Math.max(clicsReproductorEnMemoria, Number.isSafeInteger(guardados) && guardados >= 0 ? guardados : 0) + 1
+    window.sessionStorage.setItem(clave, String(clics))
+  } catch {
+    // Si el navegador bloquea el almacenamiento, el clic explícito conserva su destino.
+    clics = ++clicsReproductorEnMemoria
+  }
+  clicsReproductorEnMemoria = Math.max(clicsReproductorEnMemoria, clics)
+  const destino = resolverDestinoPromocionalReproductor(clics, urlsPromocionales.value)
+  if (!destino) return
+  const ventana = window.open(destino, '_blank', 'noopener,noreferrer')
+  if (ventana) ventana.opener = null
+}
+
 onMounted(() => {
   void registrarEvento(props.modo === 'donde-ver' ? 'match_page_view' : 'result_page_view')
+  if (props.modo !== 'donde-ver') return
+  const mesBogota = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit'
+  }).format(new Date(props.partido.fechaIso))
+  const posterMensual = `/partidos/${mesBogota}/${props.partido.slug}.webp`
+  const imagenPoster = new Image()
+  imagenPoster.onload = () => { posterVideoUrl.value = posterMensual }
+  imagenPoster.onerror = () => { posterVideoUrl.value = cartelPartidoUrl.value }
+  imagenPoster.src = posterMensual
 })
 </script>
 
@@ -102,47 +146,50 @@ onMounted(() => {
     </header>
 
     <section class="cartel-partido-seo" :class="{ 'cartel-resultado': modo === 'como-quedo' }" aria-label="Datos del partido">
-      <img
-        class="fondo-estatico-partido"
-        src="/editorial/estadio-nocturno-neutral-pont3la10.webp"
-        alt=""
-        aria-hidden="true"
+      <video
+        v-if="modo === 'donde-ver'"
+        class="reproductor-partido-seo"
+        :poster="posterVideoUrl"
+        controls
+        autoplay
+        muted
+        loop
+        playsinline
+        preload="metadata"
+        :aria-label="`Vista previa promocional de ${partido.local} vs ${partido.visitante}; no es una transmisión en vivo`"
+        @click="gestionarClicReproductor"
       >
-      <img
-        v-if="!gifFondoFallido"
-        class="fondo-animado-partido"
-        src="/editorial/liga-betplay-ambiente.gif"
-        aria-hidden="true"
-        alt=""
-        @error="gifFondoFallido = true"
-      >
+        <source src="/videos/liga-betplay-fondo-16x9.mp4" type="video/mp4">
+        Tu navegador no puede reproducir esta vista previa. Consulta los datos del partido a continuación.
+      </video>
       <img
         v-else
-        class="fondo-animado-partido"
-        src="/editorial/estadio-nocturno-neutral-pont3la10.webp"
-        alt=""
-        aria-hidden="true"
+        class="cartel-imagen-resultado"
+        :src="cartelPartidoUrl"
+        :alt="`Cartel del resultado: ${partido.local} ${marcadorDisponible ? marcador : 'vs'} ${partido.visitante}, ${etiquetaPartido}`"
       >
-      <div class="capa-cartel-partido" aria-hidden="true" />
-      <div class="marca-cartel-partido"><span>Pont3la10</span><span class="competencia-cartel-partido">{{ nombreCompetencia }}</span></div>
-      <span class="estado-cartel-partido" :class="{ 'estado-en-vivo': estadoPartido === 'EN VIVO' }">{{ etiquetaPartido }}</span>
-      <div class="equipos-cartel-partido">
-        <div class="equipo-cartel-partido">
-          <img v-if="mostrarEscudo(partido.escudoLocal)" :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" @error="escudoFallido(partido.escudoLocal)">
-          <span v-else class="escudo-cartel-fallback" aria-hidden="true">{{ iniciales(partido.local) }}</span>
-          <strong>{{ partido.local }}</strong>
-          <small>LOCAL</small>
+      <div v-if="modo === 'donde-ver'" class="capa-datos-reproductor" aria-hidden="true">
+        <div class="marca-cartel-partido"><span>Pont3la10</span><span class="competencia-cartel-partido">{{ nombreCompetencia }}</span></div>
+        <span class="estado-cartel-partido" :class="{ 'estado-en-vivo': estadoPartido === 'EN VIVO' }">{{ etiquetaPartido }}</span>
+        <div class="equipos-cartel-partido">
+          <div class="equipo-cartel-partido">
+            <img v-if="mostrarEscudo(partido.escudoLocal)" :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" @error="escudoFallido(partido.escudoLocal)">
+            <span v-else class="escudo-cartel-fallback">{{ iniciales(partido.local) }}</span>
+            <strong>{{ partido.local }}</strong>
+            <small>LOCAL</small>
+          </div>
+          <div class="centro-cartel-partido">
+            <b>VS</b>
+            <span>{{ fechaPartido(partido.fechaIso) }}</span>
+          </div>
+          <div class="equipo-cartel-partido">
+            <img v-if="mostrarEscudo(partido.escudoVisitante)" :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" @error="escudoFallido(partido.escudoVisitante)">
+            <span v-else class="escudo-cartel-fallback">{{ iniciales(partido.visitante) }}</span>
+            <strong>{{ partido.visitante }}</strong>
+            <small>VISITANTE</small>
+          </div>
         </div>
-        <div class="centro-cartel-partido">
-          <b>{{ modo === 'como-quedo' && marcadorDisponible ? marcador : 'VS' }}</b>
-          <span>{{ modo === 'como-quedo' ? textoMarcador : fechaPartido(partido.fechaIso) }}</span>
-        </div>
-        <div class="equipo-cartel-partido">
-          <img v-if="mostrarEscudo(partido.escudoVisitante)" :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" @error="escudoFallido(partido.escudoVisitante)">
-          <span v-else class="escudo-cartel-fallback" aria-hidden="true">{{ iniciales(partido.visitante) }}</span>
-          <strong>{{ partido.visitante }}</strong>
-          <small>VISITANTE</small>
-        </div>
+        <p class="nota-previa-promocional">Vista previa promocional · no es una transmisión en vivo</p>
       </div>
       <p class="detalles-cartel-partido">
         <span>{{ fechaPartido(partido.fechaIso) }}</span>
@@ -158,6 +205,7 @@ onMounted(() => {
         @click="registrarEvento('channel_click')"
       >Consultar programación oficial</a>
       <div v-else class="nota-marcador-partido">El sitio no transmite partidos. Mostramos solo información editorial publicada.</div>
+      <p v-if="modo === 'donde-ver'" class="nota-clic-promocional">Con anuncios autorizados, el primer clic en el reproductor y luego cada cuatro clics adicionales abre un enlace patrocinado.</p>
     </section>
 
     <PublicidadAdsterraSlot formato="leaderboard" contexto="página SEO de partido" />
@@ -226,11 +274,12 @@ onMounted(() => {
 .encabezado-partido-seo { max-width: 940px; margin-bottom: 22px; }
 .encabezado-partido-seo h1 { margin: 8px 0; color: #f5f8ff; font-size: clamp(1.8rem, 4vw, 3rem); }
 .encabezado-partido-seo > p:last-child { color: #afc2db; line-height: 1.6; }
-.cartel-partido-seo { position: relative; display: grid; min-height: 450px; overflow: hidden; align-content: center; justify-items: center; gap: 18px; border: 1px solid #28708b; border-radius: 18px; background: #061b35; padding: 28px; isolation: isolate; }
-.fondo-animado-partido, .fondo-estatico-partido, .capa-cartel-partido { position: absolute; z-index: -2; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.fondo-animado-partido { opacity: .4; }
-.fondo-estatico-partido { display: none; opacity: .4; }
-.capa-cartel-partido { z-index: -1; background: linear-gradient(120deg, rgba(3,17,37,.88), rgba(4,35,66,.75) 50%, rgba(3,17,37,.9)); }
+.cartel-partido-seo { position: relative; display: grid; overflow: hidden; align-content: start; justify-items: center; gap: 18px; border: 1px solid #28708b; border-radius: 18px; background: #061b35; padding: 18px; }
+.reproductor-partido-seo { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #061b35; object-fit: cover; }
+.cartel-imagen-resultado { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #061b35; object-fit: cover; }
+.capa-datos-reproductor { position: absolute; inset: 18px 18px auto; display: grid; min-height: 16vw; align-content: center; justify-items: center; gap: 12px; border-radius: 12px; background: linear-gradient(115deg, rgba(3,17,37,.75), rgba(3,17,37,.48) 52%, rgba(3,17,37,.72)); pointer-events: none; }
+.nota-previa-promocional { margin: 0; color: #d3e0ef; font-size: .85rem; text-align: center; }
+.nota-clic-promocional { margin: 0; color: #9fb5ce; font-size: .8rem; line-height: 1.5; text-align: center; }
 .marca-cartel-partido { display: flex; width: 100%; align-items: center; justify-content: space-between; color: #fff; font-size: 1.4rem; font-weight: 900; }
 .competencia-cartel-partido { border-radius: 999px; background: #0c3c60; color: #7ce8ff; padding: 8px 14px; font-size: .82rem; }
 .estado-cartel-partido { border-radius: 999px; background: #103756; color: #91eaff; padding: 7px 13px; font-size: .76rem; font-weight: 900; letter-spacing: .08em; }
@@ -273,8 +322,7 @@ body.tema-publico-blanco .bloque-datos-partido-seo, body.tema-publico-blanco .pr
 body.tema-publico-blanco .bloque-datos-partido-seo dl div, body.tema-publico-blanco .estado-marcador-partido { background: #f1f5f9; }
 body.tema-publico-blanco .bloque-datos-partido-seo dt, body.tema-publico-blanco .preguntas-partido-seo a, body.tema-publico-blanco .enlaces-mutua-partido a { color: #145996; }
 body.tema-publico-blanco .bloque-datos-partido-seo > p, body.tema-publico-blanco .contexto-partido-seo p, body.tema-publico-blanco .preguntas-partido-seo p, body.tema-publico-blanco .noticias-relacionadas-partido > p, body.tema-publico-blanco .noticias-relacionadas-partido li p { color: #586980; }
-@media (prefers-reduced-motion: reduce) { .fondo-animado-partido { display: none; } .fondo-estatico-partido { display: block; } }
 body.tema-publico-blanco .noticias-relacionadas-partido li a { color: #13253d; }
-@media (max-width: 760px) { .contenido-partido-seo-grid { grid-template-columns: minmax(0, 1fr); } .cartel-partido-seo { min-height: 390px; padding: 18px; } .bloque-datos-partido-seo dl { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) { .contenido-partido-seo-grid { grid-template-columns: minmax(0, 1fr); } .bloque-datos-partido-seo dl { grid-template-columns: minmax(0, 1fr); } .capa-datos-reproductor { min-height: 22vw; } }
 @media (max-width: 500px) { .equipos-cartel-partido { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; } .equipo-cartel-partido strong { font-size: .88rem; } .equipo-cartel-partido img, .escudo-cartel-fallback { width: 68px; height: 68px; border-width: 4px; padding: 9px; } .centro-cartel-partido span { font-size: .82rem; } .marca-cartel-partido { font-size: 1.1rem; } .detalles-cartel-partido { font-size: .84rem; } }
 </style>

@@ -2,11 +2,11 @@
 
 ## Estado
 
-La versión anterior está desplegada en Production (`main`, `fc13d9e`,
-2026-10-02). La actualización de identidad/deduplicación de esta rama es
-candidata a release, no desplegada aún. Tiene pruebas unitarias de colisiones,
-precedencia/frescura y rutas SEO; el smoke de Production posterior a merge queda
-pendiente.
+La implementación actual está desplegada en Production desde el commit
+`049849b` (2026-10-06). El calendario público respondió con 99 fixtures y las
+rutas canónicas `/como-quedo` y `/donde-ver` respondieron 200. Las pruebas de
+identidad, precedencia y rutas SEO pasaron. La comprobación de esos nueve pares
+históricos concretos no se repitió individualmente después del despliegue.
 
 ## Objetivo
 

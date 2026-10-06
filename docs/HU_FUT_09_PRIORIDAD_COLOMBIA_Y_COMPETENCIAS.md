@@ -2,10 +2,12 @@
 
 ## Estado
 
-La versión anterior está desplegada en Production (`main`, `fc13d9e`,
-2026-10-02). Los cambios de prioridad en esta rama son candidatos a release,
-no desplegados aún. La prioridad de captura está cubierta por pruebas unitarias;
-su observación operativa requiere el worker del PC habilitado y un ciclo real.
+La lógica de prioridad está desplegada en Production desde `049849b`
+(2026-10-06) y cubierta por pruebas unitarias. El worker del PC completó un
+ciclo correcto en una franja sin partidos, por lo que esa corrida confirma el
+aplazamiento y el consumo cero, pero no compara una jornada activa de Colombia,
+Europa y las cinco grandes ligas. La observación de esa prioridad en vivo queda
+pendiente.
 
 ## Objetivo
 

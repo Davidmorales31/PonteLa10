@@ -16,7 +16,7 @@ import { sincronizarClasificacionesFutbol } from '~/server/utils/proveedoresFutb
 
 const limiteCuerpoBytes = 1_024
 
-/** Activación interna firmada; no configura cron ni acepta objetivos del cliente. */
+/** Sincroniza snapshots privados de la allowlist; no escribe la tabla pública DIMAYOR. */
 export default defineEventHandler(async (evento) => {
   const config = useRuntimeConfig(evento)
   const cuerpo = await leerCuerpoFirmado(evento, limiteCuerpoBytes)
