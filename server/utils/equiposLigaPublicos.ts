@@ -4,6 +4,7 @@ import { analizarConsultaArticulosPublicos } from '~/server/utils/filtrosArticul
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
 import { listarPartidosSeoPublicos, normalizarClaveEquipoLiga } from '~/server/utils/partidosSeoPublicos'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
+import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
 
@@ -155,22 +156,16 @@ export async function obtenerFichaEquipoLigaPublica(
     normalizarClaveEquipoLiga(partido.local) === clave
     || normalizarClaveEquipoLiga(partido.visitante) === clave
   )
-  const enVivo = relacionados
-    .filter(partido => partido.estado === 'EN VIVO')
-    .sort((a, b) => Date.parse(a.fechaIso) - Date.parse(b.fechaIso))
-    .slice(0, 3)
+  const enVivo = seleccionarPartidosEnVivoEquipo(relacionados, clave)
   const proximos = relacionados
     .filter((partido) => {
       const fecha = Date.parse(partido.fechaIso)
-      return fecha >= ahoraMs && !['FINALIZADO', 'CANCELADO', 'APLAZADO', 'SUSPENDIDO', 'ABANDONADO'].includes(partido.estado || '')
+      const estado = etiquetaEstadoSeoPartido(partido.estado)
+      return fecha >= ahoraMs && !['FINALIZADO', 'CANCELADO', 'APLAZADO', 'SUSPENDIDO', 'ABANDONADO'].includes(estado)
     })
     .sort((a, b) => Date.parse(a.fechaIso) - Date.parse(b.fechaIso))
     .slice(0, 5)
-  const resultados = relacionados
-    .filter(partido => partido.estado === 'FINALIZADO'
-      && Number.isFinite(partido.golesLocal) && Number.isFinite(partido.golesVisitante))
-    .sort((a, b) => Date.parse(b.fechaIso) - Date.parse(a.fechaIso))
-    .slice(0, 5)
+  const resultados = seleccionarResultadosRecientesEquipo(relacionados, clave, ahoraMs)
   const partidoSede = seleccionarSedeVerificada(relacionados, clave)
   const clasificacionPrincipal = equipo.clasificaciones[0]
   const noticias = await buscarNoticiasEquipo(cliente, equipo.nombre)
@@ -214,6 +209,34 @@ export function seleccionarSedeVerificada(
       && Number.isFinite(Date.parse(partido.verificadoEn))
       && Date.parse(partido.verificadoEn) <= ahoraMs)
     .sort((a, b) => Date.parse(b.verificadoEn) - Date.parse(a.verificadoEn))[0] || null
+}
+
+export function seleccionarPartidosEnVivoEquipo(
+  partidos: PartidoSeoPublico[],
+  claveEquipo: string
+): PartidoSeoPublico[] {
+  return partidos
+    .filter(partido => (normalizarClaveEquipoLiga(partido.local) === claveEquipo
+      || normalizarClaveEquipoLiga(partido.visitante) === claveEquipo)
+      && etiquetaEstadoSeoPartido(partido.estado) === 'EN VIVO')
+    .sort((a, b) => Date.parse(a.fechaIso) - Date.parse(b.fechaIso))
+    .slice(0, 3)
+}
+
+export function seleccionarResultadosRecientesEquipo(
+  partidos: PartidoSeoPublico[],
+  claveEquipo: string,
+  ahoraMs = Date.now()
+): PartidoSeoPublico[] {
+  return partidos
+    .filter(partido => (normalizarClaveEquipoLiga(partido.local) === claveEquipo
+      || normalizarClaveEquipoLiga(partido.visitante) === claveEquipo)
+      && etiquetaEstadoSeoPartido(partido.estado) === 'FINALIZADO'
+      && Number.isFinite(Date.parse(partido.fechaIso))
+      && Date.parse(partido.fechaIso) <= ahoraMs
+      && Number.isFinite(partido.golesLocal) && Number.isFinite(partido.golesVisitante))
+    .sort((a, b) => Date.parse(b.fechaIso) - Date.parse(a.fechaIso))
+    .slice(0, 5)
 }
 
 function esFilaClasificacionPublica(fila: FilaClasificacionEquipo): fila is FilaClasificacionEquipoPublica {

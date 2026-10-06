@@ -2,11 +2,13 @@
 
 ## HU-SEO-07 — fichas públicas de equipos colombianos (2026-10-06)
 
-- Implementación en rama `codex/seo07-equipos`, basada en el `main` de
-  `bac0f9d` (sitemaps públicos por tipo). Añade `/equipos/:slug`, su API pública
-  y enlaces desde la tabla de Liga y las fichas SEO de partidos. Las páginas
-  reúnen tabla verificada, fixtures en vivo/futuros/resultados, noticias
-  relacionadas y sede solo cuando hay fuente oficial comprobada.
+- PR #66 se integró como `f24d4ac1192bf33ce90e40bd4e0a9c1fb84461d5`. La ruta
+  `/equipos/:slug`, su API, los enlaces desde Liga/fichas de partido y el sitemap
+  de equipos están en Production. El smoke de 2026-10-06 comprobó página/API/XML
+  HTTP 200; la ficha de Atlético Nacional ofrece posición #4, 5 próximos
+  encuentros, 1 noticia, canonical, `SportsTeam`, indexación habilitada y
+  presencia en sitemap (35 equipos indexables). La inspección accesible mostró
+  encabezados, navegación, escudos, fixtures y enlaces etiquetados.
 - El acceso a tablas usa el cliente Supabase anónimo y proyecta solo filas con
   `is_public` y `publication_rights_confirmed`. No hubo cambios de esquema ni
   escrituras remotas. Las fichas con datos insuficientes sirven `noindex`; el
@@ -14,15 +16,19 @@
 - Los aliases de nombres se contrastaron con fixtures y clasificaciones
   públicos de Production. Slugs se generan desde `team_key` autorizado y los
   nombres ambiguos no se enlazan. No se exponen IDs de proveedor.
-- Validación local: lint; suite completa (74 archivos/362 pruebas); typecheck;
-  build de producción en snapshot aislado. `git diff --check` pasa. El build
-  conserva el aviso upstream `DEP0155` de `@vue/shared`. Revisión independiente
-  de seguridad/indexación sin bloqueos; se excluyen fechas futuras de la
-  verificación de sede.
-- Estado todavía local: falta crear PR, esperar CI/preview, validar la ruta
-  renderizada en móvil/escritorio y promover a Production. No se afirma que la
-  HU esté en Producción. Handoff:
+- La inspección en Production encontró un hueco: el feed guarda finales como
+  `finished`, mientras la primera versión buscaba solo `FINALIZADO`. El 3–1 de
+  Atlético Nacional–Junior del 30-sep estaba en datos públicos pero no salía en
+  “Resultados recientes”. La reparación local en `codex/seo07-normalize-fixture-states`
+  usa la normalización de estados existente y tiene prueba para `finished` y
+  `2H`; aún falta PR/deploy de esta reparación.
+- El preview de PR #66 compiló, pero respondió 503 por falta de configuración
+  pública de Supabase para el entorno Preview. No se copiaron credenciales. Se
+  validó la respuesta y el contenido inicial ya desplegado en Production.
+- Handoff de la implementación desplegada:
   `docs/agents/handoffs/2026-10-06-hu-seo07-equipos.md`.
+  Handoff de la reparación en curso:
+  `docs/agents/handoffs/2026-10-06-hu-seo07-state-normalization.md`.
 
 ## Liga, partidos SEO y tabla DIMAYOR en Production (2026-10-06)
 
