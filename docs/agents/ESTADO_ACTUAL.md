@@ -1,5 +1,29 @@
 # Estado actual de Pont3la10
 
+## HU-SEO-07 — fichas públicas de equipos colombianos (2026-10-06)
+
+- Implementación en rama `codex/seo07-equipos`, basada en el `main` de
+  `bac0f9d` (sitemaps públicos por tipo). Añade `/equipos/:slug`, su API pública
+  y enlaces desde la tabla de Liga y las fichas SEO de partidos. Las páginas
+  reúnen tabla verificada, fixtures en vivo/futuros/resultados, noticias
+  relacionadas y sede solo cuando hay fuente oficial comprobada.
+- El acceso a tablas usa el cliente Supabase anónimo y proyecta solo filas con
+  `is_public` y `publication_rights_confirmed`. No hubo cambios de esquema ni
+  escrituras remotas. Las fichas con datos insuficientes sirven `noindex`; el
+  sitemap de equipos incluye solo fichas que pasan el mismo gate SEO.
+- Los aliases de nombres se contrastaron con fixtures y clasificaciones
+  públicos de Production. Slugs se generan desde `team_key` autorizado y los
+  nombres ambiguos no se enlazan. No se exponen IDs de proveedor.
+- Validación local: lint; suite completa (74 archivos/362 pruebas); typecheck;
+  build de producción en snapshot aislado. `git diff --check` pasa. El build
+  conserva el aviso upstream `DEP0155` de `@vue/shared`. Revisión independiente
+  de seguridad/indexación sin bloqueos; se excluyen fechas futuras de la
+  verificación de sede.
+- Estado todavía local: falta crear PR, esperar CI/preview, validar la ruta
+  renderizada en móvil/escritorio y promover a Production. No se afirma que la
+  HU esté en Producción. Handoff:
+  `docs/agents/handoffs/2026-10-06-hu-seo07-equipos.md`.
+
 ## Liga, partidos SEO y tabla DIMAYOR en Production (2026-10-06)
 
 - PR #60 se integró a `main` como `aeb3124e8bcc7c0bb89f286e74c66dc542a79b76`

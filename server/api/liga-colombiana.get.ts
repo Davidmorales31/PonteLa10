@@ -27,6 +27,8 @@ interface FilaTablaLiga {
   points: number
   team_logo_url: string | null
   checked_at: string
+  is_public: boolean
+  publication_rights_confirmed: boolean
 }
 
 export default defineEventHandler(async (evento) => {
@@ -75,6 +77,8 @@ export default defineEventHandler(async (evento) => {
     fuenteOficialUrl: partido.fuenteOficialUrl,
     escudoLocal: partido.escudoLocal,
     escudoVisitante: partido.escudoVisitante,
+    equipoLocalSlug: partido.equipoLocalSlug,
+    equipoVisitanteSlug: partido.equipoVisitanteSlug,
     verificadoEn: partido.verificadoEn
   })
   const fixturesEnVentana = todosLosPartidos
@@ -107,11 +111,13 @@ export default defineEventHandler(async (evento) => {
     .map(partido => [`${partido.competencia}|${partido.temporada}|${partido.slug}`, partido])).values()]
     .sort(ordenarPorFecha)
 
-  const tabla = posiciones.error ? [] : filasPosiciones.map((fila) => ({
+  const tabla = posiciones.error ? [] : filasPosiciones
+    .filter(fila => fila.is_public === true && fila.publication_rights_confirmed === true)
+    .map((fila) => ({
     competencia: fila.competition_slug,
     temporada: fila.season,
     fase: fila.phase,
-    equipoClave: fila.team_key,
+    equipoClave: /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(fila.team_key) ? fila.team_key : '',
     equipo: fila.team_name,
     posicion: fila.position,
     jugados: fila.played,
@@ -124,7 +130,7 @@ export default defineEventHandler(async (evento) => {
     puntos: fila.points,
     escudo: normalizarRutaEscudo(fila.team_logo_url),
     verificadoEn: fila.checked_at
-  }))
+    }))
 
   const verificados = [...todosLosPartidos, ...tabla]
     .map(fila => fila.verificadoEn)
