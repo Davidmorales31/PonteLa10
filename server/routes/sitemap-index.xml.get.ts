@@ -1,6 +1,5 @@
 import { prepararRespuestaSitemap, construirIndiceSitemapPublico, rutasSitemapPublico } from '~/server/utils/sitemapsPublicos'
 
-/** Mantiene el endpoint histórico como alias del índice; no redirige ni duplica URLs. */
 export default defineEventHandler((evento) => {
   prepararRespuestaSitemap(evento)
   const urlSitio = String(useRuntimeConfig().public.siteUrl)
