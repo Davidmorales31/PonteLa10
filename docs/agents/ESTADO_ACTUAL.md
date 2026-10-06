@@ -9,6 +9,12 @@
   encuentros, 1 noticia, canonical, `SportsTeam`, indexación habilitada y
   presencia en sitemap (35 equipos indexables). La inspección accesible mostró
   encabezados, navegación, escudos, fixtures y enlaces etiquetados.
+- El smoke reveló que el estado raw `finished` no se clasificaba como final.
+  PR #67 reutilizó la normalización compartida y se integró como
+  `c55f56061ba4d6860871f4094d5eb6373fb91c9c`. Después del deploy `Ready`, la API
+  y el HTML fresco mostraron cinco resultados recientes: Atlético Nacional 3–1
+  Junior (30-sep), Nacional 1–1 Millonarios, Llaneros 2–0 Nacional, La Equidad
+  2–3 Nacional y Nacional 2–0 Águilas Doradas.
 - El acceso a tablas usa el cliente Supabase anónimo y proyecta solo filas con
   `is_public` y `publication_rights_confirmed`. No hubo cambios de esquema ni
   escrituras remotas. Las fichas con datos insuficientes sirven `noindex`; el
@@ -16,18 +22,16 @@
 - Los aliases de nombres se contrastaron con fixtures y clasificaciones
   públicos de Production. Slugs se generan desde `team_key` autorizado y los
   nombres ambiguos no se enlazan. No se exponen IDs de proveedor.
-- La inspección en Production encontró un hueco: el feed guarda finales como
-  `finished`, mientras la primera versión buscaba solo `FINALIZADO`. El 3–1 de
-  Atlético Nacional–Junior del 30-sep estaba en datos públicos pero no salía en
-  “Resultados recientes”. La reparación local en `codex/seo07-normalize-fixture-states`
-  usa la normalización de estados existente y tiene prueba para `finished` y
-  `2H`; aún falta PR/deploy de esta reparación.
+- Las pruebas de la reparación cubren los estados raw `finished` y `2H`, y
+  excluyen partidos programados, marcadores nulos y fixtures futuros. La suite
+  completa tiene 74 archivos/363 pruebas; lint, typecheck, build y CI de PR #67
+  pasaron.
 - El preview de PR #66 compiló, pero respondió 503 por falta de configuración
   pública de Supabase para el entorno Preview. No se copiaron credenciales. Se
   validó la respuesta y el contenido inicial ya desplegado en Production.
 - Handoff de la implementación desplegada:
   `docs/agents/handoffs/2026-10-06-hu-seo07-equipos.md`.
-  Handoff de la reparación en curso:
+  Handoff de la reparación desplegada:
   `docs/agents/handoffs/2026-10-06-hu-seo07-state-normalization.md`.
 
 ## Liga, partidos SEO y tabla DIMAYOR en Production (2026-10-06)

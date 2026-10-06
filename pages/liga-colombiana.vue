@@ -228,6 +228,12 @@ useSeoPont3la10(() => ({
       </nav>
     </header>
 
+    <nav class="competiciones-permanentes-liga" aria-label="Páginas permanentes de competiciones">
+      <NuxtLink to="/competiciones/liga-betplay"><strong>Liga BetPlay</strong><span>Tabla, calendario y resultados <span aria-hidden="true">→</span></span></NuxtLink>
+      <NuxtLink to="/competiciones/torneo-betplay"><strong>Torneo BetPlay</strong><span>Equipos, jornadas y resultados <span aria-hidden="true">→</span></span></NuxtLink>
+      <NuxtLink to="/competiciones/copa-colombia"><strong>Copa Colombia</strong><span>Fases y próximos partidos <span aria-hidden="true">→</span></span></NuxtLink>
+    </nav>
+
     <div class="grilla-principal-liga">
       <section class="columna-editorial-liga" aria-label="Actualidad de la Liga Colombiana">
         <article v-if="noticiaPrincipal" class="noticia-destacada-medio">
@@ -413,6 +419,13 @@ body.tema-publico-blanco main.modulo-futbol-colombia .encabezado-noticias-listad
 body.tema-publico-blanco main.modulo-futbol-colombia .encabezado-noticias-listado p { color: #145996; }
 .navegacion-liga-colombia { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
 .navegacion-liga-colombia a { border: 1px solid rgba(255,255,255,.28); border-radius: 999px; color: #fff; padding: 8px 13px; text-decoration: none; }
+.competiciones-permanentes-liga { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 20px 0 24px; }
+.competiciones-permanentes-liga a { display: grid; gap: 6px; padding: 16px 18px; border: 1px solid #294362; border-radius: 12px; background: #10243d; color: #edf3ff; text-decoration: none; transition: transform .18s ease, border-color .18s ease; }
+.competiciones-permanentes-liga a:hover, .competiciones-permanentes-liga a:focus-visible { transform: translateY(-2px); border-color: #78dcf4; outline: 2px solid #78dcf4; outline-offset: 2px; }
+.competiciones-permanentes-liga strong { font-size: 1.08rem; }
+.competiciones-permanentes-liga a > span { color: #afc2db; font-size: .86rem; }
+:global(body.tema-publico-blanco) .competiciones-permanentes-liga a { border-color: #dce5f1; background: #fff; color: #123252; }
+:global(body.tema-publico-blanco) .competiciones-permanentes-liga a > span { color: #586980; }
 .grilla-principal-liga { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, .85fr); gap: 24px; margin-top: 24px; }
 .columna-editorial-liga, .columna-tabla-liga { display: grid; align-content: start; gap: 22px; min-width: 0; }
 .bloque-liga-colombia { margin-top: 32px; }
@@ -456,6 +469,6 @@ body.tema-publico-blanco .estado-partido-liga { background: #e7eef7; color: #4b5
 body.tema-publico-blanco .estado-partido-liga--vivo { background: #b91c34; color: #fff; }
 body.tema-publico-blanco .meta-resultado-liga { color: #586980; }
 body.tema-publico-blanco .tabla-liga-scroll th, body.tema-publico-blanco .tabla-liga-scroll td { border-color: #e2e8f0; }
-@media (max-width: 820px) { .grilla-principal-liga { grid-template-columns: minmax(0, 1fr); } .lista-partidos-liga { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 820px) { .grilla-principal-liga { grid-template-columns: minmax(0, 1fr); } .lista-partidos-liga { grid-template-columns: minmax(0, 1fr); } .competiciones-permanentes-liga { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 520px) { .cabecera-liga-colombia { padding: 20px; } .pagina-publica-medio.modulo-futbol-colombia { width: min(100% - 24px, 1240px); } }
 </style>

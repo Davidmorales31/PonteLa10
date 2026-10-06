@@ -60,4 +60,21 @@ describe('indexabilidad de fichas de partido', () => {
     expect(evaluarIndexabilidad({ ...equipo, posicionVerificadaEn: null })).toBe(false)
     expect(evaluarIndexabilidad({ ...equipo, partidosPublicos: 2 })).toBe(false)
   })
+
+  it('indexa competiciones solo con temporada válida, ocho partidos y seis equipos públicos', () => {
+    const competicion = {
+      tipo: 'competicion' as const,
+      slug: 'liga-betplay',
+      nombre: 'Liga BetPlay',
+      temporada: '2026-II',
+      partidosPublicos: 8,
+      equiposPublicos: 6,
+      fuenteDisponible: true
+    }
+    expect(evaluarIndexabilidad(competicion)).toBe(true)
+    expect(evaluarIndexabilidad({ ...competicion, partidosPublicos: 7 })).toBe(false)
+    expect(evaluarIndexabilidad({ ...competicion, equiposPublicos: 5 })).toBe(false)
+    expect(evaluarIndexabilidad({ ...competicion, temporada: 'no-valida' })).toBe(false)
+    expect(evaluarIndexabilidad({ ...competicion, fuenteDisponible: false })).toBe(false)
+  })
 })

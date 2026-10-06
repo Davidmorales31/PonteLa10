@@ -78,10 +78,13 @@ describe('sitemaps públicos por entidad', () => {
     ], limite, ahora)).toThrow('fechas inválidas o futuras')
   })
 
-  it('separa páginas públicas y la ficha permanente de Liga BetPlay', () => {
+  it('mantiene el hub colombiano y genera fichas indexables para cada temporada pública', () => {
     expect(paginas).toContain("'/partidos-hoy'")
     expect(paginas).not.toContain("'/liga-colombiana'")
     expect(competencias).toContain("ruta: '/liga-colombiana'")
+    expect(competencias).toContain('listarRutasIndexablesCompeticiones')
+    expect(competencias).toContain('obtenerClienteSupabaseAnonimo')
+    expect(competencias).toContain("registrarFalloSitemap(evento, 'competitions')")
     expect(competencias).not.toContain('sendRedirect')
   })
 

@@ -38,9 +38,9 @@
   503; la ficha de Production respondió y quedó inspeccionada. El smoke detectó
   que el estado raw `finished` no entraba en Resultados recientes. La corrección
   está en curso en `codex/seo07-normalize-fixture-states`.
-- **Pendientes:** desplegar la normalización de estados de proveedor y confirmar
-  resultados recientes en Production.
-- **Siguiente acción exacta:** cerrar pruebas/build de la reparación, crear PR
-  contra `main`, esperar checks, integrar y confirmar el 3–1 de Nacional–Junior.
+- **Pendientes:** ninguno para esta HU; la normalización de estados se desplegó
+  en PR #67 y confirmó los resultados recientes en Production (ver handoff).
+- **Siguiente acción exacta:** continuar con la siguiente HU aprobada del
+  backlog desde `main` en `c55f560`; no queda acción operativa de HU-SEO-07.
 - **Commit base:** `bac0f9d` (`feat(seo): split public sitemaps by page type`).
 - **Commit final:** `f24d4ac1192bf33ce90e40bd4e0a9c1fb84461d5` (merge de PR #66).

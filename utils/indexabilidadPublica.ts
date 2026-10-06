@@ -30,8 +30,18 @@ export interface DatosIndexabilidadEquipo {
   partidosPublicos: number
 }
 
+export interface DatosIndexabilidadCompeticion {
+  tipo: 'competicion'
+  slug: string
+  nombre: string
+  temporada: string
+  partidosPublicos: number
+  equiposPublicos: number
+  fuenteDisponible: boolean
+}
+
 export function evaluarIndexabilidad(
-  contenido: DatosIndexabilidadPartido | DatosIndexabilidadHub | DatosIndexabilidadEquipo
+  contenido: DatosIndexabilidadPartido | DatosIndexabilidadHub | DatosIndexabilidadEquipo | DatosIndexabilidadCompeticion
 ): boolean {
   if ('articulosDisponibles' in contenido) {
     return contenido.fuenteDisponible
@@ -48,6 +58,17 @@ export function evaluarIndexabilidad(
       && Boolean(contenido.posicionVerificadaEn && Number.isFinite(Date.parse(contenido.posicionVerificadaEn)))
       && Number.isInteger(contenido.partidosPublicos)
       && contenido.partidosPublicos >= 3
+  }
+
+  if ('tipo' in contenido && contenido.tipo === 'competicion') {
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(contenido.slug)
+      && contenido.nombre.trim().length >= 3
+      && /^20\d{2}(?:-[A-Za-z0-9]+)?$/.test(contenido.temporada)
+      && contenido.fuenteDisponible
+      && Number.isInteger(contenido.partidosPublicos)
+      && contenido.partidosPublicos >= 8
+      && Number.isInteger(contenido.equiposPublicos)
+      && contenido.equiposPublicos >= 6
   }
 
   const partido = contenido

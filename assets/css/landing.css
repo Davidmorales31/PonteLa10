@@ -4117,3 +4117,30 @@ body.tema-publico-azul .pagina-resultados .estado-vacio-resultados,
 body.tema-publico-azul .pagina-resultados .estado-carga-resultados {
   color: #c4d4e8;
 }
+
+@media (min-width: 1181px) and (max-width: 1320px) {
+  .cabecera-landing-contenido {
+    grid-template-columns: 170px minmax(0, 1fr) auto;
+    gap: 16px;
+  }
+
+  .navegacion-landing-escritorio {
+    gap: clamp(8px, 1vw, 13px);
+  }
+
+  .navegacion-landing-escritorio > * {
+    flex: 0 0 auto;
+  }
+
+  .navegacion-landing-escritorio a {
+    font-size: 0.68rem;
+  }
+
+  .acciones-cabecera-landing {
+    gap: 8px;
+  }
+}
+
+body.tema-publico-blanco .cabecera-pagina.cabecera-noticias-medio.cabecera-competicion h1 {
+  color: #ffffff;
+}
