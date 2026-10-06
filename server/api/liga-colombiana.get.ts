@@ -29,7 +29,7 @@ interface FilaTablaLiga {
   checked_at: string
 }
 
-export default defineCachedEventHandler(async (evento) => {
+export default defineEventHandler(async (evento) => {
   const consultaMes = getQuery(evento).mes
   const mesSolicitado = consultaMes === undefined ? null : typeof consultaMes === 'string' ? consultaMes : ''
   const rangoMes = mesSolicitado === null ? null : obtenerRangoMesBogota(mesSolicitado)
@@ -131,22 +131,13 @@ export default defineCachedEventHandler(async (evento) => {
     .filter((valor): valor is string => typeof valor === 'string')
     .sort((a, b) => Date.parse(b) - Date.parse(a))
 
-  setResponseHeader(evento, 'Cache-Control', 'public, max-age=60, s-maxage=300, stale-while-revalidate=600')
+  setResponseHeader(evento, 'Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=60')
   return {
     estado: fixtures.length || tabla.length ? 'disponible' as const : 'sin_datos' as const,
     partidos: fixtures,
     tabla,
     actualizadoEn: verificados[0] || null,
     consultadoEn: ahora.toISOString()
-  }
-}, {
-  maxAge: 300,
-  swr: true,
-  getKey: evento => {
-    const mes = getQuery(evento).mes
-    return typeof mes === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(mes)
-      ? `liga-colombiana-publica-mes-${mes}`
-      : 'liga-colombiana-publica-v1'
   }
 })
 
