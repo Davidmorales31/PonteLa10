@@ -1,60 +1,47 @@
 # Estado actual de Pont3la10
 
-## Liga, partidos SEO y worker en Production (2026-10-06)
+## Liga, partidos SEO y tabla DIMAYOR en Production (2026-10-06)
 
-- Production fue promovida al deployment `dpl_Cj7PybfvXeKeWU68QsugcnHwbnmK`
-  (`READY`), construido desde `codex/liga-colombiana-ajustes`, commit
-  `049849ba5dbd380f2139b1daf17d07d83e9c8f7b`. No se abrió PR. El checkout
-  `main` sigue en `6748e48`; una futura publicación desde `main` podría
-  reemplazar esta versión, así que los commits deben reconciliarse antes de
-  volver a desplegar desde esa rama.
-- Smoke de Production: `/liga-colombiana`, `/como-quedo/leones-fc-vs-barranquilla`
-  y `/donde-ver/leones-fc-vs-barranquilla` respondieron 200. La API del
-  calendario devolvió 99 fixtures y 36 filas de tablas; la Liga muestra agenda
-  de siete días y calendario mensual de 30 días, partidos/escudos y resultados
-  recientes. El cartel WebP y su formato PNG respondieron 200. La página
-  `/donde-ver` contiene un único video en loop con cartel y escudos reales; no
-  es una transmisión. No se hizo clic en Production para no generar clics
-  publicitarios artificiales.
-- Se generaron manualmente 80 carteles WebP optimizados para octubre de 2026
-  (~4 MB en conjunto); el script permite regenerar el mes. No hay un job
-  programado que genere carteles automáticamente ni un MP4 por partido.
-- La regla promocional desplegada redirige en los clics 1, 5, 9, etc. según el
-  contador persistido del reproductor. Su unidad está cubierta por pruebas; no
-  se ensayó haciendo clic en el dominio público.
-- El código de actualización adaptativa y de publicación de resultados está
-  desplegado. El worker local y su servidor se detuvieron para liberar archivos
-  del build; no están corriendo ahora y deben reanudarse tras el release. La
-  primera corrida correcta quedó dentro de la ventana
-  sin partidos, aplazó calendario y fixtures hasta las 06:00 COT y gastó cero
-  llamadas de proveedor; resultados y clasificaciones tampoco generaron
-  solicitudes de proveedores. El proceso actual no está instalado como tarea
-  persistente de Windows: si el PC se suspende, se cierra la sesión de Codex o
-  se detiene el servidor, el trabajo no continúa hasta reiniciarlo.
-- La ruta de clasificaciones basada en proveedores conserva su allowlist y su
-  resultado `sin_objetivos`; no se le inventaron mappings externos. Para la
-  tabla pública de Liga A/B se implementó una ruta DIMAYOR independiente:
-  temporada activa Bogotá, conjunto completo de equipos y fases, derechos
-  revalidados al escribir, fuente oficial, cero solicitudes a las APIs y
-  actualización atómica protegida por lease/token. DIMAYOR devolvió 20 filas
-  para Liga A y 16 para Liga B; el proyector local cubrió las 36 filas
-  autorizadas de Production. La migración
-  `20261006064139_hu_fut_tabla_dimayor_atomica.sql` aún NO está aplicada, por lo
-  que la tabla de Production sigue con el snapshot anterior.
-- Una lectura agregada de Supabase cerca de 00:55 COT mostró el 6-oct
-  API-Football 1/80 y Goal API 44/900; no se atribuye ese total a una corrida
-  concreta. La corrida correcta más reciente registró 0 peticiones. Los límites
-  Production siguen en 80/900, con ventanas mínimas de 5/15 minutos.
-- Esta continuación pasó lint, typecheck, suite completa (67 archivos/326
-  pruebas; una primera corrida aisló un timeout que no se reprodujo), build y
-  pruebas focalizadas (17/17). Sigue el aviso upstream `DEP0155` de
-  `@vue/shared`. El revisor de seguridad/SQL aprobó estáticamente la migración
-  y el fencing; pgTAP no pudo ejecutarse aún. El conector Supabase devolvió
-  `Unauthorized` para aplicar migración y para consultas de solo lectura. El
-  SQL Editor web abre la sesión correcta, pero no se ejecutó SQL sin un canal
-  de automatización documentado. No se debe declarar el refresco desplegado.
-  Vercel lista el proyecto pero niega acceso a leer deployments (403/404); aún
-  no se publicó la nueva versión. Handoff:
+- PR #60 se integró a `main` como `aeb3124e8bcc7c0bb89f286e74c66dc542a79b76`
+  (`feat(futbol): actualizar Liga BetPlay desde DIMAYOR`). GitHub reportó los
+  checks requeridos aprobados, incluido Vercel; después del merge Production se
+  verificó por HTTP. `/partidos-hoy`, `/liga-colombiana`, `/api/liga-colombiana`
+  y `/api/resultados?deporte=futbol&timeZone=America%2FBogota` respondieron 200.
+- `/api/liga-colombiana` sirve 36 posiciones públicas de la temporada 2026-II:
+  20 de Liga A y 16 de Liga B, con escudo para cada equipo. Las 36 filas tienen
+  `source_name=DIMAYOR` y `checked_at=2026-10-06 12:29:09 UTC` (07:29 COT).
+  El calendario público sigue sirviendo sus fixtures desde la base de datos.
+- La migración aplicada en Supabase Production quedó registrada por el servidor
+  como versión `20261006115906` (`hu_fut_tabla_dimayor_atomica`). Se alinea el
+  nombre local de su archivo a esa versión. La función privada refresca el
+  conjunto completo de Liga A/B de manera atómica, verifica temporada/fases y
+  derechos vigentes, y usa lease con fencing token y cooldown de 15 minutos.
+  El endpoint interno sin firma respondió 401; ACL/RLS impiden acceso público a
+  la escritura. El único aviso nuevo relevante del advisor es INFO sobre RLS sin
+  políticas en la tabla de lease privada (intencional); no aparecieron hallazgos
+  de rendimiento relacionados con esta tabla. pgTAP está disponible pero no
+  instalado en Production; las pruebas se validaron con consultas directas de
+  ACL/RLS y la escritura real del worker.
+- El worker local completó el primer refresco DIMAYOR de Production: 36 filas
+  actualizadas, `fuente=DIMAYOR`, `solicitudes=0`. Ese refresco no cambió los
+  contadores de APIs. En un ciclo independiente posterior, el flujo de fixtures
+  hizo 1 solicitud a Goal API (1 fixture recibido/guardado y su detalle
+  actualizado); la tabla vuelve a consultarse con cooldown protegido de 15
+  minutos. La ruta genérica de snapshots/proveedores no se reemplazó.
+- El servidor local y el worker siguen activos en `127.0.0.1:3011` dentro del
+  worktree `.codex-release-dimayor-runtime`. No se instaló una tarea persistente
+  de Windows: el PC debe permanecer despierto y los procesos deben seguir vivos;
+  tras suspensión, reinicio o cierre de los procesos hay que arrancarlos de
+  nuevo. Se dejó intacto el servicio preexistente del puerto 3001.
+- El deploy actual es el posterior al merge de PR #60; el identificador de
+  deployment no se pudo leer por el conector Vercel (403/404). El estado de CI
+  de Vercel fue exitoso y la URL pública devolvió las rutas y datos anteriores.
+  No se accedió al preview protegido. Se conserva el trabajo de Liga, páginas
+  SEO, 80 carteles WebP de octubre y reproductor promocional incluidos en PR #60.
+- Validación previa al merge: lint, typecheck, suite completa (67 archivos/326
+  pruebas), build y pruebas focalizadas (17/17); continúa el aviso upstream
+  `DEP0155` de `@vue/shared`. La migración fue revisada estáticamente y luego
+  verificada/escrita en Production. Handoff:
   `docs/agents/handoffs/2026-10-06-liga-colombiana-produccion.md`.
 
 ## Liga colombiana, SEO de partidos y cuota (2026-10-05)

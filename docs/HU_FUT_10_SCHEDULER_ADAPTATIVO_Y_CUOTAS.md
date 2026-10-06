@@ -3,12 +3,10 @@
 ## Estado
 
 La implementación adaptativa, la prioridad horaria y la publicación de
-resultados están desplegadas desde `049849b` (2026-10-06). En el primer ciclo
-correcto del worker local no había partidos en la franja: calendario y fixtures
-se aplazaron hasta las 06:00 COT con cero llamadas externas. Esto verifica el
-camino de inactividad, no la cadencia en una jornada en vivo. El worker local
-y su servidor se detuvieron para liberar archivos del build y deben reanudarse
-al finalizar la publicación.
+resultados están en Production desde el merge de PR #60, commit `aeb3124`
+(2026-10-06). El worker local y su servidor están activos en el worktree de
+release; no se instaló una tarea persistente de Windows. Si el PC se suspende o
+los procesos se detienen, el trabajo se pausa y debe reiniciarse.
 
 Las cuotas duras de Production permanecen en 80 API-Football/900 Goal API y la
 base rechaza intervalos menores de 5/15 minutos. La medición agregada del
@@ -16,14 +14,16 @@ base rechaza intervalos menores de 5/15 minutos. La medición agregada del
 concreto. Para Liga A/B se añadió una ruta DIMAYOR separada que lee las tablas
 oficiales, exige cobertura exacta de todos los equipos/fases autorizados de la
 temporada activa y los escribe en una sola transacción. No llama API-Football ni
-Goal API. El worker la programa cada 15 minutos; una lease con token descarta
-ejecuciones superpuestas o vencidas. DIMAYOR devolvió 20 filas para Liga A y 16
-para Liga B; el proyector local cubrió las 36 filas autorizadas de Production.
-La migración `20261006064139_hu_fut_tabla_dimayor_atomica.sql` y la ruta pasaron
-revisión estática, lint, typecheck, suite y build locales, pero aún no se
-desplegaron: el conector Supabase devolvió `Unauthorized` y requiere
-reautorización. pgTAP remoto, actualización inicial y observación de jornada
-activa siguen pendientes.
+Goal API. El worker la programa con cooldown de 15 minutos; una lease con token
+descarta ejecuciones superpuestas o vencidas. La migración está aplicada en
+Production como `20261006115906_hu_fut_tabla_dimayor_atomica.sql`. DIMAYOR
+devolvió 20 filas para Liga A y 16 para Liga B; las 36 posiciones autorizadas
+se escribieron y `/api/liga-colombiana` confirmó sus escudos y fecha de
+actualización. La tabla no consumió solicitudes de proveedor. En un ciclo
+posterior e independiente, el flujo de fixtures sí hizo una solicitud Goal API
+para guardar un fixture y actualizar su detalle. pgTAP no se ejecutó porque la
+extensión no está instalada; sí se verificaron ACL/RLS y la escritura real. Aún
+falta observar la frecuencia durante una jornada con varios partidos en vivo.
 
 La versión desplegada sirve carteles mensuales pre-generados (80 WebP de
 octubre). La generación sigue siendo manual y no hay un MP4 personalizado por
