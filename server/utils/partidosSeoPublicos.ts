@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createError } from 'h3'
 import { asignarSlugsPartidosSeo, buscarPartidoSeoPorSlug } from '~/utils/partidosSeo'
 import { normalizarEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
+import { obtenerRutaPublicaEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
 
 const columnasFixtures = [
   'provider', 'provider_fixture_id', 'competition_slug', 'season', 'round_name', 'scheduled_at',
@@ -97,7 +98,7 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
       for (const fila of respuestaEscudos.data as unknown as FilaEscudoEquipo[]) {
         if (fila.is_public !== true || fila.publication_rights_confirmed !== true) continue
         const ruta = normalizarRutaEscudo(fila.team_logo_url)
-        if (ruta) escudosPorEquipo.set(normalizarNombreEquipo(fila.team_name), ruta)
+        if (ruta) escudosPorEquipo.set(normalizarClaveEquipoLiga(fila.team_name), ruta)
       }
     }
 
@@ -116,8 +117,10 @@ export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promis
       estadio: fila.venue,
       ciudad: fila.city,
       fuenteOficialUrl: normalizarFuenteOficial(fila.official_source_url),
-      escudoLocal: escudosPorEquipo.get(normalizarNombreEquipo(fila.home_team)) || null,
-      escudoVisitante: escudosPorEquipo.get(normalizarNombreEquipo(fila.away_team)) || null,
+      escudoLocal: escudosPorEquipo.get(normalizarClaveEquipoLiga(fila.home_team))
+        || obtenerRutaPublicaEscudoPartidoSeo(fila.home_team),
+      escudoVisitante: escudosPorEquipo.get(normalizarClaveEquipoLiga(fila.away_team))
+        || obtenerRutaPublicaEscudoPartidoSeo(fila.away_team),
       verificadoEn: fila.checked_at
     }))
   })()
@@ -164,8 +167,8 @@ function primeraCreacion(a: string, b: string): string {
 }
 
 function claveCruceFixture(fila: FilaPartidoSeo): string {
-  return [fila.competition_slug, fila.season, normalizarNombreEquipo(fila.home_team),
-    normalizarNombreEquipo(fila.away_team)].join('|')
+  return [fila.competition_slug, fila.season, normalizarClaveEquipoLiga(fila.home_team),
+    normalizarClaveEquipoLiga(fila.away_team)].join('|')
 }
 
 function esMismoFixtureSeo(a: FilaPartidoSeo, b: FilaPartidoSeo): boolean {
@@ -219,7 +222,45 @@ export async function obtenerPartidoSeoPublico(
 }
 
 function normalizarNombreEquipo(nombre: string): string {
-  return nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es-CO').trim()
+  return nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es-CO')
+    .replace(/[^a-z0-9]+/g, ' ').trim()
+}
+
+/** Nombres documentados que los feeds oficiales usan indistintamente para el mismo club. */
+export function normalizarClaveEquipoLiga(nombre: string): string {
+  const normalizado = normalizarNombreEquipo(nombre)
+  const alias: Record<string, string> = {
+    'bogota': 'bogota fc',
+    'bogota fc': 'bogota fc',
+    'envigado fc': 'envigado',
+    'envigado': 'envigado',
+    'fortaleza ceif': 'fortaleza',
+    'fortaleza': 'fortaleza',
+    'deportivo pereira fc': 'deportivo pereira',
+    'deportivo pereira': 'deportivo pereira',
+    'jaguares de cordoba fc': 'jaguares de cordoba',
+    'jaguares': 'jaguares de cordoba',
+    'jaguares de cordoba': 'jaguares de cordoba',
+    'independiente medellin': 'independiente medellin',
+    'ind medellin': 'independiente medellin',
+    'independiente santa fe': 'independiente santa fe',
+    'santa fe': 'independiente santa fe',
+    'patriotas boyaca': 'patriotas boyaca',
+    'patriotas': 'patriotas boyaca',
+    'barranquilla': 'barranquilla fc',
+    'barranquilla fc': 'barranquilla fc',
+    'internacional palmira': 'internacional fc de palmira',
+    'internacional fc palmira': 'internacional fc de palmira',
+    'internacional fc de palmira': 'internacional fc de palmira',
+    'ind yumbo': 'independiente valle del cauca',
+    'independiente yumbo': 'independiente valle del cauca',
+    'independiente valle del cauca': 'independiente valle del cauca',
+    'tigres fc': 'tigres',
+    'tigres': 'tigres',
+    'alianza': 'alianza valledupar',
+    'alianza valledupar': 'alianza valledupar'
+  }
+  return alias[normalizado] || normalizado
 }
 
 function normalizarRutaEscudo(valor: unknown): string | null {

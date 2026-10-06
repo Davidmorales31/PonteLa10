@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import { construirUrlAbsoluta } from '~/utils/seo'
+import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 
 interface PartidoLiga {
   slug: string
@@ -71,14 +72,36 @@ const noticiaPrincipal = computed(() => noticias.value?.[0] || null)
 const ultimasNoticias = computed(() => noticias.value?.slice(1) || [])
 const tablaLiga = computed(() => liga.value.tabla.filter(fila => fila.competencia === 'liga-betplay'))
 const tablaTorneo = computed(() => liga.value.tabla.filter(fila => fila.competencia === 'torneo-betplay'))
-const ahora = computed(() => Date.parse(liga.value.consultadoEn) || 0)
-const partidosProximos = computed(() => liga.value.partidos
-  .filter(partido => Date.parse(partido.fechaIso) >= ahora.value - 12 * 60 * 60 * 1000)
-  .slice(0, 12))
+const fasesLiga = computed(() => agruparTablaPorFase(tablaLiga.value))
+const fasesTorneo = computed(() => agruparTablaPorFase(tablaTorneo.value))
+const competiciones = ['liga-betplay', 'torneo-betplay', 'copa-colombia']
+const hoyBogota = computed(() => fechaEnBogota(liga.value.consultadoEn || new Date().toISOString()))
+const gruposCalendario = computed(() => {
+  const inicioHoy = Date.parse(`${hoyBogota.value}T05:00:00.000Z`)
+  const inicioOchoDias = inicioHoy + 8 * 24 * 60 * 60 * 1000
+  const inicioTreintaDias = inicioHoy + 31 * 24 * 60 * 60 * 1000
+  const partidos = liga.value.partidos.filter(partido => competiciones.includes(partido.competencia))
+  const hoy = partidos.filter(partido => fechaEnBogota(partido.fechaIso) === hoyBogota.value).sort(ordenarPorHora)
+  const semana = partidos.filter((partido) => {
+    const inicio = Date.parse(partido.fechaIso)
+    return inicio >= inicioHoy + 24 * 60 * 60 * 1000 && inicio < inicioOchoDias
+  }).sort(ordenarPorHora).slice(0, 16)
+  const mes = partidos.filter((partido) => {
+    const inicio = Date.parse(partido.fechaIso)
+    return inicio >= inicioOchoDias && inicio < inicioTreintaDias
+  }).sort(ordenarPorHora).slice(0, 8)
+  return [
+    { id: 'hoy', titulo: 'Partidos de hoy', partidos: hoy },
+    { id: 'siete-dias', titulo: 'Próximos 7 días', partidos: semana },
+    { id: 'treinta-dias', titulo: 'Agenda de los siguientes 30 días', partidos: mes }
+  ].filter(grupo => grupo.partidos.length)
+})
 const partidosRecientes = computed(() => liga.value.partidos
-  .filter(partido => Date.parse(partido.fechaIso) < ahora.value - 12 * 60 * 60 * 1000)
-  .slice(-6)
-  .reverse())
+  .filter(partido => fechaEnBogota(partido.fechaIso) !== hoyBogota.value
+    && /finish|full.?time|\bft\b|final/i.test(partido.estado || '')
+    && Date.parse(partido.fechaIso) < Date.parse(liga.value.consultadoEn || new Date().toISOString()))
+  .sort((a, b) => Date.parse(b.fechaIso) - Date.parse(a.fechaIso))
+  .slice(0, 6))
 
 function fechaPartido(valor: string) {
   return new Intl.DateTimeFormat('es-CO', {
@@ -92,6 +115,43 @@ function etiquetaCompetencia(slug: string) {
   if (slug === 'torneo-betplay') return 'Torneo BetPlay'
   if (slug === 'copa-colombia') return 'Copa Colombia'
   return 'Liga BetPlay'
+}
+
+function fechaEnBogota(valor: string) {
+  const fecha = new Date(valor)
+  if (Number.isNaN(fecha.getTime())) return ''
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(fecha)
+}
+
+function ordenarPorHora(a: PartidoLiga, b: PartidoLiga) {
+  return Date.parse(a.fechaIso) - Date.parse(b.fechaIso)
+    || prioridadCompetencia(a.competencia) - prioridadCompetencia(b.competencia)
+}
+
+function prioridadCompetencia(competencia: string) {
+  return competencia === 'liga-betplay' ? 0 : competencia === 'copa-colombia' ? 1 : 2
+}
+
+function estadoVisible(estado: string) {
+  return etiquetaEstadoSeoPartido(estado)
+}
+
+function agruparTablaPorFase(filas: PosicionLiga[]) {
+  const grupos = new Map<string, PosicionLiga[]>()
+  for (const fila of filas) {
+    const grupo = grupos.get(fila.fase) || []
+    grupo.push(fila)
+    grupos.set(fila.fase, grupo)
+  }
+  return [...grupos.entries()].map(([fase, posiciones]) => ({
+    fase,
+    temporada: posiciones[0]?.temporada || '',
+    verificadoEn: posiciones.reduce((ultimo, fila) => Date.parse(fila.verificadoEn) > Date.parse(ultimo)
+      ? fila.verificadoEn : ultimo, posiciones[0]?.verificadoEn || ''),
+    filas: posiciones.sort((a, b) => a.posicion - b.posicion)
+  })).sort((a, b) => Date.parse(b.verificadoEn) - Date.parse(a.verificadoEn) || a.fase.localeCompare(b.fase, 'es'))
 }
 
 function iniciales(nombre: string) {
@@ -148,7 +208,6 @@ useSeoPont3la10(() => ({
     </nav>
 
     <header class="cabecera-pagina cabecera-noticias-medio cabecera-liga-colombia">
-      <img class="liga-colombia-ambiente" src="/editorial/liga-betplay-ambiente.gif" alt="" aria-hidden="true">
       <div>
         <p class="etiqueta-seccion">FÚTBOL COLOMBIANO</p>
         <h1>Liga Colombiana</h1>
@@ -198,37 +257,42 @@ useSeoPont3la10(() => ({
             </div>
             <NuxtLink to="/partidos-hoy">Partidos de hoy <span aria-hidden="true">→</span></NuxtLink>
           </div>
-          <div v-if="partidosProximos.length" class="lista-partidos-liga">
-            <article v-for="partido in partidosProximos" :key="`${partido.competencia}-${partido.local}-${partido.fechaIso}`" class="tarjeta-partido-liga">
-              <div class="meta-partido-liga">
-                <span>{{ etiquetaCompetencia(partido.competencia) }}</span>
-                <span v-if="partido.jornada">{{ partido.jornada }}</span>
+          <div v-if="gruposCalendario.length" class="grupos-calendario-liga">
+            <section v-for="grupo in gruposCalendario" :key="grupo.id" class="grupo-calendario-liga" :aria-label="grupo.titulo">
+              <h3>{{ grupo.titulo }}</h3>
+              <div class="lista-partidos-liga">
+                <article v-for="partido in grupo.partidos" :key="`${partido.competencia}-${partido.local}-${partido.fechaIso}`" class="tarjeta-partido-liga">
+                  <div class="meta-partido-liga">
+                    <span>{{ etiquetaCompetencia(partido.competencia) }}<template v-if="partido.jornada"> · {{ partido.jornada }}</template></span>
+                    <span class="estado-partido-liga" :class="{ 'estado-partido-liga--vivo': estadoVisible(partido.estado) === 'EN VIVO' }">{{ estadoVisible(partido.estado) }}</span>
+                  </div>
+                  <p class="fecha-partido-liga">{{ fechaPartido(partido.fechaIso) }}</p>
+                  <div class="equipos-partido-liga">
+                    <span class="equipo-liga">
+                      <NuxtLink v-if="hayEscudo(partido.escudoLocal)" :to="`/donde-ver/${partido.slug}`" :aria-label="`Dónde ver ${partido.local} vs ${partido.visitante}`">
+                        <img :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" loading="lazy" @error="escudoFallido(partido.escudoLocal)">
+                      </NuxtLink>
+                      <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.local) }}</b>
+                      <strong>{{ partido.local }}</strong>
+                    </span>
+                    <span class="versus-liga">{{ partido.golesLocal !== null && partido.golesVisitante !== null ? `${partido.golesLocal}–${partido.golesVisitante}` : 'vs' }}</span>
+                    <span class="equipo-liga visitante">
+                      <NuxtLink v-if="hayEscudo(partido.escudoVisitante)" :to="`/donde-ver/${partido.slug}`" :aria-label="`Dónde ver ${partido.local} vs ${partido.visitante}`">
+                        <img :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" loading="lazy" @error="escudoFallido(partido.escudoVisitante)">
+                      </NuxtLink>
+                      <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.visitante) }}</b>
+                      <strong>{{ partido.visitante }}</strong>
+                    </span>
+                  </div>
+                  <nav class="enlaces-partido-liga" :aria-label="`Páginas de ${partido.local} vs ${partido.visitante}`">
+                    <NuxtLink :to="`/donde-ver/${partido.slug}`">Dónde ver</NuxtLink>
+                    <NuxtLink :to="`/como-quedo/${partido.slug}`">Cómo quedó</NuxtLink>
+                    <a v-if="partido.fuenteOficialUrl" :href="partido.fuenteOficialUrl" target="_blank" rel="noopener noreferrer">Programación DIMAYOR</a>
+                  </nav>
+                  <p v-if="partido.estadio || partido.ciudad" class="sede-partido-liga">{{ [partido.estadio, partido.ciudad].filter(Boolean).join(' · ') }}</p>
+                </article>
               </div>
-              <p class="fecha-partido-liga">{{ fechaPartido(partido.fechaIso) }}</p>
-              <div class="equipos-partido-liga">
-                <span class="equipo-liga">
-                  <NuxtLink v-if="hayEscudo(partido.escudoLocal)" :to="`/donde-ver/${partido.slug}`" :aria-label="`Dónde ver ${partido.local} vs ${partido.visitante}`">
-                    <img :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" @error="escudoFallido(partido.escudoLocal)">
-                  </NuxtLink>
-                  <b v-if="!hayEscudo(partido.escudoLocal)" class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.local) }}</b>
-                  <strong>{{ partido.local }}</strong>
-                </span>
-                <span class="versus-liga">{{ partido.golesLocal !== null && partido.golesVisitante !== null ? `${partido.golesLocal}–${partido.golesVisitante}` : 'vs' }}</span>
-                <span class="equipo-liga visitante">
-                  <NuxtLink v-if="hayEscudo(partido.escudoVisitante)" :to="`/donde-ver/${partido.slug}`" :aria-label="`Dónde ver ${partido.local} vs ${partido.visitante}`">
-                    <img :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" @error="escudoFallido(partido.escudoVisitante)">
-                  </NuxtLink>
-                  <b v-if="!hayEscudo(partido.escudoVisitante)" class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.visitante) }}</b>
-                  <strong>{{ partido.visitante }}</strong>
-                </span>
-              </div>
-              <nav class="enlaces-partido-liga" :aria-label="`Páginas de ${partido.local} vs ${partido.visitante}`">
-                <NuxtLink :to="`/donde-ver/${partido.slug}`">Dónde ver</NuxtLink>
-                <NuxtLink :to="`/como-quedo/${partido.slug}`">Cómo quedó</NuxtLink>
-                <a v-if="partido.fuenteOficialUrl" :href="partido.fuenteOficialUrl" target="_blank" rel="noopener noreferrer">Programación DIMAYOR</a>
-              </nav>
-              <p v-if="partido.estadio || partido.ciudad" class="sede-partido-liga">{{ [partido.estadio, partido.ciudad].filter(Boolean).join(' · ') }}</p>
-            </article>
+            </section>
           </div>
           <div v-else class="estado-vacio-articulos">
             <h3>Calendario en actualización</h3>
@@ -240,8 +304,23 @@ useSeoPont3la10(() => ({
           <div class="encabezado-noticias-listado"><h2>Resultados recientes</h2></div>
           <div class="lista-partidos-liga">
             <article v-for="partido in partidosRecientes" :key="`${partido.competencia}-${partido.visitante}-${partido.fechaIso}`" class="tarjeta-partido-liga resultado-reciente-liga">
-              <span>{{ etiquetaCompetencia(partido.competencia) }} · {{ fechaPartido(partido.fechaIso) }}</span>
-              <strong>{{ partido.local }} <b>{{ partido.golesLocal ?? '—' }}–{{ partido.golesVisitante ?? '—' }}</b> {{ partido.visitante }}</strong>
+              <span class="meta-resultado-liga">{{ etiquetaCompetencia(partido.competencia) }} · {{ fechaPartido(partido.fechaIso) }}</span>
+              <div class="equipos-partido-liga">
+                <span class="equipo-liga">
+                  <img v-if="hayEscudo(partido.escudoLocal)" :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" loading="lazy" @error="escudoFallido(partido.escudoLocal)">
+                  <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.local) }}</b>
+                  <strong>{{ partido.local }}</strong>
+                </span>
+                <span class="versus-liga">{{ partido.golesLocal ?? '—' }}–{{ partido.golesVisitante ?? '—' }}</span>
+                <span class="equipo-liga visitante">
+                  <img v-if="hayEscudo(partido.escudoVisitante)" :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" loading="lazy" @error="escudoFallido(partido.escudoVisitante)">
+                  <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.visitante) }}</b>
+                  <strong>{{ partido.visitante }}</strong>
+                </span>
+              </div>
+              <nav class="enlaces-partido-liga" :aria-label="`Más información de ${partido.local} vs ${partido.visitante}`">
+                <NuxtLink :to="`/como-quedo/${partido.slug}`">Ver resultado</NuxtLink>
+              </nav>
             </article>
           </div>
         </section>
@@ -252,18 +331,23 @@ useSeoPont3la10(() => ({
           <div class="encabezado-panel-lateral">
             <div><p class="etiqueta-seccion">{{ tablaLiga[0]?.temporada || 'Liga BetPlay' }}</p><h2>Tabla de posiciones</h2></div>
           </div>
-          <div v-if="tablaLiga.length" class="tabla-liga-scroll">
-            <table>
-              <caption>Posiciones de la Liga BetPlay, {{ tablaLiga[0]?.temporada }}</caption>
-              <thead><tr><th scope="col">Pos.</th><th scope="col">Equipo</th><th scope="col">PJ</th><th scope="col">DG</th><th scope="col">Pts</th></tr></thead>
-              <tbody>
-                <tr v-for="fila in tablaLiga" :key="fila.equipoClave">
-                  <td>{{ fila.posicion }}</td>
-                  <th scope="row"><span class="equipo-tabla-liga"><img v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" loading="lazy" @error="escudoFallido(fila.escudo)"><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b>{{ fila.equipo }}</span></th>
-                  <td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td>
-                </tr>
-              </tbody>
-            </table>
+          <div v-if="fasesLiga.length" class="tablas-por-fase-liga">
+            <section v-for="grupo in fasesLiga" :key="grupo.fase" class="fase-tabla-liga">
+              <h3>{{ grupo.fase }}</h3>
+              <div class="tabla-liga-scroll">
+                <table>
+                  <caption>{{ grupo.fase }} · {{ grupo.temporada }}</caption>
+                  <thead><tr><th scope="col">Pos.</th><th scope="col">Equipo</th><th scope="col">PJ</th><th scope="col">DG</th><th scope="col">Pts</th></tr></thead>
+                  <tbody>
+                    <tr v-for="fila in grupo.filas" :key="`${fila.fase}-${fila.equipoClave}`">
+                      <td>{{ fila.posicion }}</td>
+                      <th scope="row"><span class="equipo-tabla-liga"><img v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" loading="lazy" @error="escudoFallido(fila.escudo)"><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b>{{ fila.equipo }}</span></th>
+                      <td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
           </div>
           <p v-else class="estado-tabla-liga">La clasificación verificada de Liga BetPlay todavía no está disponible.</p>
           <NuxtLink class="enlace-tabla-liga" to="/resultados/futbol">Ver resultados de fútbol <span aria-hidden="true">→</span></NuxtLink>
@@ -273,12 +357,17 @@ useSeoPont3la10(() => ({
 
         <section id="torneo-betplay" class="panel-noticias-lateral panel-tabla-liga">
           <div class="encabezado-panel-lateral"><div><p class="etiqueta-seccion">{{ tablaTorneo[0]?.temporada || 'Segunda división' }}</p><h2>Torneo BetPlay</h2></div></div>
-          <div v-if="tablaTorneo.length" class="tabla-liga-scroll">
-            <table>
-              <caption>Posiciones del Torneo BetPlay, {{ tablaTorneo[0]?.temporada }}</caption>
-              <thead><tr><th scope="col">Pos.</th><th scope="col">Equipo</th><th scope="col">PJ</th><th scope="col">DG</th><th scope="col">Pts</th></tr></thead>
-              <tbody><tr v-for="fila in tablaTorneo" :key="fila.equipoClave"><td>{{ fila.posicion }}</td><th scope="row">{{ fila.equipo }}</th><td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td></tr></tbody>
-            </table>
+          <div v-if="fasesTorneo.length" class="tablas-por-fase-liga">
+            <section v-for="grupo in fasesTorneo" :key="grupo.fase" class="fase-tabla-liga">
+              <h3>{{ grupo.fase }}</h3>
+              <div class="tabla-liga-scroll">
+                <table>
+                  <caption>{{ grupo.fase }} · {{ grupo.temporada }}</caption>
+                  <thead><tr><th scope="col">Pos.</th><th scope="col">Equipo</th><th scope="col">PJ</th><th scope="col">DG</th><th scope="col">Pts</th></tr></thead>
+                  <tbody><tr v-for="fila in grupo.filas" :key="`${fila.fase}-${fila.equipoClave}`"><td>{{ fila.posicion }}</td><th scope="row"><span class="equipo-tabla-liga"><img v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" loading="lazy" @error="escudoFallido(fila.escudo)"><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b>{{ fila.equipo }}</span></th><td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td></tr></tbody>
+                </table>
+              </div>
+            </section>
           </div>
           <p v-else class="estado-tabla-liga">La tabla del Torneo BetPlay aparecerá aquí cuando haya datos públicos verificados.</p>
         </section>
@@ -300,8 +389,7 @@ useSeoPont3la10(() => ({
 </template>
 
 <style scoped>
-.cabecera-liga-colombia { position: relative; overflow: hidden; min-height: 210px; align-content: end; border-radius: 12px; background: #0b2341; padding: 28px; }
-.liga-colombia-ambiente { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .32; }
+.cabecera-liga-colombia { position: relative; overflow: hidden; min-height: 210px; align-content: end; border-radius: 12px; background: linear-gradient(125deg, #0b2341, #103c62 58%, #0b2341); padding: 28px; }
 .cabecera-liga-colombia > div, .navegacion-liga-colombia { position: relative; z-index: 1; }
 .cabecera-liga-colombia h1, .cabecera-liga-colombia p:not(.etiqueta-seccion) { color: #fff; }
 body.tema-publico-azul main.modulo-futbol-colombia .cabecera-liga-colombia h1,
@@ -324,10 +412,14 @@ body.tema-publico-blanco main.modulo-futbol-colombia .encabezado-noticias-listad
 .columna-editorial-liga, .columna-tabla-liga { display: grid; align-content: start; gap: 22px; min-width: 0; }
 .bloque-liga-colombia { margin-top: 32px; }
 .encabezado-noticias-listado h2, .encabezado-panel-lateral h2 { margin: 0; }
+.grupos-calendario-liga, .grupo-calendario-liga, .tablas-por-fase-liga { display: grid; gap: 12px; }
+.grupo-calendario-liga > h3, .fase-tabla-liga > h3 { margin: 10px 0 0; font-size: 1rem; }
 .lista-partidos-liga { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .tarjeta-partido-liga, .panel-tabla-liga { border: 1px solid #294362; border-radius: 12px; background: #10243d; padding: 16px; }
 .meta-partido-liga, .tarjeta-partido-liga > span, .fecha-partido-liga, .sede-partido-liga { color: #afc2db; font-size: .82rem; }
 .meta-partido-liga { display: flex; justify-content: space-between; gap: 10px; color: #78dcf4; font-weight: 800; }
+.estado-partido-liga { flex: 0 0 auto; border-radius: 999px; background: rgba(122,148,177,.18); padding: 3px 8px; font-size: .7rem; }
+.estado-partido-liga--vivo { background: #b91c34; color: #fff; }
 .fecha-partido-liga { margin: 10px 0; }
 .equipos-partido-liga { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; }
 .equipo-liga { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -337,6 +429,7 @@ body.tema-publico-blanco main.modulo-futbol-colombia .encabezado-noticias-listad
 .versus-liga { color: #ffd343; font-weight: 900; }
 .escudo-fallback { display: inline-grid; width: 30px; height: 30px; flex: 0 0 auto; place-items: center; border-radius: 50%; background: #17466b; color: #fff; font-size: .65rem; }
 .sede-partido-liga { margin: 12px 0 0; }
+.meta-resultado-liga { display: block; margin-bottom: 12px; color: #afc2db; font-size: .82rem; }
 .enlaces-partido-liga { display: flex; gap: 14px; margin-top: 12px; }
 .enlaces-partido-liga a { color: #78dcf4; font-size: .82rem; font-weight: 800; }
 .tabla-liga-scroll { overflow-x: auto; }
@@ -347,13 +440,16 @@ body.tema-publico-blanco main.modulo-futbol-colombia .encabezado-noticias-listad
 .equipo-tabla-liga { display: inline-flex; align-items: center; gap: 8px; white-space: normal; }
 .estado-tabla-liga, .contenido-seo-liga { color: #afc2db; line-height: 1.7; }
 .enlace-tabla-liga { display: inline-block; margin-top: 12px; color: #78dcf4; font-weight: 800; }
-.resultado-reciente-liga strong { display: block; margin-top: 8px; }
-.resultado-reciente-liga strong b { color: #ffd343; padding: 0 5px; }
+.resultado-reciente-liga .equipos-partido-liga { padding: 10px 0; }
+.resultado-reciente-liga .versus-liga { font-size: 1.1rem; }
 .seccion-noticias-liga { margin-top: 36px; }
 .contenido-seo-liga { max-width: 920px; margin-top: 24px; }
 body.tema-publico-blanco .tarjeta-partido-liga, body.tema-publico-blanco .panel-tabla-liga { border-color: #dce5f1; background: #fff; color: #13253d; }
 body.tema-publico-blanco .meta-partido-liga, body.tema-publico-blanco .tarjeta-partido-liga > span, body.tema-publico-blanco .fecha-partido-liga, body.tema-publico-blanco .sede-partido-liga, body.tema-publico-blanco .tabla-liga-scroll caption, body.tema-publico-blanco .estado-tabla-liga, body.tema-publico-blanco .contenido-seo-liga { color: #586980; }
 body.tema-publico-blanco .enlaces-partido-liga a { color: #145996; }
+body.tema-publico-blanco .estado-partido-liga { background: #e7eef7; color: #4b5f78; }
+body.tema-publico-blanco .estado-partido-liga--vivo { background: #b91c34; color: #fff; }
+body.tema-publico-blanco .meta-resultado-liga { color: #586980; }
 body.tema-publico-blanco .tabla-liga-scroll th, body.tema-publico-blanco .tabla-liga-scroll td { border-color: #e2e8f0; }
 @media (max-width: 820px) { .grilla-principal-liga { grid-template-columns: minmax(0, 1fr); } .lista-partidos-liga { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 520px) { .cabecera-liga-colombia { padding: 20px; } .pagina-publica-medio.modulo-futbol-colombia { width: min(100% - 24px, 1240px); } }

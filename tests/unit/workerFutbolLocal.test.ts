@@ -5,7 +5,7 @@ import { crearSincronizadorFutbolLocal } from '../../workers/sincronizar_futbol_
 const secreto = 'secreto-local-de-prueba'
 
 describe('integración de fútbol en el worker local', () => {
-  it('firma fixtures cada cinco minutos sin consumir el ciclo en clasificaciones', async () => {
+  it('firma cada cinco minutos el calendario, fixtures y resultados, y clasificaciones cada quince', async () => {
     let ahora = Date.parse('2026-10-01T20:00:00.000Z')
     const llamadas: Array<[URL, RequestInit]> = []
     const registrar = vi.fn()
@@ -33,7 +33,7 @@ describe('integración de fútbol en el worker local', () => {
 
     const resultado = await sincronizador.ejecutarSiCorresponde()
     expect(resultado.estado).toBe('completado')
-    expect(transporte).toHaveBeenCalledTimes(2)
+    expect(transporte).toHaveBeenCalledTimes(4)
     expect(registrar.mock.calls.some(([mensaje]) => String(mensaje).includes('"omitidos":{"datos_invalidos":0,"competencia_no_mapeada":0}'))).toBe(true)
     for (const [url, init] of llamadas) {
       const ruta = url.pathname
@@ -45,14 +45,22 @@ describe('integración de fútbol en el worker local', () => {
         .digest('hex')
       expect(encabezados['x-pont3la10-signature']).toBe(esperada)
       expect(cuerpo).toBe('{}')
-      expect(['/api/internal/futbol/calendario', '/api/internal/futbol/fixtures']).toContain(ruta)
+      expect([
+        '/api/internal/futbol/calendario',
+        '/api/internal/futbol/fixtures',
+        '/api/internal/futbol/liga-resultados',
+        '/api/internal/futbol/clasificaciones'
+      ]).toContain(ruta)
     }
 
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
-    expect(transporte).toHaveBeenCalledTimes(2)
+    expect(transporte).toHaveBeenCalledTimes(4)
     ahora += 5 * 60 * 1000
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(4)
+    expect(transporte).toHaveBeenCalledTimes(7)
+    ahora += 10 * 60 * 1000
+    await sincronizador.ejecutarSiCorresponde()
+    expect(transporte).toHaveBeenCalledTimes(11)
   })
 
   it('no hace llamadas por omisión y rechaza destinos ajenos al PC', async () => {
@@ -100,7 +108,7 @@ describe('integración de fútbol en el worker local', () => {
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('completado')
-    expect(transporte).toHaveBeenCalledTimes(4)
+    expect(transporte).toHaveBeenCalledTimes(7)
   })
 
   it('espacia ventanas ocupadas para evitar que workers duplicados se golpeen cada minuto', async () => {
@@ -121,7 +129,7 @@ describe('integración de fútbol en el worker local', () => {
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(4)
+    expect(transporte).toHaveBeenCalledTimes(7)
   })
 
   it('duerme hasta el siguiente mantenimiento de Bogotá al agotar la cuota diaria', async () => {
@@ -142,7 +150,7 @@ describe('integración de fútbol en el worker local', () => {
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('esperando')
     ahora += 1
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(4)
+    expect(transporte).toHaveBeenCalledTimes(8)
   })
 
   it('mantiene el ciclo corto de fixtures aunque el calendario ya haya quedado programado para mañana', async () => {
@@ -164,12 +172,38 @@ describe('integración de fútbol en el worker local', () => {
     })
 
     await sincronizador.ejecutarSiCorresponde()
-    expect(transporte).toHaveBeenCalledTimes(2)
+    expect(transporte).toHaveBeenCalledTimes(4)
     ahora += 8 * 60_000
     expect((await sincronizador.ejecutarSiCorresponde()).estado).toBe('completado')
-    expect(transporte).toHaveBeenCalledTimes(3)
-    const ruta = transporte.mock.calls[2]?.[0]
+    expect(transporte).toHaveBeenCalledTimes(6)
+    const ruta = transporte.mock.calls[4]?.[0]
     const url = ruta instanceof URL ? ruta : new URL(ruta instanceof Request ? ruta.url : String(ruta))
     expect(url.pathname).toBe('/api/internal/futbol/fixtures')
+  })
+
+  it('detiene el ciclo después de la ruta actual sin iniciar otras solicitudes', async () => {
+    let detener = false
+    const transporte = vi.fn(async () => {
+      detener = true
+      return new Response(JSON.stringify({ estado: 'completado' }), {
+        status: 200, headers: { 'content-type': 'application/json' }
+      })
+    })
+    const sincronizador = crearSincronizadorFutbolLocal({
+      entorno: {
+        PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
+        PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3011',
+        NUXT_FUTBOL_WORKER_API_SECRET: secreto
+      },
+      transporte,
+      debeDetener: () => detener,
+      registrar: vi.fn(),
+      avisar: vi.fn()
+    })
+
+    const resultado = await sincronizador.ejecutarSiCorresponde()
+
+    expect(resultado).toMatchObject({ estado: 'detenido' })
+    expect(transporte).toHaveBeenCalledOnce()
   })
 })

@@ -2,7 +2,9 @@ import { createHmac, randomUUID } from 'node:crypto'
 
 const rutas = [
   { nombre: 'calendario', ruta: '/api/internal/futbol/calendario', timeoutMs: 20 * 60 * 1000, esperaFalloMs: 30 * 60 * 1000 },
-  { nombre: 'fixtures', ruta: '/api/internal/futbol/fixtures' }
+  { nombre: 'fixtures', ruta: '/api/internal/futbol/fixtures' },
+  { nombre: 'resultados_liga', ruta: '/api/internal/futbol/liga-resultados' },
+  { nombre: 'clasificaciones', ruta: '/api/internal/futbol/clasificaciones', intervaloMs: 15 * 60 * 1000 }
 ]
 const intervaloPredeterminadoMs = 5 * 60 * 1000
 const intervaloMinimoMs = 5 * 60 * 1000
@@ -14,6 +16,7 @@ const esperaMaximaFalloMs = 60 * 60 * 1000
 export function crearSincronizadorFutbolLocal({
   entorno = process.env,
   transporte = globalThis.fetch,
+  debeDetener = () => Boolean(false),
   ahora = () => Date.now(),
   registrar = console.log,
   avisar = console.warn
@@ -44,7 +47,12 @@ export function crearSincronizadorFutbolLocal({
       }
 
       const resultados = []
+      let detenerSolicitado = false
       for (const endpoint of rutas) {
+        if (debeDetener()) {
+          detenerSolicitado = true
+          break
+        }
         if (ahora() < (proximasEjecuciones.get(endpoint.nombre) || 0)) continue
         try {
           const resultado = await solicitar(endpoint.ruta, secreto, baseUrl, transporte, ahora, endpoint.timeoutMs)
@@ -54,7 +62,7 @@ export function crearSincronizadorFutbolLocal({
             : 0
           fallosPorRuta.set(endpoint.nombre, fallos)
           const esperaSugerida = leerEsperaSugerida(
-            resultado, intervaloMs, ahora(), fallos, endpoint.esperaFalloMs || esperaBaseFalloMs
+            resultado, endpoint.intervaloMs || intervaloMs, ahora(), fallos, endpoint.esperaFalloMs || esperaBaseFalloMs
           )
           proximasEjecuciones.set(endpoint.nombre, ahora() + esperaSugerida)
           resultados.push({ nombre: endpoint.nombre, ...resumen })
@@ -62,7 +70,7 @@ export function crearSincronizadorFutbolLocal({
         } catch (error) {
           const fallos = (fallosPorRuta.get(endpoint.nombre) || 0) + 1
           fallosPorRuta.set(endpoint.nombre, fallos)
-          const esperaFallo = endpoint.esperaFalloMs || Math.min(intervaloMs, 5 * intervaloMinimoMs)
+          const esperaFallo = endpoint.esperaFalloMs || Math.min(endpoint.intervaloMs || intervaloMs, 5 * intervaloMinimoMs)
           proximasEjecuciones.set(endpoint.nombre, ahora() + esperaFallo)
           const estadoHttp = Number.isInteger(error?.estadoHttp) ? error.estadoHttp : null
           const resumen = { estado: 'fallido', estadoHttp }
@@ -73,7 +81,10 @@ export function crearSincronizadorFutbolLocal({
 
       proximaEjecucion = Math.min(...[...proximasEjecuciones.values()].filter(fecha => fecha > 0))
 
-      return { estado: resultados.some(resultado => resultado.estado === 'fallido') ? 'parcial' : 'completado', resultados }
+      return {
+        estado: detenerSolicitado ? 'detenido' : resultados.some(resultado => resultado.estado === 'fallido') ? 'parcial' : 'completado',
+        resultados
+      }
     }
   }
 }
@@ -126,7 +137,7 @@ function resumir(resultado) {
   }
   const campos = ['estado', 'provider', 'solicitudes', 'fixturesRecibidos', 'fixturesGuardados',
     'detallesActualizados', 'siguienteEjecucionMs', 'siguienteEjecucionMotivo', 'omitidos',
-    'clasificacionesRecibidas', 'clasificacionesGuardadas', 'errorCode']
+    'clasificacionesRecibidas', 'clasificacionesGuardadas', 'marcadoresActualizados', 'partidosRevisados', 'errorCode']
   const resumen = Object.fromEntries(campos.flatMap(campo => {
     const valor = resultado[campo]
     return typeof valor === 'string' || (typeof valor === 'number' && Number.isFinite(valor))
@@ -178,13 +189,14 @@ function leerEsperaSugerida(
   const sugerido = Number.isFinite(resultado.siguienteEjecucionMs) && resultado.siguienteEjecucionMs > 0
     ? Math.trunc(resultado.siguienteEjecucionMs)
     : intervaloPredeterminado
-  if (resultado.estado === 'ocupado') return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, sugerido))
+  const intervaloMinimoRuta = Math.max(intervaloMinimoMs, intervaloPredeterminado)
+  if (resultado.estado === 'ocupado') return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoRuta, sugerido))
   if (resultado.estado === 'fallido') {
     const nivel = Math.min(4, Math.max(0, fallosConsecutivos - 1))
     const esperaPorFallo = Math.min(esperaMaximaFalloMs, esperaBaseFallo * (2 ** nivel))
-    return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, sugerido, esperaPorFallo))
+    return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoRuta, sugerido, esperaPorFallo))
   }
-  return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoMs, sugerido))
+  return Math.min(intervaloMaximoMs, Math.max(intervaloMinimoRuta, sugerido))
 }
 
 function esperaHastaMantenimientoBogota(ahoraMs) {
