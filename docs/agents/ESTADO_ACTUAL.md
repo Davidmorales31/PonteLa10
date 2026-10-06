@@ -1,5 +1,40 @@
 # Estado actual de Pont3la10
 
+## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
+
+- PR #68 integró las páginas públicas de competición en `main` como
+  `83f8cd5c3755064dddf88403e732b77220280ca7`; Vercel desplegó Production
+  (`4kBf7XVGB7s8uxqUpYrbRb5KMPpG`). El hub Liga BetPlay publica temporada,
+  posiciones disponibles, agenda, resultados, jornadas/fases, clubes y noticias.
+  Torneo BetPlay y Copa Colombia tienen sus propias rutas permanentes; el sitemap
+  de competiciones las incluye.
+- El smoke posterior descubrió que la URL histórica
+  `/competiciones/liga-betplay/2026-I` respondía 200 pero mostraba título,
+  contenido y canonical de la temporada actual. El endpoint histórico sí devolvía
+  datos de 2026-I. Causa: Nuxt modela `[temporada].vue` como ruta hija de
+  `[slug].vue`, pero la página padre no renderizaba `<NuxtPage>`.
+- PR #69 añadió la salida anidada, conservando el hub actual en la ruta raíz;
+  merge commit `a82fce8f4f56e0666cc27b4b5e9f38000b5957ee`. El deployment Vercel
+  `2bKkRS1LWdcTc9obKud8AhREuycY` quedó `Ready` en Production y asignado a
+  `www.pont3la10.com` y `pont3la10.com`.
+- Smoke posterior al hotfix: la ruta raíz sirve título/H1 `Liga BetPlay 2026-II`
+  y canonical raíz; la ruta histórica sirve título/H1 `Liga BetPlay 2026-I`,
+  canonical histórica e indexación habilitada. Ambas APIs responden 200; el
+  sitemap de competiciones responde 200 y contiene seis URL de competición.
+  Se validó navegación directa y cliente local. No hubo cambios en Supabase ni
+  llamadas a proveedores.
+- Validación del hotfix: lint, typecheck y build Nitro para Vercel pasaron; la
+  suite pasó con `--maxWorkers=1` (75 archivos/368 pruebas). La primera corrida
+  paralela alcanzó timeouts de 5 s en pruebas no relacionadas, por lo que la
+  repetición serial fue la validación final satisfactoria. La revisión estática
+  de seguridad no encontró hallazgos pendientes.
+- Para 2026-I la clasificación permanece etiquetada como pendiente de
+  confirmación y no se presenta una tabla parcial como oficial. Preview sigue sin
+  configuración pública de Supabase y puede responder 503; Production fue
+  verificado por separado.
+- Handoff:
+  `docs/agents/handoffs/2026-10-06-hu-seo08-competiciones.md`.
+
 ## HU-SEO-07 — fichas públicas de equipos colombianos (2026-10-06)
 
 - PR #66 se integró como `f24d4ac1192bf33ce90e40bd4e0a9c1fb84461d5`. La ruta
