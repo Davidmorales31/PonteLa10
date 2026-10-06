@@ -9,7 +9,9 @@ export function normalizarTextoBusqueda(texto: string): string {
 const aliasCategorias: Record<string, string[]> = {
   futbol: ['futbol'],
   'futbol mundial': ['futbol mundial', 'mundial 2026'],
-  'futbol colombiano': ['futbol colombiano', 'liga betplay', 'torneo betplay', 'copa colombia', 'seleccion colombia'],
+  // El slug exacto ya incluye los artículos de la categoría; reservar los cuatro
+  // términos secundarios que cubren A, B, Copa Colombia y Selección.
+  'futbol colombiano': ['liga betplay', 'torneo betplay', 'copa colombia', 'seleccion colombia'],
   'liga betplay': ['liga betplay', 'futbol colombiano'],
   'copa colombia': ['copa colombia', 'futbol colombiano'],
   'colombianos en europa': ['colombianos en europa', 'futbol colombiano'],
