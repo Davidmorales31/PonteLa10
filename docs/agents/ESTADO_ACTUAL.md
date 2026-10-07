@@ -1,6 +1,30 @@
 # Estado actual de Pont3la10
 
-## HU-ED-25 — priorización y evaluación de oportunidades editoriales (Production pendiente, 2026-10-07)
+## HU-ED-26 — actualizar antes de crear (en desarrollo, 2026-10-07)
+
+- La bandeja editorial incorpora una lectura privada de las oportunidades de la
+  última corrida: recomendaciones v2 ordenadas `update`, `merge`, `expand`,
+  `create`, `discard`; destino existente; entidades y artículos publicados
+  similares; razonamiento; y borrador relacionado. Candidatas v1 históricas se
+  señalan como pendientes de nueva evaluación; las que no cumplen el contrato
+  no se muestran y su cantidad queda visible.
+- El endpoint exige `contenido.revisar`, aplica la política centralizada de MFA
+  y usa `service_role` solo en servidor. La respuesta es `private, no-store` y
+  no cambia, fusiona, descarta, aprueba ni publica contenido. Destinos de
+  artículos solo enlazan a CMS cuando el artículo publicado fue verificado.
+- Se alineó el nombre local del archivo de ED-25 al identificador de migración
+  efectivamente registrado por Supabase Production: `20261007152635`. La
+  migración no se volvió a ejecutar ni cambió su contenido; también se corrigió
+  el test que apuntaba al nombre anterior.
+- Validación local al corte: lint y typecheck pasan; pruebas focalizadas
+  (10/10); suite completa (88 archivos/453 pruebas); build pasa con el aviso
+  upstream `[DEP0155]` de `@vue/shared`; `git diff --check` pasa. El revisor
+  confirmó cerrados los hallazgos P2/P3 y no reportó otros P0–P3. No fue posible
+  validar visualmente la ruta autenticada/responsive sin acceso a una sesión
+  editorial. No hay PR ni despliegue ED-26 todavía.
+- Handoff: `docs/agents/handoffs/2026-10-07-hu-ed26-actualizar-antes-de-crear.md`.
+
+## HU-ED-25 — priorización y evaluación de oportunidades editoriales (Production, 2026-10-07)
 
 - Se añadió un contrato v2 de prioridad (demanda, cluster, entidad, novedad,
   Search Console cuando exista, valor diferencial y posibilidad de actualizar)
@@ -17,26 +41,35 @@
   corrida: una categoría evaluada puede cerrar con 1–7 candidatos o, si está
   vacía, con `omittedReason` explícito. Vacía y sin explicación queda en
   `needs_attention`; no se crean borradores para llenar volumen.
-- La migración `20261007135830_hu_ed25_scoring_oportunidades_editoriales` añade
+- La migración `20261007152635_hu_ed25_scoring_oportunidades_editoriales` añade
   contexto privado de artículos, entidades confirmadas y reportes Search Console;
   valida el contrato también en SQL y bloquea reservas/propuestas que no
   correspondan a una agenda válida de hoy. El revisor estático no encontró
   hallazgos P0–P2. Supabase CLI y Docker no están disponibles, por lo que no se
   hizo validación local de la migración. El primer intento de aplicación a
   Production falló porque PostgreSQL rechazó el alias reservado `similar`; la
-  transacción completa hizo rollback. La migración no aparece en el historial
-  de Supabase Production y la función anterior permanece intacta; el alias se
-  corrigió en una rama de seguimiento.
+  transacción completa hizo rollback. El alias se corrigió y la migración se
+  aplicó en un segundo intento; el estado final de Production se describe abajo.
 - Validaciones locales: lint; suite completa (87 archivos, 449 pruebas);
   typecheck; build. `git diff --check` pasa. Build conserva el aviso upstream
   `[DEP0155]` de `@vue/shared`.
-- Estado al corte: PR #95 se integró como
-  `0df81b824d1e5de15341cd0866868f5acd3a305e`. El código está en `main`, pero el
-  esquema de Production aún no recibió ED-25 hasta que la corrección SQL pase
-  revisión/CI y se aplique. Production Supabase sigue en la migración
-  `20261007132510_hu_gro04_historial_oportunidades`. Search Console no tiene una
-  propiedad/reportes reales importados, por lo que las señales GSC se activarán
-  solo al cargar datos auténticos.
+- La migración corregida se aplicó en Supabase Production y se registró con
+  versión `20261007152635`; se comprobaron funciones, restricciones, triggers y
+  privilegios. PR #96 se integró por squash como
+  `cb3bcb30f0317a57d9fb6aad9ea563187008e03d`, y Vercel Production reportó
+  `success`. El archivo SQL se renombró localmente para coincidir con el
+  historial remoto y evitar que un futuro `db push` intente reaplicar ED-25.
+  Search Console todavía no tiene reportes reales importados; sus señales solo
+  se activarán al cargar datos auténticos.
+- La tarea editorial recurrente existente permanece activa, con el horario
+  original; se actualizó su prompt para respetar scoring, prioridades y no
+  imponer cuotas de borradores. El monitor informó worker desconectado y cron
+  desconocido. La última corrida observada seguía `in_progress`, con 16
+  oportunidades guardadas; 15 propuestas estaban en revisión y una publicación
+  previa no se modificó. No se reabrieron ni regeneraron propuestas.
+- La consulta agregada de intentos de ingesta no pudo completarse por un fallo
+  de transporte de Supabase MCP; no hay diagnóstico confirmado de los errores
+  históricos de ingesta. No se reintentaron ingestas.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-ed25-scoring-editorial.md`.
 
 ## HU-GRO-04 — oportunidades orgánicas (Production, 2026-10-07)
@@ -1242,4 +1275,3 @@ No crear una automatización duplicada ni apuntarla al árbol OneDrive.
 
 - `docs/ARQUITECTURA_INICIAL.md`: conserva el diseño de la primera etapa y no
   sustituye el estado verificado de este documento.
-
