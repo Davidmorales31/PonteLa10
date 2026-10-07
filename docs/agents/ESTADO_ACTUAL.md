@@ -13,6 +13,10 @@
   decisiones para revisión humana; no reescriben ni fusionan contenido
   publicado. La prioridad temática continúa siendo Liga BetPlay A/B y Selección
   Colombia, colombianos en Europa y luego otras categorías.
+- Se eliminó la cuota de cinco oportunidades por categoría y 15 borradores por
+  corrida: una categoría evaluada puede cerrar con 1–7 candidatos o, si está
+  vacía, con `omittedReason` explícito. Vacía y sin explicación queda en
+  `needs_attention`; no se crean borradores para llenar volumen.
 - La migración `20261007135830_hu_ed25_scoring_oportunidades_editoriales` añade
   contexto privado de artículos, entidades confirmadas y reportes Search Console;
   valida el contrato también en SQL y bloquea reservas/propuestas que no
@@ -22,8 +26,10 @@
 - Validaciones locales: lint; suite completa (87 archivos, 449 pruebas);
   typecheck; build. `git diff --check` pasa. Build conserva el aviso upstream
   `[DEP0155]` de `@vue/shared`.
-- Estado al corte: cambios locales en `codex/hu-ed25-prioridad-editorial`, aún
-  sin PR ni despliegue. Production Supabase sigue en la migración
+- Estado al corte: commit `c15b224` con el scoring inicial; PR #95 está abierto
+  y su CI/Vercel Preview pasaron. Se ajustó la cuota tras la revisión de la HU;
+  ese ajuste aún debe ir en un nuevo commit y pasar CI antes de desplegar.
+  Production Supabase sigue en la migración
   `20261007132510_hu_gro04_historial_oportunidades`. Search Console no tiene una
   propiedad/reportes reales importados, por lo que las señales GSC se activarán
   solo al cargar datos auténticos.

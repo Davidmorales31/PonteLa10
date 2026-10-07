@@ -551,16 +551,37 @@ begin
     if v_saved_category > 7 then
       raise exception 'La categoría excede el máximo acumulado de siete oportunidades.' using errcode = '22023';
     end if;
-    if v_saved_category < 5 then
+    if v_saved_category = 0 then
+      -- No heredar la explicación generada por la antigua cuota de cinco; un
+      -- checkpoint vacío solo se completa con una razón explícita vigente del run.
+      if coalesce(v_omitted_reason, '') like
+        'No se alcanzaron cinco oportunidades verificables%' then
+        v_omitted_reason := null;
+      end if;
       v_omitted_reason := coalesce(
-        v_omitted_reason,
-        v_previous_omitted_reason,
-        'No se alcanzaron cinco oportunidades verificables tras combinar los lotes recibidos.'
+        nullif(v_omitted_reason, ''),
+        case when coalesce(v_previous_omitted_reason, '') not like
+          'No se alcanzaron cinco oportunidades verificables%'
+          then nullif(v_previous_omitted_reason, '') else null end
       );
+      if v_omitted_reason is null then
+        v_omitted_reason := 'La categoría no tiene oportunidades registradas ni una justificación de investigación completa.';
+        v_status := 'needs_attention';
+      else
+        v_status := 'completed';
+      end if;
     else
-      v_omitted_reason := null;
+      -- Con oportunidades, solo conserva una nota enviada en este checkpoint;
+      -- nunca mostrar una explicación histórica de cuota que ya no aplica.
+      if coalesce(v_omitted_reason, '') like
+        'No se alcanzaron cinco oportunidades verificables%' then
+        v_omitted_reason := null;
+      end if;
+      v_omitted_reason := nullif(v_omitted_reason, '');
+      -- Completar una categoría significa que fue investigada y checkpointed,
+      -- no que alcanzó una cuota artificial de artículos.
+      v_status := 'completed';
     end if;
-    v_status := case when v_saved_category < 5 then 'needs_attention' else 'completed' end;
     insert into public.editorial_codex_run_categories (
       run_id, category_id, status, opportunity_count, omitted_reason, checkpoint_at
     ) values (p_run_id, v_category_id, v_status, v_saved_category, v_omitted_reason, now())

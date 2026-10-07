@@ -36,11 +36,13 @@ fails before sending a request.
    verify the date and use a new UUID only when the old run belongs to a prior
    Colombia date and today's cap has not been reached. Never retry a date
    conflict with the same old ID or use new IDs to evade today's cap.
-2. Cover every active category. Aim for five to seven complete proposals per
-   category when research supports them; at least 15 complete proposals total
-   is the run-wide floor. This is never permission to invent, duplicate, or pad
-   stories. If evidence cannot support the floor, record the gaps honestly.
-   Opinión and Especiales stay flagged for human angle/format review.
+2. Prioritize research in this order: Liga BetPlay A/B and Colombia national
+   teams; verified news about Colombian players in Europe; then another active
+   category only when there is a distinct, evidence-backed opportunity that
+   serves the product strategy. Review active categories without forcing equal
+   output. There is no per-category or run-wide draft quota: zero drafts is a
+   valid result when no candidate merits `create`. Opinión and Especiales stay
+   flagged for human angle/format review.
 3. Deduplicate before investigation and before image generation using category
    plus fingerprint. If the API context already contains a proposal for that
    candidate, do not generate or submit another one.
@@ -134,6 +136,6 @@ fails before sending a request.
 If required API configuration, research access, ImageGen, or safe checkpoint
 artifacts are unavailable, stop the affected candidate at the last completed
 stage and report what is needed. Never submit a Codex draft with a missing
-cover; keep researching other candidates and report a shortfall honestly if
-fewer than 15 complete, image-backed drafts can be confirmed. Do not fabricate
-sources, drafts, images, receipts, or successful API writes.
+cover; report the candidates actually verified and drafts confirmed. Do not
+create filler to hit a numerical target or fabricate sources, drafts, images,
+receipts, or successful API writes.
