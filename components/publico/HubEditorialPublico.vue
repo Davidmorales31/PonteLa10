@@ -10,11 +10,14 @@ interface EnlaceHub {
 
 interface ConfiguracionHub {
   titulo: string
+  tituloSeo?: string
   descripcion: string
   etiquetaSeccion: string
   categoria: string
   rutaCanonica: string
   enlaces: EnlaceHub[]
+  datosEstructuradosAdicionales?: Record<string, unknown>[]
+  entidadesVerificadas?: number
 }
 
 const props = defineProps<{ configuracion: ConfiguracionHub }>()
@@ -32,7 +35,8 @@ const noticiasRecientes = computed(() => listaNoticias.value.slice(1))
 const puedeIndexarse = computed(() => evaluarIndexabilidad({
   tipo: 'hub',
   articulosDisponibles: listaNoticias.value.length,
-  fuenteDisponible: !error.value
+  fuenteDisponible: !error.value || (props.configuracion.entidadesVerificadas ?? 0) >= 3,
+  entidadesVerificadas: props.configuracion.entidadesVerificadas
 }))
 const urlHub = computed(() => construirUrlAbsoluta(
   String(configuracionRuntime.public.siteUrl),
@@ -40,7 +44,7 @@ const urlHub = computed(() => construirUrlAbsoluta(
 ))
 
 useSeoPont3la10(() => ({
-  titulo: `${props.configuracion.titulo} | Pont3la10`,
+  titulo: `${props.configuracion.tituloSeo || props.configuracion.titulo} | Pont3la10`,
   descripcion: props.configuracion.descripcion,
   rutaCanonica: props.configuracion.rutaCanonica,
   seccion: props.configuracion.etiquetaSeccion,
@@ -70,7 +74,8 @@ useSeoPont3la10(() => ({
         { '@type': 'ListItem', position: 1, name: 'Inicio', item: construirUrlAbsoluta(String(configuracionRuntime.public.siteUrl), '/') },
         { '@type': 'ListItem', position: 2, name: props.configuracion.titulo, item: urlHub.value }
       ]
-    }
+    },
+    ...(props.configuracion.datosEstructuradosAdicionales || [])
   ]
 }))
 
@@ -99,6 +104,8 @@ function fechaPublicacion(fecha: string) {
         <NuxtLink v-for="enlace in configuracion.enlaces" :key="enlace.ruta" :to="enlace.ruta">{{ enlace.etiqueta }}</NuxtLink>
       </nav>
     </header>
+
+    <slot name="intro" />
 
     <section v-if="destacada" class="noticias-hub-editorial" aria-label="Cobertura reciente">
       <article class="noticia-destacada-medio">
@@ -151,6 +158,8 @@ function fechaPublicacion(fecha: string) {
         <NuxtLink class="boton-primario" to="/articulos">Explorar todas las noticias</NuxtLink>
       </div>
     </section>
+
+    <slot name="contenido-adicional" />
   </main>
 </template>
 

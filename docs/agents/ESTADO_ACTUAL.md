@@ -18,14 +18,46 @@
   alias del cliente excedía el máximo de cuatro validado por la RPC SQL. La
   corrección conserva cuatro alias específicos (Liga BetPlay, Torneo BetPlay,
   Copa Colombia y Selección); el `slug` exacto incluye todos los artículos de la
-  categoría canónica. La base Production ya demuestra páginas de 20 resultados
-  al invocar la RPC con esos cuatro términos; queda validar el endpoint tras el
-  despliegue. No se modificó el esquema ni se consumió cuota deportiva.
+  categoría canónica. Smoke de Production del 2026-10-06: el endpoint paginado
+  respondió 20 artículos y `hayMas=true`; el desplazamiento 20 respondió otros
+  20 sin slugs repetidos. La ruta SSR con el filtro respondió 200, con H1
+  `Noticias de fútbol colombiano`, canonical `/futbol-colombiano` y 19 enlaces
+  a artículos. La categoría principal mostrada en algunos resultados es
+  `Fútbol mundial` u `Opinión`, además de `Fútbol colombiano`; el endpoint no
+  expone las etiquetas temáticas para confirmar que todos esos resultados son
+  relevantes para los alias. Queda una revisión editorial de esa mezcla antes
+  de declarar cerrada la calidad semántica. No se modificó el esquema ni se
+  consumió cuota deportiva.
 - El listado de noticias ya incluye un slot nativo de Adsterra condicionado al
   consentimiento de publicidad. Se conserva una sola ubicación en este hub para
   no repetir anuncios ni interrumpir la intención de lectura.
 - Handoff de la reparación y validación pendiente:
   `docs/agents/handoffs/2026-10-06-hu-gro03-alias-limit.md`.
+
+## HU-SEO-09 — hub de Selección Colombia (2026-10-06)
+
+- Implementación aislada en `codex/hu-seo09-seleccion-colombia`, basada en
+  `origin/main` `723adcf`. La ruta `/seleccion-colombia` presenta agenda oficial
+  de mayores, partido del día, resultados FCF, convocatorias masculina/femenina,
+  noticias y enlaces editoriales por futbolista. Las fechas, resultados, clubes
+  y sustitución de convocatoria se contrastaron con publicaciones FCF; la hora
+  no publicada se muestra como pendiente, no estimada.
+- El marcador se enriquece leyendo el endpoint público `/api/resultados`, con
+  refresco cliente de 60 segundos (caché servidor compartida existente); no
+  consulta proveedores directamente ni escribe en Supabase. Se conserva un
+  único espacio de publicidad de Adsterra ya existente en el hub editorial,
+  condicionado al consentimiento y a que haya al menos tres noticias.
+- Canonical y metadatos quedan bajo un solo `useSeoPont3la10`; el hub añade
+  ItemLists al JSON-LD editorial existente. Sitemap e indexación permiten la
+  página si hay al menos tres piezas deportivas oficiales verificadas, y dejan
+  de hacerlo cuando la comprobación de datos cumple 60 días. El sitemap conserva
+  esta URL si falla Supabase, siempre que pase ese mismo umbral.
+- Los nombres de jugadores enlazan a búsqueda editorial, no a fichas permanentes:
+  `HU-SEO-10` (páginas de jugador) continúa pendiente. El calendario se verificó
+  el 2026-10-06 y aún requiere revisión manual cuando FCF cambie el calendario;
+  no se implementó scraping ni tarea automática de actualización.
+- Estado: código y smoke local aprobados; falta PR, checks y despliegue. Handoff:
+  `docs/agents/handoffs/2026-10-06-hu-seo09-seleccion-colombia.md`.
 
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
 

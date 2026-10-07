@@ -108,7 +108,9 @@ describe('sitemaps públicos por entidad', () => {
   })
 
   it('incluye hubs solo cuando superan el umbral editorial de indexabilidad', () => {
-    expect(hubs).toContain('evaluarIndexabilidad({ tipo: \'hub\'')
+    expect(hubs).toContain('tipo: \'hub\'')
+    expect(hubs).toContain('contarContenidoSeleccionVerificado(obtenerFechaColombia())')
+    expect(hubs).toContain("ruta: '/seleccion-colombia'")
     expect(hubs).toContain('articulosDisponibles: articulosHub.length')
     expect(hubs).toContain('modificadoEn: articulosHub[0]?.publicadoEn')
     expect(hubs).toContain('obtenerClienteSupabaseAnonimo')

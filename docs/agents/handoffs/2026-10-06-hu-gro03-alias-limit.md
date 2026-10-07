@@ -34,13 +34,21 @@
   `NUXT_PUBLIC_SITE_URL`; se repitió con `https://www.pont3la10.com` y pasó. Antes
   del fix, el endpoint público filtrado y el HTML SSR de esa categoría no
   contenían artículos (reproducido con cache MISS).
-- **Pendientes:** publicar el cambio y confirmar en Production que la API
-  filtrada devuelve 20 artículos y `hayMas=true`, la segunda página trae otros 20
-  sin duplicados, y `/articulos?categoria=futbol-colombiano` renderiza los
-  artículos desde SSR. HU-GRO-02 sigue pendiente porque la cuenta Google abierta
-  no tiene ninguna propiedad de Search Console; HU-GRO-01 aún requiere verificar
-  DebugView de Pont3la10.
-- **Siguiente acción exacta:** abrir/actualizar PR contra `main`; tras checks,
-  integrar y hacer smoke de API y SSR en el dominio de Production.
-- **Commit base:** `81e1303` (`origin/main`, deploy de Production observado).
-- **Commit final:** sin commit.
+- **Validación posterior al despliegue (2026-10-06):** PR #71 quedó integrado
+  en `main` como `723adcf`. La primera página filtrada de Production respondió
+  20 artículos y `hayMas=true`; el desplazamiento 20 respondió otros 20 sin
+  slugs repetidos. `/articulos?categoria=futbol-colombiano` respondió 200 con H1
+  `Noticias de fútbol colombiano`, canonical `/futbol-colombiano` y 19 enlaces a
+  artículos. No se hicieron escrituras remotas ni llamadas a proveedores.
+- **Pendientes:** hacer una revisión de relevancia semántica en la RPC: los
+  resultados expuestos públicamente muestran categorías principales
+  `Fútbol colombiano`, `Fútbol mundial` y `Opinión`, y el endpoint no expone las
+  etiquetas que motivaron el alias. Esto no invalida la paginación, pero falta
+  confirmar que esos artículos son apropiados para la categoría. HU-GRO-02 sigue
+  pendiente porque la cuenta Google disponible no tiene propiedad de Search
+  Console; HU-GRO-01 aún requiere verificar DebugView de Pont3la10.
+- **Siguiente acción exacta:** auditar la asignación de temas/categorías de los
+  resultados alias y documentar el criterio editorial. No cambiar DNS para
+  Search Console sin confirmación durante la acción.
+- **Commit base:** `81e1303` (antes de HU-GRO-03).
+- **Commit final:** `723adcf` (PR #71 integrado en `main`).
