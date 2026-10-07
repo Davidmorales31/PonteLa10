@@ -1,4 +1,5 @@
 import type { PartidoResultado } from '~/types/resultados'
+import type { PartidoSeleccionOficial } from '~/data/seleccionColombia2026'
 import {
   calendarioOficialSeleccion,
   convocatoriasOficialesSeleccion,
@@ -46,6 +47,19 @@ export function encontrarPartidoRegistradoSeleccion(
 
 export function normalizarNombreEquipoSeleccion(nombre: string): string {
   return claveEquipo(nombre)
+}
+
+export function obtenerPartidosRecientesPendientesSeleccion(fechaActual: string): PartidoSeleccionOficial[] {
+  return calendarioOficialSeleccion.filter((partido) => {
+    const diasDesdePartido = diferenciaEnDias(partido.fecha, fechaActual)
+    if (diasDesdePartido < 1 || diasDesdePartido > 7) return false
+
+    return !resultadosOficialesSeleccion.some(resultado =>
+      resultado.fecha === partido.fecha
+      && claveEquipo(resultado.local) === claveEquipo(partido.local)
+      && claveEquipo(resultado.visitante) === claveEquipo(partido.visitante)
+    )
+  })
 }
 
 export function obtenerFechaColombia(ahora: Date = new Date()): string {
