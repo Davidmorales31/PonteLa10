@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-## HU-OPS-01 — tests SEO automatizados (2026-10-07)
+## HU-OPS-01 — tests SEO automatizados (2026-10-07, cerrado)
 
 - En la rama `codex/hu-ops01-seo-tests`, basada en `main` `c1883f9`, se
   centralizó la construcción de metadatos SSR en `utils/headSeoPont3la10.ts`;
@@ -13,10 +13,18 @@
 - Validación local completada: lint, suite completa (82 archivos/415 pruebas),
   typecheck, build y `git diff --check` pasaron. No se cambiaron dependencias,
   base de datos ni contenido editorial.
-- Falta abrir PR, pasar CI/Vercel Preview y verificar tras el despliegue HTTP,
-  redirects y sitemap en Production. Las pruebas automatizadas son contractuales
-  y unitarias; las rutas dinámicas no se ejecutan con datos reales en CI porque
-  dependen de Supabase. Handoff: `docs/agents/handoffs/2026-10-07-hu-ops01-seo-tests.md`.
+- PR #86 se integró a `main` por squash como `7bd3042c5adc303f48520db64067762704632794`;
+  CI y Vercel Preview pasaron y el deployment Production terminó exitosamente.
+  En Preview y Production se verificaron home, artículo, hub, competición,
+  equipo y partido: HTTP 200, metadatos SSR y JSON-LD presentes; el partido
+  actual conserva `noindex` al no superar su gate de indexabilidad. En
+  Production, `/como-quedo/:slug`, `/donde-ver/:slug` y un ID de resultados
+  redirigieron con 301 a la ruta canónica `/partidos/:slug`; el índice de sitemap
+  respondió 200 con 9 entradas y el sitemap de partidos respondió 200 con 613
+  URLs únicas, todas bajo `/partidos/`, sin aliases históricos. Las rutas
+  dinámicas no se ejecutan con datos reales en CI porque dependen de Supabase;
+  el smoke remoto quedó registrado aquí. Handoff:
+  `docs/agents/handoffs/2026-10-07-hu-ops01-seo-tests.md`.
 
 ## Reenfoque maestro — seguimiento P0 (2026-10-06)
 
