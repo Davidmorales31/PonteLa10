@@ -72,7 +72,7 @@ export function construirNavegacionContextualPartidoSeo(
     resultadoAnterior: anterior
       ? {
           nombre: `${anterior.local} ${anterior.golesLocal}–${anterior.golesVisitante} ${anterior.visitante}`,
-          ruta: `/como-quedo/${anterior.slug}`,
+          ruta: `/partidos/${anterior.slug}`,
           fechaIso: anterior.fechaIso,
           detalle: 'Resultado anterior'
         }
