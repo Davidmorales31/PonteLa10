@@ -37,7 +37,7 @@ describe('navegación contextual SEO', () => {
     expect(resultado.equipoVisitante?.ruta).toBe('/equipos/deportivo-pereira')
     expect(resultado.competencia?.ruta).toBe('/competiciones/liga-betplay')
     expect(resultado.siguientePartido?.ruta).toBe('/partidos/cucuta-vs-junior')
-    expect(resultado.resultadoAnterior?.ruta).toBe('/como-quedo/cucuta-vs-pereira-anterior')
+    expect(resultado.resultadoAnterior?.ruta).toBe('/partidos/cucuta-vs-pereira-anterior')
   })
 
   it('no usa encuentros de equipos ajenos ni páginas de partido fuera del catálogo indexable', () => {
