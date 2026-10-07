@@ -42,6 +42,8 @@ describe('indexabilidad de fichas de partido', () => {
     expect(evaluarIndexabilidad({ tipo: 'hub', articulosDisponibles: 3, fuenteDisponible: true })).toBe(true)
     expect(evaluarIndexabilidad({ tipo: 'hub', articulosDisponibles: 2, fuenteDisponible: true })).toBe(false)
     expect(evaluarIndexabilidad({ tipo: 'hub', articulosDisponibles: 24, fuenteDisponible: false })).toBe(false)
+    expect(evaluarIndexabilidad({ tipo: 'hub', articulosDisponibles: 0, entidadesVerificadas: 3, fuenteDisponible: true })).toBe(true)
+    expect(evaluarIndexabilidad({ tipo: 'hub', articulosDisponibles: 0, entidadesVerificadas: 2, fuenteDisponible: true })).toBe(false)
   })
 
   it('solo indexa fichas de equipo con escudo, clasificación verificada y tres partidos', () => {

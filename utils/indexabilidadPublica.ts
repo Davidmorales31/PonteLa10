@@ -17,6 +17,7 @@ export interface DatosIndexabilidadHub {
   tipo: 'hub'
   articulosDisponibles: number
   fuenteDisponible: boolean
+  entidadesVerificadas?: number
 }
 
 export interface DatosIndexabilidadEquipo {
@@ -44,9 +45,11 @@ export function evaluarIndexabilidad(
   contenido: DatosIndexabilidadPartido | DatosIndexabilidadHub | DatosIndexabilidadEquipo | DatosIndexabilidadCompeticion
 ): boolean {
   if ('articulosDisponibles' in contenido) {
-    return contenido.fuenteDisponible
-      && Number.isInteger(contenido.articulosDisponibles)
+    const articulosSuficientes = Number.isInteger(contenido.articulosDisponibles)
       && contenido.articulosDisponibles >= 3
+    const entidadesSuficientes = Number.isInteger(contenido.entidadesVerificadas)
+      && (contenido.entidadesVerificadas ?? 0) >= 3
+    return contenido.fuenteDisponible && (articulosSuficientes || entidadesSuficientes)
   }
 
   if ('tipo' in contenido && contenido.tipo === 'equipo') {
