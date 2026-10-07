@@ -1,5 +1,23 @@
 # Estado actual de Pont3la10
 
+## HU-OPS-01 — tests SEO automatizados (2026-10-07)
+
+- En la rama `codex/hu-ops01-seo-tests`, basada en `main` `c1883f9`, se
+  centralizó la construcción de metadatos SSR en `utils/headSeoPont3la10.ts`;
+  `useSeoPont3la10` conserva la misma API y delega en ese contrato puro.
+- La suite prueba title, description, canonical, robots, Open Graph e
+  serialización JSON-LD, también el comportamiento `noindex`; verifica el
+  cableado SEO en home, artículo, partido, hub, equipo y competición, y añade
+  cobertura a redirects canónicos. Las pruebas existentes cubren serialización
+  y configuración de sitemaps.
+- Validación local completada: lint, suite completa (82 archivos/415 pruebas),
+  typecheck, build y `git diff --check` pasaron. No se cambiaron dependencias,
+  base de datos ni contenido editorial.
+- Falta abrir PR, pasar CI/Vercel Preview y verificar tras el despliegue HTTP,
+  redirects y sitemap en Production. Las pruebas automatizadas son contractuales
+  y unitarias; las rutas dinámicas no se ejecutan con datos reales en CI porque
+  dependen de Supabase. Handoff: `docs/agents/handoffs/2026-10-07-hu-ops01-seo-tests.md`.
+
 ## Reenfoque maestro — seguimiento P0 (2026-10-06)
 
 - **HU-GRO-01 — medición por tipo de página:** el código ya clasifica `page_type`

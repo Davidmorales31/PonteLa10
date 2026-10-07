@@ -7,4 +7,12 @@ describe('rutas históricas de partidos', () => {
     expect(contenido).toContain('redirectCode: 301')
     expect(contenido).toContain('`/partidos/${data.value.partido.slug}`')
   })
+
+  it('redirige el identificador de resultados a la ficha canónica cuando existe correspondencia', () => {
+    const contenido = readFileSync(new URL('../../pages/resultados/[id].vue', import.meta.url), 'utf8')
+
+    expect(contenido).toContain('/api/partidos-seo/correspondencia')
+    expect(contenido).toContain('redirectCode: 301')
+    expect(contenido).toContain('`/partidos/${correspondencia.slug}`')
+  })
 })
