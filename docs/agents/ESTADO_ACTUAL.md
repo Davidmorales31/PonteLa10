@@ -125,6 +125,39 @@
   únicamente a los flujos de jornada.
 - Handoff: `docs/agents/handoffs/2026-10-06-hu-seo13-jornadas.md`.
 
+## HU-SEO-14 — históricos de clasificación por temporada (2026-10-07)
+
+- La ficha de competición incorpora navegación entre temporadas disponibles.
+  Temporadas anteriores leen únicamente un snapshot final completo y autorizado;
+  si no existe o no supera las validaciones, no reutilizan la tabla actual ni
+  publican una clasificación parcial. La temporada vigente sigue leyendo la
+  tabla operativa.
+- Se aplicó a Supabase Production la migración
+  `20261007051308_hu_seo14_historicos_tablas`. Creó snapshots inmutables para
+  Liga BetPlay 2026-I (20 equipos, 19 partidos por club) y Torneo BetPlay 2026-I
+  (16 equipos, 15 partidos por club). Las dos filas de temporada están completas,
+  marcadas como públicas y con derechos confirmados. RLS permite lectura
+  condicionada; anon, authenticated y service_role no tienen permiso de insertar
+  y la función privada del trigger no es ejecutable por anon.
+- Los cálculos usan 190 fixtures Goal API de Liga y 119 de Torneo, más el
+  marcador Boca Juniors de Cali 0–2 Barranquilla, omitido por el feed y
+  contrastado con Win Sports y el fixture de DIMAYOR. La reconciliación produce
+  120 encuentros de Torneo. Todos los clubes completan sus PJ, cada rival aparece
+  una vez y los desempates numéricos oficiales quedan únicos; si no se pueden
+  confirmar, la migración falla cerrada en vez de inventar un sorteo.
+- Los asesores de Supabase no reportan esta tabla ni su función entre los
+  hallazgos. Sí persisten advertencias previas de seguridad/performance en otros
+  objetos del proyecto. La revisión de migración confirmó que el orden aplicado
+  corresponde al reglamento DIMAYOR 2026.
+- Validación local: suite completa (79 archivos/399 pruebas), typecheck,
+  ESLint de los tres archivos de aplicación y build Nitro pasaron; persiste el
+  aviso upstream `DEP0155`. `supabase db lint --local` no pudo conectar porque
+  Docker/Postgres local no está disponible. El lint global incluye 36 errores
+  `vue/multi-word-component-names` del directorio ajeno y no rastreado
+  `.codex-validation-hu-seo11-20261006`; los archivos de esta HU pasan lint.
+- Release Vercel/Production pendiente de PR, CI y smoke posterior. Handoff:
+  `docs/agents/handoffs/2026-10-07-hu-seo14-historicos.md`.
+
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
 
 - PR #68 integró las páginas públicas de competición en `main` como

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   esNoticiaRelacionadaCompeticion,
+  validarSnapshotTablaPublica,
   seleccionarFasesClasificacionCompletas,
   construirTemporadasPublicasCompeticion,
   construirJornadasIndexablesPublicas,
@@ -12,6 +13,34 @@ import type { PartidoSeoPublico } from '../../server/utils/partidosSeoPublicos'
 import type { EquipoLigaPublico } from '../../server/utils/equiposLigaPublicos'
 
 const fechaAhora = Date.parse('2026-10-06T17:00:00.000Z')
+
+function crearSnapshotTablaHistorica(): Record<string, unknown> {
+  return {
+    competition_slug: 'liga-betplay',
+    season: '2026-I',
+    phase: 'Todos contra todos',
+    team_count: 20,
+    matches_per_team: 19,
+    standings: Array.from({ length: 20 }, (_, indice) => ({
+      team_name: `Equipo ${indice + 1}`,
+      position: indice + 1,
+      played: 19,
+      won: 10,
+      drawn: 5,
+      lost: 4,
+      goals_for: 30,
+      goals_against: 18,
+      goal_difference: 12,
+      points: 35
+    })),
+    source_name: 'DIMAYOR + Goal API',
+    source_urls: ['https://dimayor.com.co/liga-betplay-dimayor/'],
+    checked_at: '2026-05-04T12:00:00.000Z',
+    finalized_at: '2026-05-03T12:00:00.000Z',
+    is_public: true,
+    publication_rights_confirmed: true
+  }
+}
 
 function crearPartidos(
   temporada: string,
@@ -146,6 +175,38 @@ describe('temporadas permanentes de competición', () => {
       titulo: 'La Liga BetPlay abre la fecha 14',
       resumen: 'Consulta la agenda de la competición.'
     }, 'Liga BetPlay', equipos)).toBe(true)
+  })
+})
+
+describe('snapshots históricos de posiciones', () => {
+  it('acepta solo una tabla final completa, coherente y con fuentes seguras', () => {
+    const snapshot = validarSnapshotTablaPublica(
+      crearSnapshotTablaHistorica(), 'liga-betplay', '2026-I', [], fechaAhora
+    )
+
+    expect(snapshot?.filas).toHaveLength(20)
+    expect(snapshot?.filas[0]).toMatchObject({
+      competencia: 'liga-betplay', temporada: '2026-I', fase: 'Todos contra todos',
+      posicion: 1, jugados: 19, puntos: 35, equipoSlug: null, equipoNombre: 'Equipo 1'
+    })
+    expect(snapshot?.metadata.finalizadaEn).toBe('2026-05-03T12:00:00.000Z')
+  })
+
+  it('rechaza snapshots parciales, no autorizados, inconsistentes o con verificación futura', () => {
+    const base = crearSnapshotTablaHistorica()
+    const filas = base.standings as Array<Record<string, unknown>>
+    const casos = [
+      { ...base, standings: filas.slice(0, 19) },
+      { ...base, publication_rights_confirmed: false },
+      { ...base, source_urls: ['http://dimayor.com.co/tabla'] },
+      { ...base, checked_at: '2026-10-07T18:00:00.000Z' },
+      { ...base, standings: filas.map((fila, indice) => indice === 0 ? { ...fila, points: 34 } : fila) },
+      { ...base, standings: filas.map((fila, indice) => indice === 1 ? { ...fila, position: 1 } : fila) }
+    ]
+
+    for (const caso of casos) {
+      expect(validarSnapshotTablaPublica(caso, 'liga-betplay', '2026-I', [], fechaAhora)).toBeNull()
+    }
   })
 })
 
