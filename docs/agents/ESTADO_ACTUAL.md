@@ -155,7 +155,13 @@
   Docker/Postgres local no está disponible. El lint global incluye 36 errores
   `vue/multi-word-component-names` del directorio ajeno y no rastreado
   `.codex-validation-hu-seo11-20261006`; los archivos de esta HU pasan lint.
-- Release Vercel/Production pendiente de PR, CI y smoke posterior. Handoff:
+- PR #77 se integró por squash en `main` como `aec3e5ab998900c0c53987be3f4a17e871d6d5dd`.
+  Vercel Production quedó `READY` en el deployment de ese commit y asignó el
+  dominio público. Smoke con `vercel curl`: Liga 2026-I, Torneo 2026-I y Liga
+  2026-II responden HTTP 200 con sus títulos correctos; las dos tablas históricas
+  muestran el sello de snapshot inmutable y enlace a la temporada siguiente,
+  mientras la actual conserva el sello de datos públicos confirmados.
+- Handoff de implementación y despliegue:
   `docs/agents/handoffs/2026-10-07-hu-seo14-historicos.md`.
 
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
