@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-## HU-ED-23 — fecha de actualización editorial (Supabase Production aplicada; código pendiente de despliegue, 2026-10-07)
+## HU-ED-23 — fecha de actualización editorial (Production, 2026-10-07)
 
 - El artículo conserva su `published_at` original y registra por separado
   `modified_at`; sitemap de artículos usa la fecha modificada con fallback a la
@@ -13,13 +13,17 @@
   de su versión actual y las otras 277 permanecen sin fecha de modificación.
   `anon` y `authenticated` no pueden actualizar `article_versions`; los permisos
   de edición de artículos siguen limitados por columna y flujo editorial.
-- Código y migraciones están en `codex/hu-ed23-actualizaciones-editoriales`,
-  basado en `main` `ed51489`. Lint, suite (86 archivos/439 pruebas), typecheck,
-  build y `git diff --check` pasaron. El código todavía no está en Production:
-  falta CI/Preview, merge del PR y smoke posterior al deployment.
-- La inspección visual autenticada del panel editorial no se realizó. Vercel MCP
-  no identificó el proyecto por API; el deployment se verificará mediante los
-  checks de GitHub/Vercel y el dominio público, sin afirmar éxito antes de verlo.
+- PR #91 pasó CI y Preview y se integró por squash a `main` como
+  `e86f7638ae0c5359b47dfb52d868ce8b3c5eb79f`; Vercel Production quedó `Ready`.
+  En el artículo de Camilo Durán, la página pública muestra fecha de publicación
+  original y “Actualizado”; el JSON-LD conserva `datePublished` y sirve
+  `dateModified` respaldada por la versión actual. `/sitemap-articles.xml`
+  respondió HTTP 200 con `application/xml`; el `<lastmod>` de ese artículo
+  coincide con `modified_at` en Supabase.
+- La inspección visual autenticada del panel editorial no se realizó. La API
+  Vercel MCP devolvió 404/403 para detalles, así que Preview y Production se
+  verificaron en la sesión autenticada de Vercel y desde las páginas públicas.
+  No se modificó contenido editorial.
   Handoff: `docs/agents/handoffs/2026-10-07-hu-ed23-actualizaciones-editoriales.md`.
 
 ## HU-ED-22 — plantillas editoriales por intención (Production, 2026-10-07)
