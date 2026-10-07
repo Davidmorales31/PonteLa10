@@ -37,20 +37,20 @@
   `npm.cmd run build`; revisión independiente de seguridad; verificación en
   Production de migración, `search_path`, ACL (`anon`/`authenticated` sí,
   `service_role` no), API HTTP 200 y hubs HTTP 200. Las relaciones confirmadas
-  siguen en cero.
+  siguen en cero. PR #82 pasó CI y Vercel; merge squash `ccc4635` quedó
+  registrado y el smoke final de Production repitió HTTP 200 en las cuatro rutas.
 - **Fallos:** El primer intento de test no cargó porque faltaba
   `NUXT_PUBLIC_SITE_URL`; se repitió con el dominio público no secreto y pasó.
   El lint sin exclusión escaneó el directorio ajeno no rastreado y mostró errores
   preexistentes de nombres Vue; excluyéndolo, el lint pasa. Supabase MCP aplicó
   la migración versión `20261007070936`, alineada con el archivo local. El build
   conserva la advertencia upstream Node `DEP0155`.
-- **Pendientes:** Commit, push, PR, CI/Preview, merge a `main` y revisar estado
-  de Vercel. La reparación DB ya está en Production; no repetir la migración. Una
-  persona editora debe asociar explícitamente noticias desde el CMS antes de que
-  aparezcan en los hubs; no ejecutar una asociación automática.
-- **Siguiente acción exacta:** Ejecutar `git diff --check`, revisar y commitear
-  solo los archivos del hotfix, crear PR desde
-  `codex/fix-hu-ed24-rpc-timeout`, esperar CI/Preview, integrar según la
-  autorización vigente y repetir smoke. No incluir el directorio ajeno.
+- **Pendientes:** Una persona editora debe asociar explícitamente noticias desde
+  el CMS antes de que aparezcan en los hubs; no ejecutar una asociación
+  automática. La RPC devuelve `[]` correctamente mientras no existan vínculos.
+- **Siguiente acción exacta:** Si se desea mostrar noticias en hubs, confirmar
+  relaciones desde el CMS con el equipo editorial. No repetir la migración ya
+  aplicada y no incluir `.codex-validation-hu-seo11-20261006/` en cambios.
 - **Commit base:** `7cbf26728a7e1eda297b73fa8abc5a3ea5a371cc`.
-- **Commit final:** sin commit.
+- **PR:** [#82](https://github.com/Davidmorales31/PonteLa10/pull/82), integrado.
+- **Commit final:** `ccc463553ec47f07204cd3843c14443ebf2727bd`.

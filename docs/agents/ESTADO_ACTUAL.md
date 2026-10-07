@@ -249,8 +249,10 @@
   pruebas; lint excluyendo únicamente `.codex-validation-hu-seo11-20261006/`
   (directorio ajeno no rastreado), typecheck y build Nuxt. Build conserva el
   aviso upstream `DEP0155`. La revisión de seguridad/migración aprobó el cambio
-  con la salvedad semántica descrita arriba. La migración ya está en Production;
-  falta integrar el archivo, prueba y documentación a `main` mediante PR/CI.
+  con la salvedad semántica descrita arriba. PR #82 se integró por squash como
+  `ccc463553ec47f07204cd3843c14443ebf2727bd`; CI y Vercel reportaron
+  `success`. Smoke final de Production: endpoint `200 []` y hubs de competición,
+  equipo y jugador `200`. La migración ya está en Production.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-ed24-relacion-noticia-entidad.md`.
 
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
