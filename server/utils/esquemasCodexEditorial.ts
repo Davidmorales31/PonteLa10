@@ -177,14 +177,85 @@ export const esquemaPropuestaCodex = z.object({
 
 })
 
-const esquemaScoresTendencia = z.object({
+const esquemaScoresTendenciaV1 = z.object({
   recency: z.number().int().min(0).max(100),
   relevance: z.number().int().min(0).max(100),
   novelty: z.number().int().min(0).max(100),
   editorialFit: z.number().int().min(0).max(100)
 }).strict()
 
-const esquemaOportunidadCodex = z.object({
+const esquemaUrlPublicaPont3la10 = esquemaUrlHttps.refine((valor) => {
+  const url = new URL(valor)
+  return ['pont3la10.com', 'www.pont3la10.com'].includes(url.hostname)
+    && !url.search && !url.hash
+}, 'La URL debe ser una página canónica pública de Pont3la10.')
+
+const esquemaEvaluacionOportunidadCodex = z.object({
+  recommendation: z.enum(['create', 'update', 'merge', 'expand', 'discard']),
+  targetUrl: z.string().trim().max(2048).regex(
+    /^\/(articulos|jugadores|equipos|competiciones|partidos)\/[a-z0-9]+(?:-[a-z0-9]+)*$/
+  ).nullable(),
+  entityMatch: z.object({
+    type: z.enum(['player', 'team', 'competition', 'match']),
+    slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
+    name: z.string().trim().min(2).max(160)
+  }).strict().nullable(),
+  cannibalizationRisk: z.enum(['none', 'low', 'medium', 'high']),
+  similarArticleIds: z.array(z.string().uuid()).max(3),
+  addsNewValue: z.boolean(),
+  noveltyRationale: z.string().trim().min(30).max(600),
+  differentiator: z.string().trim().min(30).max(500),
+  searchConsoleEvidence: z.object({
+    query: z.string().trim().min(1).max(500),
+    pageUrl: esquemaUrlPublicaPont3la10,
+    reportPeriodEnd: z.string().date()
+  }).strict().nullable()
+}).strict()
+
+const pesosScoringEditorial = {
+  demandSignal: 25,
+  clusterProximity: 20,
+  existingEntity: 10,
+  novelty: 15,
+  searchConsoleOpportunity: 10,
+  differentialValue: 15,
+  updateability: 5
+} as const
+
+export function calcularPrioridadEditorialCodex(scores: {
+  demandSignal: number
+  clusterProximity: number
+  existingEntity: number
+  novelty: number
+  searchConsoleOpportunity: number | null
+  differentialValue: number
+  updateability: number
+}): number {
+  const puntuacionPonderada = scores.demandSignal * pesosScoringEditorial.demandSignal
+    + scores.clusterProximity * pesosScoringEditorial.clusterProximity
+    + scores.existingEntity * pesosScoringEditorial.existingEntity
+    + scores.novelty * pesosScoringEditorial.novelty
+    + (scores.searchConsoleOpportunity ?? 0) * pesosScoringEditorial.searchConsoleOpportunity
+    + scores.differentialValue * pesosScoringEditorial.differentialValue
+    + scores.updateability * pesosScoringEditorial.updateability
+  const pesoDisponible = scores.searchConsoleOpportunity === null
+    ? 100 - pesosScoringEditorial.searchConsoleOpportunity
+    : 100
+  return Math.round(puntuacionPonderada / pesoDisponible)
+}
+
+const esquemaScoresTendenciaV2 = z.object({
+  demandSignal: z.number().int().min(0).max(100),
+  clusterProximity: z.number().int().min(0).max(100),
+  existingEntity: z.number().int().min(0).max(100),
+  novelty: z.number().int().min(0).max(100),
+  searchConsoleOpportunity: z.number().int().min(0).max(100).nullable(),
+  differentialValue: z.number().int().min(0).max(100),
+  updateability: z.number().int().min(0).max(100),
+  priorityScore: z.number().int().min(0).max(100)
+}).strict()
+
+const esquemaOportunidadCodexV1 = z.object({
   fingerprint: z.string().regex(/^[a-f0-9]{64}$/i),
   term: z.string().trim().min(2).max(160),
   titleHint: z.string().trim().min(8).max(220),
@@ -192,8 +263,127 @@ const esquemaOportunidadCodex = z.object({
   trendTitle: z.string().trim().min(3).max(240),
   observedAt: z.string().datetime({ offset: true }),
   relevanceReason: z.string().trim().min(30).max(600),
-  scores: esquemaScoresTendencia
+  scores: esquemaScoresTendenciaV1
 }).strict()
+
+const esquemaOportunidadCodexV2 = z.object({
+  fingerprint: z.string().regex(/^[a-f0-9]{64}$/i),
+  term: z.string().trim().min(2).max(160),
+  titleHint: z.string().trim().min(8).max(220),
+  trendUrl: esquemaUrlHttps,
+  trendTitle: z.string().trim().min(3).max(240),
+  observedAt: z.string().datetime({ offset: true }),
+  relevanceReason: z.string().trim().min(30).max(600),
+  scores: esquemaScoresTendenciaV2,
+  assessment: esquemaEvaluacionOportunidadCodex
+}).strict().superRefine((oportunidad, contexto) => {
+  const { scores, assessment } = oportunidad
+  const evidenciaSearchConsole = assessment.searchConsoleEvidence
+
+  if (scores.priorityScore !== calcularPrioridadEditorialCodex(scores)) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['scores', 'priorityScore'],
+      message: 'El puntaje total debe corresponder a los componentes y sus pesos.'
+    })
+  }
+  if ((scores.searchConsoleOpportunity === null) !== (evidenciaSearchConsole === null)) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['assessment', 'searchConsoleEvidence'],
+      message: 'La puntuación de Search Console requiere evidencia real asociada, y viceversa.'
+    })
+  }
+  if (assessment.entityMatch === null && scores.existingEntity !== 0) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['scores', 'existingEntity'],
+      message: 'Sin una entidad incluida en el contexto, la puntuación de entidad debe ser cero.'
+    })
+  }
+  if (assessment.recommendation === 'create' && assessment.targetUrl !== null) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['assessment', 'targetUrl'],
+      message: 'Una recomendación para crear no puede señalar una URL de destino existente.'
+    })
+  }
+  if (assessment.recommendation === 'create'
+    && (assessment.cannibalizationRisk === 'high' || scores.updateability >= 60)) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['assessment', 'recommendation'],
+      message: 'No se debe crear una URL nueva con canibalización alta o una oportunidad fuerte de actualización existente.'
+    })
+  }
+  if (assessment.recommendation !== 'discard' && !assessment.addsNewValue) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['assessment', 'addsNewValue'],
+      message: 'Solo se puede continuar si la evaluación confirma valor editorial nuevo.'
+    })
+  }
+  if (['update', 'merge', 'expand'].includes(assessment.recommendation)
+    && assessment.targetUrl === null) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['assessment', 'targetUrl'],
+      message: 'Actualizar, fusionar o ampliar requiere una URL existente como destino.'
+    })
+  }
+  if (['update', 'merge'].includes(assessment.recommendation)
+    && !assessment.targetUrl?.startsWith('/articulos/')) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['assessment', 'targetUrl'],
+      message: 'Actualizar o fusionar contenido requiere una URL de artículo existente.'
+    })
+  }
+  if (['medium', 'high'].includes(assessment.cannibalizationRisk)
+    && assessment.similarArticleIds.length === 0) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['assessment', 'similarArticleIds'],
+      message: 'Un riesgo de canibalización medio o alto debe identificar al menos una publicación similar.'
+    })
+  }
+  if (assessment.recommendation === 'expand' && assessment.entityMatch) {
+    const prefijo = {
+      player: '/jugadores/',
+      team: '/equipos/',
+      competition: '/competiciones/',
+      match: '/partidos/'
+    }[assessment.entityMatch.type]
+    if (assessment.targetUrl !== `${prefijo}${assessment.entityMatch.slug}`) {
+      contexto.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['assessment', 'targetUrl'],
+        message: 'Ampliar una entidad requiere enlazar la página de esa entidad exacta.'
+      })
+    }
+  }
+  if (assessment.recommendation === 'expand' && assessment.targetUrl
+    && !assessment.targetUrl.startsWith('/articulos/') && assessment.entityMatch === null) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['assessment', 'entityMatch'],
+      message: 'Ampliar una página de entidad requiere identificar esa entidad del contexto.'
+    })
+  }
+
+  if (new Set(assessment.similarArticleIds.map(id => id.toLowerCase())).size !== assessment.similarArticleIds.length) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['assessment', 'similarArticleIds'],
+      message: 'No se pueden repetir artículos similares.'
+    })
+  }
+})
+
+const esquemaOportunidadCodex = z.union([
+  esquemaOportunidadCodexV2,
+  esquemaOportunidadCodexV1
+])
 
 export const esquemaContextoCodex = z.object({
   runId: z.string().uuid()

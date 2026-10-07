@@ -7,7 +7,8 @@ import {
   esquemaConsultaSaludCodex,
   esquemaPortadaCodex,
   esquemaPortadaIACodex,
-  esquemaPropuestaCodex
+  esquemaPropuestaCodex,
+  calcularPrioridadEditorialCodex
 } from '~/server/utils/esquemasCodexEditorial'
 
 function crearFirma(timestamp: string, metodo: string, ruta: string, requestId: string, cuerpo: Buffer, secreto: string) {
@@ -299,6 +300,109 @@ describe('API privada de propuestas Codex', () => {
     }).success).toBe(false)
   })
 
+  it('valida el scoring ED-25, normaliza Search Console ausente y exige revisión antes de crear', () => {
+    const oportunidadV2 = {
+      fingerprint: 'b'.repeat(64),
+      term: 'Liga colombiana',
+      titleHint: 'La Liga BetPlay entra en una jornada decisiva',
+      trendUrl: 'https://trends.google.com/trends/trendingsearches/daily?geo=CO',
+      trendTitle: 'Tendencias actuales de Colombia',
+      observedAt: '2026-10-07T12:00:00Z',
+      relevanceReason: 'La señal coincide con una competición activa y debe contrastarse con fuentes primarias.',
+      scores: {
+        demandSignal: 90,
+        clusterProximity: 80,
+        existingEntity: 70,
+        novelty: 60,
+        searchConsoleOpportunity: null,
+        differentialValue: 100,
+        updateability: 50,
+        priorityScore: 80
+      },
+      assessment: {
+        recommendation: 'create' as const,
+        targetUrl: null,
+        entityMatch: { type: 'competition' as const, slug: 'liga-betplay', name: 'Liga BetPlay' },
+        cannibalizationRisk: 'none' as const,
+        similarArticleIds: [],
+        addsNewValue: true,
+        noveltyRationale: 'La cobertura disponible no informa este cambio de jornada ni sus implicaciones para los lectores.',
+        differentiator: 'La pieza explicaría el efecto sobre la clasificación y enlazaría el calendario oficial actualizado.',
+        searchConsoleEvidence: null
+      }
+    }
+    const agenda = {
+      runId: '14a5f2b0-a9c1-41b2-9b82-729f52c3b4d2',
+      status: 'in_progress' as const,
+      categories: [{ categoryId: 'ef3716e2-351e-4bc6-af69-883b17e91111', opportunities: [oportunidadV2] }]
+    }
+
+    expect(calcularPrioridadEditorialCodex(oportunidadV2.scores)).toBe(80)
+    expect(esquemaAgendaCodex.safeParse(agenda).success).toBe(true)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{ ...oportunidadV2, scores: { ...oportunidadV2.scores, priorityScore: 79 } }]
+      }]
+    }).success).toBe(false)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{ ...oportunidadV2, assessment: { ...oportunidadV2.assessment, recommendation: 'update' } }]
+      }]
+    }).success).toBe(false)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{
+          ...oportunidadV2,
+          assessment: { ...oportunidadV2.assessment, cannibalizationRisk: 'high' }
+        }]
+      }]
+    }).success).toBe(false)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{
+          ...oportunidadV2,
+          scores: { ...oportunidadV2.scores, updateability: 60, priorityScore: 81 }
+        }]
+      }]
+    }).success).toBe(false)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{
+          ...oportunidadV2,
+          assessment: { ...oportunidadV2.assessment, addsNewValue: false }
+        }]
+      }]
+    }).success).toBe(false)
+    expect(esquemaAgendaCodex.safeParse({
+      ...agenda,
+      categories: [{
+        ...agenda.categories[0],
+        opportunities: [{
+          ...oportunidadV2,
+          scores: { ...oportunidadV2.scores, searchConsoleOpportunity: 70, priorityScore: 79 },
+          assessment: {
+            ...oportunidadV2.assessment,
+            searchConsoleEvidence: {
+              query: 'liga betplay calendario',
+              pageUrl: 'https://www.pont3la10.com/liga-colombiana',
+              reportPeriodEnd: '2026-10-06'
+            }
+          }
+        }]
+      }]
+    }).success).toBe(true)
+  })
+
   it('mantiene la consulta de salud privada, vacía y solo de lectura', () => {
     const migracion = readFileSync(new URL(
       '../../supabase/migrations/20260926091323_hu_ed_13_worker_heartbeat_y_salud.sql',
@@ -361,5 +465,22 @@ describe('API privada de propuestas Codex', () => {
     expect(migracion).toContain("(v_opportunity -> 'scores' ->> 'editorialFit')::integer not between 0 and 100")
     expect(migracion).toContain('select count(*) into v_saved_category')
     expect(migracion).toContain('v_saved_category > 7')
+
+    const migrationEd25 = readFileSync(new URL(
+      '../../supabase/migrations/20261007135830_hu_ed25_scoring_oportunidades_editoriales.sql',
+      import.meta.url
+    ), 'utf8')
+    expect(migrationEd25).toContain("'searchConsole', coalesce(")
+    expect(migrationEd25).toContain("'entities', coalesce(")
+    expect(migrationEd25).toContain('priorityScore')
+    expect(migrationEd25).toContain('v_expected_priority')
+    expect(migrationEd25).toContain("'La evidencia Search Console no pertenece al reporte real más reciente.'")
+    expect(migrationEd25).toContain('El formato v1 solo puede reanudar un checkpoint histórico sin evaluación.')
+    expect(migrationEd25).toContain('editorial_codex_draft_create_gate')
+    expect(migrationEd25).toContain('editorial_codex_proposal_create_gate')
+    expect(migrationEd25).toContain('Solo una recomendación create con valor nuevo puede generar un borrador.')
+    expect(migrationEd25).toContain('security invoker')
+    expect(migrationEd25).toContain('from public, anon, authenticated')
+    expect(migrationEd25).toContain('to service_role')
   })
 })

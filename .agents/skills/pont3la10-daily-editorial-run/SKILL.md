@@ -44,6 +44,15 @@ fails before sending a request.
 3. Deduplicate before investigation and before image generation using category
    plus fingerprint. If the API context already contains a proposal for that
    candidate, do not generate or submit another one.
+   Persist the research agenda/checkpoint before any draft request. For an
+   ED-25 v2 candidate, only `assessment.recommendation = create` with
+   `assessment.addsNewValue = true` may enter the draft/cover/proposal pipeline.
+   For `update`, `merge`, `expand`, or
+   `discard`, preserve and report the recommendation, target URL/entity,
+   cannibalization risk, and evidence, but do not create a second article or
+   modify published content. These recommendations do not count as completed
+   article drafts. A legacy candidate without `assessment` may be resumed under
+   its original checkpoint; never downgrade a v2 candidate to the legacy path.
 4. For each candidate, read `pont3la10-seo-editorial` after research and before
    submission. Use Codex research for trends and claim verification; call the
    private `borrador` endpoint once per stable idempotency key so the server

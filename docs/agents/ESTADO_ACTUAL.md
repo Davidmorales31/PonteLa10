@@ -1,5 +1,34 @@
 # Estado actual de Pont3la10
 
+## HU-ED-25 — priorización y evaluación de oportunidades editoriales (local, 2026-10-07)
+
+- Se añadió un contrato v2 de prioridad (demanda, cluster, entidad, novedad,
+  Search Console cuando exista, valor diferencial y posibilidad de actualizar)
+  junto con recomendación `create/update/merge/expand/discard`, URL o entidad
+  objetivo, riesgo de canibalización, similitud y evidencia. Sin un reporte real
+  de Search Console el componente queda nulo y se normaliza el puntaje; no se
+  inventan métricas.
+- La agenda solo lleva recomendaciones `create` con valor nuevo a redacción,
+  portada y propuesta. `update`, `merge`, `expand` y `discard` quedan como
+  decisiones para revisión humana; no reescriben ni fusionan contenido
+  publicado. La prioridad temática continúa siendo Liga BetPlay A/B y Selección
+  Colombia, colombianos en Europa y luego otras categorías.
+- La migración `20261007135830_hu_ed25_scoring_oportunidades_editoriales` añade
+  contexto privado de artículos, entidades confirmadas y reportes Search Console;
+  valida el contrato también en SQL y bloquea reservas/propuestas que no
+  correspondan a una agenda válida de hoy. El revisor estático no encontró
+  hallazgos P0–P2. Supabase CLI y Docker no están disponibles, así que aún no se
+  ha ejecutado en una base local ni se ha aplicado a Production.
+- Validaciones locales: lint; suite completa (87 archivos, 449 pruebas);
+  typecheck; build. `git diff --check` pasa. Build conserva el aviso upstream
+  `[DEP0155]` de `@vue/shared`.
+- Estado al corte: cambios locales en `codex/hu-ed25-prioridad-editorial`, aún
+  sin PR ni despliegue. Production Supabase sigue en la migración
+  `20261007132510_hu_gro04_historial_oportunidades`. Search Console no tiene una
+  propiedad/reportes reales importados, por lo que las señales GSC se activarán
+  solo al cargar datos auténticos.
+- Handoff: `docs/agents/handoffs/2026-10-07-hu-ed25-scoring-editorial.md`.
+
 ## HU-GRO-04 — oportunidades orgánicas (Production, 2026-10-07)
 
 - El panel prioriza consultas y páginas usando posición 5–20, impresiones/CTR
