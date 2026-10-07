@@ -195,7 +195,16 @@ onMounted(() => {
           </div>
           <div v-if="noticiasRelacionadas.length" class="grilla-noticias-jugador">
             <article v-for="noticia in noticiasRelacionadas" :key="noticia.slug">
-              <NuxtLink v-if="noticia.imagen" :to="`/articulos/${noticia.slug}`" class="imagen-noticia-jugador" tabindex="-1" aria-hidden="true"><img :src="noticia.imagen" :alt="noticia.titulo" loading="lazy"></NuxtLink>
+              <NuxtLink v-if="noticia.imagen" :to="`/articulos/${noticia.slug}`" class="imagen-noticia-jugador" tabindex="-1" aria-hidden="true">
+                <ImagenEditorialPublica
+                  :src="noticia.imagen"
+                  :alt="noticia.titulo"
+                  width="640"
+                  height="360"
+                  :ancho-original="noticia.imagenAncho"
+                  sizes="(max-width: 760px) 100vw, 640px"
+                />
+              </NuxtLink>
               <p class="etiqueta-seccion">{{ noticia.categoria }}</p>
               <h3><NuxtLink :to="`/articulos/${noticia.slug}`">{{ noticia.titulo }}</NuxtLink></h3>
               <p>{{ noticia.resumen }}</p>

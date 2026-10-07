@@ -6,6 +6,10 @@ import {
   verificarFirmaCodex
 } from '~/server/utils/codexEditorialPrivado'
 import { procesarImagenEditorial } from '~/server/utils/procesadorImagenEditorial'
+import {
+  revertirImagenEditorialOptimizada,
+  subirImagenEditorialOptimizada
+} from '~/server/utils/almacenarImagenEditorial'
 
 const maximoBytesEntrada = 3_500_000
 
@@ -66,15 +70,15 @@ export default defineEventHandler(async (evento) => {
 
   const fecha = new Date()
   const ruta = `codex-ai/${fecha.getUTCFullYear()}/${String(fecha.getUTCMonth() + 1).padStart(2, '0')}/${imagen.hash}.webp`
-  const { error: errorSubida } = await cliente.storage
-    .from('editorial-media')
-    .upload(ruta, imagen.contenido, {
-      cacheControl: '31536000',
-      contentType: 'image/webp',
-      upsert: false
-    })
-
-  if (errorSubida && !/already exists|duplicate/i.test(errorSubida.message)) {
+  let almacenamiento: Awaited<ReturnType<typeof subirImagenEditorialOptimizada>>
+  try {
+    almacenamiento = await subirImagenEditorialOptimizada(
+      cliente,
+      'editorial-media',
+      ruta,
+      imagen
+    )
+  } catch {
     throw createError({
       statusCode: 502,
       statusMessage: 'No se pudo almacenar la ilustración generada.',
@@ -103,17 +107,29 @@ export default defineEventHandler(async (evento) => {
     .select('id')
     .single()
 
-  if (errorRegistro) {
-    if (errorRegistro.code === '23505') {
-      const { data: duplicado } = await cliente
+  if (errorRegistro || !medio) {
+    let duplicado: {
+      id: string
+      bucket: string
+      path: string
+      width: number | null
+      height: number | null
+      size_bytes: number | null
+      credit: string | null
+      source_url: string | null
+      caption: string | null
+    } | null = null
+
+    if (errorRegistro?.code === '23505') {
+      const { data } = await cliente
         .from('media_files')
-        .select('id, bucket, width, height, size_bytes, credit, source_url, caption')
+        .select('id, bucket, path, width, height, size_bytes, credit, source_url, caption')
         .eq('file_hash', imagen.hash)
         .maybeSingle()
+      duplicado = data
 
-      if (duplicado) {
-        if (duplicado.bucket !== 'editorial-media'
-          || duplicado.credit !== CREDITO_PORTADA_IA_CODEX
+      if (duplicado?.bucket === 'editorial-media' && duplicado.path === ruta) {
+        if (duplicado.credit !== CREDITO_PORTADA_IA_CODEX
           || duplicado.source_url !== null
           || duplicado.caption !== PIE_PORTADA_IA_CODEX) {
           throw createError({
@@ -129,6 +145,33 @@ export default defineEventHandler(async (evento) => {
           bytes: duplicado.size_bytes,
           yaExistia: true
         }
+      }
+    }
+
+    await revertirImagenEditorialOptimizada(
+      cliente,
+      'editorial-media',
+      ruta,
+      almacenamiento
+    )
+
+    if (duplicado) {
+      if (duplicado.bucket !== 'editorial-media'
+        || duplicado.credit !== CREDITO_PORTADA_IA_CODEX
+        || duplicado.source_url !== null
+        || duplicado.caption !== PIE_PORTADA_IA_CODEX) {
+        throw createError({
+          statusCode: 409,
+          statusMessage: 'La imagen ya está registrada con otra atribución.',
+          data: { codigo: 'PORTADA_IA_CODEX_EN_CONFLICTO' }
+        })
+      }
+      return {
+        mediaId: String(duplicado.id),
+        hash: imagen.hash,
+        dimensiones: { ancho: duplicado.width, alto: duplicado.height },
+        bytes: duplicado.size_bytes,
+        yaExistia: true
       }
     }
 

@@ -89,13 +89,10 @@ const enlacesAyuda = [
         </section>
 
         <section class="escena-error" aria-label="Jugador buscando el camino de regreso">
-          <img
-            src="/editorial/pagina_404_jugador_estadio.png"
-            alt="Jugador con el número diez frente a un estadio y un balón"
-            width="1536"
-            height="1024"
-            decoding="async"
-          >
+          <picture>
+            <source srcset="/editorial/pagina_404_jugador_estadio-640.webp 640w, /editorial/pagina_404_jugador_estadio-1024.webp 1024w, /editorial/pagina_404_jugador_estadio-1536.webp 1536w" type="image/webp" sizes="(max-width: 760px) 100vw, 50vw">
+            <img src="/editorial/pagina_404_jugador_estadio.png" alt="Jugador con el número diez frente a un estadio y un balón" width="1536" height="1024" sizes="(max-width: 760px) 100vw, 50vw" fetchpriority="high" decoding="async">
+          </picture>
           <div class="velo-escena-error" aria-hidden="true" />
           <svg class="camino-error" viewBox="0 0 600 420" aria-hidden="true">
             <path d="M145 390 C 245 350, 206 301, 309 265 S 410 189, 459 128" />

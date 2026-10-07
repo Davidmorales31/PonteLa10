@@ -15,6 +15,10 @@ const logoCabecera = computed(() => modoBlancoActivo.value
   ? '/brand/pont3la10_logo_modo_blanco.png'
   : '/brand/pont3la10_logo_login_blanco.png'
 )
+const srcsetLogoCabecera = computed(() => {
+  const base = logoCabecera.value.slice(0, -'.png'.length)
+  return [180, 360, 598].map(ancho => `${base}-${ancho}.webp ${ancho}w`).join(', ')
+})
 
 const accionCuenta = computed(() => {
   if (contextoEditorial.value) return { etiqueta: 'Panel editorial', ruta: '/admin' }
@@ -82,13 +86,10 @@ async function buscarContenido() {
   <header class="cabecera-landing" @keydown.esc="menuAbierto = false">
     <div class="cabecera-landing-contenido">
       <NuxtLink class="marca-cabecera-landing" to="/" aria-label="Pont3la10, ir al inicio">
-        <img
-          :src="logoCabecera"
-          alt="Pont3la10"
-          width="598"
-          height="115"
-          decoding="async"
-        >
+        <picture>
+          <source :srcset="srcsetLogoCabecera" type="image/webp" sizes="170px">
+          <img :src="logoCabecera" alt="Pont3la10" width="598" height="115" fetchpriority="high" decoding="async">
+        </picture>
       </NuxtLink>
 
       <nav class="navegacion-landing-escritorio" aria-label="Navegación principal">

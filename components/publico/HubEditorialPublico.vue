@@ -116,7 +116,16 @@ function fechaPublicacion(fecha: string) {
           tabindex="-1"
           aria-hidden="true"
         >
-          <img :src="destacada.imagen" :alt="destacada.titulo" width="1280" height="720" fetchpriority="high">
+          <ImagenEditorialPublica
+            :src="destacada.imagen"
+            :alt="destacada.titulo"
+            width="1280"
+            height="720"
+            :ancho-original="destacada.imagenAncho"
+            sizes="(max-width: 760px) 100vw, 1280px"
+            loading="eager"
+            prioridad-alta
+          />
         </NuxtLink>
         <div class="contenido-noticia-destacada">
           <p class="etiqueta-seccion">{{ destacada.categoria }} · DESTACADO</p>
@@ -143,7 +152,14 @@ function fechaPublicacion(fecha: string) {
             tabindex="-1"
             aria-hidden="true"
           >
-            <img :src="articulo.imagen" :alt="articulo.titulo" width="640" height="360" loading="lazy">
+            <ImagenEditorialPublica
+              :src="articulo.imagen"
+              :alt="articulo.titulo"
+              width="640"
+              height="360"
+              :ancho-original="articulo.imagenAncho"
+              sizes="(max-width: 760px) 100vw, 640px"
+            />
           </NuxtLink>
           <div>
             <p class="etiqueta-seccion">{{ articulo.categoria }}</p>

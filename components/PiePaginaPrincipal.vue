@@ -10,14 +10,10 @@ const { abrirPreferencias } = useAnaliticaPublica()
   <footer id="pie-pagina" class="pie-pagina-landing">
     <div class="pie-pagina-contenido">
       <section class="marca-pie-pagina" aria-label="Pont3la10">
-        <img
-          src="/brand/pont3la10_logo_login_blanco.png"
-          alt="Pont3la10"
-          width="598"
-          height="115"
-          loading="lazy"
-          decoding="async"
-        >
+        <picture>
+          <source srcset="/brand/pont3la10_logo_login_blanco-180.webp 180w, /brand/pont3la10_logo_login_blanco-360.webp 360w, /brand/pont3la10_logo_login_blanco-598.webp 598w" type="image/webp" sizes="170px">
+          <img src="/brand/pont3la10_logo_login_blanco.png" alt="Pont3la10" width="598" height="115" loading="lazy" decoding="async">
+        </picture>
         <p>{{ pieSitio.descripcion }}</p>
         <small>
           © {{ anioActual }} Pont3la10. Todos los derechos reservados.

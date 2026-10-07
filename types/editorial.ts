@@ -7,6 +7,7 @@ export interface ArticuloResumen {
   publicadoHace: string
   lecturaMinutos?: number
   imagen: string
+  imagenAncho?: number
   destacado?: boolean
 }
 

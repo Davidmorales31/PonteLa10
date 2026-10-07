@@ -9,6 +9,7 @@ const propiedades = withDefaults(defineProps<{
 })
 
 const imagenDisponible = ref(Boolean(propiedades.equipo.logo))
+const tamanoVisible = computed(() => ({ pequeno: 22, mediano: 40, grande: 82 })[propiedades.tamano || 'mediano'])
 
 watch(() => propiedades.equipo.logo, logo => {
   imagenDisponible.value = Boolean(logo)
@@ -17,14 +18,16 @@ watch(() => propiedades.equipo.logo, logo => {
 
 <template>
   <span class="escudo-equipo" :class="`escudo-equipo--${tamano}`" aria-hidden="true">
-    <img
+    <EscudoEquipoPublico
       v-if="imagenDisponible && equipo.logo"
       :src="equipo.logo"
       :alt="`Escudo de ${equipo.nombre}`"
+      :sizes="`${tamanoVisible}px`"
+      :width="tamanoVisible"
+      :height="tamanoVisible"
       loading="lazy"
-      referrerpolicy="no-referrer"
       @error="imagenDisponible = false"
-    >
+    />
     <span v-else>{{ equipo.nombreCorto }}</span>
   </span>
 </template>

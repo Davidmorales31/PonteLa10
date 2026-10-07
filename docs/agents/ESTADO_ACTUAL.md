@@ -1,5 +1,77 @@
 # Estado actual de Pont3la10
 
+## HU-PERF-01 — separar CSS público y administrativo (Production, 2026-10-07)
+
+- admin.css se carga desde el layout admin; landing.css, desde el layout
+  público; resultados.css, solo desde las páginas/componentes que presentan
+  resultados. main.css conserva la base compartida. Se retiraron selectores
+  administrativos obsoletos de los estilos públicos, después de verificar que
+  no se usan en componentes Vue.
+- La CSS transferible se midió como bytes sin comprimir de estilos SSR inline y
+  hojas enlazadas, antes/después del cambio: /partidos-hoy 232.138 → 162.894
+  (−29,8%); /resultados/en-vivo 228.254 → 159.771 (−30,0%);
+  /resultados 229.775 → 160.531 (−30,1%); /liga-colombiana 237.916 →
+  120.289 (−49,4%). En el smoke Production, las rutas de resultados enlazan su
+  hoja específica, Liga Colombiana no la carga y las páginas públicas no
+  incluyen admin.css ni sus selectores exclusivos.
+- /resultados/en-vivo incorpora un anuncio después de los marcadores, solo si
+  hay partidos. Reutiliza PublicidadAdsterraSlot, por lo que mantiene
+  consentimiento, carga diferida y marco reservado. No se añadió script externo
+  nuevo ni se modificaron datos.
+- Validación: lint, typecheck, build, git diff --check y suite completa
+  (89 archivos/457 pruebas); CI de PR #99 pasó lint, test, typecheck, build y
+  Vercel Preview. Inspección visual local de /partidos-hoy en escritorio,
+  móvil (390 px), tema oscuro/claro, y /resultados/en-vivo en escritorio. El
+  preview local no tenía fixtures; por eso la inspección visual de resultados
+  usó el estado vacío. Build conserva el aviso upstream [DEP0155] de @vue/shared.
+- PR #99 se integró por squash como 48482071e3fb5aef5824a8030d16da4c85a86c52;
+  el check Vercel Production reportó success. Smoke Production: /partidos-hoy,
+  /resultados/en-vivo, /resultados y /liga-colombiana respondieron HTTP 200 con
+  la distribución de CSS esperada. No hubo migración; Supabase Preview se
+  omitió.
+- Pendiente de verificación, no bloqueante para el release: inspección visual
+  del panel con sesión editorial autenticada; disponibilidad real de creatividad
+  del anunciante; barrido de logs de runtime de Vercel, no disponible desde el
+  CLI local. El preview local no tenía variables de resultados, así que no se
+  probaron visualmente tarjetas con fixtures reales.
+- Handoff: docs/agents/handoffs/2026-10-07-hu-perf01-css-split.md.
+
+## HU-PERF-02 — optimización de imágenes (código listo; publicación pendiente, 2026-10-07)
+
+- Se generaron 164 variantes WebP locales (2.250.170 bytes en total) para
+  escudos colombianos y recursos estáticos de marca, publicidad, estados vacíos,
+  login y error 404. `npm run imagenes:responsive` permite regenerarlas desde
+  los PNG originales; no modifica esos originales. Las páginas públicas usan
+  `picture/srcset` para estos recursos y escudos, con dimensiones, prioridad y
+  carga diferida según ubicación.
+- Las portadas CMS nuevas se almacenan como WebP de hasta 2400 px y crean
+  variantes físicas WebP 320/640/960 cuando el ancho de origen lo permite. Las
+  páginas públicas leen `width`/`height` en lote y sirven `srcset` únicamente
+  desde el bucket editorial esperado. Se generaron 456 sidecars para 121 medios
+  existentes: 24.994.820 bytes adicionales; el agregado de Storage quedó en
+  577 objetos y 45.766.870 bytes. Se conservaron intactos originales y se usó
+  `upsert:false`; no se habilitaron transformaciones pagas ni se modificó el
+  plan. Si falla una variante en la carga editorial con ruta UUID, se limpian
+  los objetos parciales propios; las rutas deterministas compartidas de Codex
+  se conservan para que un reintento complete el conjunto sin carreras.
+- `sizes` solo acompaña a imágenes que tienen `srcset`; dimensiones intrínsecas,
+  prioridad y carga diferida se ajustan según el uso. El GIF local
+  `public/liga-betplay-ambiente.gif` no tiene referencias y quedó intacto.
+- El GIF local `public/liga-betplay-ambiente.gif` no tiene referencias de uso
+  en el código; no se alteró el archivo.
+- Validación: suite completa 93 archivos/475 pruebas, lint, typecheck, build y
+  `git diff --check` pasan. El build conserva el aviso upstream `[DEP0155]`.
+  Smoke del servidor compilado: `/`, `/partidos-hoy`, `/articulos` y
+  `/liga-colombiana` respondieron HTTP 200; la portada ya no falla con
+  `Invalid time value`. La carga real de sidecars se verificó mediante
+  agregados SQL de solo lectura después del backfill.
+- El código aún no está publicado. El dashboard de Vercel confirma que
+  `main` es la rama de producción y que el deployment actual parte de
+  `48482071`; el camino configurado es integrar en `main`. La lectura por MCP
+  de Vercel no tiene permiso para inspeccionar deployments (403) y la CLI no
+  está instalada. Handoff:
+  `docs/agents/handoffs/2026-10-07-hu-perf02-image-optimization.md`.
+
 ## HU-ED-26 — actualizar antes de crear (Production, 2026-10-07)
 
 - La bandeja editorial incorpora una lectura privada de las oportunidades de la

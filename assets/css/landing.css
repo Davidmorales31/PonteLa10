@@ -186,6 +186,13 @@ body.tema-publico-blanco .migas-navegacion .separador-miga {
   height: auto;
 }
 
+.marca-cabecera-landing picture,
+.marca-pie-pagina picture,
+.logo-login-superpuesto picture {
+  display: block;
+  width: 100%;
+}
+
 .navegacion-landing-escritorio {
   display: flex;
   height: 66px;
@@ -2530,7 +2537,7 @@ body.tema-publico-azul .estado-datos-resultados {
   color: #edf3ff;
 }
 
-body.tema-publico-azul .estado-datos-resultados > img {
+body.tema-publico-azul .estado-datos-resultados > picture > img {
   mix-blend-mode: screen;
 }
 

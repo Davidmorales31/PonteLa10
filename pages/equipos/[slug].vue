@@ -125,7 +125,7 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
     <header class="equipo-hero panel-equipo-publico">
       <div class="equipo-identidad">
         <div class="escudo-equipo-hero">
-          <img v-if="equipo.escudo" :src="equipo.escudo" :alt="`Escudo de ${equipo.nombre}`" width="104" height="104" fetchpriority="high">
+          <EscudoEquipoPublico v-if="equipo.escudo" :src="equipo.escudo" :alt="`Escudo de ${equipo.nombre}`" :width="104" :height="104" sizes="104px" loading="eager" prioridad-alta />
           <span v-else aria-hidden="true">{{ equipo.nombre.slice(0, 1) }}</span>
         </div>
         <div>
@@ -164,7 +164,7 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
           <ol v-if="ficha.proximosPartidos.length" class="lista-partidos-equipo">
             <li v-for="partido in ficha.proximosPartidos" :key="partido.slug">
               <time :datetime="partido.fechaIso"><strong>{{ fechaBreve(partido.fechaIso) }}</strong><span>{{ horaPartido(partido.fechaIso) }}</span></time>
-              <div class="duelo-equipo"><span><img v-if="partido.escudoLocal" :src="partido.escudoLocal" :alt="`Escudo de ${partido.local}`" loading="lazy"><strong>{{ partido.local }}</strong></span><b>{{ marcador(partido) }}</b><span><img v-if="partido.escudoVisitante" :src="partido.escudoVisitante" :alt="`Escudo de ${partido.visitante}`" loading="lazy"><strong>{{ partido.visitante }}</strong></span></div>
+              <div class="duelo-equipo"><span><EscudoEquipoPublico v-if="partido.escudoLocal" :src="partido.escudoLocal" :alt="`Escudo de ${partido.local}`" :width="30" :height="30" sizes="30px" loading="lazy" /><strong>{{ partido.local }}</strong></span><b>{{ marcador(partido) }}</b><span><EscudoEquipoPublico v-if="partido.escudoVisitante" :src="partido.escudoVisitante" :alt="`Escudo de ${partido.visitante}`" :width="30" :height="30" sizes="30px" loading="lazy" /><strong>{{ partido.visitante }}</strong></span></div>
               <small>{{ nombreCompetencia(partido.competencia) }}<template v-if="partido.jornada"> · {{ partido.jornada }}</template></small>
               <NuxtLink class="enlace-partido-equipo" :to="rutaPartido(partido.slug)" :aria-label="`Ver ficha de ${partido.local} contra ${partido.visitante}`">Ver ficha <span aria-hidden="true">→</span></NuxtLink>
             </li>
@@ -177,7 +177,7 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
           <ol v-if="ficha.resultadosRecientes.length" class="lista-partidos-equipo lista-resultados-equipo">
             <li v-for="partido in ficha.resultadosRecientes" :key="partido.slug">
               <time :datetime="partido.fechaIso"><strong>{{ fechaBreve(partido.fechaIso) }}</strong></time>
-              <div class="duelo-equipo"><span><img v-if="partido.escudoLocal" :src="partido.escudoLocal" :alt="`Escudo de ${partido.local}`" loading="lazy"><strong>{{ partido.local }}</strong></span><b>{{ puntajeDeMiEquipo(partido) }}</b><span><img v-if="partido.escudoVisitante" :src="partido.escudoVisitante" :alt="`Escudo de ${partido.visitante}`" loading="lazy"><strong>{{ partido.visitante }}</strong></span></div>
+              <div class="duelo-equipo"><span><EscudoEquipoPublico v-if="partido.escudoLocal" :src="partido.escudoLocal" :alt="`Escudo de ${partido.local}`" :width="30" :height="30" sizes="30px" loading="lazy" /><strong>{{ partido.local }}</strong></span><b>{{ puntajeDeMiEquipo(partido) }}</b><span><EscudoEquipoPublico v-if="partido.escudoVisitante" :src="partido.escudoVisitante" :alt="`Escudo de ${partido.visitante}`" :width="30" :height="30" sizes="30px" loading="lazy" /><strong>{{ partido.visitante }}</strong></span></div>
               <small>{{ nombreCompetencia(partido.competencia) }}<template v-if="partido.jornada"> · {{ partido.jornada }}</template></small>
               <NuxtLink class="enlace-partido-equipo" :to="rutaPartido(partido.slug)" :aria-label="`Ver resultado de ${partido.local} contra ${partido.visitante}`">Resultado <span aria-hidden="true">→</span></NuxtLink>
             </li>
@@ -223,7 +223,16 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
       <div class="encabezado-seccion-equipo"><div><p class="etiqueta-seccion">ACTUALIDAD</p><h2 id="noticias-del-equipo">Noticias de {{ equipo.nombre }}</h2></div><NuxtLink to="/articulos?categoria=futbol-colombiano">Fútbol colombiano <span aria-hidden="true">→</span></NuxtLink></div>
       <div v-if="ficha.noticias.length" class="grilla-noticias-equipo">
         <article v-for="noticia in ficha.noticias" :key="noticia.slug">
-          <NuxtLink v-if="noticia.imagen" class="imagen-noticia-equipo" :to="`/articulos/${noticia.slug}`" tabindex="-1" aria-hidden="true"><img :src="noticia.imagen" :alt="noticia.titulo" loading="lazy"></NuxtLink>
+          <NuxtLink v-if="noticia.imagen" class="imagen-noticia-equipo" :to="`/articulos/${noticia.slug}`" tabindex="-1" aria-hidden="true">
+            <ImagenEditorialPublica
+              :src="noticia.imagen"
+              :alt="noticia.titulo"
+              width="640"
+              height="360"
+              :ancho-original="noticia.imagenAncho"
+              sizes="(max-width: 760px) 100vw, 640px"
+            />
+          </NuxtLink>
           <p class="etiqueta-seccion">{{ noticia.categoria }}</p>
           <h3><NuxtLink :to="`/articulos/${noticia.slug}`">{{ noticia.titulo }}</NuxtLink></h3>
           <p v-if="noticia.resumen">{{ noticia.resumen }}</p>

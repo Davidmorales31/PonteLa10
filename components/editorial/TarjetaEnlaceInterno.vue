@@ -17,13 +17,14 @@ withDefaults(defineProps<{
     :to="`/articulos/${articulo.slug}`"
   >
     <span v-if="articulo.imagen" class="imagen-enlace-interno">
-      <img
+      <ImagenEditorialPublica
         :src="articulo.imagen"
         :alt="articulo.titulo"
         width="320"
         height="180"
-        loading="lazy"
-      >
+        :ancho-original="articulo.imagenAncho"
+        sizes="(max-width: 760px) 100vw, 320px"
+      />
     </span>
     <span class="contenido-enlace-interno">
       <small>También puede interesarte · {{ articulo.categoria }}</small>
@@ -37,13 +38,14 @@ withDefaults(defineProps<{
     :class="['tarjeta-enlace-interno', { 'sin-imagen': !articulo.imagen }]"
   >
     <span v-if="articulo.imagen" class="imagen-enlace-interno">
-      <img
+      <ImagenEditorialPublica
         :src="articulo.imagen"
         :alt="articulo.titulo"
         width="320"
         height="180"
-        loading="lazy"
-      >
+        :ancho-original="articulo.imagenAncho"
+        sizes="(max-width: 760px) 100vw, 320px"
+      />
     </span>
     <span class="contenido-enlace-interno">
       <small>También puede interesarte · {{ articulo.categoria }}</small>

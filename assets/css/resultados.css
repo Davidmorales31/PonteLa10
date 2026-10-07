@@ -571,7 +571,7 @@
 }
 
 .estado-datos-resultados strong { color: var(--navy); font-size: 1rem; }
-.estado-datos-resultados > img { width: min(220px, 62%); max-height: 150px; object-fit: contain; mix-blend-mode: multiply; }
+.estado-datos-resultados > picture > img { width: min(220px, 62%); max-height: 150px; object-fit: contain; mix-blend-mode: multiply; }
 .estado-datos-resultados p { max-width: 520px; margin: 0; color: var(--muted); font-size: 0.78rem; line-height: 1.55; }
 .estado-datos-resultados button { display: inline-flex; min-height: 38px; align-items: center; gap: 7px; margin-top: 5px; border: 1px solid var(--navy); border-radius: 6px; background: #fff; padding: 0 14px; color: var(--navy); font-size: 0.72rem; font-weight: 900; }
 .estado-datos-resultados button svg { width: 15px; }

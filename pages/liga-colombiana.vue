@@ -244,7 +244,16 @@ useSeoPont3la10(() => ({
             tabindex="-1"
             aria-hidden="true"
           >
-            <img :src="noticiaPrincipal.imagen" :alt="noticiaPrincipal.titulo">
+            <ImagenEditorialPublica
+              :src="noticiaPrincipal.imagen"
+              :alt="noticiaPrincipal.titulo"
+              width="1280"
+              height="720"
+              :ancho-original="noticiaPrincipal.imagenAncho"
+              sizes="(max-width: 760px) 100vw, 1280px"
+              loading="eager"
+              prioridad-alta
+            />
           </NuxtLink>
           <div class="contenido-noticia-destacada">
             <p class="etiqueta-seccion">{{ noticiaPrincipal.categoria }} · ÚLTIMA HORA</p>
@@ -282,7 +291,7 @@ useSeoPont3la10(() => ({
                   <div class="equipos-partido-liga">
                     <span class="equipo-liga">
                       <NuxtLink v-if="hayEscudo(partido.escudoLocal)" :to="`/partidos/${partido.slug}`" :aria-label="`Ficha de ${partido.local} vs ${partido.visitante}`">
-                        <img :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" loading="lazy" @error="escudoFallido(partido.escudoLocal)">
+                        <EscudoEquipoPublico :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" :width="30" :height="30" sizes="30px" loading="lazy" @error="escudoFallido(partido.escudoLocal)" />
                       </NuxtLink>
                       <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.local) }}</b>
                       <strong><NuxtLink v-if="partido.equipoLocalSlug" :to="`/equipos/${partido.equipoLocalSlug}`">{{ partido.local }}</NuxtLink><template v-else>{{ partido.local }}</template></strong>
@@ -290,7 +299,7 @@ useSeoPont3la10(() => ({
                     <span class="versus-liga">{{ partido.golesLocal !== null && partido.golesVisitante !== null ? `${partido.golesLocal}–${partido.golesVisitante}` : 'vs' }}</span>
                     <span class="equipo-liga visitante">
                       <NuxtLink v-if="hayEscudo(partido.escudoVisitante)" :to="`/partidos/${partido.slug}`" :aria-label="`Ficha de ${partido.local} vs ${partido.visitante}`">
-                        <img :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" loading="lazy" @error="escudoFallido(partido.escudoVisitante)">
+                        <EscudoEquipoPublico :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" :width="30" :height="30" sizes="30px" loading="lazy" @error="escudoFallido(partido.escudoVisitante)" />
                       </NuxtLink>
                       <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.visitante) }}</b>
                       <strong><NuxtLink v-if="partido.equipoVisitanteSlug" :to="`/equipos/${partido.equipoVisitanteSlug}`">{{ partido.visitante }}</NuxtLink><template v-else>{{ partido.visitante }}</template></strong>
@@ -318,13 +327,13 @@ useSeoPont3la10(() => ({
               <span class="meta-resultado-liga">{{ etiquetaCompetencia(partido.competencia) }} · {{ fechaPartido(partido.fechaIso) }}</span>
               <div class="equipos-partido-liga">
                 <span class="equipo-liga">
-                  <img v-if="hayEscudo(partido.escudoLocal)" :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" loading="lazy" @error="escudoFallido(partido.escudoLocal)">
+                  <EscudoEquipoPublico v-if="hayEscudo(partido.escudoLocal)" :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" :width="30" :height="30" sizes="30px" loading="lazy" @error="escudoFallido(partido.escudoLocal)" />
                   <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.local) }}</b>
                   <strong><NuxtLink v-if="partido.equipoLocalSlug" :to="`/equipos/${partido.equipoLocalSlug}`">{{ partido.local }}</NuxtLink><template v-else>{{ partido.local }}</template></strong>
                 </span>
                 <span class="versus-liga">{{ partido.golesLocal ?? '—' }}–{{ partido.golesVisitante ?? '—' }}</span>
                 <span class="equipo-liga visitante">
-                  <img v-if="hayEscudo(partido.escudoVisitante)" :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" loading="lazy" @error="escudoFallido(partido.escudoVisitante)">
+                  <EscudoEquipoPublico v-if="hayEscudo(partido.escudoVisitante)" :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" :width="30" :height="30" sizes="30px" loading="lazy" @error="escudoFallido(partido.escudoVisitante)" />
                   <b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(partido.visitante) }}</b>
                   <strong><NuxtLink v-if="partido.equipoVisitanteSlug" :to="`/equipos/${partido.equipoVisitanteSlug}`">{{ partido.visitante }}</NuxtLink><template v-else>{{ partido.visitante }}</template></strong>
                 </span>
@@ -352,7 +361,7 @@ useSeoPont3la10(() => ({
                   <tbody>
                     <tr v-for="fila in grupo.filas" :key="`${fila.fase}-${fila.equipoClave}`">
                       <td>{{ fila.posicion }}</td>
-                      <th scope="row"><span class="equipo-tabla-liga"><img v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" loading="lazy" @error="escudoFallido(fila.escudo)"><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b><NuxtLink v-if="rutaFichaEquipo(fila.equipoClave)" :to="rutaFichaEquipo(fila.equipoClave) || '/liga-colombiana'">{{ fila.equipo }}</NuxtLink><template v-else>{{ fila.equipo }}</template></span></th>
+                      <th scope="row"><span class="equipo-tabla-liga"><EscudoEquipoPublico v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" :width="30" :height="30" sizes="30px" loading="lazy" @error="escudoFallido(fila.escudo)" /><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b><NuxtLink v-if="rutaFichaEquipo(fila.equipoClave)" :to="rutaFichaEquipo(fila.equipoClave) || '/liga-colombiana'">{{ fila.equipo }}</NuxtLink><template v-else>{{ fila.equipo }}</template></span></th>
                       <td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td>
                     </tr>
                   </tbody>
@@ -375,7 +384,7 @@ useSeoPont3la10(() => ({
                 <table>
                   <caption>{{ grupo.fase }} · {{ grupo.temporada }}</caption>
                   <thead><tr><th scope="col">Pos.</th><th scope="col">Equipo</th><th scope="col">PJ</th><th scope="col">DG</th><th scope="col">Pts</th></tr></thead>
-                  <tbody><tr v-for="fila in grupo.filas" :key="`${fila.fase}-${fila.equipoClave}`"><td>{{ fila.posicion }}</td><th scope="row"><span class="equipo-tabla-liga"><img v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" loading="lazy" @error="escudoFallido(fila.escudo)"><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b><NuxtLink v-if="rutaFichaEquipo(fila.equipoClave)" :to="rutaFichaEquipo(fila.equipoClave) || '/liga-colombiana'">{{ fila.equipo }}</NuxtLink><template v-else>{{ fila.equipo }}</template></span></th><td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td></tr></tbody>
+                  <tbody><tr v-for="fila in grupo.filas" :key="`${fila.fase}-${fila.equipoClave}`"><td>{{ fila.posicion }}</td><th scope="row"><span class="equipo-tabla-liga"><EscudoEquipoPublico v-if="hayEscudo(fila.escudo)" :src="fila.escudo || ''" :alt="`Escudo de ${fila.equipo}`" :width="30" :height="30" sizes="30px" loading="lazy" @error="escudoFallido(fila.escudo)" /><b v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipo) }}</b><NuxtLink v-if="rutaFichaEquipo(fila.equipoClave)" :to="rutaFichaEquipo(fila.equipoClave) || '/liga-colombiana'">{{ fila.equipo }}</NuxtLink><template v-else>{{ fila.equipo }}</template></span></th><td>{{ fila.jugados }}</td><td>{{ fila.diferencia > 0 ? `+${fila.diferencia}` : fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td></tr></tbody>
                 </table>
               </div>
             </section>
@@ -389,7 +398,16 @@ useSeoPont3la10(() => ({
       <div class="encabezado-noticias-listado"><div><p class="etiqueta-seccion">ACTUALIDAD</p><h2 id="noticias">Últimas noticias de Liga BetPlay y Copa Colombia</h2></div><NuxtLink to="/articulos?categoria=futbol-colombiano">Ver fútbol colombiano <span aria-hidden="true">→</span></NuxtLink></div>
       <div v-if="ultimasNoticias.length" class="grilla-noticias-medio">
         <article v-for="articulo in ultimasNoticias" :key="articulo.slug" class="tarjeta-noticia-medio">
-          <NuxtLink v-if="articulo.imagen" :to="`/articulos/${articulo.slug}`" class="imagen-tarjeta-noticia-medio" tabindex="-1" aria-hidden="true"><img :src="articulo.imagen" :alt="articulo.titulo" loading="lazy"></NuxtLink>
+          <NuxtLink v-if="articulo.imagen" :to="`/articulos/${articulo.slug}`" class="imagen-tarjeta-noticia-medio" tabindex="-1" aria-hidden="true">
+            <ImagenEditorialPublica
+              :src="articulo.imagen"
+              :alt="articulo.titulo"
+              width="640"
+              height="360"
+              :ancho-original="articulo.imagenAncho"
+              sizes="(max-width: 760px) 100vw, 640px"
+            />
+          </NuxtLink>
           <div><p class="etiqueta-seccion">{{ articulo.categoria }}</p><h3><NuxtLink :to="`/articulos/${articulo.slug}`">{{ articulo.titulo }}</NuxtLink></h3><p class="meta-noticia-medio">{{ new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'America/Bogota' }).format(new Date(articulo.publicadoEn)) }}</p></div>
         </article>
       </div>

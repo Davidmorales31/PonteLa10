@@ -83,7 +83,18 @@ useSeoPont3la10(() => ({
 
     <section class="noticias-europa-grid" aria-label="Noticias y perfiles de colombianos en Europa">
       <article v-if="noticiaPrincipal" class="noticia-destacada-medio">
-        <NuxtLink v-if="noticiaPrincipal.imagen" :to="`/articulos/${noticiaPrincipal.slug}`" class="imagen-noticia-destacada" tabindex="-1" aria-hidden="true"><img :src="noticiaPrincipal.imagen" :alt="noticiaPrincipal.titulo"></NuxtLink>
+        <NuxtLink v-if="noticiaPrincipal.imagen" :to="`/articulos/${noticiaPrincipal.slug}`" class="imagen-noticia-destacada" tabindex="-1" aria-hidden="true">
+          <ImagenEditorialPublica
+            :src="noticiaPrincipal.imagen"
+            :alt="noticiaPrincipal.titulo"
+            width="1280"
+            height="720"
+            :ancho-original="noticiaPrincipal.imagenAncho"
+            sizes="(max-width: 760px) 100vw, 1280px"
+            loading="eager"
+            prioridad-alta
+          />
+        </NuxtLink>
         <div class="contenido-noticia-destacada"><p class="etiqueta-seccion">{{ noticiaPrincipal.categoria }} · DESTACADO</p><h2><NuxtLink :to="`/articulos/${noticiaPrincipal.slug}`">{{ noticiaPrincipal.titulo }}</NuxtLink></h2><p>{{ noticiaPrincipal.resumen }}</p><NuxtLink class="boton-leer-noticia" :to="`/articulos/${noticiaPrincipal.slug}`">Leer noticia <span aria-hidden="true">→</span></NuxtLink></div>
       </article>
       <article v-else class="noticia-destacada-medio">
@@ -111,7 +122,16 @@ useSeoPont3la10(() => ({
       <div class="encabezado-noticias-listado"><div><p class="etiqueta-seccion">SEGUIMIENTO EDITORIAL</p><h2 id="titulo-noticias-europa">Últimas noticias de colombianos en Europa</h2></div><span>{{ noticias.length }} {{ noticias.length === 1 ? 'publicación' : 'publicaciones' }}</span></div>
       <div v-if="ultimasNoticias.length" class="grilla-noticias-medio">
         <article v-for="articulo in ultimasNoticias" :key="articulo.slug" class="tarjeta-noticia-medio">
-          <NuxtLink v-if="articulo.imagen" :to="`/articulos/${articulo.slug}`" class="imagen-tarjeta-noticia-medio" tabindex="-1" aria-hidden="true"><img :src="articulo.imagen" :alt="articulo.titulo" loading="lazy"></NuxtLink>
+          <NuxtLink v-if="articulo.imagen" :to="`/articulos/${articulo.slug}`" class="imagen-tarjeta-noticia-medio" tabindex="-1" aria-hidden="true">
+            <ImagenEditorialPublica
+              :src="articulo.imagen"
+              :alt="articulo.titulo"
+              width="640"
+              height="360"
+              :ancho-original="articulo.imagenAncho"
+              sizes="(max-width: 760px) 100vw, 640px"
+            />
+          </NuxtLink>
           <div><p class="etiqueta-seccion">{{ articulo.categoria }}</p><h3><NuxtLink :to="`/articulos/${articulo.slug}`">{{ articulo.titulo }}</NuxtLink></h3><p class="meta-noticia-medio">{{ new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'America/Bogota' }).format(new Date(articulo.publicadoEn)) }}</p></div>
         </article>
       </div>

@@ -24,13 +24,14 @@ defineProps<{
         :to="`/articulos/${articulo.slug}`"
       >
         <span v-if="articulo.imagen" class="imagen-articulo-recomendado">
-          <img
+          <ImagenEditorialPublica
             :src="articulo.imagen"
             :alt="articulo.titulo"
             width="480"
             height="270"
-            loading="lazy"
-          >
+            :ancho-original="articulo.imagenAncho"
+            sizes="(max-width: 760px) 100vw, 480px"
+          />
         </span>
         <small>{{ articulo.categoria }}</small>
         <strong>{{ articulo.titulo }}</strong>
