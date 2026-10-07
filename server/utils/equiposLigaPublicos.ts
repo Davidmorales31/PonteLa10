@@ -1,7 +1,6 @@
 import { createError } from 'h3'
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { analizarConsultaArticulosPublicos } from '~/server/utils/filtrosArticulosPublicos'
-import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
+import { listarArticulosPublicosPorEntidad } from '~/server/utils/repositorioContenidoEditorial'
 import { listarPartidosSeoPublicos, normalizarClaveEquipoLiga } from '~/server/utils/partidosSeoPublicos'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
@@ -168,7 +167,7 @@ export async function obtenerFichaEquipoLigaPublica(
   const resultados = seleccionarResultadosRecientesEquipo(relacionados, clave, ahoraMs)
   const partidoSede = seleccionarSedeVerificada(relacionados, clave)
   const clasificacionPrincipal = equipo.clasificaciones[0]
-  const noticias = await buscarNoticiasEquipo(cliente, equipo.nombre)
+  const noticias = await buscarNoticiasEquipo(cliente, equipo.slug)
 
   return {
     equipo,
@@ -269,15 +268,12 @@ function normalizarEscudoPublico(valor: string | null): string | null {
 
 async function buscarNoticiasEquipo(
   cliente: SupabaseClient,
-  nombre: string
+  slug: string
 ): Promise<ResumenArticuloPublico[]> {
-  const consulta = analizarConsultaArticulosPublicos({ buscar: nombre, limite: '4' })
-  if (!consulta) return []
-
   try {
-    return await listarArticulosPublicosEditoriales(cliente, consulta.limite, 0, consulta)
+    return await listarArticulosPublicosPorEntidad(cliente, 'team', slug, 4)
   } catch {
-    // La ficha deportiva sigue siendo útil cuando no hay noticias relacionadas.
+    // El hub no debe mostrar noticias cuya relación editorial no se confirmó.
     return []
   }
 }

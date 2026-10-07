@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 import {
-  esNoticiaRelacionadaCompeticion,
   validarSnapshotTablaPublica,
   seleccionarFasesClasificacionCompletas,
   construirTemporadasPublicasCompeticion,
@@ -146,36 +145,6 @@ describe('temporadas permanentes de competición', () => {
     expect(seleccionarFasesClasificacionCompletas(gruposCuadrangulares.slice(4), 'liga-betplay')).toHaveLength(0)
   })
 
-  it('limita las noticias a menciones de la competición o al menos dos clubes participantes', () => {
-    const equipos = ['Fortaleza CEIF', 'Millonarios', 'América de Cali', 'Atlético Nacional']
-    const noticiaDeTorneo = {
-      titulo: 'Boca Juniors llega al duelo con Unión tras un 3-2 interrumpido en Cartagena',
-      resumen: 'Boca ganó 3-2. Unión llega tras vencer a Real Santander; jugarán el 7 de octubre.'
-    }
-
-    expect(esNoticiaRelacionadaCompeticion({
-      titulo: 'Fortaleza y Millonarios llegan a la fecha 14',
-      resumen: 'El encuentro de la Liga colombiana se juega el jueves.'
-    }, 'Liga BetPlay', equipos)).toBe(true)
-
-    expect(esNoticiaRelacionadaCompeticion({
-      ...noticiaDeTorneo
-    }, 'Liga BetPlay', [...equipos, 'Junior'])).toBe(false)
-
-    expect(esNoticiaRelacionadaCompeticion(noticiaDeTorneo, 'Torneo BetPlay', [
-      'Boca Juniors de Cali', 'Unión Magdalena', 'Real Santander'
-    ])).toBe(true)
-
-    expect(esNoticiaRelacionadaCompeticion({
-      titulo: 'Liga Femenina 2026: balance de la temporada',
-      resumen: 'Deportivo Cali ganó el torneo femenino.'
-    }, 'Liga BetPlay', equipos)).toBe(false)
-
-    expect(esNoticiaRelacionadaCompeticion({
-      titulo: 'La Liga BetPlay abre la fecha 14',
-      resumen: 'Consulta la agenda de la competición.'
-    }, 'Liga BetPlay', equipos)).toBe(true)
-  })
 })
 
 describe('snapshots históricos de posiciones', () => {

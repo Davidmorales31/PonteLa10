@@ -27,11 +27,12 @@
   El lint global incluye errores previos de nombres Vue dentro del directorio
   ajeno y no rastreado; no se modificó. El lint del proyecto excluyendo esa
   carpeta pasa.
-- **Pendientes:** Publicar el código: crear PR a `main`, esperar CI y Preview,
-  integrar y comprobar deployment Production `READY` y smoke del flujo editorial.
-  Luego continuar con HU-ED-24 según el roadmap.
-- **Siguiente acción exacta:** Confirmar el estado de Production Vercel,
-  publicar la rama `codex/hu-ed20-brief-intencion` mediante PR y verificar que
-  el SHA desplegado coincide con el merge.
+- **Pendientes:** No quedan cambios de implementación de HU-ED-20. Falta una
+  prueba autenticada de la interfaz editorial con un artículo de prueba; no se
+  hicieron escrituras de contenido en Production. Continuar con HU-ED-24.
+- **Siguiente acción exacta:** Iniciar HU-ED-24 desde `main` en
+  `a96016bd9e9ba5604bc2c55090a08247c0e80ad5`, conservando esta documentación
+  factual y sin editar artículos reales para probar.
 - **Commit base:** `b9811b884191965a44b86a49ed89fa5d509c3bb1`.
-- **Commit final:** sin commit.
+- **Commit final:** PR #80 squash `a96016bd9e9ba5604bc2c55090a08247c0e80ad5`
+  (rama de implementación `804f2884c65e1d886cd08d54f08340a705f0ef9c`).

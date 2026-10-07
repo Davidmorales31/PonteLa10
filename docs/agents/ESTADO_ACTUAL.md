@@ -198,14 +198,46 @@
   cliente, servidor y restricción de base de datos.
 - Producción DB verificada: RLS activo, tabla sin filas iniciales, escritura
   directa de `service_role` revocada, RPC ejecutable solo por ese rol y el
-  índice parcial de entidad principal presente. El código aún no se ha
-  desplegado; falta PR, CI/Preview, integración a `main` y smoke de Production.
+  índice parcial de entidad principal presente. PR #80 pasó tests, lint,
+  typecheck, build y Preview; se integró por squash en `main` como
+  `a96016bd9e9ba5604bc2c55090a08247c0e80ad5`. El check Vercel del commit quedó
+  `SUCCESS` en Production. `https://www.pont3la10.com` responde HTTP 200 y la
+  ruta nueva `/api/admin/contenidos/:id/brief-seo` devuelve HTTP 401 sin sesión,
+  como corresponde. No se ejecutó una edición autenticada de artículo real.
 - Validación local: 80 archivos/403 pruebas, `typecheck`, build Nuxt y lint de
   aplicación pasan; lint global excluyendo el directorio de validación ajeno y
   no rastreado también pasa. `git diff --check` pasa. `supabase db lint`
   local no está disponible porque no hay Docker/Postgres local; el SQL fue
   aplicado y verificado en el proyecto Production.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-ed20-brief-intencion.md`.
+
+## HU-ED-24 — relación noticia → entidad (2026-10-07)
+
+- La migración `20261007065323_hu_ed24_noticias_entidad.sql` se aplicó a
+  Supabase Production `ykjithahavncswlfgsqa`. La RPC pública valida tipo y slug
+  contra el catálogo, devuelve solo resúmenes publicados con versión vigente y
+  relación editorial confirmada, limita paginación y no revela el grafo privado
+  ni el cuerpo del artículo. `anon` y `authenticated` pueden ejecutar la lectura
+  pública; `service_role` y `PUBLIC` no reciben permiso directo.
+- El endpoint `/api/articulos/entidad/:tipo/:slug` valida los parámetros, usa el
+  cliente anónimo y permite caché corta. Competencias, equipos y perfiles de
+  jugadores ahora consultan las relaciones estructuradas; no agregan noticias
+  por coincidencia de texto y retornan una lista vacía si falla la consulta.
+  Se reutiliza el panel CMS existente para buscar entidades y asociarlas como
+  principal/secundarias; no se modificó ni escribió contenido editorial real.
+- La base de datos de Production tenía cero relaciones confirmadas al iniciar y
+  continúa sin asociaciones creadas por este cambio. Por diseño, esos bloques
+  permanecen vacíos hasta que un editor confirme vínculos; no se hizo un
+  backfill especulativo. La función aparece en el asesor Supabase como
+  `SECURITY DEFINER` ejecutable por `anon`; es una API pública intencional,
+  estrictamente de lectura y acotada. El asesor también muestra avisos previos
+  no relacionados en el resto del proyecto.
+- Validación local: 81 archivos/405 pruebas, typecheck, build Nuxt y lint pasan;
+  el lint excluyó únicamente `.codex-validation-hu-seo11-20261006/`, un
+  directorio no rastreado preexistente. Build conserva el aviso upstream
+  `DEP0155`. La revisión de seguridad/migración aprobó el contrato. Release de
+  aplicación pendiente de PR/CI y smoke Production.
+- Handoff: `docs/agents/handoffs/2026-10-07-hu-ed24-relacion-noticia-entidad.md`.
 
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
 
