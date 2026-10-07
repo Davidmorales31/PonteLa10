@@ -115,6 +115,23 @@ describe('utilidades SEO', () => {
     expect(JSON.parse(head.script[0].innerHTML)).toMatchObject({ '@type': 'SportsEvent', url: canonical })
   })
 
+  it('publica la fecha real de modificación en los metadatos de artículo', () => {
+    const fechaModificacion = '2026-10-07T15:30:00.000Z'
+    const head = construirHeadSeoPont3la10('https://www.pont3la10.com', {
+      titulo: 'Colombia gana y actualiza su registro',
+      descripcion: 'Resumen verificado del encuentro y su resultado.',
+      rutaCanonica: '/articulos/colombia-gana',
+      tipoOpenGraph: 'article',
+      fechaPublicacion: '2026-10-06T12:00:00.000Z',
+      fechaModificacion
+    })
+
+    expect(head.meta).toContainEqual({
+      property: 'article:modified_time',
+      content: fechaModificacion
+    })
+  })
+
   it('mantiene el noindex y evita anunciar una canonical enlazada en páginas de búsqueda', () => {
     const head = construirHeadSeoPont3la10('https://www.pont3la10.com', {
       titulo: 'Resultados de búsqueda | Pont3la10',

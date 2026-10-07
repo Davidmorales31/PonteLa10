@@ -23,7 +23,7 @@ export default defineEventHandler(async (evento) => {
       const publicaciones = await listarArticulosPublicosEditoriales(clienteSupabase, limite, desplazamiento)
       entradas.push(...publicaciones.map(publicacion => ({
         ruta: `/articulos/${publicacion.slug}`,
-        modificadoEn: publicacion.publicadoEn,
+        modificadoEn: publicacion.modificadoEn || publicacion.publicadoEn,
         frecuencia: 'weekly' as const,
         prioridad: '0.8'
       })))

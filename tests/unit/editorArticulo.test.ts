@@ -23,6 +23,7 @@ const datosValidos = {
   portadaId: null,
   temaIds: [],
   etiquetaIds: [],
+  notaCorreccion: '',
   documento: {
     type: 'doc' as const,
     content: [{

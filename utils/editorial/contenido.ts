@@ -229,6 +229,7 @@ export const esquemaDatosEditorArticulo = z.object({
   portadaId: z.string().uuid().nullable().default(null),
   temaIds: esquemaIdsTaxonomia,
   etiquetaIds: esquemaIdsTaxonomia,
+  notaCorreccion: z.string().trim().max(500).default(''),
   documento: esquemaDocumentoEditorial,
   fuente: z.object({
     url: esquemaUrlOpcional,

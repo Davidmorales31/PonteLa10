@@ -122,6 +122,8 @@ interface FilaArticuloDetalle extends FilaArticulo {
   approved_at: string | null
   scheduled_at: string | null
   published_at: string | null
+  modified_at: string | null
+  correction_note: string | null
   published_version_id: string | null
   article_tags: FilaRelacionTema[]
   article_labels: FilaRelacionEtiqueta[]
@@ -183,6 +185,8 @@ interface FilaArticuloPublicoRpc {
   seoDescripcion: string
   textoSocial: string
   publicadoEn: string
+  modificadoEn: string | null
+  notaCorreccion: string
   autorNombre: string
   categoria: ArticuloPublicoEditorial['categoria']
   portada: null | {
@@ -205,6 +209,7 @@ interface FilaResumenArticuloPublicoRpc {
   resumen: string
   tipo: ResumenArticuloPublico['tipo']
   publicadoEn: string
+  modificadoEn?: string | null
   autorNombre: string
   categoria: string
   imagenBucket: string
@@ -463,6 +468,8 @@ export async function obtenerArticuloEditorial(
       approved_at,
       scheduled_at,
       published_at,
+      modified_at,
+      correction_note,
       published_version_id,
       cover_media_id,
       categories (
@@ -577,6 +584,7 @@ export async function obtenerArticuloEditorial(
     portadaId: fila.cover_media_id,
     temaIds: (fila.article_tags || []).map(relacion => relacion.tag_id),
     etiquetaIds: (fila.article_labels || []).map(relacion => relacion.label_id),
+    notaCorreccion: fila.correction_note || '',
     documento: documentoValidado.success
       ? documentoValidado.data
       : { type: documentoEditorialVacio.type, content: [] },
@@ -602,6 +610,7 @@ export async function obtenerArticuloEditorial(
     aprobadoEn: fila.approved_at,
     programadoPara: fila.scheduled_at,
     publicadoEn: fila.published_at,
+    modificadoEn: fila.modified_at,
     tieneVersionPublica: Boolean(fila.published_version_id),
     funcionDestacadaDisponible: !respuestaDestacada.error,
     // La marca es una mejora de portada: mientras la migración aún no esté
@@ -782,7 +791,7 @@ export async function guardarArticuloEditorial(
     entrada.documento
   )
 
-  const { data, error } = await clienteSupabase.rpc('save_editorial_article', {
+  const { data, error } = await clienteSupabase.rpc('save_editorial_article_with_correction', {
     target_article_id: articuloId,
     expected_lock_version: entrada.versionBloqueo,
     next_slug: entrada.slug,
@@ -802,7 +811,8 @@ export async function guardarArticuloEditorial(
     next_social_brief: entrada.seo.textoSocial,
     next_tag_ids: entrada.temaIds,
     next_label_ids: entrada.etiquetaIds,
-    next_change_note: entrada.notaCambio
+    next_change_note: entrada.notaCambio,
+    next_correction_note: entrada.notaCorreccion
   })
 
   if (error) {
@@ -849,6 +859,14 @@ export async function guardarArticuloEditorial(
             ? 'PORTADA_EDITORIAL_INVALIDA'
             : 'TAXONOMIA_EDITORIAL_INVALIDA'
         }
+      })
+    }
+
+    if (mensaje.includes('nota de corrección')) {
+      throw createError({
+        statusCode: 422,
+        statusMessage: mensaje,
+        data: { codigo: 'NOTA_CORRECCION_EDITORIAL_INVALIDA' }
       })
     }
 
@@ -951,7 +969,8 @@ export async function listarVersionesArticuloEditorial(
     nota: fila.change_note || '',
     creadoPor: fila.created_by,
     creadoEn: fila.created_at,
-    titulo: String(fila.snapshot.title || 'Contenido sin título')
+    titulo: String(fila.snapshot.title || 'Contenido sin título'),
+    notaCorreccion: String(fila.snapshot.correction_note || '')
   }))
 }
 
@@ -1394,6 +1413,8 @@ export async function obtenerArticuloPublicoEditorial(
     seoDescripcion: fila.seoDescripcion,
     textoSocial: fila.textoSocial,
     publicadoEn: fila.publicadoEn,
+    modificadoEn: fila.modificadoEn || null,
+    notaCorreccion: fila.notaCorreccion || '',
     autorNombre: fila.autorNombre,
     categoria: fila.categoria,
     portada: fila.portada
@@ -1476,6 +1497,7 @@ function mapearResumenesPublicos(
     resumen: fila.resumen,
     tipo: fila.tipo,
     publicadoEn: fila.publicadoEn,
+    modificadoEn: fila.modificadoEn || null,
     autorNombre: fila.autorNombre,
     categoria: fila.categoria,
     lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,
@@ -1504,6 +1526,7 @@ export async function obtenerUltimaNoticiaPublicaConPortada(
     resumen: fila.resumen,
     tipo: fila.tipo,
     publicadoEn: fila.publicadoEn,
+    modificadoEn: fila.modificadoEn || null,
     autorNombre: fila.autorNombre,
     categoria: fila.categoria,
     lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,

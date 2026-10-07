@@ -1,5 +1,27 @@
 # Estado actual de Pont3la10
 
+## HU-ED-23 — fecha de actualización editorial (Supabase Production aplicada; código pendiente de despliegue, 2026-10-07)
+
+- El artículo conserva su `published_at` original y registra por separado
+  `modified_at`; sitemap de artículos usa la fecha modificada con fallback a la
+  publicación. El detalle muestra “Actualizado”, corrige `NewsArticle.dateModified`
+  y permite una nota opcional de corrección material sin reescribir la historia.
+- En Supabase Production ya se aplicaron
+  `20261007115907_hu_ed23_actualizaciones_editoriales` y
+  `20261007120225_hu_ed23_restringir_escritura_versiones`. Se verificaron 299
+  publicaciones con su versión vigente; 22 `modified_at` coinciden con la fecha
+  de su versión actual y las otras 277 permanecen sin fecha de modificación.
+  `anon` y `authenticated` no pueden actualizar `article_versions`; los permisos
+  de edición de artículos siguen limitados por columna y flujo editorial.
+- Código y migraciones están en `codex/hu-ed23-actualizaciones-editoriales`,
+  basado en `main` `ed51489`. Lint, suite (86 archivos/439 pruebas), typecheck,
+  build y `git diff --check` pasaron. El código todavía no está en Production:
+  falta CI/Preview, merge del PR y smoke posterior al deployment.
+- La inspección visual autenticada del panel editorial no se realizó. Vercel MCP
+  no identificó el proyecto por API; el deployment se verificará mediante los
+  checks de GitHub/Vercel y el dominio público, sin afirmar éxito antes de verlo.
+  Handoff: `docs/agents/handoffs/2026-10-07-hu-ed23-actualizaciones-editoriales.md`.
+
 ## HU-ED-22 — plantillas editoriales por intención (Production, 2026-10-07)
 
 - El CMS incorpora diez plantillas por intención con campos mínimos verificables,

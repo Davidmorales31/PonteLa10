@@ -40,4 +40,14 @@ describe('contrato SEO de páginas públicas', () => {
     expect(contenido).toContain('descripcion')
     expect(contenido).toContain('datosEstructurados')
   })
+
+  it('usa fecha de modificación y muestra notas de corrección en el artículo', () => {
+    const articulo = readFileSync(new URL('../../pages/articulos/[slug].vue', import.meta.url), 'utf8')
+
+    expect(articulo).toContain('fechaModificacion: articuloPublicado.value?.modificadoEn')
+    expect(articulo).toContain('dateModified: articuloPublicado.value.modificadoEn')
+    expect(articulo).toContain('class="fecha-actualizacion-articulo"')
+    expect(articulo).toContain('class="nota-correccion-articulo"')
+    expect(articulo).toContain('articuloPublicado.notaCorreccion')
+  })
 })

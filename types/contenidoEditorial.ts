@@ -248,6 +248,7 @@ export interface DatosEditorArticulo {
   portadaId: string | null
   temaIds: string[]
   etiquetaIds: string[]
+  notaCorreccion: string
   documento: DocumentoEditorial
   fuente: FuenteArticuloEditorial
   seo: SeoArticuloEditorial
@@ -272,6 +273,7 @@ export interface ArticuloDetalleEditorial extends DatosEditorArticulo {
   aprobadoEn: string | null
   programadoPara: string | null
   publicadoEn: string | null
+  modificadoEn: string | null
   tieneVersionPublica: boolean
   funcionDestacadaDisponible: boolean
   destacadaEnPortada: boolean
@@ -304,6 +306,7 @@ export interface VersionArticuloEditorial {
   creadoPor: string | null
   creadoEn: string
   titulo: string
+  notaCorreccion: string
 }
 
 export interface CargaEditorArticuloEditorial {
@@ -416,6 +419,8 @@ export interface ArticuloPublicoEditorial {
   seoDescripcion: string
   textoSocial: string
   publicadoEn: string
+  modificadoEn: string | null
+  notaCorreccion: string
   autorNombre: string
   categoria: {
     slug: string
@@ -470,6 +475,7 @@ export interface ResumenArticuloPublico {
   resumen: string
   tipo: TipoContenidoEditorial
   publicadoEn: string
+  modificadoEn?: string | null
   autorNombre: string
   categoria: string
   imagen: string

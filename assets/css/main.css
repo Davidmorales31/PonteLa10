@@ -1499,6 +1499,31 @@ h3 {
   letter-spacing: 0;
 }
 
+.fecha-actualizacion-articulo {
+  font-weight: 750;
+}
+
+.nota-correccion-articulo {
+  max-width: 860px;
+  margin: 24px auto 0;
+  border-left: 4px solid #d6a700;
+  border-radius: 8px;
+  padding: 14px 18px;
+  background: #fff8d7;
+  color: #24364d;
+}
+
+.nota-correccion-articulo strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #102d52;
+}
+
+.nota-correccion-articulo p {
+  margin: 0;
+  line-height: 1.6;
+}
+
 .portada-articulo-publicado {
   margin: 34px 0 0;
 }

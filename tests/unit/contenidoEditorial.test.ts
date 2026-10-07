@@ -7,6 +7,7 @@ import {
   esquemaFiltrosBandeja,
   etiquetasEstadoContenido,
   etiquetasTipoContenido,
+  esquemaDatosEditorArticulo,
   estadosContenidoEditorial,
   tiposContenidoEditorial
 } from '~/utils/editorial/contenido'
@@ -28,6 +29,15 @@ describe('dominio de contenido editorial', () => {
     })
 
     expect(resultado.success).toBe(true)
+  })
+
+  it('normaliza y limita la nota de corrección pública', () => {
+    const esquemaNota = esquemaDatosEditorArticulo.shape.notaCorreccion
+
+    expect(esquemaNota.parse(undefined)).toBe('')
+    expect(esquemaNota.parse('  Corrección editorial verificada.  '))
+      .toBe('Corrección editorial verificada.')
+    expect(esquemaNota.safeParse('x'.repeat(501)).success).toBe(false)
   })
 
   it('rechaza borradores cortos, tipos desconocidos y categorias invalidas', () => {
