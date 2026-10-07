@@ -60,11 +60,37 @@
   permanentes corresponden a HU-SEO-10. El calendario se revisó con FCF el
   2026-10-06; aún no hay scraping/tarea automática de actualización. Handoff de
   entrega: `docs/agents/handoffs/2026-10-06-hu-seo09-seleccion-colombia.md`.
-- Seguimiento: `codex/hu-seo09-resultado-pendiente` muestra un encuentro FCF
-  reciente sin marcador verificado durante un máximo de siete días después de su
-  fecha, sin inferir resultado; enlace al calendario oficial. Se evita mostrarlo
-  como resultado mientras todavía es el día del partido. Handoff:
+- PR #73 integró el seguimiento de encuentros FCF recientes sin marcador
+  verificado: se muestran como pendientes hasta siete días después de su fecha,
+  sin inventar el resultado. Se evita listarlos como resultado mientras todavía
+  es el día del partido. Después del merge, Production respondió HTTP 200 en
+  `/seleccion-colombia`, conservó `robots=index, follow`, agenda y marcador
+  pendiente, y el sitemap incluyó el hub. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-seo09-resultado-pendiente.md`.
+
+## HU-SEO-10 — fichas públicas de futbolistas colombianos en Europa (2026-10-06)
+
+- Desarrollo en la rama `codex/hu-seo10-perfiles-jugadores`: rutas
+  `/jugadores/:slug`, directorio de Colombianos en Europa con enlaces a perfiles,
+  noticias relacionadas vía el buscador editorial público y `Person`/`SportsTeam`
+  en JSON-LD. Los primeros perfiles son Luis Díaz, Jhon Lucumí y Dávinson
+  Sánchez; club, posición y nacionalidad se contrastaron con fuentes oficiales.
+- El gate SEO exige identidad, club, posición, competición, descripción basada
+  en fuente oficial y verificación de no más de 90 días. El sitemap de jugadores
+  reutiliza el mismo gate. La consulta de artículos en Production encuentra una
+  pieza relacionada para cada uno de los tres nombres.
+- La base de partidos mantiene snapshots solo del día. La página muestra los
+  partidos de hoy disponibles y enlaza el calendario oficial del club; no inventa
+  una agenda europea futura ni añade llamadas a APIs deportivas. Automatizar
+  próximos fixtures requiere una fuente/caché futura que aún no existe en este
+  flujo.
+- Validación local: lint, suite completa (77 archivos/379 pruebas), typecheck y
+  build Vercel pasaron; HTTP SSR del perfil y del hub 200, 404 para slug
+  desconocido, canonical/JSON-LD `Person` presentes, tres URLs en
+  `/sitemap-players.xml`. La inspección del árbol accesible confirma H1, enlaces
+  de migas y perfiles; queda incompleta la vista manual de tamaños móviles.
+- Release Production pendiente de PR/CI. No hubo migraciones, escrituras remotas
+  ni consumo adicional de cuota deportiva.
 
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
 
