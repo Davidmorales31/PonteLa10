@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 const migrationSearchConsole = readFileSync(
-  resolve(process.cwd(), 'supabase/migrations/20261007091128_hu_ed21_search_console.sql'),
+  resolve(process.cwd(), 'supabase/migrations/20261007095219_hu_ed21_search_console.sql'),
   'utf8'
 )
 
