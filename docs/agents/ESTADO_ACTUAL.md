@@ -1,5 +1,12 @@
 # Estado actual de Pont3la10
 
+## HU-ED-21 — Search Console como feedback editorial (2026-10-07, base de datos Production)
+
+- La rama `codex/hu-ed21-search-console` implementa `/admin/search-console`, importación de CSV real exportado por el editor, métricas actuales/comparables, tendencia y triage editorial. No hay conexión OAuth a Search Console ni datos de ejemplo; las acciones no alteran ni publican contenido.
+- Las migraciones `20261007095219_hu_ed21_search_console` y `20261007095452_hu_ed21_search_console_fk_indexes` ya se aplicaron en Supabase Production. Las tres tablas tienen RLS y solo SELECT editorial con `contenido.verBorradores`; el rol authenticated no tiene DML directo. La función de import exige `contenido.editarTodos` y MFA AAL2. El schema `editorial_private` no está expuesto por el Data API.
+- Verificación remota: tablas y RPC existen, cero filas aún, invocación anónima de importación rechazada con SQLSTATE `42501`; no se modificaron datos deportivos/editoriales. Advisors sin nuevos hallazgos de seguridad; dos índices cubren las FK reportadas.
+- Validación de aplicación: lint, suite completa (84 archivos/425 pruebas), typecheck y build Vercel pasan. El código todavía requiere PR/CI/merge y smoke de Production. No hay métricas reales para mostrar hasta cargar el CSV de una propiedad Search Console de Pont3la10; la cuenta revisada no contiene esa propiedad verificada. Handoff: `docs/agents/handoffs/2026-10-07-hu-ed21-search-console.md`.
+
 ## HU-OPS-01 — tests SEO automatizados (2026-10-07, cerrado)
 
 - En la rama `codex/hu-ops01-seo-tests`, basada en `main` `c1883f9`, se
@@ -89,29 +96,11 @@
   pendiente, y el sitemap incluyó el hub. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-seo09-resultado-pendiente.md`.
 
-## HU-SEO-10 — fichas públicas de futbolistas colombianos en Europa (2026-10-06)
+## HU-SEO-10 — fichas públicas de futbolistas colombianos en Europa (Production, 2026-10-07)
 
-- Desarrollo en la rama `codex/hu-seo10-perfiles-jugadores`: rutas
-  `/jugadores/:slug`, directorio de Colombianos en Europa con enlaces a perfiles,
-  noticias relacionadas vía el buscador editorial público y `Person`/`SportsTeam`
-  en JSON-LD. Los primeros perfiles son Luis Díaz, Jhon Lucumí y Dávinson
-  Sánchez; club, posición y nacionalidad se contrastaron con fuentes oficiales.
-- El gate SEO exige identidad, club, posición, competición, descripción basada
-  en fuente oficial y verificación de no más de 90 días. El sitemap de jugadores
-  reutiliza el mismo gate. La consulta de artículos en Production encuentra una
-  pieza relacionada para cada uno de los tres nombres.
-- La base de partidos mantiene snapshots solo del día. La página muestra los
-  partidos de hoy disponibles y enlaza el calendario oficial del club; no inventa
-  una agenda europea futura ni añade llamadas a APIs deportivas. Automatizar
-  próximos fixtures requiere una fuente/caché futura que aún no existe en este
-  flujo.
-- Validación local: lint, suite completa (77 archivos/379 pruebas), typecheck y
-  build Vercel pasaron; HTTP SSR del perfil y del hub 200, 404 para slug
-  desconocido, canonical/JSON-LD `Person` presentes, tres URLs en
-  `/sitemap-players.xml`. La inspección del árbol accesible confirma H1, enlaces
-  de migas y perfiles; queda incompleta la vista manual de tamaños móviles.
-- Release Production pendiente de PR/CI. No hubo migraciones, escrituras remotas
-  ni consumo adicional de cuota deportiva.
+- PR #74 se integró a `main` por squash como `a37f4f09bd6ca4ec61aa9ce6694ac3840ccf112e`; lint, pruebas, typecheck, build y Vercel Preview pasaron. Smoke posterior en Production: perfiles de Luis Díaz, Jhon Lucumí y Dávinson Sánchez, `/colombianos-en-europa` y `/sitemap-players.xml` responden HTTP 200; las cuatro páginas HTML sirven canonical.
+- Las fichas usan datos contrastados con fuentes oficiales, noticias relacionadas vía el buscador editorial público, enlaces a calendarios oficiales, JSON-LD `Person`/`SportsTeam` y el mismo gate de indexación de 90 días para sitemap. No se inventa agenda europea futura ni se agregan llamadas a APIs deportivas.
+- La revisión manual responsive móvil sigue pendiente. Handoff actualizado: `docs/agents/handoffs/2026-10-07-hu-seo10-perfiles-jugadores.md`.
 
 ## HU-SEO-13 — páginas públicas por jornada (2026-10-06)
 

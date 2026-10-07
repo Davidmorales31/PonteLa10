@@ -1,0 +1,58 @@
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { describe, expect, it } from 'vitest'
+
+const migrationSearchConsole = readFileSync(
+  resolve(process.cwd(), 'supabase/migrations/20261007095219_hu_ed21_search_console.sql'),
+  'utf8'
+)
+
+function bloqueFuncion(esquema: string, nombre: string): string {
+  const inicio = migrationSearchConsole.indexOf('create or replace function ' + esquema + '.' + nombre)
+  if (inicio < 0) return ''
+  const cierre = migrationSearchConsole.indexOf('$$;', inicio)
+  return cierre < 0 ? '' : migrationSearchConsole.slice(inicio, cierre + 3)
+}
+
+describe('HU-ED-21 · seguridad del esquema Search Console', () => {
+  it('protege las tablas con RLS y revoca escrituras directas', () => {
+    for (const tabla of [
+      'editorial_search_console_reports',
+      'editorial_search_console_metrics',
+      'editorial_search_console_triage'
+    ]) {
+      expect(migrationSearchConsole).toContain('alter table public.' + tabla + ' enable row level security')
+    }
+    expect(migrationSearchConsole).toMatch(/revoke all privileges on table[\s\S]+from public, anon, authenticated, service_role;/)
+    expect(migrationSearchConsole).toMatch(/grant select on table[\s\S]+to authenticated;/)
+    expect(migrationSearchConsole).not.toMatch(/grant\s+(?:insert|update|delete)\s+on table public\.editorial_search_console_/i)
+    expect(migrationSearchConsole).toContain('revoke all on schema editorial_private from public, anon, authenticated, service_role')
+    expect(migrationSearchConsole).toContain('grant usage on schema editorial_private to authenticated')
+  })
+
+  it('mantiene importación y triage como funciones invoker con permisos editoriales y MFA', () => {
+    for (const nombre of [
+      'import_editorial_search_console_report',
+      'save_editorial_search_console_triage'
+    ]) {
+      const funcionPublica = bloqueFuncion('public', nombre)
+      const funcionPrivada = bloqueFuncion('editorial_private', nombre)
+      expect(funcionPublica).toContain('security invoker')
+      expect(funcionPrivada).toContain('security definer')
+      expect(funcionPrivada).toContain("public.has_editorial_permission('contenido.editarTodos')")
+      expect(funcionPrivada).toContain('public.has_aal2()')
+      expect(funcionPrivada).toContain('auth.uid()')
+      expect(migrationSearchConsole).toContain('revoke all on function editorial_private.' + nombre + '(')
+      expect(migrationSearchConsole).toContain('revoke all on function public.' + nombre + '(')
+    }
+  })
+
+  it('limita las páginas importadas al dominio propio y audita sin guardar la consulta en metadata', () => {
+    expect(migrationSearchConsole).toContain("'^https://(www\\.)?pont3la10\\.com/'")
+    expect(migrationSearchConsole).toContain('create policy "editorial team can read search console metrics"')
+    expect(migrationSearchConsole).not.toContain('create policy "editors with MFA can update search console decisions"')
+    expect(migrationSearchConsole).toContain('create or replace function editorial_private.import_editorial_search_console_report')
+    expect(bloqueFuncion('editorial_private', 'audit_editorial_search_console_change')).toContain('security definer')
+    expect(bloqueFuncion('editorial_private', 'audit_editorial_search_console_change')).not.toContain('new.query')
+  })
+})
