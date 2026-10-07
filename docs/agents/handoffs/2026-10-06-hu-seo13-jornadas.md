@@ -35,21 +35,21 @@
   `npm.cmd run build` y `git diff --check` pasaron. El build muestra un aviso
   upstream `DEP0155` de `@vue/shared`. El Preview inicial del PR #76 (commit
   `671ca3c`) se abrió autenticado; SSR y tema oscuro visibles. Se detectaron y
-  corrigieron localmente el nombre/escudo faltante del alias y el rótulo del
-  contador. El PR debe recibir este ajuste y repetir CI/Preview. Vercel MCP
+  corrigieron en el commit local `1b1fa60` el nombre/escudo faltante del alias
+  y el rótulo del contador. El PR debe recibir este ajuste y repetir CI/Preview. Vercel MCP
   denegó el bypass automatizado (403); no se modificó Deployment Protection ni
   se copiaron credenciales.
 - **Fallos:** `NUXT_PUBLIC_SITE_URL=https://www.pont3la10.com` es necesario al
   ejecutar pruebas, typecheck y build en este worktree. No se copiaron claves de
   Supabase a Preview. No se aplicaron cambios de esquema.
 - **Entrega Production:** PR #76 abierto; CI y Preview pasaron para el commit
-  anterior, no para los ajustes locales aún sin commit. Producción pendiente.
+  anterior. El commit `1b1fa60` está listo localmente pero aún no se ha enviado.
+  Producción pendiente.
 - **Pendientes:** validar SSR de Liga A 2026-II y Torneo B 2026-II; esperar 404
   para Jornada 13 y params inválidos; revisar canonical, JSON-LD, sitemap y tema
   móvil/oscuro; confirmar deployment Ready y smoke de Production.
-- **Siguiente acción exacta:** commitear solo los ajustes de identidad/etiqueta y
-  documentación, sin incluir el directorio temporal; actualizar la rama de PR
-  #76, esperar el CI/Preview nuevo y verificar en navegador autenticado. Luego
-  integrar y confirmar Production antes de HU-SEO-14.
+- **Siguiente acción exacta:** enviar la rama actual a PR #76 sin incluir el
+  directorio temporal; esperar CI/Preview nuevo y verificar en navegador
+  autenticado. Luego integrar y confirmar Production antes de HU-SEO-14.
 - **Commit base:** `163bf80a115e125184143947328f0fc412560c42`.
-- **Commit final:** pendiente.
+- **Último commit de implementación:** `1b1fa60`.

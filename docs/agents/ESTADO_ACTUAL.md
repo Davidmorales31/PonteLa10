@@ -118,7 +118,8 @@
   `@vue/shared`. La página Preview se abrió desde el navegador autenticado: SSR,
   10 partidos y tema oscuro visibles. Esa verificación descubrió la antigua
   etiqueta `La Equidad` y el contador “partidos programados” para una jornada
-  terminada; ambos quedan corregidos localmente. El CI/Preview del PR #76
+  terminada; ambos quedaron corregidos en el commit local `1b1fa60`. El
+  CI/Preview del PR #76
   corresponde al commit anterior y debe repetirse antes de producción. La
   revisión estática concluyó sin bloqueos tras propagar la caída del padrón
   únicamente a los flujos de jornada.
