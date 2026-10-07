@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { exigirMfaSegunPoliticaEditorial } from '~/server/utils/autorizacionEditorial'
 import { normalizarRedireccionInterna } from '~/utils/auth/redirecciones'
+import type { ContextoEditorial } from '~/types/editorial'
 import {
   permisosEditoriales,
   permisosPorRol,
@@ -42,6 +44,27 @@ describe('seguridad editorial', () => {
     expect(requiereMfaEditorial(['propietario'], permisosPorRol.propietario)).toBe(true)
     expect(requiereMfaEditorial(['editorJefe'], permisosPorRol.editorJefe)).toBe(true)
     expect(requiereMfaEditorial(['autor'], permisosPorRol.autor)).toBe(false)
+  })
+
+  it('aplica la política MFA del contexto editorial al endpoint privilegiado', () => {
+    const contexto: ContextoEditorial = {
+      usuario: { id: 'usuario', correo: 'editor@example.test', nombre: 'Editor' },
+      roles: ['editorJefe'],
+      permisos: [...permisosPorRol.editorJefe],
+      nivelAal: 'aal1',
+      siguienteNivelAal: 'aal2',
+      requiereMfa: true
+    }
+
+    expect(() => exigirMfaSegunPoliticaEditorial(contexto)).toThrow(
+      expect.objectContaining({ statusCode: 403 })
+    )
+    expect(() => exigirMfaSegunPoliticaEditorial({
+      ...contexto,
+      roles: ['editor'],
+      permisos: [...permisosPorRol.editor],
+      requiereMfa: false
+    })).not.toThrow()
   })
 
   it('evalúa capacidades explícitas sin depender del nombre del rol', () => {

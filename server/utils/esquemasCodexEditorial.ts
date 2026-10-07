@@ -255,7 +255,7 @@ const esquemaScoresTendenciaV2 = z.object({
   priorityScore: z.number().int().min(0).max(100)
 }).strict()
 
-const esquemaOportunidadCodexV1 = z.object({
+export const esquemaOportunidadCodexV1 = z.object({
   fingerprint: z.string().regex(/^[a-f0-9]{64}$/i),
   term: z.string().trim().min(2).max(160),
   titleHint: z.string().trim().min(8).max(220),
@@ -266,7 +266,7 @@ const esquemaOportunidadCodexV1 = z.object({
   scores: esquemaScoresTendenciaV1
 }).strict()
 
-const esquemaOportunidadCodexV2 = z.object({
+export const esquemaOportunidadCodexV2 = z.object({
   fingerprint: z.string().regex(/^[a-f0-9]{64}$/i),
   term: z.string().trim().min(2).max(160),
   titleHint: z.string().trim().min(8).max(220),
@@ -380,7 +380,7 @@ const esquemaOportunidadCodexV2 = z.object({
   }
 })
 
-const esquemaOportunidadCodex = z.union([
+export const esquemaOportunidadCodex = z.union([
   esquemaOportunidadCodexV2,
   esquemaOportunidadCodexV1
 ])

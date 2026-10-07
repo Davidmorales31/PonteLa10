@@ -467,7 +467,7 @@ describe('API privada de propuestas Codex', () => {
     expect(migracion).toContain('v_saved_category > 7')
 
     const migrationEd25 = readFileSync(new URL(
-      '../../supabase/migrations/20261007135830_hu_ed25_scoring_oportunidades_editoriales.sql',
+      '../../supabase/migrations/20261007152635_hu_ed25_scoring_oportunidades_editoriales.sql',
       import.meta.url
     ), 'utf8')
     expect(migrationEd25).toContain("'searchConsole', coalesce(")

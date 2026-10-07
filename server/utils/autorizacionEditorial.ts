@@ -156,6 +156,16 @@ export async function exigirPermisoEditorial(
   return contexto
 }
 
+export function exigirMfaSegunPoliticaEditorial(contexto: ContextoEditorial): void {
+  if (contexto.requiereMfa && contexto.nivelAal !== 'aal2') {
+    throw createError({
+      statusCode: 403,
+      statusMessage: 'Esta acción requiere verificación en dos pasos.',
+      data: { codigo: 'MFA_REQUERIDO' }
+    })
+  }
+}
+
 export async function exigirEdicionEditorial(
   evento: H3Event
 ): Promise<ContextoEditorial> {
