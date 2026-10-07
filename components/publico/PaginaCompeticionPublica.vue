@@ -255,10 +255,10 @@ function fechaActualizacion(fecha: string | null): string {
                 <td>{{ fila.posicion }}</td>
                 <td>
                   <NuxtLink v-if="fila.equipoSlug" :to="`/equipos/${encodeURIComponent(fila.equipoSlug)}`" class="equipo-tabla-liga">
-                    <img v-if="fila.equipoEscudo" :src="fila.equipoEscudo" :alt="`Escudo de ${fila.equipoNombre}`" width="32" height="32" loading="lazy"><span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipoNombre) }}</span><strong>{{ fila.equipoNombre }}</strong>
+                    <EscudoEquipoPublico v-if="fila.equipoEscudo" :src="fila.equipoEscudo" :alt="`Escudo de ${fila.equipoNombre}`" :width="32" :height="32" sizes="32px" loading="lazy" /><span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipoNombre) }}</span><strong>{{ fila.equipoNombre }}</strong>
                   </NuxtLink>
                   <span v-else class="equipo-tabla-liga equipo-tabla-sin-ficha">
-                    <img v-if="fila.equipoEscudo" :src="fila.equipoEscudo" :alt="`Escudo de ${fila.equipoNombre}`" width="32" height="32" loading="lazy"><span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipoNombre) }}</span><strong>{{ fila.equipoNombre }}</strong>
+                    <EscudoEquipoPublico v-if="fila.equipoEscudo" :src="fila.equipoEscudo" :alt="`Escudo de ${fila.equipoNombre}`" :width="32" :height="32" sizes="32px" loading="lazy" /><span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipoNombre) }}</span><strong>{{ fila.equipoNombre }}</strong>
                   </span>
                 </td>
                 <td>{{ fila.jugados }}</td><td>{{ fila.ganados }}</td><td>{{ fila.empatados }}</td><td>{{ fila.perdidos }}</td><td>{{ fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td>
@@ -324,10 +324,10 @@ function fechaActualizacion(fecha: string | null): string {
       <ul class="grilla-equipos-competicion">
         <li v-for="equipo in ficha.equipos" :key="equipo.nombre">
           <NuxtLink v-if="rutaEquipo(equipo)" :to="rutaEquipo(equipo)!">
-            <img v-if="equipo.escudo" :src="equipo.escudo" :alt="`Escudo de ${equipo.nombre}`" width="42" height="42" loading="lazy">
+            <EscudoEquipoPublico v-if="equipo.escudo" :src="equipo.escudo" :alt="`Escudo de ${equipo.nombre}`" :width="42" :height="42" sizes="42px" loading="lazy" />
             <span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(equipo.nombre) }}</span><strong>{{ equipo.nombre }}</strong><span aria-hidden="true">→</span>
           </NuxtLink>
-          <span v-else class="equipo-sin-ficha"><img v-if="equipo.escudo" :src="equipo.escudo" :alt="`Escudo de ${equipo.nombre}`" width="42" height="42" loading="lazy"><span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(equipo.nombre) }}</span><strong>{{ equipo.nombre }}</strong></span>
+          <span v-else class="equipo-sin-ficha"><EscudoEquipoPublico v-if="equipo.escudo" :src="equipo.escudo" :alt="`Escudo de ${equipo.nombre}`" :width="42" :height="42" sizes="42px" loading="lazy" /><span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(equipo.nombre) }}</span><strong>{{ equipo.nombre }}</strong></span>
         </li>
       </ul>
     </section>
@@ -336,7 +336,16 @@ function fechaActualizacion(fecha: string | null): string {
       <header class="encabezado-seccion-competicion"><div><p class="etiqueta-seccion">ACTUALIDAD</p><h2>Noticias de {{ ficha.competencia.nombre }}</h2></div></header>
       <div v-if="ficha.noticias.length" class="grilla-noticias-competicion">
         <article v-for="noticia in ficha.noticias" :key="noticia.slug">
-          <NuxtLink v-if="noticia.imagen" :to="`/articulos/${noticia.slug}`" class="imagen-noticia-competicion" tabindex="-1" aria-hidden="true"><img :src="noticia.imagen" :alt="noticia.titulo" loading="lazy"></NuxtLink>
+          <NuxtLink v-if="noticia.imagen" :to="`/articulos/${noticia.slug}`" class="imagen-noticia-competicion" tabindex="-1" aria-hidden="true">
+            <ImagenEditorialPublica
+              :src="noticia.imagen"
+              :alt="noticia.titulo"
+              width="640"
+              height="360"
+              :ancho-original="noticia.imagenAncho"
+              sizes="(max-width: 760px) 100vw, 640px"
+            />
+          </NuxtLink>
           <p class="etiqueta-seccion">{{ noticia.categoria }}</p>
           <h3><NuxtLink :to="`/articulos/${noticia.slug}`">{{ noticia.titulo }}</NuxtLink></h3>
           <p>{{ noticia.resumen }}</p>

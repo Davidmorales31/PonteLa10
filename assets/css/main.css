@@ -743,6 +743,12 @@ h3 {
   transform-origin: center bottom;
 }
 
+.panel-login-imagen picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
 .logo-login-superpuesto {
   position: absolute;
   top: clamp(52px, 7vh, 72px);

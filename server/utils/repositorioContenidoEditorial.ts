@@ -1328,6 +1328,50 @@ function obtenerUrlPublicaMedio(
   return clienteSupabase.storage.from(bucket).getPublicUrl(path).data.publicUrl
 }
 
+interface RutaMedioEditorialPublico {
+  imagenBucket?: string | null
+  imagenPath?: string | null
+}
+
+interface DimensionesMedioEditorialPublico {
+  width: number | null
+  height: number | null
+}
+
+async function obtenerMapaDimensionesMediosPublicos(
+  clienteSupabase: SupabaseClient,
+  medios: RutaMedioEditorialPublico[]
+): Promise<Map<string, DimensionesMedioEditorialPublico>> {
+  const rutas = [...new Set(medios
+    .filter(medio => medio.imagenBucket === 'editorial-media' && medio.imagenPath)
+    .map(medio => medio.imagenPath!))]
+  if (!rutas.length) return new Map()
+
+  const { data, error } = await clienteSupabase
+    .from('media_files')
+    .select('path, width, height')
+    .eq('bucket', 'editorial-media')
+    .in('path', rutas)
+
+  if (error || !data) return new Map()
+  return new Map(data.map(fila => [fila.path, {
+    width: typeof fila.width === 'number' ? fila.width : null,
+    height: typeof fila.height === 'number' ? fila.height : null
+  }]))
+}
+
+function obtenerAnchoMedioPublico(
+  dimensiones: Map<string, DimensionesMedioEditorialPublico>,
+  bucket?: string | null,
+  path?: string | null
+): number | undefined {
+  if (bucket !== 'editorial-media' || !path) return undefined
+  const ancho = dimensiones.get(path)?.width
+  return Number.isSafeInteger(ancho) && ancho! > 0 && ancho! <= 2500
+    ? ancho!
+    : undefined
+}
+
 async function resolverEnlacesInternosPublicos(
   clienteSupabase: SupabaseClient,
   documento: ArticuloPublicoEditorial['documento']
@@ -1347,8 +1391,11 @@ async function resolverEnlacesInternosPublicos(
     throw crearErrorRepositorio('No se pudieron resolver los enlaces internos.')
   }
 
+  const filasEnlaces = (data || []) as unknown as FilaEnlaceArticuloInternoRpc[]
+  const dimensiones = await obtenerMapaDimensionesMediosPublicos(clienteSupabase, filasEnlaces)
+
   const enlaces = new Map<string, EnlaceArticuloInternoEditorial>(
-    ((data || []) as unknown as FilaEnlaceArticuloInternoRpc[]).map(fila => [
+    filasEnlaces.map(fila => [
       fila.articuloId,
       {
         articuloId: fila.articuloId,
@@ -1358,7 +1405,8 @@ async function resolverEnlacesInternosPublicos(
         categoria: fila.categoria,
         imagen: fila.imagenBucket && fila.imagenPath
           ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
-          : ''
+          : '',
+        imagenAncho: obtenerAnchoMedioPublico(dimensiones, fila.imagenBucket, fila.imagenPath)
       }
     ])
   )
@@ -1485,11 +1533,12 @@ export async function listarArticulosPublicosPorEntidad(
   return mapearResumenesPublicos(data, clienteSupabase)
 }
 
-function mapearResumenesPublicos(
+async function mapearResumenesPublicos(
   data: unknown,
   clienteSupabase: SupabaseClient
-): ResumenArticuloPublico[] {
+): Promise<ResumenArticuloPublico[]> {
   const filas = Array.isArray(data) ? data as FilaResumenArticuloPublicoRpc[] : []
+  const dimensiones = await obtenerMapaDimensionesMediosPublicos(clienteSupabase, filas)
   return filas.map(fila => ({
     id: fila.id,
     slug: fila.slug,
@@ -1503,7 +1552,8 @@ function mapearResumenesPublicos(
     lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,
     imagen: fila.imagenBucket && fila.imagenPath
       ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
-      : ''
+      : '',
+    imagenAncho: obtenerAnchoMedioPublico(dimensiones, fila.imagenBucket, fila.imagenPath)
   }))
 }
 
@@ -1519,6 +1569,7 @@ export async function obtenerUltimaNoticiaPublicaConPortada(
   if (!data) return null
 
   const fila = data as FilaResumenArticuloPublicoRpc
+  const dimensiones = await obtenerMapaDimensionesMediosPublicos(clienteSupabase, [fila])
   return {
     id: fila.id,
     slug: fila.slug,
@@ -1532,7 +1583,8 @@ export async function obtenerUltimaNoticiaPublicaConPortada(
     lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,
     imagen: fila.imagenBucket && fila.imagenPath
       ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
-      : ''
+      : '',
+    imagenAncho: obtenerAnchoMedioPublico(dimensiones, fila.imagenBucket, fila.imagenPath)
   }
 }
 

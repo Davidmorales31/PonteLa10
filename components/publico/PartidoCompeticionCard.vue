@@ -23,7 +23,7 @@ defineProps<{
     <time class="fecha-partido-liga" :datetime="partido.fechaIso">{{ fechaCompleta(partido.fechaIso) }}</time>
     <div class="equipos-partido-liga">
       <span class="equipo-liga">
-        <img v-if="escudoEquipo(partido, true)" :src="escudoEquipo(partido, true)!" :alt="`Escudo de ${nombreEquipo(partido, true)}`" width="34" height="34" loading="lazy">
+        <EscudoEquipoPublico v-if="escudoEquipo(partido, true)" :src="escudoEquipo(partido, true)!" :alt="`Escudo de ${nombreEquipo(partido, true)}`" :width="34" :height="34" sizes="34px" loading="lazy" />
         <span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(nombreEquipo(partido, true)) }}</span>
         <NuxtLink v-if="rutaEquipoPartido(partido, true)" :to="rutaEquipoPartido(partido, true)!"><strong>{{ nombreEquipo(partido, true) }}</strong></NuxtLink>
         <strong v-else>{{ nombreEquipo(partido, true) }}</strong>
@@ -32,7 +32,7 @@ defineProps<{
       <span class="equipo-liga visitante">
         <NuxtLink v-if="rutaEquipoPartido(partido, false)" :to="rutaEquipoPartido(partido, false)!"><strong>{{ nombreEquipo(partido, false) }}</strong></NuxtLink>
         <strong v-else>{{ nombreEquipo(partido, false) }}</strong>
-        <img v-if="escudoEquipo(partido, false)" :src="escudoEquipo(partido, false)!" :alt="`Escudo de ${nombreEquipo(partido, false)}`" width="34" height="34" loading="lazy">
+        <EscudoEquipoPublico v-if="escudoEquipo(partido, false)" :src="escudoEquipo(partido, false)!" :alt="`Escudo de ${nombreEquipo(partido, false)}`" :width="34" :height="34" sizes="34px" loading="lazy" />
         <span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(nombreEquipo(partido, false)) }}</span>
       </span>
     </div>

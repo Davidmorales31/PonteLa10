@@ -9,7 +9,17 @@ const tieneImagen = computed(() => Boolean(props.articulo.imagen?.trim()) && ima
 <template>
   <article class="noticia-portada" :class="{ principal, 'con-imagen': tieneImagen }">
     <NuxtLink v-if="tieneImagen" class="foto" :to="`/articulos/${articulo.slug}`" tabindex="-1" aria-hidden="true">
-      <img :src="articulo.imagen" alt="" :loading="principal ? 'eager' : 'lazy'" :fetchpriority="principal ? 'high' : 'auto'" @error="imagenFallida = articulo.imagen">
+      <ImagenEditorialPublica
+        :src="articulo.imagen"
+        alt=""
+        width="1600"
+        height="900"
+        :ancho-original="articulo.imagenAncho"
+        :sizes="principal ? '(max-width: 760px) 100vw, 1280px' : '(max-width: 760px) 100vw, 640px'"
+        :loading="principal ? 'eager' : 'lazy'"
+        :prioridad-alta="principal"
+        @error="imagenFallida = articulo.imagen"
+      />
     </NuxtLink>
     <div class="texto">
       <p class="categoria">{{ articulo.categoria }}</p>

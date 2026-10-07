@@ -13,7 +13,15 @@ const tieneImagen = computed(() => Boolean(props.articulo.imagen?.trim()) && ima
 <template>
   <article :class="['tarjeta-articulo', variante === 'compacta' && 'tarjeta-articulo-compacta', { 'sin-portada': !tieneImagen }]">
     <NuxtLink v-if="tieneImagen" class="tarjeta-articulo-imagen" :to="obtenerRutaArticulo(articulo.slug)">
-      <img :src="articulo.imagen" :alt="articulo.titulo" loading="lazy" @error="imagenFallida = articulo.imagen">
+      <ImagenEditorialPublica
+        :src="articulo.imagen"
+        :alt="articulo.titulo"
+        width="640"
+        height="360"
+        :ancho-original="articulo.imagenAncho"
+        sizes="(max-width: 760px) 100vw, 640px"
+        @error="imagenFallida = articulo.imagen"
+      />
     </NuxtLink>
     <div class="tarjeta-articulo-cuerpo">
       <p class="etiqueta-seccion">{{ articulo.categoria }}</p>

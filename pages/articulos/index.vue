@@ -68,7 +68,8 @@ const articulosPublicados = computed<ArticuloListado[]>(() =>
     }).format(new Date(articulo.publicadoEn)),
     fechaPublicacion: articulo.publicadoEn,
     lecturaMinutos: articulo.lecturaMinutos,
-    imagen: articulo.imagen
+    imagen: articulo.imagen,
+    imagenAncho: articulo.imagenAncho
   }))
 )
 
@@ -294,7 +295,17 @@ useSeoPont3la10(() => {
         <main class="noticias-medio-principal">
           <article class="noticia-destacada-medio" :class="{ 'sin-imagen': !tieneImagen(noticiaPrincipal) }">
             <NuxtLink v-if="tieneImagen(noticiaPrincipal)" :to="`/articulos/${noticiaPrincipal.slug}`" class="imagen-noticia-destacada" tabindex="-1" aria-hidden="true">
-              <img :src="noticiaPrincipal.imagen" :alt="noticiaPrincipal.titulo" @error="registrarImagenFallida(noticiaPrincipal.imagen)">
+              <ImagenEditorialPublica
+                :src="noticiaPrincipal.imagen"
+                :alt="noticiaPrincipal.titulo"
+                width="1280"
+                height="720"
+                :ancho-original="noticiaPrincipal.imagenAncho"
+                sizes="(max-width: 760px) 100vw, 1280px"
+                loading="eager"
+                prioridad-alta
+                @error="registrarImagenFallida(noticiaPrincipal.imagen)"
+              />
             </NuxtLink>
             <div class="contenido-noticia-destacada">
               <p class="etiqueta-seccion">{{ noticiaPrincipal.categoria }}</p>
@@ -319,7 +330,15 @@ useSeoPont3la10(() => {
                 :class="{ 'sin-imagen': !tieneImagen(articulo) }"
               >
                 <NuxtLink v-if="tieneImagen(articulo)" :to="`/articulos/${articulo.slug}`" class="imagen-tarjeta-noticia-medio" tabindex="-1" aria-hidden="true">
-                  <img :src="articulo.imagen" :alt="articulo.titulo" loading="lazy" @error="registrarImagenFallida(articulo.imagen)">
+                  <ImagenEditorialPublica
+                    :src="articulo.imagen"
+                    :alt="articulo.titulo"
+                    width="640"
+                    height="360"
+                    :ancho-original="articulo.imagenAncho"
+                    sizes="(max-width: 760px) 100vw, 640px"
+                    @error="registrarImagenFallida(articulo.imagen)"
+                  />
                 </NuxtLink>
                 <div>
                   <p class="etiqueta-seccion">{{ articulo.categoria }}</p>
@@ -364,7 +383,15 @@ useSeoPont3la10(() => {
               >
                 <span>{{ indice + 1 }}</span>
                 <NuxtLink v-if="tieneImagen(articulo)" :to="`/articulos/${articulo.slug}`" class="imagen-tendencia-medio" tabindex="-1" aria-hidden="true">
-                  <img :src="articulo.imagen" :alt="articulo.titulo" loading="lazy" @error="registrarImagenFallida(articulo.imagen)">
+                  <ImagenEditorialPublica
+                    :src="articulo.imagen"
+                    :alt="articulo.titulo"
+                    width="640"
+                    height="360"
+                    :ancho-original="articulo.imagenAncho"
+                    sizes="(max-width: 760px) 100vw, 640px"
+                    @error="registrarImagenFallida(articulo.imagen)"
+                  />
                 </NuxtLink>
                 <div>
                   <NuxtLink :to="`/articulos/${articulo.slug}`">{{ articulo.titulo }}</NuxtLink>
@@ -395,7 +422,15 @@ useSeoPont3la10(() => {
               <NuxtLink :to="`/articulos/${noticiaLateral.slug}`">Leer <span aria-hidden="true">→</span></NuxtLink>
             </div>
             <NuxtLink v-if="tieneImagen(noticiaLateral)" :to="`/articulos/${noticiaLateral.slug}`" class="imagen-seleccion-editorial">
-              <img :src="noticiaLateral.imagen" :alt="noticiaLateral.titulo" loading="lazy" @error="registrarImagenFallida(noticiaLateral.imagen)">
+                  <ImagenEditorialPublica
+                    :src="noticiaLateral.imagen"
+                    :alt="noticiaLateral.titulo"
+                    width="480"
+                    height="270"
+                    :ancho-original="noticiaLateral.imagenAncho"
+                    sizes="(max-width: 760px) 100vw, 480px"
+                    @error="registrarImagenFallida(noticiaLateral.imagen)"
+                  />
             </NuxtLink>
             <h3>
               <NuxtLink :to="`/articulos/${noticiaLateral.slug}`">{{ noticiaLateral.titulo }}</NuxtLink>

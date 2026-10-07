@@ -6,6 +6,12 @@ import type {
   RespuestaBibliotecaMedios
 } from '~/types/mediaEditorial'
 import type { ImagenEditorialProcesada } from '~/server/utils/procesadorImagenEditorial'
+import {
+  revertirImagenEditorialOptimizada,
+  subirImagenEditorialOptimizada
+} from '~/server/utils/almacenarImagenEditorial'
+import { anchosVariantesImagenEditorial } from '~/utils/media/variantesEditoriales'
+import { rutaVarianteImagenEditorial } from '~/server/utils/variantesImagenEditorial'
 import { limpiarNombreArchivoEditorial } from '~/utils/media/editorial'
 
 const bucketMediosEditoriales = 'editorial-media'
@@ -207,15 +213,16 @@ export async function crearMedioEditorial(
     `${randomUUID()}.webp`
   ].join('/')
 
-  const { error: errorSubida } = await clienteSupabase.storage
-    .from(bucketMediosEditoriales)
-    .upload(ruta, entrada.imagen.contenido, {
-      cacheControl: '31536000',
-      contentType: entrada.imagen.tipoMime,
-      upsert: false
-    })
-
-  if (errorSubida) {
+  let almacenamiento: Awaited<ReturnType<typeof subirImagenEditorialOptimizada>>
+  try {
+    almacenamiento = await subirImagenEditorialOptimizada(
+      clienteSupabase,
+      bucketMediosEditoriales,
+      ruta,
+      entrada.imagen,
+      true
+    )
+  } catch {
     throw crearErrorMedia('No se pudo almacenar la imagen optimizada.')
   }
 
@@ -244,9 +251,12 @@ export async function crearMedioEditorial(
     .single()
 
   if (error || !data) {
-    await clienteSupabase.storage
-      .from(bucketMediosEditoriales)
-      .remove([ruta])
+    await revertirImagenEditorialOptimizada(
+      clienteSupabase,
+      bucketMediosEditoriales,
+      ruta,
+      almacenamiento
+    )
 
     if (error?.code === '23505') {
       const { data: duplicado } = await clienteSupabase
@@ -322,9 +332,12 @@ export async function eliminarMedioEditorial(
     })
   }
 
+  const rutasVariantes = anchosVariantesImagenEditorial
+    .filter(ancho => ancho < medio.ancho)
+    .map(ancho => rutaVarianteImagenEditorial(medio.ruta, ancho))
   const { error: errorStorage } = await clienteSupabase.storage
     .from(medio.bucket)
-    .remove([medio.ruta])
+    .remove([medio.ruta, ...rutasVariantes])
 
   if (errorStorage) {
     throw createError({

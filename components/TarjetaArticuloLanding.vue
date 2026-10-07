@@ -16,8 +16,11 @@ const tieneImagen = computed(() => Boolean(props.articulo.imagen?.trim()) && ima
       <img
         :src="articulo.imagen"
         :alt="articulo.descripcionImagen"
+        width="640"
+        height="360"
         :style="{ objectPosition: articulo.posicionImagen || 'center' }"
         loading="lazy"
+        decoding="async"
         @error="imagenFallida = articulo.imagen"
       >
     </NuxtLink>

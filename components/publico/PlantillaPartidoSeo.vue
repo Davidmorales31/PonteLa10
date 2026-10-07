@@ -191,13 +191,18 @@ onMounted(() => {
         class="cartel-imagen-resultado"
         :src="cartelPartidoUrl"
         :alt="`Cartel del resultado: ${partido.local} ${marcadorDisponible ? marcador : 'vs'} ${partido.visitante}, ${etiquetaPartido}`"
+        width="1200"
+        height="675"
+        sizes="(max-width: 760px) 100vw, 940px"
+        fetchpriority="high"
+        decoding="async"
       >
       <div v-if="modo !== 'como-quedo'" class="capa-datos-reproductor" aria-hidden="true">
         <div class="marca-cartel-partido"><span>Pont3la10</span><span class="competencia-cartel-partido">{{ nombreCompetencia }}</span></div>
         <span class="estado-cartel-partido" :class="{ 'estado-en-vivo': estadoPartido === 'EN VIVO' }">{{ etiquetaPartido }}</span>
         <div class="equipos-cartel-partido">
           <div class="equipo-cartel-partido">
-            <img v-if="mostrarEscudo(partido.escudoLocal)" :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" @error="escudoFallido(partido.escudoLocal)">
+            <EscudoEquipoPublico v-if="mostrarEscudo(partido.escudoLocal)" :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" :width="142" :height="142" sizes="(max-width: 500px) 68px, 142px" loading="eager" @error="escudoFallido(partido.escudoLocal)" />
             <span v-else class="escudo-cartel-fallback">{{ iniciales(partido.local) }}</span>
             <strong>{{ partido.local }}</strong>
             <small>LOCAL</small>
@@ -207,7 +212,7 @@ onMounted(() => {
             <span>{{ fechaPartido(partido.fechaIso) }}</span>
           </div>
           <div class="equipo-cartel-partido">
-            <img v-if="mostrarEscudo(partido.escudoVisitante)" :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" @error="escudoFallido(partido.escudoVisitante)">
+            <EscudoEquipoPublico v-if="mostrarEscudo(partido.escudoVisitante)" :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" :width="142" :height="142" sizes="(max-width: 500px) 68px, 142px" loading="eager" @error="escudoFallido(partido.escudoVisitante)" />
             <span v-else class="escudo-cartel-fallback">{{ iniciales(partido.visitante) }}</span>
             <strong>{{ partido.visitante }}</strong>
             <small>VISITANTE</small>

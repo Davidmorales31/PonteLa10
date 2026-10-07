@@ -264,13 +264,17 @@ const fechaActualizacion = computed(() => {
     />
 
     <figure v-if="articuloPublicado.portada" class="portada-articulo-publicado">
-      <img
+      <ImagenEditorialPublica
         class="imagen-detalle"
         :src="articuloPublicado.portada.url"
         :alt="articuloPublicado.portada.textoAlternativo"
         :width="articuloPublicado.portada.ancho || 1600"
         :height="articuloPublicado.portada.alto || 900"
-      >
+        :ancho-original="articuloPublicado.portada.ancho"
+        sizes="(max-width: 760px) 100vw, 1200px"
+        loading="eager"
+        prioridad-alta
+      />
       <figcaption
         v-if="articuloPublicado.portada.pieDeFoto || articuloPublicado.portada.credito || articuloPublicado.portada.fuenteFotoUrl"
       >

@@ -13,6 +13,10 @@ defineProps<{
       <img
         :src="articulo.imagen"
         :alt="articulo.descripcionImagen"
+        width="960"
+        height="540"
+        loading="lazy"
+        decoding="async"
         :style="{ objectPosition: articulo.posicionImagen || 'center' }"
       >
     </NuxtLink>

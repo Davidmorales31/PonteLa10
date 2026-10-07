@@ -4,6 +4,7 @@ import PublicidadHouseAd from '~/components/publicidad/HouseAd.vue'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { ArticuloResumen } from '~/types/editorial'
 import type { RespuestaResultados } from '~/types/resultados'
+import { esResumenArticuloPublico } from '~/utils/articulosPublicos'
 
 type ArticuloPortada = ArticuloResumen & { fechaPublicacion: string }
 
@@ -12,19 +13,25 @@ const { data: resultados, status: estadoResultados } = await useFetch<RespuestaR
   lazy: true
 })
 
-const { data: publicacionesReales } = await useFetch<ResumenArticuloPublico[]>('/api/articulos', {
+const { data: respuestaPublicacionesReales } = await useFetch<ResumenArticuloPublico[]>('/api/articulos', {
   key: 'articulos-publicados-portada',
   query: { limite: 6 },
   default: () => [],
   ignoreResponseError: true
 })
-const { data: publicacionDestacada } = await useFetch<ResumenArticuloPublico | null>('/api/articulos/destacada', {
+const { data: respuestaPublicacionDestacada } = await useFetch<ResumenArticuloPublico | null>('/api/articulos/destacada', {
   key: 'articulo-destacado-portada',
   default: () => null,
   ignoreResponseError: true
 })
+const publicacionesReales = computed(() => Array.isArray(respuestaPublicacionesReales.value)
+  ? respuestaPublicacionesReales.value.filter(esResumenArticuloPublico)
+  : [])
+const publicacionDestacada = computed(() => esResumenArticuloPublico(respuestaPublicacionDestacada.value)
+  ? respuestaPublicacionDestacada.value
+  : null)
 const articulosPublicados = computed<ArticuloPortada[]>(() =>
-  (publicacionesReales.value || []).map(articulo => ({
+  publicacionesReales.value.map(articulo => ({
     slug: articulo.slug,
     titulo: articulo.titulo,
     bajada: articulo.resumen,
@@ -34,7 +41,8 @@ const articulosPublicados = computed<ArticuloPortada[]>(() =>
       .format(new Date(articulo.publicadoEn)),
     fechaPublicacion: articulo.publicadoEn,
     lecturaMinutos: articulo.lecturaMinutos,
-    imagen: articulo.imagen
+    imagen: articulo.imagen,
+    imagenAncho: articulo.imagenAncho
   }))
 )
 const articuloDestacado = computed<ArticuloPortada | null>(() => {
@@ -50,7 +58,8 @@ const articuloDestacado = computed<ArticuloPortada | null>(() => {
       .format(new Date(articulo.publicadoEn)),
     fechaPublicacion: articulo.publicadoEn,
     lecturaMinutos: articulo.lecturaMinutos,
-    imagen: articulo.imagen
+    imagen: articulo.imagen,
+    imagenAncho: articulo.imagenAncho
   }
 })
 const portadaPrincipal = computed(() => articuloDestacado.value || articulosPublicados.value[0] || null)
@@ -72,7 +81,7 @@ function obtenerHoraPublicacion(fecha: string) {
 }
 
 const horasPublicacion = computed(() => new Map(
-  (publicacionesReales.value || []).map(articulo => [articulo.slug, obtenerHoraPublicacion(articulo.publicadoEn)])
+  publicacionesReales.value.map(articulo => [articulo.slug, obtenerHoraPublicacion(articulo.publicadoEn)])
 ))
 
 useSeoPont3la10(() => ({
@@ -123,6 +132,8 @@ useSeoPont3la10(() => ({
         </section>
         <PublicidadHouseAd
           image="/publicidad/pont3la10-labs.png"
+          image-srcset="/publicidad/pont3la10-labs-640.webp 640w, /publicidad/pont3la10-labs-1024.webp 1024w, /publicidad/pont3la10-labs-1672.webp 1672w"
+          image-sizes="(max-width: 700px) calc(100vw - 32px), 520px"
           label="Publicidad"
           advertiser="Pont3la10 Labs"
           title="Tu negocio necesita más que solo redes sociales."

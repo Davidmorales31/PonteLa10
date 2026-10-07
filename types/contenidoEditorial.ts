@@ -147,6 +147,7 @@ export interface EnlaceArticuloInternoEditorial {
   resumen: string
   categoria: string
   imagen: string
+  imagenAncho?: number
 }
 
 export interface NodoArticuloRelacionadoEditorial {
@@ -479,5 +480,6 @@ export interface ResumenArticuloPublico {
   autorNombre: string
   categoria: string
   imagen: string
+  imagenAncho?: number
   lecturaMinutos?: number
 }
