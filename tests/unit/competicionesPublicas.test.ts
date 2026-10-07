@@ -91,7 +91,8 @@ describe('temporadas permanentes de competición', () => {
     expect(seleccionarFasesClasificacionCompletas(faseRegular, 'liga-betplay')).toHaveLength(20)
     expect(seleccionarFasesClasificacionCompletas(faseRegular.slice(0, 8), 'liga-betplay')).toHaveLength(0)
     expect(seleccionarFasesClasificacionCompletas(gruposCuadrangulares, 'liga-betplay')).toHaveLength(8)
-    expect(seleccionarFasesClasificacionCompletas(gruposCuadrangulares.slice(1), 'liga-betplay')).toHaveLength(4)
+    expect(seleccionarFasesClasificacionCompletas(gruposCuadrangulares.slice(1), 'liga-betplay')).toHaveLength(0)
+    expect(seleccionarFasesClasificacionCompletas(gruposCuadrangulares.slice(4), 'liga-betplay')).toHaveLength(0)
   })
 
   it('limita las noticias a menciones de la competición o al menos dos clubes participantes', () => {

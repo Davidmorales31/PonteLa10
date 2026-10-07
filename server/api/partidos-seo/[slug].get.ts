@@ -1,6 +1,9 @@
 import { getRouterParam } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
-import { obtenerPartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
+import { obtenerPartidoSeoPublico, listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
+import { listarEntidadesPublicasSeo } from '~/server/utils/grafoEntidadesSeo'
+import { construirNavegacionContextualPartidoSeo } from '~/utils/editorial/navegacionContextualSeo'
+import type { NavegacionContextualPartidoSeo } from '~/types/navegacionContextualSeo'
 
 export default defineCachedEventHandler(async (evento) => {
   const slug = getRouterParam(evento, 'slug') || ''
@@ -9,7 +12,21 @@ export default defineCachedEventHandler(async (evento) => {
   }
 
   setResponseHeader(evento, 'Cache-Control', 'public, max-age=15, s-maxage=30')
-  return { partido: await obtenerPartidoSeoPublico(obtenerClienteSupabaseAnonimo(evento), slug) }
+  const cliente = obtenerClienteSupabaseAnonimo(evento)
+  const partido = await obtenerPartidoSeoPublico(cliente, slug)
+  let navegacion: NavegacionContextualPartidoSeo | null = null
+
+  try {
+    const [partidos, entidades] = await Promise.all([
+      listarPartidosSeoPublicos(cliente),
+      listarEntidadesPublicasSeo(cliente)
+    ])
+    navegacion = construirNavegacionContextualPartidoSeo(partido, partidos, entidades)
+  } catch {
+    // La ficha verificada sigue disponible si falla la ampliación de navegación contextual.
+  }
+
+  return { partido, navegacion }
 }, {
   maxAge: 30,
   swr: false,

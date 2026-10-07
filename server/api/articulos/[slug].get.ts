@@ -1,6 +1,9 @@
 import type { ArticuloPublicoEditorial } from '~/types/contenidoEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { obtenerArticuloPublicoEditorial } from '~/server/utils/repositorioContenidoEditorial'
+import { listarEntidadesPublicasSeo, listarRelacionesPublicasSeo } from '~/server/utils/grafoEntidadesSeo'
+import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
+import { seleccionarProximoPartidoArticuloSeo } from '~/utils/editorial/navegacionContextualSeo'
 
 export default defineEventHandler(async (
   evento
@@ -23,6 +26,25 @@ export default defineEventHandler(async (
       statusCode: 404,
       statusMessage: 'Publicación no encontrada.'
     })
+  }
+
+  articulo.relacionesEntidades = await listarRelacionesPublicasSeo(clienteSupabase, articulo.id)
+  articulo.proximoPartidoEntidad = null
+
+  if (articulo.relacionesEntidades.some(relacion => relacion.relacion === 'about')) {
+    try {
+      const [partidos, entidades] = await Promise.all([
+        listarPartidosSeoPublicos(clienteSupabase),
+        listarEntidadesPublicasSeo(clienteSupabase)
+      ])
+      articulo.proximoPartidoEntidad = seleccionarProximoPartidoArticuloSeo(
+        articulo.relacionesEntidades,
+        partidos,
+        entidades
+      )
+    } catch {
+      // El enlace es complementario; una consulta fallida no interrumpe la lectura del artículo.
+    }
   }
 
   setResponseHeader(

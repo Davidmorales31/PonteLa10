@@ -2,6 +2,7 @@
 import BarraCompartirArticulo from '~/components/editorial/BarraCompartirArticulo.vue'
 import ContenidoArticuloPublico from '~/components/editorial/ContenidoArticuloPublico.vue'
 import SeccionArticulosRelacionados from '~/components/editorial/SeccionArticulosRelacionados.vue'
+import SeccionEntidadesRelacionadas from '~/components/editorial/SeccionEntidadesRelacionadas.vue'
 import type {
   ArticuloPublicoEditorial,
   ResumenArticuloPublico
@@ -149,6 +150,20 @@ useSeoPont3la10(() => ({
             '@id': urlCanonica.value
           },
           author: autorEstructurado.value,
+          about: articuloPublicado.value.relacionesEntidades
+            ?.filter(relacion => relacion.relacion === 'about')
+            .map(relacion => ({
+              '@type': 'Thing',
+              name: relacion.nombre,
+              url: construirUrlAbsoluta(String(configuracion.public.siteUrl), relacion.ruta)
+            })),
+          mentions: articuloPublicado.value.relacionesEntidades
+            ?.filter(relacion => relacion.relacion === 'mentions')
+            .map(relacion => ({
+              '@type': 'Thing',
+              name: relacion.nombre,
+              url: construirUrlAbsoluta(String(configuracion.public.siteUrl), relacion.ruta)
+            })),
           publisher: {
             '@type': 'Organization',
             '@id': `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/#organizacion`,
@@ -247,6 +262,10 @@ function formatearFecha(fecha: string): string {
 
     <PublicidadAdsterraSlot formato="nativo" contexto="artículo deportivo" />
     <ContenidoArticuloPublico :documento="articuloPublicado.documento" />
+    <SeccionEntidadesRelacionadas
+      :relaciones="articuloPublicado.relacionesEntidades"
+      :proximo-partido="articuloPublicado.proximoPartidoEntidad"
+    />
 
     <footer
       v-if="articuloPublicado.fuente.url || articuloPublicado.fuente.creditos"

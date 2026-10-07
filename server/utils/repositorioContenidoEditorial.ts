@@ -1381,7 +1381,6 @@ export async function obtenerArticuloPublicoEditorial(
     clienteSupabase,
     documento.data
   )
-
   return {
     id: fila.id,
     versionId: fila.versionId,
