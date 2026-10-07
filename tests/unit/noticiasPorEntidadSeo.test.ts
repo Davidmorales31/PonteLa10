@@ -59,4 +59,21 @@ describe('noticias de hubs por relación editorial', () => {
     expect(sql).toMatch(/revoke all on function public\.list_public_editorial_articles_for_entity[\s\S]*?from public, anon, authenticated, service_role;/i)
     expect(sql).toMatch(/grant execute on function public\.list_public_editorial_articles_for_entity[\s\S]*?to anon, authenticated;/i)
   })
+
+  it('evita resolver fixtures costosos durante cada lectura pública', () => {
+    const directorioMigraciones = fileURLToPath(new URL('../../supabase/migrations/', import.meta.url))
+    const nombreMigracion = readdirSync(directorioMigraciones)
+      .find(nombre => nombre.endsWith('_hu_ed24_reader_performance.sql'))
+    expect(nombreMigracion).toBeDefined()
+    const sql = readFileSync(join(directorioMigraciones, nombreMigracion!), 'utf8')
+
+    expect(sql).not.toMatch(/resolve_public_entity_name/i)
+    expect(sql).toContain("requested_entity_slug !~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'")
+    expect(sql).toMatch(/relacion\.status = 'confirmed'/i)
+    expect(sql).toMatch(/articulo\.status = 'published'/i)
+    expect(sql).toMatch(/articulo\.published_version_id is not null/i)
+    expect(sql).toMatch(/security definer[\s\S]*?set search_path = ''/i)
+    expect(sql).toMatch(/revoke all on function public\.list_public_editorial_articles_for_entity[\s\S]*?from public, anon, authenticated, service_role;/i)
+    expect(sql).toMatch(/grant execute on function public\.list_public_editorial_articles_for_entity[\s\S]*?to anon, authenticated;/i)
+  })
 })

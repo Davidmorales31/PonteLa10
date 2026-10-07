@@ -214,11 +214,21 @@
 ## HU-ED-24 — relación noticia → entidad (2026-10-07)
 
 - La migración `20261007065323_hu_ed24_noticias_entidad.sql` se aplicó a
-  Supabase Production `ykjithahavncswlfgsqa`. La RPC pública valida tipo y slug
-  contra el catálogo, devuelve solo resúmenes publicados con versión vigente y
-  relación editorial confirmada, limita paginación y no revela el grafo privado
-  ni el cuerpo del artículo. `anon` y `authenticated` pueden ejecutar la lectura
-  pública; `service_role` y `PUBLIC` no reciben permiso directo.
+  Supabase Production `ykjithahavncswlfgsqa`. Tras el smoke detectar HTTP 503,
+  se identificó que `resolve_public_entity_name` recalculaba fixtures y tardaba
+  ~4.9 s, por encima del timeout de PostgREST. La migración
+  `20261007070936_hu_ed24_reader_performance.sql`, aplicada y registrada en
+  Production, quitó ese cálculo redundante del RPC de lectura; el RPC editorial
+  de escritura sigue validando la entidad antes de confirmar cada vínculo.
+  La lectura conserva validación de tipo/slug, relación `confirmed`, artículo
+  `published`, versión publicada vigente, límites y proyección de solo resumen;
+  no revela el grafo privado ni el cuerpo.
+- El ACL vigente conserva `search_path=''`; `anon` y `authenticated` pueden
+  ejecutar intencionalmente esta lectura pública y `service_role` no. El asesor
+  Supabase advierte por esta RPC `SECURITY DEFINER` pública, además de avisos
+  existentes del proyecto. Una relación confirmada puede seguir asociada a su
+  slug si el catálogo cambia después; no se publica por eso ningún artículo que
+  no esté publicado.
 - El endpoint `/api/articulos/entidad/:tipo/:slug` valida los parámetros, usa el
   cliente anónimo y permite caché corta. Competencias, equipos y perfiles de
   jugadores ahora consultan las relaciones estructuradas; no agregan noticias
@@ -231,12 +241,16 @@
   backfill especulativo. La función aparece en el asesor Supabase como
   `SECURITY DEFINER` ejecutable por `anon`; es una API pública intencional,
   estrictamente de lectura y acotada. El asesor también muestra avisos previos
-  no relacionados en el resto del proyecto.
-- Validación local: 81 archivos/405 pruebas, typecheck, build Nuxt y lint pasan;
-  el lint excluyó únicamente `.codex-validation-hu-seo11-20261006/`, un
-  directorio no rastreado preexistente. Build conserva el aviso upstream
-  `DEP0155`. La revisión de seguridad/migración aprobó el contrato. Release de
-  aplicación pendiente de PR/CI y smoke Production.
+  no relacionados en el resto del proyecto. Después de aplicar la corrección,
+  el endpoint de Production respondió `200 []` en ~1,0 s;
+  `/competiciones/liga-betplay`, `/equipos/millonarios` y
+  `/jugadores/luis-diaz` respondieron `200`.
+- Validación local de la corrección: prueba focal 4/4; suite 81 archivos/406
+  pruebas; lint excluyendo únicamente `.codex-validation-hu-seo11-20261006/`
+  (directorio ajeno no rastreado), typecheck y build Nuxt. Build conserva el
+  aviso upstream `DEP0155`. La revisión de seguridad/migración aprobó el cambio
+  con la salvedad semántica descrita arriba. La migración ya está en Production;
+  falta integrar el archivo, prueba y documentación a `main` mediante PR/CI.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-ed24-relacion-noticia-entidad.md`.
 
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
