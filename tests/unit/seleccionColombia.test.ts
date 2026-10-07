@@ -11,6 +11,7 @@ import {
   encontrarPartidoRegistradoSeleccion,
   esEquipoSeleccionColombia,
   filtrarPartidosSeleccionColombia,
+  obtenerPartidosRecientesPendientesSeleccion,
   obtenerFechaColombia
 } from '../../utils/seleccionColombia'
 
@@ -87,6 +88,23 @@ describe('hub de Selección Colombia', () => {
     expect(calendarioOficialSeleccion.some(partido => partido.fecha === '2026-10-10' && partido.hora === null)).toBe(true)
     expect(calendarioOficialSeleccion.every(partido => partido.fuenteUrl.includes('fcf.com.co'))).toBe(true)
     expect(convocatoriasOficialesSeleccion.every(convocatoria => convocatoria.jugadores.length === convocatoria.cantidad)).toBe(true)
+  })
+
+  it('muestra el partido oficial recién disputado sin inventar un marcador y lo retira tras siete días', () => {
+    const pendientesDuranteElPartido = obtenerPartidosRecientesPendientesSeleccion('2026-10-06')
+    const pendientesAlDiaSiguiente = obtenerPartidosRecientesPendientesSeleccion('2026-10-07')
+    const colombiaPeru = pendientesAlDiaSiguiente.find(partido => partido.fecha === '2026-10-06')
+
+    expect(pendientesDuranteElPartido.some(partido => partido.fecha === '2026-10-06')).toBe(false)
+    expect(colombiaPeru).toMatchObject({
+      local: 'Colombia',
+      visitante: 'Perú',
+      fuenteUrl: 'https://www.fcf.com.co/calendario/'
+    })
+    expect(colombiaPeru?.marcadorLocal).toBeUndefined()
+    expect(colombiaPeru?.marcadorVisitante).toBeUndefined()
+    expect(obtenerPartidosRecientesPendientesSeleccion('2026-10-13')).toContainEqual(colombiaPeru)
+    expect(obtenerPartidosRecientesPendientesSeleccion('2026-10-14')).not.toContainEqual(colombiaPeru)
   })
 
   it('indexa con suficientes datos oficiales recientes y deja de hacerlo cuando quedan desactualizados', () => {

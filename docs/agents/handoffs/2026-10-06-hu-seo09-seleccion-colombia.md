@@ -52,15 +52,20 @@
   completa encontró una aserción estática obsoleta del sitemap, actualizada para
   la nueva regla; repetición completa pasó. Typecheck detectó dos tipos que se
   corrigieron antes de la compilación.
-- **Pendientes:** abrir PR, esperar checks, integrar y verificar en Production
-  `/seleccion-colombia`, sitemap y datos SSR. Falta validación visual manual
-  responsive/accesible de modo claro y oscuro. La verificación de horarios y
-  convocatorias necesita revisión FCF cuando cambien; no existe tarea automática
-  de scraping. El listado de jugadores enlaza búsquedas, no perfiles: continúa
-  HU-SEO-10. HU-GRO-01 necesita una visita de prueba con consentimiento y
-  DebugView; HU-GRO-02 necesita una propiedad de Search Console verificada.
-- **Siguiente acción exacta:** revisar el diff final; publicar la rama
-  `codex/hu-seo09-seleccion-colombia` mediante PR a `main`; tras CI, integrar y
-  hacer smoke HTTP de Production. Solo después continuar con HU-SEO-10.
+- **Entrega Production:** PR #72 se integró el 2026-10-06 por squash como
+  `2fb69800fd2c5e31a00efc728ee283ed55f8b491`. El smoke posterior confirmó
+  `/seleccion-colombia`, `/sitemap-hubs.xml` y el endpoint
+  público de resultados mediante HTTP 200; el calendario, canonical, robots,
+  convocatorias y tres ItemLists llegaron en SSR. El endpoint devolvió diez
+  partidos del día desde `base-datos`.
+- **Pendientes:** falta validación visual manual responsive/accesible en modo
+  claro y oscuro. La verificación de horarios y convocatorias necesita revisión
+  FCF cuando cambien; no existe tarea automática de scraping. El listado de
+  jugadores enlaza búsquedas, no perfiles: continúa HU-SEO-10. HU-GRO-01 requiere
+  una visita de prueba con consentimiento y DebugView; HU-GRO-02 requiere una
+  propiedad de Search Console verificada.
+- **Siguiente acción exacta:** ver
+  `docs/agents/handoffs/2026-10-07-hu-seo09-resultado-pendiente.md`; continuar
+  después con HU-SEO-10.
 - **Commit base:** `723adcf` (`origin/main`).
-- **Commit final:** sin commit.
+- **Commit final:** `2fb69800fd2c5e31a00efc728ee283ed55f8b491`.

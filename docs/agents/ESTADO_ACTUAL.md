@@ -36,28 +36,35 @@
 
 ## HU-SEO-09 — hub de Selección Colombia (2026-10-06)
 
-- Implementación aislada en `codex/hu-seo09-seleccion-colombia`, basada en
-  `origin/main` `723adcf`. La ruta `/seleccion-colombia` presenta agenda oficial
-  de mayores, partido del día, resultados FCF, convocatorias masculina/femenina,
-  noticias y enlaces editoriales por futbolista. Las fechas, resultados, clubes
-  y sustitución de convocatoria se contrastaron con publicaciones FCF; la hora
-  no publicada se muestra como pendiente, no estimada.
-- El marcador se enriquece leyendo el endpoint público `/api/resultados`, con
-  refresco cliente de 60 segundos (caché servidor compartida existente); no
-  consulta proveedores directamente ni escribe en Supabase. Se conserva un
-  único espacio de publicidad de Adsterra ya existente en el hub editorial,
-  condicionado al consentimiento y a que haya al menos tres noticias.
-- Canonical y metadatos quedan bajo un solo `useSeoPont3la10`; el hub añade
-  ItemLists al JSON-LD editorial existente. Sitemap e indexación permiten la
-  página si hay al menos tres piezas deportivas oficiales verificadas, y dejan
-  de hacerlo cuando la comprobación de datos cumple 60 días. El sitemap conserva
-  esta URL si falla Supabase, siempre que pase ese mismo umbral.
-- Los nombres de jugadores enlazan a búsqueda editorial, no a fichas permanentes:
-  `HU-SEO-10` (páginas de jugador) continúa pendiente. El calendario se verificó
-  el 2026-10-06 y aún requiere revisión manual cuando FCF cambie el calendario;
-  no se implementó scraping ni tarea automática de actualización.
-- Estado: código y smoke local aprobados; falta PR, checks y despliegue. Handoff:
-  `docs/agents/handoffs/2026-10-06-hu-seo09-seleccion-colombia.md`.
+- PR #72 se integró a `main` por squash como `2fb69800fd2c5e31a00efc728ee283ed55f8b491`.
+  La ruta `/seleccion-colombia` presenta agenda oficial de mayores, resultados,
+  convocatorias masculina/femenina, noticias y enlaces editoriales por
+  futbolista. El calendario, los marcadores publicados y la sustitución de la
+  convocatoria se contrastaron con fuentes FCF; las horas no anunciadas no se
+  estiman.
+- La página lee el endpoint público `/api/resultados` cada 60 segundos; no llama
+  proveedores desde el navegador ni escribe en Supabase. El hub reutiliza el
+  único espacio de publicidad de Adsterra existente, sujeto al consentimiento y
+  al mínimo de tres noticias.
+- Canonical y metadatos quedan bajo un solo `useSeoPont3la10`; se añadieron
+  ItemLists al JSON-LD editorial existente. Sitemap e indexación exigen al menos
+  tres piezas deportivas oficiales recientes y retiran la URL cuando la revisión
+  supera 60 días. El sitemap tolera una falla de Supabase si el contenido
+  estático aún satisface ese umbral.
+- Después del merge, Production respondió HTTP 200 en la página y el sitemap;
+  el endpoint `/api/resultados?deporte=futbol&timeZone=America%2FBogota`
+  respondió HTTP 200 con diez partidos del día y origen `base-datos`. Se
+  comprobaron canonical única, `robots=index, follow`, agenda y convocatorias SSR,
+  tres ItemLists y presencia en `sitemap-hubs.xml`.
+- Los nombres de jugadores enlazan a búsquedas editoriales; las fichas
+  permanentes corresponden a HU-SEO-10. El calendario se revisó con FCF el
+  2026-10-06; aún no hay scraping/tarea automática de actualización. Handoff de
+  entrega: `docs/agents/handoffs/2026-10-06-hu-seo09-seleccion-colombia.md`.
+- Seguimiento: `codex/hu-seo09-resultado-pendiente` muestra un encuentro FCF
+  reciente sin marcador verificado durante un máximo de siete días después de su
+  fecha, sin inferir resultado; enlace al calendario oficial. Se evita mostrarlo
+  como resultado mientras todavía es el día del partido. Handoff:
+  `docs/agents/handoffs/2026-10-07-hu-seo09-resultado-pendiente.md`.
 
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
 

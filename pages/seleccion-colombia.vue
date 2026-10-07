@@ -11,6 +11,7 @@ import {
   contarContenidoSeleccionVerificado,
   filtrarPartidosSeleccionColombia,
   normalizarNombreEquipoSeleccion,
+  obtenerPartidosRecientesPendientesSeleccion,
   obtenerFechaColombia
 } from '~/utils/seleccionColombia'
 
@@ -72,7 +73,8 @@ const agendaProxima = computed(() => {
 const resultadosRecientes = computed(() => {
   const resultadosEstaticos = resultadosOficialesSeleccion.map(partido => ({
     ...partido,
-    partidoRegistrado: encontrarPartidoRegistradoSeleccion(partido, partidosSeleccionHoy.value) || null
+    partidoRegistrado: encontrarPartidoRegistradoSeleccion(partido, partidosSeleccionHoy.value) || null,
+    marcadorPendiente: false
   }))
   const resultadosDelDia = partidosSeleccionHoy.value
     .filter(partido => partido.estado === 'finalizado')
@@ -87,10 +89,28 @@ const resultadosRecientes = computed(() => {
       marcadorLocal: partido.marcadorLocal,
       marcadorVisitante: partido.marcadorVisitante,
       fuenteUrl: '/resultados/futbol',
-      partidoRegistrado: partido
+      partidoRegistrado: partido,
+      marcadorPendiente: false
+    }))
+  const resultadosConfirmados = [...resultadosDelDia, ...resultadosEstaticos]
+  const clavesConfirmadas = new Set(resultadosConfirmados.map(partido => [
+    partido.fecha,
+    normalizarNombreEquipoSeleccion(partido.local),
+    normalizarNombreEquipoSeleccion(partido.visitante)
+  ].join('|')))
+  const resultadosPendientes = obtenerPartidosRecientesPendientesSeleccion(fechaActual.value)
+    .filter(partido => !clavesConfirmadas.has([
+      partido.fecha,
+      normalizarNombreEquipoSeleccion(partido.local),
+      normalizarNombreEquipoSeleccion(partido.visitante)
+    ].join('|')))
+    .map(partido => ({
+      ...partido,
+      partidoRegistrado: null,
+      marcadorPendiente: true
     }))
   const claves = new Set<string>()
-  return [...resultadosDelDia, ...resultadosEstaticos]
+  return [...resultadosConfirmados, ...resultadosPendientes]
     .filter(partido => {
       const clave = [partido.fecha, normalizarNombreEquipoSeleccion(partido.local), normalizarNombreEquipoSeleccion(partido.visitante)].join('|')
       if (claves.has(clave)) return false
@@ -255,19 +275,23 @@ onBeforeUnmount(() => {
 
           <section class="panel-seleccion" aria-labelledby="titulo-resultados-seleccion">
             <div class="encabezado-panel-seleccion">
-              <p class="etiqueta-seccion">MARCADORES CONFIRMADOS</p>
+              <p class="etiqueta-seccion">RESULTADOS RECIENTES</p>
               <h3 id="titulo-resultados-seleccion">Resultados recientes</h3>
             </div>
             <ol v-if="resultadosRecientes.length" class="lista-resultados-seleccion">
               <li v-for="partido in resultadosRecientes" :key="partido.fecha + partido.local + partido.visitante">
                 <div>
                   <strong>{{ partido.local }}</strong>
-                  <span aria-label="marcador">{{ marcadorPartido(partido.partidoRegistrado) || marcadorPartido(partido) || 'Marcador pendiente de confirmación' }}</span>
+                  <span :aria-label="partido.marcadorPendiente ? 'resultado pendiente de confirmación' : 'marcador'">
+                    {{ partido.marcadorPendiente ? 'Resultado pendiente de confirmación oficial' : marcadorPartido(partido.partidoRegistrado) || marcadorPartido(partido) || 'Marcador pendiente de confirmación' }}
+                  </span>
                   <strong>{{ partido.visitante }}</strong>
                 </div>
                 <small>{{ fechaLegible(partido.fecha) }} · {{ partido.competencia }}</small>
                 <NuxtLink v-if="partido.partidoRegistrado" :to="construirUrlPartido(partido.partidoRegistrado)">Ver ficha</NuxtLink>
-                <a v-else :href="partido.fuenteUrl" target="_blank" rel="noopener noreferrer">Crónica oficial FCF</a>
+                <a v-else :href="partido.fuenteUrl" target="_blank" rel="noopener noreferrer">
+                  {{ partido.marcadorPendiente ? 'Consultar calendario oficial FCF' : 'Crónica oficial FCF' }}
+                </a>
               </li>
             </ol>
             <p v-else class="estado-seleccion-vacio">Todavía no tenemos resultados confirmados para mostrar.</p>
