@@ -25,11 +25,19 @@ interface MetricaSearchConsole {
 }
 
 interface AccionGuardadaSearchConsole {
+  triage_key: string
   query: string
   page_url: string
   action: AccionSearchConsole
   note: string | null
   updated_at: string
+}
+
+interface DecisionSearchConsole {
+  triage_key: string
+  action: AccionSearchConsole
+  note: string | null
+  changed_at: string
 }
 
 function diasPeriodo(informe: InformeSearchConsole): number {
@@ -86,23 +94,34 @@ export default defineEventHandler(async (evento) => {
       periodoActual: null,
       periodoComparacion: null,
       tendenciaDisponible: false,
+      historialCargado: 0,
+      historialTotal: 0,
+      historialLimitado: false,
       filas: []
     }
   }
 
   const anterior = informes.slice(1).find(informe => esPeriodoAnteriorComparable(informe, actual)) || null
-  const [metricasActuales, metricasAnteriores, accionesRaw] = await Promise.all([
+  const [metricasActuales, metricasAnteriores, accionesRaw, historialRaw] = await Promise.all([
     listarMetricas(cliente, actual.id),
     anterior ? listarMetricas(cliente, anterior.id) : Promise.resolve([]),
     cliente
       .from('editorial_search_console_triage')
-      .select('query,page_url,action,note,updated_at')
+      .select('triage_key,query,page_url,action,note,updated_at')
       .order('updated_at', { ascending: false })
+      .limit(5000),
+    cliente
+      .from('editorial_search_console_triage_history')
+      .select('triage_key,action,note,changed_at', { count: 'exact' })
+      .order('changed_at', { ascending: false })
       .limit(5000)
   ])
 
   if (accionesRaw.error) {
     throw createError({ statusCode: 503, statusMessage: 'No se pudieron cargar las acciones editoriales.' })
+  }
+  if (historialRaw.error) {
+    throw createError({ statusCode: 503, statusMessage: 'No se pudo cargar el historial de decisiones.' })
   }
 
   const metricasPorClave = new Map(metricasAnteriores.map((metrica) => {
@@ -122,6 +141,15 @@ export default defineEventHandler(async (evento) => {
     if (!accionesPorClave.has(clave)) accionesPorClave.set(clave, accion)
   }
 
+  const historial = (historialRaw.data || []) as unknown as DecisionSearchConsole[]
+  const historialTotal = historialRaw.count ?? historial.length
+  const historialPorClave = new Map<string, DecisionSearchConsole[]>()
+  for (const decision of historial) {
+    const historial = historialPorClave.get(decision.triage_key) || []
+    historial.push(decision)
+    historialPorClave.set(decision.triage_key, historial)
+  }
+
   const filas = metricasActuales.map((metrica) => {
     const fila: FilaSearchConsole = {
       consulta: metrica.query,
@@ -138,7 +166,8 @@ export default defineEventHandler(async (evento) => {
       tendencia: calcularTendenciaSearchConsole(fila, metricasPorClave.get(clave) || null),
       accion: accion?.action || null,
       notaAccion: accion?.note || null,
-      accionActualizadaEn: accion?.updated_at || null
+      accionActualizadaEn: accion?.updated_at || null,
+      historialAcciones: accion ? historialPorClave.get(accion.triage_key) || [] : []
     }
   })
 
@@ -160,6 +189,9 @@ export default defineEventHandler(async (evento) => {
       ? { fechaDesde: anterior.period_start, fechaHasta: anterior.period_end }
       : null,
     tendenciaDisponible: Boolean(anterior),
+    historialCargado: historial.length,
+    historialTotal,
+    historialLimitado: historial.length < historialTotal,
     filas
   }
 })

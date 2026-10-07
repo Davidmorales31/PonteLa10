@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  accionesOportunidadSearchConsole,
+  clasificarOportunidadesSearchConsole,
   calcularTendenciaSearchConsole,
   esquemaAccionSearchConsole,
   esquemaImportacionSearchConsole,
@@ -79,6 +81,29 @@ describe('HU-ED-21 · Search Console editorial', () => {
     expect(esquemaAccionSearchConsole.safeParse({
       consulta: 'liga colombiana',
       paginaUrl: `${urlSitio}/liga-colombiana`,
+      accion: 'consolidar'
+    }).success).toBe(false)
+    expect(esquemaAccionSearchConsole.safeParse({
+      consulta: 'liga colombiana',
+      paginaUrl: `${urlSitio}/liga-colombiana`,
+      accion: 'consolidar',
+      nota: `${urlSitio}/articulos/liga-colombiana`
+    }).success).toBe(true)
+    expect(esquemaAccionSearchConsole.safeParse({
+      consulta: 'liga colombiana',
+      paginaUrl: `${urlSitio}/liga-colombiana`,
+      accion: 'consolidar',
+      nota: 'https://externo.example/liga-colombiana'
+    }).success).toBe(false)
+    expect(esquemaAccionSearchConsole.safeParse({
+      consulta: 'liga colombiana',
+      paginaUrl: `${urlSitio}/liga-colombiana`,
+      accion: 'consolidar',
+      nota: '/\\externo.example'
+    }).success).toBe(false)
+    expect(esquemaAccionSearchConsole.safeParse({
+      consulta: 'liga colombiana',
+      paginaUrl: `${urlSitio}/liga-colombiana`,
       accion: 'publicar'
     }).success).toBe(false)
   })
@@ -99,5 +124,60 @@ describe('HU-ED-21 · Search Console editorial', () => {
       { clics: 0, impresiones: 0, posicion: 4 }
     )?.cambioClicsPorcentaje).toBeNull()
     expect(calcularTendenciaSearchConsole({ clics: 1, impresiones: 1, posicion: 1 }, null)).toBeNull()
+  })
+
+  it('prioriza señales medibles, etiqueta cluster y entidad desde la URL y no crea consultas', () => {
+    const filas = [
+      { consulta: 'liga betplay', paginaUrl: `${urlSitio}/liga-colombiana`, impresiones: 80, clics: 0, ctr: 0, posicion: 8, tendencia: null },
+      { consulta: 'equipo local', paginaUrl: `${urlSitio}/equipos/atletico-nacional`, impresiones: 30, clics: 2, ctr: 6.67, posicion: 5, tendencia: null },
+      { consulta: 'equipo local', paginaUrl: `${urlSitio}/articulos/guia-atletico-nacional`, impresiones: 20, clics: 1, ctr: 5, posicion: 28, tendencia: null },
+      { consulta: 'resultado europa', paginaUrl: `${urlSitio}/partidos-hoy`, impresiones: 10, clics: 1, ctr: 10, posicion: 25, tendencia: null }
+    ]
+
+    const [principal, equipo] = clasificarOportunidadesSearchConsole(filas, true)
+    expect(principal).toMatchObject({
+      cluster: 'Liga colombiana',
+      entidad: 'Liga colombiana',
+      prioridad: 'Alta',
+      paginasConsulta: 1
+    })
+    expect(principal.recomendacion).toContain('título')
+    expect(equipo).toMatchObject({
+      consulta: 'equipo local',
+      paginasConsulta: 2,
+      prioridad: 'Alta'
+    })
+    expect(equipo.recomendacion).toContain('no crear otra URL')
+    expect(equipo.cluster).toBe('Equipos')
+    expect(equipo.entidad).toBe('Atletico Nacional')
+    expect(accionesOportunidadSearchConsole).toEqual(['optimizar', 'actualizar', 'consolidar', 'ignorar'])
+  })
+
+  it('marca una posible consulta emergente con cautela y señala pérdida solo cuando empeora posición', () => {
+    const filas = clasificarOportunidadesSearchConsole([
+      {
+        consulta: 'nueva búsqueda', paginaUrl: `${urlSitio}/articulos/nueva-busqueda`,
+        impresiones: 15, clics: 1, ctr: 6.67, posicion: 12,
+        tendencia: { cambioClics: 1, cambioClicsPorcentaje: null, cambioImpresiones: 15, cambioImpresionesPorcentaje: null, cambioPosicion: 1.2 }
+      },
+      {
+        consulta: 'sin comparación', paginaUrl: `${urlSitio}/colombianos-en-europa`,
+        impresiones: 8, clics: 1, ctr: 12.5, posicion: 25, tendencia: null
+      }
+    ], true)
+
+    expect(filas.find(fila => fila.consulta === 'nueva búsqueda')?.motivos)
+      .toContain('La posición media empeoró frente al período anterior')
+    expect(filas.find(fila => fila.consulta === 'sin comparación')).toMatchObject({
+      cluster: 'Colombianos en Europa',
+      posibleEmergente: true
+    })
+    expect(filas.find(fila => fila.consulta === 'sin comparación')?.recomendacion)
+      .toContain('Validar la nueva consulta')
+
+    const sinInformeAnterior = clasificarOportunidadesSearchConsole([
+      { consulta: 'búsqueda', paginaUrl: `${urlSitio}/`, impresiones: 1, clics: 0, ctr: 0, posicion: 50, tendencia: null }
+    ], false)
+    expect(sinInformeAnterior[0]?.posibleEmergente).toBe(false)
   })
 })

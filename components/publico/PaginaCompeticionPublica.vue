@@ -293,6 +293,12 @@ function fechaActualizacion(fecha: string | null): string {
       <p v-else class="estado-competicion-vacio">Todavía no hay resultados finales confirmados para mostrar.</p>
     </section>
 
+    <PublicidadAdsterraSlot
+      v-if="ficha.temporada === ficha.temporadaActual"
+      formato="leaderboard"
+      :contexto="`${ficha.competencia.nombre} · temporada actual`"
+    />
+
     <section id="jornadas" class="bloque-liga-colombia panel-competicion">
       <header class="encabezado-seccion-competicion"><div><p class="etiqueta-seccion">CALENDARIO COMPLETO</p><h2>Jornadas y fases</h2></div><span>{{ ficha.jornadas.length }} fechas o fases</span></header>
       <div v-if="ficha.jornadas.length" class="lista-jornadas-competicion">

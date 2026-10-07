@@ -1,5 +1,31 @@
 # Estado actual de Pont3la10
 
+## HU-GRO-04 — oportunidades orgánicas (validado local, despliegue pendiente, 2026-10-07)
+
+- El panel prioriza consultas y páginas usando posición 5–20, impresiones/CTR
+  relativos al mismo reporte, aparición en varias URLs y pérdida de posición.
+  Cluster y entidad se infieren de la ruta existente; una fila ausente en el
+  período comparable se marca como posible emergente, no como consulta nueva
+  confirmada. Las recomendaciones no modifican ni publican artículos.
+- Añade acciones `optimizar`, `actualizar`, `consolidar` e `ignorar`, y conserva
+  decisiones previas de ED-21. El historial se diseñó como tabla privada con
+  RLS y trigger append-only; la migración
+  `20261007122917_hu_gro04_historial_oportunidades` todavía no está aplicada en
+  Production. El endpoint informa si su vista alcanzó el tope de 5.000 y las
+  decisiones antiguas permanecen almacenadas.
+- La cuenta Search Console revisada no tiene la propiedad de Pont3la10 y no hay
+  reportes importados. El panel mostrará estado vacío hasta que el equipo cargue
+  un CSV real; no usa métricas ficticias.
+- Se añadieron ubicaciones contextuales con el componente de anuncios existente:
+  debajo de resultados en páginas de temporada activa y después de noticias en
+  perfiles de jugadores. El componente mantiene sus reglas de consentimiento,
+  carga diferida y aislamiento.
+- Validación local: suite completa (87 archivos/448 pruebas), lint, typecheck,
+  build y `git diff --check` pasan. Build muestra solo el aviso upstream
+  `[DEP0155]` de `@vue/shared`. Revisión estática de seguridad sin bloqueos; falta
+  CI/Preview, aplicar/verificar la migración y desplegar/smoke en Production.
+- Handoff: `docs/agents/handoffs/2026-10-07-hu-gro04-oportunidades.md`.
+
 ## HU-ED-23 — fecha de actualización editorial (Production, 2026-10-07)
 
 - El artículo conserva su `published_at` original y registra por separado

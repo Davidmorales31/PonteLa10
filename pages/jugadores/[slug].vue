@@ -204,6 +204,8 @@ onMounted(() => {
           <p v-else-if="!errorNoticiasCarga" class="estado-vacio-jugador">Aún no hay artículos vinculados editorialmente con {{ ficha.nombre }}. La ficha no inventa actualidad cuando no hay cobertura confirmada.</p>
           <p v-else class="estado-vacio-jugador">No fue posible cargar las noticias relacionadas. Puedes revisar la búsqueda editorial de {{ ficha.nombre }}.</p>
         </section>
+
+        <PublicidadAdsterraSlot formato="nativo" contexto="colombianos en Europa · ficha de futbolista" />
       </div>
 
       <aside class="columna-jugador-secundaria">
