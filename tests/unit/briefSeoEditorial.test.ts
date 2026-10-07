@@ -62,7 +62,7 @@ describe('brief SEO editorial', () => {
 
   it('mantiene el brief privado y la confirmación separada del flujo del artículo', () => {
     const migracion = readFileSync(new URL(
-      '../../supabase/migrations/20261007054958_hu_ed20_brief_intencion.sql',
+      '../../supabase/migrations/20261007061722_hu_ed20_brief_intencion.sql',
       import.meta.url
     ), 'utf8')
     const rutaPropuesta = readFileSync(new URL(
