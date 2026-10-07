@@ -18,12 +18,11 @@ describe('filtros de artículos públicos', () => {
     })
   })
 
-  it('envía a la RPC como máximo cuatro alias para la categoría de fútbol colombiano', () => {
-    expect(analizarConsultaArticulosPublicos({ categoria: 'futbol-colombiano' })?.terminosCategoria).toEqual([
-      'liga betplay',
-      'torneo betplay',
-      'copa colombia',
-      'seleccion colombia'
+  it('filtra fútbol colombiano por su categoría primaria, sin aliases semánticos', () => {
+    expect(analizarConsultaArticulosPublicos({ categoria: 'futbol-colombiano' })?.terminosCategoria).toEqual([])
+    expect(analizarConsultaArticulosPublicos({ categoria: 'futbol-mundial' })?.terminosCategoria).toEqual([
+      'futbol mundial',
+      'mundial 2026'
     ])
   })
 

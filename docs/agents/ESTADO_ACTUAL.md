@@ -13,20 +13,17 @@
   días. No se inventó ni fechó retrospectivamente un baseline. Próximo paso:
   verificar/agregar la propiedad de Pont3la10 y guardar la primera extracción con
   fecha.
-- **HU-GRO-03 — filtros SSR:** se confirmó en Production que la categoría
-  `futbol-colombiano` regresaba vacía aunque había artículos. La lista de cinco
-  alias del cliente excedía el máximo de cuatro validado por la RPC SQL. La
-  corrección conserva cuatro alias específicos (Liga BetPlay, Torneo BetPlay,
-  Copa Colombia y Selección); el `slug` exacto incluye todos los artículos de la
-  categoría canónica. Smoke de Production del 2026-10-06: el endpoint paginado
-  respondió 20 artículos y `hayMas=true`; el desplazamiento 20 respondió otros
-  20 sin slugs repetidos. La ruta SSR con el filtro respondió 200, con H1
-  `Noticias de fútbol colombiano`, canonical `/futbol-colombiano` y 19 enlaces
-  a artículos. La categoría principal mostrada en algunos resultados es
-  `Fútbol mundial` u `Opinión`, además de `Fútbol colombiano`; el endpoint no
-  expone las etiquetas temáticas para confirmar que todos esos resultados son
-  relevantes para los alias. Queda una revisión editorial de esa mezcla antes
-  de declarar cerrada la calidad semántica. No se modificó el esquema ni se
+- **HU-GRO-03 — filtros SSR:** Production exponía correctamente paginación y SSR,
+  pero la categoría `futbol-colombiano` mezclaba notas de otras categorías por
+  aliases de texto y etiquetas editoriales inconsistentes. La RPC ahora exige
+  categoría primaria exacta para ese slug; los hubs/temas transversales conservan
+  sus filtros independientes. Smoke de Production (2026-10-07): 57 artículos,
+  57 slugs únicos, cero resultados cuya categoría primaria no sea
+  `Fútbol colombiano`; la consulta independiente de `seleccion-colombia` sigue
+  devolviendo resultados. La API respondió 49 + 8 registros con `hayMas` correcto
+  y la ruta `/futbol-colombiano` respondió HTTP 200 con canonical propia. Las dos
+  migraciones y el ajuste del parser están implementados; el código TypeScript
+  aún requiere integrarse y desplegarse por PR. No se modificó contenido ni se
   consumió cuota deportiva.
 - El listado de noticias ya incluye un slot nativo de Adsterra condicionado al
   consentimiento de publicidad. Se conserva una sola ubicación en este hub para
