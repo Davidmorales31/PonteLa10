@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-## HU-ED-22 — plantillas editoriales por intención (Supabase Production, 2026-10-07)
+## HU-ED-22 — plantillas editoriales por intención (Production, 2026-10-07)
 
 - El CMS incorpora diez plantillas por intención con campos mínimos verificables,
   fuente principal obligatoria y estructura H2 editable. El editor confirma los
@@ -16,10 +16,13 @@
   nombre, secciones requeridas con desarrollo y preserva el cuerpo editable.
 - Suite completa (85 archivos/432 pruebas), lint, typecheck, build y
   `git diff --check` pasan. El build conserva el aviso upstream `[DEP0155]` de
-  `@vue/shared`. No se hizo inspección visual autenticada ni se modificó contenido.
-- El código todavía requiere PR/CI y deployment de Vercel Production. El acceso
-  MCP a detalles de proyecto/deployment devuelve 404/403; se probará CI del repo
-  y se reportará cualquier límite para verificar el deployment. Handoff:
+  `@vue/shared`. PR #89 pasó CI y Vercel Preview, se integró por squash en `main`
+  como `7480b77f07a11c49809732f72a01ca83e05b931d`, y el check Vercel Production
+  quedó `success`. El dominio responde HTTP 200; los endpoints privados GET/PUT
+  responden 401 anónimamente y la ficha admin redirige a login (302).
+- No se hizo inspección visual autenticada/responsive ni se modificó contenido.
+  Vercel MCP no permitió consultar detalles (404/403); se confirmó deployment
+  mediante el estado del commit en GitHub y el smoke HTTP del dominio. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-ed22-plantillas-intencion.md`.
 
 ## HU-ED-21 — Search Console como feedback editorial (Production, 2026-10-07)
