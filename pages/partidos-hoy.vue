@@ -188,6 +188,8 @@ useSeoPont3la10(() => ({
   </main>
 </template>
 
+<style src="~/assets/css/resultados.css"></style>
+
 <style scoped>
 .pagina-agenda-futbol { padding-top: 18px; }
 .encabezado-agenda-futbol { align-items: end; margin: 18px 0 20px; }

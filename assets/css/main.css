@@ -326,7 +326,6 @@ button:disabled {
 .bloque-tendencias,
 .tarjeta-articulo,
 .tarjeta-modulo,
-.dashboard-panel,
 .auth-panel {
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -390,7 +389,6 @@ h3 {
 .cabecera-pagina p,
 .intro-especiales p,
 .tarjeta-modulo p,
-.dashboard-panel p,
 .auth-panel p {
   color: var(--muted);
   font-weight: 650;
@@ -656,7 +654,6 @@ h3 {
   line-height: 1.78;
 }
 
-.admin-dashboard,
 .auth-page {
   width: min(1120px, 100%);
   margin: 0 auto;
@@ -664,17 +661,6 @@ h3 {
 
 .page-heading {
   max-width: 760px;
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 22px;
-}
-
-.dashboard-panel {
-  padding: 22px;
 }
 
 .pagina-login-limpia {
@@ -1137,8 +1123,7 @@ h3 {
   }
 
   .grilla-articulos,
-  .grilla-modulos,
-  .dashboard-grid {
+  .grilla-modulos {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1232,7 +1217,6 @@ h3 {
   .grilla-portada,
   .grilla-articulos,
   .grilla-modulos,
-  .dashboard-grid,
   .lista-articulos .tarjeta-articulo {
     grid-template-columns: 1fr;
   }

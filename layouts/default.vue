@@ -12,3 +12,5 @@ import AvisoAnalitica from '~/components/publico/AvisoAnalitica.vue'
     <AvisoAnalitica />
   </div>
 </template>
+
+<style src="~/assets/css/landing.css"></style>

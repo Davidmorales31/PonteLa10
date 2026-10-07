@@ -24,10 +24,7 @@ export default defineNuxtConfig({
   },
   modules: ['@nuxt/eslint'],
   css: [
-    '~/assets/css/main.css',
-    '~/assets/css/landing.css',
-    '~/assets/css/resultados.css',
-    '~/assets/css/admin.css'
+    '~/assets/css/main.css'
   ],
   app: {
     head: {

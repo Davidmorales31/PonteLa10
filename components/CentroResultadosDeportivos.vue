@@ -187,3 +187,5 @@ onMounted(() => {
     </div>
   </div>
 </template>
+
+<style src="~/assets/css/resultados.css"></style>
