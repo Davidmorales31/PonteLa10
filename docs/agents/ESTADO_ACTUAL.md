@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-## HU-GRO-04 — oportunidades orgánicas (validado local, despliegue pendiente, 2026-10-07)
+## HU-GRO-04 — oportunidades orgánicas (Production, 2026-10-07)
 
 - El panel prioriza consultas y páginas usando posición 5–20, impresiones/CTR
   relativos al mismo reporte, aparición en varias URLs y pérdida de posición.
@@ -8,11 +8,13 @@
   período comparable se marca como posible emergente, no como consulta nueva
   confirmada. Las recomendaciones no modifican ni publican artículos.
 - Añade acciones `optimizar`, `actualizar`, `consolidar` e `ignorar`, y conserva
-  decisiones previas de ED-21. El historial se diseñó como tabla privada con
-  RLS y trigger append-only; la migración
-  `20261007122917_hu_gro04_historial_oportunidades` todavía no está aplicada en
-  Production. El endpoint informa si su vista alcanzó el tope de 5.000 y las
-  decisiones antiguas permanecen almacenadas.
+  decisiones previas de ED-21. El historial es una tabla privada con RLS y
+  trigger append-only. La migración
+  `20261007132510_hu_gro04_historial_oportunidades` se aplicó en Supabase
+  Production. Se verificó RLS, la única política de lectura editorial, ausencia
+  de lectura anónima y de escritura directa autenticada, trigger activo y cero
+  filas; la función de guardado requiere permiso editorial y MFA. El endpoint
+  informa si su vista alcanzó el tope de 5.000; no descarta ni borra decisiones.
 - La cuenta Search Console revisada no tiene la propiedad de Pont3la10 y no hay
   reportes importados. El panel mostrará estado vacío hasta que el equipo cargue
   un CSV real; no usa métricas ficticias.
@@ -20,10 +22,21 @@
   debajo de resultados en páginas de temporada activa y después de noticias en
   perfiles de jugadores. El componente mantiene sus reglas de consentimiento,
   carga diferida y aislamiento.
-- Validación local: suite completa (87 archivos/448 pruebas), lint, typecheck,
-  build y `git diff --check` pasan. Build muestra solo el aviso upstream
-  `[DEP0155]` de `@vue/shared`. Revisión estática de seguridad sin bloqueos; falta
-  CI/Preview, aplicar/verificar la migración y desplegar/smoke en Production.
+- Suite completa (87 archivos/448 pruebas), lint, typecheck, build y
+  `git diff --check` pasan. Build muestra solo el aviso upstream `[DEP0155]` de
+  `@vue/shared`. El revisor estático no encontró bloqueos P0–P2 y los dos P3 se
+  corrigieron. PR #93 pasó GitHub CI y Vercel Preview; se integró por squash a
+  `main` como `1298d4582cc36fda808a77437a781d84d35ce14c`; Vercel Production
+  reportó `success`.
+- Smoke Production: `/competiciones/liga-betplay` y `/jugadores/luis-diaz`
+  respondieron HTTP 200, canonical presente y slot SSR de publicidad; el hub de
+  Liga BetPlay sirve la temporada actual 2026-II. `/admin/search-console`
+  redirige a login (302) y `/api/admin/search-console` rechaza anónimos (401).
+  No se hizo inspección visual autenticada ni se verificó la entrega de
+  creatividad por el anunciante: los slots siguen sujetos a consentimiento.
+- Los advisors no mostraron hallazgos de seguridad asociados a la tabla o
+  funciones nuevas. Los índices recién creados figuran como no usados porque la
+  tabla aún no tiene filas.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-gro04-oportunidades.md`.
 
 ## HU-ED-23 — fecha de actualización editorial (Production, 2026-10-07)
