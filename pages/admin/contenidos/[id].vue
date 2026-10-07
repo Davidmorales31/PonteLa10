@@ -356,6 +356,7 @@ function aplicarDatos(datos: DatosEditorArticulo) {
     ...datos,
     temaIds: [...datos.temaIds],
     etiquetaIds: [...datos.etiquetaIds],
+    notaCorreccion: datos.notaCorreccion,
     fuente: { ...datos.fuente },
     seo: { ...datos.seo }
   }
@@ -384,6 +385,7 @@ function extraerDatosDetalle(
     portadaId: detalle.portadaId,
     temaIds: [...detalle.temaIds],
     etiquetaIds: [...detalle.etiquetaIds],
+    notaCorreccion: detalle.notaCorreccion,
     documento: detalle.documento,
     fuente: { ...detalle.fuente },
     seo: { ...detalle.seo }
@@ -1135,6 +1137,21 @@ function formatearFecha(fecha: string): string {
               </label>
             </div>
 
+            <label
+              v-if="articulo?.publicadoEn"
+              class="campo-correccion-editor"
+            >
+              Nota de corrección pública
+              <textarea
+                v-model="formulario.notaCorreccion"
+                rows="3"
+                maxlength="500"
+                placeholder="Explica brevemente una corrección relevante (opcional)"
+                :disabled="!puedeEditar"
+              />
+              <small>Solo se mostrará en el sitio cuando publiques esta revisión. La nota interna de versión es independiente.</small>
+            </label>
+
             <div
               v-if="articulo?.fuentesInvestigacion?.length"
               class="fuentes-investigacion-editor"
@@ -1434,6 +1451,9 @@ function formatearFecha(fecha: string): string {
               <li v-for="version in versiones" :key="version.id">
                 <strong>Versión {{ version.numero }}</strong>
                 <span>{{ version.nota || version.titulo }}</span>
+                <small v-if="version.estado === 'published' && version.notaCorreccion">
+                  Corrección pública: {{ version.notaCorreccion }}
+                </small>
                 <time :datetime="version.creadoEn">
                   {{ formatearFecha(version.creadoEn) }}
                 </time>

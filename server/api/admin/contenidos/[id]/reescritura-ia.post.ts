@@ -36,6 +36,7 @@ export default defineEventHandler(async (evento) => {
     portadaId: articulo.portadaId,
     temaIds: articulo.temaIds,
     etiquetaIds: articulo.etiquetaIds,
+    notaCorreccion: articulo.notaCorreccion,
     documento: articulo.documento,
     fuente: articulo.fuente,
     seo: articulo.seo
@@ -63,6 +64,7 @@ export default defineEventHandler(async (evento) => {
       portadaId: articulo.portadaId,
       temaIds: articulo.temaIds,
       etiquetaIds: articulo.etiquetaIds,
+      notaCorreccion: articulo.notaCorreccion,
       documento: articulo.documento,
       fuente: articulo.fuente,
       seo: articulo.seo

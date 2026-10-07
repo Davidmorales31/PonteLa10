@@ -2757,12 +2757,37 @@
 }
 
 .rejilla-campos-editor label,
-.panel-configuracion-editor > label {
+.panel-configuracion-editor > label,
+.panel-fuente-editor > .campo-correccion-editor {
   display: grid;
   gap: 7px;
   color: #344054;
   font-size: 0.74rem;
   font-weight: 850;
+}
+
+.panel-fuente-editor > .campo-correccion-editor {
+  margin-top: 18px;
+}
+
+.panel-fuente-editor > .campo-correccion-editor textarea {
+  width: 100%;
+  min-height: 84px;
+  border: 1px solid #d8dfe9;
+  border-radius: 6px;
+  outline: 0;
+  background: #ffffff;
+  color: #111827;
+  padding: 10px 12px;
+  font: 650 0.78rem/1.4 Montserrat, Inter, Arial, sans-serif;
+}
+
+.panel-fuente-editor > .campo-correccion-editor small,
+.historial-versiones-editor li small {
+  color: #7a8494;
+  font-size: 0.66rem;
+  font-weight: 550;
+  line-height: 1.5;
 }
 
 .campo-ancho-completo {

@@ -119,6 +119,7 @@ useSeoPont3la10(() => ({
   imagenAlto: articuloPublicado.value?.portada?.alto,
   tipoOpenGraph: 'article',
   fechaPublicacion: articuloPublicado.value?.publicadoEn,
+  fechaModificacion: articuloPublicado.value?.modificadoEn || articuloPublicado.value?.publicadoEn,
   seccion: articuloPublicado.value?.categoria?.nombre,
   robots: articuloPublicado.value ? robotsIndexables : robotsNoIndex,
   datosEstructurados: articuloPublicado.value
@@ -141,7 +142,7 @@ useSeoPont3la10(() => ({
             : undefined,
           thumbnailUrl: articuloPublicado.value.portada?.url,
           datePublished: articuloPublicado.value.publicadoEn,
-          dateModified: articuloPublicado.value.publicadoEn,
+          dateModified: articuloPublicado.value.modificadoEn || articuloPublicado.value.publicadoEn,
           articleSection: articuloPublicado.value.categoria?.nombre,
           inLanguage: 'es-CO',
           isAccessibleForFree: true,
@@ -209,6 +210,20 @@ function formatearFecha(fecha: string): string {
     timeZone: 'America/Bogota'
   }).format(new Date(fecha)).replace(/[\u00a0\u202f]/g, ' ')
 }
+
+const fechaActualizacion = computed(() => {
+  const publicadoEn = articuloPublicado.value?.publicadoEn
+  const modificadoEn = articuloPublicado.value?.modificadoEn
+  if (!publicadoEn || !modificadoEn) return null
+
+  const publicacionMs = Date.parse(publicadoEn)
+  const modificacionMs = Date.parse(modificadoEn)
+  return Number.isFinite(publicacionMs)
+    && Number.isFinite(modificacionMs)
+    && modificacionMs > publicacionMs
+    ? modificadoEn
+    : null
+})
 </script>
 
 <template>
@@ -225,8 +240,22 @@ function formatearFecha(fecha: string): string {
         <time :datetime="articuloPublicado.publicadoEn">
           {{ formatearFecha(articuloPublicado.publicadoEn) }}
         </time>
+        <span v-if="fechaActualizacion" class="fecha-actualizacion-articulo">
+          · Actualizado
+          <time :datetime="fechaActualizacion">{{ formatearFecha(fechaActualizacion) }}</time>
+        </span>
       </p>
     </header>
+
+    <aside
+      v-if="articuloPublicado.notaCorreccion"
+      class="nota-correccion-articulo"
+      role="note"
+      aria-label="Nota de corrección editorial"
+    >
+      <strong>Nota de corrección</strong>
+      <p>{{ articuloPublicado.notaCorreccion }}</p>
+    </aside>
 
     <BarraCompartirArticulo
       :titulo="articuloPublicado.titulo"

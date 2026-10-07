@@ -3739,6 +3739,14 @@ body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado,
 body.tema-publico-azul .detalle-articulo-publicado .portada-articulo-publicado figcaption {
   color: #bdcbe0;
 }
+body.tema-publico-azul .detalle-articulo-publicado .nota-correccion-articulo {
+  border-left-color: #68d9ff;
+  background: #102f4c;
+  color: #dce8f6;
+}
+body.tema-publico-azul .detalle-articulo-publicado .nota-correccion-articulo strong {
+  color: #f4f7fc;
+}
 body.tema-publico-azul .detalle-articulo-publicado .miga-articulo a,
 body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado a {
   color: #68d9ff;
@@ -3839,6 +3847,14 @@ body.tema-publico-blanco .detalle-articulo-publicado {
   padding: clamp(20px, 4vw, 38px);
 }
 body.tema-publico-blanco .detalle-articulo-publicado :is(h1, h2, h3, .fuentes-articulo-publicado strong) {
+  color: #102d52;
+}
+body.tema-publico-blanco .detalle-articulo-publicado .nota-correccion-articulo {
+  border-left-color: #c79a00;
+  background: #fff8d7;
+  color: #29394e;
+}
+body.tema-publico-blanco .detalle-articulo-publicado .nota-correccion-articulo strong {
   color: #102d52;
 }
 body.tema-publico-blanco .detalle-articulo-publicado :is(.miga-articulo, .resumen-articulo, .meta-articulo, .fuentes-articulo-publicado, .portada-articulo-publicado figcaption) {
