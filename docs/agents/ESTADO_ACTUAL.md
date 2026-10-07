@@ -15,16 +15,14 @@
   fecha.
 - **HU-GRO-03 — filtros SSR:** Production exponía correctamente paginación y SSR,
   pero la categoría `futbol-colombiano` mezclaba notas de otras categorías por
-  aliases de texto y etiquetas editoriales inconsistentes. La RPC ahora exige
+  aliases de texto y etiquetas editoriales inconsistentes. La RPC exige ahora
   categoría primaria exacta para ese slug; los hubs/temas transversales conservan
-  sus filtros independientes. Smoke de Production (2026-10-07): 57 artículos,
-  57 slugs únicos, cero resultados cuya categoría primaria no sea
-  `Fútbol colombiano`; la consulta independiente de `seleccion-colombia` sigue
-  devolviendo resultados. La API respondió 49 + 8 registros con `hayMas` correcto
-  y la ruta `/futbol-colombiano` respondió HTTP 200 con canonical propia. Las dos
-  migraciones y el ajuste del parser están implementados; el código TypeScript
-  aún requiere integrarse y desplegarse por PR. No se modificó contenido ni se
-  consumió cuota deportiva.
+  sus filtros independientes. PR #84 se integró a `main` el 2026-10-07 como
+  `93b7a18`; Vercel Production reportó deployment exitoso. Smoke posterior:
+  API 49 + 8 artículos, 57 slugs únicos, cero categorías cruzadas y
+  `hayMas` correcto; el tema `seleccion-colombia` sigue devolviendo resultados.
+  `/futbol-colombiano` respondió HTTP 200 con canonical propia y 30 enlaces de
+  artículos en SSR. No se modificó contenido ni se consumió cuota deportiva.
 - El listado de noticias ya incluye un slot nativo de Adsterra condicionado al
   consentimiento de publicidad. Se conserva una sola ubicación en este hub para
   no repetir anuncios ni interrumpir la intención de lectura.
