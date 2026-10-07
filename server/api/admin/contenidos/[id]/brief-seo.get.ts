@@ -8,6 +8,8 @@ import { esquemaIdEditorial } from '~/utils/editorial/contenido'
 interface FilaBriefSeo {
   target_query: string | null
   search_intent: BriefSeoArticuloEditorial['intencionBusqueda']
+  template_id: BriefSeoArticuloEditorial['plantillaId']
+  template_fields_complete: string[]
   parent_cluster: string | null
   freshness_window_days: number | null
   opportunity_source: string | null
@@ -29,7 +31,7 @@ export default defineEventHandler(async (evento): Promise<BriefSeoArticuloEditor
 
   const { data, error } = await cliente
     .from('editorial_article_search_briefs')
-    .select('target_query,search_intent,parent_cluster,freshness_window_days,opportunity_source,editorial_differentiator,status,confirmed_at,updated_at')
+    .select('target_query,search_intent,template_id,template_fields_complete,parent_cluster,freshness_window_days,opportunity_source,editorial_differentiator,status,confirmed_at,updated_at')
     .eq('article_id', articuloId)
     .maybeSingle()
 
@@ -43,6 +45,8 @@ export default defineEventHandler(async (evento): Promise<BriefSeoArticuloEditor
     return {
       consultaObjetivo: null,
       intencionBusqueda: null,
+      plantillaId: null,
+      camposCompletos: [],
       clusterPrincipal: null,
       ventanaFrescuraDias: null,
       origenOportunidad: null,
@@ -56,6 +60,8 @@ export default defineEventHandler(async (evento): Promise<BriefSeoArticuloEditor
   return {
     consultaObjetivo: fila.target_query,
     intencionBusqueda: fila.search_intent,
+    plantillaId: fila.template_id,
+    camposCompletos: fila.template_fields_complete,
     clusterPrincipal: fila.parent_cluster,
     ventanaFrescuraDias: fila.freshness_window_days,
     origenOportunidad: fila.opportunity_source,

@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { Check, LoaderCircle, Search } from '@lucide/vue'
-import type { BriefSeoArticuloEditorial } from '~/types/contenidoEditorial'
+import type { BriefSeoArticuloEditorial, IdPlantillaEditorial } from '~/types/contenidoEditorial'
 import {
   esquemaBriefSeoArticulo,
   intencionesBusquedaEditoriales
 } from '~/utils/editorial/briefSeo'
+import { obtenerPlantillaEditorial } from '~/utils/editorial/plantillas'
 
 const props = defineProps<{
   articuloId: string
+  plantillaId: IdPlantillaEditorial | null
+  camposCompletos: string[]
   deshabilitado?: boolean
   puedeConfirmarBrief?: boolean
 }>()
@@ -26,6 +29,8 @@ const etiquetasIntencion: Record<typeof intencionesBusquedaEditoriales[number], 
 const valorVacio = (): BriefSeoArticuloEditorial => ({
   consultaObjetivo: null,
   intencionBusqueda: null,
+  plantillaId: null,
+  camposCompletos: [],
   clusterPrincipal: null,
   ventanaFrescuraDias: null,
   origenOportunidad: null,
@@ -80,6 +85,16 @@ function mostrarFechaConfirmacion(valor: string): string {
 }
 
 watch(() => props.articuloId, cargarBrief, { immediate: true })
+watch(() => props.plantillaId, (id, anterior) => {
+  const plantilla = obtenerPlantillaEditorial(id)
+  if (plantilla) {
+    formulario.intencionBusqueda = plantilla.intencion
+    formulario.ventanaFrescuraDias = plantilla.frescuraDias
+  } else if (anterior !== undefined && anterior !== null) {
+    formulario.intencionBusqueda = null
+    formulario.ventanaFrescuraDias = null
+  }
+})
 
 function cargarFormulario(brief: BriefSeoArticuloEditorial) {
   briefGuardado.value = brief
@@ -111,6 +126,8 @@ async function cargarBrief() {
 async function guardar(estadoBrief: 'propuesto' | 'confirmado') {
   const resultado = esquemaBriefSeoArticulo.safeParse({
     ...datosActuales.value,
+    plantillaId: props.plantillaId,
+    camposCompletos: props.camposCompletos,
     estadoBrief
   })
   if (!resultado.success) {
@@ -171,8 +188,8 @@ function obtenerMensajeError(errorPeticion: unknown): string {
         <input v-model="formulario.consultaObjetivo" type="text" maxlength="160" :disabled="deshabilitado || cargando || guardando" placeholder="Consulta observada o hipótesis editorial">
       </label>
       <label>
-        Intención de búsqueda
-        <select v-model="formulario.intencionBusqueda" :disabled="deshabilitado || cargando || guardando">
+        Intención de búsqueda{{ plantillaId ? ' · definida por la plantilla' : '' }}
+        <select v-model="formulario.intencionBusqueda" :disabled="deshabilitado || cargando || guardando || Boolean(plantillaId)">
           <option :value="null">Por definir</option>
           <option v-for="intencion in intencionesBusquedaEditoriales" :key="intencion" :value="intencion">{{ etiquetasIntencion[intencion] }}</option>
         </select>
