@@ -1,6 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { analizarConsultaArticulosPublicos } from '~/server/utils/filtrosArticulosPublicos'
-import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
+import { listarArticulosPublicosPorEntidad } from '~/server/utils/repositorioContenidoEditorial'
 import { listarEquiposLigaPublicos, type ClasificacionEquipoPublica, type EquipoLigaPublico } from '~/server/utils/equiposLigaPublicos'
 import { listarPartidosSeoPublicos, normalizarClaveEquipoLiga, type PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
@@ -8,9 +7,9 @@ import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 
 export const catalogoCompeticionesPublicas = {
-  'liga-betplay': { nombre: 'Liga BetPlay', tipo: 'liga' as const, temaNoticias: 'liga-betplay' },
-  'torneo-betplay': { nombre: 'Torneo BetPlay', tipo: 'liga' as const, temaNoticias: 'torneo-betplay' },
-  'copa-colombia': { nombre: 'Copa Colombia', tipo: 'copa' as const, temaNoticias: 'copa-colombia' }
+  'liga-betplay': { nombre: 'Liga BetPlay', tipo: 'liga' as const },
+  'torneo-betplay': { nombre: 'Torneo BetPlay', tipo: 'liga' as const },
+  'copa-colombia': { nombre: 'Copa Colombia', tipo: 'copa' as const }
 }
 
 export type SlugCompeticionPublica = keyof typeof catalogoCompeticionesPublicas
@@ -167,7 +166,6 @@ export async function obtenerFichaCompeticionPublica(
   if (!temporadasDisponibles.includes(temporada)) return null
 
   const partidos = partidosCompetencia.filter(partido => partido.temporada === temporada)
-  const equiposCompetencia = listarEquiposCompeticion(partidosCompetencia)
   const esTemporadaActual = temporada === temporadaActual
   const snapshotTabla = config.tipo === 'liga' && !esTemporadaActual
     ? await cargarSnapshotTablaHistorica(cliente, slugSolicitado, temporada, base.equipos, ahoraMs)
@@ -200,9 +198,7 @@ export async function obtenerFichaCompeticionPublica(
   })
   const noticias = await listarNoticiasCompeticion(
     cliente,
-    config.temaNoticias,
-    config.nombre,
-    equiposCompetencia.map(equipo => equipo.nombre)
+    slugSolicitado
   )
   const verificados = [
     ...partidos.map(partido => partido.verificadoEn),
@@ -782,87 +778,25 @@ function esFuenteDimayor(valor: string): boolean {
 
 async function listarNoticiasCompeticion(
   cliente: SupabaseClient,
-  tema: string,
-  nombreCompetencia: string,
-  nombresEquipos: string[]
+  slug: SlugCompeticionPublica
 ): Promise<NoticiaCompeticionPublica[]> {
-  const consulta = analizarConsultaArticulosPublicos({ tema, limite: '30' })
-  if (!consulta) return []
   try {
-    const noticias = await listarArticulosPublicosEditoriales(cliente, consulta.limite, 0, consulta)
-    return noticias
-      .filter(noticia => esNoticiaRelacionadaCompeticion(
-        noticia,
-        nombreCompetencia,
-        nombresEquipos
-      ))
-      .slice(0, 6)
-      .map(noticia => ({
-        slug: noticia.slug,
-        titulo: noticia.titulo,
-        resumen: noticia.resumen,
-        tipo: noticia.tipo,
-        publicadoEn: noticia.publicadoEn,
-        autorNombre: noticia.autorNombre,
-        categoria: noticia.categoria,
-        imagen: noticia.imagen,
-        ...(noticia.lecturaMinutos === undefined ? {} : { lecturaMinutos: noticia.lecturaMinutos })
-      }))
+    const relacionadas = await listarArticulosPublicosPorEntidad(cliente, 'competition', slug, 6)
+    return relacionadas.map(noticia => ({
+      slug: noticia.slug,
+      titulo: noticia.titulo,
+      resumen: noticia.resumen,
+      tipo: noticia.tipo,
+      publicadoEn: noticia.publicadoEn,
+      autorNombre: noticia.autorNombre,
+      categoria: noticia.categoria,
+      imagen: noticia.imagen,
+      ...(noticia.lecturaMinutos === undefined ? {} : { lecturaMinutos: noticia.lecturaMinutos })
+    }))
   } catch {
+    // No sustituir una relación editorial confirmada por una coincidencia textual.
     return []
   }
-}
-
-export function esNoticiaRelacionadaCompeticion(
-  noticia: Pick<ResumenArticuloPublico, 'titulo' | 'resumen'>,
-  nombreCompetencia: string,
-  nombresEquipos: string[]
-): boolean {
-  const titulo = normalizarTextoCompeticion(noticia.titulo)
-  const texto = normalizarTextoCompeticion(`${noticia.titulo} ${noticia.resumen}`)
-  if (contieneFraseNormalizada(titulo, normalizarTextoCompeticion(nombreCompetencia))) return true
-
-  const equiposPorAlias = new Map<string, Set<number>>()
-  nombresEquipos.forEach((nombre, indice) => {
-    for (const alias of crearAliasEquipoCompeticion(nombre)) {
-      const equipos = equiposPorAlias.get(alias) || new Set<number>()
-      equipos.add(indice)
-      equiposPorAlias.set(alias, equipos)
-    }
-  })
-
-  const equiposMencionados = new Set<number>()
-  for (const [alias, equipos] of equiposPorAlias) {
-    if (alias.length >= 4 && equipos.size === 1 && contieneFraseNormalizada(texto, alias)) {
-      equiposMencionados.add([...equipos][0]!)
-    }
-  }
-  return equiposMencionados.size >= 2
-}
-
-function crearAliasEquipoCompeticion(nombre: string): Set<string> {
-  const completo = normalizarTextoCompeticion(nombre)
-  const palabrasIgnorables = new Set(['atletico', 'deportivo', 'independiente', 'fc', 'ceif', 'de', 'del', 'la', 'los'])
-  const palabras = completo.split(' ').filter(palabra => !palabrasIgnorables.has(palabra))
-  const alias = new Set([completo, palabras.join(' ')])
-  if (palabras.length > 1) {
-    alias.add(palabras[0]!)
-    alias.add(palabras[palabras.length - 1]!)
-  }
-  return alias
-}
-
-function normalizarTextoCompeticion(valor: string): string {
-  return valor.toLocaleLowerCase('es-CO')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim()
-}
-
-function contieneFraseNormalizada(texto: string, frase: string): boolean {
-  return Boolean(frase) && ` ${texto} `.includes(` ${frase} `)
 }
 
 function normalizarNombreJornada(valor: string | null): string {

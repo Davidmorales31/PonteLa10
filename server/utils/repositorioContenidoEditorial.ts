@@ -27,6 +27,7 @@ import type {
   ResultadoGuardadoEditorial,
   TaxonomiasEditoriales,
   TemaEditorial,
+  TipoEntidadSeo,
   VersionArticuloEditorial
 } from '~/types/contenidoEditorial'
 import type { PermisoEditorial } from '~/types/editorial'
@@ -1443,21 +1444,45 @@ export async function listarArticulosPublicosEditoriales(
     throw crearErrorRepositorio('No se pudieron cargar las publicaciones.')
   }
 
-  return ((data || []) as unknown as FilaResumenArticuloPublicoRpc[])
-    .map(fila => ({
-      id: fila.id,
-      slug: fila.slug,
-      titulo: fila.titulo,
-      resumen: fila.resumen,
-      tipo: fila.tipo,
-      publicadoEn: fila.publicadoEn,
-      autorNombre: fila.autorNombre,
-      categoria: fila.categoria,
-      lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,
-      imagen: fila.imagenBucket && fila.imagenPath
-        ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
-        : ''
-    }))
+  return mapearResumenesPublicos(data, clienteSupabase)
+}
+
+export async function listarArticulosPublicosPorEntidad(
+  clienteSupabase: SupabaseClient,
+  tipo: TipoEntidadSeo,
+  slug: string,
+  limite = 6
+): Promise<ResumenArticuloPublico[]> {
+  const { data, error } = await clienteSupabase.rpc('list_public_editorial_articles_for_entity', {
+    requested_entity_type: tipo,
+    requested_entity_slug: slug,
+    result_limit: Math.min(Math.max(limite, 1), 50),
+    result_offset: 0
+  })
+
+  if (error) throw crearErrorRepositorio('No se pudieron cargar las publicaciones relacionadas.')
+  return mapearResumenesPublicos(data, clienteSupabase)
+}
+
+function mapearResumenesPublicos(
+  data: unknown,
+  clienteSupabase: SupabaseClient
+): ResumenArticuloPublico[] {
+  const filas = Array.isArray(data) ? data as FilaResumenArticuloPublicoRpc[] : []
+  return filas.map(fila => ({
+    id: fila.id,
+    slug: fila.slug,
+    titulo: fila.titulo,
+    resumen: fila.resumen,
+    tipo: fila.tipo,
+    publicadoEn: fila.publicadoEn,
+    autorNombre: fila.autorNombre,
+    categoria: fila.categoria,
+    lecturaMinutos: typeof fila.lecturaMinutos === 'number' ? fila.lecturaMinutos : undefined,
+    imagen: fila.imagenBucket && fila.imagenPath
+      ? obtenerUrlPublicaMedio(clienteSupabase, fila.imagenBucket, fila.imagenPath)
+      : ''
+  }))
 }
 
 export async function obtenerUltimaNoticiaPublicaConPortada(

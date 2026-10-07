@@ -15,21 +15,19 @@ if (!perfil.value) {
 }
 
 const ficha = perfil.value
-const { data: respuestaNoticias, error: errorNoticias } = await useFetch<ResumenArticuloPublico[]>(
-  '/api/articulos',
+const { data: respuestaNoticiasRelacionales, error: errorNoticiasRelacionales } = await useFetch<ResumenArticuloPublico[]>(
+  `/api/articulos/entidad/player/${encodeURIComponent(ficha.slug)}`,
   {
-    key: `articulos-jugador-${ficha.slug}`,
-    query: { buscar: ficha.nombre, limite: 8 },
+    key: `articulos-relacionados-jugador-${ficha.slug}`,
     default: () => [],
     ignoreResponseError: true
   }
 )
 const noticiasRelacionadas = computed(() => {
-  const nombre = normalizarBusqueda(ficha.nombre)
-  return (Array.isArray(respuestaNoticias.value) ? respuestaNoticias.value : [])
-    .filter(articulo => normalizarBusqueda(`${articulo.titulo} ${articulo.resumen}`).includes(nombre))
+  return (Array.isArray(respuestaNoticiasRelacionales.value) ? respuestaNoticiasRelacionales.value : [])
     .slice(0, 6)
 })
+const errorNoticiasCarga = computed(() => Boolean(errorNoticiasRelacionales.value))
 
 const { data: respuestaResultados } = await useFetch<RespuestaResultados>(
   '/api/resultados',
@@ -105,10 +103,6 @@ useSeoPont3la10(() => ({
     }
   ]
 }))
-
-function normalizarBusqueda(valor: string): string {
-  return valor.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('es-CO')
-}
 
 function fechaPartido(partido: PartidoResultado): string {
   const fecha = Date.parse(partido.fechaIso)
@@ -207,7 +201,7 @@ onMounted(() => {
               <p>{{ noticia.resumen }}</p>
             </article>
           </div>
-          <p v-else-if="!errorNoticias" class="estado-vacio-jugador">Aún no hay artículos publicados que mencionen a {{ ficha.nombre }}. La ficha no inventa actualidad cuando no hay cobertura editorial confirmada.</p>
+          <p v-else-if="!errorNoticiasCarga" class="estado-vacio-jugador">Aún no hay artículos vinculados editorialmente con {{ ficha.nombre }}. La ficha no inventa actualidad cuando no hay cobertura confirmada.</p>
           <p v-else class="estado-vacio-jugador">No fue posible cargar las noticias relacionadas. Puedes revisar la búsqueda editorial de {{ ficha.nombre }}.</p>
         </section>
       </div>
