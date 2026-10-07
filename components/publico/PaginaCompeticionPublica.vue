@@ -28,6 +28,9 @@ if (props.temporada && ficha.value?.temporadaActual === props.temporada) {
 
 const temporadasIndexables = computed(() => ficha.value?.temporadas.filter(temporada => temporada.indexable) || [])
 const partidosTemporada = computed(() => ficha.value?.temporadas.find(t => t.temporada === ficha.value?.temporada)?.partidosPublicos || 0)
+const indiceTemporadaActual = computed(() => temporadasIndexables.value.findIndex(temporada => temporada.temporada === ficha.value?.temporada))
+const temporadaAnterior = computed(() => temporadasIndexables.value[indiceTemporadaActual.value + 1] || null)
+const temporadaSiguiente = computed(() => indiceTemporadaActual.value > 0 ? temporadasIndexables.value[indiceTemporadaActual.value - 1] || null : null)
 const fasesTabla = computed(() => {
   const grupos = new Map<string, FilaTablaCompeticionPublica[]>()
   for (const fila of ficha.value?.tabla || []) {
@@ -205,16 +208,22 @@ function fechaActualizacion(fecha: string | null): string {
         <p class="etiqueta-seccion">ARCHIVO OFICIAL</p>
         <h2 id="titulo-temporadas">Temporadas</h2>
       </div>
-      <nav aria-label="Temporadas disponibles">
-        <NuxtLink
-          v-for="opcionTemporada in temporadasIndexables"
-          :key="opcionTemporada.temporada"
-          :to="opcionTemporada.ruta"
-          :aria-current="opcionTemporada.temporada === ficha.temporada ? 'page' : undefined"
-        >
-          {{ opcionTemporada.temporada }}<span v-if="opcionTemporada.esActual"> · Actual</span>
-        </NuxtLink>
-      </nav>
+      <div class="selector-temporadas-enlaces">
+        <nav aria-label="Temporadas disponibles">
+          <NuxtLink
+            v-for="opcionTemporada in temporadasIndexables"
+            :key="opcionTemporada.temporada"
+            :to="opcionTemporada.ruta"
+            :aria-current="opcionTemporada.temporada === ficha.temporada ? 'page' : undefined"
+          >
+            {{ opcionTemporada.temporada }}<span v-if="opcionTemporada.esActual"> · Actual</span>
+          </NuxtLink>
+        </nav>
+        <nav class="navegacion-temporada-adjunta" aria-label="Temporadas anterior y siguiente">
+          <NuxtLink v-if="temporadaAnterior" :to="temporadaAnterior.ruta">← Temporada anterior · {{ temporadaAnterior.temporada }}</NuxtLink>
+          <NuxtLink v-if="temporadaSiguiente" :to="temporadaSiguiente.ruta">Temporada siguiente · {{ temporadaSiguiente.temporada }} →</NuxtLink>
+        </nav>
+      </div>
       <small v-if="ficha.actualizadaEn">Última verificación: {{ fechaActualizacion(ficha.actualizadaEn) }} (hora de Colombia)</small>
     </section>
 
@@ -227,8 +236,14 @@ function fechaActualizacion(fecha: string | null): string {
     <section v-if="ficha.tablaDisponible" id="posiciones" class="bloque-liga-colombia panel-competicion">
       <header class="encabezado-seccion-competicion">
         <div><p class="etiqueta-seccion">{{ ficha.temporada }}</p><h2>Tabla de posiciones</h2></div>
-        <span class="sello-verificado">Datos públicos confirmados</span>
+        <span v-if="ficha.snapshotTabla" class="sello-verificado">Tabla final · snapshot inmutable</span>
+        <span v-else class="sello-verificado">Datos públicos confirmados</span>
       </header>
+      <p v-if="ficha.snapshotTabla" class="nota-snapshot-tabla">
+        Cierre de la fase regular: {{ fechaActualizacion(ficha.snapshotTabla.finalizadaEn) }} · Verificada: {{ fechaActualizacion(ficha.snapshotTabla.verificadaEn) }} ·
+        <span>Fuentes: </span>
+        <a v-for="(fuente, indice) in ficha.snapshotTabla.fuentes" :key="fuente" :href="fuente" target="_blank" rel="noopener noreferrer">{{ indice ? 'fuente ' + (indice + 1) : 'fuente principal' }}</a>
+      </p>
       <div v-for="fase in fasesTabla" :key="fase.fase" class="fase-tabla-liga">
         <h3>{{ fase.fase }}</h3>
         <div class="tabla-liga-scroll">
@@ -239,9 +254,12 @@ function fechaActualizacion(fecha: string | null): string {
               <tr v-for="fila in fase.filas" :key="`${fila.temporada}-${fila.fase}-${fila.posicion}-${fila.competencia}`">
                 <td>{{ fila.posicion }}</td>
                 <td>
-                  <NuxtLink :to="`/equipos/${encodeURIComponent(fila.equipoSlug)}`" class="equipo-tabla-liga">
+                  <NuxtLink v-if="fila.equipoSlug" :to="`/equipos/${encodeURIComponent(fila.equipoSlug)}`" class="equipo-tabla-liga">
                     <img v-if="fila.equipoEscudo" :src="fila.equipoEscudo" :alt="`Escudo de ${fila.equipoNombre}`" width="32" height="32" loading="lazy"><span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipoNombre) }}</span><strong>{{ fila.equipoNombre }}</strong>
                   </NuxtLink>
+                  <span v-else class="equipo-tabla-liga equipo-tabla-sin-ficha">
+                    <img v-if="fila.equipoEscudo" :src="fila.equipoEscudo" :alt="`Escudo de ${fila.equipoNombre}`" width="32" height="32" loading="lazy"><span v-else class="escudo-fallback" aria-hidden="true">{{ iniciales(fila.equipoNombre) }}</span><strong>{{ fila.equipoNombre }}</strong>
+                  </span>
                 </td>
                 <td>{{ fila.jugados }}</td><td>{{ fila.ganados }}</td><td>{{ fila.empatados }}</td><td>{{ fila.perdidos }}</td><td>{{ fila.diferencia }}</td><td><strong>{{ fila.puntos }}</strong></td>
               </tr>
@@ -252,8 +270,9 @@ function fechaActualizacion(fecha: string | null): string {
     </section>
     <section v-else-if="ficha.competencia.tipo === 'liga'" id="posiciones" class="bloque-liga-colombia panel-competicion estado-sin-tabla">
       <p class="etiqueta-seccion">TABLA DE POSICIONES</p>
-      <h2>Clasificación pendiente de confirmación</h2>
-      <p>No mostramos una tabla parcial como si fuera oficial. Consulta el calendario y los resultados mientras se publica una clasificación completa y confirmada para {{ ficha.temporada }}.</p>
+      <h2>{{ ficha.temporada === ficha.temporadaActual ? 'Clasificación pendiente de confirmación' : 'Tabla final histórica pendiente de verificación' }}</h2>
+      <p v-if="ficha.temporada === ficha.temporadaActual">No mostramos una tabla parcial como si fuera oficial. Consulta el calendario y los resultados mientras se publica una clasificación completa y confirmada para {{ ficha.temporada }}.</p>
+      <p v-else>No mostramos la tabla actual como si fuera un resultado histórico. Aún no hay un snapshot final, completo y verificado guardado para {{ ficha.temporada }}.</p>
       <NuxtLink to="/liga-colombiana">Volver al hub de Liga colombiana <span aria-hidden="true">→</span></NuxtLink>
     </section>
 
@@ -337,6 +356,8 @@ function fechaActualizacion(fecha: string | null): string {
 .selector-temporadas { display: grid; grid-template-columns: minmax(0, auto) 1fr; align-items: center; gap: 10px 24px; }
 .selector-temporadas h2, .panel-competicion h2 { margin: 2px 0 0; color: #10233d; font-size: clamp(1.25rem, 2.4vw, 1.7rem); }
 .selector-temporadas nav { display: flex; flex-wrap: wrap; gap: 9px; }
+.selector-temporadas-enlaces { display: grid; gap: 9px; }
+.selector-temporadas .navegacion-temporada-adjunta a { padding-block: 6px; font-size: .86rem; }
 .selector-temporadas nav a { padding: 8px 13px; color: #145e99; border: 1px solid #d5e1ed; border-radius: 999px; text-decoration: none; }
 .selector-temporadas nav a[aria-current="page"] { color: #fff; border-color: #145e99; background: #145e99; }
 .selector-temporadas small { grid-column: 1 / -1; color: #65758a; }
@@ -348,6 +369,8 @@ function fechaActualizacion(fecha: string | null): string {
 .encabezado-seccion-competicion { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 17px; }
 .encabezado-seccion-competicion h2 { margin-top: 3px; }
 .sello-verificado { padding: 6px 10px; border-radius: 999px; background: #e7f5ed; color: #17613b; font-weight: 700; }
+.nota-snapshot-tabla { margin: -5px 0 16px; color: #586980; font-size: .84rem; line-height: 1.6; }
+.nota-snapshot-tabla a { margin-left: 5px; color: #145e99; }
 .fase-tabla-liga + .fase-tabla-liga { margin-top: 20px; }
 .fase-tabla-liga h3 { margin: 0 0 8px; color: #173b60; }
 .tabla-liga-scroll { overflow-x: auto; }
@@ -356,6 +379,7 @@ function fechaActualizacion(fecha: string | null): string {
 .tabla-liga-scroll th, .tabla-liga-scroll td { padding: 10px 8px; border-bottom: 1px solid #e2e8f0; text-align: right; white-space: nowrap; }
 .tabla-liga-scroll th:nth-child(2), .tabla-liga-scroll td:nth-child(2) { text-align: left; }
 .equipo-tabla-liga { display: inline-flex; align-items: center; gap: 9px; color: #145e99; text-decoration: none; }
+.equipo-tabla-sin-ficha { color: inherit; }
 .equipo-tabla-liga:hover, .equipo-tabla-liga:focus-visible, .enlace-competicion:hover { text-decoration: underline; }
 .lista-partidos-competicion { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
 .lista-partidos-competicion > li { min-width: 0; }
@@ -386,6 +410,7 @@ function fechaActualizacion(fecha: string | null): string {
 :global(body.tema-publico-azul) .fase-tabla-liga h3,
 :global(body.tema-publico-azul) .grilla-noticias-competicion h3 a { color: #f1f6ff; }
 :global(body.tema-publico-azul) .selector-temporadas small,
+:global(body.tema-publico-azul) .nota-snapshot-tabla,
 :global(body.tema-publico-azul) .resumen-competicion span,
 :global(body.tema-publico-azul) .encabezado-seccion-competicion > span,
 :global(body.tema-publico-azul) .estado-competicion-vacio,
@@ -396,6 +421,7 @@ function fechaActualizacion(fecha: string | null): string {
 :global(body.tema-publico-azul) .resumen-competicion strong,
 :global(body.tema-publico-azul) .partido-jornada-compacto p span { color: #8ce8ff; }
 :global(body.tema-publico-azul) .selector-temporadas nav a,
+:global(body.tema-publico-azul) .nota-snapshot-tabla a,
 :global(body.tema-publico-azul) .equipo-tabla-liga,
 :global(body.tema-publico-azul) .partido-jornada-compacto > a,
 :global(body.tema-publico-azul) .enlace-competicion,

@@ -53,9 +53,16 @@ export interface FichaJornadaCompeticionPublica {
 }
 
 export interface FilaTablaCompeticionPublica extends ClasificacionEquipoPublica {
-  equipoSlug: string
+  equipoSlug: string | null
   equipoNombre: string
   equipoEscudo: string | null
+}
+
+export interface SnapshotTablaCompeticionPublica {
+  finalizadaEn: string
+  verificadaEn: string
+  fuente: string
+  fuentes: string[]
 }
 
 export type NoticiaCompeticionPublica = Omit<ResumenArticuloPublico, 'id'>
@@ -67,6 +74,7 @@ export interface FichaCompeticionPublica {
   indexable: boolean
   temporadas: TemporadaCompeticionPublica[]
   tablaDisponible: boolean
+  snapshotTabla: SnapshotTablaCompeticionPublica | null
   tabla: FilaTablaCompeticionPublica[]
   partidosEnVivo: PartidoSeoPublico[]
   proximosPartidos: PartidoSeoPublico[]
@@ -160,13 +168,18 @@ export async function obtenerFichaCompeticionPublica(
 
   const partidos = partidosCompetencia.filter(partido => partido.temporada === temporada)
   const equiposCompetencia = listarEquiposCompeticion(partidosCompetencia)
-  const filasTabla = config.tipo === 'liga'
+  const esTemporadaActual = temporada === temporadaActual
+  const snapshotTabla = config.tipo === 'liga' && !esTemporadaActual
+    ? await cargarSnapshotTablaHistorica(cliente, slugSolicitado, temporada, base.equipos, ahoraMs)
+    : null
+  const filasTablaActual = config.tipo === 'liga' && esTemporadaActual
     ? base.equipos.flatMap(equipo => equipo.clasificaciones
       .filter(fila => fila.competencia === slugSolicitado && fila.temporada === temporada)
       .map(fila => ({ ...fila, equipoSlug: equipo.slug, equipoNombre: equipo.nombre, equipoEscudo: equipo.escudo })))
       .sort((a, b) => a.fase.localeCompare(b.fase, 'es-CO') || a.posicion - b.posicion)
     : []
-  const tabla = seleccionarFasesClasificacionCompletas(filasTabla, slugSolicitado)
+  const tabla = snapshotTabla?.filas
+    || seleccionarFasesClasificacionCompletas(filasTablaActual, slugSolicitado)
   const tablaDisponible = tabla.length > 0
   const equipos = listarEquiposCompeticion(partidos)
   const temporadas = temporadasDisponibles.map(temporadaDisponible => crearResumenTemporada(
@@ -203,6 +216,7 @@ export async function obtenerFichaCompeticionPublica(
     indexable,
     temporadas,
     tablaDisponible,
+    snapshotTabla: snapshotTabla?.metadata || null,
     tabla,
     partidosEnVivo: partidos
       .filter(partido => etiquetaEstadoSeoPartido(partido.estado) === 'EN VIVO')
@@ -425,6 +439,149 @@ export function seleccionarFasesClasificacionCompletas(
   return fasesCompletas
     .flatMap(entrada => entrada.filas)
     .sort((a, b) => a.fase.localeCompare(b.fase, 'es-CO') || a.posicion - b.posicion)
+}
+
+interface FilaSnapshotTablaPersistida {
+  competition_slug: string
+  season: string
+  phase: string
+  team_count: number
+  matches_per_team: number
+  standings: unknown
+  source_name: string
+  source_urls: string[]
+  checked_at: string
+  finalized_at: string
+  is_public: boolean
+  publication_rights_confirmed: boolean
+}
+
+export function validarSnapshotTablaPublica(
+  valor: unknown,
+  slug: SlugCompeticionPublica,
+  temporada: string,
+  equipos: EquipoLigaPublico[],
+  ahoraMs = Date.now()
+): { filas: FilaTablaCompeticionPublica[], metadata: SnapshotTablaCompeticionPublica } | null {
+  if (slug === 'copa-colombia' || !valor || typeof valor !== 'object') return null
+  const snapshot = valor as Partial<FilaSnapshotTablaPersistida>
+  const cantidadEsperada = slug === 'liga-betplay' ? 20 : slug === 'torneo-betplay' ? 16 : 0
+  const fasesPermitidas = slug === 'liga-betplay'
+    ? ['Todos contra todos']
+    : ['Fase todos contra todos']
+  const verificadoMs = Date.parse(snapshot.checked_at || '')
+  const finalizadoMs = Date.parse(snapshot.finalized_at || '')
+  const urls = Array.isArray(snapshot.source_urls) ? snapshot.source_urls : []
+  if (snapshot.competition_slug !== slug || snapshot.season !== temporada
+    || !fasesPermitidas.includes(snapshot.phase || '')
+    || snapshot.team_count !== cantidadEsperada
+    || !Number.isInteger(snapshot.matches_per_team) || (snapshot.matches_per_team || 0) < 1
+    || (snapshot.matches_per_team || 0) > 80
+    || snapshot.is_public !== true || snapshot.publication_rights_confirmed !== true
+    || typeof snapshot.source_name !== 'string' || !snapshot.source_name.trim()
+    || !Number.isFinite(verificadoMs) || verificadoMs > ahoraMs + 5 * 60 * 1000
+    || !Number.isFinite(finalizadoMs) || finalizadoMs > ahoraMs + 5 * 60 * 1000
+    || !Array.isArray(snapshot.standings) || snapshot.standings.length !== cantidadEsperada
+    || !urls.length || !urls.every(esFuenteSnapshotPermitida)) return null
+
+  const nombres = new Set<string>()
+  const posiciones = new Set<number>()
+  const filas: FilaTablaCompeticionPublica[] = []
+  for (const registro of snapshot.standings) {
+    if (!registro || typeof registro !== 'object') return null
+    const fila = registro as Record<string, unknown>
+    const nombre = typeof fila.team_name === 'string' ? fila.team_name.trim() : ''
+    const posicion = fila.position
+    const jugados = fila.played
+    const ganados = fila.won
+    const empatados = fila.drawn
+    const perdidos = fila.lost
+    const golesFavor = fila.goals_for
+    const golesContra = fila.goals_against
+    const diferencia = fila.goal_difference
+    const puntos = fila.points
+    const numeros = [posicion, jugados, ganados, empatados, perdidos, golesFavor, golesContra, diferencia, puntos]
+    if (!nombre || nombre.length > 100 || numeros.some(numero => !Number.isInteger(numero))
+      || posiciones.has(posicion as number) || nombres.has(normalizarClaveEquipoLiga(nombre))
+      || jugados !== snapshot.matches_per_team
+      || (ganados as number) + (empatados as number) + (perdidos as number) !== jugados
+      || (golesFavor as number) - (golesContra as number) !== diferencia
+      || (ganados as number) * 3 + (empatados as number) !== puntos
+      || (posicion as number) < 1 || (posicion as number) > cantidadEsperada
+      || [ganados, empatados, perdidos, golesFavor, golesContra, puntos].some(numero => (numero as number) < 0)) return null
+
+    nombres.add(normalizarClaveEquipoLiga(nombre))
+    posiciones.add(posicion as number)
+    const claveNombre = normalizarClaveEquipoLiga(nombre)
+    const coincidencias = equipos.filter(equipo => normalizarClaveEquipoLiga(equipo.nombre) === claveNombre)
+    const equipo = coincidencias.length === 1 ? coincidencias[0] : undefined
+    filas.push({
+      competencia: slug,
+      temporada,
+      fase: snapshot.phase!,
+      posicion: posicion as number,
+      jugados: jugados as number,
+      ganados: ganados as number,
+      empatados: empatados as number,
+      perdidos: perdidos as number,
+      golesFavor: golesFavor as number,
+      golesContra: golesContra as number,
+      diferencia: diferencia as number,
+      puntos: puntos as number,
+      verificadoEn: new Date(verificadoMs).toISOString(),
+      equipoSlug: equipo?.slug || null,
+      equipoNombre: nombre,
+      equipoEscudo: equipo?.escudo || null
+    })
+  }
+
+  if (nombres.size !== cantidadEsperada || posiciones.size !== cantidadEsperada
+    || Array.from({ length: cantidadEsperada }, (_, indice) => indice + 1).some(posicion => !posiciones.has(posicion))) return null
+
+  filas.sort((a, b) => a.posicion - b.posicion)
+  return {
+    filas,
+    metadata: {
+      finalizadaEn: new Date(finalizadoMs).toISOString(),
+      verificadaEn: new Date(verificadoMs).toISOString(),
+      fuente: snapshot.source_name!,
+      fuentes: urls as string[]
+    }
+  }
+}
+
+async function cargarSnapshotTablaHistorica(
+  cliente: SupabaseClient,
+  slug: SlugCompeticionPublica,
+  temporada: string,
+  equipos: EquipoLigaPublico[],
+  ahoraMs: number
+): Promise<{ filas: FilaTablaCompeticionPublica[], metadata: SnapshotTablaCompeticionPublica } | null> {
+  try {
+    const { data, error } = await cliente.from('colombian_league_standings_snapshots')
+      .select('competition_slug,season,phase,team_count,matches_per_team,standings,source_name,source_urls,checked_at,finalized_at,is_public,publication_rights_confirmed')
+      .eq('competition_slug', slug)
+      .eq('season', temporada)
+      .eq('phase', slug === 'liga-betplay' ? 'Todos contra todos' : 'Fase todos contra todos')
+      .maybeSingle()
+    if (error || !data) return null
+    return validarSnapshotTablaPublica(data, slug, temporada, equipos, ahoraMs)
+  } catch {
+    // La página conserva calendario y resultados si el archivo histórico no está disponible.
+    return null
+  }
+}
+
+function esFuenteSnapshotPermitida(valor: unknown): valor is string {
+  if (typeof valor !== 'string') return false
+  try {
+    const url = new URL(valor)
+    const host = url.hostname.toLowerCase().replace(/^www\./, '')
+    return url.protocol === 'https:'
+      && ['dimayor.com.co', 'goal-api.com', 'winsports.co'].some(dominio => host === dominio || host.endsWith(`.${dominio}`))
+  } catch {
+    return false
+  }
 }
 
 function extraerGrupoCuadrangular(fase: string): 'a' | 'b' | '1' | '2' | null {
