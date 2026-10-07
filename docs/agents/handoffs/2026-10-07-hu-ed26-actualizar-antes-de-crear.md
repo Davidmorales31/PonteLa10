@@ -35,13 +35,20 @@
   por un test que apuntaba al nombre viejo de la migración; se corrigió y la
   repetición completa pasó. El build conserva el aviso upstream `[DEP0155]` de
   `@vue/shared`.
-- **Pendientes:** inspección visual autenticada responsive; PR, CI/Preview y
-  despliegue Production. La inspección visual requiere sesión editorial, no
+- **Integración y Production:** PR #97 pasó lint, suite, typecheck, build y
+  Vercel Preview; Supabase Preview se omitió (HU sin migración e integración
+  Preview inactiva). Revisión estática de seguridad sin hallazgos P0–P3. Se
+  integró como `ad509d6f222e9c9023bb3f75f7f68b7361bafb8d` y Vercel Production
+  reportó éxito. Smoke: home HTTP 200, ruta privada sin sesión 302 al login,
+  endpoint GET anónimo HTTP 401.
+- **Pendientes:** inspección visual autenticada/responsive y revisión por el
+  editor de las recomendaciones históricas v1, que intencionalmente quedan
+  marcadas como pendientes. La inspección visual requiere sesión editorial, no
   disponible en este turno.
-- **Siguiente acción exacta:** revisar diff final, commit en
-  `codex/hu-ed26-update-before-create`, abrir PR contra `main`, adjuntarlo a la
-  tarea, esperar CI/Vercel Preview y revisión, integrar solo con checks verdes,
-  confirmar Vercel Production y probar que el GET rechaza acceso anónimo. No
-  ejecutar migraciones ni modificar estados editoriales para este HU.
+- **Siguiente acción exacta:** cuando el equipo editorial inicie sesión,
+  revisar `/admin/revision` en escritorio y móvil; confirmar que las
+  recomendaciones, destinos verificados y etiquetas se leen correctamente.
+  No ejecutar migraciones ni modificar estados editoriales para este HU.
 - **Commit base:** `cb3bcb30f0317a57d9fb6aad9ea563187008e03d`.
-- **Commit final:** sin commit.
+- **PR:** https://github.com/Davidmorales31/PonteLa10/pull/97
+- **Commit final:** `ad509d6f222e9c9023bb3f75f7f68b7361bafb8d`.

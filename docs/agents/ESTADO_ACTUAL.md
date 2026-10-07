@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-## HU-ED-26 — actualizar antes de crear (en desarrollo, 2026-10-07)
+## HU-ED-26 — actualizar antes de crear (Production, 2026-10-07)
 
 - La bandeja editorial incorpora una lectura privada de las oportunidades de la
   última corrida: recomendaciones v2 ordenadas `update`, `merge`, `expand`,
@@ -21,7 +21,13 @@
   upstream `[DEP0155]` de `@vue/shared`; `git diff --check` pasa. El revisor
   confirmó cerrados los hallazgos P2/P3 y no reportó otros P0–P3. No fue posible
   validar visualmente la ruta autenticada/responsive sin acceso a una sesión
-  editorial. No hay PR ni despliegue ED-26 todavía.
+-  editorial. PR #97 pasó CI y Vercel Preview y se integró como
+  `ad509d6f222e9c9023bb3f75f7f68b7361bafb8d`; Vercel Production reportó
+  `success`. Smoke del dominio: home HTTP 200, `/admin/revision` redirige a
+  login (302), y `/api/admin/oportunidades-editoriales` rechaza anónimos (401).
+  Supabase Preview se omitió porque ED-26 no agrega migración y la integración
+  Preview no está activa. Sigue pendiente la inspección visual autenticada y
+  responsive del panel.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-ed26-actualizar-antes-de-crear.md`.
 
 ## HU-ED-25 — priorización y evaluación de oportunidades editoriales (Production, 2026-10-07)
@@ -67,9 +73,16 @@
   desconocido. La última corrida observada seguía `in_progress`, con 16
   oportunidades guardadas; 15 propuestas estaban en revisión y una publicación
   previa no se modificó. No se reabrieron ni regeneraron propuestas.
-- La consulta agregada de intentos de ingesta no pudo completarse por un fallo
-  de transporte de Supabase MCP; no hay diagnóstico confirmado de los errores
-  históricos de ingesta. No se reintentaron ingestas.
+- El diagnóstico agregado de ingestas (solo estado/código/etapa, sin IDs ni
+  cargas) encontró cero intentos en los últimos siete días; el worker está
+  desconectado. El intento más reciente fue el 2026-09-29: un fallo
+  `NO_SPEECH_DETECTED` en transcripción, seguido ese día por 22 intentos
+  completados. Históricamente hay fallos `TRANSCRIPTION_FAILED` en
+  `reading_metadata` (11), `transcribing` (2) y `translating` (3), además de
+  un vencimiento de plazo. En el código, `reading_metadata` incluye
+  `yt-dlp.extract_info(..., download=True)`, así que la etapa no permite
+  atribuir una causa más precisa sin evidencia adicional. No se reencolaron
+  ingestas. Este worker de ingestas es distinto de la tarea editorial Codex.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-ed25-scoring-editorial.md`.
 
 ## HU-GRO-04 — oportunidades orgánicas (Production, 2026-10-07)
