@@ -106,16 +106,22 @@
 - En los datos públicos actuales, el calendario Liga A 2026-II produce 18
   jornadas completas; la Jornada 13 se omite porque incluye 11 partidos y un
   equipo aparece dos veces. El feed escribe `La Equidad` en algunos registros
-  donde DIMAYOR identifica a Internacional de Bogotá; el alias está limitado a
-  Liga A 2026-II y no modifica nombres históricos. Torneo B 2026-II conserva 15
-  jornadas completas. La temporada 2026-I no tiene padrón de tabla público
-  suficiente para generar estas rutas, así que no se indexan.
+  donde DIMAYOR identifica a Internacional de Bogotá. En la vista pública de
+  Liga/Jornadas, el alias se presenta con el nombre, escudo y enlace del padrón
+  oficial, solo para Liga A 2026-II; los históricos no se modifican. Torneo B
+  2026-II conserva 15 jornadas completas. La temporada 2026-I no tiene padrón
+  de tabla público suficiente para generar estas rutas, así que no se indexan.
 - No se hicieron migraciones, escrituras Supabase ni peticiones a proveedores
   deportivos. Las fichas/sitemap consultan datos públicos mediante cliente anon.
-- Validación local: suite 79 archivos/396 pruebas, lint, typecheck, build Nitro
+- Validación local: suite 79 archivos/397 pruebas, lint, typecheck, build Nitro
   y `git diff --check` pasaron; el build conserva el aviso upstream `DEP0155` de
-  `@vue/shared`. Revisión estática concluyó sin bloqueos tras propagar la caída
-  del padrón únicamente a los flujos de jornada. Preview/Production pendientes.
+  `@vue/shared`. La página Preview se abrió desde el navegador autenticado: SSR,
+  10 partidos y tema oscuro visibles. Esa verificación descubrió la antigua
+  etiqueta `La Equidad` y el contador “partidos programados” para una jornada
+  terminada; ambos quedan corregidos localmente. El CI/Preview del PR #76
+  corresponde al commit anterior y debe repetirse antes de producción. La
+  revisión estática concluyó sin bloqueos tras propagar la caída del padrón
+  únicamente a los flujos de jornada.
 - Handoff: `docs/agents/handoffs/2026-10-06-hu-seo13-jornadas.md`.
 
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)

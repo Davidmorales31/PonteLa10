@@ -139,7 +139,7 @@ function fechaActualizacion(fecha: string): string {
     </header>
 
     <section class="resumen-jornada" aria-label="Resumen de la jornada">
-      <div><strong>{{ ficha.partidos.length }}</strong><span>partidos programados</span></div>
+      <div><strong>{{ ficha.partidos.length }}</strong><span>partidos de la jornada</span></div>
       <div><strong>{{ ficha.equipos }}</strong><span>equipos participantes</span></div>
       <div><strong>{{ fechaPartido(ficha.desde, false) }}</strong><span>primer día de competencia</span></div>
     </section>

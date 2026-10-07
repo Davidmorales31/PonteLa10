@@ -146,7 +146,11 @@ export async function obtenerFichaCompeticionPublica(
 
   const config = catalogoCompeticionesPublicas[slugSolicitado]
   const base = await cargarDatosBaseCompeticion(cliente)
-  const partidosCompetencia = base.partidos.filter(partido => partido.competencia === slugSolicitado)
+  const partidosCompetencia = normalizarIdentidadEquiposCompeticionPublica(
+    base.partidos.filter(partido => partido.competencia === slugSolicitado),
+    slugSolicitado,
+    base.equipos
+  )
   const temporadasDisponibles = resolverTemporadas(slugSolicitado, partidosCompetencia, base.equipos)
   if (!temporadasDisponibles.length) return null
 
@@ -241,10 +245,15 @@ export async function obtenerFichaJornadaCompeticionPublica(
   const base = await cargarDatosBaseJornadas(cliente)
   const equiposOficiales = obtenerEquiposOficialesTemporada(slugSolicitado, temporadaSolicitada, base.equipos)
   if (!equiposOficiales) return null
+  const partidosTemporada = normalizarIdentidadEquiposCompeticionPublica(
+    base.partidos.filter(partido => partido.competencia === slugSolicitado && partido.temporada === temporadaSolicitada),
+    slugSolicitado,
+    base.equipos
+  )
   const jornada = construirJornadasIndexablesPublicas(
     slugSolicitado,
     temporadaSolicitada,
-    base.partidos.filter(partido => partido.competencia === slugSolicitado && partido.temporada === temporadaSolicitada),
+    partidosTemporada,
     equiposOficiales
   ).find(jornada => jornada.jornada.slug === jornadaSolicitada)
   if (!jornada) return null
@@ -317,6 +326,45 @@ export function construirJornadasIndexablesPublicas(
       actualizadaEn: new Date(ultimaVerificacion).toISOString()
     }]
   }).sort((a, b) => a.jornada.numero - b.jornada.numero)
+}
+
+/** Presenta los nombres heredados con la identidad del padrón oficial de esa temporada. */
+export function normalizarIdentidadEquiposCompeticionPublica(
+  partidos: PartidoSeoPublico[],
+  slug: SlugCompeticionPublica,
+  equipos: EquipoLigaPublico[]
+): PartidoSeoPublico[] {
+  return partidos.map((partido) => {
+    if (slug !== 'liga-betplay' || partido.temporada !== '2026-II') return partido
+    const normalizado: PartidoSeoPublico = { ...partido }
+    const identidad = resolverEquipoAliasTemporada(partido.local, slug, partido.temporada, equipos)
+    if (identidad) {
+      normalizado.local = identidad.nombre
+      normalizado.equipoLocalSlug = identidad.slug
+      normalizado.escudoLocal = identidad.escudo || partido.escudoLocal
+    }
+    const identidadVisitante = resolverEquipoAliasTemporada(partido.visitante, slug, partido.temporada, equipos)
+    if (identidadVisitante) {
+      normalizado.visitante = identidadVisitante.nombre
+      normalizado.equipoVisitanteSlug = identidadVisitante.slug
+      normalizado.escudoVisitante = identidadVisitante.escudo || partido.escudoVisitante
+    }
+    return normalizado
+  })
+}
+
+function resolverEquipoAliasTemporada(
+  nombre: string,
+  slug: SlugCompeticionPublica,
+  temporada: string,
+  equipos: EquipoLigaPublico[]
+): EquipoLigaPublico | undefined {
+  const clave = normalizarClaveEquipoLiga(nombre)
+  if (slug !== 'liga-betplay' || temporada !== '2026-II'
+    || clave !== normalizarClaveEquipoLiga('La Equidad')) return undefined
+  return equipos.find(equipo => normalizarClaveEquipoLiga(equipo.nombre)
+    === normalizarClaveEquipoLiga('Internacional de Bogotá')
+    && equipo.clasificaciones.some(fila => fila.competencia === slug && fila.temporada === temporada))
 }
 
 export function esSlugCompeticionPublica(valor: string): valor is SlugCompeticionPublica {

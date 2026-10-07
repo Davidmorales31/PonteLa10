@@ -4,10 +4,12 @@ import {
   seleccionarFasesClasificacionCompletas,
   construirTemporadasPublicasCompeticion,
   construirJornadasIndexablesPublicas,
+  normalizarIdentidadEquiposCompeticionPublica,
   type FilaTablaCompeticionPublica,
   type SlugCompeticionPublica
 } from '../../server/utils/competicionesPublicas'
 import type { PartidoSeoPublico } from '../../server/utils/partidosSeoPublicos'
+import type { EquipoLigaPublico } from '../../server/utils/equiposLigaPublicos'
 
 const fechaAhora = Date.parse('2026-10-06T17:00:00.000Z')
 
@@ -148,6 +150,44 @@ describe('temporadas permanentes de competición', () => {
 })
 
 describe('páginas indexables de jornada', () => {
+  it('presenta un nombre anterior con nombre, escudo y enlace del padrón actual, sin alterar históricos', () => {
+    const partido = {
+      ...crearJornadaCompleta()[0]!,
+      visitante: 'La Equidad',
+      equipoVisitanteSlug: undefined,
+      escudoVisitante: null
+    }
+    const equipoOficial: EquipoLigaPublico = {
+      slug: 'internacional-de-bogota',
+      nombre: 'Internacional de Bogotá',
+      escudo: '/escudos/internacional-de-bogota.svg',
+      clasificaciones: [{
+        competencia: 'liga-betplay', temporada: '2026-II', fase: 'Todos contra todos',
+        posicion: 13, jugados: 0, ganados: 0, empatados: 0, perdidos: 0,
+        golesFavor: 0, golesContra: 0, diferencia: 0, puntos: 0,
+        verificadoEn: '2026-10-06T12:00:00.000Z'
+      }],
+      actualizadoEn: '2026-10-06T12:00:00.000Z'
+    }
+    const [actual] = normalizarIdentidadEquiposCompeticionPublica(
+      [partido], 'liga-betplay', [equipoOficial]
+    )
+    const [historico] = normalizarIdentidadEquiposCompeticionPublica(
+      [{ ...partido, temporada: '2026-I' }], 'liga-betplay', [equipoOficial]
+    )
+
+    expect(actual).toMatchObject({
+      visitante: 'Internacional de Bogotá',
+      equipoVisitanteSlug: 'internacional-de-bogota',
+      escudoVisitante: '/escudos/internacional-de-bogota.svg'
+    })
+    expect(historico).toMatchObject({
+      visitante: 'La Equidad',
+      equipoVisitanteSlug: undefined,
+      escudoVisitante: null
+    })
+  })
+
   it('publica una URL canónica por temporada solo si están los partidos de todos los equipos', () => {
     const partidos = crearJornadaCompleta()
     const equiposOficiales = crearEquiposOficiales()
