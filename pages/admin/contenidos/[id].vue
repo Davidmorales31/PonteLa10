@@ -25,6 +25,7 @@ import ModalAccionFlujoEditorial from '~/components/admin/ModalAccionFlujoEditor
 import ModalEliminarContenido from '~/components/admin/ModalEliminarContenido.vue'
 import ModalSubirMedio from '~/components/admin/ModalSubirMedio.vue'
 import PanelFlujoEditorial from '~/components/admin/PanelFlujoEditorial.vue'
+import PanelGrafoEntidadesSeo from '~/components/admin/PanelGrafoEntidadesSeo.vue'
 import SelectorPortadaEditorial from '~/components/admin/SelectorPortadaEditorial.vue'
 import VistaPreviaArticulo from '~/components/admin/VistaPreviaArticulo.vue'
 import VistaPreviaTarjetaSocial from '~/components/admin/VistaPreviaTarjetaSocial.vue'
@@ -1302,6 +1303,11 @@ function formatearFecha(fecha: string): string {
               :descripcion="formulario.seo.descripcion || formulario.resumen"
               :slug="formulario.slug"
               :portada="portadaSeleccionada"
+            />
+            <PanelGrafoEntidadesSeo
+              v-if="pasoActual === 'seo'"
+              :articulo-id="articuloId"
+              :deshabilitado="!puedeEditar"
             />
           </section>
 

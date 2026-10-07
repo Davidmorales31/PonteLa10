@@ -6,6 +6,7 @@ import {
   Files,
   Images,
   LayoutDashboard,
+  Link2,
   LockKeyhole,
   LogOut,
   Menu,
@@ -48,6 +49,12 @@ const entradasPanel: EntradaPanel[] = [
     etiqueta: 'Contenidos',
     ruta: '/admin/contenidos',
     icono: Files,
+    permiso: 'contenido.verBorradores'
+  },
+  {
+    etiqueta: 'Grafo de entidades',
+    ruta: '/admin/seo-entidades',
+    icono: Link2,
     permiso: 'contenido.verBorradores'
   },
   {

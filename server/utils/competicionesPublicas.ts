@@ -206,7 +206,7 @@ export function seleccionarFasesClasificacionCompletas(
     porFase.set(fila.fase, grupo)
   }
 
-  return [...porFase.entries()].flatMap(([fase, grupo]) => {
+  const fasesCompletas = [...porFase.entries()].flatMap(([fase, grupo]) => {
     const faseNormalizada = fase.toLocaleLowerCase('es-CO')
     const cantidadEsperada = /todos contra todos/.test(faseNormalizada)
       ? slug === 'liga-betplay' ? 20 : 16
@@ -217,9 +217,41 @@ export function seleccionarFasesClasificacionCompletas(
           : 0
     const equiposUnicos = new Set(grupo.map(fila => fila.equipoSlug))
     return cantidadEsperada > 0 && equiposUnicos.size === cantidadEsperada
-      ? grupo
+      ? [{ fase, filas: grupo }]
       : []
-  }).sort((a, b) => a.fase.localeCompare(b.fase, 'es-CO') || a.posicion - b.posicion)
+  })
+
+  const gruposCuadrangulares = [...porFase.keys()]
+    .map(fase => ({ fase, grupo: extraerGrupoCuadrangular(fase) }))
+    .filter((entrada): entrada is { fase: string, grupo: 'a' | 'b' | '1' | '2' } => entrada.grupo !== null)
+
+  if (gruposCuadrangulares.length) {
+    const ids = new Set(gruposCuadrangulares.map(entrada => entrada.grupo))
+    const gruposEsperados = ids.has('a') || ids.has('b') ? ['a', 'b'] : ['1', '2']
+    if (!gruposEsperados.every(grupo => ids.has(grupo as 'a' | 'b' | '1' | '2'))) return []
+
+    const fasesEsperadas = new Set(
+      gruposCuadrangulares
+        .filter(entrada => gruposEsperados.includes(entrada.grupo))
+        .map(entrada => entrada.fase)
+    )
+    if ([...fasesEsperadas].length !== 2) return []
+    const fasesCompletasCuadrangulares = fasesCompletas.filter(entrada => fasesEsperadas.has(entrada.fase))
+    if (fasesCompletasCuadrangulares.length !== 2) return []
+    return fasesCompletasCuadrangulares.flatMap(entrada => entrada.filas)
+      .sort((a, b) => a.fase.localeCompare(b.fase, 'es-CO') || a.posicion - b.posicion)
+  }
+
+  return fasesCompletas
+    .flatMap(entrada => entrada.filas)
+    .sort((a, b) => a.fase.localeCompare(b.fase, 'es-CO') || a.posicion - b.posicion)
+}
+
+function extraerGrupoCuadrangular(fase: string): 'a' | 'b' | '1' | '2' | null {
+  if (!/cuadrangular|grupo/i.test(fase)) return null
+  const grupo = /(?:grupo\s*([ab12])|cuadrangulares?\s+([ab12]))\b/i.exec(fase)
+  const identificador = grupo?.[1] || grupo?.[2]
+  return identificador ? identificador.toLowerCase() as 'a' | 'b' | '1' | '2' : null
 }
 
 function crearResumenTemporada(

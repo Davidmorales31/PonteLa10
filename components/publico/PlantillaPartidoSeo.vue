@@ -4,6 +4,7 @@ import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import { resolverDestinoPromocionalReproductor } from '~/utils/publicidad/destinoPromocionalReproductor'
 import type { ProgramacionTransmisionPublica } from '~/utils/partidos/programacion'
 import { etiquetasDistribucionProgramacion } from '~/utils/partidos/programacion'
+import type { NavegacionContextualPartidoSeo } from '~/types/navegacionContextualSeo'
 
 interface PartidoSeoVista {
   slug: string
@@ -31,8 +32,9 @@ const props = defineProps<{
   modo: 'donde-ver' | 'como-quedo' | 'partido'
   partido: PartidoSeoVista
   noticias: ResumenArticuloPublico[]
+  navegacion?: NavegacionContextualPartidoSeo | null
 }>()
-const { modo, partido, noticias } = toRefs(props)
+const { modo, partido, noticias, navegacion } = toRefs(props)
 
 const configuracion = useRuntimeConfig()
 const { registrarEvento, publicidadAutorizada } = useAnaliticaPublica()
@@ -281,14 +283,17 @@ onMounted(() => {
         </section>
 
         <nav class="enlaces-mutua-partido" aria-label="Más información del encuentro">
-          <NuxtLink v-if="partido.equipoLocalSlug" :to="`/equipos/${partido.equipoLocalSlug}`">{{ partido.local }} <span aria-hidden="true">→</span></NuxtLink>
-          <NuxtLink v-if="partido.equipoVisitanteSlug" :to="`/equipos/${partido.equipoVisitanteSlug}`">{{ partido.visitante }} <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink v-if="navegacion?.equipoLocal" :to="navegacion.equipoLocal.ruta">Equipo local: {{ navegacion.equipoLocal.nombre }} <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink v-if="navegacion?.equipoVisitante" :to="navegacion.equipoVisitante.ruta">Equipo visitante: {{ navegacion.equipoVisitante.nombre }} <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink v-if="navegacion?.competencia" :to="navegacion.competencia.ruta">Competición: {{ navegacion.competencia.nombre }} <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink v-if="navegacion?.siguientePartido" :to="navegacion.siguientePartido.ruta">Siguiente partido: {{ navegacion.siguientePartido.nombre }} <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink v-if="navegacion?.resultadoAnterior" :to="navegacion.resultadoAnterior.ruta">Resultado anterior: {{ navegacion.resultadoAnterior.nombre }} <span aria-hidden="true">→</span></NuxtLink>
           <NuxtLink
             v-if="modo !== 'partido'"
             :to="`/partidos/${partido.slug}`"
             @click="registrarEvento('internal_match_link_click')"
           >Ficha completa del partido <span aria-hidden="true">→</span></NuxtLink>
-          <NuxtLink to="/liga-colombiana">Liga colombiana <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink v-if="!navegacion?.competencia" to="/liga-colombiana">Liga colombiana <span aria-hidden="true">→</span></NuxtLink>
         </nav>
         <PublicidadAdsterraSlot formato="leaderboard" contexto="página SEO de partido" />
       </article>

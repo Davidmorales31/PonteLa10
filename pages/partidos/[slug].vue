@@ -5,11 +5,15 @@ import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
 import { construirSportsEventSeo, etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
 import type { ContextoAnaliticaPagina } from '~/utils/analiticaPublica'
+import type { NavegacionContextualPartidoSeo } from '~/types/navegacionContextualSeo'
 
 const ruta = useRoute()
 const configuracion = useRuntimeConfig()
 const slug = String(ruta.params.slug || '')
-const { data, error, refresh } = await useFetch<{ partido: PartidoSeoPublico }>(
+const { data, error, refresh } = await useFetch<{
+  partido: PartidoSeoPublico
+  navegacion?: NavegacionContextualPartidoSeo | null
+}>(
   `/api/partidos-seo/${encodeURIComponent(slug)}`
 )
 
@@ -136,5 +140,5 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <PublicoPlantillaPartidoSeo v-if="data?.partido" modo="partido" :partido="partido" :noticias="noticias || []" />
+  <PublicoPlantillaPartidoSeo v-if="data?.partido" modo="partido" :partido="partido" :noticias="noticias || []" :navegacion="data.navegacion" />
 </template>

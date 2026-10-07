@@ -1,4 +1,5 @@
 import type { MedioEditorial } from '~/types/mediaEditorial'
+import type { EnlaceContextualSeo } from '~/types/navegacionContextualSeo'
 
 export type EstadoContenidoEditorial =
   | 'draft'
@@ -373,6 +374,8 @@ export interface ArticuloPublicoEditorial {
   resumen: string
   tipo: TipoContenidoEditorial
   documento: DocumentoEditorial
+  relacionesEntidades?: RelacionEntidadSeoPublica[]
+  proximoPartidoEntidad?: EnlaceContextualSeo | null
   seoTitulo: string
   seoDescripcion: string
   textoSocial: string
@@ -384,6 +387,44 @@ export interface ArticuloPublicoEditorial {
   } | null
   portada: PortadaArticuloPublico | null
   fuente: FuenteArticuloEditorial
+}
+
+export type TipoEntidadSeo = 'article' | 'match' | 'team' | 'player' | 'competition'
+export type TipoRelacionEntidadSeo = 'about' | 'mentions' | 'related'
+
+export interface RelacionEntidadSeoPublica {
+  tipo: TipoEntidadSeo
+  slug: string
+  nombre: string
+  ruta: string
+  relacion: TipoRelacionEntidadSeo
+}
+
+export interface CargaRelacionesEntidadesSeo {
+  entidades: Array<{
+    tipo: TipoEntidadSeo
+    slug: string
+    nombre: string
+    ruta: string
+  }>
+  relaciones: Array<{
+    tipo: TipoEntidadSeo
+    slug: string
+    nombre: string
+    ruta: string
+    relacion: TipoRelacionEntidadSeo
+    estado: 'confirmed' | 'rejected'
+    origen: 'automatic' | 'editorial'
+    confianza: number | null
+  }>
+  sugerencias: Array<{
+    tipo: TipoEntidadSeo
+    slug: string
+    nombre: string
+    ruta: string
+    confianza: number
+    motivo: string
+  }>
 }
 
 export interface ResumenArticuloPublico {
