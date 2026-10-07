@@ -26,9 +26,9 @@
 - Validaciones locales: lint; suite completa (87 archivos, 449 pruebas);
   typecheck; build. `git diff --check` pasa. Build conserva el aviso upstream
   `[DEP0155]` de `@vue/shared`.
-- Estado al corte: commit `c15b224` con el scoring inicial; PR #95 está abierto
-  y su CI/Vercel Preview pasaron. Se ajustó la cuota tras la revisión de la HU;
-  ese ajuste aún debe ir en un nuevo commit y pasar CI antes de desplegar.
+- Estado al corte: PR #95 está abierto en el commit `5247fca`, con el scoring y
+  el ajuste que elimina cuotas. La revisión estática final no encontró P0–P2;
+  CI/Vercel Preview debe repetirse para este commit antes de integrar.
   Production Supabase sigue en la migración
   `20261007132510_hu_gro04_historial_oportunidades`. Search Console no tiene una
   propiedad/reportes reales importados, por lo que las señales GSC se activarán
