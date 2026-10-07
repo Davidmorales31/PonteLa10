@@ -5,9 +5,10 @@ import {
   obtenerClienteCodexPrivado,
   verificarFirmaCodex
 } from '~/server/utils/codexEditorialPrivado'
-import { esquemaBorradorCodex } from '~/server/utils/esquemasCodexEditorial'
+import { esquemaBriefSeoPropuestoCodex, esquemaBorradorCodex } from '~/server/utils/esquemasCodexEditorial'
 import { crearProveedorDeepSeekCodex } from '~/server/utils/ai/deepseekCodexRedaccion'
 import type { EntradaRedaccionIa } from '~/server/utils/ai/contratosRedaccion'
+import { esIntencionBusquedaEditorial } from '~/utils/editorial/briefSeo'
 
 const limiteBorradorBytes = 1_000_000
 
@@ -148,9 +149,24 @@ export default defineEventHandler(async (evento) => {
   try {
     proveedorInvocado = true
     const resultado = await crearProveedorDeepSeekCodex().redactarBorrador(entrada)
+    const seleccion = resultado.seleccionEditorial
+    const temasDisponibles = entrada.contextoInvestigacion?.temasDisponibles || []
+    const briefSeo = esquemaBriefSeoPropuestoCodex.parse({
+      targetQuery: seleccion?.consultaPrincipal?.trim()
+        || entrada.contextoInvestigacion?.consultaPrincipal
+        || null,
+      searchIntent: esIntencionBusquedaEditorial(seleccion?.intencion)
+        ? seleccion.intencion
+        : null,
+      parentCluster: temasDisponibles.find(tema => tema.id === seleccion?.parentCluster)?.nombre || null,
+      freshnessWindowDays: seleccion?.ventanaFrescuraDias ?? null,
+      opportunitySource: entrada.contextoInvestigacion?.senalTendencia.url || null,
+      editorialDifferentiator: seleccion?.diferenciadorEditorial?.trim() || null
+    })
     const salida = {
       propuesta: resultado.propuesta,
       seleccionEditorial: resultado.seleccionEditorial,
+      briefSeo,
       proveedor: resultado.proveedor,
       modelo: resultado.modelo,
       consumo: resultado.consumo

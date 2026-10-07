@@ -20,6 +20,8 @@ export interface EntradaRedaccionIa {
     consultaPrincipal: string
     consultasRelacionadas: string[]
     intencion: 'informativa' | 'navegacional' | 'analisis'
+      | 'actualidad' | 'resultado' | 'transmision' | 'calendario'
+      | 'explicacion' | 'perfil' | 'opinion'
     resumen: string
     senalTendencia: { termino: string, titulo: string, url: string, observadaEn: string }
     fuentes: Array<{
@@ -39,6 +41,11 @@ export interface SeleccionEditorialIa {
   consultaPrincipal: string
   consultasRelacionadas: string[]
   intencion: 'informativa' | 'navegacional' | 'analisis'
+    | 'actualidad' | 'resultado' | 'transmision' | 'calendario'
+    | 'explicacion' | 'perfil' | 'opinion'
+  parentCluster: string | null
+  ventanaFrescuraDias: number | null
+  diferenciadorEditorial: string | null
   tagIds: string[]
   temasNuevos: Array<{ name: string, description: string }>
   relatedArticleIds: string[]

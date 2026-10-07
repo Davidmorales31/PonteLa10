@@ -203,6 +203,28 @@ export interface SeoArticuloEditorial {
   textoSocial: string
 }
 
+export type IntencionBusquedaEditorial =
+  | 'actualidad'
+  | 'resultado'
+  | 'transmision'
+  | 'calendario'
+  | 'explicacion'
+  | 'perfil'
+  | 'analisis'
+  | 'opinion'
+
+export interface BriefSeoArticuloEditorial {
+  consultaObjetivo: string | null
+  intencionBusqueda: IntencionBusquedaEditorial | null
+  clusterPrincipal: string | null
+  ventanaFrescuraDias: number | null
+  origenOportunidad: string | null
+  diferenciadorEditorial: string | null
+  estadoBrief: 'propuesto' | 'confirmado' | 'sin_guardar'
+  confirmadoEn: string | null
+  actualizadoEn: string | null
+}
+
 export interface DatosEditorArticulo {
   titulo: string
   slug: string

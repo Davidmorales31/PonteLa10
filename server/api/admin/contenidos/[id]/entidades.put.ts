@@ -1,5 +1,5 @@
 import type { CargaRelacionesEntidadesSeo } from '~/types/contenidoEditorial'
-import { exigirEdicionEditorial } from '~/server/utils/autorizacionEditorial'
+import { exigirPermisoEditorial } from '~/server/utils/autorizacionEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import {
   guardarDecisionesRelacionesSeo,
@@ -12,7 +12,7 @@ import { esquemaIdEditorial } from '~/utils/editorial/contenido'
 import { esquemaDecisionesRelacionesSeo } from '~/utils/editorial/grafoEntidades'
 
 export default defineEventHandler(async (evento): Promise<CargaRelacionesEntidadesSeo> => {
-  const contexto = await exigirEdicionEditorial(evento)
+  const contexto = await exigirPermisoEditorial(evento, 'contenido.verBorradores')
   const articuloId = validarEntradaEditorial(esquemaIdEditorial, getRouterParam(evento, 'id'))
   const entrada = validarEntradaEditorial(esquemaDecisionesRelacionesSeo, await readBody(evento))
   const cliente = obtenerClienteSupabaseEditorial(evento)
@@ -21,10 +21,12 @@ export default defineEventHandler(async (evento): Promise<CargaRelacionesEntidad
     editarPropio: contexto.permisos.includes('contenido.editarPropio')
   })
 
-  if (!articulo.puedeEditar) {
+  const puedeGestionarRelaciones = articulo.puedeEditar
+    || (articulo.estado === 'review' && contexto.permisos.includes('contenido.aprobar'))
+  if (!puedeGestionarRelaciones) {
     throw createError({
       statusCode: 403,
-      statusMessage: 'Este contenido no está disponible para edición en su estado actual.'
+      statusMessage: 'Las relaciones se pueden cambiar en borradores editables o en revisión con permiso de aprobación.'
     })
   }
 
