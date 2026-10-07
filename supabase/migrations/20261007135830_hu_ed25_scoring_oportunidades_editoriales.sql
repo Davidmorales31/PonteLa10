@@ -452,16 +452,16 @@ begin
 
         if exists (
           select 1
-          from jsonb_array_elements_text(v_assessment -> 'similarArticleIds') as similar(article_id)
-          where similar.article_id !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+          from jsonb_array_elements_text(v_assessment -> 'similarArticleIds') as similar_item(article_id)
+          where similar_item.article_id !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
              or not exists (
                select 1 from public.articles article
-               where article.id::text = pg_catalog.lower(similar.article_id)
+               where article.id::text = pg_catalog.lower(similar_item.article_id)
                  and article.status = 'published'
                  and article.published_version_id is not null
              )
         ) or (select count(*) from jsonb_array_elements_text(v_assessment -> 'similarArticleIds'))
-          <> (select count(distinct pg_catalog.lower(article_id)) from jsonb_array_elements_text(v_assessment -> 'similarArticleIds') as similar(article_id)) then
+          <> (select count(distinct pg_catalog.lower(article_id)) from jsonb_array_elements_text(v_assessment -> 'similarArticleIds') as similar_item(article_id)) then
           raise exception 'Los artículos similares deben existir, estar publicados y no repetirse.' using errcode = '22023';
         end if;
 
@@ -703,3 +703,4 @@ create trigger editorial_codex_proposal_create_gate
   for each row execute function public.enforce_codex_create_recommendation();
 
 commit;
+

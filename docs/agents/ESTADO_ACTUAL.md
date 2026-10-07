@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-## HU-ED-25 — priorización y evaluación de oportunidades editoriales (local, 2026-10-07)
+## HU-ED-25 — priorización y evaluación de oportunidades editoriales (Production pendiente, 2026-10-07)
 
 - Se añadió un contrato v2 de prioridad (demanda, cluster, entidad, novedad,
   Search Console cuando exista, valor diferencial y posibilidad de actualizar)
@@ -21,15 +21,19 @@
   contexto privado de artículos, entidades confirmadas y reportes Search Console;
   valida el contrato también en SQL y bloquea reservas/propuestas que no
   correspondan a una agenda válida de hoy. El revisor estático no encontró
-  hallazgos P0–P2. Supabase CLI y Docker no están disponibles, así que aún no se
-  ha ejecutado en una base local ni se ha aplicado a Production.
+  hallazgos P0–P2. Supabase CLI y Docker no están disponibles, por lo que no se
+  hizo validación local de la migración. El primer intento de aplicación a
+  Production falló porque PostgreSQL rechazó el alias reservado `similar`; la
+  transacción completa hizo rollback. La migración no aparece en el historial
+  de Supabase Production y la función anterior permanece intacta; el alias se
+  corrigió en una rama de seguimiento.
 - Validaciones locales: lint; suite completa (87 archivos, 449 pruebas);
   typecheck; build. `git diff --check` pasa. Build conserva el aviso upstream
   `[DEP0155]` de `@vue/shared`.
-- Estado al corte: PR #95 está abierto en el commit `5247fca`, con el scoring y
-  el ajuste que elimina cuotas. La revisión estática final no encontró P0–P2;
-  CI/Vercel Preview debe repetirse para este commit antes de integrar.
-  Production Supabase sigue en la migración
+- Estado al corte: PR #95 se integró como
+  `0df81b824d1e5de15341cd0866868f5acd3a305e`. El código está en `main`, pero el
+  esquema de Production aún no recibió ED-25 hasta que la corrección SQL pase
+  revisión/CI y se aplique. Production Supabase sigue en la migración
   `20261007132510_hu_gro04_historial_oportunidades`. Search Console no tiene una
   propiedad/reportes reales importados, por lo que las señales GSC se activarán
   solo al cargar datos auténticos.
@@ -1238,3 +1242,4 @@ No crear una automatización duplicada ni apuntarla al árbol OneDrive.
 
 - `docs/ARQUITECTURA_INICIAL.md`: conserva el diseño de la primera etapa y no
   sustituye el estado verificado de este documento.
+
