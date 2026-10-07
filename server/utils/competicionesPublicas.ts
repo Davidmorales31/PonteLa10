@@ -36,6 +36,20 @@ export interface TemporadaCompeticionPublica {
 export interface JornadaCompeticionPublica {
   nombre: string
   partidos: PartidoSeoPublico[]
+  ruta: string | null
+}
+
+export interface FichaJornadaCompeticionPublica {
+  competencia: { slug: SlugCompeticionPublica, nombre: string }
+  temporada: string
+  rutaCompeticionTemporada?: string
+  jornada: { numero: number, nombre: string, slug: string }
+  ruta: string
+  partidos: PartidoSeoPublico[]
+  equipos: number
+  desde: string
+  hasta: string
+  actualizadaEn: string
 }
 
 export interface FilaTablaCompeticionPublica extends ClasificacionEquipoPublica {
@@ -79,6 +93,27 @@ export async function listarRutasIndexablesCompeticiones(
       return construirTemporadasPublicasCompeticion(slug, partidos, base.equipos, ahoraMs)
         .filter(resumen => resumen.indexable)
     })
+}
+
+export async function listarRutasIndexablesJornadas(
+  cliente: SupabaseClient
+): Promise<Array<Pick<FichaJornadaCompeticionPublica, 'ruta' | 'actualizadaEn'>>> {
+  const base = await cargarDatosBaseJornadas(cliente)
+  const slugs: SlugCompeticionPublica[] = ['liga-betplay', 'torneo-betplay']
+  return slugs.flatMap((slug) => {
+    const partidosCompetencia = base.partidos.filter(partido => partido.competencia === slug)
+    const temporadas = [...new Set(partidosCompetencia.map(partido => partido.temporada).filter(esTemporadaPublica))]
+    return temporadas.flatMap((temporada) => {
+      const equiposOficiales = obtenerEquiposOficialesTemporada(slug, temporada, base.equipos)
+      if (!equiposOficiales) return []
+      return construirJornadasIndexablesPublicas(
+        slug,
+        temporada,
+        partidosCompetencia.filter(partido => partido.temporada === temporada),
+        equiposOficiales
+      ).map(jornada => ({ ruta: jornada.ruta, actualizadaEn: jornada.actualizadaEn }))
+    })
+  })
 }
 
 export function construirTemporadasPublicasCompeticion(
@@ -180,11 +215,108 @@ export async function obtenerFichaCompeticionPublica(
         && Number.isFinite(partido.golesVisitante))
       .sort((a, b) => Date.parse(b.fechaIso) - Date.parse(a.fechaIso))
       .slice(0, 12),
-    jornadas: agruparJornadas(partidos),
+    jornadas: agruparJornadas(
+      partidos,
+      slugSolicitado,
+      temporada,
+      obtenerEquiposOficialesTemporada(slugSolicitado, temporada, base.equipos) || []
+    ),
     equipos,
     noticias,
     actualizadaEn: verificados.sort((a, b) => Date.parse(b) - Date.parse(a))[0] || null
   }
+}
+
+export async function obtenerFichaJornadaCompeticionPublica(
+  cliente: SupabaseClient,
+  slugSolicitado: string,
+  temporadaSolicitada: string,
+  jornadaSolicitada: string
+): Promise<FichaJornadaCompeticionPublica | null> {
+  if (!esSlugCompeticionPublica(slugSolicitado)
+    || catalogoCompeticionesPublicas[slugSolicitado].tipo !== 'liga'
+    || !esTemporadaPublica(temporadaSolicitada)
+    || !/^jornada-(?:[1-9]|[1-9]\d)$/.test(jornadaSolicitada)) return null
+
+  const base = await cargarDatosBaseJornadas(cliente)
+  const equiposOficiales = obtenerEquiposOficialesTemporada(slugSolicitado, temporadaSolicitada, base.equipos)
+  if (!equiposOficiales) return null
+  const jornada = construirJornadasIndexablesPublicas(
+    slugSolicitado,
+    temporadaSolicitada,
+    base.partidos.filter(partido => partido.competencia === slugSolicitado && partido.temporada === temporadaSolicitada),
+    equiposOficiales
+  ).find(jornada => jornada.jornada.slug === jornadaSolicitada)
+  if (!jornada) return null
+
+  const resumenTemporada = construirTemporadasPublicasCompeticion(
+    slugSolicitado,
+    base.partidos,
+    base.equipos
+  ).find(resumen => resumen.temporada === temporadaSolicitada)
+  return {
+    ...jornada,
+    rutaCompeticionTemporada: resumenTemporada?.ruta
+      || `/competiciones/${slugSolicitado}/${encodeURIComponent(temporadaSolicitada)}`
+  }
+}
+
+export function construirJornadasIndexablesPublicas(
+  slug: SlugCompeticionPublica,
+  temporada: string,
+  partidos: PartidoSeoPublico[],
+  equiposOficiales: string[],
+  ahoraMs = Date.now()
+): FichaJornadaCompeticionPublica[] {
+  if (catalogoCompeticionesPublicas[slug].tipo !== 'liga' || !esTemporadaPublica(temporada)) return []
+
+  const equiposEsperados = slug === 'liga-betplay' ? 20 : 16
+  const clavesEquiposOficiales = new Set(equiposOficiales.map(normalizarClaveEquipoLiga).filter(Boolean))
+  if (clavesEquiposOficiales.size !== equiposEsperados) return []
+  const partidosTemporada = partidos.filter(partido => partido.competencia === slug && partido.temporada === temporada)
+
+  const porNumero = new Map<number, PartidoSeoPublico[]>()
+  for (const partido of partidosTemporada) {
+    const numero = extraerNumeroJornada(partido.jornada)
+    if (!numero) continue
+    const grupo = porNumero.get(numero) || []
+    grupo.push(partido)
+    porNumero.set(numero, grupo)
+  }
+
+  return [...porNumero.entries()].flatMap(([numero, encuentros]) => {
+    const equipos = encuentros.flatMap(partido => [
+      normalizarClaveEquipoJornada(partido.local, slug, temporada),
+      normalizarClaveEquipoJornada(partido.visitante, slug, temporada)
+    ])
+    const equiposUnicos = new Set(equipos.filter(Boolean))
+    const slugsUnicos = new Set(encuentros.map(partido => partido.slug))
+    const jornadaCompleta = encuentros.length === equiposEsperados / 2
+      && equiposUnicos.size === equiposEsperados
+      && [...equiposUnicos].every(equipo => clavesEquiposOficiales.has(equipo))
+      && slugsUnicos.size === encuentros.length
+      && encuentros.every(partido => esEncuentroJornadaVerificable(partido, ahoraMs))
+    if (!jornadaCompleta) return []
+
+    const partidosOrdenados = [...encuentros].sort(ordenarPorFecha)
+    const fechas = partidosOrdenados.map(partido => Date.parse(partido.fechaIso))
+    const verificaciones = partidosOrdenados.map(partido => Date.parse(partido.verificadoEn))
+    const fechaMinima = Math.min(...fechas)
+    const fechaMaxima = Math.max(...fechas)
+    const ultimaVerificacion = Math.max(...verificaciones)
+    const jornada = { numero, nombre: `Jornada ${numero}`, slug: `jornada-${numero}` }
+    return [{
+      competencia: { slug, nombre: catalogoCompeticionesPublicas[slug].nombre },
+      temporada,
+      jornada,
+      ruta: `/jornadas/${slug}/${encodeURIComponent(temporada)}/${jornada.slug}`,
+      partidos: partidosOrdenados,
+      equipos: equiposUnicos.size,
+      desde: new Date(fechaMinima).toISOString(),
+      hasta: new Date(fechaMaxima).toISOString(),
+      actualizadaEn: new Date(ultimaVerificacion).toISOString()
+    }]
+  }).sort((a, b) => a.jornada.numero - b.jornada.numero)
 }
 
 export function esSlugCompeticionPublica(valor: string): valor is SlugCompeticionPublica {
@@ -301,6 +433,14 @@ async function cargarDatosBaseCompeticion(cliente: SupabaseClient): Promise<Dato
   return { partidos, equipos }
 }
 
+async function cargarDatosBaseJornadas(cliente: SupabaseClient): Promise<DatosBaseCompeticion> {
+  const [partidos, equipos] = await Promise.all([
+    listarPartidosSeoPublicos(cliente),
+    listarEquiposLigaPublicos(cliente)
+  ])
+  return { partidos, equipos }
+}
+
 function resolverTemporadas(
   slug: SlugCompeticionPublica,
   partidos: PartidoSeoPublico[],
@@ -358,7 +498,14 @@ function listarEquiposCompeticion(partidos: PartidoSeoPublico[]): EquipoCompetic
   }
 }
 
-function agruparJornadas(partidos: PartidoSeoPublico[]): JornadaCompeticionPublica[] {
+function agruparJornadas(
+  partidos: PartidoSeoPublico[],
+  slug: SlugCompeticionPublica,
+  temporada: string,
+  equiposOficiales: string[]
+): JornadaCompeticionPublica[] {
+  const rutas = new Map(construirJornadasIndexablesPublicas(slug, temporada, partidos, equiposOficiales)
+    .map(jornada => [jornada.jornada.nombre, jornada.ruta]))
   const grupos = new Map<string, PartidoSeoPublico[]>()
   for (const partido of [...partidos].sort(ordenarPorFecha)) {
     const nombre = normalizarNombreJornada(partido.jornada)
@@ -367,8 +514,65 @@ function agruparJornadas(partidos: PartidoSeoPublico[]): JornadaCompeticionPubli
     grupos.set(nombre, grupo)
   }
   return [...grupos.entries()]
-    .map(([nombre, encuentros]) => ({ nombre, partidos: encuentros }))
+    .map(([nombre, encuentros]) => ({ nombre, partidos: encuentros, ruta: rutas.get(nombre) || null }))
     .sort((a, b) => compararJornadas(a.nombre, b.nombre))
+}
+
+function obtenerEquiposOficialesTemporada(
+  slug: SlugCompeticionPublica,
+  temporada: string,
+  equipos: EquipoLigaPublico[]
+): string[] | null {
+  const cantidadEsperada = slug === 'liga-betplay' ? 20 : 16
+  const nombres = equipos.flatMap(equipo => equipo.clasificaciones
+    .filter(fila => fila.competencia === slug && fila.temporada === temporada)
+    .map(() => equipo.nombre.trim())
+    .filter(Boolean))
+  const nombresUnicos = new Map(nombres.map(nombre => [normalizarClaveEquipoLiga(nombre), nombre]))
+  return nombresUnicos.size === cantidadEsperada ? [...nombresUnicos.values()] : null
+}
+
+function normalizarClaveEquipoJornada(
+  nombre: string,
+  slug: SlugCompeticionPublica,
+  temporada: string
+): string {
+  const clave = normalizarClaveEquipoLiga(nombre)
+  // El feed conserva el nombre anterior en algunos fixtures del II-2026; DIMAYOR
+  // identifica esos partidos como Internacional de Bogotá. Limitarlo a la temporada
+  // evita fusionar clubes homónimos/anteriores en históricos.
+  if (slug === 'liga-betplay' && temporada === '2026-II'
+    && clave === normalizarClaveEquipoLiga('La Equidad')) {
+    return normalizarClaveEquipoLiga('Internacional de Bogotá')
+  }
+  return clave
+}
+
+function extraerNumeroJornada(valor: string | null): number | null {
+  const numero = /^(?:(?:fecha|jornada|round|matchday)\s*)?([1-9]\d?)$/i.exec(valor?.trim().replace(/\s+/g, ' ') || '')?.[1]
+  return numero ? Number(numero) : null
+}
+
+function esEncuentroJornadaVerificable(partido: PartidoSeoPublico, ahoraMs: number): boolean {
+  const fecha = Date.parse(partido.fechaIso)
+  const verificacion = Date.parse(partido.verificadoEn)
+  const estado = etiquetaEstadoSeoPartido(partido.estado)
+  if (!Number.isFinite(fecha) || !Number.isFinite(verificacion)
+    || verificacion > ahoraMs + 5 * 60 * 1000 || !partido.slug.trim()) return false
+  if (!partido.local.trim() || !partido.visitante.trim()
+    || normalizarClaveEquipoLiga(partido.local) === normalizarClaveEquipoLiga(partido.visitante)) return false
+  if (!partido.fuenteOficialUrl || !esFuenteDimayor(partido.fuenteOficialUrl)) return false
+  return ['PROGRAMADO', 'REPROGRAMADO', 'EN VIVO', 'FINALIZADO'].includes(estado)
+}
+
+function esFuenteDimayor(valor: string): boolean {
+  try {
+    const url = new URL(valor)
+    const host = url.hostname.toLocaleLowerCase('en-US').replace(/^www\./, '')
+    return url.protocol === 'https:' && (host === 'dimayor.com.co' || host.endsWith('.dimayor.com.co'))
+  } catch {
+    return false
+  }
 }
 
 async function listarNoticiasCompeticion(

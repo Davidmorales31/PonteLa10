@@ -23,6 +23,7 @@ export const rutasSitemapPublico = [
   '/sitemap-matches.xml',
   '/sitemap-teams.xml',
   '/sitemap-competitions.xml',
+  '/sitemap-rounds.xml',
   '/sitemap-players.xml',
   '/sitemap-hubs.xml',
   '/news-sitemap.xml'

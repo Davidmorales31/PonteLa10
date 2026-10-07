@@ -92,6 +92,32 @@
 - Release Production pendiente de PR/CI. No hubo migraciones, escrituras remotas
   ni consumo adicional de cuota deportiva.
 
+## HU-SEO-13 — páginas públicas por jornada (2026-10-06)
+
+- Implementación en la rama `codex/hu-seo13-jornadas-calendario`: API y página
+  `/jornadas/:competencia/:temporada/jornada-N`, enlace desde la ficha de liga,
+  canonical y JSON-LD propios, y `/sitemap-rounds.xml` incluido en el índice.
+- Solo se construye la URL si el padrón público autorizado de la temporada está
+  completo, el fixture tiene 10 partidos Liga A u 8 Torneo B, cada equipo aparece
+  una vez, los slugs son únicos y todos los partidos tienen fuente DIMAYOR
+  verificable. Falla de lectura del padrón => 503/no-store; una jornada válida
+  ausente => 404. Las marcas de verificación futuras se excluyen (tolerancia de
+  cinco minutos).
+- En los datos públicos actuales, el calendario Liga A 2026-II produce 18
+  jornadas completas; la Jornada 13 se omite porque incluye 11 partidos y un
+  equipo aparece dos veces. El feed escribe `La Equidad` en algunos registros
+  donde DIMAYOR identifica a Internacional de Bogotá; el alias está limitado a
+  Liga A 2026-II y no modifica nombres históricos. Torneo B 2026-II conserva 15
+  jornadas completas. La temporada 2026-I no tiene padrón de tabla público
+  suficiente para generar estas rutas, así que no se indexan.
+- No se hicieron migraciones, escrituras Supabase ni peticiones a proveedores
+  deportivos. Las fichas/sitemap consultan datos públicos mediante cliente anon.
+- Validación local: suite 79 archivos/396 pruebas, lint, typecheck, build Nitro
+  y `git diff --check` pasaron; el build conserva el aviso upstream `DEP0155` de
+  `@vue/shared`. Revisión estática concluyó sin bloqueos tras propagar la caída
+  del padrón únicamente a los flujos de jornada. Preview/Production pendientes.
+- Handoff: `docs/agents/handoffs/2026-10-06-hu-seo13-jornadas.md`.
+
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
 
 - PR #68 integró las páginas públicas de competición en `main` como
