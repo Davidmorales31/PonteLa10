@@ -9,4 +9,4 @@
 - **Pendientes:** crear PR, esperar CI, integrar a `main`, verificar el deployment Production y hacer smoke de la temporada actual y las dos páginas históricas. La migración está aplicada antes del despliegue del lector; el código anterior no consulta la tabla nueva.
 - **Siguiente acción exacta:** publicar la rama `codex/hu-seo14-historicos`, abrir PR hacia `main`, resolver checks y promover el commit probado; después comprobar HTML/API de Liga 2026-I, Torneo 2026-I y temporada vigente.
 - **Commit base:** `310b19002db2537633b4cc963f21491c8ef5ebdc`.
-- **Commit final:** sin commit.
+- **Commit final:** `1c42112` (implementación y migración; la entrega continúa por PR/CI).
