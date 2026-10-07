@@ -213,9 +213,23 @@ export type IntencionBusquedaEditorial =
   | 'analisis'
   | 'opinion'
 
+export type IdPlantillaEditorial =
+  | 'previaPartido'
+  | 'dondeVer'
+  | 'resultadoPartido'
+  | 'explicacionTabla'
+  | 'proximaFecha'
+  | 'convocatoria'
+  | 'perfilFutbolista'
+  | 'analisisPospartido'
+  | 'noticiaRapida'
+  | 'piezaEvergreen'
+
 export interface BriefSeoArticuloEditorial {
   consultaObjetivo: string | null
   intencionBusqueda: IntencionBusquedaEditorial | null
+  plantillaId: IdPlantillaEditorial | null
+  camposCompletos: string[]
   clusterPrincipal: string | null
   ventanaFrescuraDias: number | null
   origenOportunidad: string | null

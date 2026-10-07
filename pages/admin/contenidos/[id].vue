@@ -26,6 +26,7 @@ import ModalEliminarContenido from '~/components/admin/ModalEliminarContenido.vu
 import ModalSubirMedio from '~/components/admin/ModalSubirMedio.vue'
 import PanelFlujoEditorial from '~/components/admin/PanelFlujoEditorial.vue'
 import PanelBriefSeoEditorial from '~/components/admin/PanelBriefSeoEditorial.vue'
+import PanelPlantillaEditorial from '~/components/admin/PanelPlantillaEditorial.vue'
 import PanelGrafoEntidadesSeo from '~/components/admin/PanelGrafoEntidadesSeo.vue'
 import SelectorPortadaEditorial from '~/components/admin/SelectorPortadaEditorial.vue'
 import VistaPreviaArticulo from '~/components/admin/VistaPreviaArticulo.vue'
@@ -40,6 +41,7 @@ import type {
   EntradaTransicionEditorial,
   FlujoArticuloEditorial,
   IdPasoEditorEditorial,
+  IdPlantillaEditorial,
   PasoEditorEditorial,
   ResultadoGuardadoEditorial,
   VersionArticuloEditorial
@@ -52,12 +54,14 @@ import {
   etiquetasEstadoContenido
 } from '~/utils/editorial/contenido'
 import {
+  crearBloqueEditorEditorial,
   convertirBloquesADocumento,
   convertirDocumentoABloques,
   contarPalabrasDocumento,
   estimarMinutosLectura
 } from '~/utils/editorial/documento'
 import { evaluarCompletitudEditor } from '~/utils/editorial/progresoEditor'
+import { evaluarCalidadPlantilla, normalizarTextoPlantilla } from '~/utils/editorial/plantillas'
 
 definePageMeta({
   layout: 'admin',
@@ -134,6 +138,8 @@ async function recargarVersiones() {
 
 const formulario = ref<DatosEditorArticulo | null>(null)
 const bloques = ref<BloqueEditorEditorial[]>([])
+const plantillaId = ref<IdPlantillaEditorial | null>(null)
+const camposPlantillaCompletos = ref<string[]>([])
 const versionBloqueo = ref(1)
 const referenciaGuardada = ref('')
 const inicializando = ref(true)
@@ -167,6 +173,12 @@ const pasoActual = ref<IdPasoEditorEditorial>(
 )
 
 const documentoActual = computed(() => convertirBloquesADocumento(bloques.value))
+const calidadPlantilla = computed(() => evaluarCalidadPlantilla({
+  plantillaId: plantillaId.value,
+  camposCompletos: camposPlantillaCompletos.value,
+  bloques: bloques.value,
+  fuente: formulario.value?.fuente || null
+}))
 
 const datosActuales = computed<DatosEditorArticulo | null>(() => {
   if (!formulario.value) return null
@@ -238,7 +250,7 @@ const pasosEditor = computed<PasoEditorEditorial[]>(() => {
       id: 'contenido',
       etiqueta: 'Contenido',
       descripcion: 'Enfoque y estructura',
-      completo: completitud.contenido
+      completo: completitud.contenido && calidadPlantilla.value.completa
     },
     {
       id: 'presentacion',
@@ -683,7 +695,45 @@ async function realizarTransicion(entrada: EntradaTransicionEditorial): Promise<
 }
 
 function abrirAccionFlujo(accion: AccionFlujoEditorial) {
+  if (accion.id === 'enviarRevision' && plantillaId.value && !calidadPlantilla.value.completa) {
+    const mensaje = calidadPlantilla.value.faltantes.join(' ')
+    mostrarAlerta({
+      tipo: 'error',
+      titulo: 'Completa la plantilla antes de enviar a revisión',
+      mensaje
+    })
+    void irAPasoEditor('contenido')
+    return
+  }
   accionFlujoSeleccionada.value = accion
+}
+
+function insertarSeccionesPlantilla(secciones: string[]) {
+  const existentes = new Set(bloques.value
+    .filter(bloque => bloque.tipo === 'encabezado2')
+    .map(bloque => normalizarTextoPlantilla(bloque.texto)))
+  const nuevasSecciones = secciones.filter(seccion =>
+    !existentes.has(normalizarTextoPlantilla(seccion))
+  )
+
+  if (!nuevasSecciones.length) {
+    mostrarAlerta({
+      tipo: 'advertencia',
+      titulo: 'La estructura ya está en el documento',
+      mensaje: 'No se agregaron encabezados duplicados.'
+    })
+    return
+  }
+
+  bloques.value = [
+    ...bloques.value,
+    ...nuevasSecciones.map(seccion => crearBloqueEditorEditorial('encabezado2', seccion))
+  ]
+  mostrarAlerta({
+    tipo: 'exito',
+    titulo: 'Estructura agregada',
+    mensaje: 'Se añadieron encabezados vacíos; completa cada sección con información respaldada.'
+  })
 }
 
 async function confirmarAccionFlujo(entrada: EntradaTransicionEditorial) {
@@ -1003,6 +1053,30 @@ function formatearFecha(fecha: string): string {
             <span>{{ formulario.resumen.length }}/320</span>
           </section>
 
+          <PanelPlantillaEditorial
+            v-model="plantillaId"
+            v-model:campos-completos="camposPlantillaCompletos"
+            :articulo-id="articuloId"
+            :deshabilitado="!puedeGestionarMetadatosSeo"
+            @insertar-estructura="insertarSeccionesPlantilla"
+          />
+          <section
+            v-if="plantillaId"
+            class="estado-calidad-plantilla"
+            :class="{ completa: calidadPlantilla.completa }"
+            aria-live="polite"
+          >
+            <strong>
+              {{ calidadPlantilla.completa
+                ? 'Plantilla lista para revisión'
+                : `Plantilla: ${calidadPlantilla.camposCompletos}/${calidadPlantilla.totalCampos} campos y ${calidadPlantilla.seccionesCompletas}/${calidadPlantilla.totalSecciones} secciones completos` }}
+            </strong>
+            <ul v-if="!calidadPlantilla.completa">
+              <li v-for="faltante in calidadPlantilla.faltantes" :key="faltante">{{ faltante }}</li>
+            </ul>
+            <p>El control revisa estructura y fuente; la persona editora debe verificar los hechos y conservar la aprobación humana.</p>
+          </section>
+
           <EditorBloquesContenido
             v-model="bloques"
             :articulo-id-actual="articuloId"
@@ -1312,6 +1386,8 @@ function formatearFecha(fecha: string): string {
             <PanelBriefSeoEditorial
               v-if="pasoActual === 'seo'"
               :articulo-id="articuloId"
+              :plantilla-id="plantillaId"
+              :campos-completos="camposPlantillaCompletos"
               :deshabilitado="!puedeGestionarMetadatosSeo"
               :puede-confirmar-brief="puedeGestionarSeoEnRevision"
             />
@@ -1477,3 +1553,11 @@ function formatearFecha(fecha: string): string {
     </template>
   </div>
 </template>
+
+<style scoped>
+.estado-calidad-plantilla { display: grid; gap: 8px; border: 1px solid #efd28b; border-radius: 7px; background: #fff8e8; padding: 14px 16px; color: #674b0b; font-size: .84rem; line-height: 1.5; }
+.estado-calidad-plantilla.completa { border-color: #a9d8b7; background: #eff9f1; color: #205f35; }
+.estado-calidad-plantilla strong { font-size: .88rem; }
+.estado-calidad-plantilla ul { margin: 0; padding-left: 20px; }
+.estado-calidad-plantilla p { margin: 0; opacity: .88; }
+</style>

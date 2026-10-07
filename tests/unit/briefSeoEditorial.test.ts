@@ -8,6 +8,8 @@ describe('brief SEO editorial', () => {
     const resultado = esquemaBriefSeoArticulo.safeParse({
       consultaObjetivo: '',
       intencionBusqueda: 'actualidad',
+      plantillaId: null,
+      camposCompletos: [],
       clusterPrincipal: 'Fútbol colombiano',
       ventanaFrescuraDias: null,
       origenOportunidad: '',
@@ -26,6 +28,8 @@ describe('brief SEO editorial', () => {
     const base = {
       consultaObjetivo: 'tabla Liga BetPlay',
       intencionBusqueda: 'resultado',
+      plantillaId: null,
+      camposCompletos: [],
       clusterPrincipal: 'Liga BetPlay',
       ventanaFrescuraDias: 30,
       origenOportunidad: 'Search Console',
@@ -36,6 +40,20 @@ describe('brief SEO editorial', () => {
     expect(esquemaBriefSeoArticulo.safeParse(base).success).toBe(true)
     expect(esquemaBriefSeoArticulo.safeParse({ ...base, intencionBusqueda: 'compra' }).success).toBe(false)
     expect(esquemaBriefSeoArticulo.safeParse({ ...base, ventanaFrescuraDias: 4000 }).success).toBe(false)
+    expect(esquemaBriefSeoArticulo.safeParse({
+      ...base,
+      plantillaId: 'dondeVer',
+      intencionBusqueda: 'resultado'
+    }).success).toBe(false)
+    expect(esquemaBriefSeoArticulo.safeParse({
+      ...base,
+      plantillaId: undefined
+    }).success).toBe(false)
+    expect(esquemaBriefSeoArticulo.safeParse({
+      ...base,
+      plantillaId: 'dondeVer',
+      camposCompletos: ['Canal o plataforma confirmados', 'Campo inventado']
+    }).success).toBe(false)
   })
 
   it('permite varias entidades secundarias, pero solo una principal por decisión', () => {

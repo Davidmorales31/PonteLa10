@@ -1,11 +1,34 @@
 # Estado actual de Pont3la10
 
-## HU-ED-21 — Search Console como feedback editorial (2026-10-07, base de datos Production)
+## HU-ED-22 — plantillas editoriales por intención (Supabase Production, 2026-10-07)
 
-- La rama `codex/hu-ed21-search-console` implementa `/admin/search-console`, importación de CSV real exportado por el editor, métricas actuales/comparables, tendencia y triage editorial. No hay conexión OAuth a Search Console ni datos de ejemplo; las acciones no alteran ni publican contenido.
+- El CMS incorpora diez plantillas por intención con campos mínimos verificables,
+  fuente principal obligatoria y estructura H2 editable. El editor confirma los
+  campos requeridos; cambiar plantilla borra esas confirmaciones. La UI no inventa
+  datos ni confirma/publica artículos: aprobación humana permanece intacta.
+- La migración `20261007105053_hu_ed22_plantillas_intencion` está registrada en
+  Supabase Production. Se comprobaron ambas columnas, el CHECK de plantillas,
+  triggers de auditoría y quality gate, comentarios y privilegios. Las funciones
+  `SECURITY DEFINER` nuevas no se pueden ejecutar directamente desde
+  `anon`, `authenticated` ni `service_role`.
+- El gate se ejecuta al avanzar un artículo a revisión/aprobación/programación/
+  publicación cuando tiene plantilla; exige checklist completo, fuente HTTPS con
+  nombre, secciones requeridas con desarrollo y preserva el cuerpo editable.
+- Suite completa (85 archivos/432 pruebas), lint, typecheck, build y
+  `git diff --check` pasan. El build conserva el aviso upstream `[DEP0155]` de
+  `@vue/shared`. No se hizo inspección visual autenticada ni se modificó contenido.
+- El código todavía requiere PR/CI y deployment de Vercel Production. El acceso
+  MCP a detalles de proyecto/deployment devuelve 404/403; se probará CI del repo
+  y se reportará cualquier límite para verificar el deployment. Handoff:
+  `docs/agents/handoffs/2026-10-07-hu-ed22-plantillas-intencion.md`.
+
+## HU-ED-21 — Search Console como feedback editorial (Production, 2026-10-07)
+
+- PR #88 se integró por squash a `main` como `7b91e07c4d3fccd3ae5c42eafd81d1a026f427db`. GitHub CI y el deployment Vercel Production terminaron exitosamente. La ruta `/admin/search-console` se publicó; el usuario sin sesión recibe 302 al login. El GET privado y ambos POST respondieron 401 sin sesión.
+- El panel permite importar CSV real exportado por el editor, ver métricas actuales/comparables, tendencias y registrar triage editorial. No hay conexión OAuth a Search Console ni datos de ejemplo; las acciones no alteran ni publican contenido.
 - Las migraciones `20261007095219_hu_ed21_search_console` y `20261007095452_hu_ed21_search_console_fk_indexes` ya se aplicaron en Supabase Production. Las tres tablas tienen RLS y solo SELECT editorial con `contenido.verBorradores`; el rol authenticated no tiene DML directo. La función de import exige `contenido.editarTodos` y MFA AAL2. El schema `editorial_private` no está expuesto por el Data API.
 - Verificación remota: tablas y RPC existen, cero filas aún, invocación anónima de importación rechazada con SQLSTATE `42501`; no se modificaron datos deportivos/editoriales. Advisors sin nuevos hallazgos de seguridad; dos índices cubren las FK reportadas.
-- Validación de aplicación: lint, suite completa (84 archivos/425 pruebas), typecheck y build Vercel pasan. El código todavía requiere PR/CI/merge y smoke de Production. No hay métricas reales para mostrar hasta cargar el CSV de una propiedad Search Console de Pont3la10; la cuenta revisada no contiene esa propiedad verificada. Handoff: `docs/agents/handoffs/2026-10-07-hu-ed21-search-console.md`.
+- Validación de aplicación: lint, suite completa (84 archivos/425 pruebas), typecheck y build Vercel pasan. En Preview se verificó redirección a login y en Production los endpoints privados rechazaron solicitudes anónimas (401). No se pudo revisar manualmente el panel autenticado ni tamaños móviles sin una cuenta editorial; la integración Vercel MCP no permitió consultar logs/deployment details (403), por lo que no se certifica un barrido de logs runtime. No hay métricas reales hasta cargar el CSV de una propiedad Search Console verificada de Pont3la10; la cuenta revisada no contiene esa propiedad. Handoff: `docs/agents/handoffs/2026-10-07-hu-ed21-search-console.md`.
 
 ## HU-OPS-01 — tests SEO automatizados (2026-10-07, cerrado)
 
