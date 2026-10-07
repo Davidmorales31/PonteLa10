@@ -8,39 +8,49 @@
   estructuradas exclusivamente; retirado el fallback de coincidencias de texto.
   Se conserva el panel CMS de búsqueda/asociación ya existente. Migración
   `20261007065323_hu_ed24_noticias_entidad.sql` aplicada a Supabase Production
-  `ykjithahavncswlfgsqa`.
+  `ykjithahavncswlfgsqa`. El smoke inicial detectó 503 por el resolver de
+  entidades (latencia observada ~4,9 s); la migración
+  `20261007070936_hu_ed24_reader_performance.sql` elimina esa revalidación cara
+  durante la lectura y ya está aplicada en Production. El endpoint volvió a
+  `200 []` (~1,0 s); competición, equipo y jugador también respondieron `200`.
 - **Archivos modificados:** `server/api/articulos/entidad/[tipo]/[slug].get.ts`,
   `server/utils/repositorioContenidoEditorial.ts`,
   `server/utils/competicionesPublicas.ts`, `server/utils/equiposLigaPublicos.ts`,
   `pages/jugadores/[slug].vue`, migración de HU, pruebas de hubs y
-  `docs/agents/ESTADO_ACTUAL.md`; además, continuidad documental de HU-ED-20.
+  `docs/agents/ESTADO_ACTUAL.md`; además, migración de rendimiento
+  `20261007070936_hu_ed24_reader_performance.sql`, test del contrato optimizado
+  y este handoff.
 - **Decisiones:** No buscar/rellenar entidades por texto en hubs. Mostrar solo
   relaciones confirmadas por el equipo editorial; los artículos no relacionados
   se omiten. No se hizo backfill ni escritura de contenido real. El `SECURITY
-  DEFINER` público es intencional para lectura anónima de resúmenes públicos:
-  valida entidad, versión publicada y relación confirmada, limita respuesta,
-  fija `search_path=''`, no devuelve cuerpo ni grafo privado y no concede
-  ejecución a `PUBLIC` ni `service_role`.
-- **Validaciones ejecutadas:** Pruebas relacionadas (3 archivos, 22 pruebas);
-  suite completa (81 archivos, 405 pruebas); `npm run lint` excluyendo solo el
-  directorio ajeno no rastreado `.codex-validation-hu-seo11-20261006/`;
-  `npm run typecheck`; `npm run build`; revisión estática independiente de
-  seguridad/migración; verificación en Production de RPC, `search_path`, ACL,
-  salida `[]` para `competition/liga-betplay`, y cero relaciones confirmadas.
-  `git diff --check` queda pendiente tras la actualización final de documentos.
+  DEFINER` público es intencional para lectura anónima de resúmenes públicos.
+  El RPC escritor autentica, autoriza y valida la entidad antes de aceptar la
+  relación confirmada; el lector conserva tipo/slug, publicación, versión,
+  límites y `search_path=''`, no devuelve cuerpo ni grafo privado y no concede
+  ejecución a `PUBLIC` ni `service_role`. Caveat: el vínculo persistirá si el
+  resolver deja de reconocer el slug después, aunque solo expone una relación
+  con contenido publicado. El asesor Supabase marca la RPC como acceso público
+  `SECURITY DEFINER` esperado y lista otros avisos del proyecto.
+- **Validaciones ejecutadas:** Prueba focal (4/4); suite completa (81 archivos,
+  406 pruebas); `npm.cmd run lint` excluyendo solo el directorio ajeno no
+  rastreado `.codex-validation-hu-seo11-20261006/`; `npm.cmd run typecheck`;
+  `npm.cmd run build`; revisión independiente de seguridad; verificación en
+  Production de migración, `search_path`, ACL (`anon`/`authenticated` sí,
+  `service_role` no), API HTTP 200 y hubs HTTP 200. Las relaciones confirmadas
+  siguen en cero.
 - **Fallos:** El primer intento de test no cargó porque faltaba
   `NUXT_PUBLIC_SITE_URL`; se repitió con el dominio público no secreto y pasó.
   El lint sin exclusión escaneó el directorio ajeno no rastreado y mostró errores
-  preexistentes de nombres Vue; excluyéndolo, el lint pasa. El CLI de Supabase
-  no está instalado; la migración se ejecutó y verificó mediante Supabase MCP.
-  El asesor Supabase reporta un warning esperado para esta RPC pública
-  `SECURITY DEFINER`, y otros avisos preexistentes del proyecto.
-- **Pendientes:** PR, CI/Preview, merge y smoke de rutas/API en Production. Una
+  preexistentes de nombres Vue; excluyéndolo, el lint pasa. Supabase MCP aplicó
+  la migración versión `20261007070936`, alineada con el archivo local. El build
+  conserva la advertencia upstream Node `DEP0155`.
+- **Pendientes:** Commit, push, PR, CI/Preview, merge a `main` y revisar estado
+  de Vercel. La reparación DB ya está en Production; no repetir la migración. Una
   persona editora debe asociar explícitamente noticias desde el CMS antes de que
   aparezcan en los hubs; no ejecutar una asociación automática.
-- **Siguiente acción exacta:** Terminar PR de la rama actual, esperar pruebas y
-  Preview, integrar a `main`, comprobar Vercel Production y hacer GET público a
-  una competición, un equipo y un jugador; verificar HTTP 200 y que los bloques
-  de noticias permanezcan vacíos hasta que el CMS tenga relaciones confirmadas.
-- **Commit base:** `a96016bd9e9ba5604bc2c55090a08247c0e80ad5`.
+- **Siguiente acción exacta:** Ejecutar `git diff --check`, revisar y commitear
+  solo los archivos del hotfix, crear PR desde
+  `codex/fix-hu-ed24-rpc-timeout`, esperar CI/Preview, integrar según la
+  autorización vigente y repetir smoke. No incluir el directorio ajeno.
+- **Commit base:** `7cbf26728a7e1eda297b73fa8abc5a3ea5a371cc`.
 - **Commit final:** sin commit.
