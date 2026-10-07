@@ -234,6 +234,20 @@ export async function guardarDecisionesRelacionesSeo(
     }
     return { decision, entidad: entidad || relacionActual! }
   })
+  const principalActual = relacionesActuales.find(relacion =>
+    relacion.estado === 'confirmed' && relacion.relacion === 'about'
+  )
+  const principalSolicitada = candidatas.find(({ decision }) =>
+    decision.estado === 'confirmed' && decision.relacion === 'about'
+  )
+  if (principalActual && principalSolicitada
+    && claveEntidad(principalActual.tipo, principalActual.slug)
+      !== claveEntidad(principalSolicitada.entidad.tipo, principalSolicitada.entidad.slug)) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'Ya hay una entidad principal confirmada. Quítala primero para asignar otra.'
+    })
+  }
   const sugerencias = sugerirEntidadesPorCoincidencia(
     articulo.titulo,
     articulo.resumen,
@@ -270,6 +284,12 @@ export async function guardarDecisionesRelacionesSeo(
       }))
     })
     if (error) {
+      if (error.code === '23505') {
+        throw createError({
+          statusCode: 409,
+          statusMessage: 'Ya hay una entidad principal confirmada. Quítala primero para asignar otra.'
+        })
+      }
       throw createError({ statusCode: 503, statusMessage: 'No se pudieron guardar las relaciones editoriales.' })
     }
   }

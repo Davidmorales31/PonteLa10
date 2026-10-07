@@ -12,6 +12,16 @@ export const esquemaDecisionesRelacionesSeo = z.object({
   }).strict()).max(40)
 }).strict().superRefine(({ decisiones }, contexto) => {
   const claves = new Set<string>()
+  const principalesConfirmadas = decisiones.filter(decision =>
+    decision.estado === 'confirmed' && decision.relacion === 'about'
+  )
+  if (principalesConfirmadas.length > 1) {
+    contexto.addIssue({
+      code: 'custom',
+      path: ['decisiones'],
+      message: 'Solo se permite una entidad principal confirmada por artículo.'
+    })
+  }
   decisiones.forEach((decision, indice) => {
     const clave = `${decision.tipo}:${decision.slug}`
     if (claves.has(clave)) {

@@ -95,6 +95,7 @@ export function normalizarSeleccionEditorialCodex(propuesta: unknown, entrada: E
       ? normalizada.tagIds.filter(id => idsTemasPermitidos.has(id)).slice(0, 3)
       : temasRelevantes.map(tema => tema.id),
     temasNuevos,
+    parentCluster: normalizada.parentCluster || normalizada.tagIds[0] || null,
     relatedArticleIds: normalizada.relatedArticleIds.filter(id => idsArticulosPermitidos.has(id)).length
       ? normalizada.relatedArticleIds.filter(id => idsArticulosPermitidos.has(id)).slice(0, 3)
       : articulosRelevantes.map(articulo => articulo.id)

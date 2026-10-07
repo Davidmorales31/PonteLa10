@@ -25,6 +25,7 @@ import ModalAccionFlujoEditorial from '~/components/admin/ModalAccionFlujoEditor
 import ModalEliminarContenido from '~/components/admin/ModalEliminarContenido.vue'
 import ModalSubirMedio from '~/components/admin/ModalSubirMedio.vue'
 import PanelFlujoEditorial from '~/components/admin/PanelFlujoEditorial.vue'
+import PanelBriefSeoEditorial from '~/components/admin/PanelBriefSeoEditorial.vue'
 import PanelGrafoEntidadesSeo from '~/components/admin/PanelGrafoEntidadesSeo.vue'
 import SelectorPortadaEditorial from '~/components/admin/SelectorPortadaEditorial.vue'
 import VistaPreviaArticulo from '~/components/admin/VistaPreviaArticulo.vue'
@@ -196,6 +197,10 @@ const puedeEditar = computed(() => {
     && esEstadoEditableContenido(detalle.estado)
   )
 })
+const puedeGestionarSeoEnRevision = computed(() =>
+  articulo.value?.estado === 'review' && tienePermiso('contenido.aprobar')
+)
+const puedeGestionarMetadatosSeo = computed(() => puedeEditar.value || puedeGestionarSeoEnRevision.value)
 const hayCambiosQueBloqueanFlujo = computed(() => puedeEditar.value && cambiosPendientes.value)
 const puedeCambiarPortadaRapida = computed(() => {
   const estado = articulo.value?.estado
@@ -1304,10 +1309,16 @@ function formatearFecha(fecha: string): string {
               :slug="formulario.slug"
               :portada="portadaSeleccionada"
             />
+            <PanelBriefSeoEditorial
+              v-if="pasoActual === 'seo'"
+              :articulo-id="articuloId"
+              :deshabilitado="!puedeGestionarMetadatosSeo"
+              :puede-confirmar-brief="puedeGestionarSeoEnRevision"
+            />
             <PanelGrafoEntidadesSeo
               v-if="pasoActual === 'seo'"
               :articulo-id="articuloId"
-              :deshabilitado="!puedeEditar"
+              :deshabilitado="!puedeGestionarMetadatosSeo"
             />
           </section>
 

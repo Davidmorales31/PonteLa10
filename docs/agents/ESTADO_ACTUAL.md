@@ -164,6 +164,49 @@
 - Handoff de implementación y despliegue:
   `docs/agents/handoffs/2026-10-07-hu-seo14-historicos.md`.
 
+## HU-SEO-12 — navegación contextual automática (2026-10-07)
+
+- PR #79 corrigió el enlace al resultado anterior en la API contextual: ahora
+  apunta directamente a `/partidos/:slug`, su ruta canonical, en vez de generar
+  un enlace interno que redirigía desde `/como-quedo/:slug`. El resto de la
+  navegación contextual ya estaba desplegada en el PR #75; mantiene relaciones
+  estructuradas y no infiere enlaces a partir de coincidencias de texto.
+- PR #79 pasó lint, suite, typecheck y build en CI; su Preview y Production
+  quedaron `READY`. Se verificó en Production HTTP 200 para la API y el detalle
+  probado, y el HTML SSR enlaza al resultado anterior canonical sin `/como-quedo/`.
+  No hubo cambios de esquema, escrituras Supabase ni consumo de proveedores.
+- La consulta de un artículo de ejemplo no encontró relaciones explícitas y por
+  eso no se mostraron enlaces especulativos. La cobertura editorial de esos
+  enlaces depende de que el CMS guarde relaciones; HU-ED-24 es el paso siguiente
+  del roadmap para resolver ese déficit estructurado.
+- Handoff: `docs/agents/handoffs/2026-10-07-hu-seo12-navegacion-contextual.md`.
+
+## HU-ED-20 — brief de intención de búsqueda (2026-10-07)
+
+- La migración `20261007061722_hu_ed20_brief_intencion.sql` se aplicó a
+  Supabase Production `ykjithahavncswlfgsqa`. El brief queda en una tabla
+  privada con RLS; `service_role` no tiene DML directo y la automatización
+  entrega propuestas mediante una RPC idempotente de alcance cerrado.
+- El editor puede registrar las ocho intenciones, consulta opcional, ventana de
+  actualidad, cluster y diferenciador; la entidad principal/secundaria se
+  conserva en el grafo existente. Las piezas originales no requieren keyword,
+  y se advierte si falta entidad principal. Codex propone, pero no confirma:
+  solo un aprobador puede confirmar metadatos con el artículo en revisión.
+- La confirmación y las relaciones no habilitan la edición del cuerpo. Cambios
+  de la persona se auditan; reintentos de Codex no sobrescriben un brief ya
+  confirmado. La protección contra más de una entidad principal se valida en
+  cliente, servidor y restricción de base de datos.
+- Producción DB verificada: RLS activo, tabla sin filas iniciales, escritura
+  directa de `service_role` revocada, RPC ejecutable solo por ese rol y el
+  índice parcial de entidad principal presente. El código aún no se ha
+  desplegado; falta PR, CI/Preview, integración a `main` y smoke de Production.
+- Validación local: 80 archivos/403 pruebas, `typecheck`, build Nuxt y lint de
+  aplicación pasan; lint global excluyendo el directorio de validación ajeno y
+  no rastreado también pasa. `git diff --check` pasa. `supabase db lint`
+  local no está disponible porque no hay Docker/Postgres local; el SQL fue
+  aplicado y verificado en el proyecto Production.
+- Handoff: `docs/agents/handoffs/2026-10-07-hu-ed20-brief-intencion.md`.
+
 ## HU-SEO-08 — páginas permanentes de competiciones (2026-10-06)
 
 - PR #68 integró las páginas públicas de competición en `main` como

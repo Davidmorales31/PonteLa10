@@ -164,14 +164,33 @@ export function normalizarSeleccionEditorial(propuesta: unknown, entrada: Entrad
     .map(item => consultasPermitidas.get(item.toLocaleLowerCase('es-CO')))
     .filter((item): item is string => typeof item === 'string'
       && item.toLocaleLowerCase('es-CO') !== consultaValidada.toLocaleLowerCase('es-CO'))
-  const intencion = ['informativa', 'navegacional', 'analisis'].includes(String(seleccion.intencion))
+  const intencionesValidas = [
+    'informativa', 'navegacional', 'analisis', 'actualidad', 'resultado',
+    'transmision', 'calendario', 'explicacion', 'perfil', 'opinion'
+  ]
+  const intencion = intencionesValidas.includes(String(seleccion.intencion))
     ? seleccion.intencion as SeleccionEditorialIa['intencion']
     : contexto?.intencion || 'informativa'
+  const parentCluster = typeof seleccion.parentCluster === 'string'
+    && idsTemas.has(seleccion.parentCluster)
+    ? seleccion.parentCluster
+    : null
+  const ventanaFrescuraDias = Number.isInteger(seleccion.ventanaFrescuraDias)
+    && Number(seleccion.ventanaFrescuraDias) >= 0
+    && Number(seleccion.ventanaFrescuraDias) <= 3650
+    ? Number(seleccion.ventanaFrescuraDias)
+    : null
+  const diferenciadorEditorial = typeof seleccion.diferenciadorEditorial === 'string'
+    ? seleccion.diferenciadorEditorial.trim().slice(0, 500) || null
+    : null
 
   return {
     consultaPrincipal: consultaValidada,
     consultasRelacionadas: [...new Set(relacionadasValidadas)].slice(0, 8),
     intencion,
+    parentCluster,
+    ventanaFrescuraDias,
+    diferenciadorEditorial,
     tagIds: strings(seleccion.tagIds, 12).filter(id => idsTemas.has(id)),
     temasNuevos: temas,
     relatedArticleIds: strings(seleccion.relatedArticleIds, 3).filter(id => idsArticulos.has(id))

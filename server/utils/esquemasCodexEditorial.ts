@@ -50,6 +50,18 @@ const esquemaFuenteCodex = z.object({
   claims: z.array(z.string().trim().min(8).max(500)).min(1).max(12)
 }).strict()
 
+export const esquemaBriefSeoPropuestoCodex = z.object({
+  targetQuery: z.string().trim().min(2).max(160).nullable(),
+  searchIntent: z.enum([
+    'actualidad', 'resultado', 'transmision', 'calendario',
+    'explicacion', 'perfil', 'analisis', 'opinion'
+  ]).nullable(),
+  parentCluster: z.string().trim().min(1).max(120).nullable(),
+  freshnessWindowDays: z.number().int().min(0).max(3650).nullable(),
+  opportunitySource: esquemaUrlHttps.nullable(),
+  editorialDifferentiator: z.string().trim().min(1).max(500).nullable()
+}).strict()
+
 function tieneCaracteresDeControl(valor: string) {
   return Array.from(valor).some((caracter) => {
     const punto = caracter.codePointAt(0) ?? 0
@@ -205,7 +217,10 @@ export const esquemaBorradorCodex = z.object({
   seoResearch: z.object({
     primaryQuery: z.string().trim().min(2).max(160),
     relatedQueries: z.array(z.string().trim().min(2).max(160)).max(8),
-    intent: z.enum(['informativa', 'navegacional', 'analisis'])
+    intent: z.enum([
+      'informativa', 'navegacional', 'analisis', 'actualidad', 'resultado',
+      'transmision', 'calendario', 'explicacion', 'perfil', 'opinion'
+    ])
   }).strict(),
   primarySourceUrl: esquemaUrlHttps,
   sources: z.array(esquemaFuenteCodex).min(2).max(10),

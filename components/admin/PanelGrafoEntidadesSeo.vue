@@ -34,6 +34,8 @@ const filtroTipo = ref<TipoEntidadSeo | ''>('')
 const relacionSeleccionada = ref<TipoRelacionEntidadSeo>('related')
 
 const relacionesGuardadas = computed(() => carga.value?.relaciones || [])
+const entidadPrincipalConfirmada = computed(() => relacionesGuardadas.value
+  .find(relacion => relacion.estado === 'confirmed' && relacion.relacion === 'about'))
 const sugerencias = computed(() => (carga.value?.sugerencias || [])
   .filter(sugerencia => filtroTipo.value === '' || sugerencia.tipo === filtroTipo.value)
   .slice(0, 8))
@@ -72,6 +74,14 @@ async function decidir(
   estado: 'confirmed' | 'rejected',
   relacion: TipoRelacionEntidadSeo = relacionSeleccionada.value
 ) {
+  if (estado === 'confirmed'
+    && relacion === 'about'
+    && entidadPrincipalConfirmada.value
+    && (entidadPrincipalConfirmada.value.tipo !== tipo || entidadPrincipalConfirmada.value.slug !== slug)) {
+    errorCarga.value = 'Ya hay una entidad principal confirmada. Quítala primero para asignar otra.'
+    return
+  }
+
   const clave = `${tipo}:${slug}`
   guardandoClave.value = clave
   errorCarga.value = ''
@@ -128,7 +138,7 @@ function obtenerMensajeError(error: unknown): string {
         Tipo de relación
         <select v-model="relacionSeleccionada" :disabled="deshabilitado || cargando || Boolean(guardandoClave)">
           <option value="related">Relacionado</option>
-          <option value="about">Tema principal</option>
+          <option value="about" :disabled="Boolean(entidadPrincipalConfirmada)">Tema principal</option>
           <option value="mentions">Mención</option>
         </select>
       </label>
@@ -140,6 +150,13 @@ function obtenerMensajeError(error: unknown): string {
         </select>
       </label>
     </div>
+
+    <p v-if="entidadPrincipalConfirmada" class="estado-principal-grafo">
+      Tema principal: {{ entidadPrincipalConfirmada.nombre }}. Quita esta relación antes de elegir otra entidad principal.
+    </p>
+    <p v-else class="estado-principal-grafo">
+      Esta pieza aún no tiene una entidad principal confirmada. Si la historia gira alrededor de un equipo, partido, jugador o competición, asígnala aquí; es un aviso, no bloquea la publicación.
+    </p>
 
     <p v-if="errorCarga" class="estado-error-grafo" role="alert">{{ errorCarga }}</p>
     <p v-else-if="mensaje" class="estado-exito-grafo" role="status">{{ mensaje }}</p>
@@ -245,6 +262,7 @@ function obtenerMensajeError(error: unknown): string {
 .controles-grafo-entidades { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .controles-grafo-entidades label { display: grid; gap: 6px; font-size: .8rem; font-weight: 750; }
 .controles-grafo-entidades select, .busqueda-entidades-grafo input { width: 100%; min-height: 42px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; padding: 8px 10px; color: #13253d; }
+.estado-principal-grafo { margin: -4px 0 0; color: #586980; font-size: .82rem; line-height: 1.5; }
 .lista-sugerencias-grafo, .busqueda-entidades-grafo, .relaciones-actuales-grafo { display: grid; gap: 10px; min-width: 0; }
 .lista-sugerencias-grafo > header { display: flex; align-items: center; gap: 8px; }
 .lista-sugerencias-grafo h3, .busqueda-entidades-grafo h3, .relaciones-actuales-grafo h3 { margin: 0; font-size: .98rem; }
