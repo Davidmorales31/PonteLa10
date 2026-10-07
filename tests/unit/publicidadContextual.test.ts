@@ -4,6 +4,7 @@ import { describe, expect, it } from 'vitest'
 
 const paginaCompeticion = readFileSync(resolve(process.cwd(), 'components/publico/PaginaCompeticionPublica.vue'), 'utf8')
 const paginaJugador = readFileSync(resolve(process.cwd(), 'pages/jugadores/[slug].vue'), 'utf8')
+const paginaResultadosEnVivo = readFileSync(resolve(process.cwd(), 'pages/resultados/en-vivo.vue'), 'utf8')
 const componenteAnuncio = readFileSync(resolve(process.cwd(), 'components/publicidad/AdsterraSlot.vue'), 'utf8')
 
 describe('HU-MON-01/02 · anuncios contextuales', () => {
@@ -30,6 +31,19 @@ describe('HU-MON-01/02 · anuncios contextuales', () => {
     expect(indiceColumnaSecundaria).toBeGreaterThan(indiceAnuncio)
     expect(paginaJugador.slice(indiceAnuncio, indiceColumnaSecundaria))
       .toContain('contexto="colombianos en Europa · ficha de futbolista"')
+  })
+
+  it('ubica el anuncio en vivo después de los marcadores y solo si hay partidos', () => {
+    const indicePartidos = paginaResultadosEnVivo.indexOf('class="grilla-marcadores-resultados"')
+    const indiceAnuncio = paginaResultadosEnVivo.indexOf('<PublicidadAdsterraSlot')
+    const indiceEnlace = paginaResultadosEnVivo.indexOf('class="enlace-regreso-seo"')
+    const bloqueAnuncio = paginaResultadosEnVivo.slice(indiceAnuncio, indiceEnlace)
+
+    expect(indicePartidos).toBeGreaterThanOrEqual(0)
+    expect(indiceAnuncio).toBeGreaterThan(indicePartidos)
+    expect(indiceEnlace).toBeGreaterThan(indiceAnuncio)
+    expect(bloqueAnuncio).toContain('v-if="partidosEnVivo.length"')
+    expect(bloqueAnuncio).toContain('contexto="resultados en vivo"')
   })
 
   it('mantiene el consentimiento, la reserva del marco y la carga diferida del proveedor', () => {

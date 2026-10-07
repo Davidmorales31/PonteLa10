@@ -32,6 +32,13 @@ useSeoPont3la10(() => ({
       <div class="titulo-panel-resultados"><h2 id="titulo-en-vivo">Partidos en juego</h2><span>Actualización según el proveedor</span></div>
       <div class="grilla-marcadores-resultados"><TarjetaMarcadorCompacto v-for="partido in partidosEnVivo" :key="partido.id" :partido="partido" /></div>
     </section>
+    <PublicidadAdsterraSlot
+      v-if="partidosEnVivo.length"
+      formato="leaderboard"
+      contexto="resultados en vivo"
+    />
     <NuxtLink class="enlace-regreso-seo" to="/partidos-hoy">Ver todos los partidos de hoy</NuxtLink>
   </main>
 </template>
+
+<style src="~/assets/css/resultados.css"></style>

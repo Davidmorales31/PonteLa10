@@ -228,3 +228,5 @@ async function salirPanel() {
     </section>
   </div>
 </template>
+
+<style src="~/assets/css/admin.css"></style>

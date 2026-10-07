@@ -27,3 +27,5 @@ const cantidadEnVivo = computed(() => propiedades.partidos.filter(partido => par
     </div>
   </section>
 </template>
+
+<style src="~/assets/css/resultados.css"></style>

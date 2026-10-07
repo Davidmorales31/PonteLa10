@@ -328,6 +328,8 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
   </div>
 </template>
 
+<style src="~/assets/css/resultados.css"></style>
+
 <style scoped>
 .goleadores-detalle-partido {
   display: flex;
