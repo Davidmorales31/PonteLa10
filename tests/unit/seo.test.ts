@@ -9,6 +9,7 @@ import {
   normalizarTextoMeta,
   serializarJsonLd
 } from '../../utils/seo'
+import { construirHeadSeoPont3la10 } from '../../utils/headSeoPont3la10'
 
 describe('utilidades SEO', () => {
   it('construye canonical absolutas sin barras duplicadas', () => {
@@ -77,5 +78,54 @@ describe('utilidades SEO', () => {
 
     expect(comprobaciones.find(item => item.id === 'imagen')?.estado).toBe('advertencia')
     expect(comprobaciones.find(item => item.id === 'imagen')?.mensaje).toContain('sin imagen')
+  })
+
+  it('genera title, description, canonical, robots, Open Graph y JSON-LD desde un contrato único', () => {
+    const head = construirHeadSeoPont3la10('https://www.pont3la10.com', {
+      titulo: 'Nacional vs Millonarios: horario, resultado y detalles',
+      descripcion: 'Consulta la información verificada del encuentro, su estado y el resultado actualizado.',
+      rutaCanonica: '/partidos/nacional-vs-millonarios',
+      imagen: '/api/partidos-seo/nacional-vs-millonarios/imagen?formato=og',
+      imagenAlt: 'Atlético Nacional vs Millonarios',
+      imagenAncho: 1200,
+      imagenAlto: 628,
+      tipoOpenGraph: 'website',
+      datosEstructurados: {
+        '@context': 'https://schema.org',
+        '@type': 'SportsEvent',
+        url: 'https://www.pont3la10.com/partidos/nacional-vs-millonarios'
+      }
+    })
+    const canonical = 'https://www.pont3la10.com/partidos/nacional-vs-millonarios'
+    const getMeta = (kind: 'name' | 'property', key: string) =>
+      head.meta.find(meta => kind === 'name'
+        ? 'name' in meta && meta.name === key
+        : 'property' in meta && meta.property === key)?.content
+
+    expect(head.title).toBe('Nacional vs Millonarios: horario, resultado y detalles')
+    expect(getMeta('name', 'description')).toContain('información verificada')
+    expect(getMeta('name', 'robots')).toContain('index, follow')
+    expect(getMeta('property', 'og:title')).toBe(head.title)
+    expect(getMeta('property', 'og:description')).toBe(getMeta('name', 'description'))
+    expect(getMeta('property', 'og:url')).toBe(canonical)
+    expect(head.link.find(link => link.rel === 'canonical')?.href).toBe(canonical)
+    expect(getMeta('property', 'og:image:width')).toBe('1200')
+    expect(getMeta('property', 'og:image:height')).toBe('628')
+    expect(head.script).toHaveLength(1)
+    expect(JSON.parse(head.script[0].innerHTML)).toMatchObject({ '@type': 'SportsEvent', url: canonical })
+  })
+
+  it('mantiene el noindex y evita anunciar una canonical enlazada en páginas de búsqueda', () => {
+    const head = construirHeadSeoPont3la10('https://www.pont3la10.com', {
+      titulo: 'Resultados de búsqueda | Pont3la10',
+      descripcion: 'Resultados internos de búsqueda.',
+      rutaCanonica: '/articulos?buscar=seleccion',
+      robots: 'noindex, follow'
+    })
+
+    expect(head.meta.find(meta => 'name' in meta && meta.name === 'robots')?.content).toBe('noindex, follow')
+    expect(head.link.some(link => link.rel === 'canonical')).toBe(false)
+    expect(head.meta.find(meta => 'property' in meta && meta.property === 'og:url')?.content)
+      .toBe('https://www.pont3la10.com/articulos?buscar=seleccion')
   })
 })
