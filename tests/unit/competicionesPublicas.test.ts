@@ -3,10 +3,13 @@ import {
   esNoticiaRelacionadaCompeticion,
   seleccionarFasesClasificacionCompletas,
   construirTemporadasPublicasCompeticion,
+  construirJornadasIndexablesPublicas,
+  normalizarIdentidadEquiposCompeticionPublica,
   type FilaTablaCompeticionPublica,
   type SlugCompeticionPublica
 } from '../../server/utils/competicionesPublicas'
 import type { PartidoSeoPublico } from '../../server/utils/partidosSeoPublicos'
+import type { EquipoLigaPublico } from '../../server/utils/equiposLigaPublicos'
 
 const fechaAhora = Date.parse('2026-10-06T17:00:00.000Z')
 
@@ -48,6 +51,25 @@ function crearFilaTabla(equipoSlug: string, fase: string): FilaTablaCompeticionP
     golesFavor: 0, golesContra: 0, diferencia: 0, puntos: 0,
     verificadoEn: '2026-10-06T12:00:00.000Z'
   }
+}
+
+function crearJornadaCompleta(
+  competencia: SlugCompeticionPublica = 'liga-betplay',
+  temporada = '2026-II'
+): PartidoSeoPublico[] {
+  const equipos = competencia === 'liga-betplay' ? 20 : 16
+  return Array.from({ length: equipos / 2 }, (_, indice) => ({
+    ...crearPartidos(temporada, equipos / 2, '2026-10-01T18:00:00.000Z', competencia)[indice]!,
+    jornada: 'Fecha 13',
+    local: `Equipo ${indice + 1}`,
+    visitante: `Equipo ${indice + 1 + equipos / 2}`,
+    fuenteOficialUrl: 'https://dimayor.com.co/programaciones-competencias-dimayor-2026/'
+  }))
+}
+
+function crearEquiposOficiales(competencia: SlugCompeticionPublica = 'liga-betplay'): string[] {
+  const cantidad = competencia === 'liga-betplay' ? 20 : 16
+  return Array.from({ length: cantidad }, (_, indice) => `Equipo ${indice + 1}`)
 }
 
 describe('temporadas permanentes de competición', () => {
@@ -124,5 +146,123 @@ describe('temporadas permanentes de competición', () => {
       titulo: 'La Liga BetPlay abre la fecha 14',
       resumen: 'Consulta la agenda de la competición.'
     }, 'Liga BetPlay', equipos)).toBe(true)
+  })
+})
+
+describe('páginas indexables de jornada', () => {
+  it('presenta un nombre anterior con nombre, escudo y enlace del padrón actual, sin alterar históricos', () => {
+    const partido = {
+      ...crearJornadaCompleta()[0]!,
+      visitante: 'La Equidad',
+      equipoVisitanteSlug: undefined,
+      escudoVisitante: null
+    }
+    const equipoOficial: EquipoLigaPublico = {
+      slug: 'internacional-de-bogota',
+      nombre: 'Internacional de Bogotá',
+      escudo: '/escudos/internacional-de-bogota.svg',
+      clasificaciones: [{
+        competencia: 'liga-betplay', temporada: '2026-II', fase: 'Todos contra todos',
+        posicion: 13, jugados: 0, ganados: 0, empatados: 0, perdidos: 0,
+        golesFavor: 0, golesContra: 0, diferencia: 0, puntos: 0,
+        verificadoEn: '2026-10-06T12:00:00.000Z'
+      }],
+      actualizadoEn: '2026-10-06T12:00:00.000Z'
+    }
+    const [actual] = normalizarIdentidadEquiposCompeticionPublica(
+      [partido], 'liga-betplay', [equipoOficial]
+    )
+    const [historico] = normalizarIdentidadEquiposCompeticionPublica(
+      [{ ...partido, temporada: '2026-I' }], 'liga-betplay', [equipoOficial]
+    )
+
+    expect(actual).toMatchObject({
+      visitante: 'Internacional de Bogotá',
+      equipoVisitanteSlug: 'internacional-de-bogota',
+      escudoVisitante: '/escudos/internacional-de-bogota.svg'
+    })
+    expect(historico).toMatchObject({
+      visitante: 'La Equidad',
+      equipoVisitanteSlug: undefined,
+      escudoVisitante: null
+    })
+  })
+
+  it('publica una URL canónica por temporada solo si están los partidos de todos los equipos', () => {
+    const partidos = crearJornadaCompleta()
+    const equiposOficiales = crearEquiposOficiales()
+    const jornadas = construirJornadasIndexablesPublicas('liga-betplay', '2026-II', partidos, equiposOficiales, fechaAhora)
+
+    expect(jornadas).toHaveLength(1)
+    expect(jornadas[0]?.ruta).toBe('/jornadas/liga-betplay/2026-II/jornada-13')
+    expect(jornadas[0]?.partidos).toHaveLength(10)
+    expect(jornadas[0]?.equipos).toBe(20)
+    expect(construirJornadasIndexablesPublicas('liga-betplay', '2026-II', partidos.slice(1), equiposOficiales, fechaAhora)).toEqual([])
+    expect(construirJornadasIndexablesPublicas('liga-betplay', '2026-II', [...partidos, partidos[0]!], equiposOficiales, fechaAhora)).toEqual([])
+    expect(construirJornadasIndexablesPublicas('liga-betplay', '2026-II', partidos, [], fechaAhora)).toEqual([])
+  })
+
+  it('excluye una jornada con un club fuera del padrón oficial aunque tenga 10 partidos', () => {
+    const partidos = crearJornadaCompleta()
+    const jornadaConNombreAjeno = [
+      { ...partidos[0]!, local: 'La Equidad' },
+      ...partidos.slice(1)
+    ]
+
+    expect(construirJornadasIndexablesPublicas(
+      'liga-betplay', '2026-II', jornadaConNombreAjeno, crearEquiposOficiales(), fechaAhora
+    )).toEqual([])
+  })
+
+  it('normaliza un nombre heredado solo en la temporada donde DIMAYOR confirma la identidad', () => {
+    const partidos = crearJornadaCompleta().map((partido, indice) => indice === 0
+      ? { ...partido, local: 'La Equidad' }
+      : partido)
+    const equiposOficiales = ['Internacional de Bogotá', ...crearEquiposOficiales().slice(1)]
+
+    expect(construirJornadasIndexablesPublicas(
+      'liga-betplay', '2026-II', partidos, equiposOficiales, fechaAhora
+    )).toHaveLength(1)
+    expect(construirJornadasIndexablesPublicas(
+      'liga-betplay', '2026-I', partidos, equiposOficiales, fechaAhora
+    )).toEqual([])
+  })
+
+  it('no publica una jornada con un encuentro adicional reclasificado por el proveedor', () => {
+    const partidos = crearJornadaCompleta()
+    const partidosConExtra = [...partidos, {
+      ...partidos[0]!,
+      slug: 'equipo-1-vs-equipo-11-reprogramado',
+      fechaIso: '2026-10-13T18:00:00.000Z'
+    }]
+
+    expect(construirJornadasIndexablesPublicas(
+      'liga-betplay', '2026-II', partidosConExtra, crearEquiposOficiales(), fechaAhora
+    )).toEqual([])
+  })
+
+  it('rechaza fuentes verificadas con marca de tiempo futura', () => {
+    const partidos = crearJornadaCompleta().map(partido => ({ ...partido, verificadoEn: '2026-10-07T12:00:00.000Z' }))
+
+    expect(construirJornadasIndexablesPublicas(
+      'liga-betplay', '2026-II', partidos, crearEquiposOficiales(), fechaAhora
+    )).toEqual([])
+  })
+
+  it('admite un torneo de 16 equipos y excluye juegos sin fuente oficial', () => {
+    const partidos = crearJornadaCompleta('torneo-betplay')
+    const equiposOficiales = crearEquiposOficiales('torneo-betplay')
+    expect(construirJornadasIndexablesPublicas('torneo-betplay', '2026-II', partidos, equiposOficiales, fechaAhora)[0]?.partidos).toHaveLength(8)
+    expect(construirJornadasIndexablesPublicas('torneo-betplay', '2026-II', [
+      ...partidos.slice(0, -1), { ...partidos.at(-1)!, fuenteOficialUrl: null }
+    ], equiposOficiales, fechaAhora)).toEqual([])
+  })
+
+  it('no crea jornadas por fecha, fase de copa o parámetros de URL inválidos', () => {
+    const partidos = crearJornadaCompleta('copa-colombia')
+    expect(construirJornadasIndexablesPublicas('copa-colombia', '2026-II', partidos, [], fechaAhora)).toEqual([])
+    expect(construirJornadasIndexablesPublicas('liga-betplay', '2026-II', partidos.map(partido => ({
+      ...partido, jornada: 'Cuadrangulares Grupo A'
+    })), crearEquiposOficiales(), fechaAhora)).toEqual([])
   })
 })

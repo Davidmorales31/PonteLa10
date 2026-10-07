@@ -279,6 +279,9 @@ function fechaActualizacion(fecha: string | null): string {
       <div v-if="ficha.jornadas.length" class="lista-jornadas-competicion">
         <details v-for="jornada in ficha.jornadas" :key="jornada.nombre">
           <summary><strong>{{ jornada.nombre }}</strong><span>{{ jornada.partidos.length }} partidos</span></summary>
+          <NuxtLink v-if="jornada.ruta" :to="jornada.ruta" class="enlace-competicion enlace-jornada-completa">
+            Ver calendario completo de {{ jornada.nombre }} <span aria-hidden="true">→</span>
+          </NuxtLink>
           <ul class="lista-partidos-competicion"><li v-for="partido in jornada.partidos" :key="partido.slug">
             <article class="partido-jornada-compacto">
               <time :datetime="partido.fechaIso">{{ fechaPartido(partido.fechaIso) }}</time>
