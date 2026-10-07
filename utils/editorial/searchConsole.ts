@@ -1,7 +1,10 @@
 import { z } from 'zod'
 
 export const accionesSearchConsole = [
+  'optimizar',
   'actualizar',
+  'consolidar',
+  'ignorar',
   'mejorar_titulo',
   'ampliar_respuesta',
   'fusionar',
@@ -9,6 +12,13 @@ export const accionesSearchConsole = [
 ] as const
 
 export type AccionSearchConsole = typeof accionesSearchConsole[number]
+
+export const accionesOportunidadSearchConsole = [
+  'optimizar',
+  'actualizar',
+  'consolidar',
+  'ignorar'
+] as const satisfies readonly AccionSearchConsole[]
 
 export interface FilaSearchConsole {
   consulta: string
@@ -25,6 +35,17 @@ export interface TendenciaSearchConsole {
   cambioImpresiones: number
   cambioImpresionesPorcentaje: number | null
   cambioPosicion: number
+}
+
+export interface FilaOportunidadSearchConsole extends FilaSearchConsole {
+  tendencia: TendenciaSearchConsole | null
+  cluster: string
+  entidad: string
+  prioridad: 'Alta' | 'Media' | 'Baja'
+  recomendacion: string
+  motivos: string[]
+  paginasConsulta: number
+  posibleEmergente: boolean
 }
 
 const esquemaFecha = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((valor) => {
@@ -49,17 +70,43 @@ export const esquemaImportacionSearchConsole = z.object({
   }
 })
 
+function esUrlPont3la10(valor: string): boolean {
+  try {
+    const url = new URL(valor, 'https://www.pont3la10.com')
+    return url.protocol === 'https:'
+      && url.hostname.toLocaleLowerCase('en-US').replace(/^www\./, '') === 'pont3la10.com'
+      && !url.search
+      && !url.hash
+  } catch {
+    return false
+  }
+}
+
 export const esquemaAccionSearchConsole = z.object({
   consulta: z.string().trim().min(1).max(500),
   paginaUrl: z.string().url().max(2048),
   accion: z.enum(accionesSearchConsole),
   nota: z.string().trim().max(500).nullable().optional()
 }).strict().superRefine(({ accion, nota }, contexto) => {
-  if (accion === 'fusionar' && !nota?.trim()) {
+  if (['consolidar', 'fusionar'].includes(accion) && !nota?.trim()) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['nota'],
-      message: 'Indica la URL o el contenido de destino para fusionar.'
+      message: 'Indica la URL de la página existente que recibirá el contenido consolidado.'
+    })
+  }
+  if (accion === 'consolidar' && nota?.trim() && !esUrlPont3la10(nota.trim())) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['nota'],
+      message: 'La consolidación debe apuntar a una URL interna de Pont3la10.'
+    })
+  }
+  if (accion === 'consolidar' && nota?.includes('\\')) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['nota'],
+      message: 'La URL de destino no puede contener barras invertidas.'
     })
   }
 })
@@ -269,4 +316,143 @@ export function calcularTendenciaSearchConsole(
     cambioImpresionesPorcentaje: porcentajeCambio(actual.impresiones, anterior.impresiones),
     cambioPosicion: Math.round((actual.posicion - anterior.posicion) * 100) / 100
   }
+}
+
+function humanizarSlug(valor: string): string {
+  let texto: string
+  try {
+    texto = decodeURIComponent(valor)
+  } catch {
+    texto = valor
+  }
+  texto = texto
+    .replace(/\.[a-z0-9]+$/i, '')
+    .replace(/[-_]+/g, ' ')
+    .trim()
+  if (!texto) return 'Sin clasificar'
+  return texto.replace(/(^|\s)(\p{L})/gu, (_coincidencia, espacio: string, letra: string) =>
+    espacio + letra.toLocaleUpperCase('es-CO'))
+}
+
+function obtenerPath(paginaUrl: string): string {
+  try {
+    return new URL(paginaUrl).pathname.toLocaleLowerCase('es-CO')
+  } catch {
+    return ''
+  }
+}
+
+function clasificarCluster(paginaUrl: string): string {
+  const path = obtenerPath(paginaUrl)
+  if (/^\/(liga-colombiana|competiciones\/(liga-betplay|torneo-betplay))(\/|$)/.test(path)) return 'Liga colombiana'
+  if (path.startsWith('/seleccion-colombia')) return 'Selección Colombia'
+  if (path.startsWith('/partidos-hoy') || path.startsWith('/partidos/')) return 'Partidos'
+  if (path.startsWith('/colombianos-en-europa') || path.startsWith('/jugadores/')) return 'Colombianos en Europa'
+  if (path.startsWith('/equipos/')) return 'Equipos'
+  if (path.startsWith('/articulos/')) return 'Noticias'
+  return 'General'
+}
+
+function extraerEntidad(paginaUrl: string): string {
+  const path = obtenerPath(paginaUrl)
+  const rutasFijas: Array<[RegExp, string]> = [
+    [/^\/liga-colombiana(?:\/|$)/, 'Liga colombiana'],
+    [/^\/seleccion-colombia(?:\/|$)/, 'Selección Colombia'],
+    [/^\/partidos-hoy(?:\/|$)/, 'Partidos de hoy'],
+    [/^\/colombianos-en-europa(?:\/|$)/, 'Colombianos en Europa']
+  ]
+  for (const [patron, entidad] of rutasFijas) {
+    if (patron.test(path)) return entidad
+  }
+
+  const segmentos = path.split('/').filter(Boolean)
+  return segmentos.length > 1 ? humanizarSlug(segmentos[1]) : 'Sin clasificar'
+}
+
+function percentil(valores: number[], fraccion: number): number {
+  if (!valores.length) return 0
+  const ordenados = [...valores].sort((a, b) => a - b)
+  return ordenados[Math.max(0, Math.ceil(ordenados.length * fraccion) - 1)]
+}
+
+export function clasificarOportunidadesSearchConsole<
+  T extends FilaSearchConsole & { tendencia: TendenciaSearchConsole | null }
+>(
+  filas: T[],
+  tendenciaDisponible: boolean
+): Array<T & Omit<FilaOportunidadSearchConsole, keyof FilaSearchConsole | 'tendencia'>> {
+  const consultasPorPagina = new Map<string, Set<string>>()
+  for (const fila of filas) {
+    const consulta = fila.consulta.trim().toLocaleLowerCase('es-CO')
+    const paginas = consultasPorPagina.get(consulta) || new Set<string>()
+    paginas.add(fila.paginaUrl)
+    consultasPorPagina.set(consulta, paginas)
+  }
+
+  const filasConImpresiones = filas.filter(fila => fila.impresiones > 0)
+  const impresionesOrdenadas = filasConImpresiones.map(fila => fila.impresiones)
+  const ctrOrdenados = filasConImpresiones.map(fila => fila.ctr)
+  const umbralImpresionesAltas = percentil(impresionesOrdenadas, 0.75)
+  const umbralImpresionesMedianas = percentil(impresionesOrdenadas, 0.5)
+  const umbralCtrBajo = percentil(ctrOrdenados, 0.25)
+  const umbralCtrMediano = percentil(ctrOrdenados, 0.5)
+
+  return filas.map((fila) => {
+    const motivos: string[] = []
+    const paginasConsulta = consultasPorPagina.get(fila.consulta.trim().toLocaleLowerCase('es-CO'))?.size || 1
+    const esPosicionOportunidad = fila.posicion >= 5 && fila.posicion <= 20
+    const ctrBajoConImpresiones = fila.impresiones > 0
+      && fila.impresiones > umbralImpresionesMedianas
+      && fila.impresiones >= umbralImpresionesAltas
+      && fila.ctr < umbralCtrMediano
+      && fila.ctr <= umbralCtrBajo
+    const esCanibalizacion = paginasConsulta > 1
+    const perdioPosicion = (fila.tendencia?.cambioPosicion || 0) > 0
+    const posibleEmergente = tendenciaDisponible && fila.tendencia === null
+
+    if (esPosicionOportunidad) motivos.push('Posición media entre 5 y 20')
+    if (ctrBajoConImpresiones) motivos.push('Impresiones altas y CTR bajo frente al informe')
+    if (posibleEmergente) motivos.push('Sin fila equivalente en el período anterior; validar si es emergente')
+    if (esCanibalizacion) motivos.push('La consulta aparece en ' + paginasConsulta + ' páginas')
+    if (perdioPosicion) motivos.push('La posición media empeoró frente al período anterior')
+
+    const puntaje = (esPosicionOportunidad ? 3 : 0)
+      + (ctrBajoConImpresiones ? 3 : 0)
+      + (posibleEmergente ? 2 : 0)
+      + (esCanibalizacion ? 3 : 0)
+      + (perdioPosicion ? 2 : 0)
+    const prioridad: FilaOportunidadSearchConsole['prioridad'] = puntaje >= 5
+      ? 'Alta'
+      : puntaje >= 2 ? 'Media' : 'Baja'
+    const recomendacion = esCanibalizacion
+      ? 'Revisar la intención de las páginas antes de consolidar; no crear otra URL.'
+      : perdioPosicion
+        ? 'Revisar cambios recientes y actualizar esta página para recuperar visibilidad.'
+        : ctrBajoConImpresiones
+          ? 'Probar un título y una descripción más alineados con la consulta.'
+          : esPosicionOportunidad
+            ? 'Optimizar la respuesta de esta URL para acercarla a los primeros resultados.'
+            : posibleEmergente
+              ? 'Validar la nueva consulta y reforzar esta URL si coincide con su intención.'
+              : 'Seguir observando; el informe no muestra una señal prioritaria.'
+
+    return {
+      ...fila,
+      cluster: clasificarCluster(fila.paginaUrl),
+      entidad: extraerEntidad(fila.paginaUrl),
+      prioridad,
+      recomendacion,
+      motivos,
+      paginasConsulta,
+      posibleEmergente
+    }
+  }).sort((a, b) => {
+    const ordenPrioridad: Record<FilaOportunidadSearchConsole['prioridad'], number> = {
+      Alta: 0,
+      Media: 1,
+      Baja: 2
+    }
+    return ordenPrioridad[a.prioridad] - ordenPrioridad[b.prioridad]
+      || b.impresiones - a.impresiones
+  })
 }

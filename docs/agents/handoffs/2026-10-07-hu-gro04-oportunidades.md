@@ -1,0 +1,12 @@
+# Handoff
+
+- **Objetivo de la sesión:** Completar HU-GRO-04 con priorización explicable de Search Console, decisiones editoriales con historial y ubicaciones contextuales de anuncios ya autorizadas.
+- **Completado:** Clasificación de oportunidades sobre datos importados; acciones nuevas con validación de consolidación interna; historial privado append-only preparado; el endpoint declara si el historial supera 5.000 filas; anuncios colocados en temporada activa y perfiles de jugadores.
+- **Archivos modificados:** `utils/editorial/searchConsole.ts`, `pages/admin/search-console.vue`, `server/api/admin/search-console.get.ts`, `supabase/migrations/20261007122917_hu_gro04_historial_oportunidades.sql`, `components/publico/PaginaCompeticionPublica.vue`, `pages/jugadores/[slug].vue`, pruebas unitarias y este handoff/estado.
+- **Decisiones:** No inventar datos de Search Console: Production no tiene reportes ni propiedad verificada. “Posible emergente” significa sin fila equivalente en la exportación, no prueba de consulta nueva. Las señales de CTR son relativas al informe importado; no modifican ni publican contenido. La tabla de historial conserva acceso solo editorial mediante RLS; sin escrituras directas.
+- **Validaciones ejecutadas:** `npm.cmd run test:unit` (87 archivos/448 pruebas), `npm.cmd run lint`, `npm.cmd run typecheck`, `npm.cmd run build` y `git diff --check`: pasan. El build conserva el aviso upstream `[DEP0155]` de `@vue/shared`. Las pruebas enfocadas de Search Console/anuncios: 19 pasan. Revisor de seguridad estática: sin bloqueos P0–P2; los hallazgos P3 se corrigieron.
+- **Fallos:** Primer intento de test/lint sin `NUXT_PUBLIC_SITE_URL` falló por configuración requerida; reejecutados con `https://www.pont3la10.com` y pasan.
+- **Pendientes:** Abrir PR desde `codex/hu-gro04-oportunidades`; esperar CI y Vercel Preview; aplicar `20261007122917_hu_gro04_historial_oportunidades` en Supabase Production; verificar RLS, grants, trigger, privilegios y asesores; integrar PR y comprobar Vercel Production Ready y smoke de rutas. Inspección visual autenticada de panel no disponible localmente.
+- **Siguiente acción exacta:** Revisar diff, commitear/push a la rama existente y abrir PR contra `main`; no integrar antes de checks verdes ni aplicar la migración hasta completar esa revisión.
+- **Commit base:** `a89a6b17e238b7aaf17efac47b055df1081f13ab`
+- **Commit final:** sin commit | `<sha>`

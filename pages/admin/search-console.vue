@@ -2,17 +2,26 @@
 import { CheckCircle2, ExternalLink, FileSpreadsheet, LoaderCircle, RefreshCw, Save, Upload } from '@lucide/vue'
 import {
   accionesSearchConsole,
+  accionesOportunidadSearchConsole,
   claveFilaSearchConsole,
+  clasificarOportunidadesSearchConsole,
   type AccionSearchConsole,
   type FilaSearchConsole,
   type TendenciaSearchConsole
 } from '~/utils/editorial/searchConsole'
+
+interface DecisionSearchConsole {
+  action: AccionSearchConsole
+  note: string | null
+  changed_at: string
+}
 
 interface FilaConAccion extends FilaSearchConsole {
   tendencia: TendenciaSearchConsole | null
   accion: AccionSearchConsole | null
   notaAccion: string | null
   accionActualizadaEn: string | null
+  historialAcciones: DecisionSearchConsole[]
 }
 
 interface RespuestaSearchConsole {
@@ -26,6 +35,9 @@ interface RespuestaSearchConsole {
   periodoActual: { fechaDesde: string, fechaHasta: string, cantidadFilas: number } | null
   periodoComparacion: { fechaDesde: string, fechaHasta: string } | null
   tendenciaDisponible: boolean
+  historialCargado: number
+  historialTotal: number
+  historialLimitado: boolean
   filas: FilaConAccion[]
 }
 
@@ -35,7 +47,10 @@ interface FormularioAccion {
 }
 
 const etiquetasAccion: Record<AccionSearchConsole, string> = {
+  optimizar: 'Optimizar página',
   actualizar: 'Actualizar contenido',
+  consolidar: 'Consolidar páginas',
+  ignorar: 'Ignorar oportunidad',
   mejorar_titulo: 'Mejorar título',
   ampliar_respuesta: 'Ampliar respuesta',
   fusionar: 'Fusionar con otra página',
@@ -74,10 +89,14 @@ const mensajeAccion = ref('')
 const errorAccion = ref('')
 const formulariosAccion = reactive<Record<string, FormularioAccion>>({})
 const tamanoPagina = 50
+const oportunidades = computed(() => clasificarOportunidadesSearchConsole(
+  datos.value?.filas || [],
+  Boolean(datos.value?.tendenciaDisponible)
+))
 
 const filasFiltradas = computed(() => {
   const termino = filtro.value.trim().toLocaleLowerCase('es-CO')
-  const filas = datos.value?.filas || []
+  const filas = oportunidades.value
   if (!termino) return filas
   return filas.filter(fila =>
     fila.consulta.toLocaleLowerCase('es-CO').includes(termino)
@@ -102,6 +121,26 @@ const resumen = computed(() => {
     ctr: impresiones > 0 ? (clics / impresiones) * 100 : 0,
     posicion: impresiones > 0 ? sumaPosiciones / impresiones : 0
   }
+})
+
+const resumenOportunidades = computed(() => ({
+  alta: oportunidades.value.filter(fila => fila.prioridad === 'Alta').length,
+  media: oportunidades.value.filter(fila => fila.prioridad === 'Media').length,
+  canibalizacion: oportunidades.value.filter(fila => fila.paginasConsulta > 1).length,
+  sinComparacion: oportunidades.value.filter(fila => fila.posibleEmergente).length
+}))
+
+const diasPeriodo = computed(() => {
+  const periodo = datos.value?.periodoActual
+  if (!periodo) return null
+  return Math.round((Date.parse(`${periodo.fechaHasta}T00:00:00Z`)
+    - Date.parse(`${periodo.fechaDesde}T00:00:00Z`)) / 86_400_000) + 1
+})
+
+const etiquetaVentanaTendencia = computed(() => {
+  if (!diasPeriodo.value) return 'Tendencia'
+  if (diasPeriodo.value === 7 || diasPeriodo.value === 28) return `Tendencia ${diasPeriodo.value} días`
+  return `Tendencia · ${diasPeriodo.value} días importados`
 })
 
 const puedeImportar = computed(() =>
@@ -205,7 +244,7 @@ function puedeGuardarFila(fila: FilaConAccion): boolean {
   const formulario = formularioDe(fila)
   return puedeRegistrarAcciones.value
     && Boolean(formulario.accion)
-    && !(formulario.accion === 'fusionar' && !formulario.nota.trim())
+    && !(['consolidar', 'fusionar'].includes(formulario.accion) && !formulario.nota.trim())
 }
 
 async function guardarAccion(fila: FilaConAccion) {
@@ -304,19 +343,23 @@ function textoPeriodo(inicio: string, fin: string): string {
   return formatearFecha(inicio) + ' – ' + formatearFecha(fin)
 }
 
-const columnasAccion = accionesSearchConsole.map(valor => ({
+const columnasAccion = accionesOportunidadSearchConsole.map(valor => ({
   valor,
   etiqueta: etiquetasAccion[valor]
 }))
+
+const columnasAccionAnterior = accionesSearchConsole
+  .filter((valor) => !accionesOportunidadSearchConsole.includes(valor as typeof accionesOportunidadSearchConsole[number]))
+  .map(valor => ({ valor, etiqueta: etiquetasAccion[valor] }))
 </script>
 
 <template>
   <div class="vista-panel-editorial vista-search-console">
     <header class="titulo-vista-panel">
       <div>
-        <p class="etiqueta-panel">HU-ED-21 · Search Console</p>
+        <p class="etiqueta-panel">HU-GRO-04 · oportunidades orgánicas</p>
         <h1>Oportunidades orgánicas</h1>
-        <p>Consulta qué búsquedas ya encuentran Pont3la10 y registra qué página conviene mejorar con datos reales.</p>
+        <p>Prioriza páginas que ya reciben impresiones y registra decisiones editoriales sin crear contenido automáticamente.</p>
       </div>
       <button class="accion-panel-secundaria" type="button" :disabled="status === 'pending'" @click="refresh()">
         <LoaderCircle v-if="status === 'pending'" class="icono-girando" aria-hidden="true" />
@@ -386,7 +429,7 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
     <section v-if="error" class="aviso-panel aviso-panel-error" role="alert">
       <div>
         <strong>No se pudieron cargar los informes</strong>
-        <span>Revisa que esté aplicada la migración HU-ED-21 y que tu cuenta tenga permiso para ver borradores.</span>
+        <span>Revisa que estén aplicadas las migraciones HU-ED-21/HU-GRO-04 y que tu cuenta tenga permiso para ver borradores.</span>
       </div>
     </section>
 
@@ -402,10 +445,17 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
         <article><span>Posición ponderada</span><strong>{{ formatearDecimal(resumen.posicion, 2) }}</strong></article>
       </section>
 
+      <section class="resumen-oportunidades-search-console" aria-label="Señales de oportunidad">
+        <article><span>Prioridad alta</span><strong>{{ formatearNumero(resumenOportunidades.alta) }}</strong></article>
+        <article><span>Prioridad media</span><strong>{{ formatearNumero(resumenOportunidades.media) }}</strong></article>
+        <article><span>Consultas en varias páginas</span><strong>{{ formatearNumero(resumenOportunidades.canibalizacion) }}</strong></article>
+        <article><span>Posibles emergentes por ausencia</span><strong>{{ formatearNumero(resumenOportunidades.sinComparacion) }}</strong></article>
+      </section>
+
       <section class="bloque-search-console">
         <div class="cabecera-bloque-search-console resultados-search-console">
           <div>
-            <p class="etiqueta-panel">Reporte más reciente</p>
+            <p class="etiqueta-panel">Reporte más reciente · {{ etiquetaVentanaTendencia.replace('Tendencia', '').trim() }}</p>
             <h2>{{ textoPeriodo(datos.periodoActual.fechaDesde, datos.periodoActual.fechaHasta) }}</h2>
             <p>
               {{ datos.periodoActual.cantidadFilas.toLocaleString('es-CO') }} consultas/páginas
@@ -426,12 +476,19 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
           <CheckCircle2 aria-hidden="true" /><span>{{ mensajeAccion }}</span>
         </p>
         <p v-if="errorAccion" class="aviso-panel aviso-panel-error" role="alert">{{ errorAccion }}</p>
+        <p v-if="datos.historialLimitado" class="aviso-panel aviso-panel-informativo" role="status">
+          <span>Se cargaron las últimas {{ formatearNumero(datos.historialCargado) }} de {{ formatearNumero(datos.historialTotal) }} decisiones. Las anteriores siguen conservadas; esta vista muestra hasta 5.000 por carga.</span>
+        </p>
 
         <div class="tabla-search-console" role="region" aria-label="Consultas orgánicas importadas" tabindex="0">
           <table>
             <thead>
               <tr>
                 <th scope="col">Consulta y página</th>
+                <th scope="col">Cluster</th>
+                <th scope="col">Entidad de la URL</th>
+                <th scope="col">Prioridad y señal</th>
+                <th scope="col">Recomendación</th>
                 <th scope="col">Impresiones</th>
                 <th scope="col">Clics</th>
                 <th scope="col">CTR</th>
@@ -449,11 +506,21 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
                     <ExternalLink aria-hidden="true" />
                   </a>
                 </td>
+                <td>{{ fila.cluster }}</td>
+                <td>{{ fila.entidad }}</td>
+                <td class="celda-prioridad-search-console">
+                  <span :class="`insignia-prioridad-search-console prioridad-${fila.prioridad.toLocaleLowerCase('es-CO')}`">
+                    {{ fila.prioridad }}
+                  </span>
+                  <small v-for="motivo in fila.motivos" :key="motivo">{{ motivo }}</small>
+                </td>
+                <td class="celda-recomendacion-search-console">{{ fila.recomendacion }}</td>
                 <td>{{ formatearNumero(fila.impresiones) }}</td>
                 <td>{{ formatearNumero(fila.clics) }}</td>
                 <td>{{ formatearDecimal(fila.ctr) }} %</td>
                 <td>{{ formatearDecimal(fila.posicion, 2) }}</td>
                 <td class="celda-tendencia-search-console" :title="etiquetaTendencia(fila)">
+                  <strong>{{ etiquetaVentanaTendencia }}</strong>
                   {{ etiquetaTendencia(fila) }}
                 </td>
                 <td class="celda-accion-search-console">
@@ -468,6 +535,11 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
                       <option v-for="accion in columnasAccion" :key="accion.valor" :value="accion.valor">
                         {{ accion.etiqueta }}
                       </option>
+                      <optgroup v-if="columnasAccionAnterior.length" label="Decisiones de ED-21 anteriores">
+                        <option v-for="accion in columnasAccionAnterior" :key="accion.valor" :value="accion.valor">
+                          {{ accion.etiqueta }}
+                        </option>
+                      </optgroup>
                     </select>
                   </label>
                   <label>
@@ -476,7 +548,7 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
                       :value="formularioDe(fila).nota"
                       type="text"
                       maxlength="500"
-                      :placeholder="formularioDe(fila).accion === 'fusionar' ? 'URL o destino de la fusión' : 'Nota opcional'"
+                      :placeholder="['consolidar', 'fusionar'].includes(formularioDe(fila).accion) ? 'URL de la página destino' : 'Nota opcional'"
                       :disabled="!puedeRegistrarAcciones"
                       @input="actualizarNota(fila, $event)"
                     >
@@ -492,10 +564,20 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
                     <span>Guardar</span>
                   </button>
                   <small v-if="fila.accion">Guardada: {{ etiquetasAccion[fila.accion] }}</small>
+                  <details v-if="fila.historialAcciones.length" class="historial-search-console">
+                    <summary>Historial ({{ fila.historialAcciones.length }})</summary>
+                    <ol>
+                      <li v-for="(decision, indice) in fila.historialAcciones" :key="`${decision.changed_at}-${indice}`">
+                        <strong>{{ etiquetasAccion[decision.action] }}</strong>
+                        <time :datetime="decision.changed_at">{{ formatearFechaHora(decision.changed_at) }}</time>
+                        <span v-if="decision.note">{{ decision.note }}</span>
+                      </li>
+                    </ol>
+                  </details>
                 </td>
               </tr>
               <tr v-if="!filasDePagina.length">
-                <td colspan="7" class="sin-filas-search-console">
+                <td colspan="11" class="sin-filas-search-console">
                   {{ filtro ? 'No hay resultados para esta búsqueda.' : 'El informe no contiene consultas para mostrar.' }}
                 </td>
               </tr>
@@ -512,6 +594,10 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
           </div>
         </footer>
       </section>
+
+      <p class="nota-search-console">
+        Cluster y entidad se derivan de la ruta de la página. Las señales de CTR alto/bajo se comparan con la distribución del mismo informe; “sin fila comparable” puede deberse a que Search Console exportó solo sus consultas principales y no confirma por sí sola que la consulta sea nueva. La asociación siempre conserva la URL existente.
+      </p>
     </template>
 
     <section v-else-if="!error" class="estado-search-console estado-vacio-search-console">
@@ -552,22 +638,39 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
 .archivo-seleccionado-search-console { color: var(--texto-secundario-panel, #64748b); font-size: .85rem; }
 .resumen-search-console { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
 .resumen-search-console article { display: grid; gap: .3rem; padding: 1rem; border: 1px solid var(--borde-panel, #cbd5e1); border-radius: .85rem; background: var(--superficie-panel, #fff); }
+.resumen-oportunidades-search-console { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .8rem; }
+.resumen-oportunidades-search-console article { display: grid; gap: .3rem; padding: .85rem 1rem; border: 1px solid var(--borde-panel, #cbd5e1); border-radius: .85rem; background: var(--superficie-panel, #fff); }
+.resumen-oportunidades-search-console span { color: var(--texto-secundario-panel, #64748b); font-size: .82rem; }
+.resumen-oportunidades-search-console strong { color: var(--texto-panel, #10243e); font-size: 1.2rem; font-variant-numeric: tabular-nums; }
 .resumen-search-console span { color: var(--texto-secundario-panel, #64748b); font-size: .85rem; }
 .resumen-search-console strong { color: var(--texto-panel, #10243e); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
 .resultados-search-console { align-items: end; }
 .filtro-search-console { min-width: min(20rem, 42%); }
 .tabla-search-console { width: 100%; overflow: auto; border: 1px solid var(--borde-panel, #dbe3ed); border-radius: .75rem; }
-.tabla-search-console table { width: 100%; min-width: 1050px; border-collapse: collapse; color: var(--texto-panel, #10243e); font-size: .86rem; }
+.tabla-search-console table { width: 100%; min-width: 1450px; border-collapse: collapse; color: var(--texto-panel, #10243e); font-size: .86rem; }
 .tabla-search-console th, .tabla-search-console td { padding: .75rem; border-bottom: 1px solid var(--borde-panel, #e2e8f0); text-align: left; vertical-align: top; }
 .tabla-search-console th { position: sticky; top: 0; z-index: 1; background: var(--superficie-panel, #f6f8fb); white-space: nowrap; }
 .tabla-search-console td:not(.celda-consulta-search-console):not(.celda-tendencia-search-console):not(.celda-accion-search-console) { font-variant-numeric: tabular-nums; white-space: nowrap; }
 .celda-consulta-search-console { min-width: 14rem; max-width: 22rem; }
 .celda-consulta-search-console strong { display: block; overflow-wrap: anywhere; }
 .celda-consulta-search-console a { display: inline-flex; align-items: center; gap: .25rem; max-width: 100%; margin-top: .25rem; overflow-wrap: anywhere; color: #087bc6; font-size: .8rem; }
+.celda-prioridad-search-console { display: grid; min-width: 13rem; gap: .35rem; }
+.celda-prioridad-search-console small { color: var(--texto-secundario-panel, #64748b); line-height: 1.35; }
+.insignia-prioridad-search-console { width: fit-content; border-radius: 999px; padding: .2rem .55rem; font-size: .73rem; font-weight: 750; }
+.prioridad-alta { color: #8b1e1e; background: #fee2e2; }
+.prioridad-media { color: #854d0e; background: #fef3c7; }
+.prioridad-baja { color: #166534; background: #dcfce7; }
+.celda-recomendacion-search-console { min-width: 15rem; max-width: 22rem; white-space: normal; }
 .celda-tendencia-search-console { min-width: 13rem; max-width: 19rem; color: var(--texto-secundario-panel, #64748b); font-size: .82rem; }
+.celda-tendencia-search-console strong { display: block; color: var(--texto-panel, #10243e); font-size: .74rem; }
 .celda-accion-search-console { display: grid; min-width: 18rem; gap: .4rem; }
 .celda-accion-search-console label { display: grid; }
 .celda-accion-search-console small { color: var(--texto-secundario-panel, #64748b); }
+.historial-search-console { margin-top: .15rem; color: var(--texto-secundario-panel, #64748b); font-size: .78rem; }
+.historial-search-console summary { width: fit-content; cursor: pointer; color: #087bc6; font-weight: 700; }
+.historial-search-console ol { display: grid; gap: .45rem; margin: .5rem 0 0; padding-left: 1rem; }
+.historial-search-console li { display: grid; gap: .1rem; }
+.historial-search-console time { font-size: .72rem; }
 .boton-guardar-search-console { justify-content: center; min-height: 2.25rem; }
 .sin-filas-search-console { padding: 1.5rem !important; text-align: center !important; color: var(--texto-secundario-panel, #64748b); }
 .pie-tabla-search-console { display: flex; align-items: center; justify-content: space-between; gap: .8rem; color: var(--texto-secundario-panel, #64748b); font-size: .85rem; }
@@ -585,7 +688,7 @@ const columnasAccion = accionesSearchConsole.map(valor => ({
   .formulario-importacion-search-console { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .formulario-importacion-search-console .campo-archivo-search-console { grid-column: 1 / -1; }
   .formulario-importacion-search-console .boton-editorial-principal { grid-column: 1 / -1; justify-content: center; }
-  .resumen-search-console { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .resumen-search-console, .resumen-oportunidades-search-console { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .filtro-search-console { min-width: 0; width: 100%; }
   .pie-tabla-search-console { align-items: flex-start; flex-direction: column; }
   .pie-tabla-search-console > div { flex-wrap: wrap; }
