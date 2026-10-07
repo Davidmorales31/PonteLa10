@@ -3,6 +3,7 @@ import {
   Activity,
   ClipboardCheck,
   ExternalLink,
+  FileSpreadsheet,
   Files,
   Images,
   LayoutDashboard,
@@ -103,6 +104,12 @@ const entradasPanel: EntradaPanel[] = [
     ruta: '/admin/operacion',
     icono: Server,
     permiso: 'configuracion.ver'
+  },
+  {
+    etiqueta: 'Search Console',
+    ruta: '/admin/search-console',
+    icono: FileSpreadsheet,
+    permiso: 'contenido.verBorradores'
   }
 ]
 
@@ -120,6 +127,7 @@ watch(() => route.fullPath, () => {
 })
 
 function esRutaActiva(ruta: string): boolean {
+  if (ruta === '/admin/operacion') return route.path === ruta
   return ruta === '/admin'
     ? route.path === ruta
     : route.path.startsWith(ruta)
