@@ -1,4 +1,5 @@
 import {
+  CABECERA_VARIANTE_CACHE_PUBLICA,
   combinarVary,
   obtenerCabecerasCachePublica,
   solicitudPuedeUsarCachePublica,
@@ -20,12 +21,12 @@ export function useCachePublica(tipo: TipoCachePublica): boolean {
     setCookie: Boolean(setCookie.value)
   })
 
-  // Las variantes autenticadas son no-store; las públicas deben evitar Vary:
-  // Cookie para que Vercel pueda guardarlas en su CDN.
+  // El middleware de Vercel asigna la dimensión binaria antes de la caché.
+  // No se usa Cookie en Vary porque es una dimensión de alta cardinalidad.
   vary.value = combinarVary(
     vary.value,
-    puedeCachear ? [] : ['Cookie', 'Authorization'],
-    puedeCachear ? ['Cookie', 'Authorization'] : []
+    [CABECERA_VARIANTE_CACHE_PUBLICA],
+    ['Cookie', 'Authorization']
   )
 
   if (!puedeCachear) {

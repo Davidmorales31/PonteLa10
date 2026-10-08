@@ -6,6 +6,7 @@ import {
   type H3Event
 } from 'h3'
 import {
+  CABECERA_VARIANTE_CACHE_PUBLICA,
   combinarVary,
   obtenerCabecerasCachePublica,
   solicitudPuedeUsarCachePublica,
@@ -20,12 +21,12 @@ export function aplicarCachePublica(evento: H3Event, tipo: TipoCachePublica): bo
     setCookie: Boolean(setCookie)
   })
 
-  // Las solicitudes con sesión se marcan no-store. Las públicas no dependen de
-  // cookies, y Vercel no almacena respuestas cuyo Vary incluya Cookie.
+  // El middleware de Vercel establece una variante de dos valores antes de la
+  // caché; Cookie queda fuera de Vary porque Vercel no almacena esa dimensión.
   const vary = combinarVary(
     getResponseHeader(evento, 'Vary')?.toString(),
-    puedeCachear ? [] : ['Cookie', 'Authorization'],
-    puedeCachear ? ['Cookie', 'Authorization'] : []
+    [CABECERA_VARIANTE_CACHE_PUBLICA],
+    ['Cookie', 'Authorization']
   )
   if (vary) setResponseHeader(evento, 'Vary', vary)
   else removeResponseHeader(evento, 'Vary')

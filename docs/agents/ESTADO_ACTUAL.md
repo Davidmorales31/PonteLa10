@@ -73,31 +73,39 @@
   sidecars descritos arriba quedaron en producción. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-perf02-image-optimization.md`.
 
-## HU-PERF-03 — caché de hubs y entidades (corrección de caché CDN en curso, 2026-10-07)
+## HU-PERF-03 — caché de hubs y entidades (separación de sesiones antes de CDN en curso, 2026-10-07)
 
 - Se centralizó la política de CDN por tipo de dato público: artículos,
   equipos, competiciones, tabla, sitemaps y partidos programados, en vivo,
   pendientes y finalizados. HTML conserva revalidación del navegador; la CDN
   recibe TTL separado. Las rutas con sesión editorial, `Authorization` o
-  `Set-Cookie` responden `private, no-store`, con `Vary: Cookie, Authorization`.
+  `Set-Cookie` responden `private, no-store`; las páginas con contenido
+  personalizado se aíslan con la variante de baja cardinalidad que añade el
+  Routing Middleware de Vercel antes de la CDN.
 - Las páginas SSR y endpoints públicos incorporan la política; el detalle de
   partido calcula TTL desde su estado actual en vez de una caché Nitro fija.
   La imagen de partido incluye el estado en su clave de caché para no mantener
   un cartel “En vivo” tras pasar a actualización pendiente.
 - PR #101 se integró como `64005429dbd7a0a400db52872bec2e096b2def6b`; CI y
-  Vercel Preview/Production reportaron success. Los endpoints en Production
-  devuelven los TTL configurados, pero dos solicitudes repetidas permanecen
-  `x-vercel-cache: MISS`: el `Vary: Cookie` agregado inicialmente impide el
-  almacenamiento CDN de Vercel (cambio de plataforma del 2026-09-30).
-- Corrección local: las respuestas públicas quitan Cookie/Authorization de
-  `Vary`; las respuestas con sesión, autorización o Set-Cookie mantienen
-  `private, no-store`. Lint, typecheck, build, suite completa (94 archivos/479
-  pruebas), prueba relacionada (4/4) y smoke local pasan. El smoke confirmó que
-  una cookie de consentimiento conserva el camino público y una cookie de
-  sesión de prueba queda `no-store`. Revisión del ajuste Vary sin hallazgos
-  P0–P2.
-- Pendiente: integrar la corrección y verificar `x-vercel-cache: HIT` en
-  Production antes de cerrar HU-PERF-03. Handoff:
+  Vercel Preview/Production reportaron success. El primer smoke mostró MISS
+  repetido porque `Vary: Cookie` impedía el almacenamiento CDN de Vercel
+  (cambio de plataforma del 2026-09-30). PR #102 quitó Cookie/Authorization de
+  `Vary` en respuestas públicas y Production pasó a HIT en solicitudes
+  anónimas. Un smoke posterior encontró que, tras calentar la caché anónima,
+  una cookie de sesión de prueba también recibía HIT antes de llegar al
+  servidor; por eso HU-PERF-03 sigue abierta.
+- Corrección local en esta rama: Routing Middleware de Vercel determina antes
+  de la CDN una variante binaria `publica`/`privada` a partir de la cookie de
+  sesión editorial o `Authorization`, sobrescribe cualquier valor entrante y
+  añade solo esa dimensión de baja cardinalidad a `Vary`. Cookies ajenas como
+  consentimiento quedan públicas; las solicitudes autenticadas siguen
+  `private, no-store`. No se envían ni registran valores de credenciales.
+  Revisión de seguridad del middleware sin hallazgos P0–P2. `npm ci`, lint,
+  typecheck y suite completa (94 archivos/480 pruebas) pasan; build y smoke de
+  producción de esta corrección están pendientes.
+- Pendiente: abrir PR, integrar tras checks y Vercel Production, y confirmar
+  en producción HIT anónimo más separación privada para cookie de sesión y
+  retorno a HIT anónimo antes de cerrar HU-PERF-03. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-perf03-cache.md`.
 
 ## HU-ED-26 — actualizar antes de crear (Production, 2026-10-07)

@@ -16,6 +16,14 @@ export interface PoliticaCachePublica {
   staleWhileRevalidate: number
 }
 
+export const CABECERA_VARIANTE_CACHE_PUBLICA = 'x-pont3la10-cache-variant'
+
+export interface SolicitudCachePublica {
+  cookie?: string
+  authorization?: string
+  setCookie?: boolean
+}
+
 const politicasCachePublicas: Record<TipoCachePublica, PoliticaCachePublica> = {
   articulo: { sMaxAge: 300, staleWhileRevalidate: 600 },
   equipo: { sMaxAge: 120, staleWhileRevalidate: 120 },
@@ -55,13 +63,16 @@ export function obtenerTipoCachePartido(estado: string | null): TipoCachePublica
   return 'partidoProgramado'
 }
 
-export function solicitudPuedeUsarCachePublica(entrada: {
-  cookie?: string
-  authorization?: string
-  setCookie?: boolean
-}): boolean {
-  if (entrada.authorization?.trim() || entrada.setCookie) return false
-  return !tieneCookieSesionEditorial(entrada.cookie)
+export function obtenerVarianteCachePublica(
+  entrada: Pick<SolicitudCachePublica, 'cookie' | 'authorization'>
+): 'publica' | 'privada' {
+  if (entrada.authorization?.trim() || tieneCookieSesionEditorial(entrada.cookie)) return 'privada'
+  return 'publica'
+}
+
+export function solicitudPuedeUsarCachePublica(entrada: SolicitudCachePublica): boolean {
+  if (entrada.setCookie) return false
+  return obtenerVarianteCachePublica(entrada) === 'publica'
 }
 
 export function combinarVary(
