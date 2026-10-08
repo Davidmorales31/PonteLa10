@@ -6,14 +6,9 @@ import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import { evaluarFrescuraPartido, evaluarFrescuraTemporada, type EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
+import { catalogoCompeticionesPublicas, type SlugCompeticionPublica } from '~/data/competicionesPublicas'
 
-export const catalogoCompeticionesPublicas = {
-  'liga-betplay': { nombre: 'Liga BetPlay', tipo: 'liga' as const },
-  'torneo-betplay': { nombre: 'Torneo BetPlay', tipo: 'liga' as const },
-  'copa-colombia': { nombre: 'Copa Colombia', tipo: 'copa' as const }
-}
-
-export type SlugCompeticionPublica = keyof typeof catalogoCompeticionesPublicas
+export { catalogoCompeticionesPublicas, type SlugCompeticionPublica } from '~/data/competicionesPublicas'
 
 export interface EquipoCompeticionPublica {
   slug: string | null

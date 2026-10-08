@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import PartidoCompeticionCard from '~/components/publico/PartidoCompeticionCard.vue'
+import BotonSeguirCompeticion from '~/components/publico/BotonSeguirCompeticion.vue'
 
 import type { EquipoCompeticionPublica, FichaCompeticionPublica, FilaTablaCompeticionPublica } from '~/server/utils/competicionesPublicas'
 import type { PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
@@ -202,6 +203,10 @@ function fechaActualizacion(fecha: string | null): string {
         <a href="#equipos">Equipos</a>
         <a href="#noticias">Noticias</a>
       </nav>
+      <div class="acciones-seguimiento-competicion">
+        <BotonSeguirCompeticion :slug="ficha.competencia.slug" :nombre="ficha.competencia.nombre" />
+        <span>Guarda el torneo en este dispositivo para volver rápido desde la portada.</span>
+      </div>
     </header>
 
     <section class="selector-temporadas panel-competicion" aria-labelledby="titulo-temporadas">
@@ -372,6 +377,10 @@ function fechaActualizacion(fecha: string | null): string {
 .cabecera-competicion .navegacion-liga-colombia { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }
 .cabecera-competicion .navegacion-liga-colombia a { padding: 8px 13px; border: 1px solid rgb(255 255 255 / 28%); border-radius: 999px; color: #fff; text-decoration: none; }
 .cabecera-competicion .navegacion-liga-colombia a:hover, .cabecera-competicion .navegacion-liga-colombia a:focus-visible { outline: 2px solid #78dcf4; outline-offset: 2px; }
+.acciones-seguimiento-competicion { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; margin-top: 16px; }
+.acciones-seguimiento-competicion > span { color: #d2e2f5; font-size: .78rem; }
+.acciones-seguimiento-competicion :deep(.boton-seguimiento-competicion:not([aria-pressed="true"])) { border-color: #78dcf4; background: #103c62; color: #fff; }
+.acciones-seguimiento-competicion :deep(.boton-seguimiento-competicion[aria-pressed="true"]) { border-color: #78dcf4; background: #17476b; color: #fff; }
 .panel-competicion { padding: clamp(18px, 3vw, 28px); color: #13243a; background: #fff; border: 1px solid #dce4ed; border-radius: 16px; box-shadow: 0 10px 30px rgb(16 36 61 / 5%); }
 .selector-temporadas { display: grid; grid-template-columns: minmax(0, auto) 1fr; align-items: center; gap: 10px 24px; }
 .selector-temporadas h2, .panel-competicion h2 { margin: 2px 0 0; color: #10233d; font-size: clamp(1.25rem, 2.4vw, 1.7rem); }
