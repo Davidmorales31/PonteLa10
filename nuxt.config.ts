@@ -43,6 +43,12 @@ export default defineNuxtConfig({
       link: [
         { rel: 'icon', type: 'image/png', href: '/brand/pont3la10_logo_05_app_icon_favicon.png' },
         { rel: 'apple-touch-icon', href: '/brand/pont3la10_logo_05_app_icon_favicon.png' },
+        {
+          rel: 'alternate',
+          type: 'application/rss+xml',
+          title: 'Pont3la10: últimas publicaciones',
+          href: '/feed.xml'
+        },
         { rel: 'preconnect', href: 'https://r2.thesportsdb.com', crossorigin: 'anonymous' },
         { rel: 'dns-prefetch', href: 'https://r2.thesportsdb.com' }
       ]
