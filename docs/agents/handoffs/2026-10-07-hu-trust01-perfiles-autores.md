@@ -1,0 +1,12 @@
+# Handoff
+
+- **Objetivo de la sesión:** Implementar HU-TRUST-01 con perfiles públicos basados solo en información editorial verificable y conectar autoría a páginas de perfil.
+- **Completado:** Perfil organizacional `/autores/equipo-pont3la10`, endpoint de lectura desde el RPC público de artículos publicados, enlaces de autor en el detalle editorial y `NewsArticle.author`, entrada en sitemap y pie, y pruebas de coincidencia segura del nombre público. El preview del proyecto todavía debe validar los datos con sus variables reales.
+- **Archivos modificados:** `utils/perfilesAutoresPublicos.ts`, `server/api/autores/[slug].get.ts`, `pages/autores/[slug].vue`, `pages/articulos/[slug].vue`, `server/routes/sitemap-pages.xml.get.ts`, `data/sitioPublico.ts`, tests, estado y handoffs.
+- **Decisiones:** Solo se habilita el perfil organizacional “Equipo Pont3la10”, cuyo texto se deriva de las páginas públicas de transparencia; no se publican biografías, credenciales ni perfiles de personas sin información pública verificada. El feed muestra hasta 24 artículos recientes filtrados desde las 50 publicaciones más recientes del RPC público. No se consultan `user_profiles` ni se exponen IDs. Las redes profesionales son opcionales y no hay ninguna confirmada para este perfil.
+- **Validaciones ejecutadas:** lint, typecheck, suite focalizada (15 pruebas), suite completa (95 archivos/485 pruebas), build Nuxt completado con aviso upstream `[DEP0155]`, `git diff --check`. El servidor local no tiene variables públicas de Supabase, por lo que la ficha devuelve 503 localmente; la ruta no se pudo validar visualmente en local. La verificación debe completarse en Vercel Preview.
+- **Fallos:** El primer intento de validación Nuxt no tenía `NUXT_PUBLIC_SITE_URL`; se repitió con esa variable temporal. Build inicial chocó con un dev server Nuxt de este worktree iniciado por la sesión anterior; se detuvo ese proceso propio y el build terminó.
+- **Pendientes:** Revisar cambios, repetir validaciones tras los últimos ajustes, crear commit y PR; validar Preview con datos, autoría/schema, sitemap y responsive en temas claro/oscuro; después integrar y comprobar Production. No publicar datos personales no verificados.
+- **Siguiente acción exacta:** `git diff --check`, revisión final de cambios, validaciones, commit, PR y pruebas de Preview.
+- **Commit base:** `740a8a254c9c089e9904db799781ad774c72c340`.
+- **Commit final:** sin commit.

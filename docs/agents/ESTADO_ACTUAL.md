@@ -1,6 +1,6 @@
 # Estado actual de Pont3la10
 
-## HU-TRUST-02/03/04 — páginas de transparencia (local, 2026-10-07)
+## HU-TRUST-02/03/04 — páginas de transparencia (Production, 2026-10-07)
 
 - Se prepararon `/quienes-somos`, `/politica-editorial` y `/correcciones` con
   SEO/canonical y jerarquía compartida de páginas legales; se enlazaron desde
@@ -15,13 +15,16 @@
   en tema oscuro/claro, sin desbordamiento horizontal. No se añadieron datos ni
   migraciones de Supabase. El build conserva el aviso upstream `[DEP0155]` de
   `@vue/shared`.
-- Pendiente: CI/Preview y smoke de producción después de la integración. La
-  consola de desarrollo mostró mismatches de hidratación preexistentes en
+- PR #106 pasó CI (lint, test, typecheck, build y Vercel Preview), se integró a
+  `main` como `740a8a254c9c089e9904db799781ad774c72c340` y el deployment de
+  Vercel `dpl_7jsY3oRRzMJxPwMKPQzEbeuP7MTN` está `READY` en Production. Smoke
+  del dominio: las tres rutas y `/sitemap-pages.xml` respondieron HTTP 200, con
+  canonical correcto y los enlaces presentes en el sitemap. La consola de
+  desarrollo mostró mismatches de hidratación preexistentes en
   `AvisoAnalitica` y `CabeceraPrincipal` por la diferencia de estado SSR frente
   a preferencias cliente de privacidad/tema; estos cambios no los modifican y
-  deben revisarse como seguimiento separado. Los perfiles individuales de
-  autor (HU-TRUST-01) requieren un contrato de exposición pública voluntaria;
-  no se inventarán biografías ni credenciales.
+  deben revisarse como seguimiento separado. HU-TRUST-01 continúa en desarrollo;
+  no se inventarán biografías ni credenciales personales.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-trust02-04-transparencia.md`.
 
 ## HU-PERF-01 — separar CSS público y administrativo (Production, 2026-10-07)
