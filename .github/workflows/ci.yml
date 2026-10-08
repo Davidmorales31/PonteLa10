@@ -87,3 +87,19 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Measure mobile performance budget
+        run: npm run perf:cwv
+        env:
+          CWV_BASE_URL: http://127.0.0.1:4173
+          CWV_START_LOCAL_SERVER: 'true'
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-mobile-${{ github.run_id }}
+          path: .lighthouseci/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 90
