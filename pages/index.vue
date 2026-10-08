@@ -436,7 +436,7 @@ useSeoPont3la10(() => ({
 .medio-seguimiento-competiciones { border: 1px solid #294467; border-radius: 12px; background: #0c2443; padding: 20px; }
 .medio-seguimiento-competiciones > .medio-encabezado { margin-bottom: 16px; }
 .medio-seguimiento-competiciones > .medio-encabezado p { margin: 5px 0 0; color: #a8bbd5; font-size: .8rem; }
-.grilla-competiciones-seguidas-home { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.grilla-competiciones-seguidas-home { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 12px; }
 .tarjeta-competicion-seguida-home { min-width: 0; border: 1px solid #294467; border-radius: 10px; background: #07182f; padding: 14px; }
 .tarjeta-competicion-seguida-home > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
 .tarjeta-competicion-seguida-home > header > div { display: grid; min-width: 0; gap: 4px; }
