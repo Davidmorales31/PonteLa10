@@ -1,6 +1,7 @@
 import {
   esRutaPublicaMedible,
   construirDimensionesVistaPagina,
+  construirUbicacionPaginaAnalitica,
   ID_MEDICION_GA4,
   normalizarCategoriaMedible,
   resolverDecisionAnalitica,
@@ -180,7 +181,7 @@ export function useAnaliticaPublica() {
     const rutaSinParametros = ruta.split(/[?#]/, 1)[0] || '/'
     const contextoSeguro = contexto?.ruta === rutaSinParametros ? contexto : null
     encolarGtag('event', 'page_view', {
-      page_location: `${window.location.origin}${rutaSinParametros}`,
+      page_location: construirUbicacionPaginaAnalitica(window.location.origin, rutaSinParametros, consulta),
       page_path: rutaSinParametros,
       ...construirDimensionesVistaPagina(rutaSinParametros, consulta, contextoSeguro)
     })

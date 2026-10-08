@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   esRutaPublicaMedible,
   construirDimensionesVistaPagina,
+  construirUbicacionPaginaAnalitica,
   ID_MEDICION_GA4,
   normalizarCategoriaMedible,
   resolverDecisionAnalitica,
@@ -35,6 +36,59 @@ describe('analítica pública', () => {
     expect(esRutaPublicaMedible('/login')).toBe(false)
     expect(esRutaPublicaMedible('/api/articulos')).toBe(false)
     expect(esRutaPublicaMedible('//otro-dominio.test')).toBe(false)
+  })
+
+  it('conserva solo UTM seguros en page_location y mantiene la ruta limpia', () => {
+    expect(construirUbicacionPaginaAnalitica(
+      'https://www.pont3la10.com',
+      '/partidos/nacional-vs-millonarios',
+      {
+        utm_source: 'Instagram',
+        utm_medium: 'Organic_Social',
+        utm_campaign: 'Match-Nacional-Vs-Millonarios',
+        utm_content: 'Reel',
+        buscar: 'correo@ejemplo.com',
+        utm_term: 'correo@ejemplo.com',
+        utm_id: 'identificador-arbitrario',
+        fbclid: 'identificador-arbitrario'
+      }
+    )).toBe('https://www.pont3la10.com/partidos/nacional-vs-millonarios?utm_source=instagram&utm_medium=organic_social&utm_campaign=match-nacional-vs-millonarios&utm_content=reel')
+  })
+
+  it('omite UTM libres o con información personal y consultas no públicas', () => {
+    expect(construirUbicacionPaginaAnalitica(
+      'https://www.pont3la10.com',
+      '/partidos/nacional-vs-millonarios?utm_source=facebook',
+      {
+        utm_source: 'juan-perez-573001234567',
+        utm_medium: 'organic_social',
+        utm_campaign: 'match-nacional-vs-millonarios-juan-perez-573001234567',
+        utm_content: 'juan-perez-573001234567'
+      }
+    )).toBe('https://www.pont3la10.com/partidos/nacional-vs-millonarios')
+    expect(construirUbicacionPaginaAnalitica(
+      'https://www.pont3la10.com',
+      '/api/privada',
+      { utm_source: 'instagram' }
+    )).toBe('')
+    expect(construirUbicacionPaginaAnalitica(
+      'https://www.pont3la10.com',
+      '/equipos/atletico-nacional',
+      {
+        utm_source: 'instagram',
+        utm_medium: 'organic_social',
+        utm_campaign: 'match-nacional-vs-millonarios'
+      }
+    )).toBe('https://www.pont3la10.com/equipos/atletico-nacional')
+    expect(construirUbicacionPaginaAnalitica(
+      'https://www.pont3la10.com',
+      '/partidos/nacional-573001234567',
+      {
+        utm_source: 'instagram',
+        utm_medium: 'organic_social',
+        utm_campaign: 'match-nacional-573001234567'
+      }
+    )).toBe('https://www.pont3la10.com/partidos/nacional-573001234567')
   })
 
   it('solo permite dimensiones de categoría conocidas, nunca valores arbitrarios', () => {
