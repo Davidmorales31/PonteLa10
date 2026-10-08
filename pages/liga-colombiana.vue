@@ -2,6 +2,7 @@
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import { construirUrlAbsoluta } from '~/utils/seo'
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
+import type { EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
 
 interface PartidoLiga {
   slug: string
@@ -47,6 +48,7 @@ interface RespuestaLiga {
   estado: 'disponible' | 'sin_datos'
   partidos: PartidoLiga[]
   tabla: PosicionLiga[]
+  frescuraTablas: Record<string, EvaluacionFrescuraDeportiva>
   actualizadoEn: string | null
   consultadoEn: string
 }
@@ -56,6 +58,7 @@ const respuestaLigaVacia: RespuestaLiga = {
   estado: 'sin_datos',
   partidos: [],
   tabla: [],
+  frescuraTablas: {},
   actualizadoEn: null,
   consultadoEn: ''
 }
@@ -111,6 +114,13 @@ function fechaPartido(valor: string) {
     dateStyle: 'medium',
     timeStyle: 'short',
     timeZone: 'America/Bogota'
+  }).format(new Date(valor))
+}
+
+function fechaActualizacion(valor: string | null) {
+  if (!valor || !Number.isFinite(Date.parse(valor))) return 'sin registro'
+  return new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Bogota'
   }).format(new Date(valor))
 }
 
@@ -352,6 +362,9 @@ useSeoPont3la10(() => ({
           <div class="encabezado-panel-lateral">
             <div><p class="etiqueta-seccion">{{ tablaLiga[0]?.temporada || 'Liga BetPlay' }}</p><h2>Tabla de posiciones</h2></div>
           </div>
+          <p v-if="liga.frescuraTablas['liga-betplay'] && !liga.frescuraTablas['liga-betplay'].actualizado" class="aviso-frescura-liga" role="status">
+            Tabla pendiente de actualización. Última verificación: {{ fechaActualizacion(liga.frescuraTablas['liga-betplay'].verificadoEn) }} (hora de Colombia).
+          </p>
           <div v-if="fasesLiga.length" class="tablas-por-fase-liga">
             <section v-for="grupo in fasesLiga" :key="grupo.fase" class="fase-tabla-liga">
               <h3>{{ grupo.fase }}</h3>
@@ -378,6 +391,9 @@ useSeoPont3la10(() => ({
 
         <section id="torneo-betplay" class="panel-noticias-lateral panel-tabla-liga">
           <div class="encabezado-panel-lateral"><div><p class="etiqueta-seccion">{{ tablaTorneo[0]?.temporada || 'Segunda división' }}</p><h2>Torneo BetPlay</h2></div></div>
+          <p v-if="liga.frescuraTablas['torneo-betplay'] && !liga.frescuraTablas['torneo-betplay'].actualizado" class="aviso-frescura-liga" role="status">
+            Tabla pendiente de actualización. Última verificación: {{ fechaActualizacion(liga.frescuraTablas['torneo-betplay'].verificadoEn) }} (hora de Colombia).
+          </p>
           <div v-if="fasesTorneo.length" class="tablas-por-fase-liga">
             <section v-for="grupo in fasesTorneo" :key="grupo.fase" class="fase-tabla-liga">
               <h3>{{ grupo.fase }}</h3>
@@ -476,6 +492,7 @@ body.tema-publico-blanco main.modulo-futbol-colombia .encabezado-noticias-listad
 .tabla-liga-scroll th:nth-child(2), .tabla-liga-scroll td:nth-child(2) { text-align: left; }
 .equipo-tabla-liga { display: inline-flex; align-items: center; gap: 8px; white-space: normal; }
 .estado-tabla-liga, .contenido-seo-liga { color: #afc2db; line-height: 1.7; }
+.aviso-frescura-liga { margin: 0 0 12px; border-left: 3px solid #e6a100; border-radius: 6px; background: rgba(230,161,0,.12); padding: 10px 12px; color: #744b00; font-size: .88rem; line-height: 1.5; }
 .enlace-tabla-liga { display: inline-block; margin-top: 12px; color: #78dcf4; font-weight: 800; }
 .resultado-reciente-liga .equipos-partido-liga { padding: 10px 0; }
 .resultado-reciente-liga .versus-liga { font-size: 1.1rem; }
@@ -488,6 +505,7 @@ body.tema-publico-blanco .estado-partido-liga { background: #e7eef7; color: #4b5
 body.tema-publico-blanco .estado-partido-liga--vivo { background: #b91c34; color: #fff; }
 body.tema-publico-blanco .meta-resultado-liga { color: #586980; }
 body.tema-publico-blanco .tabla-liga-scroll th, body.tema-publico-blanco .tabla-liga-scroll td { border-color: #e2e8f0; }
+body.tema-publico-azul .aviso-frescura-liga { color: #ffe2a6; }
 @media (max-width: 820px) { .grilla-principal-liga { grid-template-columns: minmax(0, 1fr); } .lista-partidos-liga { grid-template-columns: minmax(0, 1fr); } .competiciones-permanentes-liga { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 520px) { .cabecera-liga-colombia { padding: 20px; } .pagina-publica-medio.modulo-futbol-colombia { width: min(100% - 24px, 1240px); } }
 </style>

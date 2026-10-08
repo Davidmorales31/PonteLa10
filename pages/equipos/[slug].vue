@@ -149,6 +149,9 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
     </header>
 
     <p class="nota-verificacion-equipo">Datos públicos de clasificación y fixtures; última verificación {{ fechaBreve(equipo.actualizadoEn) }}.</p>
+    <p v-if="!ficha.frescuraTabla.actualizado" class="aviso-frescura-equipo" role="status">
+      La posición puede estar desactualizada. Última verificación: {{ ficha.frescuraTabla.verificadoEn ? fechaBreve(ficha.frescuraTabla.verificadoEn) : 'sin registro' }}; se mostrará una nueva cuando el proveedor la confirme.
+    </p>
 
     <div class="contenido-equipo-grid">
       <div class="columna-principal-equipo">
@@ -266,6 +269,7 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
 .navegacion-equipo a { padding: 9px 13px; border: 1px solid #d5e1ed; border-radius: 999px; background: #fff; }
 .navegacion-equipo a:hover, .navegacion-equipo a:focus-visible { background: #eaf5ff; outline: 2px solid #1689cb; outline-offset: 2px; }
 .nota-verificacion-equipo { margin: 14px 2px 22px; color: #65758a; font-size: .86rem; }
+.aviso-frescura-equipo { margin: -10px 0 20px; border-left: 3px solid #d59a00; border-radius: 7px; background: #fff6db; padding: 10px 13px; color: #744b00; font-size: .88rem; line-height: 1.55; }
 .contenido-equipo-grid { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(270px, .8fr); align-items: start; gap: 22px; }
 .columna-principal-equipo, .columna-secundaria-equipo { display: grid; gap: 20px; min-width: 0; }
 .seccion-equipo, .panel-clasificacion-equipo, .panel-sede-equipo, .enlaces-liga-equipo { padding: clamp(18px, 3vw, 26px); }
@@ -326,6 +330,7 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
 :global(body.tema-publico-azul) .estado-equipo-vacio,
 :global(body.tema-publico-azul) .panel-equipo-publico > small,
 :global(body.tema-publico-azul) .panel-sede-equipo small { color: #b4c9df; }
+:global(body.tema-publico-azul) .aviso-frescura-equipo { border-color: #eab338; background: #382d15; color: #ffe2a6; }
 :global(body.tema-publico-azul) .navegacion-equipo { border-color: #294563; }
 :global(body.tema-publico-azul) .navegacion-equipo a,
 :global(body.tema-publico-azul) .estadisticas-clasificacion-equipo > div,

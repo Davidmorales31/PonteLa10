@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import { evaluarIndexabilidad } from '../../utils/indexabilidadPublica'
 
+const ahora = Date.now()
 const partidoValido = {
   local: 'Atlético Nacional',
   visitante: 'Millonarios',
   competencia: 'liga-betplay',
-  fechaIso: '2026-10-06T23:00:00.000Z',
+  fechaIso: new Date(ahora + 6 * 60 * 60_000).toISOString(),
   estado: 'scheduled',
+  verificadoEn: new Date(ahora - 10 * 60_000).toISOString(),
   fuenteOficialUrl: 'https://dimayor.com.co/programacion',
   golesLocal: null,
   golesVisitante: null,
@@ -54,12 +56,13 @@ describe('indexabilidad de fichas de partido', () => {
       competencia: 'liga-betplay',
       temporada: '2026-II',
       escudo: '/images/escudos/liga-colombiana/atletico-nacional.png',
-      posicionVerificadaEn: '2026-10-06T12:00:00.000Z',
+      posicionVerificadaEn: new Date(ahora - 30 * 60_000).toISOString(),
       partidosPublicos: 3
     }
     expect(evaluarIndexabilidad(equipo)).toBe(true)
     expect(evaluarIndexabilidad({ ...equipo, escudo: null })).toBe(false)
     expect(evaluarIndexabilidad({ ...equipo, posicionVerificadaEn: null })).toBe(false)
+    expect(evaluarIndexabilidad({ ...equipo, posicionVerificadaEn: new Date(ahora - 61 * 60_000).toISOString() }, ahora)).toBe(false)
     expect(evaluarIndexabilidad({ ...equipo, partidosPublicos: 2 })).toBe(false)
   })
 
@@ -71,12 +74,27 @@ describe('indexabilidad de fichas de partido', () => {
       temporada: '2026-II',
       partidosPublicos: 8,
       equiposPublicos: 6,
-      fuenteDisponible: true
+      fuenteDisponible: true,
+      datosActualizados: true
     }
     expect(evaluarIndexabilidad(competicion)).toBe(true)
     expect(evaluarIndexabilidad({ ...competicion, partidosPublicos: 7 })).toBe(false)
     expect(evaluarIndexabilidad({ ...competicion, equiposPublicos: 5 })).toBe(false)
     expect(evaluarIndexabilidad({ ...competicion, temporada: 'no-valida' })).toBe(false)
     expect(evaluarIndexabilidad({ ...competicion, fuenteDisponible: false })).toBe(false)
+    expect(evaluarIndexabilidad({ ...competicion, datosActualizados: false })).toBe(false)
+  })
+
+  it('evita indexar partidos sin verificación reciente o con fecha de consulta faltante', () => {
+    expect(evaluarIndexabilidad({
+      ...partidoValido,
+      fechaIso: new Date(ahora + 30 * 60_000).toISOString(),
+      verificadoEn: new Date(ahora - 31 * 60_000).toISOString()
+    }, ahora)).toBe(false)
+    expect(evaluarIndexabilidad({
+      ...partidoValido,
+      verificadoEn: '',
+      fechaIso: new Date(ahora + 30 * 60_000).toISOString()
+    }, ahora)).toBe(false)
   })
 })

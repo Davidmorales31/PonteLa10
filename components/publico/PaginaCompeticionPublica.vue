@@ -228,6 +228,10 @@ function fechaActualizacion(fecha: string | null): string {
       <small v-if="ficha.actualizadaEn">Última verificación: {{ fechaActualizacion(ficha.actualizadaEn) }} (hora de Colombia)</small>
     </section>
 
+    <p v-if="!ficha.frescuraDatos.actualizado" class="aviso-frescura-competicion" role="status">
+      Algunos datos de esta competición están pendientes de actualización. Última verificación registrada: {{ fechaActualizacion(ficha.frescuraDatos.verificadoEn) }} (hora de Colombia). Consulta la fuente antes de tomar una decisión.
+    </p>
+
     <div class="resumen-competicion" aria-label="Resumen de la temporada">
       <div><strong>{{ ficha.equipos.length }}</strong><span>equipos con partidos públicos</span></div>
       <div><strong>{{ ficha.jornadas.length }}</strong><span>jornadas o fases registradas</span></div>
@@ -378,6 +382,7 @@ function fechaActualizacion(fecha: string | null): string {
 .selector-temporadas nav a[aria-current="page"] { color: #fff; border-color: #145e99; background: #145e99; }
 .selector-temporadas small { grid-column: 1 / -1; color: #65758a; }
 .resumen-competicion { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 18px 0 22px; }
+.aviso-frescura-competicion { margin: 0 0 18px; border-left: 3px solid #d59a00; border-radius: 7px; background: #fff6db; padding: 11px 14px; color: #744b00; font-size: .9rem; line-height: 1.55; }
 .resumen-competicion > div { display: grid; gap: 3px; padding: 16px 18px; border: 1px solid #dce4ed; border-radius: 14px; background: #f3f7fb; }
 .resumen-competicion strong { color: #0d4d7e; font-size: 1.55rem; }
 .resumen-competicion span, .encabezado-seccion-competicion > span, .sello-verificado, .estado-competicion-vacio, .nota-fuente-competicion { color: #586980; font-size: .88rem; }
@@ -434,6 +439,7 @@ function fechaActualizacion(fecha: string | null): string {
 :global(body.tema-publico-azul) .tabla-liga-scroll caption,
 :global(body.tema-publico-azul) .partido-jornada-compacto time { color: #b4c9df; }
 :global(body.tema-publico-azul) .resumen-competicion > div { border-color: #294563; background: #132f4d; }
+:global(body.tema-publico-azul) .aviso-frescura-competicion { border-color: #eab338; background: #382d15; color: #ffe2a6; }
 :global(body.tema-publico-azul) .resumen-competicion strong,
 :global(body.tema-publico-azul) .partido-jornada-compacto p span { color: #8ce8ff; }
 :global(body.tema-publico-azul) .selector-temporadas nav a,

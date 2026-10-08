@@ -4,6 +4,7 @@ import { listarEquiposLigaPublicos, type ClasificacionEquipoPublica, type Equipo
 import { listarPartidosSeoPublicos, normalizarClaveEquipoLiga, type PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
+import { evaluarFrescuraPartido, evaluarFrescuraTemporada, type EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 
 export const catalogoCompeticionesPublicas = {
@@ -71,6 +72,7 @@ export interface FichaCompeticionPublica {
   temporada: string
   temporadaActual: string
   indexable: boolean
+  frescuraDatos: EvaluacionFrescuraDeportiva
   temporadas: TemporadaCompeticionPublica[]
   tablaDisponible: boolean
   snapshotTabla: SnapshotTablaCompeticionPublica | null
@@ -138,7 +140,11 @@ export function construirTemporadasPublicasCompeticion(
     nombre,
     temporada,
     actual,
-    partidosCompetencia.filter(partido => partido.temporada === temporada)
+    partidosCompetencia.filter(partido => partido.temporada === temporada),
+    equipos.flatMap(equipo => equipo.clasificaciones
+      .filter(fila => fila.competencia === slug && fila.temporada === temporada)
+      .map(fila => ({ verificadoEn: fila.verificadoEn }))),
+    ahoraMs
   ))
 }
 
@@ -185,8 +191,19 @@ export async function obtenerFichaCompeticionPublica(
     config.nombre,
     temporadaDisponible,
     temporadaActual,
-    partidosCompetencia.filter(partido => partido.temporada === temporadaDisponible)
+    partidosCompetencia.filter(partido => partido.temporada === temporadaDisponible),
+    base.equipos.flatMap(equipo => equipo.clasificaciones
+      .filter(fila => fila.competencia === slugSolicitado && fila.temporada === temporadaDisponible)
+      .map(fila => ({ verificadoEn: fila.verificadoEn }))),
+    ahoraMs
   ))
+  const temporadaActualSolicitada = temporada === temporadaActual
+  const frescuraDatos = evaluarFrescuraTemporada(
+    partidos,
+    tabla,
+    temporadaActualSolicitada,
+    ahoraMs
+  )
   const indexable = evaluarIndexabilidad({
     tipo: 'competicion',
     slug: slugSolicitado,
@@ -194,7 +211,8 @@ export async function obtenerFichaCompeticionPublica(
     temporada,
     partidosPublicos: partidos.length,
     equiposPublicos: equipos.length,
-    fuenteDisponible: partidos.length > 0
+    fuenteDisponible: partidos.length > 0,
+    datosActualizados: frescuraDatos.actualizado
   })
   const noticias = await listarNoticiasCompeticion(
     cliente,
@@ -210,6 +228,7 @@ export async function obtenerFichaCompeticionPublica(
     temporada,
     temporadaActual,
     indexable,
+    frescuraDatos,
     temporadas,
     tablaDisponible,
     snapshotTabla: snapshotTabla?.metadata || null,
@@ -592,9 +611,17 @@ function crearResumenTemporada(
   nombre: string,
   temporada: string,
   temporadaActual: string,
-  partidos: PartidoSeoPublico[]
+  partidos: PartidoSeoPublico[],
+  filasTabla: Array<{ verificadoEn: string }>,
+  ahoraMs = Date.now()
 ): TemporadaCompeticionPublica {
   const equipos = listarEquiposCompeticion(partidos)
+  const frescuraDatos = evaluarFrescuraTemporada(
+    partidos,
+    filasTabla,
+    temporada === temporadaActual,
+    ahoraMs
+  )
   const indexable = evaluarIndexabilidad({
     tipo: 'competicion',
     slug,
@@ -602,7 +629,8 @@ function crearResumenTemporada(
     temporada,
     partidosPublicos: partidos.length,
     equiposPublicos: equipos.length,
-    fuenteDisponible: partidos.length > 0
+    fuenteDisponible: partidos.length > 0,
+    datosActualizados: frescuraDatos.actualizado
   })
   const fechas = partidos.map(partido => Date.parse(partido.fechaIso)).filter(Number.isFinite)
   const verificacion = partidos.map(partido => partido.verificadoEn)
@@ -763,6 +791,9 @@ function esEncuentroJornadaVerificable(partido: PartidoSeoPublico, ahoraMs: numb
   if (!partido.local.trim() || !partido.visitante.trim()
     || normalizarClaveEquipoLiga(partido.local) === normalizarClaveEquipoLiga(partido.visitante)) return false
   if (!partido.fuenteOficialUrl || !esFuenteDimayor(partido.fuenteOficialUrl)) return false
+  const datosActualizados = partido.estadoFrescura?.actualizado
+    ?? evaluarFrescuraPartido(partido, ahoraMs).actualizado
+  if (!datosActualizados) return false
   return ['PROGRAMADO', 'REPROGRAMADO', 'EN VIVO', 'FINALIZADO'].includes(estado)
 }
 

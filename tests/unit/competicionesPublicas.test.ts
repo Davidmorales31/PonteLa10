@@ -50,17 +50,19 @@ function crearPartidos(
   return Array.from({ length: cantidad }, (_, indice) => {
     const local = indice % 8
     const visitante = (indice + 1) % 8
+    const fechaIso = new Date(Date.parse(inicio) + indice * 60 * 60 * 1000).toISOString()
+    const finalizado = Date.parse(fechaIso) < fechaAhora
     return {
       slug: `${temporada.toLocaleLowerCase()}-partido-${indice + 1}`,
       competencia,
       temporada,
       jornada: `Fecha ${Math.floor(indice / 2) + 1}`,
-      fechaIso: new Date(Date.parse(inicio) + indice * 60 * 60 * 1000).toISOString(),
+      fechaIso,
       local: `Equipo ${local + 1}`,
       visitante: `Equipo ${visitante + 1}`,
-      estado: 'scheduled',
-      golesLocal: null,
-      golesVisitante: null,
+      estado: finalizado ? 'finished' : 'scheduled',
+      golesLocal: finalizado ? 1 : null,
+      golesVisitante: finalizado ? 0 : null,
       estadio: null,
       ciudad: null,
       fuenteOficialUrl: null,
