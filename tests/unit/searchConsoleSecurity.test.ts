@@ -26,6 +26,13 @@ describe('HU-ED-21 · seguridad del esquema Search Console', () => {
   it('mantiene la detección privada, de solo lectura y acotada a contenido publicado', () => {
     expect(rutaSearchConsole).toContain("exigirPermisoEditorial(evento, 'contenido.verBorradores')")
     expect(rutaSearchConsole).toContain('setResponseHeader(evento, \'Cache-Control\', \'private, no-store\')')
+    const inicioHandler = rutaSearchConsole.indexOf('export default defineEventHandler(async (evento) => {')
+    const handler = rutaSearchConsole.slice(inicioHandler)
+    const indiceCachePrivado = handler.indexOf('setResponseHeader(evento, \'Cache-Control\', \'private, no-store\')')
+    const indiceGuard = handler.indexOf("await exigirPermisoEditorial(evento, 'contenido.verBorradores')")
+    expect(indiceCachePrivado).toBeGreaterThanOrEqual(0)
+    expect(indiceGuard).toBeGreaterThan(0)
+    expect(indiceCachePrivado).toBeLessThan(indiceGuard)
     expect(rutaSearchConsole).toContain(".eq('status', 'published')")
     expect(rutaSearchConsole).toContain(".not('published_version_id', 'is', null)")
     expect(rutaSearchConsole).toContain(".eq('status', 'confirmed')")

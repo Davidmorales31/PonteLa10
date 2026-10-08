@@ -262,6 +262,7 @@ async function listarMetricas(
 }
 
 export default defineEventHandler(async (evento) => {
+  setResponseHeader(evento, 'Cache-Control', 'private, no-store')
   await exigirPermisoEditorial(evento, 'contenido.verBorradores')
   const cliente = obtenerClienteSupabaseEditorial(evento)
   const { data: informesRaw, error: errorInformes } = await cliente
