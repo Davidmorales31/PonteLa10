@@ -9,6 +9,7 @@ import {
   type FilaSearchConsole,
   type TendenciaSearchConsole
 } from '~/utils/editorial/searchConsole'
+import type { CandidatoCanibalizacion, TipoAccionCanibalizacion } from '~/utils/editorial/canibalizacion'
 
 interface DecisionSearchConsole {
   action: AccionSearchConsole
@@ -39,6 +40,16 @@ interface RespuestaSearchConsole {
   historialTotal: number
   historialLimitado: boolean
   filas: FilaConAccion[]
+  canibalizacion: {
+    candidatos: CandidatoCanibalizacion[]
+    totalCandidatos: number
+    candidatosLimitados: boolean
+    articulosComparados: number
+    briefsConfirmados: number
+    entidadesPrincipales: number
+    alcanceLimitado: boolean
+    metadatosDisponibles: boolean
+  }
 }
 
 interface FormularioAccion {
@@ -55,6 +66,14 @@ const etiquetasAccion: Record<AccionSearchConsole, string> = {
   ampliar_respuesta: 'Ampliar respuesta',
   fusionar: 'Fusionar con otra página',
   no_actuar: 'No actuar por ahora'
+}
+
+const etiquetasAccionCanibalizacion: Record<TipoAccionCanibalizacion, string> = {
+  mantener_ambas: 'Mantener ambas',
+  fusionar: 'Evaluar fusión',
+  redirect: 'Revisar redirect',
+  canonical: 'Revisar canonical',
+  reorientar_intencion: 'Reorientar intención'
 }
 
 definePageMeta({
@@ -452,6 +471,101 @@ const columnasAccionAnterior = accionesSearchConsole
         <article><span>Posibles emergentes por ausencia</span><strong>{{ formatearNumero(resumenOportunidades.sinComparacion) }}</strong></article>
       </section>
 
+      <section class="bloque-canibalizacion-search-console" aria-labelledby="titulo-canibalizacion-search-console">
+        <header class="cabecera-canibalizacion-search-console">
+          <div>
+            <p class="etiqueta-panel">HU-ED-28 · revisión SEO</p>
+            <h2 id="titulo-canibalizacion-search-console">Posibles páginas compitiendo por la misma intención</h2>
+            <p>
+              Compara las consultas del CSV más reciente y, cuando hay metadatos editoriales confirmados,
+              también los títulos, la intención y las entidades de artículos publicados.
+            </p>
+          </div>
+          <span class="contador-canibalizacion-search-console">
+            {{ formatearNumero(datos.canibalizacion.totalCandidatos) }} señales
+          </span>
+        </header>
+
+        <p v-if="!datos.canibalizacion.metadatosDisponibles" class="aviso-panel aviso-panel-informativo" role="status">
+          No se pudieron leer los metadatos editoriales. Se muestran únicamente coincidencias de consultas de Search Console.
+        </p>
+        <p v-else class="nota-metadatos-canibalizacion-search-console">
+          Metadatos incluidos: {{ formatearNumero(datos.canibalizacion.articulosComparados) }} artículos del informe,
+          {{ formatearNumero(datos.canibalizacion.briefsConfirmados) }} briefs confirmados y
+          {{ formatearNumero(datos.canibalizacion.entidadesPrincipales) }} entidades principales.
+          <template v-if="datos.canibalizacion.alcanceLimitado">
+            La comparación de artículos se limita a las 300 URL con más impresiones.
+          </template>
+        </p>
+
+        <p v-if="datos.canibalizacion.candidatosLimitados" class="aviso-panel aviso-panel-informativo" role="status">
+          Se muestran los primeros {{ formatearNumero(datos.canibalizacion.candidatos.length) }} candidatos,
+          ordenados por puntuación e impresiones; hay {{ formatearNumero(datos.canibalizacion.totalCandidatos) }} en total.
+        </p>
+
+        <p v-if="!datos.canibalizacion.candidatos.length" class="sin-canibalizacion-search-console">
+          No hay pares candidatos en este informe. Esto no confirma que no exista canibalización:
+          depende de las consultas importadas y de los metadatos editoriales disponibles.
+        </p>
+
+        <ol v-else class="lista-canibalizacion-search-console">
+          <li v-for="candidato in datos.canibalizacion.candidatos" :key="candidato.clave" class="tarjeta-canibalizacion-search-console">
+            <header class="encabezado-tarjeta-canibalizacion-search-console">
+              <strong>Coincidencia {{ candidato.confianza.toLocaleLowerCase('es-CO') }}</strong>
+              <span :class="`confianza-canibalizacion confianza-${candidato.confianza.toLocaleLowerCase('es-CO')}`">
+                {{ candidato.confianza }} · {{ candidato.puntuacion }} puntos
+              </span>
+            </header>
+
+            <div class="par-urls-canibalizacion-search-console">
+              <article>
+                <span>URL A</span>
+                <a :href="candidato.urlA" target="_blank" rel="noopener noreferrer">
+                  <strong>{{ candidato.tituloA }}</strong>
+                  <code>{{ candidato.urlA }}</code>
+                </a>
+              </article>
+              <article>
+                <span>URL B</span>
+                <a :href="candidato.urlB" target="_blank" rel="noopener noreferrer">
+                  <strong>{{ candidato.tituloB }}</strong>
+                  <code>{{ candidato.urlB }}</code>
+                </a>
+              </article>
+            </div>
+
+            <div class="senales-canibalizacion-search-console" aria-label="Señales detectadas">
+              <span v-for="senal in candidato.senales" :key="senal">{{ senal }}</span>
+              <span v-if="candidato.entidadesCompartidas.length">
+                Entidad: {{ candidato.entidadesCompartidas.join(', ') }}
+              </span>
+            </div>
+
+            <ul v-if="candidato.consultasCompartidas.length" class="consultas-canibalizacion-search-console">
+              <li v-for="consulta in candidato.consultasCompartidas" :key="consulta.consulta">
+                <strong>“{{ consulta.consulta }}”</strong>
+                <span>
+                  URL A: {{ formatearNumero(consulta.impresionesA) }} impresiones, posición {{ formatearDecimal(consulta.posicionA, 2) }}
+                  · URL B: {{ formatearNumero(consulta.impresionesB) }} impresiones, posición {{ formatearDecimal(consulta.posicionB, 2) }}
+                </span>
+              </li>
+            </ul>
+
+            <p class="recomendacion-canibalizacion-search-console">
+              <strong>Sugerencia: {{ etiquetasAccionCanibalizacion[candidato.accionSugerida] }}.</strong>
+              {{ candidato.recomendacion }}
+            </p>
+            <p class="acciones-canibalizacion-search-console">
+              Opciones para revisión humana:
+              <span v-for="accion in candidato.accionesSugeridas" :key="accion">
+                {{ etiquetasAccionCanibalizacion[accion] }}
+              </span>
+              No se fusiona, redirige ni cambia una canonical automáticamente.
+            </p>
+          </li>
+        </ol>
+      </section>
+
       <section class="bloque-search-console">
         <div class="cabecera-bloque-search-console resultados-search-console">
           <div>
@@ -644,6 +758,34 @@ const columnasAccionAnterior = accionesSearchConsole
 .resumen-oportunidades-search-console strong { color: var(--texto-panel, #10243e); font-size: 1.2rem; font-variant-numeric: tabular-nums; }
 .resumen-search-console span { color: var(--texto-secundario-panel, #64748b); font-size: .85rem; }
 .resumen-search-console strong { color: var(--texto-panel, #10243e); font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+.bloque-canibalizacion-search-console { display: grid; gap: .85rem; min-width: 0; padding: 1.15rem; border: 1px solid var(--borde-panel, #cbd5e1); border-radius: 1rem; background: var(--superficie-panel, #fff); color: var(--texto-panel, #10243e); }
+.cabecera-canibalizacion-search-console { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.cabecera-canibalizacion-search-console > div { display: grid; gap: .35rem; }
+.cabecera-canibalizacion-search-console h2 { margin: 0; color: var(--texto-panel, #10243e); font-size: 1.12rem; }
+.cabecera-canibalizacion-search-console p, .nota-metadatos-canibalizacion-search-console, .sin-canibalizacion-search-console { margin: 0; color: var(--texto-secundario-panel, #64748b); font-size: .88rem; }
+.contador-canibalizacion-search-console { flex: 0 0 auto; border: 1px solid var(--borde-panel, #cbd5e1); border-radius: 999px; padding: .3rem .65rem; color: var(--texto-panel, #10243e); font-size: .8rem; font-weight: 750; }
+.lista-canibalizacion-search-console { display: grid; gap: .75rem; margin: 0; padding: 0; list-style: none; }
+.tarjeta-canibalizacion-search-console { display: grid; gap: .7rem; min-width: 0; padding: .9rem; border: 1px solid var(--borde-panel, #dbe3ed); border-radius: .8rem; background: var(--superficie-panel, #fff); }
+.encabezado-tarjeta-canibalizacion-search-console { display: flex; align-items: center; justify-content: space-between; gap: .7rem; color: var(--texto-panel, #10243e); }
+.confianza-canibalizacion { flex: 0 0 auto; border-radius: 999px; padding: .22rem .55rem; font-size: .74rem; font-weight: 750; }
+.confianza-alta { color: #14532d; background: #dcfce7; }
+.confianza-media { color: #854d0e; background: #fef3c7; }
+.confianza-baja { color: #334155; background: #e2e8f0; }
+.par-urls-canibalizacion-search-console { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
+.par-urls-canibalizacion-search-console article { display: grid; align-content: start; gap: .3rem; min-width: 0; padding: .7rem; border: 1px solid var(--borde-panel, #dbe3ed); border-radius: .65rem; }
+.par-urls-canibalizacion-search-console article > span { color: var(--texto-secundario-panel, #64748b); font-size: .74rem; font-weight: 700; text-transform: uppercase; }
+.par-urls-canibalizacion-search-console a { display: grid; gap: .25rem; color: #087bc6; text-decoration: none; }
+.par-urls-canibalizacion-search-console a:hover { text-decoration: underline; }
+.par-urls-canibalizacion-search-console strong, .par-urls-canibalizacion-search-console code { overflow-wrap: anywhere; }
+.par-urls-canibalizacion-search-console code { color: var(--texto-secundario-panel, #64748b); font-size: .76rem; }
+.senales-canibalizacion-search-console { display: flex; flex-wrap: wrap; gap: .4rem; }
+.senales-canibalizacion-search-console span, .acciones-canibalizacion-search-console span { border-radius: 999px; padding: .25rem .5rem; color: var(--texto-panel, #10243e); background: var(--superficie-panel, #f1f5f9); font-size: .76rem; }
+.consultas-canibalizacion-search-console { display: grid; gap: .4rem; margin: 0; padding-left: 1.2rem; color: var(--texto-secundario-panel, #64748b); font-size: .82rem; }
+.consultas-canibalizacion-search-console li { display: grid; gap: .15rem; }
+.consultas-canibalizacion-search-console strong { color: var(--texto-panel, #10243e); }
+.recomendacion-canibalizacion-search-console, .acciones-canibalizacion-search-console { margin: 0; color: var(--texto-secundario-panel, #64748b); font-size: .83rem; line-height: 1.5; }
+.recomendacion-canibalizacion-search-console strong { color: var(--texto-panel, #10243e); }
+.acciones-canibalizacion-search-console { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
 .resultados-search-console { align-items: end; }
 .filtro-search-console { min-width: min(20rem, 42%); }
 .tabla-search-console { width: 100%; overflow: auto; border: 1px solid var(--borde-panel, #dbe3ed); border-radius: .75rem; }
@@ -684,11 +826,12 @@ const columnasAccionAnterior = accionesSearchConsole
 .nota-search-console { margin: 0; color: var(--texto-secundario-panel, #64748b); font-size: .85rem; }
 .vista-search-console .aviso-panel { margin: 0; }
 @media (max-width: 740px) {
-  .vista-search-console > .titulo-vista-panel, .cabecera-bloque-search-console { flex-direction: column; align-items: stretch; }
+  .vista-search-console > .titulo-vista-panel, .cabecera-bloque-search-console, .cabecera-canibalizacion-search-console { flex-direction: column; align-items: stretch; }
   .formulario-importacion-search-console { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .formulario-importacion-search-console .campo-archivo-search-console { grid-column: 1 / -1; }
   .formulario-importacion-search-console .boton-editorial-principal { grid-column: 1 / -1; justify-content: center; }
   .resumen-search-console, .resumen-oportunidades-search-console { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .par-urls-canibalizacion-search-console { grid-template-columns: 1fr; }
   .filtro-search-console { min-width: 0; width: 100%; }
   .pie-tabla-search-console { align-items: flex-start; flex-direction: column; }
   .pie-tabla-search-console > div { flex-wrap: wrap; }
