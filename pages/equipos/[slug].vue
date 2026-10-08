@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { FichaEquipoLigaPublica } from '~/server/utils/equiposLigaPublicos'
 import { construirUrlAbsoluta } from '~/utils/seo'
+import BarraCompartirArticulo from '~/components/editorial/BarraCompartirArticulo.vue'
 
 const configuracion = useRuntimeConfig()
 const route = useRoute()
@@ -31,9 +32,17 @@ const descripcionPagina = computed(() => {
     : ' Consulta sus partidos, resultados y noticias verificadas.'
   return `Calendario y actualidad de ${nombre} en el fútbol colombiano.${posicion}`
 })
+const rutaCanonica = computed(() => `/equipos/${slug.value}`)
+const urlCanonica = computed(() => construirUrlAbsoluta(String(configuracion.public.siteUrl), rutaCanonica.value))
+const imagenSocial = computed(() => `/api/equipos/${encodeURIComponent(slug.value)}/imagen`)
+const textoCompartir = computed(() => {
+  const nombre = equipo.value?.nombre || 'Equipo colombiano'
+  if (!clasificacion.value) return `${nombre}: consulta calendario, resultados y noticias verificadas de fútbol colombiano.`
+  return `${nombre}: posición ${clasificacion.value.posicion} con ${clasificacion.value.puntos} puntos en ${nombreCompetencia(clasificacion.value.competencia)} ${clasificacion.value.temporada}.`
+})
 const structuredData = computed(() => {
   if (!equipo.value || !ficha.value?.indexable) return undefined
-  const url = construirUrlAbsoluta(String(configuracion.public.siteUrl), `/equipos/${equipo.value.slug}`)
+  const url = urlCanonica.value
   return [{
     '@context': 'https://schema.org',
     '@type': 'SportsTeam',
@@ -61,8 +70,12 @@ const structuredData = computed(() => {
 useSeoPont3la10(() => ({
   titulo: tituloPagina.value,
   descripcion: descripcionPagina.value,
-  rutaCanonica: `/equipos/${slug.value}`,
-  ...(equipo.value?.escudo ? { imagen: equipo.value.escudo, imagenAlt: `Escudo de ${equipo.value.nombre}` } : {}),
+  rutaCanonica: rutaCanonica.value,
+  imagen: imagenSocial.value,
+  imagenAlt: equipo.value ? `Tarjeta social de ${equipo.value.nombre}, equipo de fútbol colombiano` : 'Tarjeta social de equipo colombiano',
+  imagenTipo: 'image/png',
+  imagenAncho: 1200,
+  imagenAlto: 630,
   seccion: 'Fútbol colombiano',
   robots: ficha.value?.indexable ? undefined : 'noindex, follow',
   datosEstructurados: structuredData.value
@@ -147,6 +160,13 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
         <NuxtLink to="/liga-colombiana">Tabla de la liga <span aria-hidden="true">→</span></NuxtLink>
       </nav>
     </header>
+
+    <BarraCompartirArticulo
+      :titulo="tituloPagina"
+      :texto="textoCompartir"
+      :url="urlCanonica"
+      etiqueta="la ficha del equipo"
+    />
 
     <p class="nota-verificacion-equipo">Datos públicos de clasificación y fixtures; última verificación {{ fechaBreve(equipo.actualizadoEn) }}.</p>
     <p v-if="!ficha.frescuraTabla.actualizado" class="aviso-frescura-equipo" role="status">
@@ -253,6 +273,8 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
 <style scoped>
 .pagina-equipo-publico { max-width: 1220px; margin-inline: auto; }
 .equipo-hero, .panel-equipo-publico { color: #13243a; background: #fff; border: 1px solid #dce4ed; border-radius: 18px; box-shadow: 0 12px 34px rgb(16 36 61 / 6%); }
+.pagina-equipo-publico :deep(.barra-compartir-articulo) { max-width: 100%; margin: 14px 0 24px; border-color: #dce4ed; }
+.pagina-equipo-publico :deep(.barra-compartir-articulo strong) { color: #45566e; }
 .equipo-hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 22px; padding: clamp(22px, 4vw, 42px); background: linear-gradient(120deg, #f4f8fd, #fff 64%); }
 .equipo-identidad { display: flex; align-items: center; gap: 22px; min-width: 0; }
 .escudo-equipo-hero { display: grid; flex: 0 0 104px; width: 104px; height: 104px; place-items: center; overflow: hidden; border: 1px solid #e1e8ef; border-radius: 22px; background: #fff; }
@@ -315,6 +337,11 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
 .estado-equipo-vacio { margin-bottom: 0; }
 
 :global(body.tema-publico-azul) .panel-equipo-publico { color: #e5efff; border-color: #294563; background: #102842; box-shadow: 0 12px 32px rgb(0 0 0 / 18%); }
+:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo) { border-color: #315273; }
+:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo strong) { color: #d3e0ef; }
+:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo button) { border-color: #365875; background: #102842; color: #e8f2ff; }
+:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo button:hover),
+:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo button:focus-visible) { border-color: #59d9ff; background: #17476b; color: #fff; }
 :global(body.tema-publico-azul) .equipo-hero { background: linear-gradient(120deg, #102a46, #0c2037 64%); }
 :global(body.tema-publico-azul) .equipo-hero h1,
 :global(body.tema-publico-azul) .panel-equipo-publico h2,
