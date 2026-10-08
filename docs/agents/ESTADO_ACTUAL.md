@@ -1,6 +1,27 @@
 # Estado actual de Pont3la10
 
-## HU-ED-27 — programa de contenido original (implementada en rama, 2026-10-08)
+## HU-ED-28 — detección de canibalización editorial (validada, despliegue pendiente)
+
+- El panel Search Console compara consultas compartidas y, cuando hay datos
+  editoriales confirmados, snapshots de artículos publicados, consultas objetivo,
+  intención y entidades principales. La API conserva permiso editorial, sesión
+  de usuario y RLS; no escribe, no usa `service_role` y no aplica cambios SEO.
+- Los candidatos recomiendan mantener/reorientar o evaluar fusión, redirect y
+  canonical, siempre sujetos a revisión humana y selección explícita de URL.
+  Comparación acotada a 300 URL de artículos del informe; informa el total de
+  pares y avisa si la lista visible está truncada a 50.
+- Producción, lectura de solo lectura: hay 0 informes de Search Console, 315
+  artículos publicados, 0 briefs confirmados y 0 relaciones de entidad
+  confirmadas. No se fabricaron ni importaron datos; las señales reales aparecerán
+  después de importar un CSV auténtico desde el panel existente.
+- Sin migraciones ni escrituras en Supabase. Revisión independiente sin
+  hallazgos. Validación local: lint, 102 archivos/527 pruebas (con timeout de
+  prueba ampliado a 15 s tras un timeout aislado en una prueba de escudos),
+  typecheck, build y `git diff --check` pasan. Pendiente completar PR, Vercel
+  Preview/CI y confirmar Production antes de marcar como desplegado.
+- Handoff: `docs/agents/handoffs/2026-10-08-hu-ed28-cannibalizacion.md`.
+
+## HU-ED-27 — programa de contenido original (Production, 2026-10-08)
 
 - Se añadió el programa editorial y sus ocho líneas de contenido. Los briefs
   confirmados requieren diferenciador de al menos 20 caracteres y fuente
@@ -11,11 +32,14 @@
   una reescritura de agencia y que aporte el valor declarado.
 - No se cambia el esquema de Supabase ni el flujo de aprobación: las propuestas
   válidas llegan únicamente al estado privado `review`.
-- Validación local: lint, 101 archivos/521 pruebas, typecheck, build y
-  `git diff --check` pasan. Build conserva la advertencia upstream `[DEP0155]`
-  de `@vue/shared`. La vista admin autenticada no se pudo probar visualmente en
-  este worktree sin una sesión editorial.
-- Todavía no está desplegada. Handoff:
+- Validación local y CI: lint, 101 archivos/521 pruebas, typecheck y build
+  pasan; CI del PR #112 quedó verde. Build conserva la advertencia upstream
+  `[DEP0155]` de `@vue/shared`. Vercel Production desplegó el commit
+  `5e07c2595a076b32e7a5493c2239386de3b1985d`; `/partidos-hoy` cargó y el panel
+  editorial autenticado mostró los campos de brief/diferenciador. La historia
+  usada para comprobarlo estaba publicada, así que los controles de edición
+  estaban deshabilitados y no se probó el envío de confirmación.
+- No requiere migración Supabase. Handoff:
   `docs/agents/handoffs/2026-10-08-hu-ed27-original-content.md`.
 
 ## HU-OPS-03 — auditoría de páginas huérfanas (Production, 2026-10-08)

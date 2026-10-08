@@ -6,6 +6,10 @@ import {
   type AccionSearchConsole,
   type FilaSearchConsole
 } from '~/utils/editorial/searchConsole'
+import {
+  detectarCanibalizacionEditorial,
+  type ArticuloCanibalizacion
+} from '~/utils/editorial/canibalizacion'
 
 interface InformeSearchConsole {
   id: string
@@ -38,6 +42,192 @@ interface DecisionSearchConsole {
   action: AccionSearchConsole
   note: string | null
   changed_at: string
+}
+
+interface ArticuloCanibalizacionDb {
+  id: string
+  slug: string
+  title: string
+  published_version_id: string
+}
+
+interface VersionCanibalizacionDb {
+  id: string
+  snapshot: Record<string, unknown>
+}
+
+interface BriefCanibalizacionDb {
+  article_id: string
+  target_query: string | null
+  search_intent: string | null
+}
+
+interface EntidadCanibalizacionDb {
+  article_id: string
+  entity_type: string
+  entity_slug: string
+  entity_name: string
+}
+
+const maximoUrlsArticuloCanibalizacion = 300
+const tamanoLoteArticulosCanibalizacion = 100
+
+function extraerSlugArticulo(paginaUrl: string): string | null {
+  try {
+    const url = new URL(paginaUrl)
+    const host = url.hostname.toLocaleLowerCase('en-US').replace(/^www\./, '')
+    if (url.protocol !== 'https:' || host !== 'pont3la10.com' || url.search || url.hash) return null
+    return url.pathname.match(/^\/articulos\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/)?.[1] || null
+  } catch {
+    return null
+  }
+}
+
+function dividirEnLotes<T>(valores: T[], tamano: number): T[][] {
+  const lotes: T[][] = []
+  for (let indice = 0; indice < valores.length; indice += tamano) {
+    lotes.push(valores.slice(indice, indice + tamano))
+  }
+  return lotes
+}
+
+async function cargarArticulosCanibalizacion(
+  cliente: ReturnType<typeof obtenerClienteSupabaseEditorial>,
+  metricas: MetricaSearchConsole[]
+): Promise<{
+  articulos: ArticuloCanibalizacion[]
+  cantidadArticulos: number
+  briefsConfirmados: number
+  entidadesPrincipales: number
+  alcanceLimitado: boolean
+  metadatosDisponibles: boolean
+}> {
+  const impresionesPorSlug = new Map<string, number>()
+  for (const metrica of metricas) {
+    const slug = extraerSlugArticulo(metrica.page_url)
+    if (slug) impresionesPorSlug.set(slug, (impresionesPorSlug.get(slug) || 0) + metrica.impressions)
+  }
+
+  const slugsOrdenados = [...impresionesPorSlug.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'en'))
+    .map(([slug]) => slug)
+  const alcanceLimitado = slugsOrdenados.length > maximoUrlsArticuloCanibalizacion
+  const slugs = slugsOrdenados.slice(0, maximoUrlsArticuloCanibalizacion)
+  if (!slugs.length) {
+    return {
+      articulos: [],
+      cantidadArticulos: 0,
+      briefsConfirmados: 0,
+      entidadesPrincipales: 0,
+      alcanceLimitado: false,
+      metadatosDisponibles: true
+    }
+  }
+
+  const respuestasArticulos = await Promise.all(dividirEnLotes(slugs, tamanoLoteArticulosCanibalizacion)
+    .map(lote => cliente.from('articles')
+      .select('id,slug,title,published_version_id')
+      .eq('status', 'published')
+      .not('published_version_id', 'is', null)
+      .in('slug', lote)))
+  if (respuestasArticulos.some(respuesta => respuesta.error)) {
+    return {
+      articulos: [],
+      cantidadArticulos: 0,
+      briefsConfirmados: 0,
+      entidadesPrincipales: 0,
+      alcanceLimitado,
+      metadatosDisponibles: false
+    }
+  }
+
+  const articulosDb = respuestasArticulos.flatMap(respuesta =>
+    (respuesta.data || []) as unknown as ArticuloCanibalizacionDb[])
+  const articulosPorLote = await Promise.all(dividirEnLotes(articulosDb, tamanoLoteArticulosCanibalizacion)
+    .map(async (lote) => {
+      const idsArticulo = lote.map(articulo => articulo.id)
+      const idsVersion = lote.map(articulo => articulo.published_version_id)
+      const [respuestaVersiones, respuestaBriefs, respuestaEntidades] = await Promise.all([
+        cliente.from('article_versions').select('id,snapshot').in('id', idsVersion),
+        cliente.from('editorial_article_search_briefs')
+          .select('article_id,target_query,search_intent')
+          .eq('status', 'confirmed')
+          .in('article_id', idsArticulo),
+        cliente.from('editorial_article_entity_relations')
+          .select('article_id,entity_type,entity_slug,entity_name')
+          .eq('status', 'confirmed')
+          .eq('relation_type', 'about')
+          .in('article_id', idsArticulo)
+          .limit(5000)
+      ])
+      return {
+        error: respuestaVersiones.error || respuestaBriefs.error || respuestaEntidades.error,
+        versiones: (respuestaVersiones.data || []) as unknown as VersionCanibalizacionDb[],
+        briefs: (respuestaBriefs.data || []) as unknown as BriefCanibalizacionDb[],
+        entidades: (respuestaEntidades.data || []) as unknown as EntidadCanibalizacionDb[]
+      }
+    }))
+
+  if (articulosPorLote.some(respuesta => respuesta.error)) {
+    return {
+      articulos: [],
+      cantidadArticulos: 0,
+      briefsConfirmados: 0,
+      entidadesPrincipales: 0,
+      alcanceLimitado,
+      metadatosDisponibles: false
+    }
+  }
+
+  const versiones = new Map(articulosPorLote.flatMap(respuesta => respuesta.versiones.map(version => [version.id, version] as const)))
+  const briefs = new Map(articulosPorLote.flatMap(respuesta => respuesta.briefs.map(brief => [brief.article_id, brief] as const)))
+  const entidades = new Map<string, EntidadCanibalizacionDb[]>()
+  for (const entidad of articulosPorLote.flatMap(respuesta => respuesta.entidades)) {
+    const lista = entidades.get(entidad.article_id) || []
+    lista.push(entidad)
+    entidades.set(entidad.article_id, lista)
+  }
+
+  const articulos: ArticuloCanibalizacion[] = articulosDb.flatMap((articulo) => {
+    const snapshot = versiones.get(articulo.published_version_id)?.snapshot
+    if (!snapshot) return []
+    const brief = briefs.get(articulo.id)
+    const entidadesPrincipales = entidades.get(articulo.id) || []
+    return [{
+      id: articulo.id,
+      url: `https://www.pont3la10.com/articulos/${articulo.slug}`,
+      titulo: String(snapshot.title || articulo.title),
+      tituloSeo: String(snapshot.seo_title || snapshot.title || articulo.title),
+      consultaObjetivo: brief?.target_query || null,
+      intencion: brief?.search_intent || null,
+      entidades: entidadesPrincipales.map(entidad => ({
+        clave: `${entidad.entity_type}:${entidad.entity_slug}`,
+        nombre: entidad.entity_name
+      }))
+    }]
+  })
+
+  return {
+    articulos,
+    cantidadArticulos: articulos.length,
+    briefsConfirmados: articulosDb.filter(articulo => briefs.has(articulo.id)).length,
+    entidadesPrincipales: articulos.reduce((total, articulo) => total + articulo.entidades.length, 0),
+    alcanceLimitado,
+    metadatosDisponibles: true
+  }
+}
+
+function respuestaCanibalizacionVacia() {
+  return {
+    candidatos: [],
+    totalCandidatos: 0,
+    candidatosLimitados: false,
+    articulosComparados: 0,
+    briefsConfirmados: 0,
+    entidadesPrincipales: 0,
+    alcanceLimitado: false,
+    metadatosDisponibles: true
+  }
 }
 
 function diasPeriodo(informe: InformeSearchConsole): number {
@@ -97,7 +287,8 @@ export default defineEventHandler(async (evento) => {
       historialCargado: 0,
       historialTotal: 0,
       historialLimitado: false,
-      filas: []
+      filas: [],
+      canibalizacion: respuestaCanibalizacionVacia()
     }
   }
 
@@ -171,6 +362,8 @@ export default defineEventHandler(async (evento) => {
     }
   })
 
+  const datosArticulosCanibalizacion = await cargarArticulosCanibalizacion(cliente, metricasActuales)
+
   setResponseHeader(evento, 'Cache-Control', 'private, no-store')
   return {
     informes: informes.map(informe => ({
@@ -192,6 +385,14 @@ export default defineEventHandler(async (evento) => {
     historialCargado: historial.length,
     historialTotal,
     historialLimitado: historial.length < historialTotal,
-    filas
+    filas,
+    canibalizacion: {
+      ...detectarCanibalizacionEditorial(filas, datosArticulosCanibalizacion.articulos),
+      articulosComparados: datosArticulosCanibalizacion.cantidadArticulos,
+      briefsConfirmados: datosArticulosCanibalizacion.briefsConfirmados,
+      entidadesPrincipales: datosArticulosCanibalizacion.entidadesPrincipales,
+      alcanceLimitado: datosArticulosCanibalizacion.alcanceLimitado,
+      metadatosDisponibles: datosArticulosCanibalizacion.metadatosDisponibles
+    }
   }
 })

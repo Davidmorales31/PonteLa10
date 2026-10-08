@@ -1,0 +1,12 @@
+# Handoff
+
+- **Objetivo de la sesión:** Implementar HU-ED-28 — detección de canibalización editorial en el panel Search Console.
+- **Completado:** El endpoint protegido calcula candidatos a partir de consultas compartidas del último informe y snapshots publicados; incorpora únicamente briefs y entidades confirmados. La página muestra señales, consultas/métricas, confianza y opciones conservadoras. El conteo comunica el total de pares únicos previo al recorte y avisa cuando la lista se limita a 50. No se ejecutan merges, redirects ni cambios de canonical.
+- **Archivos modificados:** `pages/admin/search-console.vue`, `server/api/admin/search-console.get.ts`, `utils/editorial/canibalizacion.ts`, `tests/unit/canibalizacionEditorial.test.ts`, `tests/unit/searchConsoleSecurity.test.ts`, `docs/agents/ESTADO_ACTUAL.md` y el handoff HU-ED-27 ya actualizado en esta rama.
+- **Decisiones:** Usar el cliente Supabase de usuario y permiso `contenido.verBorradores`; depender de RLS; solo snapshots `published_version_id` y metadatos editoriales confirmados. Sin migración, escritura ni `service_role`. Máximo 300 URL publicadas por informe y 50 candidatos visibles por orden de puntuación/impresiones. El equipo editorial debe aprobar cualquier acción SEO.
+- **Validaciones ejecutadas:** Revisión independiente sin hallazgos; lint; pruebas enfocadas 2 archivos/13 pruebas; suite 102 archivos/527 pruebas (segunda corrida con `--testTimeout=15000`); typecheck; build Nuxt/Nitro; `git diff --check`.
+- **Fallos:** La primera corrida estándar de suite tuvo un timeout aislado de 5 s en `tests/unit/imagenesPublicas.test.ts` (526/527 pasaron); la corrida completa repetida con 15 s pasó 527/527. Build conserva advertencia upstream `[DEP0155]` en el mapeo `exports` de `@vue/shared`.
+- **Pendientes:** Abrir PR desde `codex/hu-ed28-cannibalization` a `main`, confirmar CI y Preview de Vercel, integrar y verificar que el deployment de Production quedó `READY`. Hacer smoke anónimo de la página pública y del rechazo de sesión de la API; la pantalla administrativa con sesión editorial no se puede validar sin sesión disponible.
+- **Siguiente acción exacta:** Revisar el PR y checks; tras integrarlo, confirmar el SHA y deployment Production en el proyecto Vercel `ponte-la10` del equipo `somosnoobs-projects`, probar `/partidos-hoy` y que `/api/admin/search-console` rechace una sesión anónima; actualizar este handoff y `ESTADO_ACTUAL.md` con esos resultados.
+- **Commit base:** `5e07c2595a076b32e7a5493c2239386de3b1985d`.
+- **Commit final:** pendiente de commit.

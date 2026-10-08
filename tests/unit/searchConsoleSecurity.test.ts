@@ -23,6 +23,17 @@ function bloqueFuncion(esquema: string, nombre: string): string {
 }
 
 describe('HU-ED-21 · seguridad del esquema Search Console', () => {
+  it('mantiene la detección privada, de solo lectura y acotada a contenido publicado', () => {
+    expect(rutaSearchConsole).toContain("exigirPermisoEditorial(evento, 'contenido.verBorradores')")
+    expect(rutaSearchConsole).toContain('setResponseHeader(evento, \'Cache-Control\', \'private, no-store\')')
+    expect(rutaSearchConsole).toContain(".eq('status', 'published')")
+    expect(rutaSearchConsole).toContain(".not('published_version_id', 'is', null)")
+    expect(rutaSearchConsole).toContain(".eq('status', 'confirmed')")
+    expect(rutaSearchConsole).toContain(".eq('relation_type', 'about')")
+    expect(rutaSearchConsole).not.toContain('service_role')
+    expect(rutaSearchConsole).not.toMatch(/\.\s*(?:insert|update|upsert|delete|rpc)\s*\(/i)
+  })
+
   it('protege las tablas con RLS y revoca escrituras directas', () => {
     for (const tabla of [
       'editorial_search_console_reports',
