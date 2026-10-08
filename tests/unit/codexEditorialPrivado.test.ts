@@ -7,6 +7,9 @@ import {
   esquemaConsultaSaludCodex,
   esquemaPortadaCodex,
   esquemaPortadaIACodex,
+  esquemaBorradorCodex,
+  esquemaBriefSeoListoPropuestaCodex,
+  esquemaBriefSeoPropuestoCodex,
   esquemaPropuestaCodex,
   calcularPrioridadEditorialCodex
 } from '~/server/utils/esquemasCodexEditorial'
@@ -129,7 +132,7 @@ describe('API privada de propuestas Codex', () => {
       tagIds: [],
       newTopics: [],
       relatedArticleIds: [],
-      sources: [fuente, { ...fuente, url: 'https://example.org/confirmacion', tipo: 'secundaria' as const }],
+      sources: [fuente, { ...fuente, url: 'https://independiente.example.org/confirmacion', publisher: 'Publicación independiente', tipo: 'secundaria' as const }],
       editorialFlags: []
     }
 
@@ -138,6 +141,16 @@ describe('API privada de propuestas Codex', () => {
       ...propuesta,
       editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
     }).success).toBe(true)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      sources: propuesta.sources.map(origen => ({ ...origen, tipo: 'secundaria' as const })),
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
+    }).success).toBe(false)
+    expect(esquemaPropuestaCodex.safeParse({
+      ...propuesta,
+      sourceUrl: 'https://independiente.example.org/confirmacion',
+      editorialFlags: ['needs_angle_review', 'licensed_photo_cover']
+    }).success).toBe(false)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
       editorialFlags: ['needs_angle_review', 'ai_generated_cover']
@@ -181,6 +194,78 @@ describe('API privada de propuestas Codex', () => {
       ...propuesta,
       editorialFlags: ['needs_angle_review', 'licensed_photo_cover'],
       newTopics: [{ name: 'Tema deportivo', description: 'Descripción\u0085 inválida.' }]
+    }).success).toBe(false)
+  })
+
+  it('exige aporte diferenciado y fuente primaria correctamente identificada antes de redactar', () => {
+    const fuentePrimaria = {
+      url: 'https://dimayor.example.org/acta',
+      titulo: 'Acta oficial del encuentro',
+      publisher: 'Dimayor',
+      publishedAt: null,
+      accessedAt: '2026-10-08T12:00:00Z',
+      tipo: 'primaria' as const,
+      claims: ['El acta oficial confirma la fecha del encuentro.']
+    }
+    const fuenteSecundaria = {
+      url: 'https://medio.example.org/cronica',
+      titulo: 'Crónica independiente del encuentro',
+      publisher: 'Medio independiente',
+      publishedAt: null,
+      accessedAt: '2026-10-08T12:00:00Z',
+      tipo: 'secundaria' as const,
+      claims: ['El medio describe el impacto deportivo del resultado.']
+    }
+    const borrador = {
+      idempotencyKey: '45d8b1c5-47e7-42b8-9ac5-ea753c4a5ebf',
+      runId: '14a5f2b0-a9c1-41b2-9b82-729f52c3b4d2',
+      categoryId: 'ef3716e2-351e-4bc6-af69-883b17e91111',
+      storyFingerprint: 'b'.repeat(64),
+      titleHint: 'La historia del fútbol regional y su impacto',
+      contentType: 'analisis' as const,
+      researchSummary: 'El expediente resume el acta oficial, la cronología, los datos revisados y una corroboración independiente suficiente para desarrollar el contexto del encuentro.',
+      trend: {
+        term: 'fútbol regional',
+        title: 'Agenda de fútbol regional',
+        url: 'https://agenda.example.org/futbol',
+        observedAt: '2026-10-08T12:00:00Z'
+      },
+      seoResearch: {
+        primaryQuery: 'fútbol regional',
+        relatedQueries: [],
+        intent: 'analisis' as const
+      },
+      primarySourceUrl: fuentePrimaria.url,
+      sources: [fuentePrimaria, fuenteSecundaria],
+      topicCatalog: [],
+      relatedArticles: []
+    }
+
+    expect(esquemaBorradorCodex.safeParse(borrador).success).toBe(true)
+    expect(esquemaBorradorCodex.safeParse({
+      ...borrador,
+      sources: borrador.sources.map(origen => ({ ...origen, tipo: 'secundaria' as const }))
+    }).success).toBe(false)
+    expect(esquemaBorradorCodex.safeParse({
+      ...borrador,
+      primarySourceUrl: fuenteSecundaria.url
+    }).success).toBe(false)
+
+    const brief = {
+      targetQuery: 'fútbol regional',
+      searchIntent: 'analisis' as const,
+      parentCluster: null,
+      freshnessWindowDays: null,
+      opportunitySource: null,
+      editorialDifferentiator: 'Contrasta el acta con el efecto del resultado en la tabla regional.'
+    }
+    expect(esquemaBriefSeoPropuestoCodex.safeParse(brief).success).toBe(true)
+    expect(esquemaBriefSeoPropuestoCodex.safeParse({ ...brief, editorialDifferentiator: null }).success).toBe(true)
+    expect(esquemaBriefSeoListoPropuestaCodex.safeParse(brief).success).toBe(true)
+    expect(esquemaBriefSeoListoPropuestaCodex.safeParse({ ...brief, editorialDifferentiator: null }).success).toBe(false)
+    expect(esquemaBriefSeoListoPropuestaCodex.safeParse({
+      ...brief,
+      editorialDifferentiator: 'Muy breve'
     }).success).toBe(false)
   })
 

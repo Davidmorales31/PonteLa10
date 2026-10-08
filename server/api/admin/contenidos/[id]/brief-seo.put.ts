@@ -46,6 +46,13 @@ export default defineEventHandler(async (evento): Promise<BriefSeoArticuloEditor
       statusMessage: 'Solo una persona con permiso de aprobación puede confirmar el brief mientras el artículo está en revisión.'
     })
   }
+  if (entrada.estadoBrief === 'confirmado'
+    && (!articulo.fuente.nombre.trim() || !articulo.fuente.url.trim())) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'Identifica la fuente principal con nombre y URL antes de confirmar el brief.'
+    })
+  }
 
   const { data: briefExistente, error: errorLecturaBrief } = await cliente
     .from('editorial_article_search_briefs')

@@ -13,6 +13,7 @@ const props = defineProps<{
   camposCompletos: string[]
   deshabilitado?: boolean
   puedeConfirmarBrief?: boolean
+  fuentePrincipalIdentificada?: boolean
 }>()
 
 const etiquetasIntencion: Record<typeof intencionesBusquedaEditoriales[number], string> = {
@@ -74,6 +75,8 @@ const datosNormalizados = computed(() => ({
 const hayCambios = computed(() => JSON.stringify(datosNormalizados.value) !== datosBase.value)
 const puedeGuardarPropuesta = computed(() => hayCambios.value || briefGuardado.value.estadoBrief !== 'propuesto')
 const puedeConfirmar = computed(() => Boolean(props.puedeConfirmarBrief)
+  && Boolean(props.fuentePrincipalIdentificada)
+  && Boolean(formulario.diferenciadorEditorial?.trim() && formulario.diferenciadorEditorial.trim().length >= 20)
   && (hayCambios.value || briefGuardado.value.estadoBrief !== 'confirmado'))
 
 function mostrarFechaConfirmacion(valor: string): string {
@@ -207,12 +210,14 @@ function obtenerMensajeError(errorPeticion: unknown): string {
         <input v-model="formulario.origenOportunidad" type="text" maxlength="2048" :disabled="deshabilitado || cargando || guardando" placeholder="Tendencia, Search Console, calendario o encargo">
       </label>
       <label class="campo-ancho-brief-seo">
-        Diferenciador editorial
+        Diferenciador editorial <span>mínimo 20 caracteres para confirmar</span>
         <textarea v-model="formulario.diferenciadorEditorial" rows="3" maxlength="500" :disabled="deshabilitado || cargando || guardando" placeholder="Qué contexto, fuente o respuesta propia aporta esta pieza" />
       </label>
     </div>
 
-    <p class="ayuda-brief-seo">Las entidades principales y secundarias se gestionan abajo en “Entidades relacionadas”; cada propuesta requiere confirmación humana con permiso de aprobación cuando el artículo está en revisión. La consulta objetivo es opcional: una pieza original no queda bloqueada si no tiene keyword.</p>
+    <p class="ayuda-brief-seo">Para confirmar el brief se requiere una fuente principal identificable en el artículo y explicar qué aporte verificable distingue esta pieza. Una reescritura de agencia no se clasifica como contenido original. Las entidades se gestionan abajo; la consulta objetivo sigue siendo opcional.</p>
+    <p v-if="puedeConfirmarBrief && !fuentePrincipalIdentificada" class="mensaje-error-brief-seo" role="status">Completa el nombre y la URL de la fuente principal en la etapa Contenido para poder confirmar.</p>
+    <p v-else-if="puedeConfirmarBrief && (!formulario.diferenciadorEditorial?.trim() || formulario.diferenciadorEditorial.trim().length < 20)" class="estado-brief-seo propuesto" role="status">Añade un diferenciador verificable de al menos 20 caracteres para confirmar el brief.</p>
     <div class="acciones-brief-seo">
       <button type="button" :disabled="deshabilitado || cargando || guardando || !puedeGuardarPropuesta" @click="guardar('propuesto')">
         {{ guardando ? 'Guardando…' : 'Guardar propuesta' }}

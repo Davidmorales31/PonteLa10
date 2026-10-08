@@ -1,5 +1,23 @@
 # Estado actual de Pont3la10
 
+## HU-ED-27 — programa de contenido original (implementada en rama, 2026-10-08)
+
+- Se añadió el programa editorial y sus ocho líneas de contenido. Los briefs
+  confirmados requieren diferenciador de al menos 20 caracteres y fuente
+  identificable con nombre y URL. La propuesta Codex rechaza expedientes sin
+  brief/diferenciador antes de crear un artículo; la URL principal debe estar
+  marcada como primaria. No se exige una segunda editorial si la pieza se basa
+  en entrevistas o datos propios; la revisión humana debe comprobar que no sea
+  una reescritura de agencia y que aporte el valor declarado.
+- No se cambia el esquema de Supabase ni el flujo de aprobación: las propuestas
+  válidas llegan únicamente al estado privado `review`.
+- Validación local: lint, 101 archivos/521 pruebas, typecheck, build y
+  `git diff --check` pasan. Build conserva la advertencia upstream `[DEP0155]`
+  de `@vue/shared`. La vista admin autenticada no se pudo probar visualmente en
+  este worktree sin una sesión editorial.
+- Todavía no está desplegada. Handoff:
+  `docs/agents/handoffs/2026-10-08-hu-ed27-original-content.md`.
+
 ## HU-OPS-03 — auditoría de páginas huérfanas (Production, 2026-10-08)
 
 - PR #110 se integró a `main` como `cb7a9ff88ca094b97faa594292f5ec469df3c488`;
@@ -15,7 +33,7 @@
   y la vista administrativa redirigió al login. Handoff:
   `docs/agents/handoffs/2026-10-08-hu-ops03-orphan-pages.md`.
 
-## HU-OPS-04 — control de frescura de datos (código validado, PR pendiente, 2026-10-08)
+## HU-OPS-04 — control de frescura de datos (Production, 2026-10-08)
 
 - Usa `checked_at` existente como `verificadoEn`; no requiere DDL ni escrituras.
   La consulta de solo lectura en Supabase Production confirmó filas públicas
@@ -37,15 +55,25 @@
   aislada (7/7) y la suite completa volvió a pasar. El build conserva la
   advertencia upstream `[DEP0155]` de `@vue/shared`. Revisión estática de
   seguridad sin hallazgos P0–P2 tras corregir alertas de `sin_datos`/cobertura
-  parcial y el límite de minutos exacto. El smoke local no autenticado del
-  endpoint de frescura devolvió 503 porque el worktree no tiene configuración
-  de autenticación Supabase; no se pudo validar autorización positiva/negativa
-  con un usuario en Preview.
+  parcial y el límite de minutos exacto. PR #111 se integró a `main` como
+  `8bfba4e482dba4dee3e4a3285c58b614d323a5c9`; lint, test, typecheck y build
+  de CI pasaron. Smoke de Production en `www.pont3la10.com`: `/partidos-hoy` y
+  `/liga-colombiana` responden HTTP 200; GET anónimo a
+  `/api/admin/futbol/frescura` responde HTTP 401 `SESION_REQUERIDA` con
+  `Cache-Control: private, no-store`, antes de consultar datos. La integración
+  Vercel no muestra este proyecto ni metadatos del deployment, así que la
+  comprobación de Production se basa en el comportamiento HTTP del endpoint
+  nuevo, no en el identificador/estado del deployment. La vista administrativa
+  y la respuesta autorizada requieren una sesión editorial con
+  `configuracion.ver` y no se pudieron verificar aquí.
 - Riesgos aceptados: el sitemap puede conservar URLs hasta 10 min por su caché;
   una temporada actual se vuelve no indexable si cualquier dato activo rebasa
   su umbral; `/liga-colombiana` permanece en sitemap como hub evergreen.
-  No hubo migración ni escrituras en Supabase Production.
-- Falta crear PR, revisar CI/Preview, integrar a `main` y confirmar Production.
+  No hubo migración ni escrituras en Supabase Production. Preview se revisó en
+  tema oscuro y móvil (438 px): sin desbordamiento horizontal, un H1, imágenes
+  con `alt` y sin errores de consola. El smoke local no autenticado devolvió 503
+  por falta de configuración Supabase en el worktree; el smoke anónimo de
+  Production verificó el rechazo de sesión.
 - Handoff: `docs/agents/handoffs/2026-10-08-hu-ops04-data-freshness.md`.
 
 ## HU-TRUST-05 — transparencia de datos del partido (Production, 2026-10-08 UTC)

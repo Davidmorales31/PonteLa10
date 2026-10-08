@@ -62,6 +62,10 @@ export const esquemaBriefSeoPropuestoCodex = z.object({
   editorialDifferentiator: z.string().trim().min(1).max(500).nullable()
 }).strict()
 
+export const esquemaBriefSeoListoPropuestaCodex = esquemaBriefSeoPropuestoCodex.extend({
+  editorialDifferentiator: z.string().trim().min(20).max(500)
+})
+
 function tieneCaracteresDeControl(valor: string) {
   return Array.from(valor).some((caracter) => {
     const punto = caracter.codePointAt(0) ?? 0
@@ -146,11 +150,11 @@ export const esquemaPropuestaCodex = z.object({
     })
   }
 
-  if (!propuesta.sources.some(fuente => fuente.url === propuesta.sourceUrl)) {
+  if (!propuesta.sources.some(fuente => fuente.url === propuesta.sourceUrl && fuente.tipo === 'primaria')) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['sourceUrl'],
-      message: 'La fuente principal debe aparecer en las fuentes estructuradas.'
+      message: 'La fuente principal debe aparecer como primaria en las fuentes estructuradas.'
     })
   }
 
@@ -426,12 +430,12 @@ export const esquemaBorradorCodex = z.object({
     categoryName: z.string().trim().min(2).max(80)
   }).strict()).max(100)
 }).strict().superRefine((entrada, contexto) => {
-  const urlFuentePrincipal = entrada.sources.some(fuente => fuente.url === entrada.primarySourceUrl)
+  const urlFuentePrincipal = entrada.sources.some(fuente => fuente.url === entrada.primarySourceUrl && fuente.tipo === 'primaria')
   if (!urlFuentePrincipal) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['primarySourceUrl'],
-      message: 'La fuente principal debe pertenecer al expediente de investigación.'
+      message: 'La URL principal debe pertenecer a una fuente marcada como primaria en el expediente.'
     })
   }
 

@@ -5,7 +5,7 @@ import {
   verificarFirmaCodex
 } from '~/server/utils/codexEditorialPrivado'
 import {
-  esquemaBriefSeoPropuestoCodex,
+  esquemaBriefSeoListoPropuestaCodex,
   esquemaPropuestaCodex
 } from '~/server/utils/esquemasCodexEditorial'
 
@@ -32,6 +32,64 @@ export default defineEventHandler(async (evento) => {
   }
 
   const cliente = obtenerClienteCodexPrivado(evento)
+  const { data: generacion, error: errorGeneracion } = await cliente
+    .from('editorial_codex_draft_generations')
+    .select('run_id,category_id,story_fingerprint,status,result')
+    .eq('idempotency_key', resultado.data.idempotencyKey)
+    .maybeSingle()
+
+  if (errorGeneracion || !generacion) {
+    throw createError({
+      statusCode: 503,
+      statusMessage: 'No se pudo verificar el expediente de investigación y su brief SEO.',
+      data: { codigo: 'BRIEF_SEO_CODEX_NO_DISPONIBLE' }
+    })
+  }
+
+  const generacionEsperada = generacion as unknown as {
+    run_id: string
+    category_id: string
+    story_fingerprint: string
+    status: string
+    result: unknown
+  }
+  if (generacionEsperada.status !== 'completed'
+    || generacionEsperada.run_id.toLowerCase() !== resultado.data.runId.toLowerCase()
+    || generacionEsperada.category_id.toLowerCase() !== resultado.data.categoryId.toLowerCase()
+    || generacionEsperada.story_fingerprint.toLowerCase() !== resultado.data.storyFingerprint.toLowerCase()) {
+    throw createError({
+      statusCode: 409,
+      statusMessage: 'El brief SEO no corresponde a la generación de esta propuesta.',
+      data: { codigo: 'BRIEF_SEO_CODEX_GENERACION_INCONSISTENTE' }
+    })
+  }
+
+  const briefPersistido = generacionEsperada.result
+    && typeof generacionEsperada.result === 'object'
+    ? (generacionEsperada.result as { briefSeo?: unknown }).briefSeo
+    : undefined
+
+  if (briefPersistido === undefined) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'La generación no contiene un diferenciador editorial; no se creó un artículo para revisión.',
+      data: { codigo: 'DIFERENCIADOR_EDITORIAL_AUSENTE' }
+    })
+  }
+
+  const validacionBrief = esquemaBriefSeoListoPropuestaCodex.safeParse(briefPersistido)
+  if (!validacionBrief.success) {
+    throw createError({
+      statusCode: 422,
+      statusMessage: 'La generación no demuestra un diferenciador editorial verificable; no se creó un artículo para revisión.',
+      data: {
+        codigo: 'DIFERENCIADOR_EDITORIAL_INSUFICIENTE',
+        campos: validacionBrief.error.flatten().fieldErrors
+      }
+    })
+  }
+  const briefValidado = validacionBrief.data
+
   const { data, error } = await cliente.rpc('submit_codex_editorial_proposal', {
     p_input: resultado.data
   })
@@ -62,68 +120,18 @@ export default defineEventHandler(async (evento) => {
     })
   }
 
-  const { data: generacion, error: errorGeneracion } = await cliente
-    .from('editorial_codex_draft_generations')
-    .select('run_id,category_id,story_fingerprint,status,result')
-    .eq('idempotency_key', resultado.data.idempotencyKey)
-    .maybeSingle()
+  const { error: errorBrief } = await cliente.rpc('propose_editorial_article_search_brief', {
+    p_idempotency_key: resultado.data.idempotencyKey,
+    p_article_id: respuesta.articleId,
+    p_brief: briefValidado
+  })
 
-  if (errorGeneracion || !generacion) {
+  if (errorBrief) {
     throw createError({
       statusCode: 503,
-      statusMessage: 'La propuesta se registró, pero no se pudo recuperar su brief SEO idempotente.',
-      data: { codigo: 'BRIEF_SEO_CODEX_NO_DISPONIBLE' }
+      statusMessage: 'La propuesta se registró, pero no se pudo guardar su brief SEO.',
+      data: { codigo: 'BRIEF_SEO_CODEX_NO_PERSISTIDO' }
     })
-  }
-
-  const generacionEsperada = generacion as unknown as {
-    run_id: string
-    category_id: string
-    story_fingerprint: string
-    status: string
-    result: unknown
-  }
-  if (generacionEsperada.status !== 'completed'
-    || generacionEsperada.run_id.toLowerCase() !== resultado.data.runId.toLowerCase()
-    || generacionEsperada.category_id.toLowerCase() !== resultado.data.categoryId.toLowerCase()
-    || generacionEsperada.story_fingerprint.toLowerCase() !== resultado.data.storyFingerprint.toLowerCase()) {
-    throw createError({
-      statusCode: 409,
-      statusMessage: 'El brief SEO no corresponde a la generación de esta propuesta.',
-      data: { codigo: 'BRIEF_SEO_CODEX_GENERACION_INCONSISTENTE' }
-    })
-  }
-
-  const briefPersistido = generacionEsperada.result
-    && typeof generacionEsperada.result === 'object'
-    ? (generacionEsperada.result as { briefSeo?: unknown }).briefSeo
-    : undefined
-
-  // Las generaciones anteriores a HU-ED-20 no contienen el brief; se conservan
-  // como propuestas válidas y no se inventan metadatos para completarlas.
-  if (briefPersistido !== undefined) {
-    const briefValidado = esquemaBriefSeoPropuestoCodex.safeParse(briefPersistido)
-    if (!briefValidado.success) {
-      throw createError({
-        statusCode: 502,
-        statusMessage: 'La generación guardada contiene un brief SEO inválido.',
-        data: { codigo: 'BRIEF_SEO_CODEX_INVALIDO' }
-      })
-    }
-
-    const { error: errorBrief } = await cliente.rpc('propose_editorial_article_search_brief', {
-      p_idempotency_key: resultado.data.idempotencyKey,
-      p_article_id: respuesta.articleId,
-      p_brief: briefValidado.data
-    })
-
-    if (errorBrief) {
-      throw createError({
-        statusCode: 503,
-        statusMessage: 'La propuesta se registró, pero no se pudo guardar su brief SEO.',
-        data: { codigo: 'BRIEF_SEO_CODEX_NO_PERSISTIDO' }
-      })
-    }
   }
 
   setResponseStatus(evento, respuesta.duplicado ? 200 : 201)

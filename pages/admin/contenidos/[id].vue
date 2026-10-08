@@ -1407,6 +1407,7 @@ function formatearFecha(fecha: string): string {
               :campos-completos="camposPlantillaCompletos"
               :deshabilitado="!puedeGestionarMetadatosSeo"
               :puede-confirmar-brief="puedeGestionarSeoEnRevision"
+              :fuente-principal-identificada="Boolean(formulario?.fuente.nombre.trim() && formulario.fuente.url.trim())"
             />
             <PanelGrafoEntidadesSeo
               v-if="pasoActual === 'seo'"

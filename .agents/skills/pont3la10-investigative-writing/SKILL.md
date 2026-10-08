@@ -9,6 +9,18 @@ Write a publishable-quality draft whose every material factual claim can be
 traced to the dossier. Follow the existing evidence and editorial contracts in
 `docs/HU_ED_08_BORRADOR_IA.md` when present and the current HU-ED-11.
 
+Use the editorial pillars and evidence gate in
+`docs/PROGRAMA_CONTENIDO_ORIGINAL.md`, especially for candidates in the original
+content program. Every Codex candidate needs a specific, evidence-backed
+differentiator in `seleccionEditorial.diferenciadorEditorial` and at least one
+identifiable primary source. Add corroboration when the claim requires it, but
+do not reject genuine original interviews or data merely because no second
+publisher exists. Treat agency copy as secondary context only: an agency rewrite
+is never original reporting. A primary source alone does not make a story
+original; the article must add reporting, data, analysis, or explanatory
+context of its own. If those conditions are not met, reject/omit the candidate
+rather than labeling or polishing it as original.
+
 Use the Codex-specific DeepSeek provider and its contract. Mirror the proven
 article length, paragraph development, and factual discipline of TikTok
 ingestion without editing or routing through the TikTok worker/provider.
