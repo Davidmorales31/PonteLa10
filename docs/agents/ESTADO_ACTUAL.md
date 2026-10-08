@@ -1,5 +1,29 @@
 # Estado actual de Pont3la10
 
+## HU-TRUST-02/03/04 — páginas de transparencia (local, 2026-10-07)
+
+- Se prepararon `/quienes-somos`, `/politica-editorial` y `/correcciones` con
+  SEO/canonical y jerarquía compartida de páginas legales; se enlazaron desde
+  el pie público y el sitemap de páginas. El texto de responsable y contacto
+  coincide con la información ya publicada en Privacidad y Términos. Se explica
+  la asistencia de IA sin presentarla como fuente ni como publicación
+  automática, la separación editorial/comercial, la variabilidad de datos
+  deportivos y el canal/clasificación de correcciones.
+- Validación local: lint, typecheck, suite (94 archivos/482 pruebas), build de
+  Vercel, prueba de sitemap (12/12) y `git diff --check` pasan. Las rutas
+  respondieron HTTP 200; inspección de escritorio en tema claro y móvil 390 px
+  en tema oscuro/claro, sin desbordamiento horizontal. No se añadieron datos ni
+  migraciones de Supabase. El build conserva el aviso upstream `[DEP0155]` de
+  `@vue/shared`.
+- Pendiente: CI/Preview y smoke de producción después de la integración. La
+  consola de desarrollo mostró mismatches de hidratación preexistentes en
+  `AvisoAnalitica` y `CabeceraPrincipal` por la diferencia de estado SSR frente
+  a preferencias cliente de privacidad/tema; estos cambios no los modifican y
+  deben revisarse como seguimiento separado. Los perfiles individuales de
+  autor (HU-TRUST-01) requieren un contrato de exposición pública voluntaria;
+  no se inventarán biografías ni credenciales.
+- Handoff: `docs/agents/handoffs/2026-10-07-hu-trust02-04-transparencia.md`.
+
 ## HU-PERF-01 — separar CSS público y administrativo (Production, 2026-10-07)
 
 - admin.css se carga desde el layout admin; landing.css, desde el layout

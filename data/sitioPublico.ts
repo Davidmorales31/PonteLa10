@@ -38,6 +38,6 @@ export const pieSitio: FooterLanding = {
   columnas: [
     { titulo: 'Navegación', enlaces: [{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Noticias', ruta: '/articulos' }, { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' }, { etiqueta: 'Resultados', ruta: '/resultados' }, { etiqueta: 'Liga colombiana', ruta: '/liga-colombiana' }, { etiqueta: 'Selección Colombia', ruta: '/seleccion-colombia' }] },
     { titulo: 'Categorías', enlaces: [{ etiqueta: 'Fútbol colombiano', ruta: '/futbol-colombiano' }, { etiqueta: 'Fútbol internacional', ruta: '/futbol-internacional' }, { etiqueta: 'Colombianos en Europa', ruta: '/colombianos-en-europa' }] },
-    { titulo: 'Legal', enlaces: [{ etiqueta: 'Términos y condiciones', ruta: '/terminos' }, { etiqueta: 'Privacidad', ruta: '/privacidad' }] }
+    { titulo: 'Transparencia y legal', enlaces: [{ etiqueta: 'Quiénes somos', ruta: '/quienes-somos' }, { etiqueta: 'Política editorial', ruta: '/politica-editorial' }, { etiqueta: 'Correcciones', ruta: '/correcciones' }, { etiqueta: 'Términos y condiciones', ruta: '/terminos' }, { etiqueta: 'Privacidad', ruta: '/privacidad' }] }
   ]
 }
