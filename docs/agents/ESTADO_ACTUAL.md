@@ -1,13 +1,12 @@
 # Estado actual de Pont3la10
 
-## HU-PERF-04 — presupuesto inicial de Core Web Vitals (Production, 2026-10-08; guardas en ajuste)
+## HU-PERF-04 — presupuesto inicial de Core Web Vitals (Production, 2026-10-08)
 
 - `lighthouserc.cjs` define cuatro rutas públicas, emulación móvil y tres
   ejecuciones por URL. CI mide el build local y archiva el reporte; un workflow
-  semanal repite la medición contra Production. El PR #116 ya está integrado;
-  la calibración final de guardas se trabaja en un seguimiento. Meta actual:
-  performance ≥ 0,45, LCP ≤ 9 s, CLS ≤ 0,30 y TBT ≤ 800 ms; runners fijados a
-  Ubuntu 24.04.
+  semanal repite la medición contra Production. Los PR #116 y #117 están
+  integrados; límites de regresión actuales: performance ≥ 0,45, LCP ≤ 9 s,
+  CLS ≤ 0,30 y TBT ≤ 800 ms; runners fijados a Ubuntu 24.04.
 - Muestra exploratoria de Production en `/` (una pasada; Edge 154.0.4258.37,
   Lighthouse 12.6.1): score 0,69, LCP 4,056 s (4 056 ms), CLS 0, TBT 395 ms. No representa
   el percentil 75. La API PageSpeed Insights respondió 429 por cuota cero; no se
@@ -25,12 +24,16 @@
   6,769 s/0,06. Esto revela deuda de rendimiento; los límites CI detectan
   regresiones grandes y no equivalen a cumplir los objetivos de campo. CI
   post-merge luego observó CLS 0,266 en `/partidos-hoy`.
-- Primer reporte manual Production (tres muestras): `/` performance 0,87/LCP
-  3,430 s/CLS 0/TBT 202 ms; `/partidos-hoy` 0,73/4,811 s/0,20/212 ms;
-  `/liga-colombiana` 0,74/3,342 s/0,01/636 ms; `/colombianos-en-europa`
-  0,90/3,161 s/0,06/150 ms. No son datos CrUX/p75. El seguimiento #117
-  ajusta umbrales para cubrir esta variación y mantenerlos como guardas de
-  regresión, no como afirmación de CWV ideal.
+- Reporte final Production `37752052200` (tres muestras por ruta, guardas
+  verdes): `/` performance 0,71/LCP 6,903 s/CLS 0/TBT 187 ms; `/partidos-hoy`
+  0,70/4,216 s/0,20/245 ms; `/liga-colombiana` 0,75/3,347 s/0,01/580 ms;
+  `/colombianos-en-europa` 0,73/5,429 s/0,06/264 ms. El CI post-merge
+  `37751820428` también pasó. No son datos CrUX/p75; LCP y CLS aún evidencian
+  deuda de rendimiento, especialmente `/partidos-hoy`.
+- Smoke Production después del merge: `/`, `/partidos-hoy`, `/liga-colombiana`
+  y `/colombianos-en-europa` responden HTTP 200 y conservan sus títulos. No se
+  agrega publicidad ni telemetría nueva; PageSpeed Insights respondió 429 y no
+  hay INP de campo disponible.
 - Handoff: `docs/agents/handoffs/2026-10-08-hu-perf04-core-web-vitals.md`.
 
 ## Seguimiento HU-TRUST-01 — Production verificado (2026-10-08)
