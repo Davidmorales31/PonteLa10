@@ -7,6 +7,7 @@ const paginaJugador = readFileSync(resolve(process.cwd(), 'pages/jugadores/[slug
 const paginaResultadosEnVivo = readFileSync(resolve(process.cwd(), 'pages/resultados/en-vivo.vue'), 'utf8')
 const paginaEuropa = readFileSync(resolve(process.cwd(), 'pages/colombianos-en-europa.vue'), 'utf8')
 const componenteAnuncio = readFileSync(resolve(process.cwd(), 'components/publicidad/AdsterraSlot.vue'), 'utf8')
+const detallePartido = readFileSync(resolve(process.cwd(), 'pages/resultados/[id].vue'), 'utf8')
 
 describe('HU-MON-01/02 · anuncios contextuales', () => {
   it('coloca el anuncio de competición después de resultados y solo en temporada actual', () => {
@@ -63,7 +64,26 @@ describe('HU-MON-01/02 · anuncios contextuales', () => {
   it('mantiene el consentimiento, la reserva del marco y la carga diferida del proveedor', () => {
     expect(componenteAnuncio).toContain('if (!publicidadAutorizada.value || !visible.value) return \'\'')
     expect(componenteAnuncio).toContain('v-show="publicidadAutorizada"')
-    expect(componenteAnuncio).toContain('height: `${altoMarco}px`')
     expect(componenteAnuncio).toContain('loading="lazy"')
+    expect(componenteAnuncio).toContain('aspect-ratio: 728 / 90')
+    expect(componenteAnuncio).toContain('.espacio-adsterra--nativo .espacio-adsterra__marco {\n  height: 280px;')
+  })
+
+  it('reserva el leaderboard móvil antes del iframe y escala sin recortar el ancho', () => {
+    expect(componenteAnuncio).toContain('escala.value = Math.min(1, anchoDisponible / 728)')
+    expect(componenteAnuncio).not.toContain('Math.max(0.42')
+    expect(componenteAnuncio).not.toContain('height: `${altoMarco}px`')
+  })
+
+  it('muestra primero el dato principal del partido y después la publicidad', () => {
+    const indiceDatoPrincipal = detallePartido.indexOf('<PartidoDestacadoResultados')
+    const indiceAnuncio = detallePartido.indexOf('<PublicidadAdsterraSlot')
+    const indicePestanas = detallePartido.indexOf('class="pestanas-detalle-partido"')
+
+    expect(indiceDatoPrincipal).toBeGreaterThanOrEqual(0)
+    expect(indiceAnuncio).toBeGreaterThan(indiceDatoPrincipal)
+    expect(indicePestanas).toBeGreaterThan(indiceAnuncio)
+    expect(detallePartido.slice(indiceDatoPrincipal, indiceAnuncio)).toContain('PartidoDestacadoResultados')
+    expect(detallePartido.slice(indiceAnuncio, indicePestanas)).toContain('contexto="detalle del partido"')
   })
 })

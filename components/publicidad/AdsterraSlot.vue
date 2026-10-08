@@ -19,14 +19,13 @@ const documentoAnuncio = computed(() => {
   return crearDocumentoAdsterra(propiedades.formato)
 })
 
-const altoMarco = computed(() => propiedades.formato === 'leaderboard' ? 90 * escala.value : 280)
 const estiloMarco = computed(() => propiedades.formato === 'leaderboard'
   ? { width: '728px', height: '90px', transform: `translateX(-50%) scale(${escala.value})` }
   : { width: '100%', height: '280px' })
 
 function actualizarEscala() {
   const anchoDisponible = espacio.value?.clientWidth || 728
-  escala.value = Math.min(1, Math.max(0.42, anchoDisponible / 728))
+  escala.value = Math.min(1, anchoDisponible / 728)
 }
 
 function observarEspacio() {
@@ -78,7 +77,7 @@ onBeforeUnmount(() => {
     :aria-label="`Publicidad de Adsterra: ${contexto}`"
   >
     <p class="espacio-adsterra__rotulo">Publicidad</p>
-    <div class="espacio-adsterra__marco" :style="{ height: `${altoMarco}px` }">
+    <div class="espacio-adsterra__marco">
       <iframe
         v-if="documentoAnuncio"
         :key="`${formato}-${publicidadAutorizada ? 'permitido' : 'bloqueado'}`"
@@ -119,6 +118,14 @@ onBeforeUnmount(() => {
   position: relative;
   width: 100%;
   overflow: hidden;
+}
+
+.espacio-adsterra--leaderboard .espacio-adsterra__marco {
+  aspect-ratio: 728 / 90;
+}
+
+.espacio-adsterra--nativo .espacio-adsterra__marco {
+  height: 280px;
 }
 
 .espacio-adsterra iframe {
