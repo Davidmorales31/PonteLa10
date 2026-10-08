@@ -11,6 +11,7 @@ import {
   LockKeyhole,
   LogOut,
   Menu,
+  NotebookPen,
   RadioTower,
   Tv,
   Server,
@@ -110,6 +111,12 @@ const entradasPanel: EntradaPanel[] = [
     ruta: '/admin/search-console',
     icono: FileSpreadsheet,
     permiso: 'contenido.verBorradores'
+  },
+  {
+    etiqueta: 'Revisión de contenido',
+    ruta: '/admin/poda-contenido',
+    icono: NotebookPen,
+    permiso: 'contenido.revisar'
   }
 ]
 
