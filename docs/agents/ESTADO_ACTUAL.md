@@ -1,5 +1,53 @@
 # Estado actual de Pont3la10
 
+## HU-DIST-01/02/03 — distribución editorial (Production, 2026-10-08)
+
+- RSS público (PR #120, merge `a49e9b97d09bf22d0e542df3312cea13959f65fa`),
+  metadatos/enlaces para compartir partidos y equipos (PR #121, merge
+  `54d42e9de6fea9c996a2cbbfef0ffb6de0b2aa1a`) y landing social de partidos
+  (PR #122, merge `d0dc4722316916447f0203e12377b275c0481f18`) están integrados.
+  El despliegue Production `6933703077` quedó `success`; RSS, fichas y landing
+  responden desde las rutas públicas.
+
+## HU-RET-01/02/03 — seguimiento de entidades (Production, 2026-10-08)
+
+- PR #123 permite seguir equipos; PR #124, jugadores colombianos públicos en
+  Europa; PR #125, competiciones colombianas. Las preferencias se guardan en el
+  navegador. La portada lee únicamente el resumen público existente, sin
+  llamadas a proveedores deportivos.
+- Merges: `c4f3e84c0c9f701541569a594a78f6ee19f5db27`,
+  `691f09559208fd20bf9e2329881bad34944990fe` y
+  `de330b12986ac1ac7e2296e9f68d42f2a3b5e198`. Deployments Production
+  `6934218275`, `6934658515` y `6935286912` terminaron `success`; rutas de
+  portada, competición y APIs públicas respondieron HTTP 200.
+- Las fichas de jugadores no inventan relaciones editoriales: la comprobación
+  Production encontró cero artículos confirmados para tres perfiles y la UI lo
+  expresa como ausencia de cobertura relacionada.
+- Handoff: `docs/agents/handoffs/2026-10-08-hu-ret01-03-seguimiento.md`.
+
+## HU-MON-01 — publicidad subordinada a la experiencia (Production, 2026-10-08)
+
+- En el detalle de partido, equipos, marcador y metadatos aparecen antes del
+  leaderboard; la publicidad sigue después del dato principal, con permiso
+  explícito, carga diferida, iframe aislado y sin popups.
+- El leaderboard reserva su proporción 728:90 con CSS antes de montar el iframe
+  y escala al ancho disponible sin el recorte que podía ocurrir en pantallas
+  estrechas. El formato nativo mantiene una reserva de 280 px.
+- PR #126 se integró como `351d2dd162154862afacbfd993a65fdd0873183c` y Vercel
+  Production `6935787492` quedó `success`. Smoke: `/partidos-hoy` HTTP 200 en
+  Production; su CSS servido incluye la proporción responsive. No se cambió
+  consentimiento, preferencias, proveedor ni densidad de anuncios.
+- Validación local y CI: lint, suite 110 archivos/559 pruebas, typecheck, build
+  Vercel y Lighthouse móvil pasan. La vista previa requería autenticación y el
+  conector Vercel devolvió 403; no se alteró Deployment Protection. La CSS de
+  Production se verificó por HTTP, aunque no se completó una captura visual
+  autenticada del anuncio.
+- HU-MON-02 ya estaba integrada por PR #105 (`2c696bf4d59aef6947a28ee647a8368ad0678fec`):
+  inventario contextual para Liga, Selección, agenda, Europa y otros perfiles,
+  patrocinio identificado y separación editorial/comercial. El despliegue
+  `6935787492` incluye ese trabajo.
+- Handoff: `docs/agents/handoffs/2026-10-08-hu-mon01-ad-ux.md`.
+
 ## HU-PERF-04 — presupuesto inicial de Core Web Vitals (Production, 2026-10-08)
 
 - `lighthouserc.cjs` define cuatro rutas públicas, emulación móvil y tres
