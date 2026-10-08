@@ -73,7 +73,7 @@
   sidecars descritos arriba quedaron en producción. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-perf02-image-optimization.md`.
 
-## HU-PERF-03 — caché de hubs y entidades (validado localmente; release pendiente, 2026-10-07)
+## HU-PERF-03 — caché de hubs y entidades (corrección de caché CDN en curso, 2026-10-07)
 
 - Se centralizó la política de CDN por tipo de dato público: artículos,
   equipos, competiciones, tabla, sitemaps y partidos programados, en vivo,
@@ -84,14 +84,20 @@
   partido calcula TTL desde su estado actual en vez de una caché Nitro fija.
   La imagen de partido incluye el estado en su clave de caché para no mantener
   un cartel “En vivo” tras pasar a actualización pendiente.
-- Validación local: lint, typecheck, build, `git diff --check`, suite completa
-  (94 archivos/479 pruebas) y tres pruebas relacionadas (18/18). Smoke del
-  build: páginas de artículos, Liga Colombiana y sitemap HTTP 200 con CDN TTL
-  esperado; cookie de sesión de prueba produce `private, no-store`. Revisión de
-  seguridad sin hallazgos P0–P2. Build conserva el aviso upstream `[DEP0155]`
-  de `@vue/shared`.
-- Pendiente: PR, checks de CI/Vercel Preview, integrar en `main` y verificar
-  cabeceras en Production. Handoff:
+- PR #101 se integró como `64005429dbd7a0a400db52872bec2e096b2def6b`; CI y
+  Vercel Preview/Production reportaron success. Los endpoints en Production
+  devuelven los TTL configurados, pero dos solicitudes repetidas permanecen
+  `x-vercel-cache: MISS`: el `Vary: Cookie` agregado inicialmente impide el
+  almacenamiento CDN de Vercel (cambio de plataforma del 2026-09-30).
+- Corrección local: las respuestas públicas quitan Cookie/Authorization de
+  `Vary`; las respuestas con sesión, autorización o Set-Cookie mantienen
+  `private, no-store`. Lint, typecheck, build, suite completa (94 archivos/479
+  pruebas), prueba relacionada (4/4) y smoke local pasan. El smoke confirmó que
+  una cookie de consentimiento conserva el camino público y una cookie de
+  sesión de prueba queda `no-store`. Revisión del ajuste Vary sin hallazgos
+  P0–P2.
+- Pendiente: integrar la corrección y verificar `x-vercel-cache: HIT` en
+  Production antes de cerrar HU-PERF-03. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-perf03-cache.md`.
 
 ## HU-ED-26 — actualizar antes de crear (Production, 2026-10-07)

@@ -38,6 +38,9 @@ describe('políticas de caché del contenido público', () => {
   it('combina Vary sin duplicar encabezados y conserva el comodín', () => {
     expect(combinarVary('Accept-Encoding, cookie', ['Cookie', 'Authorization']))
       .toBe('Accept-Encoding, cookie, Authorization')
+    expect(combinarVary('Accept-Encoding, Cookie, Authorization', [], ['cookie', 'authorization']))
+      .toBe('Accept-Encoding')
+    expect(combinarVary('Cookie', [], ['cookie'])).toBe('')
     expect(combinarVary('*', ['Cookie'])).toBe('*')
   })
 })

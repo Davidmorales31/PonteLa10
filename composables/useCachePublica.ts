@@ -14,12 +14,19 @@ export function useCachePublica(tipo: TipoCachePublica): boolean {
   const vary = useResponseHeader('Vary')
   const setCookie = useResponseHeader('Set-Cookie')
 
-  vary.value = combinarVary(vary.value, ['Cookie', 'Authorization'])
   const puedeCachear = solicitudPuedeUsarCachePublica({
     cookie: solicitud.cookie,
     authorization: solicitud.authorization,
     setCookie: Boolean(setCookie.value)
   })
+
+  // Las variantes autenticadas son no-store; las públicas deben evitar Vary:
+  // Cookie para que Vercel pueda guardarlas en su CDN.
+  vary.value = combinarVary(
+    vary.value,
+    puedeCachear ? [] : ['Cookie', 'Authorization'],
+    puedeCachear ? ['Cookie', 'Authorization'] : []
+  )
 
   if (!puedeCachear) {
     cacheControl.value = 'private, no-store'
