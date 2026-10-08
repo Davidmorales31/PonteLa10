@@ -140,6 +140,11 @@ useSeoPont3la10(() => ({
         <p>Esta sección solo muestra publicaciones etiquetadas y verificadas. Mientras se actualiza, explora la actualidad internacional.</p>
         <NuxtLink class="boton-primario" to="/articulos?categoria=futbol-mundial">Ver fútbol internacional</NuxtLink>
       </div>
+      <PublicidadAdsterraSlot
+        v-if="ultimasNoticias.length >= 6"
+        formato="leaderboard"
+        contexto="colombianos en Europa · archivo de actualidad"
+      />
       <p class="texto-seo-europa">Sigue el recorrido de los futbolistas colombianos en Europa, sus goles, convocatorias y partidos en ligas nacionales, Champions League, Europa League y otros torneos continentales. La cobertura se amplía a partir de noticias confirmadas y no de una lista fija de nombres.</p>
     </section>
   </main>

@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 const paginaCompeticion = readFileSync(resolve(process.cwd(), 'components/publico/PaginaCompeticionPublica.vue'), 'utf8')
 const paginaJugador = readFileSync(resolve(process.cwd(), 'pages/jugadores/[slug].vue'), 'utf8')
 const paginaResultadosEnVivo = readFileSync(resolve(process.cwd(), 'pages/resultados/en-vivo.vue'), 'utf8')
+const paginaEuropa = readFileSync(resolve(process.cwd(), 'pages/colombianos-en-europa.vue'), 'utf8')
 const componenteAnuncio = readFileSync(resolve(process.cwd(), 'components/publicidad/AdsterraSlot.vue'), 'utf8')
 
 describe('HU-MON-01/02 · anuncios contextuales', () => {
@@ -44,6 +45,19 @@ describe('HU-MON-01/02 · anuncios contextuales', () => {
     expect(indiceEnlace).toBeGreaterThan(indiceAnuncio)
     expect(bloqueAnuncio).toContain('v-if="partidosEnVivo.length"')
     expect(bloqueAnuncio).toContain('contexto="resultados en vivo"')
+  })
+
+  it('añade un segundo anuncio de Europa solo tras un archivo editorial amplio', () => {
+    const indiceListado = paginaEuropa.indexOf('class="grilla-noticias-medio"')
+    const indiceAnuncio = paginaEuropa.indexOf('<PublicidadAdsterraSlot', indiceListado)
+    const indiceTextoSeo = paginaEuropa.indexOf('class="texto-seo-europa"')
+    const bloqueAnuncio = paginaEuropa.slice(indiceAnuncio, indiceTextoSeo)
+
+    expect(indiceListado).toBeGreaterThanOrEqual(0)
+    expect(indiceAnuncio).toBeGreaterThan(indiceListado)
+    expect(indiceTextoSeo).toBeGreaterThan(indiceAnuncio)
+    expect(bloqueAnuncio).toContain('v-if="ultimasNoticias.length >= 6"')
+    expect(bloqueAnuncio).toContain('contexto="colombianos en Europa · archivo de actualidad"')
   })
 
   it('mantiene el consentimiento, la reserva del marco y la carga diferida del proveedor', () => {

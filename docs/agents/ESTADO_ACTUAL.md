@@ -222,6 +222,34 @@
   tabla aún no tiene filas.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-gro04-oportunidades.md`.
 
+## HU-GRO-01 y HU-MON-02 — guía de medición y espacio de Europa (2026-10-07)
+
+- La instrumentación existente distingue `page_type`, mantiene eventos
+  internos específicos y omite query strings y términos de búsqueda. Se
+  amplió la cobertura unitaria para equipos, competiciones y jugadores, y se
+  agregó `docs/agents/GUIA_GA4_DEBUGVIEW.md` con el recorrido de validación.
+- La sesión Google accesible no mostró una propiedad Pont3la10 para medir; la
+  sesión de Search Console tampoco tiene una propiedad verificada del sitio.
+  No se enviaron eventos de prueba ni se inventó el baseline: la recepción real
+  en DebugView y la extracción de los últimos 28 días siguen pendientes de una
+  propiedad accesible y verificada.
+- El inventario comercial ya tiene espacios contextuales en Liga, Selección,
+  agenda diaria, resultados, fichas de partido, equipos, competiciones,
+  futbolistas y noticias. Se añadió un segundo leaderboard al archivo de
+  Colombianos en Europa solo si hay al menos seis noticias además de la
+  destacada; aparece después de la lista, conserva consentimiento, lazy-load,
+  aislamiento y espacio reservado. No se añadió publicidad si el hub tiene
+  poca cobertura ni se cambió la separación editorial/comercial.
+- Validaciones: prueba focalizada (2 archivos/12 pruebas), suite completa (94
+  archivos/481 pruebas), lint, typecheck, build Vercel y `git diff --check`
+  pasan. El build conserva el aviso upstream `[DEP0155]` de `@vue/shared`.
+  En Vercel Preview, con diez publicaciones, se verificó en escritorio el tema
+  azul y blanco; tras el consentimiento aparecieron ambos slots y el segundo
+  iframe se cargó al llegar al bloque final. La creatividad del proveedor quedó
+  vacía en Preview, así que no se afirma que Adsterra haya llenado el anuncio.
+  No se revisó móvil.
+- Handoff: `docs/agents/handoffs/2026-10-07-hu-gro01-debugview-y-mon02-inventario.md`.
+
 ## HU-ED-23 — fecha de actualización editorial (Production, 2026-10-07)
 
 - El artículo conserva su `published_at` original y registra por separado
