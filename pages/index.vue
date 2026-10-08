@@ -3,12 +3,18 @@ import { categoriasSitio } from '~/data/sitioPublico'
 import PublicidadHouseAd from '~/components/publicidad/HouseAd.vue'
 import BotonSeguirEquipo from '~/components/publico/BotonSeguirEquipo.vue'
 import BotonSeguirJugador from '~/components/publico/BotonSeguirJugador.vue'
+import BotonSeguirCompeticion from '~/components/publico/BotonSeguirCompeticion.vue'
 import { buscarPerfilJugadorEuropa } from '~/data/jugadoresColombianosEuropa'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { ArticuloResumen } from '~/types/editorial'
 import type { RespuestaResultados } from '~/types/resultados'
 import type { PerfilJugadorEuropa } from '~/data/jugadoresColombianosEuropa'
 import type { EquipoSeguidoResumen } from '~/types/seguimientoEquipos'
+import type { CompeticionSeguidaPortada } from '~/utils/seguimientoCompeticiones'
+import {
+  crearResumenCompeticionSeguida,
+  crearResumenCompeticionSinDatos
+} from '~/utils/seguimientoCompeticiones'
 import { esResumenArticuloPublico } from '~/utils/articulosPublicos'
 
 type ArticuloPortada = ArticuloResumen & { fechaPublicacion: string }
@@ -145,6 +151,38 @@ watch([seguimientoJugadoresHidratado, jugadoresSeguidos], async ([hidratado, slu
   }
 }, { immediate: true, deep: true })
 
+const { competicionesSeguidas, seguimientoCompeticionesHidratado } = useSeguimientoCompeticiones()
+const actualidadCompeticionesSeguidas = ref<CompeticionSeguidaPortada[]>([])
+const cargandoCompeticionesSeguidas = ref(false)
+let secuenciaCargaCompeticionesSeguidas = 0
+
+watch([seguimientoCompeticionesHidratado, competicionesSeguidas], async ([hidratado, slugs]) => {
+  if (!hidratado) return
+
+  const secuencia = ++secuenciaCargaCompeticionesSeguidas
+  if (!slugs.length) {
+    actualidadCompeticionesSeguidas.value = []
+    cargandoCompeticionesSeguidas.value = false
+    return
+  }
+
+  cargandoCompeticionesSeguidas.value = true
+  const respuestas = await Promise.all(slugs.map(async (slug) => {
+    try {
+      const ficha = await $fetch<unknown>(`/api/competiciones/${encodeURIComponent(slug)}`)
+      return crearResumenCompeticionSeguida(slug, ficha)
+        || crearResumenCompeticionSinDatos(slug)
+    } catch {
+      return crearResumenCompeticionSinDatos(slug)
+    }
+  }))
+
+  if (secuencia === secuenciaCargaCompeticionesSeguidas) {
+    actualidadCompeticionesSeguidas.value = respuestas.filter((respuesta): respuesta is CompeticionSeguidaPortada => respuesta !== null)
+    cargandoCompeticionesSeguidas.value = false
+  }
+}, { immediate: true, deep: true })
+
 function fechaEquipoSeguido(valor: string) {
   if (!Number.isFinite(Date.parse(valor))) return 'Fecha por confirmar'
   return new Intl.DateTimeFormat('es-CO', {
@@ -234,6 +272,49 @@ useSeoPont3la10(() => ({
           </article>
         </div>
         <p v-else class="estado-seguimiento-home">No fue posible cargar la actualidad de tus equipos. Puedes abrir sus fichas para ver el calendario y las noticias.</p>
+      </section>
+
+      <section
+        v-if="seguimientoCompeticionesHidratado && competicionesSeguidas.length"
+        class="medio-seccion medio-seguimiento-competiciones"
+        aria-labelledby="titulo-competiciones-seguidas"
+      >
+        <div class="medio-encabezado">
+          <div>
+            <h2 id="titulo-competiciones-seguidas">Tus competiciones</h2>
+            <p>Marcadores y próximos partidos de los torneos que sigues.</p>
+          </div>
+          <NuxtLink to="/liga-colombiana">Explorar fútbol colombiano <span aria-hidden="true">→</span></NuxtLink>
+        </div>
+        <p v-if="cargandoCompeticionesSeguidas && !actualidadCompeticionesSeguidas.length" class="estado-seguimiento-home" role="status">Cargando tus competiciones…</p>
+        <div v-else-if="actualidadCompeticionesSeguidas.length" class="grilla-competiciones-seguidas-home">
+          <article v-for="competicion in actualidadCompeticionesSeguidas" :key="competicion.slug" class="tarjeta-competicion-seguida-home">
+            <header>
+              <div>
+                <span class="etiqueta-competicion-seguida-home">FÚTBOL COLOMBIANO</span>
+                <NuxtLink class="nombre-competicion-seguida-home" :to="`/competiciones/${competicion.slug}`">{{ competicion.nombre }}</NuxtLink>
+              </div>
+              <BotonSeguirCompeticion compacto :slug="competicion.slug" :nombre="competicion.nombre" />
+            </header>
+            <p v-if="competicion.partidoEnVivo" class="partido-competicion-seguida-home en-vivo">
+              <span>EN VIVO</span>
+              <NuxtLink :to="`/partidos/${encodeURIComponent(competicion.partidoEnVivo.slug)}`">{{ competicion.partidoEnVivo.local }} {{ competicion.partidoEnVivo.golesLocal ?? '—' }}–{{ competicion.partidoEnVivo.golesVisitante ?? '—' }} {{ competicion.partidoEnVivo.visitante }}</NuxtLink>
+            </p>
+            <p v-else-if="competicion.proximoPartido" class="partido-competicion-seguida-home">
+              <span>PRÓXIMO · {{ fechaEquipoSeguido(competicion.proximoPartido.fechaIso) }}</span>
+              <NuxtLink :to="`/partidos/${encodeURIComponent(competicion.proximoPartido.slug)}`">{{ competicion.proximoPartido.local }} vs {{ competicion.proximoPartido.visitante }}</NuxtLink>
+            </p>
+            <p v-else-if="competicion.resultadoReciente" class="partido-competicion-seguida-home">
+              <span>RESULTADO RECIENTE</span>
+              <NuxtLink :to="`/partidos/${encodeURIComponent(competicion.resultadoReciente.slug)}`">{{ competicion.resultadoReciente.local }} {{ competicion.resultadoReciente.golesLocal ?? '—' }}–{{ competicion.resultadoReciente.golesVisitante ?? '—' }} {{ competicion.resultadoReciente.visitante }}</NuxtLink>
+            </p>
+            <p v-else class="estado-seguimiento-home">
+              {{ competicion.error ? 'No fue posible cargar el calendario ahora.' : 'No hay partidos públicos confirmados para mostrar.' }}
+            </p>
+            <NuxtLink class="enlace-competicion-seguida-home" :to="`/competiciones/${competicion.slug}`">Ver calendario, tabla y noticias <span aria-hidden="true">→</span></NuxtLink>
+          </article>
+        </div>
+        <p v-else class="estado-seguimiento-home">No fue posible cargar tus competiciones ahora. Puedes volver a sus fichas para consultar el calendario.</p>
       </section>
 
       <section
@@ -352,6 +433,23 @@ useSeoPont3la10(() => ({
 .medio-seguimiento-equipos { border: 1px solid #294467; border-radius: 12px; background: #0c2443; padding: 20px; }
 .medio-seguimiento-equipos > .medio-encabezado { margin-bottom: 16px; }
 .medio-seguimiento-equipos > .medio-encabezado p { margin: 5px 0 0; color: #a8bbd5; font-size: .8rem; }
+.medio-seguimiento-competiciones { border: 1px solid #294467; border-radius: 12px; background: #0c2443; padding: 20px; }
+.medio-seguimiento-competiciones > .medio-encabezado { margin-bottom: 16px; }
+.medio-seguimiento-competiciones > .medio-encabezado p { margin: 5px 0 0; color: #a8bbd5; font-size: .8rem; }
+.grilla-competiciones-seguidas-home { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tarjeta-competicion-seguida-home { min-width: 0; border: 1px solid #294467; border-radius: 10px; background: #07182f; padding: 14px; }
+.tarjeta-competicion-seguida-home > header { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+.tarjeta-competicion-seguida-home > header > div { display: grid; min-width: 0; gap: 4px; }
+.etiqueta-competicion-seguida-home { color: #a8bbd5; font-size: .62rem; font-weight: 800; letter-spacing: .06em; }
+.nombre-competicion-seguida-home { color: #fff; font-size: .98rem; font-weight: 800; text-decoration: none; }
+.nombre-competicion-seguida-home:hover, .enlace-competicion-seguida-home:hover { color: #ffd800; }
+.tarjeta-competicion-seguida-home :deep(.boton-seguimiento-competicion) { min-height: 32px; padding: 5px 9px; }
+.partido-competicion-seguida-home { display: grid; gap: 5px; margin: 14px 0 0; border-top: 1px solid #294467; padding-top: 12px; }
+.partido-competicion-seguida-home > span { color: #9bc8ff; font-size: .63rem; font-weight: 850; letter-spacing: .06em; }
+.partido-competicion-seguida-home.en-vivo > span { color: #ff8f98; }
+.partido-competicion-seguida-home a { color: #e7edf6; font-size: .8rem; font-weight: 650; line-height: 1.45; }
+.partido-competicion-seguida-home a:hover { color: #ffd800; }
+.enlace-competicion-seguida-home { display: inline-flex; justify-content: space-between; gap: 12px; width: 100%; margin-top: 12px; border-top: 1px solid #294467; padding-top: 11px; color: #9bc8ff; font-size: .76rem; font-weight: 700; text-decoration: none; }
 .grilla-equipos-seguidos-home { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .tarjeta-equipo-seguido-home { min-width: 0; border: 1px solid #294467; border-radius: 10px; background: #07182f; padding: 14px; }
 .tarjeta-equipo-seguido-home > header { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -393,6 +491,7 @@ useSeoPont3la10(() => ({
   .medio-edicion { font-size: .55rem; letter-spacing: .07em; }
   .medio-apertura, .medio-actualidad { grid-template-columns: 1fr; }
   .grilla-equipos-seguidos-home { grid-template-columns: 1fr; }
+  .grilla-competiciones-seguidas-home { grid-template-columns: 1fr; }
   .medio-secundarias { gap: 10px; }
   .medio-actualidad { margin-top: 24px; gap: 24px; }
   .medio-resultados { grid-template-columns: 1fr; }
