@@ -76,7 +76,8 @@ describe('caché del calendario público para páginas SEO', () => {
       local: 'Cúcuta Deportivo',
       visitante: 'Deportivo Pereira',
       golesLocal: 2,
-      fuenteOficialUrl: fixture.official_source_url
+      fuenteOficialUrl: fixture.official_source_url,
+      verificadoEn: copiaGoalApi.checked_at
     })
     expect(administrable[0]?.identidadFuente).toEqual({
       competenciaSlug: 'liga-betplay',
@@ -85,6 +86,8 @@ describe('caché del calendario público para páginas SEO', () => {
       idProveedor: 'goal-fixture-77'
     })
     expect(primera[0]).not.toHaveProperty('identidadFuente')
+    expect(primera[0]).not.toHaveProperty('provider')
+    expect(primera[0]).not.toHaveProperty('provider_fixture_id')
     expect(primera[1]).toMatchObject({
       slug: 'cucuta-deportivo-vs-deportivo-pereira-liga-betplay-2027-i',
       slugsAlternos: [

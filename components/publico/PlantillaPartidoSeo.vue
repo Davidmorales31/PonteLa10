@@ -95,8 +95,23 @@ function nombrePais(codigo: string) {
 
 function fechaVerificacion(valor: string) {
   const fecha = new Date(valor)
-  if (!Number.isFinite(fecha.getTime())) return 'Verificada'
-  return `Verificada el ${new Intl.DateTimeFormat('es-CO', { dateStyle: 'medium', timeZone: 'America/Bogota' }).format(fecha)}`
+  if (!Number.isFinite(fecha.getTime())) return 'Fecha de verificación no disponible'
+  const fechaHora = new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'America/Bogota'
+  }).format(fecha)
+  return `Verificada el ${fechaHora} (hora de Colombia)`
+}
+
+function fechaHoraActualizacion(valor: string) {
+  const fecha = new Date(valor)
+  if (!Number.isFinite(fecha.getTime())) return 'Fecha de consulta no disponible'
+  return new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'America/Bogota'
+  }).format(fecha)
 }
 
 function modoEstadoParaEtiqueta(estado: string, modo: 'donde-ver' | 'como-quedo') {
@@ -164,7 +179,7 @@ onMounted(() => {
       <h1 v-if="modo === 'partido'">{{ partido.local }} vs {{ partido.visitante }}: fecha, hora y resultado</h1>
       <h1 v-else-if="modo === 'donde-ver'">¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</h1>
       <h1 v-else>Cómo quedó {{ partido.local }} vs {{ partido.visitante }}</h1>
-      <p v-if="modo === 'partido'">Horario de Colombia, estado y marcador verificado en una sola ficha. La programación de transmisión solo se muestra cuando tiene confirmación oficial.</p>
+      <p v-if="modo === 'partido'">Horario de Colombia, estado y marcador en una sola ficha, con fuente y hora de consulta cuando están disponibles. La programación de transmisión solo se muestra cuando tiene confirmación oficial.</p>
       <p v-else-if="modo === 'donde-ver'">Horario de Colombia, estadio y canales oficiales disponibles para el partido.</p>
       <p v-else>Consulta el estado del encuentro y el marcador publicado para {{ partido.local }} y {{ partido.visitante }}.</p>
     </header>
@@ -234,6 +249,24 @@ onMounted(() => {
         @click="registrarEvento('channel_click')"
       >Consultar programación oficial</a>
       <div v-else class="nota-marcador-partido">El sitio no transmite partidos. Mostramos solo información editorial publicada.</div>
+      <section class="fuente-verificacion-partido" aria-label="Fuente y actualización de los datos">
+        <strong>Fuente y actualización</strong>
+        <p>
+          Datos del encuentro consultados por última vez el
+          <time :datetime="partido.verificadoEn">{{ fechaHoraActualizacion(partido.verificadoEn) }}</time>
+          (hora de Colombia).
+        </p>
+        <a
+          v-if="partido.fuenteOficialUrl"
+          :href="partido.fuenteOficialUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >Fuente oficial del calendario: DIMAYOR</a>
+        <p v-else>
+          Este registro no incluye un enlace de origen específico.
+          <a :href="urlProgramacionOficial" target="_blank" rel="noopener noreferrer">Consulta el calendario oficial de DIMAYOR</a>.
+        </p>
+      </section>
       <p v-if="modo === 'donde-ver'" class="nota-clic-promocional">Con anuncios autorizados, el primer clic en el reproductor y luego cada cuatro clics adicionales abre un enlace patrocinado.</p>
     </section>
 
@@ -345,6 +378,10 @@ onMounted(() => {
 .detalles-cartel-partido span + span::before { content: '•'; margin-right: 14px; }
 .boton-programacion-oficial { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; border: 1px solid #59d9ff; border-radius: 10px; background: #1269a9; color: #fff; padding: 0 24px; font-weight: 900; text-decoration: none; }
 .nota-marcador-partido { color: #c3d4e8; text-align: center; }
+.fuente-verificacion-partido { display: grid; justify-items: center; gap: 5px; max-width: 720px; border: 1px solid #294362; border-radius: 10px; background: rgba(4, 18, 36, .55); padding: 12px 16px; color: #b4c7dd; text-align: center; line-height: 1.5; }
+.fuente-verificacion-partido strong { color: #83dff6; }
+.fuente-verificacion-partido p { margin: 0; }
+.fuente-verificacion-partido a { color: #83dff6; font-weight: 800; }
 .contenido-partido-seo-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .8fr); gap: 24px; margin-top: 28px; }
 .articulo-partido-seo, .lateral-partido-seo { display: grid; align-content: start; gap: 20px; min-width: 0; }
 .bloque-datos-partido-seo, .preguntas-partido-seo, .contexto-partido-seo, .noticias-relacionadas-partido { border: 1px solid #294362; border-radius: 12px; background: #10243d; padding: 20px; }
@@ -374,6 +411,8 @@ body.tema-publico-blanco .bloque-datos-partido-seo, body.tema-publico-blanco .pr
 body.tema-publico-blanco .bloque-datos-partido-seo dl div, body.tema-publico-blanco .estado-marcador-partido { background: #f1f5f9; }
 body.tema-publico-blanco .bloque-datos-partido-seo dt, body.tema-publico-blanco .preguntas-partido-seo a, body.tema-publico-blanco .enlaces-mutua-partido a { color: #145996; }
 body.tema-publico-blanco .bloque-datos-partido-seo > p, body.tema-publico-blanco .contexto-partido-seo p, body.tema-publico-blanco .preguntas-partido-seo p, body.tema-publico-blanco .noticias-relacionadas-partido > p, body.tema-publico-blanco .noticias-relacionadas-partido li p { color: #586980; }
+body.tema-publico-blanco .fuente-verificacion-partido { border-color: #dce5f1; background: #f8fafc; color: #586980; }
+body.tema-publico-blanco .fuente-verificacion-partido strong, body.tema-publico-blanco .fuente-verificacion-partido a { color: #145996; }
 body.tema-publico-blanco .noticias-relacionadas-partido li a { color: #13253d; }
 @media (max-width: 760px) { .contenido-partido-seo-grid { grid-template-columns: minmax(0, 1fr); } .bloque-datos-partido-seo dl { grid-template-columns: minmax(0, 1fr); } .capa-datos-reproductor { min-height: 22vw; } }
 @media (max-width: 500px) { .equipos-cartel-partido { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; } .equipo-cartel-partido strong { font-size: .88rem; } .equipo-cartel-partido img, .escudo-cartel-fallback { width: 68px; height: 68px; border-width: 4px; padding: 9px; } .centro-cartel-partido span { font-size: .82rem; } .marca-cartel-partido { font-size: 1.1rem; } .detalles-cartel-partido { font-size: .84rem; } }
