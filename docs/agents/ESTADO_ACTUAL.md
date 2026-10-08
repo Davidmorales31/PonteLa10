@@ -15,23 +15,26 @@
   datos de Supabase. Handoff:
   `docs/agents/handoffs/2026-10-08-hu-trust05-fuentes-hora.md`.
 
-## HU-OPS-02 — monitoreo SEO de 404 y redirects (en desarrollo, 2026-10-08)
+## HU-OPS-02 — monitoreo SEO de 404 y redirects (Production, 2026-10-08)
 
-- Implementación preparada en `codex/hu-ops02-404-redirects`: captura solo
-  404 públicos GET/HEAD en logs estructurados de Nitro; omite consultas,
+- PR #109 se integró a `main` como `42aa78e25ab5fdf57f331c6da095cdf3afc7d94e`;
+  lint, suite (97 archivos/506 pruebas), typecheck, build y Vercel Production
+  pasaron. `/partidos-hoy` respondió HTTP 200; la ruta sintética de prueba
+  devolvió 404.
+- El logger solo registra 404 públicos GET/HEAD en Nitro; omite consultas,
   cookies, IP y rutas privadas; conserva el referer únicamente como ruta del
-  mismo origen. El workflow de GitHub audita sitemaps y cadenas/aliases cada
-  semana y manualmente. No agrega tablas, claves ni migraciones de Supabase.
-- Límites: 8 solicitudes simultáneas, hasta 5.000 URLs públicas, 10.000 `<loc>`,
-  10 MB por sitemap y 50 MB acumulados; exige el origen HTTPS exacto
-  `www.pont3la10.com`. Los dos aliases se prueban para una ficha representativa,
-  no para todos los partidos. Esta limitación debe conservarse en el reporte.
-- Validación local final: lint, typecheck, build y `git diff --check`; suite
-  completa 97 archivos/506 pruebas. Smoke del Nitro compilado: una ruta 404
-  devolvió HTTP 404 y registró solo `/hu-ops02-smoke` y `/liga-colombiana` como
-  rutas normalizadas. Revisión estática de seguridad sin hallazgos P0–P2.
-- Estado: PR/Preview/Production y primera ejecución del workflow pendientes.
-  Handoff: `docs/agents/handoffs/2026-10-08-hu-ops02-404-sitemap.md`.
+  mismo origen. No agrega tablas, claves ni migraciones de Supabase.
+- La primera auditoría de producción completó con éxito:
+  [workflow 37729409803](https://github.com/Davidmorales31/PonteLa10/actions/runs/37729409803),
+  10 sitemaps, 1.032 URLs comprobadas, 2 aliases representativos correctos,
+  0 incidencias y 0 URLs rotas reportadas. Los aliases no se prueban para cada
+  partido. Límites de rastreo: 8 solicitudes simultáneas, hasta 5.000 URLs,
+  10.000 `<loc>`, 10 MB por sitemap y 50 MB agregados; allowlist HTTPS exacta
+  `www.pont3la10.com`.
+- Smoke del Nitro compilado registró solo `/hu-ops02-smoke` y `/liga-colombiana`
+  como rutas normalizadas. No se tuvo acceso a los runtime logs de Vercel desde
+  la integración conectada; no se afirma haberlos inspeccionado.
+- Handoff: `docs/agents/handoffs/2026-10-08-hu-ops02-404-sitemap.md`.
 
 ## HU-TRUST-02/03/04 — páginas de transparencia (Production, 2026-10-07)
 

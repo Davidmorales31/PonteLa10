@@ -29,6 +29,7 @@ export interface EntidadCandidataSeo {
   slug: string
   nombre: string
   ruta: string
+  cluster?: string
   /** Cada grupo requiere que todas sus frases aparezcan; basta con un grupo. */
   coincidencias: string[][]
   idArticulo?: string
@@ -70,18 +71,23 @@ interface FilaRelacionArticuloSeo {
   target_article_id: string
 }
 
+export interface PaginaHuerfanaSeo {
+  tipo: TipoEntidadSeo
+  slug: string
+  nombre: string
+  ruta: string
+  enlacesEntrantes: number
+  cluster: string
+  estado: 'huerfana'
+}
+
 export interface ResultadoDetectorHuerfanasSeo {
   paginasPublicas: number
   paginasContextualmenteEnlazadas: number
   paginasSinEnlaceContextual: number
   coberturaArticulosCompleta: boolean
   limiteArticulos: number
-  paginas: Array<{
-    tipo: TipoEntidadSeo
-    slug: string
-    nombre: string
-    ruta: string
-  }>
+  paginas: PaginaHuerfanaSeo[]
 }
 
 const limiteArticulosCatalogo = 1000
@@ -328,7 +334,13 @@ export async function detectarPaginasSeoSinEnlacesContextuales(
   const nodos = new Map(catalogo.entidades.map(entidad => [
     claveEntidad(entidad.tipo, entidad.slug), entidad
   ]))
-  const entradas = new Set<string>()
+  const entradasPorPagina = new Map<string, Set<string>>()
+  const registrarEnlace = (origen: string, destino: string) => {
+    if (!origen || origen === destino || !nodos.has(origen) || !nodos.has(destino)) return
+    const entradas = entradasPorPagina.get(destino) || new Set<string>()
+    entradas.add(origen)
+    entradasPorPagina.set(destino, entradas)
+  }
   const articulosPublicos = new Set(catalogo.articulos.map(articulo => articulo.id))
   const slugPorArticulo = new Map(catalogo.articulos.map(articulo => [articulo.id, articulo.slug]))
 
@@ -349,7 +361,7 @@ export async function detectarPaginasSeoSinEnlacesContextuales(
       const slugOrigen = slugPorArticulo.get(fila.article_id)
       const origen = slugOrigen ? claveEntidad('article', slugOrigen) : ''
       const destino = claveEntidad(fila.entity_type, fila.entity_slug)
-      if (origen && nodos.has(destino)) entradas.add(destino)
+      registrarEnlace(origen, destino)
     }
     if (filas.length < 1000) break
     desde += 1000
@@ -359,25 +371,47 @@ export async function detectarPaginasSeoSinEnlacesContextuales(
     .rpc('list_public_editorial_article_links')
   if (!errorEnlacesArticulo) {
     for (const fila of (enlacesArticulo || []) as unknown as FilaRelacionArticuloSeo[]) {
+      const slugOrigen = slugPorArticulo.get(fila.source_article_id)
       const slugDestino = slugPorArticulo.get(fila.target_article_id)
-      if (slugDestino) entradas.add(claveEntidad('article', slugDestino))
+      if (slugOrigen && slugDestino) {
+        registrarEnlace(claveEntidad('article', slugOrigen), claveEntidad('article', slugDestino))
+      }
     }
   }
 
-  agregarRelacionesDeportivasAlGrafo(catalogo, nodos, entradas)
-  const huerfanas = [...nodos.values()]
-    .filter(entidad => !entradas.has(claveEntidad(entidad.tipo, entidad.slug)))
-    .sort((a, b) => a.tipo.localeCompare(b.tipo) || a.nombre.localeCompare(b.nombre, 'es-CO'))
+  agregarRelacionesDeportivasAlGrafo(catalogo, nodos, registrarEnlace)
   const maxResultados = 200
+  const paginasHuerfanas = construirPaginasHuerfanasSeo([...nodos.values()], entradasPorPagina, maxResultados)
 
   return {
     paginasPublicas: nodos.size,
-    paginasContextualmenteEnlazadas: nodos.size - huerfanas.length,
-    paginasSinEnlaceContextual: huerfanas.length,
+    paginasContextualmenteEnlazadas: nodos.size - paginasHuerfanas.total,
+    paginasSinEnlaceContextual: paginasHuerfanas.total,
     coberturaArticulosCompleta: catalogo.articulosCompleto && !errorEnlacesArticulo,
     limiteArticulos: limiteArticulosCatalogo,
-    paginas: huerfanas.slice(0, maxResultados).map(({ tipo, slug, nombre, ruta }) => ({
-      tipo, slug, nombre, ruta
+    paginas: paginasHuerfanas.paginas
+  }
+}
+
+export function construirPaginasHuerfanasSeo(
+  entidades: EntidadCandidataSeo[],
+  entradasPorPagina: ReadonlyMap<string, ReadonlySet<string>>,
+  limite = 200
+): { total: number, paginas: PaginaHuerfanaSeo[] } {
+  const huerfanas = entidades
+    .filter(entidad => !entradasPorPagina.get(claveEntidad(entidad.tipo, entidad.slug))?.size)
+    .sort((a, b) => a.tipo.localeCompare(b.tipo) || a.nombre.localeCompare(b.nombre, 'es-CO'))
+
+  return {
+    total: huerfanas.length,
+    paginas: huerfanas.slice(0, Math.max(0, limite)).map(({ tipo, slug, nombre, ruta, cluster }) => ({
+      tipo,
+      slug,
+      nombre,
+      ruta,
+      enlacesEntrantes: entradasPorPagina.get(claveEntidad(tipo, slug))?.size || 0,
+      cluster: cluster || 'Sin cluster asignado',
+      estado: 'huerfana'
     }))
   }
 }
@@ -405,28 +439,28 @@ export function claveEntidad(tipo: TipoEntidadSeo, slug: string): string {
 function agregarRelacionesDeportivasAlGrafo(
   catalogo: CatalogoEntidadesSeo,
   nodos: Map<string, EntidadCandidataSeo>,
-  entradas: Set<string>
+  registrarEnlace: (origen: string, destino: string) => void
 ) {
   const equiposPorNombre = new Map<string, string>()
   for (const entidad of nodos.values()) {
     if (entidad.tipo === 'team') equiposPorNombre.set(normalizarClaveEquipoLiga(entidad.nombre), entidad.slug)
   }
-  const anadirEntrada = (tipo: TipoEntidadSeo, slug?: string | null) => {
-    if (slug && nodos.has(claveEntidad(tipo, slug))) entradas.add(claveEntidad(tipo, slug))
+  const anadirRelacion = (origen: string, tipo: TipoEntidadSeo, slug?: string | null) => {
+    if (slug) registrarEnlace(origen, claveEntidad(tipo, slug))
   }
 
   for (const partido of catalogo.partidos) {
     const matchKey = claveEntidad('match', partido.slug)
     if (!nodos.has(matchKey)) continue
-    anadirEntrada('team', partido.equipoLocalSlug || equiposPorNombre.get(normalizarClaveEquipoLiga(partido.local)))
-    anadirEntrada('team', partido.equipoVisitanteSlug || equiposPorNombre.get(normalizarClaveEquipoLiga(partido.visitante)))
-    anadirEntrada('competition', partido.competencia)
+    anadirRelacion(matchKey, 'team', partido.equipoLocalSlug || equiposPorNombre.get(normalizarClaveEquipoLiga(partido.local)))
+    anadirRelacion(matchKey, 'team', partido.equipoVisitanteSlug || equiposPorNombre.get(normalizarClaveEquipoLiga(partido.visitante)))
+    anadirRelacion(matchKey, 'competition', partido.competencia)
   }
   for (const entidad of nodos.values()) {
     if (entidad.tipo !== 'team') continue
     const equipo = catalogo.equipos.get(entidad.slug)
     const competencia = equipo?.clasificaciones[0]?.competencia
-    anadirEntrada('competition', competencia)
+    anadirRelacion(claveEntidad('team', entidad.slug), 'competition', competencia)
   }
 
   // La relación inversa equipo/competición y competición/partidos también cuenta como navegación contextual.
@@ -435,11 +469,15 @@ function agregarRelacionesDeportivasAlGrafo(
     if (!nodos.has(matchKey)) continue
     const equipoLocal = partido.equipoLocalSlug || equiposPorNombre.get(normalizarClaveEquipoLiga(partido.local))
     const equipoVisitante = partido.equipoVisitanteSlug || equiposPorNombre.get(normalizarClaveEquipoLiga(partido.visitante))
-    const competenciaDisponible = nodos.has(claveEntidad('competition', partido.competencia))
+    const competenciaKey = claveEntidad('competition', partido.competencia)
+    const competenciaDisponible = nodos.has(competenciaKey)
     const equiposDisponibles = [equipoLocal, equipoVisitante]
       .filter((slug): slug is string => Boolean(slug && nodos.has(claveEntidad('team', slug))))
-    if (competenciaDisponible || equiposDisponibles.length) entradas.add(matchKey)
-    for (const slug of equiposDisponibles) entradas.add(claveEntidad('team', slug))
+    if (competenciaDisponible) registrarEnlace(competenciaKey, matchKey)
+    for (const slug of equiposDisponibles) {
+      registrarEnlace(claveEntidad('team', slug), matchKey)
+      registrarEnlace(matchKey, claveEntidad('team', slug))
+    }
   }
 }
 
@@ -481,7 +519,11 @@ async function obtenerCatalogo(cliente: SupabaseClient): Promise<CatalogoEntidad
     const equiposPorSlug = new Map(equipos.map(equipo => [equipo.slug, equipo]))
     for (const equipo of equiposPublicos) {
       entidades.push({
-        tipo: 'team', slug: equipo.slug, nombre: equipo.nombre, ruta: `/equipos/${equipo.slug}`,
+        tipo: 'team',
+        slug: equipo.slug,
+        nombre: equipo.nombre,
+        ruta: `/equipos/${equipo.slug}`,
+        cluster: nombreCompetencia(equipo.clasificaciones[0]?.competencia),
         coincidencias: [[equipo.nombre]]
       })
     }
@@ -498,6 +540,7 @@ async function obtenerCatalogo(cliente: SupabaseClient): Promise<CatalogoEntidad
       const datos = catalogoCompeticionesPublicas[slug as keyof typeof catalogoCompeticionesPublicas]
       entidades.push({
         tipo: 'competition', slug, nombre: datos.nombre, ruta: `/competiciones/${slug}`,
+        cluster: datos.nombre,
         coincidencias: [[datos.nombre]]
       })
     }
@@ -508,6 +551,7 @@ async function obtenerCatalogo(cliente: SupabaseClient): Promise<CatalogoEntidad
       entidades.push({
         tipo: 'match', slug: partido.slug, nombre: `${partido.local} vs. ${partido.visitante}`,
         ruta: `/partidos/${partido.slug}`,
+        cluster: nombreCompetencia(partido.competencia),
         coincidencias: [[partido.local, partido.visitante]]
       })
     }
@@ -516,6 +560,7 @@ async function obtenerCatalogo(cliente: SupabaseClient): Promise<CatalogoEntidad
       if (!evaluarIndexabilidad({ tipo: 'jugador', ...jugador })) continue
       entidades.push({
         tipo: 'player', slug: jugador.slug, nombre: jugador.nombre, ruta: `/jugadores/${jugador.slug}`,
+        cluster: 'Colombianos en Europa',
         coincidencias: [[jugador.nombre]]
       })
     }
@@ -524,6 +569,7 @@ async function obtenerCatalogo(cliente: SupabaseClient): Promise<CatalogoEntidad
       entidades.push({
         tipo: 'article', slug: articulo.slug, nombre: articulo.titulo,
         ruta: `/articulos/${articulo.slug}`, idArticulo: articulo.id,
+        cluster: articulo.categoria || 'Sin categoría',
         coincidencias: [[articulo.titulo]]
       })
     }
@@ -551,6 +597,12 @@ async function obtenerCatalogo(cliente: SupabaseClient): Promise<CatalogoEntidad
   } finally {
     if (cargaCatalogo === carga) cargaCatalogo = null
   }
+}
+
+function nombreCompetencia(slug?: string | null): string {
+  if (!slug) return 'Fútbol colombiano'
+  return catalogoCompeticionesPublicas[slug as keyof typeof catalogoCompeticionesPublicas]?.nombre
+    || 'Fútbol colombiano'
 }
 
 async function cargarArticulosPublicos(

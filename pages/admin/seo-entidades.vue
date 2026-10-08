@@ -53,7 +53,7 @@ function mostrarError(valor: unknown): string {
 
     <p class="nota-alcance-grafo">
       <AlertTriangle aria-hidden="true" />
-      El detector mide enlaces contextuales estructurados; no cuenta menú, migas de pan ni sitemap como enlaces de apoyo. Los nodos de partidos, equipos y competiciones también consideran sus relaciones del calendario y la clasificación existentes.
+      El detector mide enlaces contextuales estructurados; no cuenta menú, migas de pan ni sitemap como enlaces de apoyo. Los nodos de partidos, equipos y competiciones también consideran relaciones del calendario y la clasificación. “Huérfana” describe el grafo, no es un código HTTP; las páginas legales y rutas fuera del catálogo público quedan excluidas.
     </p>
 
     <section v-if="error" class="error-admin-grafo" role="alert">
@@ -92,6 +92,8 @@ function mostrarError(valor: unknown): string {
           <li v-for="pagina in data.paginas" :key="`${pagina.tipo}:${pagina.slug}`">
             <span>
               <small>{{ etiquetaTipo[pagina.tipo] }}</small>
+              <span class="cluster-huerfana-grafo">Cluster: {{ pagina.cluster }}</span>
+              <span class="estado-huerfana-grafo">Huérfana · {{ pagina.enlacesEntrantes }} enlaces entrantes</span>
               <strong>{{ pagina.nombre }}</strong>
               <code>{{ pagina.ruta }}</code>
             </span>
@@ -128,6 +130,8 @@ function mostrarError(valor: unknown): string {
 .lista-huerfanas-grafo li { display: flex; align-items: center; justify-content: space-between; gap: 14px; border: 1px solid #e2e8f0; border-radius: 7px; padding: 11px 13px; }
 .lista-huerfanas-grafo li > span { display: grid; gap: 4px; min-width: 0; }
 .lista-huerfanas-grafo small { color: #2476b8; font-size: .72rem; font-weight: 800; }
+.cluster-huerfana-grafo, .estado-huerfana-grafo { color: #586980; font-size: .75rem; }
+.estado-huerfana-grafo { width: fit-content; border-radius: 999px; background: #fff2d8; padding: 3px 8px; color: #76520d; font-weight: 700; }
 .lista-huerfanas-grafo strong { overflow-wrap: anywhere; font-size: .88rem; }
 .lista-huerfanas-grafo code { color: #61738a; font-size: .75rem; overflow-wrap: anywhere; }
 .lista-huerfanas-grafo li > a { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; color: #145996; font-size: .78rem; font-weight: 800; text-decoration: none; }

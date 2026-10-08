@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  construirPaginasHuerfanasSeo,
   construirRutaEntidadSeo,
   esRutaRaizCompeticionIndexable,
+  claveEntidad,
   sugerirEntidadesPorCoincidencia,
   type EntidadCandidataSeo
 } from '../../server/utils/grafoEntidadesSeo'
@@ -59,6 +61,35 @@ describe('grafo interno de entidades SEO', () => {
   it('solo convierte en entidad el hub de competición cuando esa ruta raíz es indexable', () => {
     expect(esRutaRaizCompeticionIndexable('/competiciones/liga-betplay', 'liga-betplay')).toBe(true)
     expect(esRutaRaizCompeticionIndexable('/competiciones/liga-betplay/2026-I', 'liga-betplay')).toBe(false)
+  })
+
+  it('reporta URL, tipo, enlaces entrantes, cluster y estado de cada página huérfana', () => {
+    const articulo: EntidadCandidataSeo = {
+      tipo: 'article',
+      slug: 'previa-liga',
+      nombre: 'Previa Liga',
+      ruta: '/articulos/previa-liga',
+      cluster: 'Liga BetPlay',
+      coincidencias: []
+    }
+    const equipoConCluster: EntidadCandidataSeo = {
+      ...equipo,
+      cluster: 'Liga BetPlay'
+    }
+    const entradas = new Map([[claveEntidad('team', equipoConCluster.slug), new Set(['article:previa-liga'])]])
+
+    expect(construirPaginasHuerfanasSeo([articulo, equipoConCluster], entradas)).toEqual({
+      total: 1,
+      paginas: [{
+        tipo: 'article',
+        slug: 'previa-liga',
+        nombre: 'Previa Liga',
+        ruta: '/articulos/previa-liga',
+        enlacesEntrantes: 0,
+        cluster: 'Liga BetPlay',
+        estado: 'huerfana'
+      }]
+    })
   })
 
   it('valida decisiones y rechaza objetivos duplicados', () => {
