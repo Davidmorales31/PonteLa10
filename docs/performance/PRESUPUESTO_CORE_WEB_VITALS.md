@@ -65,6 +65,19 @@ la imagen `ubuntu-latest` no alteren la referencia de las mediciones. Estos
 límites detectan regresiones grandes, no cumplimiento de los Core Web Vitals
 ideales; los puntos de deuda anteriores siguen visibles y deben optimizarse.
 
+La verificación final de Production tras integrar los límites (run
+`37752052200`) también pasó las assertions y archivó sus reportes:
+
+| Ruta | Performance | LCP | CLS | TBT |
+| --- | ---: | ---: | ---: | ---: |
+| `/` | 0,71 | 6 903 ms | 0,00 | 187 ms |
+| `/partidos-hoy` | 0,70 | 4 216 ms | 0,20 | 245 ms |
+| `/liga-colombiana` | 0,75 | 3 347 ms | 0,01 | 580 ms |
+| `/colombianos-en-europa` | 0,73 | 5 429 ms | 0,06 | 264 ms |
+
+Estas son mediciones Lighthouse de laboratorio y pueden variar entre corridas;
+no equivalen a CrUX, percentil 75 ni a una medición real de INP.
+
 ## Rutas y controles
 
 CI mide `/`, `/partidos-hoy`, `/liga-colombiana` y
