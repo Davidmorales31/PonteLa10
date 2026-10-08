@@ -1,4 +1,4 @@
-import { etiquetaEstadoSeoPartido } from './schemaPartidoSeo'
+import { etiquetaEstadoSeoPartido } from './schemaPartidoSeo.js'
 
 export type TipoCachePublica =
   | 'articulo'

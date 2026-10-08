@@ -2,7 +2,7 @@ import { next } from '@vercel/functions'
 import {
   CABECERA_VARIANTE_CACHE_PUBLICA,
   obtenerVarianteCachePublica
-} from './utils/cachePublica'
+} from './utils/cachePublica.js'
 
 export const config = {
   matcher: [

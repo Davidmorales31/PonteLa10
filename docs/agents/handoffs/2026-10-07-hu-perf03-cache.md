@@ -29,8 +29,11 @@
   Supabase ni se agregaron variables o secretos.
 - **Validaciones ejecutadas:** `npm ci`, lint, typecheck y suite completa (94
   archivos, 480 pruebas). La prueba unitaria de la variante cubre cookie de
-  consentimiento, sesión y Authorization. Build de esta última corrección y
-  smoke en Production siguen pendientes. Revisiones de seguridad previas sin
+  consentimiento, sesión y Authorization. Build local pasó. El primer Preview
+  devolvió `MIDDLEWARE_INVOCATION_FAILED`: el runtime ESM no encontró el import
+  extensionless de `utils/cachePublica`; se ajustó la cadena relacionada a
+  extensiones `.js`. El nuevo Preview y el smoke siguen pendientes. Revisiones
+  de seguridad previas sin
   hallazgos P0–P2. La corrección sigue las [notas de Vercel sobre respuestas
   `Vary: Cookie`](https://vercel.com/changelog/vary-cookie-responses-no-longer-cached).
 - **Fallos:** El primer intento local requirió `NUXT_PUBLIC_SITE_URL`, que se
@@ -40,9 +43,9 @@
   están pendientes.
 - **Pendientes:** Abrir PR con Routing Middleware, comprobar checks/preview,
   integrar y comprobar separación real de variantes en Production.
-- **Siguiente acción exacta:** Terminar build; abrir PR desde
-  `codex/hu-perf03-cache-auth-bypass`; después de checks verdes, hacer smoke
-  Production: anónimo MISS→HIT, cookie de sesión `private, no-store` sin HIT
+- **Siguiente acción exacta:** Ejecutar validaciones, subir el fix al PR #103,
+  esperar el nuevo Preview y probar: anónimo MISS→HIT, cookie de sesión
+  `private, no-store` sin HIT
   cruzado, y anónimo HIT posterior; verificar también cookie de consentimiento.
 - **Commit base:** `3ed59b60d2704341626ad9a641cbd4998ec044f6` (merge de PR #102).
 - **Commit final:** pendiente de PR y smoke de producción.

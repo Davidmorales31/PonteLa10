@@ -101,8 +101,10 @@
   consentimiento quedan públicas; las solicitudes autenticadas siguen
   `private, no-store`. No se envían ni registran valores de credenciales.
   Revisión de seguridad del middleware sin hallazgos P0–P2. `npm ci`, lint,
-  typecheck y suite completa (94 archivos/480 pruebas) pasan; build y smoke de
-  producción de esta corrección están pendientes.
+  typecheck, suite completa (94 archivos/480 pruebas) y build local pasan. El
+  primer Preview falló con `MIDDLEWARE_INVOCATION_FAILED`: Vercel ejecuta el
+  middleware como ESM y no resolvió el import local sin extensión. Se cambian
+  los imports de esa cadena a `.js`; nuevo Preview y smoke siguen pendientes.
 - Pendiente: abrir PR, integrar tras checks y Vercel Production, y confirmar
   en producción HIT anónimo más separación privada para cookie de sesión y
   retorno a HIT anónimo antes de cerrar HU-PERF-03. Handoff:
