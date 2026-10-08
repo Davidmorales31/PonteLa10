@@ -1,5 +1,38 @@
 # Estado actual de Pont3la10
 
+## HU-TRUST-05 — transparencia de datos del partido (Production, 2026-10-08 UTC)
+
+- La ficha de partido público declara la fuente de datos y la hora de consulta,
+  con enlace a la fuente oficial, sin presentar la consulta como verificación
+  editorial del marcador. La zona horaria mostrada es la de Colombia.
+- PR #108 se integró a `main` como
+  `40c63b767074d087a8a547d135a67264be7fda75`; Vercel confirmó Production
+  `READY`. El smoke de `/partidos/deportivo-pereira-fc-vs-llaneros` en
+  producción mostró la atribución esperada. Preview revisado en tema claro y
+  oscuro, escritorio y móvil de 390 px.
+- Validación: 97 archivos/495 pruebas, lint, typecheck y build; el build mantiene
+  el aviso upstream `[DEP0155]` de `@vue/shared`. Sin migración ni cambios a
+  datos de Supabase. Handoff:
+  `docs/agents/handoffs/2026-10-08-hu-trust05-fuentes-hora.md`.
+
+## HU-OPS-02 — monitoreo SEO de 404 y redirects (en desarrollo, 2026-10-08)
+
+- Implementación preparada en `codex/hu-ops02-404-redirects`: captura solo
+  404 públicos GET/HEAD en logs estructurados de Nitro; omite consultas,
+  cookies, IP y rutas privadas; conserva el referer únicamente como ruta del
+  mismo origen. El workflow de GitHub audita sitemaps y cadenas/aliases cada
+  semana y manualmente. No agrega tablas, claves ni migraciones de Supabase.
+- Límites: 8 solicitudes simultáneas, hasta 5.000 URLs públicas, 10.000 `<loc>`,
+  10 MB por sitemap y 50 MB acumulados; exige el origen HTTPS exacto
+  `www.pont3la10.com`. Los dos aliases se prueban para una ficha representativa,
+  no para todos los partidos. Esta limitación debe conservarse en el reporte.
+- Validación local final: lint, typecheck, build y `git diff --check`; suite
+  completa 97 archivos/506 pruebas. Smoke del Nitro compilado: una ruta 404
+  devolvió HTTP 404 y registró solo `/hu-ops02-smoke` y `/liga-colombiana` como
+  rutas normalizadas. Revisión estática de seguridad sin hallazgos P0–P2.
+- Estado: PR/Preview/Production y primera ejecución del workflow pendientes.
+  Handoff: `docs/agents/handoffs/2026-10-08-hu-ops02-404-sitemap.md`.
+
 ## HU-TRUST-02/03/04 — páginas de transparencia (Production, 2026-10-07)
 
 - Se prepararon `/quienes-somos`, `/politica-editorial` y `/correcciones` con
