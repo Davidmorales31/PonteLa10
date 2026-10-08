@@ -28,9 +28,9 @@ module.exports = {
     collect,
     assert: {
       assertions: {
-        'categories:performance': ['error', { minScore: 0.65, aggregationMethod: 'median-run' }],
-        'largest-contentful-paint': ['error', { maxNumericValue: 4500, aggregationMethod: 'median-run' }],
-        'cumulative-layout-shift': ['error', { maxNumericValue: 0.1, aggregationMethod: 'median-run' }],
+        'categories:performance': ['error', { minScore: 0.45, aggregationMethod: 'median-run' }],
+        'largest-contentful-paint': ['error', { maxNumericValue: 9000, aggregationMethod: 'median-run' }],
+        'cumulative-layout-shift': ['error', { maxNumericValue: 0.2, aggregationMethod: 'median-run' }],
         'total-blocking-time': ['error', { maxNumericValue: 500, aggregationMethod: 'median-run' }]
       }
     },

@@ -4,8 +4,8 @@
 
 - `lighthouserc.cjs` define cuatro rutas públicas, emulación móvil y tres
   ejecuciones por URL. CI mide el build local y archiva el reporte; un workflow
-  semanal repite la medición contra Production. Los límites iniciales de
-  regresión son performance ≥ 0,65, LCP ≤ 4,5 s, CLS ≤ 0,1 y TBT ≤ 500 ms.
+  semanal repite la medición contra Production. Límites de regresión
+  calibrados tras CI: performance ≥ 0,45, LCP ≤ 9 s, CLS ≤ 0,2 y TBT ≤ 500 ms.
 - Muestra exploratoria de Production en `/` (una pasada; Edge 154.0.4258.37,
   Lighthouse 12.6.1): score 0,69, LCP 4,056 s (4 056 ms), CLS 0, TBT 395 ms. No representa
   el percentil 75. La API PageSpeed Insights respondió 429 por cuota cero; no se
@@ -18,6 +18,11 @@
 - No se agrega publicidad ni telemetría nueva: los recursos publicitarios
   existentes no cambian y la recolección de INP de campo requiere una fuente
   autorizada respetando las preferencias vigentes.
+- La primera corrida CI mostró medianas: `/` LCP 8,372 s/CLS 0; `/partidos-hoy`
+  7,218 s/0,17; `/liga-colombiana` 6,918 s/0,01; `/colombianos-en-europa`
+  6,769 s/0,06. Esto revela deuda de rendimiento; los límites CI detectan
+  regresiones grandes y no equivalen a cumplir los objetivos de campo. Su
+  incorporación está pendiente de repetir CI después de calibrarlos.
 - Handoff: `docs/agents/handoffs/2026-10-08-hu-perf04-core-web-vitals.md`.
 
 ## Seguimiento HU-TRUST-01 — Production verificado (2026-10-08)

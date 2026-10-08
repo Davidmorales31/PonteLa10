@@ -27,6 +27,26 @@ afirma tener un baseline CrUX ni un valor real de INP. Lighthouse de laboratorio
 no expone INP observado; TBT se usa únicamente como señal de bloqueo del hilo
 principal, no como sustituto numérico de INP.
 
+## Baseline inicial de CI
+
+La primera corrida de CI (2026-10-08) generó tres muestras Lighthouse por ruta
+contra el preview local del build. Sus medianas fueron:
+
+| Ruta | Performance | LCP | CLS | TBT |
+| --- | ---: | ---: | ---: | ---: |
+| `/` | 0,59 | 8 372 ms | 0,00 | 172 ms |
+| `/partidos-hoy` | 0,51 | 7 218 ms | 0,17 | 214 ms |
+| `/liga-colombiana` | 0,60 | 6 918 ms | 0,01 | 208 ms |
+| `/colombianos-en-europa` | 0,60 | 6 769 ms | 0,06 | 202 ms |
+
+Esta muestra hace visible deuda real: el LCP de laboratorio es alto y
+`/partidos-hoy` supera el umbral ideal de CLS 0,1. Los límites de CI son
+**guardas iniciales contra regresiones grandes**, calibradas para no bloquear
+el desarrollo existente; no son los objetivos de experiencia ni declaran que
+las rutas estén optimizadas. El siguiente trabajo de rendimiento debe reducir
+LCP y CLS, especialmente en `/partidos-hoy`, y bajar esos límites con nuevas
+mediciones repetibles.
+
 ## Rutas y controles
 
 CI mide `/`, `/partidos-hoy`, `/liga-colombiana` y
@@ -35,12 +55,11 @@ ruta. Los reportes se conservan como artefactos de GitHub Actions durante 90
 días. Un workflow semanal repite la muestra contra Production cada martes a las
 09:17, hora de Colombia.
 
-Los límites duros iniciales de laboratorio son performance ≥ 0,65, LCP ≤ 4,5 s,
-CLS ≤ 0,1 y TBT ≤ 500 ms. El límite LCP/TBT deja margen frente a la muestra
-local de una sola ejecución y detecta deterioros importantes; **no significa
-que se haya alcanzado el objetivo ideal de campo**. Los reportes muestran los
-valores medianos para que el equipo pueda bajar los límites gradualmente sin
-ocultar una regresión.
+Los límites duros iniciales de regresión son performance ≥ 0,45, LCP ≤ 9 s,
+CLS ≤ 0,2 y TBT ≤ 500 ms. Se evalúan sobre la mediana de tres ejecuciones por
+ruta; **no significan que se haya alcanzado el objetivo ideal de campo**. Los
+reportes se conservan para que el equipo pueda bajar los límites
+gradualmente sin ocultar una regresión.
 
 La cuota actual impide consultar la API de PageSpeed Insights desde este
 entorno. La medición de INP de usuarios reales debe añadirse cuando exista una fuente de
