@@ -243,9 +243,11 @@
 - Validaciones: prueba focalizada (2 archivos/12 pruebas), suite completa (94
   archivos/481 pruebas), lint, typecheck, build Vercel y `git diff --check`
   pasan. El build conserva el aviso upstream `[DEP0155]` de `@vue/shared`.
-  La revisión visual de la variante con seis noticias requiere Preview con
-  datos; esta copia limpia no tiene `.env` y el puerto local de reserva ya está
-  ocupado.
+  En Vercel Preview, con diez publicaciones, se verificó en escritorio el tema
+  azul y blanco; tras el consentimiento aparecieron ambos slots y el segundo
+  iframe se cargó al llegar al bloque final. La creatividad del proveedor quedó
+  vacía en Preview, así que no se afirma que Adsterra haya llenado el anuncio.
+  No se revisó móvil.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-gro01-debugview-y-mon02-inventario.md`.
 
 ## HU-ED-23 — fecha de actualización editorial (Production, 2026-10-07)

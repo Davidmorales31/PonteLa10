@@ -26,13 +26,17 @@
   `NITRO_PRESET=vercel npm.cmd run build` y `git diff --check`: pasan. Se usó
   `NUXT_PUBLIC_SITE_URL=https://www.pont3la10.com` solo en los procesos de
   validación porque el worktree limpio no tiene `.env`. El build conserva el
-  aviso upstream `[DEP0155]` de `@vue/shared`.
+  aviso upstream `[DEP0155]` de `@vue/shared`. PR #105 Preview terminó Ready;
+  con diez publicaciones se vieron dos slots tras aceptar publicidad y el
+  segundo iframe se cargó al llegar al final. Tema azul y blanco revisados en
+  escritorio. La creatividad del anunciante no apareció en Preview; móvil no
+  se verificó.
 - **Fallos:** No había una propiedad GA4 o Search Console de Pont3la10 en la
   sesión Google disponible; no puede certificarse la recepción real de eventos
   ni capturarse un baseline de 28 días.
-- **Pendientes:** Verificar visualmente en Preview el hub con seis o más
-  noticias; terminar la verificación real de DebugView y el baseline cuando se
-  habilite el acceso a la propiedad verificada.
+- **Pendientes:** Verificar la entrega de creatividad en el dominio de
+  producción y en móvil; terminar la verificación real de DebugView y el
+  baseline cuando se habilite el acceso a la propiedad verificada.
 - **Siguiente acción exacta:** Verificar esta rama, corregir cualquier fallo y
   continuar con la siguiente HU implementable del documento maestro, sin
   presentar los bloqueos de GA4/Search Console como trabajo completado.
