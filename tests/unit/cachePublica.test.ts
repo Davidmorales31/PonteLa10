@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   combinarVary,
+  obtenerVarianteCachePublica,
   obtenerCabecerasCachePublica,
   obtenerTipoCachePartido,
   solicitudPuedeUsarCachePublica
@@ -33,6 +34,17 @@ describe('políticas de caché del contenido público', () => {
     expect(solicitudPuedeUsarCachePublica({ cookie: 'pont3la10-auth.0=token' })).toBe(false)
     expect(solicitudPuedeUsarCachePublica({ authorization: 'Bearer token' })).toBe(false)
     expect(solicitudPuedeUsarCachePublica({ setCookie: true })).toBe(false)
+  })
+
+  it('agrupa las solicitudes antes de la CDN en una dimensión pública o privada', () => {
+    expect(obtenerVarianteCachePublica({ cookie: 'consent=accepted' })).toBe('publica')
+    expect(obtenerVarianteCachePublica({ cookie: 'pont3la10-auth.0=token' })).toBe('privada')
+    expect(obtenerVarianteCachePublica({ authorization: 'Bearer token' })).toBe('privada')
+    expect(combinarVary(
+      'Accept-Encoding, Cookie, Authorization',
+      ['x-pont3la10-cache-variant'],
+      ['Cookie', 'Authorization']
+    )).toBe('Accept-Encoding, x-pont3la10-cache-variant')
   })
 
   it('combina Vary sin duplicar encabezados y conserva el comodín', () => {
