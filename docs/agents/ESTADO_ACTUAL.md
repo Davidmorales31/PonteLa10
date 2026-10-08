@@ -78,6 +78,38 @@
   visualmente el panel administrativo en esa sesión.
 - Handoff: `docs/agents/handoffs/2026-10-08-hu-ed28-cannibalizacion.md`.
 
+## HU-ED-29 — revisión de poda de contenido (Production, 2026-10-08)
+
+- `/admin/poda-contenido` identifica contenido para revisión humana con señales
+  conservadoras: falta de enlaces entrantes, similitud de títulos y cero
+  impresiones totales en informes explícitos de Search Console durante al menos
+  90 días y dos informes. La antigüedad por sí sola no marca un candidato.
+  Comunica truncamiento y cobertura parcial de sus límites de análisis.
+- Las propuestas `actualizar`, `fusionar`, `mantener`, `noindex`, `retirar_410` y
+  `redirect` quedan registradas como decisiones privadas auditadas. No se borra
+  ni modifica contenido público, rutas, canonical, indexabilidad, sitemap o
+  redirects automáticamente. GET y POST requieren `contenido.revisar` y MFA;
+  las lecturas/escrituras directas se protegen adicionalmente con RLS/RPC y AAL2.
+- La migración aditiva `20261008093417_hu_ed29_pruning_review` quedó aplicada en
+  Supabase Production. Verificación de solo lectura: RLS habilitado, una
+  política selectiva, cuatro funciones esperadas; políticas y RPC privadas
+  requieren MFA y ninguna función de esta HU puede ejecutarse como `anon`.
+  Supabase Advisors no reportó hallazgos nuevos para esta HU.
+- PR #119 se integró en `main` como `766c25f0e26d1904ae3ec0837a970668672d0c4a`;
+  Vercel indicó `Deployment has completed`. Smoke de Production:
+  `/partidos-hoy` HTTP 200, `/admin/poda-contenido` redirige a login (302) y
+  GET anónimo de `/api/admin/seo/poda-contenido` devuelve 401 con
+  `Cache-Control: no-store, private`. No se realizó ninguna decisión editorial.
+- Validación local: lint, suite completa 104 archivos/535 pruebas, typecheck,
+  build, pruebas HU específicas 8/8 y `git diff --check`. La revisión de
+  seguridad independiente no encontró riesgos P0–P2; CI del PR y corrida
+  post-merge `37758195448` pasaron, incluida la medición Lighthouse. La revisión
+  visual autenticada queda pendiente: el
+  conector Vercel rechazó acceso al preview con 403 y no se modificó la
+  protección; el smoke de Production confirmó el guard de acceso, no la vista
+  autenticada. Handoff:
+  `docs/agents/handoffs/2026-10-08-hu-ed29-poda-contenido.md`.
+
 ## HU-ED-27 — programa de contenido original (Production, 2026-10-08)
 
 - Se añadió el programa editorial y sus ocho líneas de contenido. Los briefs
