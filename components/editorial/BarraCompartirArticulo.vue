@@ -9,11 +9,13 @@ const props = defineProps<{
   titulo: string
   url: string
   texto?: string
+  etiqueta?: string
   variante?: 'superior' | 'inferior'
 }>()
 
 const enlaceCopiado = ref(false)
 const puedeCompartirNativo = ref(false)
+const mensajeCompartir = ref('')
 
 onMounted(() => {
   puedeCompartirNativo.value = typeof navigator.share === 'function'
@@ -30,17 +32,28 @@ function abrirRed(red: RedCompartirArticulo) {
 
 async function compartirNativo() {
   if (!navigator.share) return
-  await navigator.share({
-    title: props.titulo,
-    text: props.texto || props.titulo,
-    url: props.url
-  })
+  mensajeCompartir.value = ''
+  try {
+    await navigator.share({
+      title: props.titulo,
+      text: props.texto || props.titulo,
+      url: props.url
+    })
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') return
+    mensajeCompartir.value = 'No fue posible abrir el menú para compartir.'
+  }
 }
 
 async function copiarEnlace() {
-  await navigator.clipboard.writeText(props.url)
-  enlaceCopiado.value = true
-  window.setTimeout(() => { enlaceCopiado.value = false }, 2200)
+  mensajeCompartir.value = ''
+  try {
+    await navigator.clipboard.writeText(props.url)
+    enlaceCopiado.value = true
+    window.setTimeout(() => { enlaceCopiado.value = false }, 2200)
+  } catch {
+    mensajeCompartir.value = 'No fue posible copiar el enlace en este navegador.'
+  }
 }
 </script>
 
@@ -48,7 +61,7 @@ async function copiarEnlace() {
   <aside
     class="barra-compartir-articulo"
     :class="`barra-compartir-${variante || 'superior'}`"
-    aria-label="Compartir esta publicación"
+    :aria-label="`Compartir ${etiqueta || 'esta publicación'}`"
   >
     <strong>{{ variante === 'inferior' ? 'Comparte esta historia' : 'Compartir' }}</strong>
     <div>
@@ -96,7 +109,7 @@ async function copiarEnlace() {
       </button>
     </div>
     <span class="sr-only" aria-live="polite">
-      {{ enlaceCopiado ? 'Enlace copiado al portapapeles.' : '' }}
+      {{ enlaceCopiado ? 'Enlace copiado al portapapeles.' : mensajeCompartir }}
     </span>
   </aside>
 </template>

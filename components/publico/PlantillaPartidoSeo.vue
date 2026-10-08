@@ -6,6 +6,8 @@ import type { ProgramacionTransmisionPublica } from '~/utils/partidos/programaci
 import { etiquetasDistribucionProgramacion } from '~/utils/partidos/programacion'
 import type { NavegacionContextualPartidoSeo } from '~/types/navegacionContextualSeo'
 import type { EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
+import { construirUrlAbsoluta } from '~/utils/seo'
+import BarraCompartirArticulo from '~/components/editorial/BarraCompartirArticulo.vue'
 
 interface PartidoSeoVista {
   slug: string
@@ -39,6 +41,22 @@ const props = defineProps<{
 const { modo, partido, noticias, navegacion } = toRefs(props)
 
 const configuracion = useRuntimeConfig()
+const tituloCompartir = computed(() => `${props.partido.local} vs ${props.partido.visitante} | ${nombreCompetencia.value}`)
+const urlCompartir = computed(() => construirUrlAbsoluta(
+  String(configuracion.public.siteUrl),
+  `/partidos/${encodeURIComponent(props.partido.slug)}`
+))
+const textoCompartir = computed(() => {
+  const partes = [
+    `${props.partido.local} vs ${props.partido.visitante}`,
+    nombreCompetencia.value,
+    fechaPartido(props.partido.fechaIso)
+  ]
+  if (estadoPartido.value === 'FINALIZADO' && marcadorDisponible.value) {
+    partes.unshift(`Resultado final: ${marcador.value}`)
+  }
+  return partes.join(' · ')
+})
 const { registrarEvento, publicidadAutorizada } = useAnaliticaPublica()
 const escudosFallidos = ref<string[]>([])
 const urlsPromocionales = computed(() => String(configuracion.public.adsterraMatchPromoUrls || '')
@@ -192,6 +210,13 @@ onMounted(() => {
       <p v-if="modo === 'partido'">Horario de Colombia, estado y marcador en una sola ficha, con fuente y hora de consulta cuando están disponibles. La programación de transmisión solo se muestra cuando tiene confirmación oficial.</p>
       <p v-else-if="modo === 'donde-ver'">Horario de Colombia, estadio y canales oficiales disponibles para el partido.</p>
       <p v-else>Consulta el estado del encuentro y el marcador publicado para {{ partido.local }} y {{ partido.visitante }}.</p>
+      <BarraCompartirArticulo
+        v-if="modo === 'partido'"
+        :titulo="tituloCompartir"
+        :texto="textoCompartir"
+        :url="urlCompartir"
+        etiqueta="la ficha del partido"
+      />
     </header>
 
     <section class="cartel-partido-seo" :class="{ 'cartel-resultado': modo === 'como-quedo' }" aria-label="Datos del partido">
@@ -369,6 +394,10 @@ onMounted(() => {
 .encabezado-partido-seo { max-width: 940px; margin-bottom: 22px; }
 .encabezado-partido-seo h1 { margin: 8px 0; color: #f5f8ff; font-size: clamp(1.8rem, 4vw, 3rem); }
 .encabezado-partido-seo > p:last-child { color: #afc2db; line-height: 1.6; }
+.encabezado-partido-seo :deep(.barra-compartir-articulo) { max-width: 100%; margin: 14px 0 0; border-color: #294362; }
+.encabezado-partido-seo :deep(.barra-compartir-articulo strong) { color: #d3e0ef; }
+.encabezado-partido-seo :deep(.barra-compartir-articulo button) { border-color: #315273; background: #10243d; color: #e8f2ff; }
+.encabezado-partido-seo :deep(.barra-compartir-articulo button:hover), .encabezado-partido-seo :deep(.barra-compartir-articulo button:focus-visible) { border-color: #59d9ff; background: #17476b; color: #fff; }
 .cartel-partido-seo { position: relative; display: grid; overflow: hidden; align-content: start; justify-items: center; gap: 18px; border: 1px solid #28708b; border-radius: 18px; background: #061b35; padding: 18px; }
 .reproductor-partido-seo { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #061b35; object-fit: cover; }
 .cartel-imagen-resultado { display: block; width: 100%; aspect-ratio: 16 / 9; border-radius: 12px; background: #061b35; object-fit: cover; }
@@ -423,6 +452,9 @@ onMounted(() => {
 .noticias-relacionadas-partido li p { margin: 4px 0 0; color: #afc2db; font-size: .8rem; }
 body.tema-publico-blanco .encabezado-partido-seo > p:last-child { color: #586980; }
 body.tema-publico-blanco .encabezado-partido-seo h1 { color: #13253d; }
+body.tema-publico-blanco .encabezado-partido-seo :deep(.barra-compartir-articulo) { border-color: #dce5f1; }
+body.tema-publico-blanco .encabezado-partido-seo :deep(.barra-compartir-articulo strong) { color: #45566e; }
+body.tema-publico-blanco .encabezado-partido-seo :deep(.barra-compartir-articulo button) { border-color: #dce3ec; background: #fff; color: #08204a; }
 body.tema-publico-blanco .bloque-datos-partido-seo, body.tema-publico-blanco .preguntas-partido-seo, body.tema-publico-blanco .contexto-partido-seo, body.tema-publico-blanco .noticias-relacionadas-partido { border-color: #dce5f1; background: #fff; color: #13253d; }
 body.tema-publico-blanco .bloque-datos-partido-seo dl div, body.tema-publico-blanco .estado-marcador-partido { background: #f1f5f9; }
 body.tema-publico-blanco .bloque-datos-partido-seo dt, body.tema-publico-blanco .preguntas-partido-seo a, body.tema-publico-blanco .enlaces-mutua-partido a { color: #145996; }

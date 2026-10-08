@@ -91,7 +91,7 @@ useSeoPont3la10(() => {
     imagen: `/api/partidos-seo/${encodeURIComponent(partido.value.slug)}/imagen?formato=og`,
     imagenTipo: 'image/png',
     imagenAncho: 1200,
-    imagenAlto: 628,
+    imagenAlto: 630,
     tipoOpenGraph: 'website',
     seccion: partido.value.competencia,
     fechaModificacion: partido.value.verificadoEn,

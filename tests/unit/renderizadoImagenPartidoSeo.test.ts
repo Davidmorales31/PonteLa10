@@ -26,7 +26,7 @@ const partidoBase: PartidoSeoPublico = {
 describe('carteles sociales de partido', () => {
   it('renderiza las dimensiones OpenGraph e incrusta escudos locales reales', async () => {
     const escudoWebp = readFileSync(new URL('../../server/assets/escudos-liga-colombiana/atletico-nacional.webp', import.meta.url))
-    const svg = await crearCartelSvg(partidoBase, 1200, 628, async (nombre) => {
+    const svg = await crearCartelSvg(partidoBase, 1200, 630, async (nombre) => {
       if (nombre === 'Atlético Nacional') return `data:image/webp;base64,${escudoWebp.toString('base64')}`
       return null
     })
@@ -35,12 +35,12 @@ describe('carteles sociales de partido', () => {
 
     expect(svg).toContain('data:image/webp;base64,')
     expect(metadata.width).toBe(1200)
-    expect(metadata.height).toBe(628)
+    expect(metadata.height).toBe(630)
     expect(metadata.format).toBe('png')
   })
 
   it('mantiene iniciales seguras cuando no existe escudo local mapeado', () => {
-    return crearCartelSvg({ ...partidoBase, local: 'Club inventado' }, 1200, 628, async () => null)
+    return crearCartelSvg({ ...partidoBase, local: 'Club inventado' }, 1200, 630, async () => null)
       .then((svg) => {
         expect(svg).toContain('>CI</text>')
         expect(svg).not.toContain('onerror=')

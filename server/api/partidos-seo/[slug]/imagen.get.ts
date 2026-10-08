@@ -8,7 +8,7 @@ import { obtenerPartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
 import { obtenerTipoCachePartido } from '~/utils/cachePublica'
 
 const formatos = {
-  og: { ancho: 1200, alto: 628 },
+  og: { ancho: 1200, alto: 630 },
   wide: { ancho: 1920, alto: 1080 },
   story: { ancho: 1080, alto: 1920 },
   square: { ancho: 1080, alto: 1080 }
