@@ -64,16 +64,24 @@ export function solicitudPuedeUsarCachePublica(entrada: {
   return !tieneCookieSesionEditorial(entrada.cookie)
 }
 
-export function combinarVary(varyExistente: string | undefined, agregar: string[]): string {
+export function combinarVary(
+  varyExistente: string | undefined,
+  agregar: string[],
+  excluir: string[] = []
+): string {
   const valores = new Map<string, string>()
+  const valoresExcluidos = new Set(excluir.map(nombre => nombre.trim().toLowerCase()))
   for (const parte of (varyExistente || '').split(',')) {
     const nombre = parte.trim()
     if (nombre === '*') return '*'
-    if (nombre) valores.set(nombre.toLowerCase(), nombre)
+    const clave = nombre.toLowerCase()
+    if (nombre && !valoresExcluidos.has(clave)) valores.set(clave, nombre)
   }
   for (const nombre of agregar) {
     const clave = nombre.trim().toLowerCase()
-    if (clave && !valores.has(clave)) valores.set(clave, nombre.trim())
+    if (clave && !valoresExcluidos.has(clave) && !valores.has(clave)) {
+      valores.set(clave, nombre.trim())
+    }
   }
   return [...valores.values()].join(', ')
 }

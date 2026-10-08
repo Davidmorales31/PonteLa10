@@ -1,4 +1,10 @@
-import { getRequestHeader, getResponseHeader, setResponseHeader, type H3Event } from 'h3'
+import {
+  getRequestHeader,
+  getResponseHeader,
+  removeResponseHeader,
+  setResponseHeader,
+  type H3Event
+} from 'h3'
 import {
   combinarVary,
   obtenerCabecerasCachePublica,
@@ -7,18 +13,22 @@ import {
 } from '~/utils/cachePublica'
 
 export function aplicarCachePublica(evento: H3Event, tipo: TipoCachePublica): boolean {
-  setResponseHeader(
-    evento,
-    'Vary',
-    combinarVary(getResponseHeader(evento, 'Vary')?.toString(), ['Cookie', 'Authorization'])
-  )
-
   const setCookie = getResponseHeader(evento, 'Set-Cookie')
   const puedeCachear = solicitudPuedeUsarCachePublica({
     cookie: getRequestHeader(evento, 'cookie'),
     authorization: getRequestHeader(evento, 'authorization'),
     setCookie: Boolean(setCookie)
   })
+
+  // Las solicitudes con sesión se marcan no-store. Las públicas no dependen de
+  // cookies, y Vercel no almacena respuestas cuyo Vary incluya Cookie.
+  const vary = combinarVary(
+    getResponseHeader(evento, 'Vary')?.toString(),
+    puedeCachear ? [] : ['Cookie', 'Authorization'],
+    puedeCachear ? ['Cookie', 'Authorization'] : []
+  )
+  if (vary) setResponseHeader(evento, 'Vary', vary)
+  else removeResponseHeader(evento, 'Vary')
 
   if (!puedeCachear) {
     setResponseHeader(evento, 'Cache-Control', 'private, no-store')
