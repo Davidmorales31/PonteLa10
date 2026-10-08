@@ -27,15 +27,26 @@ el mismo navegador conectado con Tag Assistant, visita estas rutas:
 | Abrir `/` | `page_view` | `page_type=home` |
 | Abrir un artículo publicado | `page_view`, `article_view` | `page_type=article`, `content_id`, `category` y `primary_entity` cuando existan |
 | Abrir `/partidos/<slug>` | `page_view`, `match_page_view` | `page_type=match`, `match_id`, `competition` y `match_status` cuando estén disponibles |
-| Pulsar un enlace interno a otro partido | `internal_match_link_click` y el `page_view` de destino | No debe aparecer texto de búsqueda, correo, nombre de cuenta ni query string |
+| Abrir `/partidos/nacional-vs-millonarios` desde una publicación social con `?utm_source=instagram&utm_medium=organic_social&utm_campaign=match-nacional-vs-millonarios&utm_content=reel` | `page_view` | `page_type=match`; `page_location` conserva esos UTM aprobados y `page_path` solo `/partidos/<slug>` |
+| Pulsar un enlace interno a otro partido | `internal_match_link_click` y el `page_view` de destino | No debe aparecer texto de búsqueda, correo, nombre de cuenta ni query string ajena a UTM |
 | Abrir `/resultados/futbol` | `page_view` | `page_type=results` |
 | Abrir un hub como `/liga-colombiana` | `page_view` | `page_type=hub`, `hub_type=liga_colombiana` |
 
 Selecciona un evento reciente para inspeccionar sus parámetros. El `page_view`
-se envía de forma manual para evitar duplicados y su `page_location`/`page_path`
-omiten query string y fragmento. El término de búsqueda nunca se adjunta al
-evento. Los eventos de canal solo se registran al hacer clic en una fuente o
-programación confirmada; no debe abrirse un anuncio para probar analítica.
+se envía de forma manual para evitar duplicados. `page_path` siempre contiene
+solo la ruta. `page_location` solo conserva campañas de partido cuando
+`utm_source` pertenece a la lista cerrada `facebook`, `instagram`, `tiktok`,
+`whatsapp`, `youtube`, `x`, `telegram`, `threads`, `reddit`, `discord` o
+`newsletter`; `utm_medium` pertenece a `organic_social`, `paid_social`,
+`social`, `referral`, `email`, `messaging` o `display`; y
+`utm_campaign` coincide exactamente con `match-<slug de la ruta>`. El campo
+opcional `utm_content` se limita a `post`, `feed`, `story`, `reel`, `carousel`,
+`video`, `image` o `whatsapp_status`. Los valores se normalizan a minúsculas.
+Se omiten `utm_term`, IDs, campos de plataforma, fragmentos, búsqueda y toda
+etiqueta libre; no incluyas información personal en las URL de campaña. La
+etiqueta canonical/`og:url` permanece en `/partidos/<slug>` sin UTM. Los
+eventos de canal solo se registran al hacer clic en una fuente o programación
+confirmada; no debe abrirse un anuncio para probar analítica.
 
 ## Registro del resultado
 

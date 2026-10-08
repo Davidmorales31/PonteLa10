@@ -49,6 +49,62 @@ export function esRutaPublicaMedible(ruta: string): boolean {
   return !/^\/(admin|api|login|cuenta)(\/|$)/i.test(rutaNormalizada)
 }
 
+const ORIGENES_UTM_PERMITIDOS = new Set([
+  'facebook', 'instagram', 'tiktok', 'whatsapp', 'youtube', 'x', 'telegram',
+  'threads', 'reddit', 'discord', 'newsletter'
+])
+const MEDIOS_UTM_PERMITIDOS = new Set([
+  'organic_social', 'paid_social', 'social', 'referral', 'email', 'messaging', 'display'
+])
+const CONTENIDOS_UTM_PERMITIDOS = new Set([
+  'post', 'feed', 'story', 'reel', 'carousel', 'video', 'image', 'whatsapp_status'
+])
+
+function normalizarUtmEnumerado(valor: unknown, permitidos: Set<string>): string | null {
+  if (typeof valor !== 'string') return null
+  const valorNormalizado = valor.trim().toLocaleLowerCase('en-US')
+  return permitidos.has(valorNormalizado) ? valorNormalizado : null
+}
+
+export function construirUbicacionPaginaAnalitica(
+  origen: string,
+  ruta: string,
+  consulta: ConsultaAnaliticaPagina = {}
+): string {
+  const rutaCanonica = ruta.split(/[?#]/, 1)[0] || '/'
+  const origenNormalizado = origen.replace(/\/+$/, '')
+  if (
+    !/^https?:\/\/[^/?#]+$/i.test(origenNormalizado)
+    || !esRutaPublicaMedible(rutaCanonica)
+  ) return ''
+
+  const slugPartido = rutaCanonica.match(/^\/partidos\/([a-z0-9]+(?:-[a-z0-9]+)*)$/)?.[1]
+  const origenUtm = normalizarUtmEnumerado(consulta.utm_source, ORIGENES_UTM_PERMITIDOS)
+  const medioUtm = normalizarUtmEnumerado(consulta.utm_medium, MEDIOS_UTM_PERMITIDOS)
+  const cantidadDigitosSlug = slugPartido?.replace(/\D/g, '').length || 0
+  const campanaEsperada = slugPartido
+    && slugPartido.length <= 80
+    && cantidadDigitosSlug < 10
+    ? `match-${slugPartido}`
+    : null
+  const campanaRecibida = typeof consulta.utm_campaign === 'string'
+    ? consulta.utm_campaign.trim().toLocaleLowerCase('en-US')
+    : null
+  if (!origenUtm || !medioUtm || !campanaEsperada || campanaRecibida !== campanaEsperada) {
+    return `${origenNormalizado}${rutaCanonica}`
+  }
+
+  const parametros = new URLSearchParams()
+  parametros.set('utm_source', origenUtm)
+  parametros.set('utm_medium', medioUtm)
+  parametros.set('utm_campaign', campanaEsperada)
+  const contenidoUtm = normalizarUtmEnumerado(consulta.utm_content, CONTENIDOS_UTM_PERMITIDOS)
+  if (contenidoUtm) parametros.set('utm_content', contenidoUtm)
+
+  const queryUtm = parametros.toString()
+  return `${origenNormalizado}${rutaCanonica}${queryUtm ? `?${queryUtm}` : ''}`
+}
+
 export function normalizarCategoriaMedible(valor: unknown): string | null {
   if (typeof valor !== 'string') return null
   const categoria = valor.trim().toLocaleLowerCase('en-US')
