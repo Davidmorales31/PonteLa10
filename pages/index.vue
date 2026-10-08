@@ -2,13 +2,21 @@
 import { categoriasSitio } from '~/data/sitioPublico'
 import PublicidadHouseAd from '~/components/publicidad/HouseAd.vue'
 import BotonSeguirEquipo from '~/components/publico/BotonSeguirEquipo.vue'
+import BotonSeguirJugador from '~/components/publico/BotonSeguirJugador.vue'
+import { buscarPerfilJugadorEuropa } from '~/data/jugadoresColombianosEuropa'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { ArticuloResumen } from '~/types/editorial'
 import type { RespuestaResultados } from '~/types/resultados'
+import type { PerfilJugadorEuropa } from '~/data/jugadoresColombianosEuropa'
 import type { EquipoSeguidoResumen } from '~/types/seguimientoEquipos'
 import { esResumenArticuloPublico } from '~/utils/articulosPublicos'
 
 type ArticuloPortada = ArticuloResumen & { fechaPublicacion: string }
+interface JugadorSeguidoPortada {
+  perfil: PerfilJugadorEuropa
+  noticias: ResumenArticuloPublico[]
+  error: boolean
+}
 
 const { data: resultados, status: estadoResultados } = await useFetch<RespuestaResultados>('/api/resultados', {
   key: 'resultados-portada',
@@ -97,6 +105,43 @@ watch([seguimientoEquiposHidratado, equiposSeguidos], async ([hidratado, slugs])
     if (secuencia === secuenciaCargaEquiposSeguidos) resumenesEquiposSeguidos.value = []
   } finally {
     if (secuencia === secuenciaCargaEquiposSeguidos) cargandoEquiposSeguidos.value = false
+  }
+}, { immediate: true, deep: true })
+
+const { jugadoresSeguidos, seguimientoJugadoresHidratado } = useSeguimientoJugadores()
+const actualidadJugadoresSeguidos = ref<JugadorSeguidoPortada[]>([])
+const cargandoJugadoresSeguidos = ref(false)
+let secuenciaCargaJugadoresSeguidos = 0
+
+watch([seguimientoJugadoresHidratado, jugadoresSeguidos], async ([hidratado, slugs]) => {
+  if (!hidratado) return
+
+  const secuencia = ++secuenciaCargaJugadoresSeguidos
+  if (!slugs.length) {
+    actualidadJugadoresSeguidos.value = []
+    cargandoJugadoresSeguidos.value = false
+    return
+  }
+
+  cargandoJugadoresSeguidos.value = true
+  const respuestas = await Promise.all(slugs.map(async (slug): Promise<JugadorSeguidoPortada | null> => {
+    const perfil = buscarPerfilJugadorEuropa(slug)
+    if (!perfil) return null
+
+    try {
+      const respuesta = await $fetch<unknown>(`/api/articulos/entidad/player/${encodeURIComponent(perfil.slug)}`)
+      const noticias = Array.isArray(respuesta)
+        ? respuesta.filter(esResumenArticuloPublico).slice(0, 2)
+        : []
+      return { perfil, noticias, error: false }
+    } catch {
+      return { perfil, noticias: [], error: true }
+    }
+  }))
+
+  if (secuencia === secuenciaCargaJugadoresSeguidos) {
+    actualidadJugadoresSeguidos.value = respuestas.filter((respuesta): respuesta is JugadorSeguidoPortada => respuesta !== null)
+    cargandoJugadoresSeguidos.value = false
   }
 }, { immediate: true, deep: true })
 
@@ -191,6 +236,44 @@ useSeoPont3la10(() => ({
         <p v-else class="estado-seguimiento-home">No fue posible cargar la actualidad de tus equipos. Puedes abrir sus fichas para ver el calendario y las noticias.</p>
       </section>
 
+      <section
+        v-if="seguimientoJugadoresHidratado && jugadoresSeguidos.length"
+        class="medio-seccion medio-seguimiento-equipos medio-seguimiento-jugadores"
+        aria-labelledby="titulo-jugadores-seguidos"
+      >
+        <div class="medio-encabezado">
+          <div>
+            <h2 id="titulo-jugadores-seguidos">Jugadores que sigues</h2>
+            <p>Noticias públicas vinculadas editorialmente con sus perfiles.</p>
+          </div>
+          <NuxtLink to="/colombianos-en-europa">Explorar jugadores <span aria-hidden="true">→</span></NuxtLink>
+        </div>
+        <p v-if="cargandoJugadoresSeguidos && !actualidadJugadoresSeguidos.length" class="estado-seguimiento-home" role="status">Cargando noticias de los jugadores que sigues…</p>
+        <div v-else-if="actualidadJugadoresSeguidos.length" class="grilla-equipos-seguidos-home">
+          <article v-for="jugador in actualidadJugadoresSeguidos" :key="jugador.perfil.slug" class="tarjeta-equipo-seguido-home">
+            <header>
+              <span class="inicial-equipo-seguido" aria-hidden="true">{{ jugador.perfil.nombre.slice(0, 1) }}</span>
+              <div>
+                <NuxtLink :to="`/jugadores/${encodeURIComponent(jugador.perfil.slug)}`">{{ jugador.perfil.nombre }}</NuxtLink>
+                <small>{{ jugador.perfil.club }} · {{ jugador.perfil.competencia }}</small>
+              </div>
+              <BotonSeguirJugador compacto :slug="jugador.perfil.slug" :nombre="jugador.perfil.nombre" />
+            </header>
+            <NuxtLink
+              v-for="noticia in jugador.noticias"
+              :key="noticia.slug"
+              class="noticia-seguida-home"
+              :to="`/articulos/${encodeURIComponent(noticia.slug)}`"
+            >
+              <span>{{ noticia.categoria }}</span>{{ noticia.titulo }}
+            </NuxtLink>
+            <p v-if="jugador.error" class="estado-seguimiento-home">No fue posible cargar sus noticias relacionadas.</p>
+            <p v-else-if="!jugador.noticias.length" class="estado-seguimiento-home">Aún no hay artículos públicos vinculados editorialmente con este jugador.</p>
+          </article>
+        </div>
+        <p v-else class="estado-seguimiento-home">No fue posible cargar las noticias de los jugadores que sigues.</p>
+      </section>
+
       <div class="medio-actualidad">
         <section aria-labelledby="titulo-ultimas-noticias">
           <div class="medio-encabezado">
@@ -278,6 +361,7 @@ useSeoPont3la10(() => ({
 .tarjeta-equipo-seguido-home > header > div > a { overflow: hidden; color: #fff; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
 .tarjeta-equipo-seguido-home > header small, .estado-seguimiento-home { color: #a8bbd5; font-size: .76rem; }
 .tarjeta-equipo-seguido-home :deep(.boton-seguimiento-equipo) { min-height: 32px; padding: 5px 9px; }
+.tarjeta-equipo-seguido-home :deep(.boton-seguimiento-jugador) { min-height: 32px; padding: 5px 9px; }
 .partido-seguido-home { display: grid; gap: 5px; margin: 14px 0 0; border-top: 1px solid #294467; padding-top: 12px; }
 .partido-seguido-home > span, .noticia-seguida-home > span { color: #9bc8ff; font-size: .63rem; font-weight: 850; letter-spacing: .06em; }
 .partido-seguido-home.en-vivo > span { color: #ff8f98; }

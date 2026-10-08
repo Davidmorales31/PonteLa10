@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { PartidoResultado, RespuestaResultados } from '~/types/resultados'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
+import BotonSeguirJugador from '~/components/publico/BotonSeguirJugador.vue'
 import { buscarPerfilJugadorEuropa, partidoCorrespondeAClubJugador } from '~/data/jugadoresColombianosEuropa'
 import { construirUrlAbsoluta } from '~/utils/seo'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
@@ -147,6 +148,7 @@ onMounted(() => {
           <p class="etiqueta-seccion">FICHA DE FUTBOLISTA · COLOMBIANO EN EUROPA</p>
           <h1>{{ ficha.nombre }}</h1>
           <p class="resumen-cabecera-jugador">{{ ficha.posicion }} · {{ ficha.nacionalidad }}</p>
+          <BotonSeguirJugador :slug="ficha.slug" :nombre="ficha.nombre" />
         </div>
       </div>
       <div class="club-jugador">
