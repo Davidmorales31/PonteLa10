@@ -73,41 +73,29 @@
   sidecars descritos arriba quedaron en producción. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-perf02-image-optimization.md`.
 
-## HU-PERF-03 — caché de hubs y entidades (separación de sesiones antes de CDN en curso, 2026-10-07)
+## HU-PERF-03 — caché de hubs y entidades (Production, 2026-10-08)
 
-- Se centralizó la política de CDN por tipo de dato público: artículos,
-  equipos, competiciones, tabla, sitemaps y partidos programados, en vivo,
-  pendientes y finalizados. HTML conserva revalidación del navegador; la CDN
-  recibe TTL separado. Las rutas con sesión editorial, `Authorization` o
-  `Set-Cookie` responden `private, no-store`; las páginas con contenido
-  personalizado se aíslan con la variante de baja cardinalidad que añade el
-  Routing Middleware de Vercel antes de la CDN.
-- Las páginas SSR y endpoints públicos incorporan la política; el detalle de
-  partido calcula TTL desde su estado actual en vez de una caché Nitro fija.
-  La imagen de partido incluye el estado en su clave de caché para no mantener
-  un cartel “En vivo” tras pasar a actualización pendiente.
-- PR #101 se integró como `64005429dbd7a0a400db52872bec2e096b2def6b`; CI y
-  Vercel Preview/Production reportaron success. El primer smoke mostró MISS
-  repetido porque `Vary: Cookie` impedía el almacenamiento CDN de Vercel
-  (cambio de plataforma del 2026-09-30). PR #102 quitó Cookie/Authorization de
-  `Vary` en respuestas públicas y Production pasó a HIT en solicitudes
-  anónimas. Un smoke posterior encontró que, tras calentar la caché anónima,
-  una cookie de sesión de prueba también recibía HIT antes de llegar al
-  servidor; por eso HU-PERF-03 sigue abierta.
-- Corrección local en esta rama: Routing Middleware de Vercel determina antes
-  de la CDN una variante binaria `publica`/`privada` a partir de la cookie de
-  sesión editorial o `Authorization`, sobrescribe cualquier valor entrante y
-  añade solo esa dimensión de baja cardinalidad a `Vary`. Cookies ajenas como
-  consentimiento quedan públicas; las solicitudes autenticadas siguen
-  `private, no-store`. No se envían ni registran valores de credenciales.
-  Revisión de seguridad del middleware sin hallazgos P0–P2. `npm ci`, lint,
-  typecheck, suite completa (94 archivos/480 pruebas) y build local pasan. El
-  primer Preview falló con `MIDDLEWARE_INVOCATION_FAILED`: Vercel ejecuta el
-  middleware como ESM y no resolvió el import local sin extensión. Se cambian
-  los imports de esa cadena a `.js`; nuevo Preview y smoke siguen pendientes.
-- Pendiente: abrir PR, integrar tras checks y Vercel Production, y confirmar
-  en producción HIT anónimo más separación privada para cookie de sesión y
-  retorno a HIT anónimo antes de cerrar HU-PERF-03. Handoff:
+- Se centralizó la política CDN por tipo de dato público —artículos, equipos,
+  competiciones, tablas, sitemaps y partidos según estado— en páginas SSR y
+  APIs. HTML conserva revalidación del navegador y la CDN recibe TTL separado;
+  el TTL de partido cambia con su estado y la imagen usa el estado en su clave.
+- Routing Middleware de Vercel clasifica antes de la CDN las solicitudes como
+  `publica` o `privada`, sobrescribiendo el encabezado entrante. `Vary` usa
+  `x-pont3la10-cache-variant` en vez de `Cookie`; consentimiento no personaliza
+  la respuesta. Sesión editorial, `Authorization` o `Set-Cookie` dan
+  `private, no-store`. No se registran ni exponen credenciales.
+- PR #103 se integró en `main` como `2efea57e2603e5234a3628ee028f57063f2c474e`;
+  Vercel Production reportó success. El primer Preview de la PR falló por un
+  import ESM local sin extensión; se corrigió con `.js`, y el Preview final
+  respondió 200 en `/articulos` y `/api/articulos`, sin errores de middleware.
+- Smoke en Production: `/api/articulos` y `/articulos` retornan anónimo
+  MISS→HIT con `Vary: x-pont3la10-cache-variant`; con cookie de sesión fixture
+  responden `private, no-store` y `MISS`; la siguiente solicitud anónima vuelve
+  a `HIT`. `consent=accepted` permanece en la variante pública y retorna `HIT`.
+- `npm ci`, lint, typecheck, suite completa (94 archivos/480 pruebas), build y
+  `git diff --check` pasan; la prueba relacionada de caché pasa 5/5. Revisión
+  de seguridad sin hallazgos P0–P2. No hubo cambios de Supabase, migraciones,
+  variables ni secretos. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-perf03-cache.md`.
 
 ## HU-ED-26 — actualizar antes de crear (Production, 2026-10-07)
