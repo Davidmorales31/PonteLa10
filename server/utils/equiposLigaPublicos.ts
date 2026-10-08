@@ -3,6 +3,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { listarArticulosPublicosPorEntidad } from '~/server/utils/repositorioContenidoEditorial'
 import { listarPartidosSeoPublicos, normalizarClaveEquipoLiga } from '~/server/utils/partidosSeoPublicos'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
+import { evaluarFrescuraTabla, type EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
@@ -59,6 +60,7 @@ export interface EquipoLigaPublico {
 export interface FichaEquipoLigaPublica {
   equipo: EquipoLigaPublico
   indexable: boolean
+  frescuraTabla: EvaluacionFrescuraDeportiva
   partidosPublicos: number
   sedeVerificada: { estadio: string, ciudad: string | null, verificadoEn: string, fuenteOficialUrl: string } | null
   partidosEnVivo: PartidoSeoPublico[]
@@ -168,9 +170,11 @@ export async function obtenerFichaEquipoLigaPublica(
   const partidoSede = seleccionarSedeVerificada(relacionados, clave)
   const clasificacionPrincipal = equipo.clasificaciones[0]
   const noticias = await buscarNoticiasEquipo(cliente, equipo.slug)
+  const frescuraTabla = evaluarFrescuraTabla(clasificacionPrincipal?.verificadoEn, ahoraMs)
 
   return {
     equipo,
+    frescuraTabla,
     indexable: evaluarIndexabilidad({
       tipo: 'equipo',
       slug: equipo.slug,
@@ -180,7 +184,7 @@ export async function obtenerFichaEquipoLigaPublica(
       escudo: equipo.escudo,
       posicionVerificadaEn: clasificacionPrincipal?.verificadoEn || null,
       partidosPublicos: relacionados.length
-    }),
+    }, ahoraMs),
     partidosPublicos: relacionados.length,
     sedeVerificada: partidoSede?.estadio
       ? {

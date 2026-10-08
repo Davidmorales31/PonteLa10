@@ -8,6 +8,7 @@ import {
   RefreshCw,
   Server
 } from '@lucide/vue'
+import { generarAlertasFrescuraFutbol } from '~/utils/alertasFrescuraFutbol'
 
 interface SaludOperativa {
   consultadoEn: string | null
@@ -32,6 +33,26 @@ interface SaludOperativa {
   cron: { estado: string, disponible: boolean, configurado: boolean | null, iniciadaEn: string | null, terminadaEn: string | null }
 }
 
+interface GrupoFrescuraFutbol {
+  competencia: string
+  estado: 'saludable' | 'atencion' | 'sin_datos'
+  registros: number
+  actualizados: number
+  desactualizados: number
+  sinVerificacion: number
+  ultimaVerificacion: string | null
+  edadMayorMinutos: number | null
+}
+
+interface SaludFrescuraFutbol {
+  consultadoEn: string
+  calendario: GrupoFrescuraFutbol[]
+  tablas: GrupoFrescuraFutbol[]
+  filasRecibidas: { calendario: number, tablas: number }
+  limitesConsulta: { calendario: number, tablas: number }
+  coberturaCompleta: boolean
+}
+
 definePageMeta({
   layout: 'admin',
   middleware: 'autenticacion-editorial',
@@ -47,11 +68,17 @@ const {
   error,
   refresh
 } = await useFetch<SaludOperativa>('/api/admin/operacion')
+const {
+  data: saludFutbol,
+  error: errorSaludFutbol,
+  status: estadoSaludFutbol,
+  refresh: refreshSaludFutbol
+} = await useFetch<SaludFrescuraFutbol>('/api/admin/futbol/frescura')
 
 const alertasOperativas = computed(() => {
-  if (!salud.value) return []
+  const alertas = generarAlertasFrescuraFutbol(saludFutbol.value, Boolean(errorSaludFutbol.value))
+  if (!salud.value) return alertas
   const estado = salud.value
-  const alertas: string[] = []
   if (estado.worker.estado !== 'activo') alertas.push(`Worker: ${estado.worker.estado}`)
   if (estado.ingestas.procesamientoConLeaseVencido > 0) alertas.push('Hay ingestas con lease vencido')
   if (estado.ingestas.fallidas > 0) alertas.push(`${estado.ingestas.fallidas} ingestas fallidas`)
@@ -101,7 +128,7 @@ function etiquetaEstado(estado: string): string {
 function claseEstado(estado: string): string {
   return ['activo', 'completed', 'succeeded'].includes(estado)
     ? 'estado-salud estado-salud-ok'
-    : ['partial', 'deteniendose', 'running', 'sin_ejecuciones'].includes(estado)
+    : ['partial', 'deteniendose', 'running', 'sin_ejecuciones', 'sin_datos'].includes(estado)
       ? 'estado-salud estado-salud-atencion'
       : 'estado-salud estado-salud-error'
 }
@@ -124,7 +151,13 @@ function formatearEdad(segundos: number | null): string {
 }
 
 async function recargar() {
-  await refresh()
+  await Promise.all([refresh(), refreshSaludFutbol()])
+}
+
+function estadoControlFrescura(grupo: GrupoFrescuraFutbol): string {
+  if (grupo.estado === 'saludable') return 'Saludable'
+  if (grupo.estado === 'sin_datos') return 'Sin datos'
+  return 'Requiere atención'
 }
 </script>
 
@@ -136,8 +169,8 @@ async function recargar() {
         <h1>Operación editorial</h1>
         <p>Worker, ingestas, corridas de Codex y publicaciones. Este panel no reintenta ni modifica contenido.</p>
       </div>
-      <button class="accion-panel-secundaria" type="button" :disabled="status === 'pending'" @click="recargar">
-        <LoaderCircle v-if="status === 'pending'" class="icono-girando" aria-hidden="true" />
+      <button class="accion-panel-secundaria" type="button" :disabled="status === 'pending' || estadoSaludFutbol === 'pending'" @click="recargar">
+        <LoaderCircle v-if="status === 'pending' || estadoSaludFutbol === 'pending'" class="icono-girando" aria-hidden="true" />
         <RefreshCw v-else aria-hidden="true" />
         <span>Actualizar</span>
       </button>
@@ -207,6 +240,36 @@ async function recargar() {
           </dl>
         </article>
       </section>
+      <section class="tarjeta-salud-operativa tarjeta-salud-futbol" aria-labelledby="titulo-salud-futbol">
+        <header><Activity aria-hidden="true" /><h2 id="titulo-salud-futbol">Frescura de datos deportivos</h2></header>
+        <p v-if="estadoSaludFutbol === 'pending' && !saludFutbol" class="nota-operacion-editorial" role="status">Consultando snapshots públicos…</p>
+        <p v-else-if="errorSaludFutbol" class="aviso-panel aviso-panel-atencion" role="status">
+          Monitor de fútbol no disponible. La vista editorial sigue funcionando; revisa la sesión y los permisos si persiste.
+        </p>
+        <template v-else-if="saludFutbol">
+          <p class="nota-operacion-editorial">Consulta {{ formatearFecha(saludFutbol.consultadoEn) }} · umbrales: en vivo 3 min, prepartido 30 min, calendario 36 h, aplazado/suspendido 90 min y tabla 60 min.</p>
+          <p v-if="!saludFutbol.coberturaCompleta" class="aviso-panel aviso-panel-atencion" role="status">Consulta parcial: se alcanzó el límite de filas. No se interpreta como cobertura completa.</p>
+          <div class="resumen-frescura-futbol">
+            <div>
+              <h3>Calendario y marcadores</h3>
+              <dl v-for="grupo in saludFutbol.calendario" :key="`fixture-${grupo.competencia}`">
+                <div><dt>{{ grupo.competencia }}</dt><dd><span :class="claseEstado(grupo.estado)">{{ estadoControlFrescura(grupo) }}</span></dd></div>
+                <div><dt>Filas · vencidas · sin verificación</dt><dd>{{ grupo.registros }} · {{ grupo.desactualizados }} · {{ grupo.sinVerificacion }}</dd></div>
+                <div><dt>Última verificación</dt><dd>{{ formatearFecha(grupo.ultimaVerificacion) }}</dd></div>
+              </dl>
+            </div>
+            <div>
+              <h3>Tablas de posiciones</h3>
+              <dl v-for="grupo in saludFutbol.tablas" :key="`tabla-${grupo.competencia}`">
+                <div><dt>{{ grupo.competencia }}</dt><dd><span :class="claseEstado(grupo.estado)">{{ estadoControlFrescura(grupo) }}</span></dd></div>
+                <div><dt>Filas · vencidas · sin verificación</dt><dd>{{ grupo.registros }} · {{ grupo.desactualizados }} · {{ grupo.sinVerificacion }}</dd></div>
+                <div><dt>Última verificación</dt><dd>{{ formatearFecha(grupo.ultimaVerificacion) }}</dd></div>
+              </dl>
+            </div>
+          </div>
+          <p class="nota-operacion-editorial">Solo se leen registros públicos con derechos confirmados; no se consultan APIs deportivas ni se gastan cuotas. La consulta está protegida por permisos editoriales y RLS.</p>
+        </template>
+      </section>
       <p class="nota-operacion-editorial">Las horas se muestran en America/Bogota. La consulta no revela mensajes internos del Cron, IDs de instancia ni contenido de artículos.</p>
     </template>
   </div>
@@ -228,6 +291,13 @@ async function recargar() {
 .tarjeta-salud-operativa dt { color: var(--texto-secundario-panel, #64748b); }
 .tarjeta-salud-operativa dd { margin: 0; text-align: right; color: var(--texto-panel, #10243e); font-weight: 650; }
 .tarjeta-salud-operativa dd small { font-weight: 400; color: var(--texto-secundario-panel, #64748b); }
+.tarjeta-salud-futbol { grid-column: 1 / -1; }
+.resumen-frescura-futbol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.resumen-frescura-futbol h3 { margin: 0 0 .75rem; font-size: .95rem; }
+.resumen-frescura-futbol dl { display: grid; gap: .45rem; margin: 0 0 1rem; }
+.resumen-frescura-futbol dl > div { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; border-bottom: 1px solid var(--borde-panel, #e2e8f0); padding-bottom: .35rem; }
+.resumen-frescura-futbol dt { color: var(--texto-secundario-panel, #64748b); }
+.resumen-frescura-futbol dd { margin: 0; text-align: right; font-weight: 650; }
 .tarjeta-salud-operativa > a { color: #087bc6; text-decoration: none; font-weight: 650; }
 .estado-salud { display: inline-flex; width: fit-content; align-items: center; border-radius: 999px; padding: .3rem .65rem; font-size: .8rem; font-weight: 700; }
 .estado-salud-ok { color: #08713f; background: #e3f6eb; }
@@ -239,5 +309,6 @@ async function recargar() {
 @media (max-width: 740px) {
   .vista-operacion-editorial > .titulo-vista-panel { flex-direction: column; }
   .tarjetas-salud-operativa { grid-template-columns: minmax(0, 1fr); }
+  .resumen-frescura-futbol { grid-template-columns: minmax(0, 1fr); }
 }
 </style>

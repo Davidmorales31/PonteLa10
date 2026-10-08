@@ -1,5 +1,53 @@
 # Estado actual de Pont3la10
 
+## HU-OPS-03 — auditoría de páginas huérfanas (Production, 2026-10-08)
+
+- PR #110 se integró a `main` como `cb7a9ff88ca094b97faa594292f5ec469df3c488`;
+  Vercel confirmó Production. El panel protegido muestra URL, tipo, número de
+  páginas de origen únicas, cluster y estado `huerfana`; el conteo excluye
+  navegación, breadcrumbs, sitemap, páginas legales y rutas fuera del catálogo.
+- El monitor reutiliza el grafo SEO existente, relaciones editoriales y
+  fixtures/calendario; no agrega tablas ni migraciones. `huerfana` describe
+  enlaces contextuales medidos, no el status HTTP.
+- Validación local y CI: lint, 97 archivos/507 pruebas, typecheck, build y
+  `git diff --check`. La validación visual autenticada quedó limitada: no había
+  configuración Supabase en el worktree local; el endpoint local respondió 503
+  y la vista administrativa redirigió al login. Handoff:
+  `docs/agents/handoffs/2026-10-08-hu-ops03-orphan-pages.md`.
+
+## HU-OPS-04 — control de frescura de datos (código validado, PR pendiente, 2026-10-08)
+
+- Usa `checked_at` existente como `verificadoEn`; no requiere DDL ni escrituras.
+  La consulta de solo lectura en Supabase Production confirmó filas públicas
+  de fixtures y tablas, y políticas RLS SELECT que exigen
+  `is_public AND publication_rights_confirmed`.
+- Umbrales centrales: en vivo 3 min, prepartido (<=90 min al inicio) 30 min,
+  calendario futuro 36 h, aplazado/suspendido/reprogramado 90 min y tabla 60
+  min. Resultados finales/cancelados/abandonados verificados se consideran
+  estables, pues el worker deja de consultarlos.
+- Las fichas de partido, equipo y competición y las jornadas usan el control
+  para avisar o excluir datos vencidos de indexación/sitemap. El panel de
+  Operación añade un endpoint privado GET agregado, sin IDs, protegido por
+  `configuracion.ver`, RLS y `Cache-Control: private, no-store`; no llama a
+  proveedores ni consume cuotas. El hub editorial `/liga-colombiana` se mantiene
+  indexable como landing evergreen; las temporadas/partidos dependen de frescura.
+- Validación local: suite 101 archivos/519 pruebas, lint, typecheck, build y
+  `git diff --check` pasan. Una ejecución completa intermedia tuvo un timeout
+  aislado en la prueba existente de variantes de escudos; esa prueba pasó
+  aislada (7/7) y la suite completa volvió a pasar. El build conserva la
+  advertencia upstream `[DEP0155]` de `@vue/shared`. Revisión estática de
+  seguridad sin hallazgos P0–P2 tras corregir alertas de `sin_datos`/cobertura
+  parcial y el límite de minutos exacto. El smoke local no autenticado del
+  endpoint de frescura devolvió 503 porque el worktree no tiene configuración
+  de autenticación Supabase; no se pudo validar autorización positiva/negativa
+  con un usuario en Preview.
+- Riesgos aceptados: el sitemap puede conservar URLs hasta 10 min por su caché;
+  una temporada actual se vuelve no indexable si cualquier dato activo rebasa
+  su umbral; `/liga-colombiana` permanece en sitemap como hub evergreen.
+  No hubo migración ni escrituras en Supabase Production.
+- Falta crear PR, revisar CI/Preview, integrar a `main` y confirmar Production.
+- Handoff: `docs/agents/handoffs/2026-10-08-hu-ops04-data-freshness.md`.
+
 ## HU-TRUST-05 — transparencia de datos del partido (Production, 2026-10-08 UTC)
 
 - La ficha de partido público declara la fuente de datos y la hora de consulta,

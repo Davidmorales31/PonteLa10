@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createError } from 'h3'
 import { asignarSlugsPartidosSeo, buscarPartidoSeoPorSlug } from '~/utils/partidosSeo'
 import { normalizarEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
+import { evaluarFrescuraPartido, type EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
 import { obtenerRutaPublicaEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
 import type { ProgramacionTransmisionPublica } from '~/utils/partidos/programacion'
 
@@ -65,6 +66,7 @@ export interface PartidoSeoPublico {
   equipoLocalSlug?: string
   equipoVisitanteSlug?: string
   verificadoEn: string
+  estadoFrescura?: EvaluacionFrescuraDeportiva
   transmisiones?: ProgramacionTransmisionPublica[]
 }
 
@@ -125,6 +127,7 @@ export async function listarPartidosSeoAdministrables(cliente: SupabaseClient): 
       }
     }
 
+      const ahoraMs = Date.now()
       return slugs.map(fila => ({
         slug: fila.slug,
       slugsAlternos: fila.slugsAlternos,
@@ -134,7 +137,7 @@ export async function listarPartidosSeoAdministrables(cliente: SupabaseClient): 
       fechaIso: fila.scheduled_at,
       local: fila.home_team,
       visitante: fila.away_team,
-      estado: normalizarEstadoSeoPartido(fila.status, fila.scheduled_at, fila.checked_at),
+      estado: normalizarEstadoSeoPartido(fila.status, fila.scheduled_at, fila.checked_at, ahoraMs),
       golesLocal: fila.goals_home,
       golesVisitante: fila.goals_away,
       estadio: fila.venue,
@@ -147,6 +150,11 @@ export async function listarPartidosSeoAdministrables(cliente: SupabaseClient): 
       equipoLocalSlug: slugsPorEquipo.get(normalizarClaveEquipoLiga(fila.home_team)),
       equipoVisitanteSlug: slugsPorEquipo.get(normalizarClaveEquipoLiga(fila.away_team)),
         verificadoEn: fila.checked_at,
+        estadoFrescura: evaluarFrescuraPartido({
+          estado: normalizarEstadoSeoPartido(fila.status, fila.scheduled_at, fila.checked_at, ahoraMs),
+          fechaIso: fila.scheduled_at,
+          verificadoEn: fila.checked_at
+        }, ahoraMs),
         identidadFuente: {
           competenciaSlug: fila.competition_slug,
           temporada: fila.season,
@@ -187,6 +195,7 @@ function presentarPartidoSeoPublico(partido: PartidoSeoAdministrable): PartidoSe
     equipoLocalSlug: partido.equipoLocalSlug,
     equipoVisitanteSlug: partido.equipoVisitanteSlug,
     verificadoEn: partido.verificadoEn,
+    estadoFrescura: partido.estadoFrescura,
     transmisiones: partido.transmisiones
   }
 }

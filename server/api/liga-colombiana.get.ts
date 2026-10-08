@@ -3,6 +3,7 @@ import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseE
 import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
 import { obtenerRangoMesBogota } from '~/server/utils/rangoMesBogota'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
+import { resumirFrescuraTabla, type EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
 
 const competiciones = ['liga-betplay', 'torneo-betplay', 'copa-colombia']
 const columnasTabla = [
@@ -133,6 +134,15 @@ export default defineEventHandler(async (evento) => {
     verificadoEn: fila.checked_at
     }))
 
+  const frescuraTablas: Record<string, EvaluacionFrescuraDeportiva> = Object.fromEntries(
+    competiciones.map(competencia => [
+      competencia,
+      resumirFrescuraTabla(tabla
+        .filter(fila => fila.competencia === competencia)
+        .map(fila => ({ verificadoEn: fila.verificadoEn })), ahora.getTime())
+    ])
+  )
+
   const verificados = [...todosLosPartidos, ...tabla]
     .map(fila => fila.verificadoEn)
     .filter((valor): valor is string => typeof valor === 'string')
@@ -143,6 +153,7 @@ export default defineEventHandler(async (evento) => {
     estado: fixtures.length || tabla.length ? 'disponible' as const : 'sin_datos' as const,
     partidos: fixtures,
     tabla,
+    frescuraTablas,
     actualizadoEn: verificados[0] || null,
     consultadoEn: ahora.toISOString()
   }

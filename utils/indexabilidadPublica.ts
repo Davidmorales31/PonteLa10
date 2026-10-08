@@ -1,4 +1,5 @@
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
+import { evaluarFrescuraPartido, evaluarFrescuraTabla, type EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
 
 export interface DatosIndexabilidadPartido {
   local: string
@@ -6,6 +7,8 @@ export interface DatosIndexabilidadPartido {
   competencia: string
   fechaIso: string
   estado: string | null
+  verificadoEn: string
+  estadoFrescura?: EvaluacionFrescuraDeportiva
   fuenteOficialUrl: string | null
   golesLocal: number | null
   golesVisitante: number | null
@@ -39,6 +42,7 @@ export interface DatosIndexabilidadCompeticion {
   partidosPublicos: number
   equiposPublicos: number
   fuenteDisponible: boolean
+  datosActualizados: boolean
 }
 
 export interface DatosIndexabilidadJugador {
@@ -73,6 +77,7 @@ export function evaluarIndexabilidad(
       && /^20\d{2}(?:-[A-Za-z0-9]+)?$/.test(contenido.temporada)
       && Boolean(contenido.escudo && /^\/images\/escudos\/liga-colombiana\/[a-z0-9-]+\.png$/.test(contenido.escudo))
       && Boolean(contenido.posicionVerificadaEn && Number.isFinite(Date.parse(contenido.posicionVerificadaEn)))
+      && evaluarFrescuraTabla(contenido.posicionVerificadaEn, ahora).actualizado
       && Number.isInteger(contenido.partidosPublicos)
       && contenido.partidosPublicos >= 3
   }
@@ -86,6 +91,7 @@ export function evaluarIndexabilidad(
       && contenido.partidosPublicos >= 8
       && Number.isInteger(contenido.equiposPublicos)
       && contenido.equiposPublicos >= 6
+      && contenido.datosActualizados
   }
 
   if ('tipo' in contenido && contenido.tipo === 'jugador') {
@@ -105,6 +111,8 @@ export function evaluarIndexabilidad(
   }
 
   const partido = contenido
+  const frescuraSuficiente = partido.estadoFrescura?.actualizado
+    ?? evaluarFrescuraPartido(partido, ahora).actualizado
   const fechaValida = Number.isFinite(Date.parse(partido.fechaIso))
   const estadoConfirmado = Boolean(partido.estado)
     && etiquetaEstadoSeoPartido(partido.estado) !== 'ACTUALIZACIÓN PENDIENTE'
@@ -123,6 +131,7 @@ export function evaluarIndexabilidad(
     && fuenteOficial
     && equiposConfirmados
     && competenciaConfirmada
+    && frescuraSuficiente
     && (resultadoConfirmado || sedeConfirmada || partido.transmisionVerificada === true)
 }
 

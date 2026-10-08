@@ -5,6 +5,7 @@ import { resolverDestinoPromocionalReproductor } from '~/utils/publicidad/destin
 import type { ProgramacionTransmisionPublica } from '~/utils/partidos/programacion'
 import { etiquetasDistribucionProgramacion } from '~/utils/partidos/programacion'
 import type { NavegacionContextualPartidoSeo } from '~/types/navegacionContextualSeo'
+import type { EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
 
 interface PartidoSeoVista {
   slug: string
@@ -25,6 +26,7 @@ interface PartidoSeoVista {
   equipoLocalSlug?: string
   equipoVisitanteSlug?: string
   verificadoEn: string
+  estadoFrescura?: EvaluacionFrescuraDeportiva
   transmisiones?: ProgramacionTransmisionPublica[]
 }
 
@@ -57,6 +59,14 @@ const marcadorDisponible = computed(() => props.partido.golesLocal !== null
   && props.partido.golesVisitante !== null)
 const marcador = computed(() => `${props.partido.golesLocal ?? '—'}–${props.partido.golesVisitante ?? '—'}`)
 const estadoPartido = computed(() => etiquetaEstadoSeoPartido(props.partido.estado))
+const frescuraDesactualizada = computed(() => estadoPartido.value === 'ACTUALIZACIÓN PENDIENTE'
+  || (props.partido.estadoFrescura
+    && ['desactualizado', 'sin_verificar', 'fecha_invalida'].includes(props.partido.estadoFrescura.estado)))
+const etiquetaFrescura = computed(() => estadoPartido.value === 'ACTUALIZACIÓN PENDIENTE'
+  ? 'Estado del encuentro pendiente de confirmación'
+  : props.partido.estadoFrescura?.estado === 'estable'
+  ? 'Resultado estable'
+  : frescuraDesactualizada.value ? 'Dato pendiente de actualización' : 'Dato actualizado')
 const transmisionesConfirmadas = computed(() => (props.partido.transmisiones || [])
   .filter(transmision => transmision.status === 'confirmed'
     && Boolean(transmision.verifiedAt)
@@ -251,6 +261,10 @@ onMounted(() => {
       <div v-else class="nota-marcador-partido">El sitio no transmite partidos. Mostramos solo información editorial publicada.</div>
       <section class="fuente-verificacion-partido" aria-label="Fuente y actualización de los datos">
         <strong>Fuente y actualización</strong>
+        <p v-if="frescuraDesactualizada" class="aviso-frescura-partido" role="status">
+          {{ etiquetaFrescura }}. Puede haber cambios posteriores; consulta la fuente oficial antes de tomar una decisión.
+        </p>
+        <p v-else class="estado-frescura-partido" role="status">{{ etiquetaFrescura }}<template v-if="partido.estadoFrescura?.umbralMinutos"> · umbral {{ partido.estadoFrescura.umbralMinutos }} min</template>.</p>
         <p>
           Datos del encuentro consultados por última vez el
           <time :datetime="partido.verificadoEn">{{ fechaHoraActualizacion(partido.verificadoEn) }}</time>
@@ -381,6 +395,8 @@ onMounted(() => {
 .fuente-verificacion-partido { display: grid; justify-items: center; gap: 5px; max-width: 720px; border: 1px solid #294362; border-radius: 10px; background: rgba(4, 18, 36, .55); padding: 12px 16px; color: #b4c7dd; text-align: center; line-height: 1.5; }
 .fuente-verificacion-partido strong { color: #83dff6; }
 .fuente-verificacion-partido p { margin: 0; }
+.fuente-verificacion-partido .aviso-frescura-partido { border-left: 3px solid #d59a00; border-radius: 6px; background: #fff6db; padding: 8px 11px; color: #744b00; }
+.fuente-verificacion-partido .estado-frescura-partido { color: #b9edcc; font-weight: 700; }
 .fuente-verificacion-partido a { color: #83dff6; font-weight: 800; }
 .contenido-partido-seo-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .8fr); gap: 24px; margin-top: 28px; }
 .articulo-partido-seo, .lateral-partido-seo { display: grid; align-content: start; gap: 20px; min-width: 0; }
@@ -413,6 +429,7 @@ body.tema-publico-blanco .bloque-datos-partido-seo dt, body.tema-publico-blanco 
 body.tema-publico-blanco .bloque-datos-partido-seo > p, body.tema-publico-blanco .contexto-partido-seo p, body.tema-publico-blanco .preguntas-partido-seo p, body.tema-publico-blanco .noticias-relacionadas-partido > p, body.tema-publico-blanco .noticias-relacionadas-partido li p { color: #586980; }
 body.tema-publico-blanco .fuente-verificacion-partido { border-color: #dce5f1; background: #f8fafc; color: #586980; }
 body.tema-publico-blanco .fuente-verificacion-partido strong, body.tema-publico-blanco .fuente-verificacion-partido a { color: #145996; }
+body.tema-publico-blanco .fuente-verificacion-partido .estado-frescura-partido { color: #17653b; }
 body.tema-publico-blanco .noticias-relacionadas-partido li a { color: #13253d; }
 @media (max-width: 760px) { .contenido-partido-seo-grid { grid-template-columns: minmax(0, 1fr); } .bloque-datos-partido-seo dl { grid-template-columns: minmax(0, 1fr); } .capa-datos-reproductor { min-height: 22vw; } }
 @media (max-width: 500px) { .equipos-cartel-partido { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; } .equipo-cartel-partido strong { font-size: .88rem; } .equipo-cartel-partido img, .escudo-cartel-fallback { width: 68px; height: 68px; border-width: 4px; padding: 9px; } .centro-cartel-partido span { font-size: .82rem; } .marca-cartel-partido { font-size: 1.1rem; } .detalles-cartel-partido { font-size: .84rem; } }
