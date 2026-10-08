@@ -11,6 +11,9 @@ const paginasPublicas = [
   '/resultados/tenis',
   '/resultados/beisbol',
   '/especiales',
+  '/quienes-somos',
+  '/politica-editorial',
+  '/correcciones',
   '/privacidad',
   '/terminos'
 ]

@@ -11,6 +11,7 @@ const leerRuta = (ruta: string) => readFileSync(new URL(`../../server/routes/${r
 const indice = leerRuta('sitemap-index.xml.get.ts')
 const legado = leerRuta('sitemap.xml.get.ts')
 const paginas = leerRuta('sitemap-pages.xml.get.ts')
+const datosSitio = readFileSync(new URL('../../data/sitioPublico.ts', import.meta.url), 'utf8')
 const competencias = leerRuta('sitemap-competitions.xml.get.ts')
 const jornadas = leerRuta('sitemap-rounds.xml.get.ts')
 const articulos = leerRuta('sitemap-articles.xml.get.ts')
@@ -88,6 +89,13 @@ describe('sitemaps públicos por entidad', () => {
     expect(competencias).toContain('obtenerClienteSupabaseAnonimo')
     expect(competencias).toContain("registrarFalloSitemap(evento, 'competitions')")
     expect(competencias).not.toContain('sendRedirect')
+  })
+
+  it('descubre las páginas de transparencia desde el sitemap y el pie público', () => {
+    for (const ruta of ['/quienes-somos', '/politica-editorial', '/correcciones']) {
+      expect(paginas).toContain(`'${ruta}'`)
+      expect(datosSitio).toContain(`ruta: '${ruta}'`)
+    }
   })
 
   it('incluye solo jornadas verificadas y completas en su sitemap independiente', () => {
