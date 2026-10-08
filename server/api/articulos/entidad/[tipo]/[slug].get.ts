@@ -1,6 +1,7 @@
-import { getRouterParam, setResponseHeader } from 'h3'
+import { getRouterParam } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { listarArticulosPublicosPorEntidad } from '~/server/utils/repositorioContenidoEditorial'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 import type { TipoEntidadSeo } from '~/types/contenidoEditorial'
 
 const tiposEntidadPublica = new Set<TipoEntidadSeo>([
@@ -22,6 +23,6 @@ export default defineEventHandler(async (evento) => {
     slug,
     12
   )
-  setResponseHeader(evento, 'Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=60')
+  aplicarCachePublica(evento, 'articulo')
   return articulos
 })

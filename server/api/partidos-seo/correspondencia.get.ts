@@ -2,6 +2,7 @@ import { z } from 'zod'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
 import { buscarCorrespondenciaPartidoSeo } from '~/server/utils/partidoSeoCorrespondencia'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 
 const esquemaConsultaCorrespondencia = z.object({
   competencia: z.string().trim().min(2).max(100),
@@ -16,8 +17,8 @@ export default defineEventHandler(async (evento) => {
     throw createError({ statusCode: 400, statusMessage: 'La identidad del partido no es válida.' })
   }
 
-  setResponseHeader(evento, 'Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=120')
   const partidos = await listarPartidosSeoPublicos(obtenerClienteSupabaseAnonimo(evento))
   const partido = buscarCorrespondenciaPartidoSeo(partidos, parametros.data)
+  aplicarCachePublica(evento, 'partidoProgramado')
   return { slug: partido?.slug || null }
 })

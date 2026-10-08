@@ -1,6 +1,7 @@
-import { getRouterParam, setResponseHeader } from 'h3'
+import { getRouterParam } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { obtenerFichaEquipoLigaPublica } from '~/server/utils/equiposLigaPublicos'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 
 export default defineEventHandler(async (evento) => {
   const slug = getRouterParam(evento, 'slug') || ''
@@ -12,6 +13,6 @@ export default defineEventHandler(async (evento) => {
   const ficha = await obtenerFichaEquipoLigaPublica(cliente, slug)
   if (!ficha) throw createError({ statusCode: 404, statusMessage: 'No encontramos ese equipo.' })
 
-  setResponseHeader(evento, 'Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=60')
+  aplicarCachePublica(evento, 'equipo')
   return ficha
 })

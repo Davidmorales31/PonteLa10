@@ -24,14 +24,12 @@
   10s. Se corrigió una carrera que podía borrar el original que una solicitud
   concurrente estaba registrando y se añadieron pruebas para comprobar limpieza
   segura de rutas UUID y conservación de rutas compartidas.
-- **Estado de publicación:** Vercel Dashboard muestra proyecto `ponte-la10`,
-  rama de producción `main` y deployment actual basado en `48482071`. El
-  dashboard indica desplegar empujando a `main`. El CLI no está instalado; el
-  Vercel MCP devuelve 404/403 al consultar proyecto/deployments. No se afirmó
-  que este código ya esté en producción. El remoto Git consultado todavía tenía
-  `main` en `48482071`.
-- **Pendiente exacto:** confirmar el diff, guardar los cambios en Git y
-  publicarlos por la rama `main`, ya que ese es el flujo configurado; luego
-  esperar deployment READY y repetir smoke del dominio de producción.
+- **Estado de publicación:** PR #100 se integró por squash en `main` como
+  `0de45d0d941ba1c7f2266ff24e8f064b62e9b732`. GitHub CI (lint, test,
+  typecheck, build), Vercel Preview y Vercel Production pasaron. Smoke de
+  Production confirmó HTTP 200 en portada, partidos de hoy, artículos y Liga
+  Colombiana. Los 456 sidecars/24.994.820 bytes y 577 objetos/45.766.870 bytes
+  se verificaron en Supabase; originales preservados.
+- **Pendiente exacto:** ninguno para HU-PERF-02.
 - **Commit base:** `48482071e3fb5aef5824a8030d16da4c85a86c52` (Production/PR #99).
-- **Commit final:** pendiente del corte de producción.
+- **Commit final:** `0de45d0d941ba1c7f2266ff24e8f064b62e9b732` (PR #100).

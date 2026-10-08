@@ -2,6 +2,7 @@ import { getQuery } from 'h3'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
 import { obtenerRangoMesBogota } from '~/server/utils/rangoMesBogota'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 
 const competiciones = ['liga-betplay', 'torneo-betplay', 'copa-colombia']
 const columnasTabla = [
@@ -137,7 +138,7 @@ export default defineEventHandler(async (evento) => {
     .filter((valor): valor is string => typeof valor === 'string')
     .sort((a, b) => Date.parse(b) - Date.parse(a))
 
-  setResponseHeader(evento, 'Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=60')
+  aplicarCachePublica(evento, 'tabla')
   return {
     estado: fixtures.length || tabla.length ? 'disponible' as const : 'sin_datos' as const,
     partidos: fixtures,

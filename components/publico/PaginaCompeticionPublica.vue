@@ -21,6 +21,7 @@ if (error.value) {
     statusMessage: error.value.statusMessage || 'No fue posible cargar la competición.'
   })
 }
+useCachePublica('competicion')
 
 if (props.temporada && ficha.value?.temporadaActual === props.temporada) {
   await navigateTo(`/competiciones/${encodeURIComponent(props.slug)}`, { redirectCode: 301, replace: true })

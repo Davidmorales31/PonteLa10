@@ -3,6 +3,7 @@ import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseE
 import { obtenerArticuloPublicoEditorial } from '~/server/utils/repositorioContenidoEditorial'
 import { listarEntidadesPublicasSeo, listarRelacionesPublicasSeo } from '~/server/utils/grafoEntidadesSeo'
 import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 import { seleccionarProximoPartidoArticuloSeo } from '~/utils/editorial/navegacionContextualSeo'
 
 export default defineEventHandler(async (
@@ -47,11 +48,7 @@ export default defineEventHandler(async (
     }
   }
 
-  setResponseHeader(
-    evento,
-    'Cache-Control',
-    'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
-  )
+  aplicarCachePublica(evento, 'articulo')
 
   return articulo
 })

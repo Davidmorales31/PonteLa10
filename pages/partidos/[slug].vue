@@ -6,6 +6,7 @@ import { construirSportsEventSeo, etiquetaEstadoSeoPartido } from '~/utils/schem
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
 import type { ContextoAnaliticaPagina } from '~/utils/analiticaPublica'
 import type { NavegacionContextualPartidoSeo } from '~/types/navegacionContextualSeo'
+import { obtenerTipoCachePartido } from '~/utils/cachePublica'
 
 const ruta = useRoute()
 const configuracion = useRuntimeConfig()
@@ -26,6 +27,7 @@ if (error.value || !data.value?.partido) {
       : 'No se pudo cargar la información verificada del partido.'
   })
 }
+useCachePublica(obtenerTipoCachePartido(data.value.partido.estado))
 
 const partidoInicial = data.value.partido
 const partido = computed(() => data.value?.partido || partidoInicial)

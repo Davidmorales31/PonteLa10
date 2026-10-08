@@ -36,7 +36,7 @@
   probaron visualmente tarjetas con fixtures reales.
 - Handoff: docs/agents/handoffs/2026-10-07-hu-perf01-css-split.md.
 
-## HU-PERF-02 — optimización de imágenes (código listo; publicación pendiente, 2026-10-07)
+## HU-PERF-02 — optimización de imágenes (Production, 2026-10-07)
 
 - Se generaron 164 variantes WebP locales (2.250.170 bytes en total) para
   escudos colombianos y recursos estáticos de marca, publicidad, estados vacíos,
@@ -65,12 +65,34 @@
   `/liga-colombiana` respondieron HTTP 200; la portada ya no falla con
   `Invalid time value`. La carga real de sidecars se verificó mediante
   agregados SQL de solo lectura después del backfill.
-- El código aún no está publicado. El dashboard de Vercel confirma que
-  `main` es la rama de producción y que el deployment actual parte de
-  `48482071`; el camino configurado es integrar en `main`. La lectura por MCP
-  de Vercel no tiene permiso para inspeccionar deployments (403) y la CLI no
-  está instalada. Handoff:
+- PR #100 se integró por squash como
+  `0de45d0d941ba1c7f2266ff24e8f064b62e9b732`. Los checks lint, test,
+  typecheck, build y Vercel Preview pasaron; Supabase Preview se omitió porque
+  no había migración. Vercel Production reportó success. Smoke verificado en
+  portada, partidos de hoy, artículos y Liga Colombiana; las variantes y
+  sidecars descritos arriba quedaron en producción. Handoff:
   `docs/agents/handoffs/2026-10-07-hu-perf02-image-optimization.md`.
+
+## HU-PERF-03 — caché de hubs y entidades (validado localmente; release pendiente, 2026-10-07)
+
+- Se centralizó la política de CDN por tipo de dato público: artículos,
+  equipos, competiciones, tabla, sitemaps y partidos programados, en vivo,
+  pendientes y finalizados. HTML conserva revalidación del navegador; la CDN
+  recibe TTL separado. Las rutas con sesión editorial, `Authorization` o
+  `Set-Cookie` responden `private, no-store`, con `Vary: Cookie, Authorization`.
+- Las páginas SSR y endpoints públicos incorporan la política; el detalle de
+  partido calcula TTL desde su estado actual en vez de una caché Nitro fija.
+  La imagen de partido incluye el estado en su clave de caché para no mantener
+  un cartel “En vivo” tras pasar a actualización pendiente.
+- Validación local: lint, typecheck, build, `git diff --check`, suite completa
+  (94 archivos/479 pruebas) y tres pruebas relacionadas (18/18). Smoke del
+  build: páginas de artículos, Liga Colombiana y sitemap HTTP 200 con CDN TTL
+  esperado; cookie de sesión de prueba produce `private, no-store`. Revisión de
+  seguridad sin hallazgos P0–P2. Build conserva el aviso upstream `[DEP0155]`
+  de `@vue/shared`.
+- Pendiente: PR, checks de CI/Vercel Preview, integrar en `main` y verificar
+  cabeceras en Production. Handoff:
+  `docs/agents/handoffs/2026-10-07-hu-perf03-cache.md`.
 
 ## HU-ED-26 — actualizar antes de crear (Production, 2026-10-07)
 

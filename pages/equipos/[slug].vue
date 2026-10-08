@@ -16,6 +16,7 @@ if (error.value) {
     statusMessage: error.value.statusMessage || 'No fue posible cargar la ficha del equipo.'
   })
 }
+useCachePublica('equipo')
 
 const equipo = computed(() => ficha.value?.equipo || null)
 const clasificacion = computed(() => equipo.value?.clasificaciones[0] || null)
