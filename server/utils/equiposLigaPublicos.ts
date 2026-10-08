@@ -90,6 +90,26 @@ export async function listarEquiposLigaPublicos(cliente: SupabaseClient): Promis
   return proyectarEquiposLigaPublicos(data as unknown as FilaClasificacionEquipo[])
 }
 
+export async function obtenerEquipoLigaPublicoPorSlug(
+  cliente: SupabaseClient,
+  slug: string
+): Promise<EquipoLigaPublico | null> {
+  const { data, error } = await cliente.from('colombian_league_standings')
+    .select(columnasClasificacion)
+    .eq('team_key', slug)
+    .eq('is_public', true)
+    .eq('publication_rights_confirmed', true)
+    .order('checked_at', { ascending: false })
+    .limit(50)
+
+  if (error || !Array.isArray(data)) {
+    throw createError({ statusCode: 503, message: 'La clasificación pública no está disponible.' })
+  }
+
+  return proyectarEquiposLigaPublicos(data as unknown as FilaClasificacionEquipo[])
+    .find(equipo => equipo.slug === slug) || null
+}
+
 export function proyectarEquiposLigaPublicos(filas: FilaClasificacionEquipo[]): EquipoLigaPublico[] {
   const equipos = new Map<string, EquipoLigaPublico>()
   const clavesClasificacion = new Set<string>()
