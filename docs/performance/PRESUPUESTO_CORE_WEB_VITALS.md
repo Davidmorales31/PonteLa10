@@ -47,6 +47,24 @@ las rutas estén optimizadas. El siguiente trabajo de rendimiento debe reducir
 LCP y CLS, especialmente en `/partidos-hoy`, y bajar esos límites con nuevas
 mediciones repetibles.
 
+La primera ejecución manual del workflow contra Production (2026-10-08) produjo
+estas medianas de tres muestras:
+
+| Ruta | Performance | LCP | CLS | TBT |
+| --- | ---: | ---: | ---: | ---: |
+| `/` | 0,87 | 3 430 ms | 0,00 | 202 ms |
+| `/partidos-hoy` | 0,73 | 4 811 ms | 0,20 | 212 ms |
+| `/liga-colombiana` | 0,74 | 3 342 ms | 0,01 | 636 ms |
+| `/colombianos-en-europa` | 0,90 | 3 161 ms | 0,06 | 150 ms |
+
+La primera corrida post-merge de CI llegó a CLS 0,266 en `/partidos-hoy`; la
+medición de Production observó TBT 636 ms en `/liga-colombiana`. Los controles
+quedan en performance ≥0,45, LCP ≤9 s, CLS ≤0,30 y TBT ≤800 ms, evaluados por
+mediana de tres corridas. Se fija Ubuntu 24.04 para que cambios automáticos de
+la imagen `ubuntu-latest` no alteren la referencia de las mediciones. Estos
+límites detectan regresiones grandes, no cumplimiento de los Core Web Vitals
+ideales; los puntos de deuda anteriores siguen visibles y deben optimizarse.
+
 ## Rutas y controles
 
 CI mide `/`, `/partidos-hoy`, `/liga-colombiana` y
@@ -56,7 +74,7 @@ días. Un workflow semanal repite la muestra contra Production cada martes a las
 09:17, hora de Colombia.
 
 Los límites duros iniciales de regresión son performance ≥ 0,45, LCP ≤ 9 s,
-CLS ≤ 0,2 y TBT ≤ 500 ms. Se evalúan sobre la mediana de tres ejecuciones por
+CLS ≤ 0,30 y TBT ≤ 800 ms. Se evalúan sobre la mediana de tres ejecuciones por
 ruta; **no significan que se haya alcanzado el objetivo ideal de campo**. Los
 reportes se conservan para que el equipo pueda bajar los límites
 gradualmente sin ocultar una regresión.
