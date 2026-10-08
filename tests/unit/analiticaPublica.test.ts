@@ -72,6 +72,18 @@ describe('analítica pública', () => {
       page_type: 'match'
     })
     expect(construirDimensionesVistaPagina('/resultados/123')).toEqual({ page_type: 'results' })
+    expect(construirDimensionesVistaPagina('/equipos/atletico-nacional')).toEqual({
+      team_id: 'atletico-nacional',
+      page_type: 'team'
+    })
+    expect(construirDimensionesVistaPagina('/competiciones/liga-betplay')).toEqual({
+      competition_id: 'liga-betplay',
+      page_type: 'competition'
+    })
+    expect(construirDimensionesVistaPagina('/jugadores/luis-diaz')).toEqual({
+      player_id: 'luis-diaz',
+      page_type: 'player'
+    })
     expect(construirDimensionesVistaPagina('/seleccion-colombia')).toEqual({
       hub_type: 'seleccion_colombia',
       page_type: 'hub'
