@@ -24,6 +24,7 @@ const { data: articuloPublicado } = await useFetch<ArticuloPublicoEditorial>(
     ignoreResponseError: true
   }
 )
+if (articuloPublicado.value) useCachePublica('articulo')
 const contextoAnalitica = useState<ContextoAnaliticaPagina | null>('contexto-analitica-pagina', () => null)
 watchEffect(() => {
   const articulo = articuloPublicado.value

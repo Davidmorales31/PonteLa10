@@ -1,5 +1,6 @@
 import { setResponseHeader, setResponseStatus, type H3Event } from 'h3'
 import { construirUrlAbsoluta, escaparXml } from '~/utils/seo'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 
 export interface EntradaSitemapPublico {
   ruta: string
@@ -59,11 +60,12 @@ export function construirIndiceSitemapPublico(entradas: EntradaIndiceSitemapPubl
 
 export function prepararRespuestaSitemap(evento: H3Event, cacheable = true): void {
   setResponseHeader(evento, 'Content-Type', 'application/xml; charset=utf-8')
-  setResponseHeader(
-    evento,
-    'Cache-Control',
-    cacheable ? 'public, max-age=0, s-maxage=300, stale-while-revalidate=300' : 'no-store'
-  )
+  if (cacheable) {
+    aplicarCachePublica(evento, 'sitemap')
+  } else {
+    setResponseHeader(evento, 'Cache-Control', 'no-store')
+    setResponseHeader(evento, 'CDN-Cache-Control', 'no-store')
+  }
 }
 
 export function filtrarPublicacionesVentanaNews<T extends PublicacionSitemapNews>(

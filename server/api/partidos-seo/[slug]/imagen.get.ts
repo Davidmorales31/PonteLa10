@@ -3,7 +3,9 @@ import sharp from 'sharp'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { crearCartelSvg } from '~/server/utils/cartelPartidoSeo'
 import { obtenerEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 import { obtenerPartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
+import { obtenerTipoCachePartido } from '~/utils/cachePublica'
 
 const formatos = {
   og: { ancho: 1200, alto: 628 },
@@ -28,7 +30,7 @@ export default defineEventHandler(async (evento) => {
 
   const partido = await obtenerPartidoSeoPublico(obtenerClienteSupabaseAnonimo(evento), slug)
   const dimensiones = formatos[formato as keyof typeof formatos]
-  const clave = `${slug}-${formato}-${partido.verificadoEn}`
+  const clave = [slug, formato, partido.estado || 'sin-estado', partido.verificadoEn].join('-')
   const ahora = Date.now()
   let imagen = cacheCarteles.get(clave)
   if (!imagen || imagen.venceEn <= ahora) {
@@ -53,8 +55,8 @@ export default defineEventHandler(async (evento) => {
   setResponseHeaders(evento, {
     'Content-Type': 'image/png',
     'Content-Length': String(imagen.imagen.length),
-    'Cache-Control': 'public, max-age=30, s-maxage=60, stale-while-revalidate=60',
     'X-Content-Type-Options': 'nosniff'
   })
+  aplicarCachePublica(evento, obtenerTipoCachePartido(partido.estado))
   return send(evento, imagen.imagen, 'image/png')
 })

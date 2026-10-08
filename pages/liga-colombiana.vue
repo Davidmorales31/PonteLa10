@@ -67,6 +67,7 @@ const { data: noticias } = await useFetch<ResumenArticuloPublico[]>(
   '/api/articulos?tema=liga-betplay&limite=16',
   { default: () => [], key: 'noticias-liga-betplay' }
 )
+useCachePublica('tabla')
 
 const escudosFallidos = ref<string[]>([])
 const liga = computed(() => datosLiga.value || respuestaLigaVacia)

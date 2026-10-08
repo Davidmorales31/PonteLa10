@@ -1,6 +1,7 @@
-import { getQuery, getRouterParam, setResponseHeader } from 'h3'
+import { getQuery, getRouterParam } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { obtenerFichaCompeticionPublica } from '~/server/utils/competicionesPublicas'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 
 export default defineEventHandler(async (evento) => {
   const slug = getRouterParam(evento, 'slug') || ''
@@ -16,6 +17,6 @@ export default defineEventHandler(async (evento) => {
   )
   if (!ficha) throw createError({ statusCode: 404, statusMessage: 'No encontramos esa temporada de competición.' })
 
-  setResponseHeader(evento, 'Cache-Control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=60')
+  aplicarCachePublica(evento, 'competicion')
   return ficha
 })

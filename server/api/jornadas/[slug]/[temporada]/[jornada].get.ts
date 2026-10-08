@@ -1,6 +1,7 @@
-import { getRouterParam, setResponseHeader } from 'h3'
+import { getRouterParam } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { obtenerFichaJornadaCompeticionPublica } from '~/server/utils/competicionesPublicas'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 
 export default defineEventHandler(async (evento) => {
   const ficha = await obtenerFichaJornadaCompeticionPublica(
@@ -11,6 +12,6 @@ export default defineEventHandler(async (evento) => {
   )
   if (!ficha) throw createError({ statusCode: 404, statusMessage: 'No encontramos una jornada completa y verificada.' })
 
-  setResponseHeader(evento, 'Cache-Control', 'public, max-age=0, s-maxage=300, stale-while-revalidate=300')
+  aplicarCachePublica(evento, 'competicion')
   return ficha
 })

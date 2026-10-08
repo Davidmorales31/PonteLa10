@@ -45,6 +45,7 @@ const { data: paginaInicial } = await useFetch<PaginaArticulosPublicos>(
     ignoreResponseError: true
   }
 )
+useCachePublica('articulo')
 
 const articulosCargados = ref(paginaInicial.value?.articulos || [])
 const hayMasDesdeServidor = ref(paginaInicial.value?.hayMas || false)

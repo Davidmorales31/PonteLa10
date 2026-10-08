@@ -1,6 +1,7 @@
 import { createError } from 'h3'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
+import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 import { analizarConsultaArticulosPublicos } from '~/server/utils/filtrosArticulosPublicos'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
 
@@ -16,18 +17,13 @@ export default defineEventHandler(async (
     })
   }
 
-  setResponseHeader(
-    evento,
-    'Cache-Control',
-    'public, max-age=60, s-maxage=300, stale-while-revalidate=600'
-  )
-
   const articulos = await listarArticulosPublicosEditoriales(
     clienteSupabase,
     consulta.paginado ? consulta.limite + 1 : consulta.limite,
     consulta.desplazamiento,
     consulta.categoria || consulta.tema || consulta.buscar ? consulta : undefined
   )
+  aplicarCachePublica(evento, 'articulo')
 
   if (consulta.paginado) {
     return {
