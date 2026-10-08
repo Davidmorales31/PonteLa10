@@ -7,6 +7,7 @@ import { evaluarFrescuraTabla, type EvaluacionFrescuraDeportiva } from '~/utils/
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
+import type { EquipoSeguidoResumen, PartidoEquipoSeguidoResumen } from '~/types/seguimientoEquipos'
 
 type FilaClasificacionEquipo = {
   competition_slug: string
@@ -218,6 +219,70 @@ export async function obtenerFichaEquipoLigaPublica(
     proximosPartidos: proximos,
     resultadosRecientes: resultados,
     noticias
+  }
+}
+
+export async function obtenerResumenesEquiposSeguidos(
+  cliente: SupabaseClient,
+  slugs: string[],
+  ahoraMs = Date.now()
+): Promise<EquipoSeguidoResumen[]> {
+  const slugsUnicos = [...new Set(slugs)]
+  if (!slugsUnicos.length) return []
+
+  const [equipos, partidos] = await Promise.all([
+    listarEquiposLigaPublicos(cliente),
+    listarPartidosSeoPublicos(cliente)
+  ])
+  const equiposPorSlug = new Map(equipos.map(equipo => [equipo.slug, equipo]))
+  const resumenes: Array<EquipoSeguidoResumen | null> = await Promise.all(slugsUnicos.map(async (slug) => {
+    const equipo = equiposPorSlug.get(slug)
+    if (!equipo) return null
+
+    const clave = normalizarClaveEquipoLiga(equipo.nombre)
+    const relacionados = partidos.filter(partido =>
+      normalizarClaveEquipoLiga(partido.local) === clave
+      || normalizarClaveEquipoLiga(partido.visitante) === clave
+    )
+    const clasificacion = equipo.clasificaciones[0] || null
+    const partidoEnVivo = seleccionarPartidosEnVivoEquipo(relacionados, clave)[0] || null
+    const proximoPartido = relacionados
+      .filter((partido) => {
+        const fecha = Date.parse(partido.fechaIso)
+        const estado = etiquetaEstadoSeoPartido(partido.estado)
+        return fecha >= ahoraMs && !['FINALIZADO', 'CANCELADO', 'APLAZADO', 'SUSPENDIDO', 'ABANDONADO'].includes(estado)
+      })
+      .sort((a, b) => Date.parse(a.fechaIso) - Date.parse(b.fechaIso))[0] || null
+    const noticias = await buscarNoticiasEquipo(cliente, slug)
+
+    return {
+      slug: equipo.slug,
+      nombre: equipo.nombre,
+      escudo: equipo.escudo,
+      competencia: clasificacion?.competencia || null,
+      temporada: clasificacion?.temporada || null,
+      posicion: clasificacion?.posicion ?? null,
+      puntos: clasificacion?.puntos ?? null,
+      partidoEnVivo: partidoEnVivo ? resumirPartidoEquipoSeguido(partidoEnVivo) : null,
+      proximoPartido: proximoPartido ? resumirPartidoEquipoSeguido(proximoPartido) : null,
+      noticia: noticias[0]
+        ? { slug: noticias[0].slug, titulo: noticias[0].titulo, publicadoEn: noticias[0].publicadoEn }
+        : null
+    } satisfies EquipoSeguidoResumen
+  }))
+
+  return resumenes.filter((resumen): resumen is EquipoSeguidoResumen => resumen !== null)
+}
+
+function resumirPartidoEquipoSeguido(partido: PartidoSeoPublico): PartidoEquipoSeguidoResumen {
+  return {
+    slug: partido.slug,
+    local: partido.local,
+    visitante: partido.visitante,
+    fechaIso: partido.fechaIso,
+    competencia: partido.competencia,
+    golesLocal: partido.golesLocal,
+    golesVisitante: partido.golesVisitante
   }
 }
 

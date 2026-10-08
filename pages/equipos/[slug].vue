@@ -2,6 +2,7 @@
 import type { FichaEquipoLigaPublica } from '~/server/utils/equiposLigaPublicos'
 import { construirUrlAbsoluta } from '~/utils/seo'
 import BarraCompartirArticulo from '~/components/editorial/BarraCompartirArticulo.vue'
+import BotonSeguirEquipo from '~/components/publico/BotonSeguirEquipo.vue'
 
 const configuracion = useRuntimeConfig()
 const route = useRoute()
@@ -146,6 +147,7 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
           <p class="etiqueta-seccion">FÚTBOL COLOMBIANO · {{ nombreCompetencia(clasificacion?.competencia || '') }}</p>
           <h1>{{ equipo.nombre }}</h1>
           <p class="temporada-equipo">Temporada {{ clasificacion?.temporada || 'actual' }}<template v-if="clasificacion?.fase"> · {{ clasificacion.fase }}</template></p>
+          <BotonSeguirEquipo :slug="equipo.slug" :nombre="equipo.nombre" />
         </div>
       </div>
       <div v-if="clasificacion" class="resumen-posicion-equipo" aria-label="Posición verificada">

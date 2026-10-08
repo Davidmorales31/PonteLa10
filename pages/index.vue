@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { categoriasSitio } from '~/data/sitioPublico'
 import PublicidadHouseAd from '~/components/publicidad/HouseAd.vue'
+import BotonSeguirEquipo from '~/components/publico/BotonSeguirEquipo.vue'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { ArticuloResumen } from '~/types/editorial'
 import type { RespuestaResultados } from '~/types/resultados'
+import type { EquipoSeguidoResumen } from '~/types/seguimientoEquipos'
 import { esResumenArticuloPublico } from '~/utils/articulosPublicos'
 
 type ArticuloPortada = ArticuloResumen & { fechaPublicacion: string }
@@ -70,6 +72,40 @@ const noticiasSecundarias = computed(() => articulosPublicados.value
 const ultimasNoticias = computed(() => articulosPublicados.value
   .filter(articulo => articulo.slug !== portadaPrincipal.value?.slug)
 )
+const { equiposSeguidos, seguimientoEquiposHidratado } = useSeguimientoEquipos()
+const resumenesEquiposSeguidos = ref<EquipoSeguidoResumen[]>([])
+const cargandoEquiposSeguidos = ref(false)
+let secuenciaCargaEquiposSeguidos = 0
+
+watch([seguimientoEquiposHidratado, equiposSeguidos], async ([hidratado, slugs]) => {
+  if (!hidratado) return
+
+  const secuencia = ++secuenciaCargaEquiposSeguidos
+  if (!slugs.length) {
+    resumenesEquiposSeguidos.value = []
+    cargandoEquiposSeguidos.value = false
+    return
+  }
+
+  cargandoEquiposSeguidos.value = true
+  try {
+    const resumenes = await $fetch<EquipoSeguidoResumen[]>('/api/seguimiento/equipos', {
+      query: { slugs: slugs.join(',') }
+    })
+    if (secuencia === secuenciaCargaEquiposSeguidos) resumenesEquiposSeguidos.value = resumenes
+  } catch {
+    if (secuencia === secuenciaCargaEquiposSeguidos) resumenesEquiposSeguidos.value = []
+  } finally {
+    if (secuencia === secuenciaCargaEquiposSeguidos) cargandoEquiposSeguidos.value = false
+  }
+}, { immediate: true, deep: true })
+
+function fechaEquipoSeguido(valor: string) {
+  if (!Number.isFinite(Date.parse(valor))) return 'Fecha por confirmar'
+  return new Intl.DateTimeFormat('es-CO', {
+    dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Bogota'
+  }).format(new Date(valor))
+}
 
 function obtenerHoraPublicacion(fecha: string) {
   return new Intl.DateTimeFormat('es-CO', {
@@ -114,6 +150,45 @@ useSeoPont3la10(() => ({
       <section v-else class="medio-vacio">
         <h1>La actualidad empieza aquí</h1>
         <p>Las noticias aparecerán cuando el equipo editorial las publique.</p>
+      </section>
+
+      <section
+        v-if="seguimientoEquiposHidratado && equiposSeguidos.length"
+        class="medio-seccion medio-seguimiento-equipos"
+        aria-labelledby="titulo-equipos-seguidos"
+      >
+        <div class="medio-encabezado">
+          <div>
+            <h2 id="titulo-equipos-seguidos">Tu fútbol</h2>
+            <p>Próximos partidos y noticias de los equipos que sigues.</p>
+          </div>
+          <NuxtLink to="/liga-colombiana#equipos">Explorar equipos <span aria-hidden="true">→</span></NuxtLink>
+        </div>
+        <p v-if="cargandoEquiposSeguidos && !resumenesEquiposSeguidos.length" class="estado-seguimiento-home" role="status">Cargando la actualidad de tus equipos…</p>
+        <div v-else-if="resumenesEquiposSeguidos.length" class="grilla-equipos-seguidos-home">
+          <article v-for="equipo in resumenesEquiposSeguidos" :key="equipo.slug" class="tarjeta-equipo-seguido-home">
+            <header>
+              <EscudoEquipoPublico v-if="equipo.escudo" :src="equipo.escudo" :alt="`Escudo de ${equipo.nombre}`" :width="42" :height="42" sizes="42px" loading="lazy" />
+              <span v-else class="inicial-equipo-seguido" aria-hidden="true">{{ equipo.nombre.slice(0, 1) }}</span>
+              <div><NuxtLink :to="`/equipos/${encodeURIComponent(equipo.slug)}`">{{ equipo.nombre }}</NuxtLink><small v-if="equipo.posicion">#{{ equipo.posicion }} · {{ equipo.puntos }} pts</small></div>
+              <BotonSeguirEquipo compacto :slug="equipo.slug" :nombre="equipo.nombre" />
+            </header>
+            <p v-if="equipo.partidoEnVivo" class="partido-seguido-home en-vivo">
+              <span>EN VIVO</span>
+              <NuxtLink :to="`/partidos/${encodeURIComponent(equipo.partidoEnVivo.slug)}`">{{ equipo.partidoEnVivo.local }} {{ equipo.partidoEnVivo.golesLocal ?? '—' }}–{{ equipo.partidoEnVivo.golesVisitante ?? '—' }} {{ equipo.partidoEnVivo.visitante }}</NuxtLink>
+            </p>
+            <p v-else-if="equipo.proximoPartido" class="partido-seguido-home">
+              <span>PRÓXIMO · {{ fechaEquipoSeguido(equipo.proximoPartido.fechaIso) }}</span>
+              <NuxtLink :to="`/partidos/${encodeURIComponent(equipo.proximoPartido.slug)}`">{{ equipo.proximoPartido.local }} vs {{ equipo.proximoPartido.visitante }}</NuxtLink>
+            </p>
+            <p v-else class="partido-seguido-home estado-seguimiento-home">Sin partidos próximos confirmados.</p>
+            <NuxtLink v-if="equipo.noticia" class="noticia-seguida-home" :to="`/articulos/${encodeURIComponent(equipo.noticia.slug)}`">
+              <span>NOTICIA</span>{{ equipo.noticia.titulo }}
+            </NuxtLink>
+            <p v-else class="estado-seguimiento-home">Aún no hay noticias relacionadas confirmadas.</p>
+          </article>
+        </div>
+        <p v-else class="estado-seguimiento-home">No fue posible cargar la actualidad de tus equipos. Puedes abrir sus fichas para ver el calendario y las noticias.</p>
       </section>
 
       <div class="medio-actualidad">
@@ -191,6 +266,25 @@ useSeoPont3la10(() => ({
 .medio-ultimas a span { color: #ffd800; }
 .medio-ultimas a:hover { color: #ffd800; }
 .medio-seccion { margin-top: 28px; }
+.medio-seguimiento-equipos { border: 1px solid #294467; border-radius: 12px; background: #0c2443; padding: 20px; }
+.medio-seguimiento-equipos > .medio-encabezado { margin-bottom: 16px; }
+.medio-seguimiento-equipos > .medio-encabezado p { margin: 5px 0 0; color: #a8bbd5; font-size: .8rem; }
+.grilla-equipos-seguidos-home { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.tarjeta-equipo-seguido-home { min-width: 0; border: 1px solid #294467; border-radius: 10px; background: #07182f; padding: 14px; }
+.tarjeta-equipo-seguido-home > header { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tarjeta-equipo-seguido-home > header img, .inicial-equipo-seguido { flex: 0 0 42px; width: 42px; height: 42px; object-fit: contain; }
+.inicial-equipo-seguido { display: grid; place-items: center; border-radius: 50%; background: #173657; color: #fff; font-weight: 800; }
+.tarjeta-equipo-seguido-home > header > div { display: grid; min-width: 0; flex: 1; gap: 3px; }
+.tarjeta-equipo-seguido-home > header > div > a { overflow: hidden; color: #fff; font-weight: 750; text-overflow: ellipsis; white-space: nowrap; }
+.tarjeta-equipo-seguido-home > header small, .estado-seguimiento-home { color: #a8bbd5; font-size: .76rem; }
+.tarjeta-equipo-seguido-home :deep(.boton-seguimiento-equipo) { min-height: 32px; padding: 5px 9px; }
+.partido-seguido-home { display: grid; gap: 5px; margin: 14px 0 0; border-top: 1px solid #294467; padding-top: 12px; }
+.partido-seguido-home > span, .noticia-seguida-home > span { color: #9bc8ff; font-size: .63rem; font-weight: 850; letter-spacing: .06em; }
+.partido-seguido-home.en-vivo > span { color: #ff8f98; }
+.partido-seguido-home a, .noticia-seguida-home { color: #e7edf6; font-size: .8rem; font-weight: 650; line-height: 1.45; }
+.noticia-seguida-home { display: grid; gap: 4px; margin-top: 12px; border-top: 1px solid #294467; padding-top: 11px; text-decoration: none; }
+.noticia-seguida-home:hover, .partido-seguido-home a:hover { color: #ffd800; }
+.estado-seguimiento-home { margin: 12px 0 0; }
 .medio-resultados { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
 .medio-explora { display: flex; align-items: center; gap: 20px; padding: 26px 0; }
 .medio-explora h2 { flex-shrink: 0; }
@@ -214,6 +308,7 @@ useSeoPont3la10(() => ({
   .medio-contenedor { width: calc(100% - 32px); }
   .medio-edicion { font-size: .55rem; letter-spacing: .07em; }
   .medio-apertura, .medio-actualidad { grid-template-columns: 1fr; }
+  .grilla-equipos-seguidos-home { grid-template-columns: 1fr; }
   .medio-secundarias { gap: 10px; }
   .medio-actualidad { margin-top: 24px; gap: 24px; }
   .medio-resultados { grid-template-columns: 1fr; }
