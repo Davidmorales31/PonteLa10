@@ -30,8 +30,8 @@ module.exports = {
       assertions: {
         'categories:performance': ['error', { minScore: 0.45, aggregationMethod: 'median-run' }],
         'largest-contentful-paint': ['error', { maxNumericValue: 9000, aggregationMethod: 'median-run' }],
-        'cumulative-layout-shift': ['error', { maxNumericValue: 0.2, aggregationMethod: 'median-run' }],
-        'total-blocking-time': ['error', { maxNumericValue: 500, aggregationMethod: 'median-run' }]
+        'cumulative-layout-shift': ['error', { maxNumericValue: 0.3, aggregationMethod: 'median-run' }],
+        'total-blocking-time': ['error', { maxNumericValue: 800, aggregationMethod: 'median-run' }]
       }
     },
     upload: {

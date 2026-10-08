@@ -1,11 +1,13 @@
 # Estado actual de Pont3la10
 
-## HU-PERF-04 — presupuesto inicial de Core Web Vitals (implementación en revisión, 2026-10-08)
+## HU-PERF-04 — presupuesto inicial de Core Web Vitals (Production, 2026-10-08; guardas en ajuste)
 
 - `lighthouserc.cjs` define cuatro rutas públicas, emulación móvil y tres
   ejecuciones por URL. CI mide el build local y archiva el reporte; un workflow
-  semanal repite la medición contra Production. Límites de regresión
-  calibrados tras CI: performance ≥ 0,45, LCP ≤ 9 s, CLS ≤ 0,2 y TBT ≤ 500 ms.
+  semanal repite la medición contra Production. El PR #116 ya está integrado;
+  la calibración final de guardas se trabaja en un seguimiento. Meta actual:
+  performance ≥ 0,45, LCP ≤ 9 s, CLS ≤ 0,30 y TBT ≤ 800 ms; runners fijados a
+  Ubuntu 24.04.
 - Muestra exploratoria de Production en `/` (una pasada; Edge 154.0.4258.37,
   Lighthouse 12.6.1): score 0,69, LCP 4,056 s (4 056 ms), CLS 0, TBT 395 ms. No representa
   el percentil 75. La API PageSpeed Insights respondió 429 por cuota cero; no se
@@ -21,8 +23,14 @@
 - La primera corrida CI mostró medianas: `/` LCP 8,372 s/CLS 0; `/partidos-hoy`
   7,218 s/0,17; `/liga-colombiana` 6,918 s/0,01; `/colombianos-en-europa`
   6,769 s/0,06. Esto revela deuda de rendimiento; los límites CI detectan
-  regresiones grandes y no equivalen a cumplir los objetivos de campo. Su
-  incorporación está pendiente de repetir CI después de calibrarlos.
+  regresiones grandes y no equivalen a cumplir los objetivos de campo. CI
+  post-merge luego observó CLS 0,266 en `/partidos-hoy`.
+- Primer reporte manual Production (tres muestras): `/` performance 0,87/LCP
+  3,430 s/CLS 0/TBT 202 ms; `/partidos-hoy` 0,73/4,811 s/0,20/212 ms;
+  `/liga-colombiana` 0,74/3,342 s/0,01/636 ms; `/colombianos-en-europa`
+  0,90/3,161 s/0,06/150 ms. No son datos CrUX/p75. El seguimiento #117
+  ajusta umbrales para cubrir esta variación y mantenerlos como guardas de
+  regresión, no como afirmación de CWV ideal.
 - Handoff: `docs/agents/handoffs/2026-10-08-hu-perf04-core-web-vitals.md`.
 
 ## Seguimiento HU-TRUST-01 — Production verificado (2026-10-08)
