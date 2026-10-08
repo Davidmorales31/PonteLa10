@@ -13,6 +13,10 @@ import {
   robotsNoIndex
 } from '~/utils/seo'
 import { seleccionarArticulosRelacionados } from '~/utils/editorial/distribucion'
+import {
+  crearAutorEstructurado,
+  obtenerPerfilAutorPublico
+} from '~/utils/perfilesAutoresPublicos'
 import type { ContextoAnaliticaPagina, EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
 
 const ruta = useRoute()
@@ -104,10 +108,7 @@ const imagenAltSeo = computed(() => articuloPublicado.value?.portada?.textoAlter
 )
 const autorEstructurado = computed(() => {
   const nombre = articuloPublicado.value?.autorNombre || 'Equipo Pont3la10'
-  return {
-    '@type': nombre === 'Equipo Pont3la10' ? 'Organization' : 'Person',
-    name: nombre
-  }
+  return crearAutorEstructurado(nombre, String(configuracion.public.siteUrl))
 })
 
 useSeoPont3la10(() => ({
@@ -237,7 +238,14 @@ const fechaActualizacion = computed(() => {
       <h1>{{ articuloPublicado.titulo }}</h1>
       <p class="resumen-articulo">{{ articuloPublicado.resumen }}</p>
       <p class="meta-articulo">
-        {{ articuloPublicado.autorNombre }} ·
+        <NuxtLink
+          v-if="obtenerPerfilAutorPublico(articuloPublicado.autorNombre)"
+          :to="`/autores/${obtenerPerfilAutorPublico(articuloPublicado.autorNombre)?.slug}`"
+        >
+          {{ articuloPublicado.autorNombre }}
+        </NuxtLink>
+        <span v-else>{{ articuloPublicado.autorNombre }}</span>
+        ·
         <time :datetime="articuloPublicado.publicadoEn">
           {{ formatearFecha(articuloPublicado.publicadoEn) }}
         </time>

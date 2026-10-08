@@ -92,7 +92,7 @@ describe('sitemaps públicos por entidad', () => {
   })
 
   it('descubre las páginas de transparencia desde el sitemap y el pie público', () => {
-    for (const ruta of ['/quienes-somos', '/politica-editorial', '/correcciones']) {
+    for (const ruta of ['/quienes-somos', '/politica-editorial', '/correcciones', '/autores/equipo-pont3la10']) {
       expect(paginas).toContain(`'${ruta}'`)
       expect(datosSitio).toContain(`ruta: '${ruta}'`)
     }

@@ -14,6 +14,7 @@ const paginasPublicas = [
   '/quienes-somos',
   '/politica-editorial',
   '/correcciones',
+  '/autores/equipo-pont3la10',
   '/privacidad',
   '/terminos'
 ]
