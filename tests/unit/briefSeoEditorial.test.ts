@@ -24,6 +24,23 @@ describe('brief SEO editorial', () => {
     }
   })
 
+  it('no permite confirmar un brief sin diferenciador editorial verificable', () => {
+    const resultado = esquemaBriefSeoArticulo.safeParse({
+      consultaObjetivo: '',
+      intencionBusqueda: 'analisis',
+      plantillaId: null,
+      camposCompletos: [],
+      clusterPrincipal: 'Fútbol de Huila',
+      ventanaFrescuraDias: null,
+      origenOportunidad: '',
+      diferenciadorEditorial: '',
+      estadoBrief: 'confirmado'
+    })
+
+    expect(resultado.success).toBe(false)
+    expect(resultado.error?.issues.some(issue => issue.path[0] === 'diferenciadorEditorial')).toBe(true)
+  })
+
   it('valida la taxonomía de intención y los límites de campos', () => {
     const base = {
       consultaObjetivo: 'tabla Liga BetPlay',
@@ -99,6 +116,10 @@ describe('brief SEO editorial', () => {
       '../../server/api/internal/codex/draft.post.ts',
       import.meta.url
     ), 'utf8')
+    const rutaPropuestaCodex = readFileSync(new URL(
+      '../../server/api/internal/codex/proposals.post.ts',
+      import.meta.url
+    ), 'utf8')
 
     expect(migracion).toContain('enable row level security')
     expect(migracion).toContain("status = 'confirmed' and confirmed_by is not null and confirmed_at is not null")
@@ -114,6 +135,12 @@ describe('brief SEO editorial', () => {
     expect(migracion).toMatch(/revoke all on function public\.propose_editorial_article_search_brief\(uuid, uuid, jsonb\)[\s\S]*?from public, anon, authenticated, service_role/i)
     expect(migracion).toMatch(/grant execute on function public\.propose_editorial_article_search_brief\(uuid, uuid, jsonb\)[\s\S]*?to service_role/i)
     expect(rutaGuardado).toContain("contexto.permisos.includes('contenido.aprobar')")
+    expect(rutaGuardado).toContain('articulo.fuente.nombre.trim()')
+    expect(rutaGuardado).toContain('articulo.fuente.url.trim()')
+    expect(rutaPropuestaCodex).toContain('esquemaBriefSeoListoPropuestaCodex.safeParse')
+    expect(rutaPropuestaCodex).toContain('briefPersistido === undefined')
+    expect(rutaPropuestaCodex.indexOf('esquemaBriefSeoListoPropuestaCodex.safeParse'))
+      .toBeLessThan(rutaPropuestaCodex.indexOf("cliente.rpc('submit_codex_editorial_proposal'"))
     expect(rutaBorrador).toContain('briefSeo,')
     expect(rutaPropuesta).toContain("cliente.rpc('propose_editorial_article_search_brief'")
     expect(rutaPropuesta).toContain(".eq('idempotency_key', resultado.data.idempotencyKey)")

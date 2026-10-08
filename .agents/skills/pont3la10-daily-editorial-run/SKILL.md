@@ -43,6 +43,14 @@ fails before sending a request.
    output. There is no per-category or run-wide draft quota: zero drafts is a
    valid result when no candidate merits `create`. Opinión and Especiales stay
    flagged for human angle/format review.
+   Apply the source and differentiation gate in
+   `docs/PROGRAMA_CONTENIDO_ORIGINAL.md` to every Codex candidate. Do not advance
+   a dossier supported only by agency rewrites or without a specific
+   differentiator and an identifiable primary source. Corroborate claims when
+   needed, but do not reject a genuine original interview or own-data story just
+   because it has no second publisher. The API checks that the declared primary
+   URL matches a source typed as primary; human review must still verify that
+   the work is not an agency rewrite and adds its claimed original value.
 3. Deduplicate before investigation and before image generation using category
    plus fingerprint. If the API context already contains a proposal for that
    candidate, do not generate or submit another one.

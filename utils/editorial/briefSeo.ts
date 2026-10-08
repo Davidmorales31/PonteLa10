@@ -71,6 +71,14 @@ export const esquemaBriefSeoArticulo = z.object({
       message: 'La intención de búsqueda debe coincidir con la plantilla editorial.'
     })
   }
+  if (brief.estadoBrief === 'confirmado'
+    && (!brief.diferenciadorEditorial || brief.diferenciadorEditorial.length < 20)) {
+    contexto.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['diferenciadorEditorial'],
+      message: 'Para confirmar, explica en al menos 20 caracteres qué aporte verificable diferencia la pieza.'
+    })
+  }
 })
 
 export type EntradaBriefSeoArticulo = z.infer<typeof esquemaBriefSeoArticulo>
