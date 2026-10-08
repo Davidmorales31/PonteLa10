@@ -1,24 +1,37 @@
 # Estado actual de Pont3la10
 
-## HU-ED-28 — detección de canibalización editorial (validada, despliegue pendiente)
+## HU-ED-28 — detección de canibalización editorial (Production, 2026-10-08)
 
-- El panel Search Console compara consultas compartidas y, cuando hay datos
-  editoriales confirmados, snapshots de artículos publicados, consultas objetivo,
-  intención y entidades principales. La API conserva permiso editorial, sesión
-  de usuario y RLS; no escribe, no usa `service_role` y no aplica cambios SEO.
-- Los candidatos recomiendan mantener/reorientar o evaluar fusión, redirect y
-  canonical, siempre sujetos a revisión humana y selección explícita de URL.
-  Comparación acotada a 300 URL de artículos del informe; informa el total de
-  pares y avisa si la lista visible está truncada a 50.
-- Producción, lectura de solo lectura: hay 0 informes de Search Console, 315
+- `/admin/search-console` muestra pares de artículos publicados que comparten
+  consultas de Search Console y compara snapshots publicados, consultas
+  objetivo, intención y entidades editoriales confirmadas. La API exige
+  `contenido.verBorradores`, usa sesión de usuario/RLS y fija
+  `Cache-Control: private, no-store` antes del guard. No escribe ni usa
+  `service_role`.
+- El panel presenta evidencia, métricas y recomendaciones conservadoras:
+  mantener, reorientar o evaluar fusión/redirect/canonical; toda acción queda
+  sujeta a decisión humana. La comparación cubre hasta 300 URL del informe y
+  comunica total y truncamiento cuando presenta los 50 candidatos prioritarios.
+- PR #113 se integró como `42ba594260eb550496e86c88d963e4c6c6b3ea9b`;
+  Vercel Production `dpl_AsFLWYHyW8zYDaycJ62Lx6usswU6` quedó `READY`. El smoke
+  posterior del endpoint encontró que 401 no heredaba `private, no-store`; PR
+  #114 adelantó el header al guard y se integró como
+  `48a2319833f49fa8b6a0b9aa15e49a4c8cc9a154`. El deployment
+  `dpl_JGr3hzJBAVf2Ax2Uvsfoui14ZeKA` quedó `READY`. Smoke final: `/partidos-hoy`
+  devuelve HTTP 200; GET anónimo a `/api/admin/search-console` devuelve HTTP 401
+  con `Cache-Control: private, no-store`.
+- Producción, consulta de solo lectura: hay 0 informes Search Console, 315
   artículos publicados, 0 briefs confirmados y 0 relaciones de entidad
-  confirmadas. No se fabricaron ni importaron datos; las señales reales aparecerán
-  después de importar un CSV auténtico desde el panel existente.
+  confirmadas. No se importaron ni inventaron datos; para generar candidatos
+  reales el equipo debe cargar un CSV genuino desde el importador existente.
 - Sin migraciones ni escrituras en Supabase. Revisión independiente sin
-  hallazgos. Validación local: lint, 102 archivos/527 pruebas (con timeout de
-  prueba ampliado a 15 s tras un timeout aislado en una prueba de escudos),
-  typecheck, build y `git diff --check` pasan. Pendiente completar PR, Vercel
-  Preview/CI y confirmar Production antes de marcar como desplegado.
+  hallazgos P0–P2. Validación local: lint, suite 102 archivos/527 pruebas,
+  typecheck, build Nuxt/Nitro y `git diff --check`; CI y Vercel Preview de ambos
+  PR en verde. La primera corrida estándar tuvo un timeout aislado en una prueba
+  de escudos; la suite completa pasó al repetir con timeout 15 s. El build
+  conserva aviso upstream `[DEP0155]` de `@vue/shared`. La conexión Vercel negó
+  (403) el fetch automatizado del Preview protegido; por ello no se certificó
+  visualmente el panel administrativo en esa sesión.
 - Handoff: `docs/agents/handoffs/2026-10-08-hu-ed28-cannibalizacion.md`.
 
 ## HU-ED-27 — programa de contenido original (Production, 2026-10-08)
