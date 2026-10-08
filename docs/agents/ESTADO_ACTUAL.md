@@ -1,5 +1,38 @@
 # Estado actual de Pont3la10
 
+## HU-PERF-04 — presupuesto inicial de Core Web Vitals (implementación en revisión, 2026-10-08)
+
+- `lighthouserc.cjs` define cuatro rutas públicas, emulación móvil y tres
+  ejecuciones por URL. CI mide el build local y archiva el reporte; un workflow
+  semanal repite la medición contra Production. Límites de regresión
+  calibrados tras CI: performance ≥ 0,45, LCP ≤ 9 s, CLS ≤ 0,2 y TBT ≤ 500 ms.
+- Muestra exploratoria de Production en `/` (una pasada; Edge 154.0.4258.37,
+  Lighthouse 12.6.1): score 0,69, LCP 4,056 s (4 056 ms), CLS 0, TBT 395 ms. No representa
+  el percentil 75. La API PageSpeed Insights respondió 429 por cuota cero; no se
+  obtuvo INP real. TBT es solo un indicador de laboratorio, no sustituye INP.
+- Validación local: lint, 102 archivos/527 pruebas, typecheck y build pasan;
+  parseo de configuración/workflows y smoke SSR de las cuatro rutas HTTP 200.
+  El build conserva el warning upstream `[DEP0155]` de `@vue/shared`. La medición
+  Lighthouse local no se ejecutó porque el autoarranque de Edge en Windows no
+  expone el puerto que espera LHCI; el check corre en GitHub Actions con Chrome.
+- No se agrega publicidad ni telemetría nueva: los recursos publicitarios
+  existentes no cambian y la recolección de INP de campo requiere una fuente
+  autorizada respetando las preferencias vigentes.
+- La primera corrida CI mostró medianas: `/` LCP 8,372 s/CLS 0; `/partidos-hoy`
+  7,218 s/0,17; `/liga-colombiana` 6,918 s/0,01; `/colombianos-en-europa`
+  6,769 s/0,06. Esto revela deuda de rendimiento; los límites CI detectan
+  regresiones grandes y no equivalen a cumplir los objetivos de campo. Su
+  incorporación está pendiente de repetir CI después de calibrarlos.
+- Handoff: `docs/agents/handoffs/2026-10-08-hu-perf04-core-web-vitals.md`.
+
+## Seguimiento HU-TRUST-01 — Production verificado (2026-10-08)
+
+- La nota histórica de abajo que marcaba HU-TRUST-01 “en desarrollo” quedó
+  superada por el PR #107. El perfil organizacional `/autores/equipo-pont3la10`,
+  su API y el sitemap responden HTTP 200 en Production; una noticia enlaza a
+  dicho perfil y expone `NewsArticle.author` como `Organization`. El perfil
+  lista 24 artículos. No se agregaron biografías o credenciales personales.
+
 ## HU-ED-28 — detección de canibalización editorial (Production, 2026-10-08)
 
 - `/admin/search-console` muestra pares de artículos publicados que comparten
@@ -172,8 +205,8 @@
   desarrollo mostró mismatches de hidratación preexistentes en
   `AvisoAnalitica` y `CabeceraPrincipal` por la diferencia de estado SSR frente
   a preferencias cliente de privacidad/tema; estos cambios no los modifican y
-  deben revisarse como seguimiento separado. HU-TRUST-01 continúa en desarrollo;
-  no se inventarán biografías ni credenciales personales.
+  deben revisarse como seguimiento separado. En ese handoff HU-TRUST-01 aún
+  estaba en desarrollo; su verificación posterior quedó registrada arriba.
 - Handoff: `docs/agents/handoffs/2026-10-07-hu-trust02-04-transparencia.md`.
 
 ## HU-PERF-01 — separar CSS público y administrativo (Production, 2026-10-07)

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "nuxt build",
+    "perf:cwv": "npx --yes --package=@lhci/cli@0.15.1 -- lhci autorun",
     "dev": "nuxt dev --host 127.0.0.1 --port 3001",
     "generate": "nuxt generate",
     "lint": "nuxt prepare && eslint .",

@@ -1,0 +1,47 @@
+name: Core Web Vitals — production report
+
+on:
+  schedule:
+    - cron: '17 14 * * 2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cwv-production-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    name: Measure mobile production routes
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CWV_BASE_URL: https://www.pont3la10.com
+      CWV_START_LOCAL_SERVER: 'false'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install
+        run: npm ci --no-audit --no-fund
+
+      - name: Measure mobile performance budget
+        run: npm run perf:cwv
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: lighthouse-production-${{ github.run_id }}
+          path: .lighthouseci/
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 90
