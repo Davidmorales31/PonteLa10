@@ -20,10 +20,10 @@
   569 pruebas unitarias pasan. Build emite advertencia upstream DEP0155 de
   `@vue/shared`. La vista del preview aislado comprobó tema claro/oscuro y el
   aviso en una primera visita; no quedó visible un fixture de backend.
-- Aún no se ha desplegado este cambio. El `main` remoto verificado continúa en
-  `80ed373be1b6ff08ddb45bcc34e2e82d530f6dbf` (base del worktree). La publicación
-  requiere integrar únicamente los archivos listados en el handoff; no incluir
-  artefactos de build ni el handoff ajeno `2026-10-08-revalidacion-hu-gro-seo10.md`.
+- El cambio está guardado localmente en `208a60d`, sobre `main`
+  `80ed373be1b6ff08ddb45bcc34e2e82d530f6dbf`. El push directo fue rechazado por
+  la regla de GitHub que exige PR y cuatro checks; no se modificó ni se evadió
+  esa protección. Aún no está en Production.
 - Riesgos pendientes: el preview local no tiene configuración de backend para
   validar datasets reales. No se atribuye el `Failed to fetch` de renovación de
   sesión Supabase a este cambio. El resto del roadmap HU conserva sus estados y

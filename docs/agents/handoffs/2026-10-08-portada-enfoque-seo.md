@@ -32,16 +32,18 @@
   de sesión Supabase reportado en Production. La interacción observada confirma
   lectura/visibilidad; no sustituye un smoke con datos en producción.
 - **Estado de publicación:** `main` remoto fue comprobado en
-  `80ed373be1b6ff08ddb45bcc34e2e82d530f6dbf`; esta versión local todavía no está
-  en producción. El usuario autorizó la publicación directa del cambio sin PR.
-  Integrar solo archivos del objetivo; no incluir artefactos locales de build ni
-  el handoff ajeno `2026-10-08-revalidacion-hu-gro-seo10.md`.
+  `80ed373be1b6ff08ddb45bcc34e2e82d530f6dbf`; el cambio quedó en el commit local
+  `208a60d`. GitHub rechazó el push a `main` porque exige PR y cuatro checks. No
+  se intentó alterar o evadir la regla. La versión todavía no está en
+  producción. No incluir artefactos locales de build ni el handoff ajeno
+  `2026-10-08-revalidacion-hu-gro-seo10.md`.
 - **Pendientes:** desplegar y verificar las rutas públicas; auditar el resto de
   HUs del roadmap contra producción y continuar con las que sean implementables.
   Algunas tareas analíticas/editoriales dependen de acceso real a GA4, Search
   Console o un proveedor de newsletter; no inventar esos datos.
-- **Siguiente acción exacta:** publicar el conjunto revisado en el proyecto
-  Vercel `ponte-la10`/equipo `somosnoobs`, esperar estado READY y probar la
-  portada y las rutas del flujo; después continuar la auditoría del roadmap.
+- **Siguiente acción exacta:** seguir el flujo requerido de PR, esperar los
+  cuatro checks, fusionar únicamente si pasan, confirmar Vercel Production
+  `ponte-la10`/equipo `somosnoobs` en estado READY y probar las rutas públicas;
+  después continuar la auditoría del roadmap.
 - **Commit base:** `d25eb6560b760829f7f5419295f4dffde9dbf459`.
-- **Commit final:** pendiente de integrar/publicar.
+- **Commit del cambio:** `208a60d` (local, pendiente de PR/checks/integración).
