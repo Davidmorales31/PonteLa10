@@ -46,13 +46,21 @@
   marcadores. La tabla de Liga se alineó con los resultados confirmados.
 - La inspección móvil 390×844 de HU-SEO-10 detectó que el botón flotante de
   privacidad cubría texto. Se oculta ese botón a ≤680 px y permanece el acceso
-  de preferencias en el pie. El ajuste tiene prueba unitaria; todavía requiere
-  PR, checks, despliegue y verificación visual en Production.
+  de preferencias en el pie. PR #129 se integró por squash en
+  `fee72379b0622c3a65379bdcd2a5fd90de634021`. Vercel informó `success` para el
+  commit de `main`; la ficha pública `/jugadores/luis-diaz` responde HTTP 200 y
+  su bundle carga `default.FmEej3R6.css`, que contiene la regla
+  `@media(max-width:680px)` para ocultar el botón. El HTML conserva el control
+  “Preferencias de privacidad” en el pie.
+- La captura manual final a 390×844 no se completó: la automatización del
+  navegador expiró dos veces; no se reutilizaron índices ni se cambió la
+  configuración de acceso. El comportamiento CSS servido sí quedó verificado.
 - Validaciones del ajuste: prueba focal 9/9; suite 111 archivos/570 pruebas;
   lint con exclusión del artefacto local `.output-validation-20261008`; typecheck;
   build y `git diff --check` pasan. No hubo cambios de esquema Supabase.
-- Siguiente acción: PR protegido para el ajuste móvil, esperar checks, integrar,
-  confirmar el deployment Production y comprobar `/jugadores/luis-diaz` a 390 px.
+- Siguiente acción: cuando la automatización visual esté disponible, completar
+  la captura a 390×844; después seguir con la siguiente HU implementable del
+  roadmap, sin declarar terminado todo el documento maestro.
 
 ## Revalidación de HU-GRO, HU-RET-04 y HU-SEO-10 (2026-10-08)
 

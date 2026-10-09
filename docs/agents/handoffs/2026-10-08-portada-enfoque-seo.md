@@ -41,22 +41,25 @@
   de proveedor para la clasificación. Supabase confirmó 20 filas de Liga A y
   16 de Torneo B actualizadas a las 22:45 COT. Dos partidos quedaron con
   resultado final verificado; otros dos siguen pendientes de confirmación.
-- **Ajuste posterior en curso:** el botón flotante de privacidad se superponía a
-  texto en móvil (390×844). El cambio local lo oculta hasta 680 px y conserva
-  el control del pie. Su prueba focal (9/9), suite completa (111 archivos/570
-  pruebas), lint focalizado, typecheck y build pasan; `git diff --check` pasa.
-  La revisión visual del fix y su despliegue aún están pendientes. El build
+- **Ajuste móvil integrado:** PR #129 se fusionó por squash como
+  `fee72379b0622c3a65379bdcd2a5fd90de634021`; los cuatro checks de CI pasaron y
+  Vercel reportó `success` para el commit de `main`. En Production,
+  `/jugadores/luis-diaz` responde HTTP 200; su JavaScript referencia el CSS
+  servido `default.FmEej3R6.css`, que contiene el `@media(max-width:680px)` que
+  oculta el botón flotante. El HTML conserva el botón de preferencias del pie.
+  La captura visual final a 390×844 quedó pendiente porque CUA agotó tiempo dos
+  veces; no se alteró Deployment Protection ni el consentimiento.
+- **Validaciones:** prueba focal (9/9), suite (111 archivos/570 pruebas), lint
+  focalizado, typecheck, build, CI completo y `git diff --check` pasan. El build
   mantiene la advertencia upstream DEP0155 en `@vue/shared`.
 - **Límites:** no se inventan marcadores, canales ni convocatorias. El preview
   local no tiene dataset de producción. No incluir artefactos locales de build
   ni el handoff ajeno `2026-10-08-revalidacion-hu-gro-seo10.md`.
-- **Pendientes:** enviar el ajuste móvil por PR, esperar los checks requeridos,
-  integrar solo si pasan, verificar Vercel Production y repetir inspección
-  visual móvil. Luego continuar la auditoría del resto de HUs del roadmap; la
-  recolección GA4, Search Console y newsletter conservan las dependencias
-  externas indicadas en `ESTADO_ACTUAL.md`.
-- **Siguiente acción exacta:** PR protegido para el fix móvil; tras el merge,
-  confirmar `Ready`, rutas públicas y layout a 390×844. Después reanudar la
-  siguiente HU implementable desde la matriz, sin declarar cerrado el roadmap.
+- **Pendientes:** completar una captura visual a 390×844 cuando la automatización
+  del navegador responda. Después continuar la auditoría del resto de HUs del
+  roadmap; la recolección GA4, Search Console y newsletter conservan las
+  dependencias externas indicadas en `ESTADO_ACTUAL.md`.
+- **Siguiente acción exacta:** revisar el layout a 390×844 y continuar con la
+  siguiente HU implementable; no declarar cerrado el roadmap completo.
 - **Commit base de portada:** `d25eb6560b760829f7f5419295f4dffde9dbf459`.
 - **Commit de portada:** `208a60d` (integrado por PR #128).
