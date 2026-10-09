@@ -40,6 +40,13 @@ export default defineNuxtConfig({
         { property: 'og:site_name', content: 'Pont3la10' },
         { property: 'og:type', content: 'website' }
       ],
+      script: [
+        {
+          src: 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6921155737987422',
+          async: true,
+          crossorigin: 'anonymous'
+        }
+      ],
       link: [
         { rel: 'icon', type: 'image/png', href: '/brand/pont3la10_logo_05_app_icon_favicon.png' },
         { rel: 'apple-touch-icon', href: '/brand/pont3la10_logo_05_app_icon_favicon.png' },
