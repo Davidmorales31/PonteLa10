@@ -422,15 +422,22 @@ useSeoPont3la10(() => ({
     <FranjaMarcadores v-else-if="partidosFranja.length" :partidos="partidosFranja" destino="/partidos-hoy" />
     <div class="medio-contenedor">
       <div class="medio-edicion"><span>LA JUGADA CLARA</span><span>Deporte · Tecnología · Actualidad</span></div>
-      <section v-if="portadaPrincipal" class="medio-apertura" :class="{ 'sin-secundarias': !noticiasSecundarias.length }" aria-label="Portada editorial">
-        <NoticiaPortada :articulo="portadaPrincipal" principal />
-        <div v-if="noticiasSecundarias.length" class="medio-secundarias">
-          <NoticiaPortada v-for="articulo in noticiasSecundarias" :key="articulo.slug" :articulo="articulo" />
+      <section class="medio-apertura" :class="{ 'sin-secundarias': !noticiasSecundarias.length }" aria-labelledby="titulo-portada-home">
+        <div class="medio-introduccion">
+          <p class="home-antetitulo">LA JUGADA CLARA · FÚTBOL COLOMBIANO</p>
+          <h1 id="titulo-portada-home">Fútbol colombiano y Selección Colombia</h1>
+          <p>Partidos, resultados y noticias de la Liga BetPlay, la Selección y nuestros futbolistas en el exterior, con fuentes y fechas claras.</p>
         </div>
-      </section>
-      <section v-else class="medio-vacio">
-        <h1>La actualidad empieza aquí</h1>
-        <p>Las noticias aparecerán cuando el equipo editorial las publique.</p>
+        <template v-if="portadaPrincipal">
+          <NoticiaPortada :articulo="portadaPrincipal" principal nivel-titulo="h2" />
+          <div v-if="noticiasSecundarias.length" class="medio-secundarias">
+            <NoticiaPortada v-for="articulo in noticiasSecundarias" :key="articulo.slug" :articulo="articulo" />
+          </div>
+        </template>
+        <div v-else class="medio-vacio">
+          <h2>La actualidad empieza aquí</h2>
+          <p>Las noticias aparecerán cuando el equipo editorial las publique.</p>
+        </div>
       </section>
 
       <section class="medio-seccion home-jornada" aria-labelledby="titulo-jornada-home">
@@ -747,8 +754,11 @@ useSeoPont3la10(() => ({
 .medio-contenedor { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
 .medio-edicion { display: flex; justify-content: space-between; gap: 16px; padding: 18px 0 14px; color: #9eafc8; font-size: .62rem; letter-spacing: .12em; }
 .medio-edicion span:first-child { color: #ffd800; font-weight: 800; }
-.medio-apertura { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
-.medio-apertura.sin-secundarias { grid-template-columns: 1fr; }
+.medio-apertura { display: grid; grid-template-columns: minmax(235px, .82fr) minmax(0, 1.28fr) minmax(0, .82fr); gap: 16px; align-items: stretch; }
+.medio-apertura.sin-secundarias { grid-template-columns: minmax(220px, .72fr) minmax(0, 1.28fr); }
+.medio-introduccion { min-width: 0; align-self: center; padding: 12px 8px 12px 0; }
+.medio-introduccion h1 { margin: 8px 0 12px; color: #f5f8ff; font-size: clamp(1.8rem, 2.8vw, 2.65rem); font-weight: 850; line-height: 1.06; letter-spacing: -.045em; text-wrap: balance; }
+.medio-introduccion > p:last-child { margin: 0; color: #a8bbd5; font-size: clamp(.86rem, 1.05vw, .98rem); line-height: 1.55; }
 .medio-secundarias { display: grid; gap: 12px; }
 .medio-actualidad { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; gap: 24px; margin-top: 28px; }
 .medio-encabezado { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 14px; }
@@ -813,7 +823,7 @@ useSeoPont3la10(() => ({
 .medio-patrocinios a:hover { border-color: #ffd800; }
 .medio-texto-suave, .medio-vacio p { color: #a8bbd5; }
 .medio-vacio { padding: 36px 0; }
-.medio-vacio h1 { color: #f5f8ff; font-size: 2rem; }
+.medio-vacio h2 { margin: 0; color: #f5f8ff; font-size: 2rem; }
 .home-bloque-tematico, .home-jornada, .home-analisis { margin-top: clamp(30px, 4vw, 48px); }
 .home-encabezado-seccion { align-items: center; margin-bottom: 16px; }
 .home-encabezado-seccion > div { min-width: 0; }
@@ -901,7 +911,9 @@ useSeoPont3la10(() => ({
 .home-jornada :deep(.espacio-adsterra) { margin-top: 16px; }
 .portada-medio a:focus-visible { outline: 3px solid #7ce6f5; outline-offset: 3px; }
 @media (max-width: 900px) {
-  .medio-apertura { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .medio-apertura { grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); }
+  .medio-apertura.sin-secundarias { grid-template-columns: minmax(0, .84fr) minmax(0, 1.16fr); }
+  .medio-secundarias { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .medio-actualidad { gap: 20px; }
   .medio-patrocinios { align-items: start; flex-direction: column; }
   .home-noticias-europa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -910,10 +922,16 @@ useSeoPont3la10(() => ({
 @media (max-width: 700px) {
   .medio-contenedor { width: calc(100% - 32px); }
   .medio-edicion { font-size: .55rem; letter-spacing: .07em; }
-  .medio-apertura, .medio-actualidad { grid-template-columns: 1fr; }
+  .medio-apertura, .medio-apertura.sin-secundarias, .medio-actualidad { grid-template-columns: 1fr; }
+  .medio-introduccion { padding: 8px 0 2px; }
+  .medio-introduccion h1 { max-width: 19ch; margin: 7px 0 9px; font-size: clamp(1.8rem, 7.6vw, 2.2rem); }
+  .medio-introduccion > p:last-child { max-width: 54ch; font-size: .9rem; }
   .grilla-equipos-seguidos-home { grid-template-columns: 1fr; }
   .grilla-competiciones-seguidas-home { grid-template-columns: 1fr; }
-  .medio-secundarias { gap: 10px; }
+  .medio-secundarias { grid-column: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .medio-secundarias :deep(.noticia-portada.con-imagen:not(.principal)) { grid-template-columns: 1fr; grid-template-rows: auto 1fr; align-content: start; }
+  .medio-secundarias :deep(.noticia-portada:not(.principal) .foto) { min-height: 96px; }
+  .medio-secundarias :deep(.noticia-portada:not(.principal) .texto) { padding: 11px; }
   .medio-actualidad { margin-top: 24px; gap: 24px; }
   .medio-resultados { grid-template-columns: 1fr; }
   .medio-explora { align-items: start; flex-direction: column; gap: 12px; }
@@ -932,5 +950,8 @@ useSeoPont3la10(() => ({
   .home-equipo-tabla { min-width: 125px; }
   .home-tabla-titulo { align-items: flex-start; }
   .home-tabla-titulo time { max-width: 44%; }
+}
+@media (max-width: 370px) {
+  .medio-secundarias { grid-template-columns: 1fr; }
 }
 </style>
