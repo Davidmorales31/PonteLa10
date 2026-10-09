@@ -17,13 +17,12 @@
   al montaje; el tema también lee/escribe `localStorage` de forma diferida y
   tolerante a almacenamiento bloqueado.
 - Validaciones: lint, typecheck, build aislado de producción y 111 archivos /
-  569 pruebas unitarias pasan. Build emite advertencia upstream DEP0155 de
+  570 pruebas unitarias pasan. Build emite advertencia upstream DEP0155 de
   `@vue/shared`. La vista del preview aislado comprobó tema claro/oscuro y el
   aviso en una primera visita; no quedó visible un fixture de backend.
-- El cambio está guardado localmente en `208a60d`, sobre `main`
-  `80ed373be1b6ff08ddb45bcc34e2e82d530f6dbf`. El push directo fue rechazado por
-  la regla de GitHub que exige PR y cuatro checks; no se modificó ni se evadió
-  esa protección. Aún no está en Production.
+- El rediseño se integró mediante PR #128 en `95f25575d30ec904a6880bf9ba4c76416886a9eb`;
+  Vercel Production `DaawAHdpH6SrWeyr4KxoXgJLAUC3` quedó `Ready` y asignó
+  `www.pont3la10.com`. No se cambió la protección de GitHub.
 - Riesgos pendientes: el preview local no tiene configuración de backend para
   validar datasets reales. No se atribuye el `Failed to fetch` de renovación de
   sesión Supabase a este cambio. El resto del roadmap HU conserva sus estados y
@@ -33,6 +32,27 @@
   CMS, distribución, operación y retención; esta entrega solo cubre la home y
   no certifica el reenfoque global.
 - Handoff: `docs/agents/handoffs/2026-10-08-portada-enfoque-seo.md`.
+
+## Revalidación operativa y ajuste móvil (2026-10-08)
+
+- Supabase Production `ykjithahavncswlfgsqa` ya tiene registradas las
+  migraciones de calendario DIMAYOR, escudos/equipos y actualización atómica de
+  tabla. El worker local usó la configuración existente de derechos confirmados
+  para actualizar las clasificaciones Liga A (20 equipos) y Torneo B (16) a las
+  22:45 COT; no se escribió SQL manual ni se consumieron cuotas de proveedores
+  para esta actualización.
+- La consulta de `/partidos-hoy` después de sincronizar reflejó dos resultados
+  finales y dejó dos fixtures como pendientes de confirmación, sin inventar
+  marcadores. La tabla de Liga se alineó con los resultados confirmados.
+- La inspección móvil 390×844 de HU-SEO-10 detectó que el botón flotante de
+  privacidad cubría texto. Se oculta ese botón a ≤680 px y permanece el acceso
+  de preferencias en el pie. El ajuste tiene prueba unitaria; todavía requiere
+  PR, checks, despliegue y verificación visual en Production.
+- Validaciones del ajuste: prueba focal 9/9; suite 111 archivos/570 pruebas;
+  lint con exclusión del artefacto local `.output-validation-20261008`; typecheck;
+  build y `git diff --check` pasan. No hubo cambios de esquema Supabase.
+- Siguiente acción: PR protegido para el ajuste móvil, esperar checks, integrar,
+  confirmar el deployment Production y comprobar `/jugadores/luis-diaz` a 390 px.
 
 ## Revalidación de HU-GRO, HU-RET-04 y HU-SEO-10 (2026-10-08)
 

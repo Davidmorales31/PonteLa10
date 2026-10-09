@@ -345,6 +345,11 @@ function guardarPreferencias() {
 }
 
 @media (max-width: 680px) {
+  /* En móvil el pie conserva el acceso sin cubrir texto ni controles. */
+  .preferencias-privacidad-flotante {
+    display: none;
+  }
+
   .aviso-analitica {
     width: calc(100% - 2rem);
     grid-template-columns: 1fr;

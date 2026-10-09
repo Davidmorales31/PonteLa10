@@ -31,19 +31,32 @@
   lo que no certifica datos deportivos/editoriales reales ni el `Failed to fetch`
   de sesión Supabase reportado en Production. La interacción observada confirma
   lectura/visibilidad; no sustituye un smoke con datos en producción.
-- **Estado de publicación:** `main` remoto fue comprobado en
-  `80ed373be1b6ff08ddb45bcc34e2e82d530f6dbf`; el cambio quedó en el commit local
-  `208a60d`. GitHub rechazó el push a `main` porque exige PR y cuatro checks. No
-  se intentó alterar o evadir la regla. La versión todavía no está en
-  producción. No incluir artefactos locales de build ni el handoff ajeno
-  `2026-10-08-revalidacion-hu-gro-seo10.md`.
-- **Pendientes:** desplegar y verificar las rutas públicas; auditar el resto de
-  HUs del roadmap contra producción y continuar con las que sean implementables.
-  Algunas tareas analíticas/editoriales dependen de acceso real a GA4, Search
-  Console o un proveedor de newsletter; no inventar esos datos.
-- **Siguiente acción exacta:** seguir el flujo requerido de PR, esperar los
-  cuatro checks, fusionar únicamente si pasan, confirmar Vercel Production
-  `ponte-la10`/equipo `somosnoobs` en estado READY y probar las rutas públicas;
-  después continuar la auditoría del roadmap.
-- **Commit base:** `d25eb6560b760829f7f5419295f4dffde9dbf459`.
-- **Commit del cambio:** `208a60d` (local, pendiente de PR/checks/integración).
+- **Estado de publicación de portada:** PR #128 integró `208a60d` y la nota de
+  estado en `95f25575d30ec904a6880bf9ba4c76416886a9eb`. Vercel Production
+  `DaawAHdpH6SrWeyr4KxoXgJLAUC3` está `Ready`, con dominio `www.pont3la10.com`.
+  La vista pública `/`, `/partidos-hoy` y `/liga-colombiana` respondió y el
+  deployment indica como fuente el merge de `main`; no se intentó evadir la
+  protección de GitHub.
+- **Revalidación de datos:** el worker local terminó su ciclo sin consumir cuota
+  de proveedor para la clasificación. Supabase confirmó 20 filas de Liga A y
+  16 de Torneo B actualizadas a las 22:45 COT. Dos partidos quedaron con
+  resultado final verificado; otros dos siguen pendientes de confirmación.
+- **Ajuste posterior en curso:** el botón flotante de privacidad se superponía a
+  texto en móvil (390×844). El cambio local lo oculta hasta 680 px y conserva
+  el control del pie. Su prueba focal (9/9), suite completa (111 archivos/570
+  pruebas), lint focalizado, typecheck y build pasan; `git diff --check` pasa.
+  La revisión visual del fix y su despliegue aún están pendientes. El build
+  mantiene la advertencia upstream DEP0155 en `@vue/shared`.
+- **Límites:** no se inventan marcadores, canales ni convocatorias. El preview
+  local no tiene dataset de producción. No incluir artefactos locales de build
+  ni el handoff ajeno `2026-10-08-revalidacion-hu-gro-seo10.md`.
+- **Pendientes:** enviar el ajuste móvil por PR, esperar los checks requeridos,
+  integrar solo si pasan, verificar Vercel Production y repetir inspección
+  visual móvil. Luego continuar la auditoría del resto de HUs del roadmap; la
+  recolección GA4, Search Console y newsletter conservan las dependencias
+  externas indicadas en `ESTADO_ACTUAL.md`.
+- **Siguiente acción exacta:** PR protegido para el fix móvil; tras el merge,
+  confirmar `Ready`, rutas públicas y layout a 390×844. Después reanudar la
+  siguiente HU implementable desde la matriz, sin declarar cerrado el roadmap.
+- **Commit base de portada:** `d25eb6560b760829f7f5419295f4dffde9dbf459`.
+- **Commit de portada:** `208a60d` (integrado por PR #128).
