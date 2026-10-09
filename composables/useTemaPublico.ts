@@ -11,14 +11,6 @@ export function useTemaPublico() {
     document.body.classList.add(`tema-publico-${nuevoTema}`)
   }
 
-  if (import.meta.client && !inicializado.value) {
-    const temaGuardado = window.localStorage.getItem(CLAVE_TEMA_PUBLICO)
-    if (temaGuardado === 'azul' || temaGuardado === 'blanco') {
-      tema.value = temaGuardado
-    }
-    inicializado.value = true
-  }
-
   const modoBlancoActivo = computed(() => tema.value === 'blanco')
   const etiquetaAlternarTema = computed(() => modoBlancoActivo.value ? 'Modo azul' : 'Modo blanco')
 
@@ -32,13 +24,29 @@ export function useTemaPublico() {
 
   if (import.meta.client) {
     onMounted(() => {
+      if (!inicializado.value) {
+        try {
+          const temaGuardado = window.localStorage.getItem(CLAVE_TEMA_PUBLICO)
+          if (temaGuardado === 'azul' || temaGuardado === 'blanco') {
+            tema.value = temaGuardado
+          }
+        } catch {
+          // El tema predeterminado sigue disponible si el almacenamiento está bloqueado.
+        }
+        inicializado.value = true
+      }
+
       aplicarClaseTema(tema.value)
     })
 
     watch(tema, (nuevoTema) => {
-      window.localStorage.setItem(CLAVE_TEMA_PUBLICO, nuevoTema)
+      try {
+        window.localStorage.setItem(CLAVE_TEMA_PUBLICO, nuevoTema)
+      } catch {
+        // La preferencia de tema es opcional; no debe impedir usar el sitio.
+      }
       aplicarClaseTema(nuevoTema)
-    }, { immediate: true, flush: 'post' })
+    }, { flush: 'post' })
   }
 
   return {
