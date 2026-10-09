@@ -1,5 +1,30 @@
 # Estado actual de Pont3la10
 
+## Apertura de home alineada a la referencia (2026-10-08; despliegue pendiente)
+
+- Se añadió una introducción de producto estable con un único H1 orientado a
+  fútbol colombiano y Selección. La noticia principal conserva tamaño visual de
+  titular pero pasa a H2; las noticias secundarias siguen como H2. Sin noticia
+  pública, permanece un fallback editorial bajo el H1, no se pierde la identidad
+  ni el encabezado SEO.
+- La apertura usa tres columnas en escritorio, dos en tablet y una columna en
+  móvil; las dos tarjetas secundarias se muestran juntas en móvil salvo anchos
+  menores a 371 px. Se conservan tipografía, paleta navy/amarillo/cian y el tema
+  claro propio de Pont3la10; no se copió el estilo de la plantilla de referencia.
+- Validación visual local a 1280 px y 390 px, en temas claro y azul: un H1 y sin
+  desbordamiento horizontal. La configuración local de este worktree no tiene
+  datos de Supabase: las capturas muestran estados vacíos y no certifican los
+  artículos, fixture o tabla que devolverá Production.
+- Lint, prueba focal 8/8, suite 111 archivos/571 pruebas, typecheck, build de
+  producción y `git diff --check` pasan. El build conserva el warning upstream
+  DEP0155 de `@vue/shared`. `npm ci` informó 5 vulnerabilidades críticas en el
+  árbol de dependencias; no se ejecutó `npm audit fix` por quedar fuera de este
+  ajuste.
+- Código todavía no publicado: rama `codex/hu-reenfoque-completion-20261008`,
+  basada en `e2975fc6831708e9893dcc28429eb62226a6ff99` (Production/main). PR,
+  CI y verificación post-despliegue pendientes.
+- Handoff: `docs/agents/handoffs/2026-10-08-apertura-home-estructura.md`.
+
 ## Reenfoque de portada SEO y reparación de hidratación (2026-10-08)
 
 - Se reordenó la portada siguiendo la estructura del documento maestro: jornada,

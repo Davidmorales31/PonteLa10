@@ -66,11 +66,25 @@ describe('configuración de la landing', () => {
     expect(portada).toContain('articulo-destacado-portada')
   })
 
+  it('adapta el esqueleto de referencia y conserva un único H1 de producto', () => {
+    const portada = readFileSync(new URL('../../pages/index.vue', import.meta.url), 'utf8')
+    const noticiaPortada = readFileSync(new URL('../../components/NoticiaPortada.vue', import.meta.url), 'utf8')
+
+    expect(portada).toContain('class="medio-introduccion"')
+    expect(portada).toContain('<h1 id="titulo-portada-home">Fútbol colombiano y Selección Colombia</h1>')
+    expect(portada).toContain('principal nivel-titulo="h2"')
+    expect(portada.match(/<h1\b/g)).toHaveLength(1)
+    expect(noticiaPortada).toContain("props.nivelTitulo ?? (props.principal ? 'h1' : 'h2')")
+    expect(portada).toContain('grid-template-columns: minmax(235px, .82fr) minmax(0, 1.28fr) minmax(0, .82fr)')
+  })
+
   it('da estilo al contenido nuevo en ambos temas públicos', () => {
     const estilos = readFileSync(new URL('../../assets/css/landing.css', import.meta.url), 'utf8')
 
     expect(estilos).toContain('body.tema-publico-blanco .portada-medio :is(.home-panel')
     expect(estilos).toContain('.home-sin-datos-contenido, .tarjeta-articulo-portada)')
     expect(estilos).toContain('.home-tabla, .home-tabla tbody > tr > th')
+    expect(estilos).toContain('body.tema-publico-blanco .medio-introduccion h1')
+    expect(estilos).toContain('body.tema-publico-blanco .portada-medio .medio-introduccion > p:last-child')
   })
 })
