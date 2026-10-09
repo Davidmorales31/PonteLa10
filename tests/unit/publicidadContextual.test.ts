@@ -8,6 +8,7 @@ const paginaResultadosEnVivo = readFileSync(resolve(process.cwd(), 'pages/result
 const paginaEuropa = readFileSync(resolve(process.cwd(), 'pages/colombianos-en-europa.vue'), 'utf8')
 const componenteAnuncio = readFileSync(resolve(process.cwd(), 'components/publicidad/AdsterraSlot.vue'), 'utf8')
 const avisoAnalitica = readFileSync(resolve(process.cwd(), 'components/publico/AvisoAnalitica.vue'), 'utf8')
+const piePagina = readFileSync(resolve(process.cwd(), 'components/PiePaginaPrincipal.vue'), 'utf8')
 const detallePartido = readFileSync(resolve(process.cwd(), 'pages/resultados/[id].vue'), 'utf8')
 
 describe('HU-MON-01/02 · anuncios contextuales', () => {
@@ -74,6 +75,11 @@ describe('HU-MON-01/02 · anuncios contextuales', () => {
     expect(avisoAnalitica).toContain('const interfazLista = ref(false)')
     expect(avisoAnalitica).toContain('onMounted(() => {\n  inicializarConsentimiento()')
     expect(avisoAnalitica).toContain('v-if="interfazLista && mostrarAviso"')
+  })
+
+  it('evita que el control flotante de privacidad tape contenido móvil y conserva acceso en el pie', () => {
+    expect(avisoAnalitica).toContain('@media (max-width: 680px) {\n  /* En móvil el pie conserva el acceso sin cubrir texto ni controles. */\n  .preferencias-privacidad-flotante {\n    display: none;')
+    expect(piePagina).toContain('class="enlace-preferencias-analitica"')
   })
 
   it('reserva el leaderboard móvil antes del iframe y escala sin recortar el ancho', () => {
