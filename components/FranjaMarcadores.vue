@@ -2,9 +2,15 @@
 import { ArrowRight, Radio } from '@lucide/vue'
 import type { PartidoResultado } from '~/types/resultados'
 
-const propiedades = defineProps<{ partidos: PartidoResultado[] }>()
+const propiedades = withDefaults(defineProps<{ partidos: PartidoResultado[]; destino?: string }>(), {
+  destino: '/resultados'
+})
 const partidosVisibles = computed(() => propiedades.partidos.slice(0, 8))
 const cantidadEnVivo = computed(() => propiedades.partidos.filter(partido => partido.estado === 'en-vivo').length)
+const cantidadProximos = computed(() => propiedades.partidos.filter(partido => partido.estado === 'programado').length)
+const etiquetaFranja = computed(() => cantidadEnVivo.value
+  ? `${cantidadEnVivo.value} en vivo`
+  : cantidadProximos.value ? 'Próximos de hoy' : 'Resultados recientes')
 </script>
 
 <template>
@@ -12,11 +18,11 @@ const cantidadEnVivo = computed(() => propiedades.partidos.filter(partido => par
     <div class="franja-marcadores-contenido">
       <div class="encabezado-franja-marcadores">
         <div>
-          <span v-if="cantidadEnVivo" class="senal-en-vivo"><Radio aria-hidden="true" /> {{ cantidadEnVivo }} en vivo</span>
-          <span v-else class="senal-resultados">Últimos resultados</span>
+          <span v-if="cantidadEnVivo" class="senal-en-vivo"><Radio aria-hidden="true" /> {{ etiquetaFranja }}</span>
+          <span v-else class="senal-resultados">{{ etiquetaFranja }}</span>
           <h2 id="titulo-marcadores-home">Marcadores</h2>
         </div>
-        <NuxtLink to="/resultados">
+        <NuxtLink :to="destino">
           Ver todos
           <span class="icono-enlace-marcadores"><ArrowRight aria-hidden="true" /></span>
         </NuxtLink>

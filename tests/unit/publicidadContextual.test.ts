@@ -7,6 +7,7 @@ const paginaJugador = readFileSync(resolve(process.cwd(), 'pages/jugadores/[slug
 const paginaResultadosEnVivo = readFileSync(resolve(process.cwd(), 'pages/resultados/en-vivo.vue'), 'utf8')
 const paginaEuropa = readFileSync(resolve(process.cwd(), 'pages/colombianos-en-europa.vue'), 'utf8')
 const componenteAnuncio = readFileSync(resolve(process.cwd(), 'components/publicidad/AdsterraSlot.vue'), 'utf8')
+const avisoAnalitica = readFileSync(resolve(process.cwd(), 'components/publico/AvisoAnalitica.vue'), 'utf8')
 const detallePartido = readFileSync(resolve(process.cwd(), 'pages/resultados/[id].vue'), 'utf8')
 
 describe('HU-MON-01/02 · anuncios contextuales', () => {
@@ -67,6 +68,12 @@ describe('HU-MON-01/02 · anuncios contextuales', () => {
     expect(componenteAnuncio).toContain('loading="lazy"')
     expect(componenteAnuncio).toContain('aspect-ratio: 728 / 90')
     expect(componenteAnuncio).toContain('.espacio-adsterra--nativo .espacio-adsterra__marco {\n  height: 280px;')
+  })
+
+  it('espera al montaje antes de mostrar el consentimiento almacenado en el navegador', () => {
+    expect(avisoAnalitica).toContain('const interfazLista = ref(false)')
+    expect(avisoAnalitica).toContain('onMounted(() => {\n  inicializarConsentimiento()')
+    expect(avisoAnalitica).toContain('v-if="interfazLista && mostrarAviso"')
   })
 
   it('reserva el leaderboard móvil antes del iframe y escala sin recortar el ancho', () => {

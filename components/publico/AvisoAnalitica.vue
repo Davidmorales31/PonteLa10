@@ -11,11 +11,18 @@ const {
   aceptarPublicidad,
   rechazarPublicidad,
   abrirPreferencias,
-  cerrarPreferencias
+  cerrarPreferencias,
+  inicializarConsentimiento
 } = useAnaliticaPublica()
 const { modoBlancoActivo } = useTemaPublico()
+const interfazLista = ref(false)
 const analiticaSeleccionada = ref(decision.value === 'aceptada')
 const publicidadSeleccionada = ref(decisionPublicidad.value === 'aceptada')
+
+onMounted(() => {
+  inicializarConsentimiento()
+  interfazLista.value = true
+})
 
 watch(preferenciasAbiertas, (abiertas) => {
   if (!abiertas) return
@@ -34,7 +41,7 @@ function guardarPreferencias() {
 
 <template>
   <aside
-    v-if="mostrarAviso"
+    v-if="interfazLista && mostrarAviso"
     class="aviso-analitica"
     :class="[
       { 'aviso-analitica--tema-blanco': modoBlancoActivo },

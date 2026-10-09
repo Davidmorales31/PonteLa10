@@ -1,5 +1,66 @@
 # Estado actual de Pont3la10
 
+## Reenfoque de portada SEO y reparación de hidratación (2026-10-08)
+
+- Se reordenó la portada siguiendo la estructura del documento maestro: jornada,
+  Liga BetPlay, Selección Colombia, colombianos en Europa, noticias, análisis y
+  espacios comerciales; conserva colores y estilos propios de Pont3la10.
+- La home consume rutas públicas existentes en SSR, acota las noticias por tema
+  y filtra las de Selección para exigir categoría futbolística. Los filtros de
+  jornada solo incluyen fútbol del día en hora de Colombia y ocultan programados
+  vencidos; se añadieron tarjetas editoriales y módulos de tema claro.
+- Revisión en preview local móvil detectó y corrigió el H1 de portada oscuro
+  sobre fondo oscuro. La vista final muestra el título blanco legible.
+- La discrepancia de hidratación reproducida en `AvisoAnalitica` ocurría porque
+  el SSR renderizaba el botón flotante y el primer render del navegador
+  renderizaba el aviso según el consentimiento persistido. El aviso ahora espera
+  al montaje; el tema también lee/escribe `localStorage` de forma diferida y
+  tolerante a almacenamiento bloqueado.
+- Validaciones: lint, typecheck, build aislado de producción y 111 archivos /
+  569 pruebas unitarias pasan. Build emite advertencia upstream DEP0155 de
+  `@vue/shared`. La vista del preview aislado comprobó tema claro/oscuro y el
+  aviso en una primera visita; no quedó visible un fixture de backend.
+- El cambio está guardado localmente en `208a60d`, sobre `main`
+  `80ed373be1b6ff08ddb45bcc34e2e82d530f6dbf`. El push directo fue rechazado por
+  la regla de GitHub que exige PR y cuatro checks; no se modificó ni se evadió
+  esa protección. Aún no está en Production.
+- Riesgos pendientes: el preview local no tiene configuración de backend para
+  validar datasets reales. No se atribuye el `Failed to fetch` de renovación de
+  sesión Supabase a este cambio. El resto del roadmap HU conserva sus estados y
+  dependencias externos descritos en sus handoffs; esta entrega no certifica
+  todo el reenfoque global.
+- El documento maestro contiene otras HUs de medición, arquitectura, entidades,
+  CMS, distribución, operación y retención; esta entrega solo cubre la home y
+  no certifica el reenfoque global.
+- Handoff: `docs/agents/handoffs/2026-10-08-portada-enfoque-seo.md`.
+
+## Revalidación de HU-GRO, HU-RET-04 y HU-SEO-10 (2026-10-08)
+
+- **HU-GRO-01:** la propiedad GA4 contiene un flujo web “Pont3 la 10” para
+  `pont3la10.com`; su ID de medición coincide con `ID_MEDICION_GA4` en el
+  código. La interfaz de GA4 dice que la recogida no está activada y que no
+  recibió datos en las últimas 48 horas. No se envió un evento de prueba ni se
+  cambió el consentimiento local; por tanto, no se certificó DebugView ni se
+  puede atribuir la falta de datos a una causa concreta.
+- **HU-GRO-02:** la propiedad Search Console `pont3la10.com` existe, pero la
+  sesión disponible no tiene acceso. No se leyeron consultas ni métricas, no se
+  importó información y no se modificaron propietarios o permisos. Esta
+  comprobación precisa el estado anterior: la propiedad no está ausente, pero
+  sí inaccesible desde esta cuenta.
+- **HU-RET-04:** el esquema público de Supabase no contiene tablas de newsletter
+  y el inventario de nombres de variables de Production no muestra credenciales
+  de un proveedor de campañas. No se leyeron valores de variables, no se
+  guardaron correos y no se simuló una suscripción. SMTP de autenticación no
+  acredita un servicio de campañas.
+- **HU-SEO-10:** revisión visual de `/jugadores/luis-diaz` en Production, tema
+  oscuro y viewport 390×844. El contenido se apila, la navegación colapsa y no
+  hay desbordamiento horizontal. El botón flotante “Privacidad” se superpone a
+  una línea de texto cuando queda sobre el contenido; registrar como ajuste
+  visual pendiente. No se modificó el consentimiento.
+- **Publicidad:** los espacios contextuales de HU-MON-02 ya cubren los hubs,
+  fichas y páginas principales; no se aumentó densidad en esta revisión.
+- Handoff: `docs/agents/handoffs/2026-10-08-revalidacion-hu-gro-seo10.md`.
+
 ## HU-DIST-01/02/03 — distribución editorial (Production, 2026-10-08)
 
 - RSS público (PR #120, merge `a49e9b97d09bf22d0e542df3312cea13959f65fa`),

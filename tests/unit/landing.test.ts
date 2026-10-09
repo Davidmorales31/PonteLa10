@@ -54,4 +54,23 @@ describe('configuración de la landing', () => {
     expect(estilos).toContain('body.tema-publico-blanco .busqueda-cabecera-landing input::placeholder')
     expect(estilos).toContain('body.tema-publico-blanco .busqueda-cabecera-landing input:focus')
   })
+
+  it('mantiene la portada de fútbol conectada a datos reales y sus módulos SEO', () => {
+    const portada = readFileSync(new URL('../../pages/index.vue', import.meta.url), 'utf8')
+
+    expect(portada).toContain("query: { deporte: 'futbol', timeZone: zonaHorariaColombia }")
+    expect(portada).toContain('id="titulo-jornada-home"')
+    expect(portada).toContain('id="titulo-liga-home"')
+    expect(portada).toContain('id="titulo-seleccion-home"')
+    expect(portada).toContain('id="titulo-europa-home"')
+    expect(portada).toContain('articulo-destacado-portada')
+  })
+
+  it('da estilo al contenido nuevo en ambos temas públicos', () => {
+    const estilos = readFileSync(new URL('../../assets/css/landing.css', import.meta.url), 'utf8')
+
+    expect(estilos).toContain('body.tema-publico-blanco .portada-medio :is(.home-panel')
+    expect(estilos).toContain('.home-sin-datos-contenido, .tarjeta-articulo-portada)')
+    expect(estilos).toContain('.home-tabla, .home-tabla tbody > tr > th')
+  })
 })

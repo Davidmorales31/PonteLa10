@@ -3701,6 +3701,43 @@ body.tema-publico-azul .pagina-noticias-medio :is(p, .meta-noticia-medio, .lista
 .busqueda-cabecera-landing > div { display: flex; align-items: center; gap: 8px; padding: 8px; }
 .busqueda-cabecera-landing input { min-width: 0; flex: 1; }
 
+/* Portada reordenada: superficies y texto conservan contraste en tema claro. */
+body.tema-publico-blanco .portada-medio :is(.home-panel, .home-lista-partidos li, .home-lista-resultados li, .home-perfiles-europa a, .home-sin-datos-contenido, .tarjeta-articulo-portada) {
+  border-color: #dbe2ee;
+  background: #fff;
+}
+body.tema-publico-blanco .portada-medio :is(.home-encabezado-seccion h2, .home-encabezado-panel h3, .home-tabla, .home-tabla tbody > tr > th, .home-equipos-resultado > span, .home-equipos-partido strong, .home-proximo-link strong, .home-seleccion-agenda > strong, .home-seleccion-sin-noticias h3, .home-perfiles-europa strong, .contenido-articulo-portada h3, .contenido-articulo-portada h3 a) {
+  color: #08204a;
+}
+body.tema-publico-blanco .portada-medio :is(.home-encabezado-seccion p:not(.home-antetitulo), .home-partido-link, .home-resultado-link, .home-partido-link time, .home-resultado-meta, .home-tabla thead, .home-tabla-titulo time, .home-proximo-link time, .home-seleccion-agenda > p, .home-seleccion-agenda > time, .home-seleccion-sin-noticias p, .home-convocatoria > a, .home-convocatoria small, .home-perfiles-europa small, .contenido-articulo-portada > span, .home-sin-datos) {
+  color: #52647b;
+}
+body.tema-publico-blanco .portada-medio :is(.home-antetitulo, .home-tabla-titulo p, .home-proximo-link > span, .home-convocatoria > span, .contenido-articulo-portada p) {
+  color: #17658d;
+}
+body.tema-publico-blanco .portada-medio :is(.home-partido-meta, .home-partido-meta > :last-child, .home-encabezado-panel > a, .home-encabezado-panel > span, .home-enlace-panel, .home-seleccion-agenda > a, .home-seleccion-sin-noticias > a, .home-encabezado-seccion > a) {
+  color: #174ea6;
+}
+body.tema-publico-blanco .portada-medio :is(.home-estado-vivo, .home-equipos-partido > b, .home-equipos-resultado > strong, .home-tabla tbody > tr > td:first-child) {
+  color: #a31c35;
+}
+body.tema-publico-blanco .portada-medio :is(.home-partido-meta .home-estado-vivo, .home-partido-meta > .home-estado-vivo) {
+  color: #b91c34;
+}
+body.tema-publico-blanco .portada-medio :is(.home-tabla th, .home-tabla td, .home-convocatoria, .home-perfiles-europa a) {
+  border-color: #e4e9f1;
+}
+body.tema-publico-blanco .portada-medio .home-tabla tbody > tr > td:last-child { color: #08204a; }
+body.tema-publico-blanco .portada-medio .home-seleccion-agenda > strong small { color: #174ea6; }
+body.tema-publico-blanco .portada-medio .contenido-articulo-portada h3 a:hover { color: #174ea6; }
+body.tema-publico-blanco .portada-medio :is(.home-equipos-resultado > span b, .home-equipo-tabla > b, .home-perfiles-europa a > span) {
+  background: #eaf1f9;
+  color: #174ea6;
+}
+body.tema-publico-blanco .portada-medio .home-jornada .home-panel { box-shadow: 0 5px 18px rgba(8, 32, 74, .045); }
+body.tema-publico-blanco .portada-medio .tarjeta-articulo-portada .imagen-articulo-portada { background: #edf2f8; }
+body.tema-publico-blanco .portada-medio .tarjeta-articulo-portada a:focus-visible { outline-color: #174ea6; }
+
 body.tema-publico-blanco .busqueda-cabecera-landing {
   border-color: #dbe2ee;
   background: #ffffff;
