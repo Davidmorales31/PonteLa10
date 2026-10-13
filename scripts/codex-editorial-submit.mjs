@@ -2,6 +2,7 @@ import { createHmac, randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { diagnosticarTransporteEditorial, obtenerBaseUrlEditorial } from './codex-editorial-config.mjs'
 import {
   contarPalabrasEditoriales,
   cumplePortadaPropuestaCodex,
@@ -38,7 +39,7 @@ if (!rutas[recurso] || !archivo) {
   terminar('Uso: node scripts/codex-editorial-submit.mjs <contexto|agenda|borrador|media|media-ia|propuesta|salud> <archivo-json>')
 }
 
-const baseUrl = process.env.PONT3LA10_CODEX_API_BASE_URL
+const baseUrl = obtenerBaseUrlEditorial(process.env)
 const secreto = process.env.NUXT_CODEX_EDITORIAL_API_SECRET
 if (!baseUrl || !secreto) {
   terminar('Falta configuración local de la API privada editorial.')
@@ -107,8 +108,8 @@ try {
     body: cuerpo,
     signal: AbortSignal.timeout(recurso === 'borrador' ? 90_000 : 45_000)
   })
-} catch {
-  terminar('La API privada no respondió; conserva la misma clave de idempotencia para reintentar.')
+} catch (error) {
+  terminar(`${diagnosticarTransporteEditorial(error)} Conserva la misma clave de idempotencia para reintentar.`)
 }
 
 let resultado
