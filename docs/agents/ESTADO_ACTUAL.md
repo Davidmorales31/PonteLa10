@@ -1,5 +1,33 @@
 # Estado actual de Pont3la10
 
+## Refactor SEO del Home y retiro del backlog HU-TR (2026-10-13)
+
+- Trabajo aislado en `.codex/worktrees/home-seo-20261013`, rama
+  `codex/home-seo-20261013`, desde `origin/main=4cd32be`, confirmado como SHA
+  de Vercel Production. Se preservan los cambios locales del checkout principal.
+- Home tiene H1 visible y estable, hero H2, title/description exactos de la HU,
+  canonical raíz y tarjeta social fija. Reutiliza el schema global: un WebSite y
+  NewsMediaOrganization solo en `/`; las otras rutas conservan Organization.
+- Apertura con introducción, hero y secundarias basada en el esqueleto de las
+  referencias; mantiene navy, azul eléctrico y amarillo. Resultados de fútbol,
+  enlaces descriptivos a Liga/Selección, módulo internacional desde CMS y texto
+  institucional visible de 86 palabras. No se crean datos ni rutas ficticias.
+- Validación visual local con datos reales: azul/blanco, 390, 768 y 1440 px;
+  320 px sin overflow. Se corrigieron enlaces de equipos y “vs” poco legibles
+  en blanco. El contraste calculado revisó 145 textos/enlaces de superficies
+  uniformes; hero sobre imagen se revisó visualmente.
+- Vue detectó una diferencia ICU de espacios en “p. m.” entre Node y navegador.
+  Se normaliza únicamente el texto de horarios de Home; hay prueba de regresión.
+  Tras recargar, no hubo nuevos errores de hidratación en desarrollo.
+- El usuario confirmó retirar el backlog antiguo HU-TR: PR #35–47 cerrados y
+  sus 13 ramas remotas eliminadas. `git ls-remote` confirma cero ramas
+  `codex/hu-tr-*`; el archivo histórico `e42b57b` tiene 28 commits fuera de main.
+  No se reescribe main ni se borran stashes/worktrees locales de recuperación.
+- Matriz final: lint, 111 archivos/573 pruebas, typecheck, build y diff pasan.
+  Build conserva el aviso upstream DEP0155 de `@vue/shared`.
+  PR y despliegue: en curso. Handoff:
+  `docs/agents/handoffs/2026-10-13-home-seo.md`.
+
 ## Reenfoque de portada SEO y reparación de hidratación (2026-10-08)
 
 - Se reordenó la portada siguiendo la estructura del documento maestro: jornada,

@@ -4,12 +4,13 @@ import AlertasEditorialesGlobales from '~/components/AlertasEditorialesGlobales.
 import { construirUrlAbsoluta, normalizarUrlSitio, serializarJsonLd } from '~/utils/seo'
 
 const configuracion = useRuntimeConfig()
+const rutaActual = useRoute()
 const urlSitio = normalizarUrlSitio(String(configuracion.public.siteUrl))
-const identidadSeo = {
+const identidadSeo = computed(() => ({
   '@context': 'https://schema.org',
   '@graph': [
     {
-      '@type': 'Organization',
+      '@type': rutaActual.path === '/' ? 'NewsMediaOrganization' : 'Organization',
       '@id': `${urlSitio}/#organizacion`,
       name: 'Pont3la10',
       url: urlSitio,
@@ -27,7 +28,7 @@ const identidadSeo = {
       publisher: { '@id': `${urlSitio}/#organizacion` }
     }
   ]
-}
+}))
 
 useSeoMeta({
   ogSiteName: 'Pont3la10',
@@ -35,13 +36,13 @@ useSeoMeta({
   themeColor: '#08204A'
 })
 
-useHead({
+useHead(() => ({
   script: [{
     key: 'identidad-estructurada-pont3la10',
     type: 'application/ld+json',
-    innerHTML: serializarJsonLd(identidadSeo)
+    innerHTML: serializarJsonLd(identidadSeo.value)
   }]
-})
+}))
 </script>
 
 <template>

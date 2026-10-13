@@ -29,6 +29,8 @@ import {
   filtrarNoticiasEuropa,
   filtrarNoticiasLiga,
   filtrarNoticiasSeleccion,
+  priorizarPartidosPortada,
+  normalizarEspaciosFechaPortada,
   obtenerProximoPartidoLiga,
   obtenerResultadosLigaRecientes,
   separarJornadaPortada
@@ -85,7 +87,7 @@ const respuestaLigaVacia: RespuestaLigaPortada = {
   consultadoEn: ''
 }
 const [consultaResultados, consultaLiga, consultaArticulos, consultaDestacada,
-  consultaLigaArticulos, consultaSeleccionArticulos, consultaEuropaArticulos] = await Promise.all([
+  consultaLigaArticulos, consultaSeleccionArticulos, consultaEuropaArticulos, consultaInternacionalArticulos] = await Promise.all([
   useFetch<RespuestaResultados>('/api/resultados', {
     key: 'resultados-portada-futbol',
     query: { deporte: 'futbol', timeZone: zonaHorariaColombia },
@@ -125,6 +127,12 @@ const [consultaResultados, consultaLiga, consultaArticulos, consultaDestacada,
     query: { tema: 'colombianos-en-europa', limite: 8 },
     default: () => [],
     ignoreResponseError: true
+  }),
+  useFetch<ResumenArticuloPublico[]>('/api/articulos', {
+    key: 'articulos-internacionales-portada',
+    query: { categoria: 'futbol-mundial', limite: 3 },
+    default: () => [],
+    ignoreResponseError: true
   })
 ])
 const resultados = consultaResultados.data
@@ -135,6 +143,9 @@ const respuestaPublicacionDestacada = consultaDestacada.data
 const respuestaArticulosLiga = consultaLigaArticulos.data
 const respuestaArticulosSeleccion = consultaSeleccionArticulos.data
 const respuestaArticulosEuropa = consultaEuropaArticulos.data
+const noticiasInternacionales = computed(() => (Array.isArray(consultaInternacionalArticulos.data.value)
+  ? consultaInternacionalArticulos.data.value.filter(esResumenArticuloPublico)
+  : []).map(mapearArticuloPortada))
 const publicacionesReales = computed(() => Array.isArray(respuestaPublicacionesReales.value)
   ? respuestaPublicacionesReales.value.filter(esResumenArticuloPublico)
   : [])
@@ -187,6 +198,7 @@ const jornadaPortada = computed(() => separarJornadaPortada(
   Array.isArray(resultados.value?.partidos) ? resultados.value.partidos : [],
   instantePortada.value
 ))
+const partidosHoyPortada = computed(() => priorizarPartidosPortada(jornadaPortada.value.partidos).slice(0, 5))
 const resultadosRecientesPortada = computed<ResultadoRecientePortada[]>(() => {
   const resultadosDeHoy = jornadaPortada.value.finalizados
     .filter(partido => Number.isFinite(partido.marcadorLocal) && Number.isFinite(partido.marcadorVisitante))
@@ -354,9 +366,9 @@ watch([seguimientoCompeticionesHidratado, competicionesSeguidas], async ([hidrat
 
 function fechaEquipoSeguido(valor: string) {
   if (!Number.isFinite(Date.parse(valor))) return 'Fecha por confirmar'
-  return new Intl.DateTimeFormat('es-CO', {
+  return normalizarEspaciosFechaPortada(new Intl.DateTimeFormat('es-CO', {
     dateStyle: 'medium', timeStyle: 'short', timeZone: 'America/Bogota'
-  }).format(new Date(valor))
+  }).format(new Date(valor)))
 }
 
 function obtenerHoraPublicacion(fecha: string) {
@@ -377,9 +389,9 @@ function fechaPartidoPortada(fecha: string) {
 
 function horaPartidoPortada(fecha: string) {
   if (!Number.isFinite(Date.parse(fecha))) return 'Hora por confirmar'
-  return new Intl.DateTimeFormat('es-CO', {
+  return normalizarEspaciosFechaPortada(new Intl.DateTimeFormat('es-CO', {
     hour: '2-digit', minute: '2-digit', hour12: true, timeZone: zonaHorariaColombia
-  }).format(new Date(fecha))
+  }).format(new Date(fecha)))
 }
 
 function fechaSeleccionPortada(fecha: string) {
@@ -401,48 +413,56 @@ const horasPublicacion = computed(() => new Map(
   publicacionesReales.value.map(articulo => [articulo.slug, obtenerHoraPublicacion(articulo.publicadoEn)])
 ))
 
-useSeoPont3la10(() => ({
-  titulo: 'Pont3la10 | Fútbol colombiano, partidos y noticias',
-  descripcion: 'Partidos de hoy, resultados recientes, Liga BetPlay, Selección Colombia y noticias de futbolistas colombianos en Europa.',
+useSeoPont3la10({
+  titulo: 'Fútbol colombiano: noticias, partidos y resultados | Pont3la10',
+  descripcion: 'Noticias de fútbol colombiano, Selección Colombia y Liga BetPlay. Consulta partidos de hoy, resultados, tabla de posiciones y fútbol internacional en Pont3la10.',
   rutaCanonica: '/',
-  imagen: portadaPrincipal.value?.imagen,
+  imagenAlt: 'Pont3la10, la jugada clara',
   datosEstructurados: {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Pont3la10',
-    description: 'Partidos de hoy, resultados, fútbol colombiano y actualidad de la Selección Colombia y sus futbolistas en Europa.',
+    name: 'Noticias de fútbol colombiano y Selección Colombia',
+    description: 'Liga BetPlay, Selección Colombia, fútbol internacional, partidos de hoy, resultados y actualidad deportiva.',
     inLanguage: 'es-CO'
   }
-}))
+})
 </script>
 
 <template>
   <div class="portada-medio">
-    <EsqueletoResultados v-if="estadoResultados === 'pending'" tipo="franja" />
-    <FranjaMarcadores v-else-if="partidosFranja.length" :partidos="partidosFranja" destino="/partidos-hoy" />
     <div class="medio-contenedor">
-      <div class="medio-edicion"><span>LA JUGADA CLARA</span><span>Deporte · Tecnología · Actualidad</span></div>
-      <section v-if="portadaPrincipal" class="medio-apertura" :class="{ 'sin-secundarias': !noticiasSecundarias.length }" aria-label="Portada editorial">
-        <NoticiaPortada :articulo="portadaPrincipal" principal />
-        <div v-if="noticiasSecundarias.length" class="medio-secundarias">
-          <NoticiaPortada v-for="articulo in noticiasSecundarias" :key="articulo.slug" :articulo="articulo" />
+      <div class="medio-edicion"><span>LA JUGADA CLARA</span><span>Fútbol colombiano · Actualidad deportiva</span></div>
+      <section class="medio-apertura" :class="{ 'sin-secundarias': !noticiasSecundarias.length }" aria-labelledby="titulo-portada-home">
+        <div class="medio-introduccion">
+          <p class="home-antetitulo">LA JUGADA CLARA · FÚTBOL COLOMBIANO</p>
+          <h1 id="titulo-portada-home">Noticias de fútbol colombiano y Selección Colombia</h1>
+          <p>Liga BetPlay, Selección Colombia, fútbol internacional, partidos de hoy, resultados y actualidad deportiva.</p>
+        </div>
+        <template v-if="portadaPrincipal">
+          <NoticiaPortada :articulo="portadaPrincipal" principal nivel-titulo="h2" />
+          <div v-if="noticiasSecundarias.length" class="medio-secundarias">
+            <NoticiaPortada v-for="articulo in noticiasSecundarias" :key="articulo.slug" :articulo="articulo" />
+          </div>
+        </template>
+        <div v-else class="medio-vacio">
+          <h2>La actualidad empieza aquí</h2>
+          <p>Las noticias aparecerán cuando el equipo editorial las publique.</p>
         </div>
       </section>
-      <section v-else class="medio-vacio">
-        <h1>La actualidad empieza aquí</h1>
-        <p>Las noticias aparecerán cuando el equipo editorial las publique.</p>
-      </section>
+
+      <EsqueletoResultados v-if="estadoResultados === 'pending'" tipo="franja" />
+      <FranjaMarcadores v-else-if="partidosFranja.length" :partidos="partidosFranja" destino="/partidos-hoy" />
 
       <section class="medio-seccion home-jornada" aria-labelledby="titulo-jornada-home">
         <div class="medio-encabezado home-encabezado-seccion">
           <div><p class="home-antetitulo">FÚTBOL DE HOY</p><h2 id="titulo-jornada-home">Tu jornada</h2><p>Partidos y marcadores confirmados · hora de Colombia</p></div>
-          <NuxtLink to="/partidos-hoy">Abrir agenda <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink to="/partidos-hoy">Ver partidos de hoy <span aria-hidden="true">→</span></NuxtLink>
         </div>
         <div class="home-jornada-grid">
           <section class="home-panel" aria-labelledby="titulo-partidos-hoy-home">
             <div class="home-encabezado-panel"><h3 id="titulo-partidos-hoy-home">Partidos de hoy</h3><NuxtLink to="/partidos-hoy">Ver agenda</NuxtLink></div>
-            <ul v-if="jornadaPortada.partidos.length" class="home-lista-partidos">
-              <li v-for="partido in jornadaPortada.partidos.slice(0, 5)" :key="partido.id">
+            <ul v-if="partidosHoyPortada.length" class="home-lista-partidos">
+              <li v-for="partido in partidosHoyPortada" :key="partido.id">
                 <NuxtLink :to="`/resultados/${encodeURIComponent(partido.id)}`" class="home-partido-link">
                   <span class="home-partido-meta"><span>{{ partido.competencia }}</span><span :class="{ 'home-estado-vivo': partido.estado === 'en-vivo' }">{{ partido.estado === 'en-vivo' ? 'EN VIVO' : partido.estado === 'finalizado' ? 'FINALIZADO' : 'PRÓXIMO' }}</span></span>
                   <span class="home-equipos-partido">
@@ -458,7 +478,7 @@ useSeoPont3la10(() => ({
           </section>
 
           <section class="home-panel" aria-labelledby="titulo-resultados-recientes-home">
-            <div class="home-encabezado-panel"><h3 id="titulo-resultados-recientes-home">Resultados recientes</h3><NuxtLink to="/resultados">Todos los resultados</NuxtLink></div>
+            <div class="home-encabezado-panel"><h3 id="titulo-resultados-recientes-home">Resultados de fútbol</h3><NuxtLink to="/resultados/futbol">Todos los resultados de fútbol</NuxtLink></div>
             <ul v-if="resultadosRecientesPortada.length" class="home-lista-resultados">
               <li v-for="partido in resultadosRecientesPortada" :key="partido.id">
                 <NuxtLink :to="partido.ruta" class="home-resultado-link">
@@ -480,7 +500,7 @@ useSeoPont3la10(() => ({
       <section class="medio-seccion home-bloque-tematico home-liga" aria-labelledby="titulo-liga-home">
         <div class="medio-encabezado home-encabezado-seccion">
           <div><p class="home-antetitulo">FÚTBOL COLOMBIANO</p><h2 id="titulo-liga-home">Liga BetPlay</h2><p>Posiciones, próximo partido y actualidad del torneo.</p></div>
-          <NuxtLink to="/liga-colombiana">Ir al hub de Liga <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink to="/liga-colombiana">Noticias y calendario de Liga BetPlay <span aria-hidden="true">→</span></NuxtLink>
         </div>
         <div class="home-liga-grid">
           <section class="home-panel home-tabla-panel" aria-labelledby="titulo-tabla-home">
@@ -500,7 +520,7 @@ useSeoPont3la10(() => ({
                   </tr>
                 </tbody>
               </table>
-              <NuxtLink class="home-enlace-panel" to="/liga-colombiana#posiciones">Ver tabla completa <span aria-hidden="true">→</span></NuxtLink>
+              <NuxtLink class="home-enlace-panel" to="/liga-colombiana#posiciones">Ver tabla de la Liga BetPlay <span aria-hidden="true">→</span></NuxtLink>
             </div>
             <p v-else class="home-sin-datos">La tabla oficial todavía no está disponible en los datos públicos.</p>
           </section>
@@ -526,7 +546,7 @@ useSeoPont3la10(() => ({
       <section class="medio-seccion home-bloque-tematico home-seleccion" aria-labelledby="titulo-seleccion-home">
         <div class="medio-encabezado home-encabezado-seccion">
           <div><p class="home-antetitulo">FÚTBOL DE SELECCIONES</p><h2 id="titulo-seleccion-home">Selección Colombia</h2><p>Agenda y convocatorias contrastadas con la Federación Colombiana de Fútbol.</p></div>
-          <NuxtLink to="/seleccion-colombia">Ver Selección Colombia <span aria-hidden="true">→</span></NuxtLink>
+          <NuxtLink to="/seleccion-colombia">Más noticias de la Selección Colombia <span aria-hidden="true">→</span></NuxtLink>
         </div>
         <div class="home-seleccion-grid">
           <article class="home-panel home-seleccion-agenda">
@@ -555,10 +575,20 @@ useSeoPont3la10(() => ({
         </div>
       </section>
 
+      <section v-if="noticiasInternacionales.length" class="medio-seccion home-bloque-tematico" aria-labelledby="titulo-internacional-home">
+        <div class="medio-encabezado home-encabezado-seccion">
+          <div><p class="home-antetitulo">EL FÚTBOL EN EL MUNDO</p><h2 id="titulo-internacional-home">Fútbol internacional</h2><p>Noticias publicadas de ligas y competiciones internacionales.</p></div>
+          <NuxtLink to="/futbol-internacional">Más noticias de fútbol internacional <span aria-hidden="true">→</span></NuxtLink>
+        </div>
+        <div class="home-noticias-modulo home-noticias-europa">
+          <TarjetaArticuloPortada v-for="articulo in noticiasInternacionales" :key="articulo.slug" :articulo="articulo" />
+        </div>
+      </section>
+
       <section class="medio-seccion home-bloque-tematico home-europa" aria-labelledby="titulo-europa-home">
         <div class="medio-encabezado home-encabezado-seccion">
-          <div><p class="home-antetitulo">FÚTBOL INTERNACIONAL</p><h2 id="titulo-europa-home">Colombianos en Europa</h2><p>Actualidad editorial y perfiles verificados, sin estadísticas inventadas.</p></div>
-          <NuxtLink to="/colombianos-en-europa">Ver todos <span aria-hidden="true">→</span></NuxtLink>
+          <div><p class="home-antetitulo">FÚTBOL INTERNACIONAL</p><h2 id="titulo-europa-home">Colombianos en el exterior</h2><p>Noticias y perfiles de futbolistas colombianos en Europa.</p></div>
+          <NuxtLink to="/colombianos-en-europa">Ver colombianos en Europa <span aria-hidden="true">→</span></NuxtLink>
         </div>
         <nav class="home-perfiles-europa" aria-label="Perfiles verificados de futbolistas colombianos">
           <NuxtLink v-for="jugador in perfilesEuropaPortada" :key="jugador.slug" :to="`/jugadores/${encodeURIComponent(jugador.slug)}`">
@@ -695,7 +725,7 @@ useSeoPont3la10(() => ({
         <section aria-labelledby="titulo-ultimas-noticias">
           <div class="medio-encabezado">
             <h2 id="titulo-ultimas-noticias">Últimas noticias</h2>
-            <NuxtLink to="/articulos">Ver todas <span aria-hidden="true">→</span></NuxtLink>
+            <NuxtLink to="/articulos">Todas las noticias deportivas <span aria-hidden="true">→</span></NuxtLink>
           </div>
           <ol v-if="ultimasNoticias.length" class="medio-ultimas">
             <li v-for="articulo in ultimasNoticias" :key="articulo.slug">
@@ -730,13 +760,17 @@ useSeoPont3la10(() => ({
       <section class="medio-explora" aria-label="Explora categorías">
         <h2>Explora</h2>
         <nav aria-label="Categorías">
-          <NuxtLink v-for="categoria in categoriasSitio" :key="categoria.ruta" :to="categoria.ruta">{{ categoria.etiqueta }} <span aria-hidden="true">↗</span></NuxtLink>
+          <NuxtLink v-for="categoria in categoriasSitio" :key="categoria.ruta" :to="categoria.ruta">{{ categoria.etiqueta === 'Tech deportiva' ? 'Tecnología deportiva' : categoria.etiqueta }} <span aria-hidden="true">↗</span></NuxtLink>
         </nav>
       </section>
 
       <section class="medio-patrocinios" aria-label="Anúnciate con nosotros">
         <div><h2>¿Quieres anunciarte en Pont3la10?</h2><p>Conecta con nuestra comunidad de deporte y tecnología.</p></div>
         <a href="mailto:contact@pont3la10.com">contact@pont3la10.com <span aria-hidden="true">→</span></a>
+      </section>
+      <section class="medio-institucional medio-seccion" aria-labelledby="titulo-sobre-home">
+        <h2 id="titulo-sobre-home">Fútbol colombiano, con la jugada clara</h2>
+        <p>Pont3la10 cubre la actualidad del fútbol colombiano, la Selección Colombia y los principales torneos internacionales. Aquí encuentras noticias de la Liga BetPlay, tabla de posiciones, resultados, próximos partidos y horarios en Colombia. Sigue también la actualidad de futbolistas colombianos en Europa y consulta sus perfiles. Nuestra portada reúne las historias publicadas por el equipo editorial y los datos deportivos disponibles, con fechas y fuentes para entender cada información. Explora las noticias, el calendario y los análisis para seguir el juego dentro y fuera de la cancha.</p>
       </section>
     </div>
   </div>
@@ -747,9 +781,19 @@ useSeoPont3la10(() => ({
 .medio-contenedor { width: min(1240px, calc(100% - 48px)); margin: 0 auto; }
 .medio-edicion { display: flex; justify-content: space-between; gap: 16px; padding: 18px 0 14px; color: #9eafc8; font-size: .62rem; letter-spacing: .12em; }
 .medio-edicion span:first-child { color: #ffd800; font-weight: 800; }
-.medio-apertura { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: 16px; align-items: stretch; }
-.medio-apertura.sin-secundarias { grid-template-columns: 1fr; }
-.medio-secundarias { display: grid; gap: 12px; }
+.medio-apertura { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.3fr) minmax(0, 1.2fr); gap: 16px; align-items: stretch; }
+.medio-apertura.sin-secundarias { grid-template-columns: minmax(220px, .72fr) minmax(0, 1.28fr); }
+.medio-introduccion { min-width: 0; align-self: center; padding: 12px 8px 12px 0; }
+.medio-introduccion .home-antetitulo { margin: 0; color: #ffd800; font-size: .65rem; font-weight: 800; letter-spacing: .09em; line-height: 1.5; }
+.medio-introduccion h1 { margin: 8px 0 12px; color: #f5f8ff; font-size: clamp(1.8rem, 2.8vw, 2.65rem); font-weight: 850; line-height: 1.06; letter-spacing: -.045em; text-wrap: balance; }
+.medio-introduccion > p:last-child { margin: 0; color: #a8bbd5; font-size: clamp(.86rem, 1.05vw, .98rem); line-height: 1.55; }
+.medio-secundarias { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.medio-secundarias :deep(.noticia-portada.con-imagen:not(.principal)) { grid-template-columns: 1fr; grid-template-rows: 150px 1fr; align-content: start; }
+.medio-secundarias :deep(.noticia-portada:not(.principal) .texto) { padding: 14px; }
+.medio-apertura > :deep(.principal h2) { font-size: clamp(1.5rem, 2.2vw, 2.1rem); }
+.medio-institucional { border-top: 1px solid #294467; padding-top: 24px; }
+.medio-institucional h2 { margin: 0 0 10px; color: #f5f8ff; font-size: 1.2rem; }
+.medio-institucional p { max-width: 85ch; margin: 0; color: #a8bbd5; font-size: .9rem; line-height: 1.7; }
 .medio-actualidad { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); align-items: start; gap: 24px; margin-top: 28px; }
 .medio-encabezado { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; margin-bottom: 14px; }
 .medio-encabezado h2, .medio-explora h2 { margin: 0; color: #fff; font-size: clamp(1.2rem, 2vw, 1.5rem); letter-spacing: -.035em; }
@@ -813,7 +857,7 @@ useSeoPont3la10(() => ({
 .medio-patrocinios a:hover { border-color: #ffd800; }
 .medio-texto-suave, .medio-vacio p { color: #a8bbd5; }
 .medio-vacio { padding: 36px 0; }
-.medio-vacio h1 { color: #f5f8ff; font-size: 2rem; }
+.medio-vacio h2 { margin: 0; color: #f5f8ff; font-size: 2rem; }
 .home-bloque-tematico, .home-jornada, .home-analisis { margin-top: clamp(30px, 4vw, 48px); }
 .home-encabezado-seccion { align-items: center; margin-bottom: 16px; }
 .home-encabezado-seccion > div { min-width: 0; }
@@ -901,7 +945,9 @@ useSeoPont3la10(() => ({
 .home-jornada :deep(.espacio-adsterra) { margin-top: 16px; }
 .portada-medio a:focus-visible { outline: 3px solid #7ce6f5; outline-offset: 3px; }
 @media (max-width: 900px) {
-  .medio-apertura { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); }
+  .medio-apertura { grid-template-columns: minmax(0, .92fr) minmax(0, 1.08fr); }
+  .medio-apertura.sin-secundarias { grid-template-columns: minmax(0, .84fr) minmax(0, 1.16fr); }
+  .medio-secundarias { grid-column: 1 / -1; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .medio-actualidad { gap: 20px; }
   .medio-patrocinios { align-items: start; flex-direction: column; }
   .home-noticias-europa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -910,10 +956,16 @@ useSeoPont3la10(() => ({
 @media (max-width: 700px) {
   .medio-contenedor { width: calc(100% - 32px); }
   .medio-edicion { font-size: .55rem; letter-spacing: .07em; }
-  .medio-apertura, .medio-actualidad { grid-template-columns: 1fr; }
+  .medio-apertura, .medio-apertura.sin-secundarias, .medio-actualidad { grid-template-columns: 1fr; }
+  .medio-introduccion { padding: 8px 0 2px; }
+  .medio-introduccion h1 { max-width: 19ch; margin: 7px 0 9px; font-size: clamp(1.8rem, 7.6vw, 2.2rem); }
+  .medio-introduccion > p:last-child { max-width: 54ch; font-size: .9rem; }
   .grilla-equipos-seguidos-home { grid-template-columns: 1fr; }
   .grilla-competiciones-seguidas-home { grid-template-columns: 1fr; }
-  .medio-secundarias { gap: 10px; }
+  .medio-secundarias { grid-column: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .medio-secundarias :deep(.noticia-portada.con-imagen:not(.principal)) { grid-template-columns: 1fr; grid-template-rows: auto 1fr; align-content: start; }
+  .medio-secundarias :deep(.noticia-portada:not(.principal) .foto) { min-height: 96px; }
+  .medio-secundarias :deep(.noticia-portada:not(.principal) .texto) { padding: 11px; }
   .medio-actualidad { margin-top: 24px; gap: 24px; }
   .medio-resultados { grid-template-columns: 1fr; }
   .medio-explora { align-items: start; flex-direction: column; gap: 12px; }
@@ -932,5 +984,8 @@ useSeoPont3la10(() => ({
   .home-equipo-tabla { min-width: 125px; }
   .home-tabla-titulo { align-items: flex-start; }
   .home-tabla-titulo time { max-width: 44%; }
+}
+@media (max-width: 370px) {
+  .medio-secundarias { grid-template-columns: 1fr; }
 }
 </style>
