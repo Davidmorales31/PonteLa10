@@ -1,5 +1,21 @@
 # Estado actual de Pont3la10
 
+## Reparación editorial: chat único y conexión a Producción (2026-10-13)
+
+- La tarea existente `pont3la10-propuestas-editoriales-diarias` usa heartbeat
+  activo en el chat `01a133a4-a58a-77e0-bcf8-52a61bd004a0`, con horarios
+  06:05/14:05/20:05 COT. No genera un chat nuevo por corrida.
+- Se separa el destino editorial de la URL local del worker fútbol. Salud,
+  contexto y una agenda v2 real pasan en Producción; instrucciones alineadas
+  con el contrato vigente, sin cuotas y con portada opcional.
+- El primer borrador produjo JSON inválido de DeepSeek y quedó `uncertain`.
+  El proveedor Codex solicita ahora JSON mode; Juan autorizó exactamente un
+  reintento pagado tras desplegar. Todavía no hay recibo CMS `review`.
+- Pruebas relacionadas (12), lint y suite (113 archivos/582 pruebas) pasan;
+  typecheck y build pasan; despliegue en curso. Revisor sin bloqueos. Cambios ajenos
+  del checkout principal preservados; trabajo aislado desde main `10a6af2`.
+- Handoff: `docs/agents/handoffs/2026-10-13-reparacion-editorial-chat-unico.md`.
+
 ## Refactor SEO del Home y retiro del backlog HU-TR (2026-10-13)
 
 - Trabajo aislado en `.codex/worktrees/home-seo-20261013`, rama

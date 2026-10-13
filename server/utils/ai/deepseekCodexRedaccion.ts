@@ -57,6 +57,7 @@ export function crearProveedorDeepSeekCodex(): ProveedorRedaccionIa {
           reasoning_effort: 'none',
           max_tokens: 6144,
           stream: false,
+          response_format: { type: 'json_object' },
           messages: [
             { role: 'system', content: instruccionesRedaccionCodex },
             { role: 'user', content: JSON.stringify({

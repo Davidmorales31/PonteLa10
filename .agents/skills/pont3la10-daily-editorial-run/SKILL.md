@@ -5,10 +5,10 @@ description: Run or resume Pont3la10's daily research-to-review editorial batch 
 
 # Pont3la10 Daily Editorial Run
 
-Use this as the coordinator for the daily scheduled Codex task. Read the trend,
-investigative-writing, SEO, auto-cover, and `pont3la10-ai-editorial-cover`
-skills before producing candidates. The AI-cover skill is exclusive to this
-Codex task; never change the TikTok ingestion workflow. Use the
+Use this as the coordinator for the daily scheduled Codex task in its existing
+chat. Read the trend, investigative-writing and SEO skills before producing
+candidates. Read auto-cover or AI-cover skills only when using that image path.
+The AI-cover skill is exclusive to this Codex task; never change the TikTok ingestion workflow. Use the
 operational-monitor skill only for a separate read-only health check.
 
 ## Private API configuration
@@ -20,6 +20,14 @@ values. Scheduled tasks may not inherit variables from an interactive
 PowerShell session, so never stop solely because `$env:` checks are empty and
 never print or inspect secret values. If configuration is missing, the CLI
 fails before sending a request.
+
+Set `PONT3LA10_CODEX_EDITORIAL_API_BASE_URL` to the production editorial API
+origin for scheduled runs. The CLI prefers it over the legacy
+`PONT3LA10_CODEX_API_BASE_URL`, which the local football worker also uses.
+Keep those destinations independent. Before research, verify private health
+and the requested context. Diagnose a refused local connection by checking the
+destination; preserve run and idempotency identities on uncertain transport.
+Do not delete process variables to force a stale `.env` destination.
 
 ## Run and resume safely
 
@@ -79,16 +87,14 @@ fails before sending a request.
 
    - `expediente`: trend signal, source records, claim/source map, uncertainty.
    - `borrador`: complete structured article proposal, taxonomy and SEO.
-   - `portadaIA`: required ImageGen editorial illustration after the draft
-     passes quality checks. Read and follow `pont3la10-ai-editorial-cover` and
-     `pont3la10-editorial-imagery`; inspect, optimize, and checkpoint the
-     result. If it cannot be generated safely, skip this candidate rather than
-     create a text-only Codex draft. Do not replace this task's ImageGen step
-     with the optional licensed-photo search path.
-   - `media`: required stable returned media ID and safe upload receipt from
-     `media-ia`; on an ambiguous persistence response, reuse the checkpoint and
-     idempotency key rather than regenerating, duplicating, or submitting
-     without the media ID.
+   - `portada` or `portadaIA`: optional verified, reusable photograph or
+     explicitly disclosed editorial illustration, after draft quality checks.
+     Follow the selected cover skill and inspect the image. If no suitable
+     cover is available, keep `coverMediaId: null` and omit image flags; the
+     production contract permits a text-only draft for human review.
+   - `media`: when a cover is used, save its stable persisted media ID and safe
+     receipt. On ambiguous persistence, reuse the checkpoint and idempotency
+     key rather than regenerating or duplicating the image.
    - `propuesta`: exact API proposal payload plus stable idempotency key.
    - `entrega`: API response identifying the private review draft.
 
@@ -100,8 +106,12 @@ fails before sending a request.
    Check the returned taxonomy against the API-supplied public topic and
    published-story candidates before mapping the payload. A blank selection is
    not a default: select relevant exact IDs when warranted, omit unrelated
-   matches, and propose a deduplicated public topic only when the catalog has no
-   equivalent. Never fabricate an internal label, category, or related article.
+   matches, and propose at most one deduplicated public topic only when the catalog has no
+   equivalent. Review the story's central entities against all relevant public
+   topics; correct obvious omissions in the model selection before submission.
+   Never fabricate an internal label, category, or related article. Verify the
+   persisted category, topics and related articles after the review receipt;
+   a model selection or local payload alone does not prove CMS labeling.
    Derive human-review flags from the content type and verified photo receipt.
 
    Before saving or submitting each proposal, count the words in its plain-text
@@ -121,10 +131,10 @@ fails before sending a request.
    an inspected ImageGen result and its title/alt metadata. Use
    `payload-portada-ia` with an output filename relative to that candidate's
    folder. Submit generated illustrations using `media-ia`. Before proposal
-   submission, verify `coverMediaId` equals the persisted media receipt ID and
-   `editorialFlags` includes `ai_generated_cover` but not
-   `licensed_photo_cover`; the CLI and private API reject proposals without a
-   persisted cover. Never print
+   submission with an AI cover, verify `coverMediaId` equals the persisted media
+   receipt ID and `editorialFlags` includes `ai_generated_cover` but not
+   `licensed_photo_cover`. For a licensed photo use only `licensed_photo_cover`;
+   for no cover use neither flag. Never print
    the base64 media payload or store credentials in checkpoints.
    Use `exportar` to materialize an exact saved stage to a file inside its
    ignored candidate folder without printing article/source content to terminal.
@@ -136,14 +146,16 @@ fails before sending a request.
 7. Submit only through `scripts/codex-editorial-submit.mjs`. The pipeline may
    create or update a private `review` draft only. Never approve, schedule,
    publish, or bypass server-side validation; human approval is the boundary.
-8. Report the run ID, per-category counts, drafts created, skipped duplicates,
+8. Confirm `articleId` and `estado: review` in the API receipt, then verify the
+   saved article and taxonomy. Report the run ID, per-category counts, drafts created, skipped duplicates,
    unresolved candidates, and any safe required action. Distinguish partial
-   completion from success; do not claim all categories met the target unless
-   API receipts prove it.
+   completion from success; do not claim unreviewed categories are complete.
+   Scheduled follow-ups stay in the configured chat. Keep unchanged/non-actionable
+   checks quiet; notify on a new review draft, meaningful failure or needed action.
 
-If required API configuration, research access, ImageGen, or safe checkpoint
+If required API configuration, research access or safe checkpoint
 artifacts are unavailable, stop the affected candidate at the last completed
-stage and report what is needed. Never submit a Codex draft with a missing
-cover; report the candidates actually verified and drafts confirmed. Do not
+stage and report what is needed. A missing optional cover is not an API blocker;
+report the candidates actually verified and drafts confirmed. Do not
 create filler to hit a numerical target or fabricate sources, drafts, images,
 receipts, or successful API writes.
