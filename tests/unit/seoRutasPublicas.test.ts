@@ -29,6 +29,24 @@ const paginas = [
 ]
 
 describe('contrato SEO de páginas públicas', () => {
+  it('mantiene identidad de Home, H1 y tarjeta social independientes de la noticia principal', () => {
+    const portada = readFileSync(new URL('../../pages/index.vue', import.meta.url), 'utf8')
+    const identidad = readFileSync(new URL('../../app.vue', import.meta.url), 'utf8')
+    const metadata = portada.slice(portada.indexOf('useSeoPont3la10('), portada.indexOf('</script>'))
+
+    expect(metadata).toContain('Fútbol colombiano: noticias, partidos y resultados | Pont3la10')
+    expect(metadata).toContain('Noticias de fútbol colombiano, Selección Colombia y Liga BetPlay. Consulta partidos de hoy, resultados, tabla de posiciones y fútbol internacional en Pont3la10.')
+    expect(metadata).not.toContain('portadaPrincipal')
+    expect(metadata).toContain("rutaCanonica: '/'")
+    expect(portada.match(/<h1\b/g)).toHaveLength(1)
+    expect(portada).toContain('Noticias de fútbol colombiano y Selección Colombia</h1>')
+    expect(portada).toContain('principal nivel-titulo="h2"')
+    expect(portada).toContain('to="/liga-colombiana"')
+    expect(portada).toContain('to="/seleccion-colombia"')
+    expect(identidad).toContain("rutaActual.path === '/' ? 'NewsMediaOrganization' : 'Organization'")
+    expect(identidad.match(/'@type': 'WebSite'/g)).toHaveLength(1)
+  })
+
   it.each(paginas)('$tipo conecta metadatos y JSON-LD a la ruta canonical', ({ archivos }) => {
     const contenido = archivos
       .map(archivo => readFileSync(new URL(archivo, import.meta.url), 'utf8'))

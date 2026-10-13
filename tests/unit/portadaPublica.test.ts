@@ -7,6 +7,8 @@ import {
   filtrarNoticiasSeleccion,
   obtenerProximoPartidoLiga,
   obtenerResultadosLigaRecientes,
+  priorizarPartidosPortada,
+  normalizarEspaciosFechaPortada,
   separarJornadaPortada,
   type PartidoLigaPortada
 } from '../../utils/portadaPublica'
@@ -60,6 +62,26 @@ function crearPartidoLiga(
 }
 
 describe('portada pública', () => {
+  it('iguala espacios de ICU entre SSR y navegador sin alterar la hora mostrada', () => {
+    expect(normalizarEspaciosFechaPortada('06:30 p.\u00a0m.')).toBe('06:30 p. m.')
+    expect(normalizarEspaciosFechaPortada('06:30\u202fp. m.')).toBe('06:30 p. m.')
+    expect(normalizarEspaciosFechaPortada('06:30 p. m.')).toBe('06:30 p. m.')
+  })
+
+  it('prioriza selección y torneos colombianos sin descartar ni mutar fixtures internacionales', () => {
+    const partidos = [
+      { ...crearPartido('premier', '2026-10-13T12:00:00Z', 'programado'), competencia: 'Premier League' },
+      { ...crearPartido('torneo', '2026-10-13T20:00:00Z', 'programado'), competencia: 'Torneo BetPlay' },
+      { ...crearPartido('liga', '2026-10-13T22:00:00Z', 'programado'), competencia: 'Liga BetPlay' },
+      { ...crearPartido('copa', '2026-10-13T18:00:00Z', 'programado'), competencia: 'Copa Colombia' },
+      { ...crearPartido('seleccion', '2026-10-13T23:00:00Z', 'programado'), equipoLocal: { id: 'colombia', nombre: 'Colombia', nombreCorto: 'COL' } }
+    ]
+    expect(priorizarPartidosPortada(partidos).map(partido => partido.id))
+      .toEqual(['seleccion', 'liga', 'torneo', 'copa', 'premier'])
+    expect(partidos[0].id).toBe('premier')
+    expect(priorizarPartidosPortada([])).toEqual([])
+  })
+
   it('separa los partidos de hoy por estado y oculta programados cuya hora ya pasó', () => {
     const jornada = separarJornadaPortada([
       crearPartido('en-vivo', '2026-10-08T18:00:00.000Z', 'en-vivo'),

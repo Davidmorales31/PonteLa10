@@ -2672,7 +2672,8 @@ body.tema-publico-blanco .medio-edicion {
 
 body.tema-publico-blanco .medio-encabezado h2,
 body.tema-publico-blanco .medio-explora h2,
-body.tema-publico-blanco .medio-vacio h1 {
+body.tema-publico-blanco .medio-vacio :is(h1, h2),
+body.tema-publico-blanco .medio-introduccion h1 {
   color: #08204a;
 }
 
@@ -3682,7 +3683,7 @@ body.tema-publico-blanco .portada-medio .noticia-portada.principal:not(.con-imag
   background: linear-gradient(145deg, #fff, #f4f7fb);
   border-top-color: #174ea6;
 }
-body.tema-publico-blanco .portada-medio .noticia-portada.principal:not(.con-imagen) :is(h1, h1 a) {
+body.tema-publico-blanco .portada-medio .noticia-portada.principal:not(.con-imagen) :is(h1, h1 a, h2, h2 a) {
   color: #08204a;
 }
 body.tema-publico-blanco .portada-medio .noticia-portada.principal:not(.con-imagen) :is(.categoria, .resumen) {
@@ -3712,6 +3713,24 @@ body.tema-publico-blanco .portada-medio :is(.home-encabezado-seccion h2, .home-e
 body.tema-publico-blanco .portada-medio :is(.home-encabezado-seccion p:not(.home-antetitulo), .home-partido-link, .home-resultado-link, .home-partido-link time, .home-resultado-meta, .home-tabla thead, .home-tabla-titulo time, .home-proximo-link time, .home-seleccion-agenda > p, .home-seleccion-agenda > time, .home-seleccion-sin-noticias p, .home-convocatoria > a, .home-convocatoria small, .home-perfiles-europa small, .contenido-articulo-portada > span, .home-sin-datos) {
   color: #52647b;
 }
+body.tema-publico-blanco .portada-medio .medio-introduccion > p:last-child {
+  color: #52647b;
+}
+body.tema-publico-blanco .portada-medio .medio-edicion span:first-child {
+  color: #174ea6;
+}
+body.tema-publico-blanco .portada-medio .medio-institucional {
+  border-color: #dbe2ee;
+}
+body.tema-publico-blanco .portada-medio .medio-institucional h2 {
+  color: #08204a;
+}
+body.tema-publico-blanco .portada-medio .medio-institucional p {
+  color: #52647b;
+}
+body.tema-publico-blanco .portada-medio a:focus-visible {
+  outline-color: #174ea6;
+}
 body.tema-publico-blanco .portada-medio :is(.home-antetitulo, .home-tabla-titulo p, .home-proximo-link > span, .home-convocatoria > span, .contenido-articulo-portada p) {
   color: #17658d;
 }
@@ -3728,7 +3747,10 @@ body.tema-publico-blanco .portada-medio :is(.home-tabla th, .home-tabla td, .hom
   border-color: #e4e9f1;
 }
 body.tema-publico-blanco .portada-medio .home-tabla tbody > tr > td:last-child { color: #08204a; }
+body.tema-publico-blanco .portada-medio .home-equipo-tabla a { color: #08204a; }
+body.tema-publico-blanco .portada-medio .home-equipo-tabla a:hover { color: #174ea6; }
 body.tema-publico-blanco .portada-medio .home-seleccion-agenda > strong small { color: #174ea6; }
+body.tema-publico-blanco .portada-medio .home-proximo-link strong small { color: #174ea6; }
 body.tema-publico-blanco .portada-medio .contenido-articulo-portada h3 a:hover { color: #174ea6; }
 body.tema-publico-blanco .portada-medio :is(.home-equipos-resultado > span b, .home-equipo-tabla > b, .home-perfiles-europa a > span) {
   background: #eaf1f9;

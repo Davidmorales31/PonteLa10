@@ -10,6 +10,11 @@ export interface JornadaPortada {
   finalizados: PartidoResultado[]
 }
 
+// ICU puede usar espacios distintos en Node y en el navegador (p. m.).
+export function normalizarEspaciosFechaPortada(texto: string): string {
+  return texto.replace(/\s/g, ' ')
+}
+
 export interface PartidoLigaPortada {
   slug: string
   competencia: string
@@ -24,6 +29,23 @@ export interface PartidoLigaPortada {
   escudoLocal?: string | null
   escudoVisitante?: string | null
   verificadoEn: string
+}
+
+// La prioridad editorial solo ordena el módulo de Home; conserva todos los fixtures.
+export function priorizarPartidosPortada(partidos: readonly PartidoResultado[]): PartidoResultado[] {
+  const prioridad = (partido: PartidoResultado) => {
+    const competencia = partido.competencia.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+    const equipos = `${partido.equipoLocal.nombre} ${partido.equipoVisitante.nombre}`.toLowerCase()
+    if (/\bcolombia\b/.test(equipos)) return 0
+    if (/liga.?betplay|primera a|liga colombiana/.test(competencia)) return 1
+    if (/torneo.?betplay|primera b/.test(competencia)) return 2
+    if (/copa.?colombia|copa.?betplay/.test(competencia)) return 3
+    if (/libertadores|sudamericana/.test(competencia)) return 4
+    if (/champions|premier|la liga|laliga|serie a|bundesliga|ligue 1/.test(competencia)) return 5
+    return 6
+  }
+  return [...partidos].sort((a, b) => prioridad(a) - prioridad(b)
+    || Date.parse(a.fechaIso) - Date.parse(b.fechaIso))
 }
 
 export function separarJornadaPortada(
