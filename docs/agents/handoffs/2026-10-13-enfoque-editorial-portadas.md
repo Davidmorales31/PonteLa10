@@ -1,58 +1,69 @@
 # Handoff
 
-- **Objetivo de la sesión:** priorizar Liga BetPlay y Colombianos en Europa;
-  buscar fotografía con fuente/crédito antes de IA y bloquear toda entrega
-  Codex sin portada persistida.
-- **Completado:** heartbeat actualizado en el mismo chat y con los mismos
-  tres horarios. Skills coordinadora, investigación, escritura y portadas
-  alineadas. Se admite fotografía documentada mediante campos existentes de
-  crédito/fuente del CMS, sin inventar licencias. Cliente y esquema API exigen
-  portada y exactamente un tipo: credited_photo_cover, licensed_photo_cover
-  o ai_generated_cover. Migración aplicada en Producción: helper privado y
-  validación del RPC de propuestas, más reparación acotada de portadas faltantes.
-- **Archivos modificados:** cinco skills editoriales versionadas; CLI, contrato
-  y helper de fotografías; esquemas/API media/cover; migración
-  20261014002150_exigir_portada_codex_y_fotos_acreditadas.sql; tres pruebas,
-  estado y este handoff. Se incluye cierre factual local de la reparación previa.
-- **Decisiones:** Liga BetPlay primero y Colombianos en Europa segundo; usar
-  categorías/temas reales del catálogo. Foto pertinente con crédito verificado
-  y URL de procedencia primero; ilustración IA divulgada si esa vía falla. Si
-  ambas fallan, texto solo en checkpoint local y ninguna entrega de artículo.
-  La regla actual sustituye la portada opcional del flujo anterior.
-- **Validaciones ejecutadas:** lint; suite 113 archivos/585 pruebas; typecheck;
-  build; diff; 24 pruebas de portadas/esquemas y prueba focal del helper final.
-  Revisor sin P0–P2. Base objetivo rechaza portada nula/medio inexistente;
-  ACL niega anon/authenticated y permite solo service_role. Advisors conservan
-  cuatro avisos anteriores, sin nuevos atribuibles a este cambio.
-- **Fallos:** ninguno bloqueante. La fecha de versión remota de la migración
-  difiere de la creación inicial CLI; el archivo se renombró a la versión real
-  20261014002150 para mantener paridad. No se reabrió ni redrafteó el run parcial.
-- **Pendientes:** PR/CI/despliegue de la API; subir y asignar la foto al borrador
-  Codex propio sin portada; confirmar crédito, fuente, permisos, rechazos y replay.
-- **Siguiente acción exacta:** desplegar el diff validado, subir la foto preparada
-  por media y usar portada/cover con versión1 del artículo propio; conservar
-  la propuesta original y guardar recibo de reparación separado.
-- **Commit base:** 3f449d96285cc5b3c87a138afb03a6a74797a3ae.
-- **Commit final:** pendiente.
+- **Objetivo:** priorizar Liga BetPlay y Colombianos en Europa; fotografía con
+  crédito/fuente antes de IA y ninguna entrega Codex sin portada persistida.
+- **Completado:** heartbeat existente ACTIVE en este chat, mismos tres horarios;
+  cinco skills coordinadas y controles en CLI, API y PostgreSQL. Fotografías
+  acreditadas usan campos actuales del CMS, sin inventar licencias. IA fallback
+  divulgada; si tampoco funciona, solo checkpoint local y ninguna entrega CMS.
+- **Entrega:** PR [#135](https://github.com/Davidmorales31/PonteLa10/pull/135)
+  integrado. Implementación 3b5cd7b78b8fea69c4609e353cd02bb4bbcb0d12;
+  main 4b7d5781b8802a43b5b4a2b20f9372162001b4f8. Vercel
+  dpl_MqXX1Emwh1Y1ukiGNNwYNQppX6oa READY, production, alias
+  https://www.pont3la10.com/.
+- **Migración aplicada:** 20261014002150_exigir_portada_codex_y_fotos_acreditadas.sql.
+  Helper de validación, guard obligatorio del RPC de propuestas y reparación
+  acotada para borradores propios sin intervención humana.
+- **Validaciones:** matriz oficial: lint, 113 archivos/585 pruebas, typecheck,
+  build, diff; CI/Lighthouse y Preview pasan. Revisor sin P0–P2. ACL de nuevas
+  funciones: anon/authenticated sin EXECUTE, service_role autorizado; funciones
+  invoker y search_path vacío. Advisors conservan los mismos cuatro avisos.
+- **Prueba real:** fotografía subida por API de Producción, optimizada a WebP
+  2400×1299/235714 bytes. Replay de media confirma yaExistia=true y mismo ID.
+  CMS con sesión/MFA confirma portada guardada, autor, fuente y pie en preview.
+  SQL confirma imagen válida, una auditoría de asignación y cero artículos Codex
+  draft/review/approved/scheduled sin portada.
+- **Pruebas negativas:** API propuesta sin portada 422; media sin crédito 422;
+  cover sin firma 401; cover tras aprobación humana 422. RPC de propuestas
+  rechaza portada nula con 22023; helper rechaza medio inexistente.
+- **Cambio de estado externo:** el artículo era review/version1 cuando se
+  preparó el diff; después fue aprobado y programado por el usuario a version3.
+  La reparación privada protegió esa edición. Se usó únicamente el cambio
+  rápido de portada del CMS con MFA: scheduled/version4, título y cuerpo con
+  hashes idénticos y horario 2026-10-13 19:45 COT conservado; sin versión pública.
+  No se aprobaron, programaron ni publicaron historias desde esta sesión.
+- **Omisiones justificadas:** no se probó éxito/replay del RPC de reparación
+  sobre ese artículo porque dejó de ser un borrador sin intervención humana.
+  Se verificó su rechazo real y la vía autorizada del CMS; no se crearon datos
+  ficticios para probarlo. No se generó IA porque se consiguió foto pertinente;
+  contrato/fallback cubiertos por las pruebas existentes.
+- **Pendientes:** ninguno para este objetivo. Próxima corrida: consultar
+  contexto vigente, investigar los dos focos primero, conservar dedupe/SEO y
+  portada obligatoria. No reabrir el run parcial anterior ni pagar otra redacción.
+- **Documentación:** este cierre se integra en una rama de documentación desde
+  main. Cambios ajenos del checkout principal permanecen preservados.
 
-## Seguridad y evidencia
+## Portada y continuidad
 
-Funciones security invoker con search_path vacío y EXECUTE solo a service_role.
-La API conserva firma HMAC y validación estricta. La reparación exige artículo
-Codex en review sin edición humana, aprobación ni versión pública; toma locks,
-comprueba versión, no reemplaza una portada existente y deja auditoría. No
-modifica ingestas TikTok, publicación manual, RLS, MFA ni secretos.
+Artículo: 13891b80-9eb1-488b-aacf-3d83334c26af.
+Medio: 53b50cb9-584d-4e88-a9d5-afe7077540fd.
+Foto de archivo2011 del estadio General Santander, Cúcuta, autor Hekas2.
+Crédito guardado: Hekas2 · CC0 1.0 · Wikimedia Commons.
+Fuente: https://commons.wikimedia.org/wiki/File:General_Santander_DSC01853.jpg
+El pie declara archivo2011 y que no representa un partido de2026; se conserva
+el original sin borrar elementos. No es una imagen generada.
 
-Un único borrador Codex en review carecía de portada: artículo
-13891b80-9eb1-488b-aacf-3d83334c26af, lock_version1 y last_saved_by null.
-Foto elegida: fachada General Santander, archivo2011, autor Hekas2, CC0 1.0,
-4000×2165, 553115 bytes. Crédito: Hekas2 · CC0 1.0 · Wikimedia Commons.
-Ficha: https://commons.wikimedia.org/wiki/File:General_Santander_DSC01853.jpg
-Se inspeccionó el original y se conserva su encuadre/texto; no se presenta como
-partido de2026. Artefactos en .codex/artifacts/editorial-portadas-20261013/ y
-checkpoint portada del candidato original. No repetir propuesta/redacción ni
-cambiar su clave idempotente: la asignación y su replay van solo por cover.
+Run f3b770e4-2005-45df-a2bb-cf9584cac9fb cerrado partial. El único reintento
+pagado autorizado ya se consumió. Mantener intactos propuesta y entrega
+originales; no alterar la clave/hash para añadir imagen. Se guardó checkpoint
+media y recibo separado de asignación por CMS en el candidato original.
 
-Reversibilidad: la definición original de submit está guardada como evidencia
-privada; revertir requiere una migración revisada que restituya solo su bloque
-de portada. Las nuevas funciones no elevan privilegios ni alteran tablas/RLS.
+Evidencia privada local: .codex/artifacts/editorial-portadas-20261013/:
+media-response.json, media-replay-response.json, rechazos-api.json,
+estado-antes-cms.json, estado-despues-cms.json, portada-creditos-cms.jpg,
+verificacion-automatizacion.json. Sin credenciales ni contenido de .env.
+El código reproducible está en .codex/worktrees/editorial-single-chat-20261013/.
+
+Reversibilidad: la definición anterior de submit está preservada como evidencia
+privada. Cualquier reversión SQL exige una migración revisada que cambie solo
+el guard de portada; no hubo nuevas tablas ni cambios RLS o privilegios elevados.

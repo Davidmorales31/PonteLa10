@@ -1,20 +1,35 @@
 # Estado actual de Pont3la10
 
-## Liga BetPlay / Colombianos en Europa y portada obligatoria (2026-10-13)
+## Enfoque editorial y portadas: verificado en Producción (2026-10-13)
 
-- Heartbeat actualizado: investiga primero Liga BetPlay y después Colombianos
-  en Europa antes de otras áreas; mantiene este chat y 06:05/14:05/20:05 COT.
-- Regla actual sustituye portada opcional: toda entrega Codex exige media
-  persistida y una sola marca de fotografía o IA. Buscar foto pertinente con
-  crédito/fuente primero; si no se obtiene, ilustración IA divulgada. Si ambas
-  vías fallan, no se crea un artículo CMS; se conserva el texto local.
-- Se reutilizan campos de crédito/fuente del CMS. La fotografía acreditada
-  acepta procedencia HTTPS sin la antigua restricción general a Commons;
-  la vía de licencias Commons verificadas conserva su validación compatible.
-- Lint, 585 pruebas, tipos, build y diff pasan. Revisor sin bloqueos; migración
-  20261014002150 aplicada en Producción, ACL y rechazos de portada verificados.
-  Pendientes PR/CI/deployment, carga/asignación de foto y verificación final.
+- Prioridad del heartbeat: Liga BetPlay primero y Colombianos en Europa después;
+  usa temas/categorías reales, SEO y deduplicación. ACTIVE en este chat, mismos
+  horarios 06:05/14:05/20:05 COT.
+- Portada obligatoria para toda entrega Codex: fotografía pertinente con crédito
+  y fuente primero; IA divulgada cuando no se consigue foto acreditada. Si ambas
+  vías fallan, solo checkpoint local y ninguna propuesta CMS. Sustituye la regla
+  histórica de portada opcional.
+- PR #135 integrado, implementación 3b5cd7b, main
+  4b7d5781b8802a43b5b4a2b20f9372162001b4f8. Vercel
+  dpl_MqXX1Emwh1Y1ukiGNNwYNQppX6oa READY, target production y alias
+  https://www.pont3la10.com/. Migración 20261014002150 aplicada y ACL privada.
+- Artículo 13891b80-9eb1-488b-aacf-3d83334c26af tiene foto de archivo General
+  Santander 2011, Hekas2 · CC0 1.0 · Wikimedia Commons, fuente enlazada y alt/pie.
+  Medio 53b50cb9-584d-4e88-a9d5-afe7077540fd: WebP 2400×1299, 235714 bytes.
+  El usuario había aprobado/programado el artículo durante la sesión; se añadió
+  solo la portada mediante CMS con MFA, conservando título, cuerpo y horario
+  2026-10-13 19:45 COT. Estado scheduled, lock_version4; sin versión pública.
+- Producción rechaza propuesta sin portada (422), foto sin crédito (422), cover
+  sin firma (401) y reparación Codex tras aprobación humana (422). SQL rechaza
+  propuesta sin portada (22023); carga de foto repetida reutiliza el mismo medio.
+  Auditoría CMS confirma una asignación; cero artículos Codex pendientes sin
+  portada. Vista previa confirma imagen, crédito y fuente.
+- Lint, suite 113 archivos/585 pruebas, typecheck, build, diff y CI/Lighthouse
+  pasan; revisor sin bloqueos. Cuatro advisors previos, sin nuevos atribuibles.
+  No se generó IA porque se obtuvo foto adecuada; fallback validado por contrato.
 - Handoff: docs/agents/handoffs/2026-10-13-enfoque-editorial-portadas.md.
+  Run previo cerrado partial; único reintento pagado consumido: no reabrir/pagar
+  otra vez ni cambiar la propuesta original. Próxima corrida usa contexto nuevo.
 
 ## Editorial reparada y borrador en revisión (Producción, 2026-10-13)
 
