@@ -60,5 +60,8 @@ ingestion without editing or routing through the TikTok worker/provider.
 
 Submit as a structured proposal to the private API. It may create only a private
 `review` draft. Never approve, schedule, publish, or bypass an API validation.
-An appropriate, verifiably licensed cover is optional: if none can be found,
-submit the complete story with `coverMediaId: null` and no photo-license flag.
+Every delivery requires a persisted cover. Search a relevant real photo with
+an accurate visible credit and source URL first; if that cannot be obtained,
+use a disclosed AI editorial illustration following the cover skills. Never
+submit `coverMediaId: null`. If both paths fail, retain the completed text as a
+local checkpoint and report an incomplete candidate, without creating a CMS article.

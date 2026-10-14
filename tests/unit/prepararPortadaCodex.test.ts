@@ -18,6 +18,17 @@ const pngPrueba = () => Buffer.concat([
 ])
 
 describe('preparación segura de portada Codex', () => {
+  it('conserva el crédito editorial y la fuente sin atribuir una licencia desconocida', () => {
+    const datos = { titulo: metadatos.titulo, alt: metadatos.alt, pie: metadatos.pie,
+      credito: 'Carlos Pérez · Archivo de la fuente', urlFuente: 'https://fuente.example/archivo' }
+    const payload = prepararPayloadPortada(pngPrueba(), 'foto.png', datos)
+    expect(payload.credito).toBe(datos.credito)
+    expect(payload.urlFuente).toBe(datos.urlFuente)
+    expect(payload).not.toHaveProperty('licenciaFoto')
+    expect(payload).not.toHaveProperty('autorFoto')
+    expect(() => prepararPayloadPortada(pngPrueba(), 'foto.png', { ...datos, credito: '' })).toThrow()
+    expect(() => prepararPayloadPortada(pngPrueba(), 'foto.png', { ...datos, urlFuente: 'https://usuario:clave@fuente.example/foto' })).toThrow()
+  })
   it('identifica el formato real por la firma del archivo y prepara el payload', () => {
     const png = pngPrueba()
 

@@ -29,7 +29,12 @@ export function prepararPayloadPortada(bytes, nombreArchivo, metadatos) {
     throw new Error('La imagen debe ser JPEG, PNG o WebP válido.')
   }
 
-  const campos = ['titulo', 'alt', 'pie', 'autorFoto', 'licenciaFoto', 'urlFuente']
+  const esFotoAcreditada = typeof metadatos?.credito === 'string'
+  const campos = esFotoAcreditada
+    ? ['titulo', 'alt', 'pie', 'credito', 'urlFuente']
+    : ['titulo', 'alt', 'pie', 'autorFoto', 'licenciaFoto', 'urlFuente']
+  let urlFuente
+  try { urlFuente = new URL(metadatos?.urlFuente) } catch { /* Se rechaza abajo. */ }
   if (!metadatos || typeof metadatos !== 'object' || Array.isArray(metadatos)
     || Object.keys(metadatos).length !== campos.length
     || campos.some(campo => typeof metadatos[campo] !== 'string'
@@ -37,14 +42,20 @@ export function prepararPayloadPortada(bytes, nombreArchivo, metadatos) {
     || metadatos.titulo.trim().length < 8 || metadatos.titulo.trim().length > 160
     || metadatos.alt.trim().length < 5 || metadatos.alt.trim().length > 240
     || metadatos.pie.trim().length < 10 || metadatos.pie.trim().length > 500
-    || metadatos.autorFoto.trim().length < 2 || metadatos.autorFoto.trim().length > 200
-    || !['CC0 1.0', 'CC BY 4.0', 'Dominio público'].includes(metadatos.licenciaFoto)
+    || (esFotoAcreditada
+      ? metadatos.credito.trim().length < 2 || metadatos.credito.trim().length > 300
+      : metadatos.autorFoto.trim().length < 2 || metadatos.autorFoto.trim().length > 200
+        || !['CC0 1.0', 'CC BY 4.0', 'Dominio público'].includes(metadatos.licenciaFoto))
     || metadatos.urlFuente.trim().length > 2048
-    || !/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/i.test(metadatos.urlFuente.trim())) {
-    throw new Error('Los metadatos deben identificar una foto de Commons, autor y licencia permitida.')
+    || !urlFuente || urlFuente.protocol !== 'https:' || urlFuente.username || urlFuente.password
+    || (!esFotoAcreditada && !/^https:\/\/commons\.wikimedia\.org\/wiki\/File:/i.test(metadatos.urlFuente.trim()))) {
+    throw new Error(esFotoAcreditada
+      ? 'Los metadatos deben identificar fuente HTTPS, crédito, alt y pie de foto.'
+      : 'Los metadatos deben identificar una foto de Commons, autor y licencia permitida.')
   }
 
-  const credito = `${metadatos.autorFoto.trim()} · ${metadatos.licenciaFoto} · Wikimedia Commons`
+  const credito = esFotoAcreditada ? metadatos.credito.trim()
+    : `${metadatos.autorFoto.trim()} · ${metadatos.licenciaFoto} · Wikimedia Commons`
   return {
     nombreOriginal: basename(nombreArchivo).slice(0, 160),
     tipoMime,
@@ -54,8 +65,7 @@ export function prepararPayloadPortada(bytes, nombreArchivo, metadatos) {
     pie: metadatos.pie.trim(),
     credito,
     urlFuente: metadatos.urlFuente.trim(),
-    autorFoto: metadatos.autorFoto.trim(),
-    licenciaFoto: metadatos.licenciaFoto
+    ...(!esFotoAcreditada ? { autorFoto: metadatos.autorFoto.trim(), licenciaFoto: metadatos.licenciaFoto } : {})
   }
 }
 

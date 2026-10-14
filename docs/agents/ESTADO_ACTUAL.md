@@ -1,20 +1,43 @@
 # Estado actual de Pont3la10
 
-## Reparación editorial: chat único y conexión a Producción (2026-10-13)
+## Liga BetPlay / Colombianos en Europa y portada obligatoria (2026-10-13)
 
-- La tarea existente `pont3la10-propuestas-editoriales-diarias` usa heartbeat
-  activo en el chat `01a133a4-a58a-77e0-bcf8-52a61bd004a0`, con horarios
-  06:05/14:05/20:05 COT. No genera un chat nuevo por corrida.
-- Se separa el destino editorial de la URL local del worker fútbol. Salud,
-  contexto y una agenda v2 real pasan en Producción; instrucciones alineadas
-  con el contrato vigente, sin cuotas y con portada opcional.
-- El primer borrador produjo JSON inválido de DeepSeek y quedó `uncertain`.
-  El proveedor Codex solicita ahora JSON mode; Juan autorizó exactamente un
-  reintento pagado tras desplegar. Todavía no hay recibo CMS `review`.
-- Pruebas relacionadas (12), lint y suite (113 archivos/582 pruebas) pasan;
-  typecheck y build pasan; despliegue en curso. Revisor sin bloqueos. Cambios ajenos
-  del checkout principal preservados; trabajo aislado desde main `10a6af2`.
-- Handoff: `docs/agents/handoffs/2026-10-13-reparacion-editorial-chat-unico.md`.
+- Heartbeat actualizado: investiga primero Liga BetPlay y después Colombianos
+  en Europa antes de otras áreas; mantiene este chat y 06:05/14:05/20:05 COT.
+- Regla actual sustituye portada opcional: toda entrega Codex exige media
+  persistida y una sola marca de fotografía o IA. Buscar foto pertinente con
+  crédito/fuente primero; si no se obtiene, ilustración IA divulgada. Si ambas
+  vías fallan, no se crea un artículo CMS; se conserva el texto local.
+- Se reutilizan campos de crédito/fuente del CMS. La fotografía acreditada
+  acepta procedencia HTTPS sin la antigua restricción general a Commons;
+  la vía de licencias Commons verificadas conserva su validación compatible.
+- Lint, 585 pruebas, tipos, build y diff pasan. Revisor sin bloqueos; migración
+  20261014002150 aplicada en Producción, ACL y rechazos de portada verificados.
+  Pendientes PR/CI/deployment, carga/asignación de foto y verificación final.
+- Handoff: docs/agents/handoffs/2026-10-13-enfoque-editorial-portadas.md.
+
+## Editorial reparada y borrador en revisión (Producción, 2026-10-13)
+
+- La tarea existente usa heartbeat ACTIVE en este chat, con horarios
+  06:05/14:05/20:05 COT; conserva el contexto entre corridas. Configuración
+  verificada contra target_thread_id 01a133a4-a58a-77e0-bcf8-52a61bd004a0.
+- Conexión editorial independiente del localhost del worker fútbol. Skills
+  alineadas con contrato actual, sin cuotas y con portada opcional. DeepSeek
+  Codex solicita JSON mode; TikTok no cambia. PR #134 integrado; producción
+  READY dpl_3252VppWxJ7zizNtGUqp1gZcXehy, main 3f449d9, alias www.pont3la10.com.
+- Artículo 13891b80-9eb1-488b-aacf-3d83334c26af confirmado review por API/SQL:
+  descenso Liga BetPlay 2026, 1.037 palabras/10 párrafos, Fútbol colombiano,
+  tema Liga BetPlay, dos relacionados y tres fuentes. Brief proposed explicacion.
+  Sin aprobación, programación, publicación ni versión pública. Replay devuelve
+  el mismo artículo y no crea un duplicado.
+- La primera redacción quedó uncertain por JSON inválido; el único reintento
+  pagado expresamente autorizado pasó tras desplegar (completed, retry_count=1).
+  Este estado sustituye los preflights de conexión bloqueada del mismo día.
+- npm ci, lint, pruebas relacionadas, suite (113 archivos/582 pruebas),
+  typecheck, build, diff, CI/Lighthouse y Preview pasan. Revisores sin bloqueos.
+  Prueba cerrada partial: las otras categorías no se investigaron y quedan
+  para las siguientes corridas, sin inventar oportunidades ni omisiones.
+- Handoff: docs/agents/handoffs/2026-10-13-reparacion-editorial-chat-unico.md.
 
 ## Refactor SEO del Home y retiro del backlog HU-TR (2026-10-13)
 

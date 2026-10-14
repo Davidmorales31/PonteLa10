@@ -1,4 +1,5 @@
-import { esquemaPortadaCodex } from '~/server/utils/esquemasCodexEditorial'
+import { z } from 'zod'
+import { esquemaFotoAcreditadaCodex, esquemaPortadaCodex } from '~/server/utils/esquemasCodexEditorial'
 import {
   decodificarJsonFirmado,
   leerCuerpoFirmado,
@@ -22,7 +23,7 @@ export default defineEventHandler(async (evento) => {
   const cuerpo = await leerCuerpoFirmado(evento, maximoBytesEntrada)
   await verificarFirmaCodex(evento, cuerpo, secreto)
 
-  const resultado = esquemaPortadaCodex.safeParse(
+  const resultado = z.union([esquemaPortadaCodex, esquemaFotoAcreditadaCodex]).safeParse(
     decodificarJsonFirmado<unknown>(cuerpo)
   )
 
@@ -35,7 +36,9 @@ export default defineEventHandler(async (evento) => {
   }
 
   const entrada = resultado.data
-  const creditoEsperado = await verificarAtribucionFotoCommons(entrada)
+  const creditoEsperado = 'licenciaFoto' in entrada
+    ? await verificarAtribucionFotoCommons(entrada)
+    : entrada.credito
   if (entrada.credito !== creditoEsperado) {
     throw createError({
       statusCode: 422,
