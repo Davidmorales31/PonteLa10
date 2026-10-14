@@ -6,6 +6,8 @@ import {
   esquemaAgendaCodex,
   esquemaConsultaSaludCodex,
   esquemaPortadaCodex,
+  esquemaFotoAcreditadaCodex,
+  esquemaAsignarPortadaCodex,
   esquemaPortadaIACodex,
   esquemaBorradorCodex,
   esquemaBriefSeoListoPropuestaCodex,
@@ -45,6 +47,24 @@ describe('API privada de propuestas Codex', () => {
       ...portada,
       licenciaFoto: 'CC BY-NC 4.0'
     }).success).toBe(false)
+  })
+
+  it('acepta una foto con fuente y crédito sin inventar ni exigir licencia', () => {
+    const foto = { nombreOriginal: 'liga.webp', tipoMime: 'image/webp', imagenBase64: 'a'.repeat(100),
+      titulo: 'Estadio colombiano', alt: 'Cancha de fútbol colombiano en una fotografía de archivo.',
+      pie: 'Imagen de archivo del estadio; no representa el partido actual.',
+      credito: 'Fotografía: Autor · Fuente oficial', urlFuente: 'https://fuente.example/fotografia' }
+    expect(esquemaFotoAcreditadaCodex.safeParse(foto).success).toBe(true)
+    expect(esquemaFotoAcreditadaCodex.safeParse({ ...foto, credito: '' }).success).toBe(false)
+    expect(esquemaFotoAcreditadaCodex.safeParse({ ...foto, urlFuente: 'https://usuario:clave@fuente.example/foto' }).success).toBe(false)
+    expect(esquemaFotoAcreditadaCodex.safeParse({ ...foto, licenciaFoto: 'inventada' }).success).toBe(false)
+  })
+
+  it('limita la asignación de portada a IDs, versión y tipo de imagen válidos', () => {
+    const asignacion = { articleId: '13891b80-9eb1-488b-aacf-3d83334c26af', coverMediaId: 'ed2af2d4-533e-4dab-9e9d-a48268297220', expectedLockVersion: 1, coverFlag: 'credited_photo_cover' }
+    expect(esquemaAsignarPortadaCodex.safeParse(asignacion).success).toBe(true)
+    expect(esquemaAsignarPortadaCodex.safeParse({ ...asignacion, expectedLockVersion: 0 }).success).toBe(false)
+    expect(esquemaAsignarPortadaCodex.safeParse({ ...asignacion, publish: true }).success).toBe(false)
   })
 
   it('acepta una portada IA sin permitir fuente, crédito o licencia inventados', () => {
@@ -170,7 +190,7 @@ describe('API privada de propuestas Codex', () => {
       ...propuesta,
       coverMediaId: null,
       editorialFlags: ['needs_angle_review']
-    }).success).toBe(true)
+    }).success).toBe(false)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
       coverMediaId: null,

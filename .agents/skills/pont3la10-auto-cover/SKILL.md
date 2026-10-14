@@ -1,32 +1,34 @@
 ---
 name: pont3la10-auto-cover
-description: Find and prepare a genuinely reusable, accurately credited sports/editorial photograph for a Pont3la10 article; never fabricate documentary photography.
+description: Find and prepare an accurately credited source photograph for a Pont3la10 article before falling back to a disclosed AI illustration.
 ---
 
 # Pont3la10 Sourced Editorial Photos
 
-Use only after the article's reporting is complete. Follow HU-ED-11 and the
-source-page license, not just the image preview.
+Use only after the article's reporting is complete. Search the real source,
+not only an image preview. Every delivered Codex draft requires a cover.
 
-1. Search Wikimedia Commons for a photograph that directly and accurately
+1. Search Wikimedia Commons, official sources or editorial source pages for a photograph that directly and accurately
    illustrates the story. Do not imply that an archival image depicts a current
    event, match, lineup, injury, or person when it does not.
-2. Open the Commons file page and verify its creator and reuse terms. Only use
-   `CC0 1.0`, `CC BY 4.0`, or clearly stated `Dominio público`. Do not use
-   `NC`, `ND`, `BY-SA`, unclear, or missing licenses in this first production
-   pilot. If the author, license, or provenance cannot be verified, do not use
-   the image; record the omission and continue the article without a cover.
-3. Download the original image from that Commons file page. Never take a
+2. Open the source page and verify the image's author/agency or source credit.
+   Preserve an available license accurately, but never invent one or use the
+   old pilot whitelist as a blanket blocker: Juan authorized the credited
+   source path. If a relevant image and truthful credit cannot be obtained,
+   record why and continue through the AI-cover skill; no text-only delivery.
+3. Download the image from its verified source. Never take a
    thumbnail from a search-results page, remove a watermark, or re-create a
    real player's likeness. The CMS optimizes to WebP; the visible credit must
-   identify the author, exact allowed license, and Wikimedia Commons. The file
-   page link is retained so a reviewer can verify the credit/license.
-4. If no relevant image passes verification, do not fail or discard the story.
-   Record that no suitable licensed photo was found, skip the `portada` and
-   `media` checkpoint stages, and submit the text-only proposal with
-   `coverMediaId: null` and without `licensed_photo_cover`. Never use an
+   identify the actual author/agency or source. Keep the source page URL in
+   the CMS so a reviewer can verify the attribution.
+4. If no relevant image and credit can be obtained, use the disclosed AI fallback.
+   If that also fails, retain the local text and deliver no CMS article. Never use an
    unrelated image just to fill the space.
-5. When a photo passes verification, prepare a temporary JSON file containing
+5. For the general credited-source path, prepare metadata with exactly
+   `titulo`, `alt`, `pie`, `credito`, and `urlFuente` (HTTPS source page).
+   Preserve the literal truthful credit; do not claim a license or ownership.
+   Use `credited_photo_cover` on the final proposal.
+   The verified Commons compatibility path instead uses
    exactly `titulo`, `alt`, `pie`, `autorFoto`, `licenciaFoto`, and `urlFuente`.
    `urlFuente` must be the HTTPS
    Wikimedia Commons file page (`/wiki/File:...`). The helper derives the
@@ -43,5 +45,6 @@ source-page license, not just the image preview.
    wording; never claim Pont3la10 owns the photograph.
 8. Remove only the exact temporary metadata and payload files after submission.
 
-Never fall back to AI imagery or an unlicensed stock image. This Skill cannot
+Fall back only to an explicitly disclosed AI editorial illustration when the
+photo/credit path is unavailable. This Skill cannot
 approve, schedule, or publish content.

@@ -45,9 +45,11 @@ never create weak, duplicate, or invented stories to fill space.
    Console is null, omit its weight and normalize by the remaining 90. The API
    independently checks that total. Scores are editorial ranking signals, not
    factual claims.
-6. Respect the site's current editorial order when deciding what to research
-   first: Liga BetPlay A/B and Colombia national teams, then Colombian players
-   in Europe, then other active categories only when a distinct opportunity
+6. Research Liga BetPlay first and Colombianos en Europa second, the two main
+   focuses of the site. Review both before national teams or other categories.
+   Map them to actual active categories/public topics in API context; never
+   invent a category ID or force every Colombian football story into both.
+   Consider other active categories only when a distinct opportunity
    fits the strategy. Prioritize effort, not equal volume; there is no quota.
 7. Investigate each surviving candidate separately. Prefer primary sources for
    official statements, schedules, results, and statistics; use independent

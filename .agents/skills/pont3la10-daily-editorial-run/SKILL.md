@@ -7,7 +7,8 @@ description: Run or resume Pont3la10's daily research-to-review editorial batch 
 
 Use this as the coordinator for the daily scheduled Codex task in its existing
 chat. Read the trend, investigative-writing and SEO skills before producing
-candidates. Read auto-cover or AI-cover skills only when using that image path.
+candidates. Read auto-cover first; use AI-cover only as fallback when no suitable
+photo with a verified credit and source is available. Every delivery requires a cover.
 The AI-cover skill is exclusive to this Codex task; never change the TikTok ingestion workflow. Use the
 operational-monitor skill only for a separate read-only health check.
 
@@ -44,8 +45,12 @@ Do not delete process variables to force a stale `.env` destination.
    verify the date and use a new UUID only when the old run belongs to a prior
    Colombia date and today's cap has not been reached. Never retry a date
    conflict with the same old ID or use new IDs to evade today's cap.
-2. Prioritize research in this order: Liga BetPlay A/B and Colombia national
-   teams; verified news about Colombian players in Europe; then another active
+2. Prioritize the site's two main focuses in this order: Liga BetPlay
+   (competitions, teams, fixtures, results, rules and analysis in Colombia),
+   then Colombianos en Europa (verified club news, performances and continuity
+   of Colombian players abroad). Research both focuses before other categories.
+   Match active categories/public topics from context: these focuses are not
+   permission to fabricate new category IDs. National teams or another active
    category only when there is a distinct, evidence-backed opportunity that
    serves the product strategy. Review active categories without forcing equal
    output. There is no per-category or run-wide draft quota: zero drafts is a
@@ -87,12 +92,16 @@ Do not delete process variables to force a stale `.env` destination.
 
    - `expediente`: trend signal, source records, claim/source map, uncertainty.
    - `borrador`: complete structured article proposal, taxonomy and SEO.
-   - `portada` or `portadaIA`: optional verified, reusable photograph or
-     explicitly disclosed editorial illustration, after draft quality checks.
-     Follow the selected cover skill and inspect the image. If no suitable
-     cover is available, keep `coverMediaId: null` and omit image flags; the
-     production contract permits a text-only draft for human review.
-   - `media`: when a cover is used, save its stable persisted media ID and safe
+   - `portada` or `portadaIA`: mandatory. Search a relevant real photograph and
+     open its source to identify an accurate visible credit. Keep source URL,
+     author/agency when available, and a truthful archival/current caption.
+     The CMS already stores/displays these fields. No invented license, creator
+     or documentary implication. The user's authorization permits the credited
+     source path without the old Commons-only license gate. If no suitable image
+     and credit can be obtained, generate and inspect a disclosed AI illustration.
+     Never deliver `coverMediaId: null`; if both paths fail, checkpoint the
+     candidate as incomplete and deliver no article.
+   - `media`: save the stable persisted media ID and safe
      receipt. On ambiguous persistence, reuse the checkpoint and idempotency
      key rather than regenerating or duplicating the image.
    - `propuesta`: exact API proposal payload plus stable idempotency key.
@@ -133,8 +142,10 @@ Do not delete process variables to force a stale `.env` destination.
    folder. Submit generated illustrations using `media-ia`. Before proposal
    submission with an AI cover, verify `coverMediaId` equals the persisted media
    receipt ID and `editorialFlags` includes `ai_generated_cover` but not
-   `licensed_photo_cover`. For a licensed photo use only `licensed_photo_cover`;
-   for no cover use neither flag. Never print
+   `licensed_photo_cover` or `credited_photo_cover`. For a verified Commons
+   license path use only `licensed_photo_cover`; for a sourced credited photo
+   use only `credited_photo_cover`. Require a real persisted ID in every case.
+   Never print
    the base64 media payload or store credentials in checkpoints.
    Use `exportar` to materialize an exact saved stage to a file inside its
    ignored candidate folder without printing article/source content to terminal.
@@ -155,7 +166,7 @@ Do not delete process variables to force a stale `.env` destination.
 
 If required API configuration, research access or safe checkpoint
 artifacts are unavailable, stop the affected candidate at the last completed
-stage and report what is needed. A missing optional cover is not an API blocker;
+stage and report what is needed. A missing cover always blocks article delivery;
 report the candidates actually verified and drafts confirmed. Do not
 create filler to hit a numerical target or fabricate sources, drafts, images,
 receipts, or successful API writes.

@@ -29,6 +29,24 @@ export const esquemaPortadaCodex = z.object({
   licenciaFoto: z.enum(['CC0 1.0', 'CC BY 4.0', 'Dominio público'])
 }).strict()
 
+// Foto documentada por la corrida: fuente y crédito editorial, sin inventar licencia.
+export const esquemaFotoAcreditadaCodex = esquemaPortadaCodex
+  .omit({ autorFoto: true, licenciaFoto: true, urlFuente: true })
+  .extend({
+    credito: z.string().trim().min(2).max(300),
+    urlFuente: esquemaUrlHttps.refine(valor => {
+      const url = new URL(valor)
+      return !url.username && !url.password
+    }, 'La fuente no puede contener credenciales.')
+  }).strict()
+
+export const esquemaAsignarPortadaCodex = z.object({
+  articleId: z.string().uuid(),
+  coverMediaId: z.string().uuid(),
+  expectedLockVersion: z.number().int().positive(),
+  coverFlag: z.enum(['licensed_photo_cover', 'credited_photo_cover', 'ai_generated_cover'])
+}).strict()
+
 export const esquemaPortadaIACodex = z.object({
   nombreOriginal: z.string().trim().min(3).max(160),
   tipoMime: z.enum(['image/jpeg', 'image/png', 'image/webp']),
@@ -88,8 +106,7 @@ export const esquemaPropuestaCodex = z.object({
   socialBrief: z.string().trim().min(10).max(300),
   sourceUrl: esquemaUrlHttps,
   sourceName: z.string().trim().min(2).max(160),
-  // La portada es opcional cuando no hay una foto reutilizable acreditada.
-  coverMediaId: z.string().uuid().nullable(),
+  coverMediaId: z.string().uuid(),
   tagIds: z.array(z.string().uuid()).max(12),
   newTopics: z.array(z.object({
     name: z.string().trim().min(2).max(80)
@@ -104,6 +121,7 @@ export const esquemaPropuestaCodex = z.object({
     'insufficient_independent_corroboration',
     'sensitive_claims',
     'licensed_photo_cover',
+    'credited_photo_cover',
     'ai_generated_cover'
   ])).max(8)
 }).strict().superRefine((propuesta, contexto) => {
@@ -168,14 +186,14 @@ export const esquemaPropuestaCodex = z.object({
   }
 
   const tieneFotoLicenciada = propuesta.editorialFlags.includes('licensed_photo_cover')
+  const tieneFotoAcreditada = propuesta.editorialFlags.includes('credited_photo_cover')
   const tienePortadaIA = propuesta.editorialFlags.includes('ai_generated_cover')
 
-  const tieneMarcaPortada = tieneFotoLicenciada || tienePortadaIA
-  if (propuesta.coverMediaId === null ? tieneMarcaPortada : tieneFotoLicenciada === tienePortadaIA) {
+  if ([tieneFotoLicenciada, tieneFotoAcreditada, tienePortadaIA].filter(Boolean).length !== 1) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['editorialFlags'],
-      message: 'Una portada requiere una sola marca compatible; sin portada no se permiten marcas de imagen.'
+      message: 'La propuesta requiere portada y exactamente una marca compatible con la imagen.'
     })
   }
 

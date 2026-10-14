@@ -17,6 +17,7 @@ const rutas = {
   media: '/api/internal/codex/media',
   'media-ia': '/api/internal/codex/media-ai',
   propuesta: '/api/internal/codex/proposals',
+  portada: '/api/internal/codex/cover',
   salud: '/api/internal/codex/health'
 }
 
@@ -36,7 +37,7 @@ try {
 }
 
 if (!rutas[recurso] || !archivo) {
-  terminar('Uso: node scripts/codex-editorial-submit.mjs <contexto|agenda|borrador|media|media-ia|propuesta|salud> <archivo-json>')
+  terminar('Uso: node scripts/codex-editorial-submit.mjs <contexto|agenda|borrador|media|media-ia|propuesta|portada|salud> <archivo-json>')
 }
 
 const baseUrl = obtenerBaseUrlEditorial(process.env)
@@ -84,7 +85,7 @@ if (recurso === 'propuesta') {
   }
 
   if (!cumplePortadaPropuestaCodex(payload)) {
-    terminar('La propuesta no se envió: una portada persistida requiere una marca compatible; sin portada, no debe incluir marcas de imagen.')
+    terminar('La propuesta no se envió: requiere una portada persistida y exactamente una marca de tipo de imagen.')
   }
 }
 
