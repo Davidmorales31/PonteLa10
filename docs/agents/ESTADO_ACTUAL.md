@@ -8,18 +8,22 @@
   sus cambios locales sin tocar.
 - Las fichas reciben el marcador/status actual del snapshot solo al coincidir
   proveedor e ID externo, validando frescura y estado del fixture. La lectura
-  SSR usa cliente privado solo en servidor; las marcas `is_public` de snapshot,
-  partido, competencia y equipos siempre se exigen. La autorización global de
-  derechos no anula esas puertas individuales.
+  SSR usa cliente privado solo en servidor. Respeta el contrato de publicación
+  vigente: la bandera privada global de Production autoriza el corpus existente;
+  sin ella, exige `is_public` y confirmación de derechos por registro. En ambos
+  casos conserva los mappings exactos y una proyección pública segura.
 - La ficha conserva identidad visual Pont3la10 y adopta la jerarquía de la
   referencia: breadcrumb, hero del partido, resumen y navegación, con agenda,
   consulta oficial y noticias en columna lateral. El contenido se adapta a
   pantallas pequeñas y mantiene las secciones existentes.
-- Lint, typecheck, suite completa (114 archivos/592 pruebas), build de
+- Lint, typecheck, suite completa (114 archivos/590 pruebas), build de
   producción y `git diff --check` pasan. La revisión de seguridad estática no
   encontró P1/P2. El build emite únicamente DEP0155 de `@vue/shared` upstream.
-- PR, comprobación responsive en preview y despliegue Production aún pendientes;
-  seguir el handoff `docs/agents/handoffs/2026-10-15-fichas-partido-produccion.md`.
+- PR #137 abierto; se está alineando la lectura con la autorización global ya
+  habilitada únicamente en Production. Tras actualizarlo: comprobar responsive
+  en preview, integrar y verificar el nuevo despliegue Production. El preview no
+  hereda la bandera privada ni certifica la publicación del dataset de Production.
+  Seguir `docs/agents/handoffs/2026-10-15-fichas-partido-produccion.md`.
 
 ## Enfoque editorial y portadas: verificado en Producción (2026-10-13)
 

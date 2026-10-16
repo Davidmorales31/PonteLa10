@@ -63,15 +63,18 @@ export async function leerSnapshotsFutbolPublicosConIdentidad(
 ): Promise<SnapshotFutbolPublicoConIdentidad[]> {
   if (filtros.fechaNegocio && !/^\d{4}-\d{2}-\d{2}$/.test(filtros.fechaNegocio)) return []
   if (filtros.fixtureId && !/^[0-9a-f-]{36}$/i.test(filtros.fixtureId)) return []
-  const exigirConfirmacionDerechosPorRegistro = filtros.derechosPublicacionConfirmados !== true
+  // La autorización privada global permite publicar el corpus existente de Production.
+  // Los mappings canónicos y la proyección segura siguen siendo obligatorios.
+  const exigirAutorizacionPorRegistro = filtros.derechosPublicacionConfirmados !== true
 
   let consulta = cliente
     .from('football_fixtures_today')
     .select(columnasSnapshot)
-    .eq('is_public', true)
     .order('kickoff_at', { ascending: true })
     .limit(limiteLecturaSnapshots)
-  if (exigirConfirmacionDerechosPorRegistro) consulta = consulta.eq('publication_rights_confirmed', true)
+  if (exigirAutorizacionPorRegistro) {
+    consulta = consulta.eq('is_public', true).eq('publication_rights_confirmed', true)
+  }
 
   if (filtros.fechaNegocio) consulta = consulta.eq('business_date', filtros.fechaNegocio)
   if (filtros.fixtureId) consulta = consulta.eq('fixture_id', filtros.fixtureId)
@@ -81,10 +84,10 @@ export async function leerSnapshotsFutbolPublicosConIdentidad(
   const datosSnapshot = data as unknown as Fila[]
   const filas = datosSnapshot.filter(fila => Boolean(
       fila && typeof fila === 'object'
-      && fila.is_public === true
-      && (!exigirConfirmacionDerechosPorRegistro || fila.publication_rights_confirmed === true)
+      && (!exigirAutorizacionPorRegistro
+        || (fila.is_public === true && fila.publication_rights_confirmed === true))
   ))
-  if (!filas.length || !(await validarIdentidadesPublicas(cliente, filas))) return []
+  if (!filas.length || !(await validarIdentidadesPublicas(cliente, filas, exigirAutorizacionPorRegistro))) return []
 
   const salida: SnapshotFutbolPublicoConIdentidad[] = []
   for (const fila of filas) {
@@ -96,9 +99,9 @@ export async function leerSnapshotsFutbolPublicosConIdentidad(
         proveedor,
         idFixtureProveedor,
         fixture: proyectarFixtureFutbolPublico(
-          (exigirConfirmacionDerechosPorRegistro
+          (exigirAutorizacionPorRegistro
             ? fila
-            : { ...fila, publication_rights_confirmed: true }) as unknown as Parameters<typeof proyectarFixtureFutbolPublico>[0]
+            : { ...fila, is_public: true, publication_rights_confirmed: true }) as unknown as Parameters<typeof proyectarFixtureFutbolPublico>[0]
         )
       })
     } catch {
@@ -116,7 +119,8 @@ export async function leerSnapshotsFutbolPublicosConIdentidad(
 
 async function validarIdentidadesPublicas(
   cliente: SupabaseClient,
-  filas: Fila[]
+  filas: Fila[],
+  exigirAutorizacionPorRegistro: boolean
 ): Promise<boolean> {
   const idsFixture = valoresUnicos(filas, 'fixture_id')
   const proveedores = [...new Set(filas.map(fila => fila.provider).filter(esProveedor))]
@@ -126,11 +130,11 @@ async function validarIdentidadesPublicas(
   ]).filter((valor): valor is string => typeof valor === 'string' && valor.length > 0))]
   if (!idsFixture.length || !proveedores.length || !idsExternos.length) return false
 
-  const consultaFixtures = cliente
+  let consultaFixtures = cliente
     .from('sports_fixtures')
     .select('id,competition_id,home_team_id,away_team_id,is_public')
     .in('id', idsFixture)
-    .eq('is_public', true)
+  if (exigirAutorizacionPorRegistro) consultaFixtures = consultaFixtures.eq('is_public', true)
   const { data: fixtures, error: errorFixtures } = await consultaFixtures
   if (errorFixtures || !fixtures) return false
 
@@ -140,8 +144,8 @@ async function validarIdentidadesPublicas(
   if (!competitionIds.length || !teamIds.length) return false
 
   const [competitions, teams, mappings] = await Promise.all([
-    consultarEntidadesPublicas(cliente, 'sports_competitions', competitionIds),
-    consultarEntidadesPublicas(cliente, 'sports_teams', teamIds),
+    consultarEntidadesPublicas(cliente, 'sports_competitions', competitionIds, exigirAutorizacionPorRegistro),
+    consultarEntidadesPublicas(cliente, 'sports_teams', teamIds, exigirAutorizacionPorRegistro),
     cliente.from('sports_provider_mappings')
       .select('provider,entity_type,external_id,competition_id,team_id,fixture_id')
       .in('provider', proveedores)
@@ -168,10 +172,10 @@ async function validarIdentidadesPublicas(
     const proveedor = esProveedor(fila.provider) ? fila.provider : null
     const canonico = fixtureId ? fixturesPorId.get(fixtureId) : undefined
     if (!fixtureId || !proveedor || !canonico) return false
-    if (!canonico.is_public
+    if (exigirAutorizacionPorRegistro && (!canonico.is_public
       || !idsCompetenciaPublica.has(canonico.competition_id)
       || !idsEquipoPublico.has(canonico.home_team_id)
-      || !idsEquipoPublico.has(canonico.away_team_id)) return false
+      || !idsEquipoPublico.has(canonico.away_team_id))) return false
 
     return tieneMapping(mappingsPorClave, proveedor, 'fixture', fila.provider_fixture_id, fixtureId)
       && tieneMapping(mappingsPorClave, proveedor, 'competition', fila.league_id, canonico.competition_id)
@@ -183,9 +187,12 @@ async function validarIdentidadesPublicas(
 function consultarEntidadesPublicas(
   cliente: SupabaseClient,
   tabla: 'sports_competitions' | 'sports_teams',
-  ids: string[]
+  ids: string[],
+  exigirAutorizacionPorRegistro: boolean
 ) {
-  return cliente.from(tabla).select('id,is_public').in('id', ids).eq('is_public', true)
+  let consulta = cliente.from(tabla).select('id,is_public').in('id', ids)
+  if (exigirAutorizacionPorRegistro) consulta = consulta.eq('is_public', true)
+  return consulta
 }
 
 function tieneMapping(mappings: Set<string>, proveedor: string, tipo: string, externo: unknown, canonico: string): boolean {

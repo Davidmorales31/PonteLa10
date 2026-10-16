@@ -35,7 +35,7 @@ const snapshot = {
   lineups: [],
   statistics: [],
   provider_fetched_at: '2026-10-02T17:00:00.000Z',
-  is_public: true,
+  is_public: false,
   publication_rights_confirmed: false
 }
 
@@ -45,12 +45,12 @@ const entidades = {
     competition_id: '22222222-2222-4222-8222-222222222222',
     home_team_id: '33333333-3333-4333-8333-333333333333',
     away_team_id: '44444444-4444-4444-8444-444444444444',
-    is_public: true
+    is_public: false
   }],
-  sports_competitions: [{ id: '22222222-2222-4222-8222-222222222222', is_public: true }],
+  sports_competitions: [{ id: '22222222-2222-4222-8222-222222222222', is_public: false }],
   sports_teams: [
-    { id: '33333333-3333-4333-8333-333333333333', is_public: true },
-    { id: '44444444-4444-4444-8444-444444444444', is_public: true }
+    { id: '33333333-3333-4333-8333-333333333333', is_public: false },
+    { id: '44444444-4444-4444-8444-444444444444', is_public: false }
   ],
   sports_provider_mappings: [
     { provider: 'api-football', entity_type: 'fixture', external_id: 'fixture-10', competition_id: null, team_id: null, fixture_id: snapshot.fixture_id },
@@ -105,7 +105,7 @@ describe('lectura de snapshots públicos de fútbol', () => {
     expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['publication_rights_confirmed', true] })
   })
 
-  it('con autorización privada omite solo la confirmación de derechos y devuelve proyección segura', async () => {
+  it('con autorización global privada publica el corpus autorizado y devuelve proyección segura', async () => {
     const { cliente, llamadas } = crearClienteMock()
 
     const fixtures = await leerSnapshotsFutbolPublicos(cliente, {
@@ -121,39 +121,13 @@ describe('lectura de snapshots públicos de fútbol', () => {
       homeTeam: { name: 'Local' },
       awayTeam: { name: 'Visitante' }
     })
-    expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['is_public', true] })
-    expect(llamadas).toContainEqual({ tabla: 'sports_fixtures', metodo: 'eq', args: ['is_public', true] })
-    expect(llamadas).toContainEqual({ tabla: 'sports_competitions', metodo: 'eq', args: ['is_public', true] })
-    expect(llamadas).toContainEqual({ tabla: 'sports_teams', metodo: 'eq', args: ['is_public', true] })
+    expect(llamadas).not.toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['is_public', true] })
+    expect(llamadas).not.toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['publication_rights_confirmed', true] })
+    expect(llamadas).not.toContainEqual({ tabla: 'sports_fixtures', metodo: 'eq', args: ['is_public', true] })
+    expect(llamadas).not.toContainEqual({ tabla: 'sports_competitions', metodo: 'eq', args: ['is_public', true] })
+    expect(llamadas).not.toContainEqual({ tabla: 'sports_teams', metodo: 'eq', args: ['is_public', true] })
     expect(llamadas.filter(({ tabla, metodo, args }) => tabla === 'sports_provider_mappings' && metodo === 'in' && args[0] === 'entity_type'))
       .toContainEqual({ tabla: 'sports_provider_mappings', metodo: 'in', args: ['entity_type', ['competition', 'team', 'fixture']] })
-  })
-
-  it('no expone snapshots ni entidades canónicas privadas aunque haya autorización global de derechos', async () => {
-    const entidadesPrivadas = {
-      ...entidades,
-      sports_competitions: [{ ...entidades.sports_competitions[0], is_public: false }]
-    }
-    const { cliente } = crearClienteMock(
-      entidades.sports_provider_mappings,
-      { ...snapshot, publication_rights_confirmed: true },
-      entidadesPrivadas
-    )
-
-    await expect(leerSnapshotsFutbolPublicos(cliente, {
-      derechosPublicacionConfirmados: true
-    })).resolves.toEqual([])
-  })
-
-  it('rechaza un snapshot privado aunque la autorización global confirme los derechos', async () => {
-    const { cliente } = crearClienteMock(
-      entidades.sports_provider_mappings,
-      { ...snapshot, is_public: false, publication_rights_confirmed: true }
-    )
-
-    await expect(leerSnapshotsFutbolPublicos(cliente, {
-      derechosPublicacionConfirmados: true
-    })).resolves.toEqual([])
   })
 
   it('conserva la identidad del proveedor junto a la proyección pública segura', async () => {
