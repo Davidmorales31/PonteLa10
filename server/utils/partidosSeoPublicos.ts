@@ -1,10 +1,15 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { createError } from 'h3'
+import { createError, type H3Event } from 'h3'
 import { asignarSlugsPartidosSeo, buscarPartidoSeoPorSlug } from '~/utils/partidosSeo'
 import { normalizarEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import { evaluarFrescuraPartido, type EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
 import { obtenerRutaPublicaEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
 import type { ProgramacionTransmisionPublica } from '~/utils/partidos/programacion'
+import {
+  leerSnapshotsFutbolPublicosConIdentidad,
+  type SnapshotFutbolPublicoConIdentidad
+} from '~/server/utils/lecturaSnapshotsFutbol'
+import { obtenerClienteSupabasePrivado } from '~/server/utils/clienteSupabasePrivado'
 
 const columnasFixtures = [
   'provider', 'provider_fixture_id', 'competition_slug', 'season', 'round_name', 'scheduled_at',
@@ -43,8 +48,35 @@ interface FilaEscudoEquipo {
 }
 
 const DURACION_CACHE_PARTIDOS_MS = 60_000
+const DURACION_CACHE_SNAPSHOTS_MS = 10_000
 let cachePartidosPublicos: { venceEn: number, partidos: PartidoSeoAdministrable[] } | null = null
 let cargaPartidosPublicos: Promise<PartidoSeoAdministrable[]> | null = null
+let cacheSnapshotsFutbol: {
+  venceEn: number
+  snapshots: SnapshotFutbolPublicoConIdentidad[]
+  derechosPublicacionConfirmados: boolean
+} | null = null
+let cargaSnapshotsFutbol: {
+  derechosPublicacionConfirmados: boolean
+  promesa: Promise<SnapshotFutbolPublicoConIdentidad[]>
+} | null = null
+
+export interface OpcionesLecturaSnapshotsPartidosSeo {
+  cliente: SupabaseClient
+  derechosPublicacionConfirmados: boolean
+}
+
+/** El service_role solo se usa en servidor; los datos se revalidan antes de publicarse. */
+export function obtenerOpcionesLecturaSnapshotsPartidosSeo(
+  evento: H3Event
+): OpcionesLecturaSnapshotsPartidosSeo | undefined {
+  const cliente = obtenerClienteSupabasePrivado(evento)
+  if (!cliente) return undefined
+  return {
+    cliente,
+    derechosPublicacionConfirmados: useRuntimeConfig(evento).futbolDerechosPublicacionConfirmados === true
+  }
+}
 
 export interface PartidoSeoPublico {
   slug: string
@@ -79,11 +111,25 @@ export interface PartidoSeoAdministrable extends PartidoSeoPublico {
   }
 }
 
-export async function listarPartidosSeoPublicos(cliente: SupabaseClient): Promise<PartidoSeoPublico[]> {
-  return (await listarPartidosSeoAdministrables(cliente)).map(presentarPartidoSeoPublico)
+export async function listarPartidosSeoPublicos(
+  cliente: SupabaseClient,
+  opcionesSnapshots?: OpcionesLecturaSnapshotsPartidosSeo
+): Promise<PartidoSeoPublico[]> {
+  return (await listarPartidosSeoAdministrables(cliente, opcionesSnapshots)).map(presentarPartidoSeoPublico)
 }
 
-export async function listarPartidosSeoAdministrables(cliente: SupabaseClient): Promise<PartidoSeoAdministrable[]> {
+export async function listarPartidosSeoAdministrables(
+  cliente: SupabaseClient,
+  opcionesSnapshots?: OpcionesLecturaSnapshotsPartidosSeo
+): Promise<PartidoSeoAdministrable[]> {
+  const [partidos, snapshots] = await Promise.all([
+    listarPartidosSeoCalendario(cliente),
+    listarSnapshotsFutbolPublicosConCache(opcionesSnapshots)
+  ])
+  return mezclarSnapshotsFutbolEnPartidosSeo(partidos, snapshots)
+}
+
+async function listarPartidosSeoCalendario(cliente: SupabaseClient): Promise<PartidoSeoAdministrable[]> {
   const ahora = Date.now()
   if (cachePartidosPublicos && cachePartidosPublicos.venceEn > ahora) {
     return cachePartidosPublicos.partidos
@@ -172,6 +218,100 @@ export async function listarPartidosSeoAdministrables(cliente: SupabaseClient): 
   } finally {
     if (cargaPartidosPublicos === carga) cargaPartidosPublicos = null
   }
+}
+
+async function listarSnapshotsFutbolPublicosConCache(
+  opciones?: OpcionesLecturaSnapshotsPartidosSeo
+): Promise<SnapshotFutbolPublicoConIdentidad[]> {
+  if (!opciones) return []
+  const derechosPublicacionConfirmados = opciones.derechosPublicacionConfirmados === true
+  const ahora = Date.now()
+  if (cacheSnapshotsFutbol && cacheSnapshotsFutbol.venceEn > ahora
+    && cacheSnapshotsFutbol.derechosPublicacionConfirmados === derechosPublicacionConfirmados) {
+    return cacheSnapshotsFutbol.snapshots
+  }
+  if (cargaSnapshotsFutbol?.derechosPublicacionConfirmados === derechosPublicacionConfirmados) {
+    return cargaSnapshotsFutbol.promesa
+  }
+
+  const carga = leerSnapshotsFutbolPublicosConIdentidad(opciones.cliente, {
+    limite: 1000,
+    derechosPublicacionConfirmados
+  })
+  cargaSnapshotsFutbol = { derechosPublicacionConfirmados, promesa: carga }
+  try {
+    const snapshots = await carga
+    cacheSnapshotsFutbol = {
+      snapshots,
+      venceEn: Date.now() + DURACION_CACHE_SNAPSHOTS_MS,
+      derechosPublicacionConfirmados
+    }
+    return snapshots
+  } finally {
+    if (cargaSnapshotsFutbol?.promesa === carga) cargaSnapshotsFutbol = null
+  }
+}
+
+/** Cruza el calendario con datos públicos solo cuando proveedor e ID son idénticos. */
+export function mezclarSnapshotsFutbolEnPartidosSeo(
+  partidos: PartidoSeoAdministrable[],
+  snapshots: SnapshotFutbolPublicoConIdentidad[],
+  ahoraMs = Date.now()
+): PartidoSeoAdministrable[] {
+  const snapshotsPorIdentidad = new Map(snapshots.map(snapshot => [
+    `${snapshot.proveedor}\u0000${snapshot.idFixtureProveedor}`,
+    snapshot
+  ]))
+
+  return partidos.map((partido) => {
+    const estadoCalendario = normalizarEstadoSeoPartido(
+      partido.estado,
+      partido.fechaIso,
+      partido.verificadoEn,
+      ahoraMs
+    )
+    const base = {
+      ...partido,
+      estado: estadoCalendario,
+      estadoFrescura: evaluarFrescuraPartido({
+        estado: estadoCalendario,
+        fechaIso: partido.fechaIso,
+        verificadoEn: partido.verificadoEn
+      }, ahoraMs)
+    }
+    const identidad = partido.identidadFuente
+    const snapshot = snapshotsPorIdentidad.get(`${identidad.proveedor}\u0000${identidad.idProveedor}`)
+    if (!snapshot) return base
+
+    const fechaSnapshotMs = Date.parse(snapshot.fixture.providerFetchedAt)
+    const fechaCalendarioMs = Date.parse(partido.verificadoEn)
+    if (!Number.isFinite(fechaSnapshotMs)
+      || !Number.isFinite(fechaCalendarioMs)
+      || fechaSnapshotMs < fechaCalendarioMs
+      || fechaSnapshotMs > ahoraMs + 30_000) return base
+
+    const verificadoEn = new Date(fechaSnapshotMs).toISOString()
+    const estado = normalizarEstadoSeoPartido(
+      snapshot.fixture.status,
+      partido.fechaIso,
+      verificadoEn,
+      ahoraMs
+    )
+    const snapshotTieneMarcadorCompleto = snapshot.fixture.goalsHome !== null
+      && snapshot.fixture.goalsAway !== null
+    return {
+      ...base,
+      estado,
+      golesLocal: snapshotTieneMarcadorCompleto ? snapshot.fixture.goalsHome : partido.golesLocal,
+      golesVisitante: snapshotTieneMarcadorCompleto ? snapshot.fixture.goalsAway : partido.golesVisitante,
+      verificadoEn,
+      estadoFrescura: evaluarFrescuraPartido({
+        estado,
+        fechaIso: partido.fechaIso,
+        verificadoEn
+      }, ahoraMs)
+    }
+  })
 }
 
 function presentarPartidoSeoPublico(partido: PartidoSeoAdministrable): PartidoSeoPublico {
@@ -277,9 +417,10 @@ function compararCalidadFixture(a: FilaPartidoSeo, b: FilaPartidoSeo): number {
 
 export async function obtenerPartidoSeoPublico(
   cliente: SupabaseClient,
-  slugSolicitado: string
+  slugSolicitado: string,
+  opcionesSnapshots?: OpcionesLecturaSnapshotsPartidosSeo
 ): Promise<PartidoSeoPublico> {
-  const partidos = await listarPartidosSeoPublicos(cliente)
+  const partidos = await listarPartidosSeoPublicos(cliente, opcionesSnapshots)
   const partido = buscarPartidoSeoPorSlug(partidos, slugSolicitado)
 
   if (!partido) throw createError({ statusCode: 404, statusMessage: 'No encontramos ese partido.' })

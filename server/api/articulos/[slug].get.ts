@@ -2,7 +2,10 @@ import type { ArticuloPublicoEditorial } from '~/types/contenidoEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { obtenerArticuloPublicoEditorial } from '~/server/utils/repositorioContenidoEditorial'
 import { listarEntidadesPublicasSeo, listarRelacionesPublicasSeo } from '~/server/utils/grafoEntidadesSeo'
-import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
+import {
+  listarPartidosSeoPublicos,
+  obtenerOpcionesLecturaSnapshotsPartidosSeo
+} from '~/server/utils/partidosSeoPublicos'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 import { seleccionarProximoPartidoArticuloSeo } from '~/utils/editorial/navegacionContextualSeo'
 
@@ -35,7 +38,10 @@ export default defineEventHandler(async (
   if (articulo.relacionesEntidades.some(relacion => relacion.relacion === 'about')) {
     try {
       const [partidos, entidades] = await Promise.all([
-        listarPartidosSeoPublicos(clienteSupabase),
+        listarPartidosSeoPublicos(
+          clienteSupabase,
+          obtenerOpcionesLecturaSnapshotsPartidosSeo(evento)
+        ),
         listarEntidadesPublicasSeo(clienteSupabase)
       ])
       articulo.proximoPartidoEntidad = seleccionarProximoPartidoArticuloSeo(

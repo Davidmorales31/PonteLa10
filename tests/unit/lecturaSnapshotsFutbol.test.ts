@@ -1,6 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { describe, expect, it, vi } from 'vitest'
-import { leerSnapshotsFutbolPublicos } from '../../server/utils/lecturaSnapshotsFutbol'
+import {
+  leerSnapshotsFutbolPublicos,
+  leerSnapshotsFutbolPublicosConIdentidad
+} from '../../server/utils/lecturaSnapshotsFutbol'
 
 const snapshot = {
   fixture_id: '11111111-1111-4111-8111-111111111111',
@@ -32,7 +35,7 @@ const snapshot = {
   lineups: [],
   statistics: [],
   provider_fetched_at: '2026-10-02T17:00:00.000Z',
-  is_public: false,
+  is_public: true,
   publication_rights_confirmed: false
 }
 
@@ -42,12 +45,12 @@ const entidades = {
     competition_id: '22222222-2222-4222-8222-222222222222',
     home_team_id: '33333333-3333-4333-8333-333333333333',
     away_team_id: '44444444-4444-4444-8444-444444444444',
-    is_public: false
+    is_public: true
   }],
-  sports_competitions: [{ id: '22222222-2222-4222-8222-222222222222', is_public: false }],
+  sports_competitions: [{ id: '22222222-2222-4222-8222-222222222222', is_public: true }],
   sports_teams: [
-    { id: '33333333-3333-4333-8333-333333333333', is_public: false },
-    { id: '44444444-4444-4444-8444-444444444444', is_public: false }
+    { id: '33333333-3333-4333-8333-333333333333', is_public: true },
+    { id: '44444444-4444-4444-8444-444444444444', is_public: true }
   ],
   sports_provider_mappings: [
     { provider: 'api-football', entity_type: 'fixture', external_id: 'fixture-10', competition_id: null, team_id: null, fixture_id: snapshot.fixture_id },
@@ -57,11 +60,15 @@ const entidades = {
   ]
 }
 
-function crearClienteMock(mappingRows = entidades.sports_provider_mappings) {
+function crearClienteMock(
+  mappingRows = entidades.sports_provider_mappings,
+  snapshotRow = snapshot,
+  entidadesRows = entidades
+) {
   const llamadas: Array<{ tabla: string; metodo: string; args: unknown[] }> = []
   const datosPorTabla: Record<string, Array<Record<string, unknown>>> = {
-    football_fixtures_today: [snapshot],
-    ...entidades,
+    football_fixtures_today: [snapshotRow],
+    ...entidadesRows,
     sports_provider_mappings: mappingRows
   }
   const cliente = {
@@ -79,9 +86,7 @@ function crearClienteMock(mappingRows = entidades.sports_provider_mappings) {
       }
       consulta.then = (resolve, reject) => {
         let data = datosPorTabla[tabla] || []
-        if (filtros.some(([columna, valor]) => columna === 'is_public' && valor === true)) {
-          data = data.filter((fila) => (fila as { is_public?: boolean }).is_public === true)
-        }
+        data = data.filter(fila => filtros.every(([columna, valor]) => fila[columna] === valor))
         return Promise.resolve({ data, error: null }).then(resolve, reject)
       }
       return consulta
@@ -100,7 +105,7 @@ describe('lectura de snapshots públicos de fútbol', () => {
     expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['publication_rights_confirmed', true] })
   })
 
-  it('con autorización privada publica solo identidades completas y devuelve una proyección segura', async () => {
+  it('con autorización privada omite solo la confirmación de derechos y devuelve proyección segura', async () => {
     const { cliente, llamadas } = crearClienteMock()
 
     const fixtures = await leerSnapshotsFutbolPublicos(cliente, {
@@ -116,9 +121,56 @@ describe('lectura de snapshots públicos de fútbol', () => {
       homeTeam: { name: 'Local' },
       awayTeam: { name: 'Visitante' }
     })
-    expect(llamadas.some(({ tabla, metodo, args }) => tabla === 'sports_fixtures' && metodo === 'eq' && args[0] === 'is_public')).toBe(false)
+    expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['is_public', true] })
+    expect(llamadas).toContainEqual({ tabla: 'sports_fixtures', metodo: 'eq', args: ['is_public', true] })
+    expect(llamadas).toContainEqual({ tabla: 'sports_competitions', metodo: 'eq', args: ['is_public', true] })
+    expect(llamadas).toContainEqual({ tabla: 'sports_teams', metodo: 'eq', args: ['is_public', true] })
     expect(llamadas.filter(({ tabla, metodo, args }) => tabla === 'sports_provider_mappings' && metodo === 'in' && args[0] === 'entity_type'))
       .toContainEqual({ tabla: 'sports_provider_mappings', metodo: 'in', args: ['entity_type', ['competition', 'team', 'fixture']] })
+  })
+
+  it('no expone snapshots ni entidades canónicas privadas aunque haya autorización global de derechos', async () => {
+    const entidadesPrivadas = {
+      ...entidades,
+      sports_competitions: [{ ...entidades.sports_competitions[0], is_public: false }]
+    }
+    const { cliente } = crearClienteMock(
+      entidades.sports_provider_mappings,
+      { ...snapshot, publication_rights_confirmed: true },
+      entidadesPrivadas
+    )
+
+    await expect(leerSnapshotsFutbolPublicos(cliente, {
+      derechosPublicacionConfirmados: true
+    })).resolves.toEqual([])
+  })
+
+  it('rechaza un snapshot privado aunque la autorización global confirme los derechos', async () => {
+    const { cliente } = crearClienteMock(
+      entidades.sports_provider_mappings,
+      { ...snapshot, is_public: false, publication_rights_confirmed: true }
+    )
+
+    await expect(leerSnapshotsFutbolPublicos(cliente, {
+      derechosPublicacionConfirmados: true
+    })).resolves.toEqual([])
+  })
+
+  it('conserva la identidad del proveedor junto a la proyección pública segura', async () => {
+    const { cliente } = crearClienteMock()
+
+    const snapshots = await leerSnapshotsFutbolPublicosConIdentidad(cliente, {
+      derechosPublicacionConfirmados: true
+    })
+
+    expect(snapshots).toHaveLength(1)
+    expect(snapshots[0]).toMatchObject({
+      proveedor: 'api-football',
+      idFixtureProveedor: 'fixture-10',
+      fixture: { id: snapshot.fixture_id, status: 'scheduled' }
+    })
+    expect(snapshots[0]?.fixture).not.toHaveProperty('provider')
+    expect(snapshots[0]?.fixture).not.toHaveProperty('provider_fixture_id')
   })
 
   it('no publica cuando falta o no coincide un mapping canónico', async () => {

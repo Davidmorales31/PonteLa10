@@ -1,6 +1,10 @@
 import { getRouterParam } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
-import { obtenerPartidoSeoPublico, listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
+import {
+  obtenerOpcionesLecturaSnapshotsPartidosSeo,
+  obtenerPartidoSeoPublico,
+  listarPartidosSeoPublicos
+} from '~/server/utils/partidosSeoPublicos'
 import { listarEntidadesPublicasSeo } from '~/server/utils/grafoEntidadesSeo'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 import { obtenerTipoCachePartido } from '~/utils/cachePublica'
@@ -14,12 +18,13 @@ export default defineEventHandler(async (evento) => {
   }
 
   const cliente = obtenerClienteSupabaseAnonimo(evento)
-  const partido = await obtenerPartidoSeoPublico(cliente, slug)
+  const opcionesSnapshots = obtenerOpcionesLecturaSnapshotsPartidosSeo(evento)
+  const partido = await obtenerPartidoSeoPublico(cliente, slug, opcionesSnapshots)
   let navegacion: NavegacionContextualPartidoSeo | null = null
 
   try {
     const [partidos, entidades] = await Promise.all([
-      listarPartidosSeoPublicos(cliente),
+      listarPartidosSeoPublicos(cliente, opcionesSnapshots),
       listarEntidadesPublicasSeo(cliente)
     ])
     navegacion = construirNavegacionContextualPartidoSeo(partido, partidos, entidades)

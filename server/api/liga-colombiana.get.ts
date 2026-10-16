@@ -1,6 +1,9 @@
 import { getQuery } from 'h3'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
-import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
+import {
+  listarPartidosSeoPublicos,
+  obtenerOpcionesLecturaSnapshotsPartidosSeo
+} from '~/server/utils/partidosSeoPublicos'
 import { obtenerRangoMesBogota } from '~/server/utils/rangoMesBogota'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 import { resumirFrescuraTabla, type EvaluacionFrescuraDeportiva } from '~/utils/frescuraDatosDeportivos'
@@ -42,6 +45,7 @@ export default defineEventHandler(async (evento) => {
   }
 
   const cliente = obtenerClienteSupabaseEditorial(evento)
+  const opcionesSnapshots = obtenerOpcionesLecturaSnapshotsPartidosSeo(evento)
   const ahora = new Date()
   const desde = ahora.getTime() - 45 * 24 * 60 * 60 * 1000
   const hasta = ahora.getTime() + 90 * 24 * 60 * 60 * 1000
@@ -50,7 +54,7 @@ export default defineEventHandler(async (evento) => {
   const inicioManana = inicioHoy + 24 * 60 * 60 * 1000
   const inicioOctavoDia = inicioHoy + 8 * 24 * 60 * 60 * 1000
   const [todosLosPartidos, posiciones] = await Promise.all([
-    listarPartidosSeoPublicos(cliente),
+    listarPartidosSeoPublicos(cliente, opcionesSnapshots),
     cliente.from('colombian_league_standings')
       .select(columnasTabla)
       .in('competition_slug', competiciones)

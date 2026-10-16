@@ -1,6 +1,9 @@
 import { z } from 'zod'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
-import { listarPartidosSeoPublicos } from '~/server/utils/partidosSeoPublicos'
+import {
+  listarPartidosSeoPublicos,
+  obtenerOpcionesLecturaSnapshotsPartidosSeo
+} from '~/server/utils/partidosSeoPublicos'
 import { buscarCorrespondenciaPartidoSeo } from '~/server/utils/partidoSeoCorrespondencia'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 
@@ -17,7 +20,10 @@ export default defineEventHandler(async (evento) => {
     throw createError({ statusCode: 400, statusMessage: 'La identidad del partido no es válida.' })
   }
 
-  const partidos = await listarPartidosSeoPublicos(obtenerClienteSupabaseAnonimo(evento))
+  const partidos = await listarPartidosSeoPublicos(
+    obtenerClienteSupabaseAnonimo(evento),
+    obtenerOpcionesLecturaSnapshotsPartidosSeo(evento)
+  )
   const partido = buscarCorrespondenciaPartidoSeo(partidos, parametros.data)
   aplicarCachePublica(evento, 'partidoProgramado')
   return { slug: partido?.slug || null }
