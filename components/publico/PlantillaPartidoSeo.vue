@@ -79,22 +79,18 @@ const urlsPromocionales = computed(() => String(configuracion.public.adsterraMat
 const cartelPartidoUrl = computed(() => `/api/partidos-seo/${encodeURIComponent(partido.value.slug)}/imagen?formato=wide`)
 const posterVideoUrl = ref(cartelPartidoUrl.value)
 let clicsReproductorEnMemoria = 0
+let primerAnuncioWinPlayEnMemoria = false
+const urlWinPlay = 'https://winplay.co/'
+const competenciasWinSports = ['liga-betplay', 'torneo-betplay', 'copa-colombia']
 const marcadorDisponible = computed(() => partido.value.golesLocal !== null
   && partido.value.golesVisitante !== null)
 const marcador = computed(() => `${partido.value.golesLocal ?? '—'}–${partido.value.golesVisitante ?? '—'}`)
 const estadoPartido = computed(() => etiquetaEstadoSeoPartido(partido.value.estado))
-const frescuraDesactualizada = computed(() => estadoPartido.value === 'ACTUALIZACIÓN PENDIENTE'
-  || (partido.value.estadoFrescura
-    && ['desactualizado', 'sin_verificar', 'fecha_invalida'].includes(partido.value.estadoFrescura.estado)))
-const etiquetaFrescura = computed(() => estadoPartido.value === 'ACTUALIZACIÓN PENDIENTE'
-  ? 'Estado del encuentro pendiente de confirmación'
-  : partido.value.estadoFrescura?.estado === 'estable'
-  ? 'Resultado estable'
-  : frescuraDesactualizada.value ? 'Dato pendiente de actualización' : 'Dato actualizado')
 const transmisionesConfirmadas = computed(() => (partido.value.transmisiones || [])
   .filter(transmision => transmision.status === 'confirmed'
     && Boolean(transmision.verifiedAt)
     && transmision.sourceUrl.startsWith('https://')))
+const mostrarEnlaceWinSports = computed(() => competenciasWinSports.includes(partido.value.competencia))
 const textoMarcador = computed(() => {
   if (!marcadorDisponible.value) return 'El marcador oficial todavía no está publicado.'
   if (estadoPartido.value === 'EN VIVO') return `Marcador actualizado: ${marcador.value}`
@@ -107,8 +103,6 @@ const nombreCompetencia = computed(() => {
   return 'Liga BetPlay'
 })
 const etiquetaPartido = computed(() => modoEstadoParaEtiqueta(estadoPartido.value, props.modo === 'como-quedo' ? 'como-quedo' : 'donde-ver'))
-const urlProgramacionOficial = computed(() => partido.value.fuenteOficialUrl
-  || `https://dimayor.com.co/programaciones-competencias-dimayor-${partido.value.temporada.slice(0, 4)}/`)
 
 function fechaPartido(valor: string, incluirHora = true) {
   if (!Number.isFinite(Date.parse(valor))) return 'Fecha por confirmar'
@@ -136,16 +130,6 @@ function fechaVerificacion(valor: string) {
     timeZone: 'America/Bogota'
   }).format(fecha)
   return `Verificada el ${fechaHora} (hora de Colombia)`
-}
-
-function fechaHoraActualizacion(valor: string) {
-  const fecha = new Date(valor)
-  if (!Number.isFinite(fecha.getTime())) return 'Fecha de consulta no disponible'
-  return new Intl.DateTimeFormat('es-CO', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'America/Bogota'
-  }).format(fecha)
 }
 
 function modoEstadoParaEtiqueta(estado: string, modo: 'donde-ver' | 'como-quedo') {
@@ -182,6 +166,30 @@ function gestionarClicReproductor() {
   if (!destino) return
   const ventana = window.open(destino, '_blank', 'noopener,noreferrer')
   if (ventana) ventana.opener = null
+}
+
+function gestionarClicWinPlay(evento: MouseEvent) {
+  if (!import.meta.client || evento.button !== 0 || evento.metaKey || evento.ctrlKey || evento.shiftKey || evento.altKey) return
+  evento.preventDefault()
+  void registrarEvento('channel_click')
+
+  if (publicidadAutorizada.value && urlsPromocionales.value.length) {
+    const clave = 'pont3la10:anuncio-winplay-visto:v1'
+    let mostrarAnuncio = false
+    try {
+      mostrarAnuncio = window.sessionStorage.getItem(clave) !== '1'
+      if (mostrarAnuncio) window.sessionStorage.setItem(clave, '1')
+    } catch {
+      mostrarAnuncio = !primerAnuncioWinPlayEnMemoria
+      primerAnuncioWinPlayEnMemoria = true
+    }
+
+    if (mostrarAnuncio) {
+      window.open(urlsPromocionales.value[0], '_blank', 'noopener,noreferrer')
+    }
+  }
+
+  window.location.assign(urlWinPlay)
 }
 
 function cargarPosterVideo() {
@@ -293,38 +301,6 @@ onMounted(() => {
             <span v-if="partido.estadio">{{ partido.estadio }}</span>
             <span v-if="partido.ciudad">{{ partido.ciudad }}</span>
           </p>
-          <a
-            v-if="modo !== 'como-quedo'"
-            class="boton-programacion-oficial"
-            :href="urlProgramacionOficial"
-            target="_blank"
-            rel="noopener noreferrer"
-            @click="registrarEvento('channel_click')"
-          >Consultar programación oficial</a>
-          <div v-else class="nota-marcador-partido">El sitio no transmite partidos. Mostramos solo información editorial publicada.</div>
-          <section class="fuente-verificacion-partido" aria-label="Fuente y actualización de los datos">
-            <strong>Fuente y actualización</strong>
-            <p v-if="frescuraDesactualizada" class="aviso-frescura-partido" role="status">
-              {{ etiquetaFrescura }}. Puede haber cambios posteriores; consulta la fuente oficial antes de tomar una decisión.
-            </p>
-            <p v-else class="estado-frescura-partido" role="status">{{ etiquetaFrescura }}<template v-if="partido.estadoFrescura?.umbralMinutos"> · umbral {{ partido.estadoFrescura.umbralMinutos }} min</template>.</p>
-            <p>
-              Datos del encuentro consultados por última vez el
-              <time :datetime="partido.verificadoEn">{{ fechaHoraActualizacion(partido.verificadoEn) }}</time>
-              (hora de Colombia).
-            </p>
-            <a
-              v-if="partido.fuenteOficialUrl"
-              :href="partido.fuenteOficialUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-            >Fuente oficial del calendario: DIMAYOR</a>
-            <p v-else>
-              Este registro no incluye un enlace de origen específico.
-              <a :href="urlProgramacionOficial" target="_blank" rel="noopener noreferrer">Consulta el calendario oficial de DIMAYOR</a>.
-            </p>
-          </section>
-          <p v-if="modo === 'donde-ver'" class="nota-clic-promocional">Con anuncios autorizados, el primer clic en el reproductor y luego cada cuatro clics adicionales abre un enlace patrocinado.</p>
         </section>
 
         <nav class="tabs-partido-seo" aria-label="Secciones de la ficha">
@@ -334,18 +310,38 @@ onMounted(() => {
         </nav>
 
         <article class="articulo-partido-seo">
-          <section id="resumen" class="bloque-datos-partido-seo" aria-labelledby="titulo-resumen-partido">
-            <h2 id="titulo-resumen-partido">{{ marcadorDisponible ? 'Marcador y estado' : 'Estado del encuentro' }}</h2>
-            <p class="estado-marcador-partido" role="status" aria-live="polite"><strong>{{ estadoPartido }}</strong><span>{{ marcadorDisponible ? marcador : 'Marcador pendiente' }}</span></p>
-            <p>{{ textoMarcador }}</p>
-            <p v-if="marcadorDisponible && modo === 'como-quedo'">La programación disponible no incluye todavía el detalle verificado de goleadores o eventos.</p>
-            <p v-else-if="marcadorDisponible">Los goleadores y eventos se mostrarán cuando estén presentes en una fuente publicada y verificada.</p>
+          <section id="resumen" class="bloque-datos-partido-seo marcador-partido-resumen" :class="{ 'marcador-partido-resumen--vivo': estadoPartido === 'EN VIVO' }" aria-labelledby="titulo-resumen-partido">
+            <header class="cabecera-marcador-resumen">
+              <div><span class="rotulo-marcador-resumen">{{ nombreCompetencia }}<template v-if="partido.jornada"> · {{ partido.jornada }}</template></span><h2 id="titulo-resumen-partido">{{ marcadorDisponible && estadoPartido === 'FINALIZADO' ? 'Resultado final' : 'Marcador y estado' }}</h2></div>
+              <span class="insignia-estado-marcador" :class="`insignia-estado-marcador--${estadoPartido === 'EN VIVO' ? 'vivo' : estadoPartido === 'FINALIZADO' ? 'final' : 'proximo'}`" role="status" aria-live="polite"><i aria-hidden="true" />{{ estadoPartido }}</span>
+            </header>
+            <div class="pizarra-marcador-partido">
+              <div class="equipo-resumen-marcador">
+                <EscudoEquipoPublico v-if="mostrarEscudo(partido.escudoLocal)" :src="partido.escudoLocal || ''" :alt="`Escudo de ${partido.local}`" :width="56" :height="56" sizes="56px" loading="lazy" @error="escudoFallido(partido.escudoLocal)" />
+                <span v-else class="escudo-resumen-fallback">{{ iniciales(partido.local) }}</span>
+                <div><small>LOCAL</small><strong>{{ partido.local }}</strong></div>
+              </div>
+              <div class="centro-marcador-resumen">
+                <div v-if="marcadorDisponible" class="cifras-marcador-resumen"><strong>{{ partido.golesLocal }}</strong><span>–</span><strong>{{ partido.golesVisitante }}</strong></div>
+                <strong v-else class="versus-marcador-resumen">VS</strong>
+                <small>{{ estadoPartido === 'FINALIZADO' ? 'MARCADOR FINAL' : estadoPartido === 'EN VIVO' ? 'EN JUEGO' : 'PARTIDO' }}</small>
+              </div>
+              <div class="equipo-resumen-marcador equipo-resumen-marcador--visitante">
+                <EscudoEquipoPublico v-if="mostrarEscudo(partido.escudoVisitante)" :src="partido.escudoVisitante || ''" :alt="`Escudo de ${partido.visitante}`" :width="56" :height="56" sizes="56px" loading="lazy" @error="escudoFallido(partido.escudoVisitante)" />
+                <span v-else class="escudo-resumen-fallback">{{ iniciales(partido.visitante) }}</span>
+                <div><small>VISITANTE</small><strong>{{ partido.visitante }}</strong></div>
+              </div>
+            </div>
+            <div class="detalle-eventos-partido">
+              <span aria-hidden="true">i</span>
+              <div><strong>{{ estadoPartido === 'FINALIZADO' ? 'Sin eventos publicados' : 'Detalle del encuentro' }}</strong><p>{{ estadoPartido === 'FINALIZADO' ? 'Los goleadores y demás eventos no están disponibles en una fuente verificada.' : textoMarcador }}</p></div>
+            </div>
           </section>
 
           <section v-if="modo !== 'como-quedo'" class="preguntas-partido-seo" aria-labelledby="faq-partido-seo">
             <h2 id="faq-partido-seo">Preguntas frecuentes</h2>
             <details open><summary>¿A qué hora juega {{ partido.local }} vs {{ partido.visitante }}?</summary><p>El horario publicado es {{ fechaPartido(partido.fechaIso) }}, hora de Colombia. Si la organización anuncia un cambio, esta ficha se actualizará.</p></details>
-            <details><summary>¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</summary><p v-if="transmisionesConfirmadas.length">{{ transmisionesConfirmadas.map(item => `${item.channel} (${nombrePais(item.countryCode)})`).join(', ') }}. Revisa la fuente enlazada junto a cada opción porque la disponibilidad puede variar según el país.</p><p v-else>El canal o la plataforma no está confirmado. Revisa la <a :href="urlProgramacionOficial" target="_blank" rel="noopener noreferrer" @click="registrarEvento('channel_click')">programación de DIMAYOR</a>.</p></details>
+            <details><summary>¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</summary><p v-if="transmisionesConfirmadas.length">{{ transmisionesConfirmadas.map(item => `${item.channel} (${nombrePais(item.countryCode)})`).join(', ') }}. Revisa la fuente enlazada junto a cada opción porque la disponibilidad puede variar según el país.</p><p v-else-if="mostrarEnlaceWinSports">La Liga BetPlay, el Torneo BetPlay y la Copa Colombia cuentan con señal de Win Sports+. Usa el botón «Ver en vivo» para abrir Win Play y consultar la disponibilidad.</p><p v-else>El canal o la plataforma para este partido todavía no está confirmado.</p></details>
           </section>
           <section v-else class="contexto-partido-seo">
             <h2>Información del partido</h2>
@@ -371,34 +367,55 @@ onMounted(() => {
 
       <aside class="lateral-partido-seo" aria-label="Información complementaria del partido">
         <PublicidadAdsterraSlot formato="nativo" contexto="noticias relacionadas con partido" />
-        <section id="informacion" class="bloque-datos-partido-seo">
-          <h2>Horario y dónde ver {{ partido.local }} vs {{ partido.visitante }}</h2>
-          <dl>
-            <div><dt>Fecha y hora</dt><dd>{{ fechaPartido(partido.fechaIso) }} (hora de Colombia)</dd></div>
-            <div><dt>Competición</dt><dd>{{ nombreCompetencia }} · {{ partido.temporada }}<template v-if="partido.jornada"> · {{ partido.jornada }}</template></dd></div>
-            <div>
-              <dt>Canal o plataforma</dt>
-              <dd v-if="transmisionesConfirmadas.length">
-                <ul class="lista-transmisiones-partido">
-                  <li v-for="transmision in transmisionesConfirmadas" :key="transmision.id">
-                    <strong>{{ transmision.channel }}</strong> · {{ transmision.platform }}
-                    <span> · {{ nombrePais(transmision.countryCode) }} · {{ etiquetasDistribucionProgramacion[transmision.distributionType] }}</span>
-                    <a :href="transmision.sourceUrl" target="_blank" rel="noopener noreferrer">Ver fuente</a>
-                    <small>{{ fechaVerificacion(transmision.verifiedAt || '') }}</small>
-                    <span v-if="transmision.notes">{{ transmision.notes }}</span>
-                  </li>
-                </ul>
-              </dd>
-              <dd v-else>Por confirmar. No tenemos una fuente verificada para este partido.</dd>
+        <section id="informacion" class="bloque-datos-partido-seo tarjeta-informacion-partido" aria-labelledby="titulo-informacion-partido">
+          <header class="encabezado-informacion-partido">
+            <span>DATOS DEL ENCUENTRO</span>
+            <h2 id="titulo-informacion-partido">Horario y dónde ver</h2>
+            <p>{{ partido.local }} vs {{ partido.visitante }}</p>
+          </header>
+          <dl class="lista-informacion-partido">
+            <div class="dato-informacion-partido">
+              <span class="icono-informacion-partido" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="16" rx="2" /><path d="M7.5 3v4M16.5 3v4M3.5 9h17M8 13h3M8 16.5h7" /></svg></span>
+              <div><dt>Fecha y hora</dt><dd>{{ fechaPartido(partido.fechaIso) }}<small>Hora de Colombia</small></dd></div>
             </div>
-            <div><dt>Estadio</dt><dd>{{ partido.estadio || 'No publicado' }}<template v-if="partido.ciudad"> · {{ partido.ciudad }}</template></dd></div>
+            <div class="dato-informacion-partido">
+              <span class="icono-informacion-partido" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4h10l2 4-2 12H7L5 8l2-4Z" /><path d="M5.5 8h13M9 4 7.5 8M15 4l1.5 4M9 12h6M9 15h6" /></svg></span>
+              <div><dt>Competición</dt><dd>{{ nombreCompetencia }} · {{ partido.temporada }}<template v-if="partido.jornada"> · {{ partido.jornada }}</template></dd></div>
+            </div>
+            <div class="dato-informacion-partido">
+              <span class="icono-informacion-partido" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m8 3 4 2 4-2M8 21l4-2 4 2M10 10l5 2-5 2v-4Z" /></svg></span>
+              <div>
+                <dt>Canal o plataforma</dt>
+                <dd v-if="transmisionesConfirmadas.length">
+                  <ul class="lista-transmisiones-partido">
+                    <li v-for="transmision in transmisionesConfirmadas" :key="transmision.id">
+                      <strong>{{ transmision.channel }}</strong> · {{ transmision.platform }}
+                      <span> · {{ nombrePais(transmision.countryCode) }} · {{ etiquetasDistribucionProgramacion[transmision.distributionType] }}</span>
+                      <a :href="transmision.sourceUrl" target="_blank" rel="noopener noreferrer">Ver fuente</a>
+                      <small>{{ fechaVerificacion(transmision.verifiedAt || '') }}</small>
+                      <span v-if="transmision.notes">{{ transmision.notes }}</span>
+                    </li>
+                  </ul>
+                </dd>
+                <dd v-else-if="mostrarEnlaceWinSports">Win Sports+<small>Acceso y disponibilidad en Win Play</small></dd>
+                <dd v-else>Por confirmar. No hay una fuente verificada para este partido.</dd>
+              </div>
+            </div>
+            <div class="dato-informacion-partido">
+              <span class="icono-informacion-partido" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 20h18M5 20V9l7-5 7 5v11M8 20v-6h8v6M9 10h.01M15 10h.01" /></svg></span>
+              <div><dt>Estadio</dt><dd>{{ partido.estadio || 'No publicado' }}<template v-if="partido.ciudad"> · {{ partido.ciudad }}</template></dd></div>
+            </div>
           </dl>
-          <p>Verificamos las opciones de transmisión para el país indicado y enlazamos su fuente. Pont3la10 no transmite el partido.</p>
-        </section>
-        <section class="panel-noticias-lateral ficha-fuente-oficial">
-          <h2>Consulta la información oficial</h2>
-          <p>Confirma la programación y los datos publicados en la página de DIMAYOR.</p>
-          <a :href="urlProgramacionOficial" target="_blank" rel="noopener noreferrer" @click="registrarEvento('channel_click')">Ir al sitio oficial <span aria-hidden="true">↗</span></a>
+          <a
+            v-if="mostrarEnlaceWinSports"
+            class="boton-win-sports"
+            :href="urlWinPlay"
+            aria-label="Ver en vivo en Win Sports+, plataforma Win Play"
+            @click="gestionarClicWinPlay"
+          ><img src="/images/win-sports-ver-en-vivo.svg" alt="Ver en vivo en Win Sports+" width="600" height="180" loading="lazy" decoding="async"></a>
+          <p v-if="mostrarEnlaceWinSports" class="nota-win-sports">La disponibilidad depende de la programación y del acceso a Win Play.</p>
+          <p v-if="mostrarEnlaceWinSports && publicidadAutorizada && urlsPromocionales.length" class="nota-anuncio-win-play">El primer clic de esta sesión abre un anuncio patrocinado en otra pestaña.</p>
+          <p v-if="!mostrarEnlaceWinSports" class="nota-info-transmision">La programación de transmisión solo aparece cuando existe una fuente verificada.</p>
         </section>
         <section id="noticias" class="panel-noticias-lateral noticias-relacionadas-partido" aria-labelledby="titulo-noticias-partido">
           <div class="encabezado-panel-lateral"><h2 id="titulo-noticias-partido">Noticias relacionadas</h2><NuxtLink to="/liga-colombiana">Ver todas <span aria-hidden="true">→</span></NuxtLink></div>
@@ -413,7 +430,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.pagina-partido-seo { padding-bottom: 56px; }
+.pagina-partido-seo { padding-bottom: 56px; color: #e8f2fd; color-scheme: dark; }
 .encabezado-partido-seo { max-width: 940px; margin-bottom: 22px; }
 .encabezado-partido-seo h1 { margin: 8px 0; color: #f5f8ff; font-size: clamp(1.8rem, 4vw, 3rem); }
 .encabezado-partido-seo > p:last-child { color: #afc2db; line-height: 1.6; }
@@ -442,14 +459,12 @@ onMounted(() => {
 .centro-cartel-partido span { max-width: 360px; color: #d4e1ef; line-height: 1.5; }
 .detalles-cartel-partido { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 14px; color: #d3e0ef; text-align: center; }
 .detalles-cartel-partido span + span::before { content: '•'; margin-right: 14px; }
-.boton-programacion-oficial { display: inline-flex; min-height: 48px; align-items: center; justify-content: center; border: 1px solid #59d9ff; border-radius: 10px; background: #1269a9; color: #fff; padding: 0 24px; font-weight: 900; text-decoration: none; }
-.nota-marcador-partido { color: #c3d4e8; text-align: center; }
-.fuente-verificacion-partido { display: grid; justify-items: center; gap: 5px; max-width: 720px; border: 1px solid #294362; border-radius: 10px; background: rgba(4, 18, 36, .55); padding: 12px 16px; color: #b4c7dd; text-align: center; line-height: 1.5; }
-.fuente-verificacion-partido strong { color: #83dff6; }
-.fuente-verificacion-partido p { margin: 0; }
-.fuente-verificacion-partido .aviso-frescura-partido { border-left: 3px solid #d59a00; border-radius: 6px; background: #fff6db; padding: 8px 11px; color: #744b00; }
-.fuente-verificacion-partido .estado-frescura-partido { color: #b9edcc; font-weight: 700; }
-.fuente-verificacion-partido a { color: #83dff6; font-weight: 800; }
+.boton-win-sports { display: block; width: 100%; overflow: hidden; border-radius: 12px; text-decoration: none; transition: filter .18s ease, transform .18s ease; }
+.boton-win-sports:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.boton-win-sports:focus-visible { outline: 3px solid #ff9b52; outline-offset: 3px; }
+.boton-win-sports img { display: block; width: 100%; height: auto; border-radius: inherit; }
+.nota-win-sports, .nota-info-transmision { margin: 9px 1px 0; color: #a9bfd5; font-size: .76rem; line-height: 1.45; }
+.nota-anuncio-win-play { margin: 7px 1px 0; color: #93abc2; font-size: .69rem; line-height: 1.4; }
 .contenido-partido-seo-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(270px, .8fr); gap: 24px; margin-top: 28px; }
 .columna-principal-partido { display: grid; align-content: start; gap: 20px; min-width: 0; }
 .articulo-partido-seo, .lateral-partido-seo { display: grid; align-content: start; gap: 20px; min-width: 0; }
@@ -459,50 +474,103 @@ onMounted(() => {
 .tabs-partido-seo a:first-child { border-color: #83dff6; color: #83dff6; }
 .tabs-partido-seo a:hover, .tabs-partido-seo a:focus-visible { color: #fff; outline: 2px solid #59d9ff; outline-offset: -3px; }
 .bloque-datos-partido-seo, .preguntas-partido-seo, .contexto-partido-seo, .noticias-relacionadas-partido { border: 1px solid #294362; border-radius: 12px; background: #10243d; padding: 20px; }
-.ficha-fuente-oficial { border: 1px solid #294362; border-radius: 12px; background: #10243d; padding: 20px; }
-.ficha-fuente-oficial h2 { margin-top: 0; }
-.bloque-datos-partido-seo h2, .preguntas-partido-seo h2, .contexto-partido-seo h2, .ficha-fuente-oficial h2 { color: #f5f8ff; }
-.ficha-fuente-oficial p { color: #b4c7dd; line-height: 1.6; }
-.ficha-fuente-oficial a { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; border: 1px solid #59d9ff; border-radius: 10px; background: #1269a9; color: #fff; padding: 0 16px; font-weight: 850; text-decoration: none; }
+.bloque-datos-partido-seo h2, .preguntas-partido-seo h2, .contexto-partido-seo h2 { color: #f5f8ff; }
 .bloque-datos-partido-seo h2, .preguntas-partido-seo h2, .contexto-partido-seo h2 { margin-top: 0; }
 .bloque-datos-partido-seo dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .bloque-datos-partido-seo dl div { border-radius: 8px; background: rgba(4, 18, 36, .45); padding: 12px; }
 .bloque-datos-partido-seo dt { color: #83dff6; font-size: .8rem; font-weight: 900; }
 .bloque-datos-partido-seo dd { margin: 5px 0 0; line-height: 1.5; }
+.bloque-datos-partido-seo dd small { display: block; margin-top: 4px; }
+.encabezado-informacion-partido { margin: 0 0 15px; }
+.encabezado-informacion-partido > span { color: #f29b5b; font-size: .65rem; font-weight: 900; letter-spacing: .12em; }
+.encabezado-informacion-partido h2 { margin: 4px 0 0; font-size: 1.3rem; line-height: 1.2; }
+.encabezado-informacion-partido p { margin: 4px 0 0; color: #a9bfd5; font-size: .86rem; line-height: 1.4; }
+.bloque-datos-partido-seo dl.lista-informacion-partido { grid-template-columns: minmax(0, 1fr); gap: 9px; margin: 0 0 15px; }
+.bloque-datos-partido-seo dl.lista-informacion-partido .dato-informacion-partido { display: grid; grid-template-columns: 40px minmax(0, 1fr); align-items: center; gap: 11px; border: 1px solid rgba(148, 175, 200, .12); border-radius: 10px; background: rgba(4, 18, 36, .45); padding: 10px; }
+.icono-informacion-partido { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 9px; background: rgba(131, 223, 246, .1); color: #83dff6; }
+.icono-informacion-partido svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.7; }
+.dato-informacion-partido dt { color: #a9bfd5; font-size: .69rem; font-weight: 850; letter-spacing: .045em; text-transform: uppercase; }
+.dato-informacion-partido dd { margin: 3px 0 0; font-size: .87rem; font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+.dato-informacion-partido dd small { margin-top: 3px; color: #93abc2; font-size: .73rem; font-weight: 500; }
 .lista-transmisiones-partido { display: grid; gap: 8px; margin: 0; padding-left: 18px; }
 .lista-transmisiones-partido li { padding-left: 2px; }
 .lista-transmisiones-partido a { display: inline-block; margin-left: 7px; color: #83dff6; font-weight: 850; }
 .lista-transmisiones-partido small { display: block; margin-top: 3px; color: #a9bdd4; font-size: .7rem; }
 .bloque-datos-partido-seo > p, .contexto-partido-seo p, .preguntas-partido-seo p, .noticias-relacionadas-partido > p { color: #b4c7dd; line-height: 1.7; }
-.estado-marcador-partido { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; border-radius: 10px; background: #07192e; padding: 15px; font-size: 1.2rem; }
-.estado-marcador-partido strong { color: #83dff6; }
-.estado-marcador-partido span { color: #ffd342; font-size: 1.6rem; font-weight: 900; }
+.marcador-partido-resumen { display: grid; gap: 20px; overflow: hidden; border-color: #37536d; background: radial-gradient(ellipse at 50% -30%, rgba(42, 113, 152, .28), transparent 68%), linear-gradient(145deg, #10243d, #0a1c31); }
+.cabecera-marcador-resumen { display: flex; align-items: center; justify-content: space-between; gap: 14px; }
+.cabecera-marcador-resumen h2 { margin: 4px 0 0 !important; font-size: clamp(1.1rem, 2.3vw, 1.45rem); }
+.rotulo-marcador-resumen { color: #9eb9d3; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.insignia-estado-marcador { display: inline-flex; min-height: 31px; flex: 0 0 auto; align-items: center; gap: 8px; border: 1px solid #3d6681; border-radius: 999px; background: #123956; color: #b4ebff; padding: 0 12px; font-size: .68rem; font-weight: 900; letter-spacing: .07em; }
+.insignia-estado-marcador i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.insignia-estado-marcador--vivo { border-color: rgba(255, 77, 93, .65); background: rgba(153, 18, 42, .22); color: #ff8391; }
+.insignia-estado-marcador--vivo i { animation: pulso-estado-en-vivo 1.5s ease-in-out infinite; }
+.insignia-estado-marcador--final { border-color: rgba(131, 223, 246, .35); background: rgba(27, 93, 127, .22); color: #9ce9ff; }
+.insignia-estado-marcador--proximo { border-color: rgba(255, 211, 66, .38); background: rgba(119, 89, 12, .2); color: #ffdf73; }
+.pizarra-marcador-partido { display: grid; min-height: 138px; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 16px; border: 1px solid rgba(147, 177, 203, .15); border-radius: 13px; background: rgba(3, 15, 30, .5); padding: 18px 20px; }
+.equipo-resumen-marcador { display: flex; min-width: 0; align-items: center; gap: 13px; }
+.equipo-resumen-marcador :deep(img), .escudo-resumen-fallback { display: grid; width: 56px; height: 56px; flex: 0 0 56px; place-items: center; border: 2px solid #4ccdf3; border-radius: 50%; background: #123e60; object-fit: contain; padding: 8px; }
+.escudo-resumen-fallback { color: #f5f8ff; font-size: 1rem; font-weight: 900; }
+.equipo-resumen-marcador > div { display: grid; min-width: 0; gap: 4px; }
+.equipo-resumen-marcador small { color: #8ea9c4; font-size: .65rem; font-weight: 850; letter-spacing: .1em; }
+.equipo-resumen-marcador strong { color: #f5f8ff; font-size: clamp(.86rem, 1.4vw, 1rem); line-height: 1.3; overflow-wrap: anywhere; }
+.equipo-resumen-marcador--visitante { justify-content: flex-end; text-align: right; }
+.centro-marcador-resumen { display: grid; min-width: 124px; justify-items: center; gap: 3px; text-align: center; }
+.cifras-marcador-resumen { display: flex; align-items: center; gap: 13px; color: #fff; }
+.cifras-marcador-resumen strong { font-size: clamp(2.5rem, 5vw, 3.45rem); font-variant-numeric: tabular-nums; font-weight: 950; letter-spacing: -.06em; line-height: 1; }
+.cifras-marcador-resumen span { color: #ffd342; font-size: 1.5rem; font-weight: 800; }
+.versus-marcador-resumen { color: #d8e6f4; font-size: 1.75rem; font-weight: 900; letter-spacing: .08em; }
+.centro-marcador-resumen small { color: #91a9c0; font-size: .59rem; font-weight: 850; letter-spacing: .12em; }
+.detalle-eventos-partido { display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: start; gap: 11px; border-top: 1px solid rgba(147, 177, 203, .16); padding-top: 16px; }
+.detalle-eventos-partido > span { display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid rgba(131, 223, 246, .32); border-radius: 50%; color: #9ce9ff; font-family: Georgia, serif; font-size: 1rem; font-style: italic; font-weight: 800; }
+.detalle-eventos-partido strong { color: #e8f2fd; font-size: .88rem; }
+.detalle-eventos-partido p { margin: 4px 0 0; color: #a9bfd5; font-size: .82rem; line-height: 1.55; }
+@keyframes pulso-estado-en-vivo { 50% { opacity: .38; box-shadow: 0 0 0 5px rgba(255, 77, 93, .14); } }
 .preguntas-partido-seo details { border-top: 1px solid #294362; padding: 13px 0; }
-.preguntas-partido-seo summary { cursor: pointer; font-weight: 800; }
+.preguntas-partido-seo summary { color: inherit; cursor: pointer; font-weight: 800; }
 .preguntas-partido-seo a, .enlaces-mutua-partido a { color: #83dff6; font-weight: 800; }
 .enlaces-mutua-partido { display: flex; flex-wrap: wrap; gap: 14px 22px; padding: 10px 0; }
 .noticias-relacionadas-partido ol { display: grid; gap: 14px; margin: 16px 0 0; padding-left: 20px; }
 .noticias-relacionadas-partido li a { color: #fff; font-weight: 800; }
 .noticias-relacionadas-partido li p { margin: 4px 0 0; color: #afc2db; font-size: .8rem; }
+body.tema-publico-blanco .pagina-partido-seo { color: #13253d; color-scheme: light; }
 body.tema-publico-blanco .encabezado-partido-seo > p:last-child { color: #586980; }
 body.tema-publico-blanco .encabezado-partido-seo h1 { color: #13253d; }
 body.tema-publico-blanco .encabezado-partido-seo :deep(.barra-compartir-articulo) { border-color: #dce5f1; }
 body.tema-publico-blanco .encabezado-partido-seo :deep(.barra-compartir-articulo strong) { color: #45566e; }
 body.tema-publico-blanco .encabezado-partido-seo :deep(.barra-compartir-articulo button) { border-color: #dce3ec; background: #fff; color: #08204a; }
 body.tema-publico-blanco .bloque-datos-partido-seo, body.tema-publico-blanco .preguntas-partido-seo, body.tema-publico-blanco .contexto-partido-seo, body.tema-publico-blanco .noticias-relacionadas-partido { border-color: #dce5f1; background: #fff; color: #13253d; }
-body.tema-publico-blanco .bloque-datos-partido-seo h2, body.tema-publico-blanco .preguntas-partido-seo h2, body.tema-publico-blanco .contexto-partido-seo h2, body.tema-publico-blanco .ficha-fuente-oficial h2 { color: #13253d; }
-body.tema-publico-blanco .tabs-partido-seo, body.tema-publico-blanco .ficha-fuente-oficial { border-color: #dce5f1; background: #fff; color: #13253d; }
+body.tema-publico-blanco .bloque-datos-partido-seo h2, body.tema-publico-blanco .preguntas-partido-seo h2, body.tema-publico-blanco .contexto-partido-seo h2 { color: #13253d; }
+body.tema-publico-blanco .tabs-partido-seo { border-color: #dce5f1; background: #fff; color: #13253d; }
 body.tema-publico-blanco .tabs-partido-seo a { color: #586980; }
 body.tema-publico-blanco .tabs-partido-seo a:first-child { color: #145996; border-color: #145996; }
 body.tema-publico-blanco .tabs-partido-seo a:hover, body.tema-publico-blanco .tabs-partido-seo a:focus-visible { color: #08204a; }
-body.tema-publico-blanco .ficha-fuente-oficial p { color: #586980; }
-body.tema-publico-blanco .bloque-datos-partido-seo dl div, body.tema-publico-blanco .estado-marcador-partido { background: #f1f5f9; }
+body.tema-publico-blanco .bloque-datos-partido-seo dl div { background: #f1f5f9; }
 body.tema-publico-blanco .bloque-datos-partido-seo dt, body.tema-publico-blanco .preguntas-partido-seo a, body.tema-publico-blanco .enlaces-mutua-partido a { color: #145996; }
 body.tema-publico-blanco .bloque-datos-partido-seo > p, body.tema-publico-blanco .contexto-partido-seo p, body.tema-publico-blanco .preguntas-partido-seo p, body.tema-publico-blanco .noticias-relacionadas-partido > p, body.tema-publico-blanco .noticias-relacionadas-partido li p { color: #586980; }
-body.tema-publico-blanco .fuente-verificacion-partido { border-color: #dce5f1; background: #f8fafc; color: #586980; }
-body.tema-publico-blanco .fuente-verificacion-partido strong, body.tema-publico-blanco .fuente-verificacion-partido a { color: #145996; }
-body.tema-publico-blanco .fuente-verificacion-partido .estado-frescura-partido { color: #17653b; }
 body.tema-publico-blanco .noticias-relacionadas-partido li a { color: #13253d; }
+body.tema-publico-blanco .encabezado-informacion-partido > span { color: #a9551c; }
+body.tema-publico-blanco .encabezado-informacion-partido p { color: #586980; }
+body.tema-publico-blanco .bloque-datos-partido-seo dl.lista-informacion-partido .dato-informacion-partido { border-color: #e1e8f0; background: #f6f8fb; }
+body.tema-publico-blanco .icono-informacion-partido { background: #e9f3fa; color: #24618c; }
+body.tema-publico-blanco .dato-informacion-partido dt { color: #65788e; }
+body.tema-publico-blanco .dato-informacion-partido dd small { color: #66798e; }
+body.tema-publico-blanco .nota-win-sports, body.tema-publico-blanco .nota-info-transmision { color: #586980; }
+body.tema-publico-blanco .nota-anuncio-win-play { color: #68788b; }
+body.tema-publico-blanco .marcador-partido-resumen { border-color: #d4e0ed; background: radial-gradient(ellipse at 50% -30%, rgba(38, 135, 177, .1), transparent 68%), linear-gradient(145deg, #fff, #f5f8fc); }
+body.tema-publico-blanco .rotulo-marcador-resumen { color: #63748b; }
+body.tema-publico-blanco .insignia-estado-marcador--final { border-color: #b7dfeb; background: #eaf7fb; color: #126286; }
+body.tema-publico-blanco .insignia-estado-marcador--proximo { border-color: #ead99e; background: #fff9e3; color: #785b00; }
+body.tema-publico-blanco .pizarra-marcador-partido { border-color: #dce5ee; background: #f6f9fc; }
+body.tema-publico-blanco .equipo-resumen-marcador strong, body.tema-publico-blanco .versus-marcador-resumen { color: #13253d; }
+body.tema-publico-blanco .equipo-resumen-marcador small, body.tema-publico-blanco .centro-marcador-resumen small { color: #65788e; }
+body.tema-publico-blanco .escudo-resumen-fallback { background: #e7f1f8; color: #13253d; }
+body.tema-publico-blanco .cifras-marcador-resumen { color: #13253d; }
+body.tema-publico-blanco .detalle-eventos-partido { border-color: #dce5ee; }
+body.tema-publico-blanco .detalle-eventos-partido strong { color: #13253d; }
+body.tema-publico-blanco .detalle-eventos-partido p { color: #586980; }
+body.tema-publico-blanco .preguntas-partido-seo details { border-color: #dce5f1; }
+body.tema-publico-blanco .preguntas-partido-seo summary { color: #13253d; }
 @media (max-width: 760px) {
   .contenido-partido-seo-grid { grid-template-columns: minmax(0, 1fr); }
   .bloque-datos-partido-seo dl { grid-template-columns: minmax(0, 1fr); }
@@ -513,5 +581,23 @@ body.tema-publico-blanco .noticias-relacionadas-partido li a { color: #13253d; }
   .centro-cartel-partido { min-width: 0; max-width: 96px; }
   .centro-cartel-partido span { max-width: 90px; overflow-wrap: anywhere; }
 }
+@media (max-width: 560px) {
+  .cabecera-marcador-resumen { align-items: flex-start; }
+  .insignia-estado-marcador { min-height: 28px; padding: 0 9px; font-size: .59rem; }
+  .pizarra-marcador-partido { min-height: 122px; gap: 7px; padding: 14px 9px; }
+  .equipo-resumen-marcador, .equipo-resumen-marcador--visitante { flex-direction: column; justify-content: center; gap: 7px; text-align: center; }
+  .equipo-resumen-marcador :deep(img), .escudo-resumen-fallback { width: 42px; height: 42px; flex-basis: 42px; padding: 6px; }
+  .equipo-resumen-marcador strong { font-size: .76rem; }
+  .equipo-resumen-marcador small { font-size: .56rem; }
+  .centro-marcador-resumen { min-width: 78px; }
+  .cifras-marcador-resumen { gap: 6px; }
+  .cifras-marcador-resumen strong { font-size: 2.35rem; }
+  .cifras-marcador-resumen span { font-size: 1rem; }
+  .versus-marcador-resumen { font-size: 1.3rem; }
+  .detalle-eventos-partido { gap: 9px; }
+  .nota-win-sports, .nota-info-transmision { font-size: .73rem; }
+  .nota-anuncio-win-play { font-size: .67rem; }
+}
 @media (max-width: 500px) { .equipo-cartel-partido strong { font-size: .88rem; } .equipo-cartel-partido img, .escudo-cartel-fallback { width: 68px; height: 68px; border-width: 4px; padding: 9px; } .centro-cartel-partido span { font-size: .82rem; } .marca-cartel-partido { font-size: 1.1rem; } .detalles-cartel-partido { font-size: .84rem; } }
+@media (prefers-reduced-motion: reduce) { .boton-win-sports { transition: none; } .insignia-estado-marcador--vivo i { animation: none; } }
 </style>

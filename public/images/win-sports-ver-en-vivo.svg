@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="180" viewBox="0 0 600 180" fill="none">
+  <defs>
+    <linearGradient id="naranja" x1="0" y1="0" x2="600" y2="180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F47A20" />
+      <stop offset="1" stop-color="#E95719" />
+    </linearGradient>
+    <linearGradient id="brillo" x1="66" y1="8" x2="486" y2="171" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF" stop-opacity=".12" />
+      <stop offset="1" stop-color="#FFF" stop-opacity="0" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="592" height="172" rx="16" fill="url(#naranja)" />
+  <path d="M20 4h560a16 16 0 0 1 16 16v12L170 176H20a16 16 0 0 1-16-16V20A16 16 0 0 1 20 4Z" fill="url(#brillo)" />
+  <rect x="4.5" y="4.5" width="591" height="171" rx="15.5" stroke="#FFF" stroke-opacity=".18" />
+  <circle cx="83" cy="90" r="35" stroke="#FFF" stroke-width="3.5" />
+  <path d="M77 72v36l30-18-30-18Z" fill="#FFF" />
+  <text x="143" y="95" fill="#FFF" font-family="Arial, Helvetica, sans-serif" font-size="43" font-weight="900" letter-spacing="-1.8">WIN SPORTS+</text>
+  <path d="M145 111h82" stroke="#FFF" stroke-opacity=".62" stroke-width="2" stroke-linecap="round" />
+  <text x="241" y="130" fill="#FFF" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" letter-spacing="2.4">VER EN VIVO</text>
+</svg>
