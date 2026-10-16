@@ -2,10 +2,11 @@
 
 ## Fichas de partido: datos en vivo y nueva estructura (2026-10-15)
 
-- Implementación terminada en el worktree aislado `.codex-release-match-20261015`,
-  rama `codex/ficha-partido-produccion-20261015`, base `origin/main`
-  `de4de562787d6e45bf5334751300fc36c91662d3`. El checkout principal conserva
-  sus cambios locales sin tocar.
+- PR #137 integrado por squash en `7dac629a717441de0c0d2441fda8ba615307c2f8`;
+  despliegue Vercel Production `dpl_BwF9z5EjFP4x5d2wAYee1gbJeBua` quedó READY y
+  asignó `www.pont3la10.com` y `pont3la10.com`. La implementación se preparó en
+  el worktree aislado `.codex-release-match-20261015`; el checkout principal
+  conservó sus cambios locales sin tocar.
 - Las fichas reciben el marcador/status actual del snapshot solo al coincidir
   proveedor e ID externo, validando frescura y estado del fixture. La lectura
   SSR usa cliente privado solo en servidor. Respeta el contrato de publicación
@@ -16,14 +17,16 @@
   referencia: breadcrumb, hero del partido, resumen y navegación, con agenda,
   consulta oficial y noticias en columna lateral. El contenido se adapta a
   pantallas pequeñas y mantiene las secciones existentes.
+- En Production, `/api/partidos-seo/union-magdalena-vs-ind-yumbo` devuelve
+  `finished`, marcador 1–1 y snapshot consultado el 2026-10-15 23:58 UTC. La
+  ficha pública muestra FINALIZADO y 1–1 tanto en el cartel como en el resumen.
+  El Preview no hereda la bandera privada ni el dataset de Production.
 - Lint, typecheck, suite completa (114 archivos/590 pruebas), build de
-  producción y `git diff --check` pasan. La revisión de seguridad estática no
-  encontró P1/P2. El build emite únicamente DEP0155 de `@vue/shared` upstream.
-- PR #137 abierto; se está alineando la lectura con la autorización global ya
-  habilitada únicamente en Production. Tras actualizarlo: comprobar responsive
-  en preview, integrar y verificar el nuevo despliegue Production. El preview no
-  hereda la bandera privada ni certifica la publicación del dataset de Production.
-  Seguir `docs/agents/handoffs/2026-10-15-fichas-partido-produccion.md`.
+  producción y `git diff --check` pasan. CI de GitHub (build, typecheck, test,
+  lint y presupuesto móvil) y Vercel Preview pasan. Revisión de seguridad
+  estática sin hallazgos P1/P2. El build conserva el aviso upstream DEP0155 de
+  `@vue/shared`.
+- Handoff: `docs/agents/handoffs/2026-10-15-fichas-partido-produccion.md`.
 
 ## Enfoque editorial y portadas: verificado en Producción (2026-10-13)
 
