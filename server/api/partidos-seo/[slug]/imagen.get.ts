@@ -4,7 +4,10 @@ import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAno
 import { crearCartelSvg } from '~/server/utils/cartelPartidoSeo'
 import { obtenerEscudoPartidoSeo } from '~/server/utils/escudosPartidoSeo'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
-import { obtenerPartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
+import {
+  obtenerOpcionesLecturaSnapshotsPartidosSeo,
+  obtenerPartidoSeoPublico
+} from '~/server/utils/partidosSeoPublicos'
 import { obtenerTipoCachePartido } from '~/utils/cachePublica'
 
 const formatos = {
@@ -28,7 +31,11 @@ export default defineEventHandler(async (evento) => {
     throw createError({ statusCode: 400, statusMessage: 'El formato de imagen solicitado no es válido.' })
   }
 
-  const partido = await obtenerPartidoSeoPublico(obtenerClienteSupabaseAnonimo(evento), slug)
+  const partido = await obtenerPartidoSeoPublico(
+    obtenerClienteSupabaseAnonimo(evento),
+    slug,
+    obtenerOpcionesLecturaSnapshotsPartidosSeo(evento)
+  )
   const dimensiones = formatos[formato as keyof typeof formatos]
   const clave = [slug, formato, partido.estado || 'sin-estado', partido.verificadoEn].join('-')
   const ahora = Date.now()

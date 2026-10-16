@@ -32,6 +32,12 @@ const columnasSnapshot = [
 ].join(',')
 const limiteLecturaSnapshots = 1000
 
+export interface SnapshotFutbolPublicoConIdentidad {
+  proveedor: IdentificadorProveedorFutbol
+  idFixtureProveedor: string
+  fixture: FixtureFutbolPublico
+}
+
 // service_role omite RLS; esta lectura repite explícitamente sus puertas de publicación.
 export async function leerSnapshotsFutbolPublicos(
   cliente: SupabaseClient,
@@ -42,8 +48,23 @@ export async function leerSnapshotsFutbolPublicos(
     derechosPublicacionConfirmados?: boolean
   } = {}
 ): Promise<FixtureFutbolPublico[]> {
+  const snapshots = await leerSnapshotsFutbolPublicosConIdentidad(cliente, filtros)
+  return snapshots.map(snapshot => snapshot.fixture)
+}
+
+export async function leerSnapshotsFutbolPublicosConIdentidad(
+  cliente: SupabaseClient,
+  filtros: {
+    fechaNegocio?: string
+    fixtureId?: string
+    limite?: number
+    derechosPublicacionConfirmados?: boolean
+  } = {}
+): Promise<SnapshotFutbolPublicoConIdentidad[]> {
   if (filtros.fechaNegocio && !/^\d{4}-\d{2}-\d{2}$/.test(filtros.fechaNegocio)) return []
   if (filtros.fixtureId && !/^[0-9a-f-]{36}$/i.test(filtros.fixtureId)) return []
+  // La autorización privada global permite publicar el corpus existente de Production.
+  // Los mappings canónicos y la proyección segura siguen siendo obligatorios.
   const exigirAutorizacionPorRegistro = filtros.derechosPublicacionConfirmados !== true
 
   let consulta = cliente
@@ -68,19 +89,32 @@ export async function leerSnapshotsFutbolPublicos(
   ))
   if (!filas.length || !(await validarIdentidadesPublicas(cliente, filas, exigirAutorizacionPorRegistro))) return []
 
-  const salida: FixtureFutbolPublico[] = []
+  const salida: SnapshotFutbolPublicoConIdentidad[] = []
   for (const fila of filas) {
     try {
-      salida.push(proyectarFixtureFutbolPublico(
-        (exigirAutorizacionPorRegistro
-          ? fila
-          : { ...fila, is_public: true, publication_rights_confirmed: true }) as unknown as Parameters<typeof proyectarFixtureFutbolPublico>[0]
-      ))
+      const proveedor = esProveedor(fila.provider) ? fila.provider : null
+      const idFixtureProveedor = texto(fila.provider_fixture_id)
+      if (!proveedor || !idFixtureProveedor) continue
+      salida.push({
+        proveedor,
+        idFixtureProveedor,
+        fixture: proyectarFixtureFutbolPublico(
+          (exigirAutorizacionPorRegistro
+            ? fila
+            : { ...fila, is_public: true, publication_rights_confirmed: true }) as unknown as Parameters<typeof proyectarFixtureFutbolPublico>[0]
+        )
+      })
     } catch {
       // Un registro inválido se omite; nunca se devuelve su payload crudo.
     }
   }
-  return deduplicarFixturesFutbol(salida).slice(0, Math.min(Math.max(filtros.limite ?? 1000, 1), limiteLecturaSnapshots))
+  const wrappersPorFixture = new Map(salida.map(snapshot => [snapshot.fixture, snapshot]))
+  return deduplicarFixturesFutbol(salida.map(snapshot => snapshot.fixture))
+    .slice(0, Math.min(Math.max(filtros.limite ?? 1000, 1), limiteLecturaSnapshots))
+    .flatMap(fixture => {
+      const snapshot = wrappersPorFixture.get(fixture)
+      return snapshot ? [snapshot] : []
+    })
 }
 
 async function validarIdentidadesPublicas(

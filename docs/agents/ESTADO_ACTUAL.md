@@ -1,5 +1,30 @@
 # Estado actual de Pont3la10
 
+## Fichas de partido: datos en vivo y nueva estructura (2026-10-15)
+
+- Implementación terminada en el worktree aislado `.codex-release-match-20261015`,
+  rama `codex/ficha-partido-produccion-20261015`, base `origin/main`
+  `de4de562787d6e45bf5334751300fc36c91662d3`. El checkout principal conserva
+  sus cambios locales sin tocar.
+- Las fichas reciben el marcador/status actual del snapshot solo al coincidir
+  proveedor e ID externo, validando frescura y estado del fixture. La lectura
+  SSR usa cliente privado solo en servidor. Respeta el contrato de publicación
+  vigente: la bandera privada global de Production autoriza el corpus existente;
+  sin ella, exige `is_public` y confirmación de derechos por registro. En ambos
+  casos conserva los mappings exactos y una proyección pública segura.
+- La ficha conserva identidad visual Pont3la10 y adopta la jerarquía de la
+  referencia: breadcrumb, hero del partido, resumen y navegación, con agenda,
+  consulta oficial y noticias en columna lateral. El contenido se adapta a
+  pantallas pequeñas y mantiene las secciones existentes.
+- Lint, typecheck, suite completa (114 archivos/590 pruebas), build de
+  producción y `git diff --check` pasan. La revisión de seguridad estática no
+  encontró P1/P2. El build emite únicamente DEP0155 de `@vue/shared` upstream.
+- PR #137 abierto; se está alineando la lectura con la autorización global ya
+  habilitada únicamente en Production. Tras actualizarlo: comprobar responsive
+  en preview, integrar y verificar el nuevo despliegue Production. El preview no
+  hereda la bandera privada ni certifica la publicación del dataset de Production.
+  Seguir `docs/agents/handoffs/2026-10-15-fichas-partido-produccion.md`.
+
 ## Enfoque editorial y portadas: verificado en Producción (2026-10-13)
 
 - Prioridad del heartbeat: Liga BetPlay primero y Colombianos en Europa después;

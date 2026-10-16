@@ -56,7 +56,9 @@ describe('caché del calendario público para páginas SEO', () => {
           return consulta
         },
         order: () => consulta,
-        limit: async () => respuesta
+        limit: () => consulta,
+        then: (resolve: (valor: unknown) => unknown, reject: (error: unknown) => unknown) =>
+          Promise.resolve(respuesta).then(resolve, reject)
       }
       return consulta
     })

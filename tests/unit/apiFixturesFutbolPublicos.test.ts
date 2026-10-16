@@ -11,6 +11,7 @@ describe('API SSR pública de fixtures', () => {
     expect(configuracion).toContain("process.env.NUXT_FUTBOL_DERECHOS_PUBLICACION_CONFIRMADOS === 'true'")
     expect(ruta).toContain('derechosPublicacionConfirmados: configuracion.futbolDerechosPublicacionConfirmados === true')
     expect(lectura).toContain('filtros.derechosPublicacionConfirmados !== true')
+    expect(lectura).toContain(".eq('is_public', true)")
     expect(lectura).toContain("consulta = consulta.eq('is_public', true).eq('publication_rights_confirmed', true)")
     expect(lectura).toContain('validarIdentidadesPublicas(cliente, filas, exigirAutorizacionPorRegistro)')
     expect(lectura).toContain('proyectarFixtureFutbolPublico(')
