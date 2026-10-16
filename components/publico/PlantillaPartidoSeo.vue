@@ -461,6 +461,7 @@ onMounted(() => {
 .bloque-datos-partido-seo, .preguntas-partido-seo, .contexto-partido-seo, .noticias-relacionadas-partido { border: 1px solid #294362; border-radius: 12px; background: #10243d; padding: 20px; }
 .ficha-fuente-oficial { border: 1px solid #294362; border-radius: 12px; background: #10243d; padding: 20px; }
 .ficha-fuente-oficial h2 { margin-top: 0; }
+.bloque-datos-partido-seo h2, .preguntas-partido-seo h2, .contexto-partido-seo h2, .ficha-fuente-oficial h2 { color: #f5f8ff; }
 .ficha-fuente-oficial p { color: #b4c7dd; line-height: 1.6; }
 .ficha-fuente-oficial a { display: inline-flex; min-height: 44px; align-items: center; justify-content: center; border: 1px solid #59d9ff; border-radius: 10px; background: #1269a9; color: #fff; padding: 0 16px; font-weight: 850; text-decoration: none; }
 .bloque-datos-partido-seo h2, .preguntas-partido-seo h2, .contexto-partido-seo h2 { margin-top: 0; }
@@ -489,6 +490,7 @@ body.tema-publico-blanco .encabezado-partido-seo :deep(.barra-compartir-articulo
 body.tema-publico-blanco .encabezado-partido-seo :deep(.barra-compartir-articulo strong) { color: #45566e; }
 body.tema-publico-blanco .encabezado-partido-seo :deep(.barra-compartir-articulo button) { border-color: #dce3ec; background: #fff; color: #08204a; }
 body.tema-publico-blanco .bloque-datos-partido-seo, body.tema-publico-blanco .preguntas-partido-seo, body.tema-publico-blanco .contexto-partido-seo, body.tema-publico-blanco .noticias-relacionadas-partido { border-color: #dce5f1; background: #fff; color: #13253d; }
+body.tema-publico-blanco .bloque-datos-partido-seo h2, body.tema-publico-blanco .preguntas-partido-seo h2, body.tema-publico-blanco .contexto-partido-seo h2, body.tema-publico-blanco .ficha-fuente-oficial h2 { color: #13253d; }
 body.tema-publico-blanco .tabs-partido-seo, body.tema-publico-blanco .ficha-fuente-oficial { border-color: #dce5f1; background: #fff; color: #13253d; }
 body.tema-publico-blanco .tabs-partido-seo a { color: #586980; }
 body.tema-publico-blanco .tabs-partido-seo a:first-child { color: #145996; border-color: #145996; }
@@ -501,6 +503,15 @@ body.tema-publico-blanco .fuente-verificacion-partido { border-color: #dce5f1; b
 body.tema-publico-blanco .fuente-verificacion-partido strong, body.tema-publico-blanco .fuente-verificacion-partido a { color: #145996; }
 body.tema-publico-blanco .fuente-verificacion-partido .estado-frescura-partido { color: #17653b; }
 body.tema-publico-blanco .noticias-relacionadas-partido li a { color: #13253d; }
-@media (max-width: 760px) { .contenido-partido-seo-grid { grid-template-columns: minmax(0, 1fr); } .bloque-datos-partido-seo dl { grid-template-columns: minmax(0, 1fr); } .capa-datos-reproductor { min-height: 22vw; } }
-@media (max-width: 500px) { .equipos-cartel-partido { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; } .equipo-cartel-partido strong { font-size: .88rem; } .equipo-cartel-partido img, .escudo-cartel-fallback { width: 68px; height: 68px; border-width: 4px; padding: 9px; } .centro-cartel-partido span { font-size: .82rem; } .marca-cartel-partido { font-size: 1.1rem; } .detalles-cartel-partido { font-size: .84rem; } }
+@media (max-width: 760px) {
+  .contenido-partido-seo-grid { grid-template-columns: minmax(0, 1fr); }
+  .bloque-datos-partido-seo dl { grid-template-columns: minmax(0, 1fr); }
+  .capa-datos-reproductor { position: relative; inset: auto; width: 100%; min-height: 0; padding: 16px; }
+  .equipos-cartel-partido { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; }
+  .equipo-cartel-partido { min-width: 0; }
+  .equipo-cartel-partido strong { max-width: 100%; overflow-wrap: anywhere; }
+  .centro-cartel-partido { min-width: 0; max-width: 96px; }
+  .centro-cartel-partido span { max-width: 90px; overflow-wrap: anywhere; }
+}
+@media (max-width: 500px) { .equipo-cartel-partido strong { font-size: .88rem; } .equipo-cartel-partido img, .escudo-cartel-fallback { width: 68px; height: 68px; border-width: 4px; padding: 9px; } .centro-cartel-partido span { font-size: .82rem; } .marca-cartel-partido { font-size: 1.1rem; } .detalles-cartel-partido { font-size: .84rem; } }
 </style>
