@@ -6,10 +6,13 @@ import { clasificarCategoriaFutbol, type CategoriaFutbol } from '~/utils/clasifi
 
 const configuracion = useRuntimeConfig()
 const zonaHoraria = ref('America/Bogota')
+const urlResultados = import.meta.server && configuracion.public.apiOrigin
+  ? `${String(configuracion.public.apiOrigin).replace(/\/$/, '')}/api/resultados`
+  : '/api/resultados'
 // Se serializa para que servidor y cliente formateen el mismo instante durante
 // la hidratación, incluso si el render cruza la medianoche de Bogotá.
 const instanteRenderizado = useState('partidos-hoy-instante-renderizado', () => new Date().toISOString())
-const { data: respuesta, error, refresh } = await useFetch<RespuestaResultados>('/api/resultados', {
+const { data: respuesta, error, refresh } = await useFetch<RespuestaResultados>(urlResultados, {
   key: 'seo-partidos-hoy',
   query: computed(() => ({ deporte: 'futbol', timeZone: zonaHoraria.value }))
 })

@@ -7,9 +7,9 @@ import { crearProveedorFixturesDiariosPersistidos } from '~/server/utils/proveed
 import { crearRepositorioSnapshotsSupabase } from '~/server/utils/proveedoresFutbol/repositorioSnapshotsSupabase'
 import { sincronizarFixturesDiariosFutbol } from '~/server/utils/proveedoresFutbol/sincronizadorFixturesDiarios'
 import {
-  debeDiferirCargaInicialFutbol,
-  esperaHastaLasSeisBogota,
-  esperaHastaMantenimientoDiarioBogota
+  esperaHastaMantenimientoDiarioBogota,
+  presupuestoDiarioGoalApi,
+  type PlanCoberturaWorkerFutbol
 } from '~/utils/politicaWorkerFutbol'
 
 export default defineEventHandler(async (evento) => {
@@ -26,7 +26,11 @@ export default defineEventHandler(async (evento) => {
   const repositorio = crearRepositorioSnapshotsSupabase(cliente)
   let proveedores
   try {
-    proveedores = crearProveedoresFutbolConfigurados(config, {
+    proveedores = crearProveedoresFutbolConfigurados({
+      ...config,
+      footballPrimaryProvider: 'goal-api',
+      footballFallbackProvider: ''
+    }, {
       fechaNegocio,
       reservarPeticion: crearReservaDiariaSupabaseFutbol(cliente)
     })
@@ -38,46 +42,28 @@ export default defineEventHandler(async (evento) => {
   if (!Number.isInteger(maxConfigurado) || maxConfigurado < 0 || maxConfigurado > 100) {
     throw createError({ statusCode: 503, statusMessage: 'El límite de detalles de fútbol no es válido.', data: { codigo: 'LIMITE_DETALLES_FUTBOL_INVALIDO' } })
   }
-  // El sincronizador limita Goal API a dos fixtures por ciclo incluso si una
-  // configuración antigua pide tres. API-Football mantiene el lote de hasta 3.
-  const maxActualizaciones = Math.min(maxConfigurado, 3)
+  const maxActualizaciones = Math.min(maxConfigurado, 2)
   const principal = crearProveedorFixturesDiariosPersistidos(proveedores.principal, repositorio, fechaNegocio)
-  const secundario = proveedores.secundario
-    ? crearProveedorFixturesDiariosPersistidos(proveedores.secundario, repositorio, fechaNegocio)
-    : undefined
   const ahora = new Date()
-  if (debeDiferirCargaInicialFutbol(ahora)) {
-    const fuentes = [principal, ...(secundario ? [secundario] : [])]
-    const calendariosCompletos = await Promise.all(fuentes.map(fuente =>
-      repositorio.calendarioDiarioCompleto(fuente.id, fechaNegocio)
-    ))
-    if (calendariosCompletos.some(completo => !completo)) {
-      return {
-        estado: 'diferido_ventana_sin_partidos',
-        provider: principal.id,
-        solicitudes: 0,
-        fixturesRecibidos: 0,
-        fixturesGuardados: 0,
-        detallesActualizados: 0,
-        omitidos: null,
-        siguienteEjecucionMs: esperaHastaLasSeisBogota(ahora),
-        siguienteEjecucionMotivo: 'carga_inicial_diferida_hasta_las_seis_bogota'
-      }
-    }
-  }
-  const resultado = await sincronizarFixturesDiariosFutbol({ principal, ...(secundario ? { secundario } : {}), repositorio, fechaNegocio,
+  const resultado = await sincronizarFixturesDiariosFutbol({ principal, repositorio, fechaNegocio,
     maxActualizacionesPorCiclo: maxActualizaciones,
     puedeConsumir: crearGateReservaClasificaciones(provider => repositorio.reclamarVentanaWorker(provider, 'fixtures_diarios')) })
-  let proxima = { esperaMs: 5 * 60_000, motivo: 'intervalo_seguro_por_defecto' }
-  try {
-    // El resultado puede venir del fallback; planear solo con ese proveedor
-    // ocultaba snapshots vencidos del primario y dejaba dormido al worker.
-    proxima = await repositorio.calcularEsperaSiguienteEjecucion(
-      [principal.id, ...(secundario ? [secundario.id] : [])],
-      fechaNegocio
-    )
-  } catch {
-    // Si el cálculo de la próxima ventana falla, se conserva un ritmo moderado.
+  let proxima: PlanCoberturaWorkerFutbol = {
+    esperaMs: 5 * 60_000,
+    motivo: 'intervalo_seguro_por_defecto',
+    solicitudesUsadas: 0,
+    solicitudesRestantes: presupuestoDiarioGoalApi,
+    partidosEnCobertura: 0,
+    partidosPendientes: 0,
+    franjasCobertura: []
+  }
+  if (resultado.estado !== 'fallido') {
+    try {
+      proxima = await repositorio.calcularEsperaSiguienteEjecucion([principal.id], fechaNegocio)
+    } catch {
+      // Si falla la lectura de calendario o presupuesto, el transporte conserva
+      // el tope atómico y se reintenta a ritmo moderado.
+    }
   }
   const siguienteEjecucionMs = resultado.estado === 'sin_cuota'
     ? esperaHastaMantenimientoDiarioBogota(ahora)
@@ -87,6 +73,11 @@ export default defineEventHandler(async (evento) => {
   return {
     ...resultado,
     siguienteEjecucionMs,
+    solicitudesDiariasUsadas: proxima.solicitudesUsadas,
+    solicitudesDiariasRestantes: proxima.solicitudesRestantes,
+    partidosEnCobertura: proxima.partidosEnCobertura,
+    partidosPendientes: proxima.partidosPendientes,
+    franjasCobertura: proxima.franjasCobertura,
     siguienteEjecucionMotivo: resultado.estado === 'sin_cuota'
       ? 'cuota_agotada_hasta_mantenimiento_bogota'
       : resultado.estado === 'ocupado' ? 'ventana_ocupada_reintento_5m' : proxima.motivo

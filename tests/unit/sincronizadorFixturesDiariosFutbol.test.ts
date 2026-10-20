@@ -273,7 +273,7 @@ describe('sincronizador diario privado de fixtures', () => {
   })
 
   it('vuelve a consultar un programado con más de dos horas de retraso y guarda su estado corregido', async () => {
-    const partidoVencido = { ...partido, inicioUtc: '2026-10-01T16:00:00.000Z' }
+    const partidoVencido = { ...partido, inicioUtc: '2026-10-01T17:30:00.000Z' }
     const partidoFinalizado = { ...partidoVencido, estado: 'finished' as const, golesLocal: 2, golesVisitante: 1 }
     const actualizacion: PaqueteActualizacionFutbolProveedor = {
       partido: partidoFinalizado, eventos: [], alineaciones: [], estadisticas: []

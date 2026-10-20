@@ -27,7 +27,7 @@ function crearClienteMock(respuestas: Record<string, Array<{ data: unknown; erro
       const consulta: Record<string, (...args: unknown[]) => unknown> & {
         then?: (resolve: (valor: unknown) => unknown, reject: (error: unknown) => unknown) => unknown
       } = {}
-      for (const metodo of ['select', 'eq', 'in', 'gte', 'lt', 'range', 'order', 'upsert', 'insert', 'update']) {
+      for (const metodo of ['select', 'eq', 'in', 'gte', 'lt', 'range', 'order', 'upsert', 'insert', 'update', 'maybeSingle']) {
         consulta[metodo] = vi.fn((...args: unknown[]) => {
           llamadas.push({ tabla, metodo, args })
           return consulta
@@ -135,20 +135,29 @@ describe('repositorio privado de snapshots de fútbol en Supabase', () => {
     })
   })
 
-  it('calcula el siguiente sondeo sobre primario y fallback para no ignorar snapshots vencidos', async () => {
+  it('calcula el siguiente sondeo según la cobertura Goal API y el presupuesto restante', async () => {
     const instante = new Date('2026-10-03T02:00:00.000Z')
     const { cliente, llamadas } = crearClienteMock({
       football_fixtures_today: [{ data: [
-        { provider: 'api-football', status: 'scheduled', kickoff_at: '2026-10-02T22:00:00.000Z', details_fetched_at: null },
-        { provider: 'goal-api', status: 'finished', kickoff_at: '2026-10-02T20:00:00.000Z', details_fetched_at: '2026-10-02T22:40:00.000Z' }
-      ], error: null }]
+        { provider: 'goal-api', status: 'live', kickoff_at: '2026-10-03T01:00:00.000Z', details_fetched_at: null }
+      ], error: null }],
+      football_provider_daily_usage: [{ data: { requests_used: 100 }, error: null }]
     })
     const repositorio = crearRepositorioSnapshotsSupabase(cliente)
 
-    await expect(repositorio.calcularEsperaSiguienteEjecucion(['api-football', 'goal-api'], '2026-10-02', instante))
-      .resolves.toEqual({ esperaMs: 60_000, motivo: 'fixture_debe_actualizarse' })
-    expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'in', args: ['provider', ['api-football', 'goal-api']] })
+    const plan = await repositorio.calcularEsperaSiguienteEjecucion(['api-football', 'goal-api'], '2026-10-02', instante)
+    expect(plan).toMatchObject({
+      esperaMs: 15_000,
+      motivo: 'reparto_presupuesto_por_cobertura',
+      solicitudesUsadas: 100,
+      solicitudesRestantes: 800,
+      partidosEnCobertura: 1,
+      partidosPendientes: 1,
+      franjasCobertura: [expect.objectContaining({ solicitudesAsignadas: 800 })]
+    })
+    expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['provider', 'goal-api'] })
     expect(llamadas).toContainEqual({ tabla: 'football_fixtures_today', metodo: 'eq', args: ['business_date', '2026-10-02'] })
+    expect(llamadas).toContainEqual({ tabla: 'football_provider_daily_usage', metodo: 'maybeSingle', args: [] })
   })
 
   it('lee la última actualización por proveedor para rotar detalles con justicia', async () => {

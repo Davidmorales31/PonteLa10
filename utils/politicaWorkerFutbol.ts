@@ -20,8 +20,173 @@ export interface SnapshotParaSchedulerFutbol {
   detallesActualizadosEn: string | null
 }
 
+export interface PlanCoberturaWorkerFutbol {
+  esperaMs: number
+  motivo: string
+  solicitudesUsadas: number
+  solicitudesRestantes: number
+  partidosEnCobertura: number
+  partidosPendientes: number
+  franjasCobertura: FranjaCoberturaWorkerFutbol[]
+}
+
+export interface FranjaCoberturaWorkerFutbol {
+  desdeBogota: string
+  hastaBogota: string
+  partidosSimultaneos: number
+  solicitudesAsignadas: number
+}
+
+/** Reparte el saldo diario entre minutos con partidos de las ligas priorizadas. */
+export function calcularSiguienteEjecucionCoberturaFutbol(
+  snapshots: SnapshotParaSchedulerFutbol[],
+  solicitudesUsadas: number,
+  ahoraMs = Date.now(),
+  maxSolicitudesPorActivacion = 2
+): PlanCoberturaWorkerFutbol {
+  const usadas = Number.isInteger(solicitudesUsadas) && solicitudesUsadas > 0 ? solicitudesUsadas : 0
+  const restantes = Math.max(0, presupuestoDiarioGoalApi - usadas)
+  const ventanas = snapshots
+    .filter(snapshot => snapshot.provider === 'goal-api')
+    .flatMap(snapshot => {
+      const inicio = Date.parse(snapshot.inicioUtc)
+      if (!Number.isFinite(inicio)) return []
+      if (snapshot.estado === 'finished' && !snapshot.detallesActualizadosEn) {
+        return [{ inicio: ahoraMs, fin: ahoraMs + esperaMinimaCoberturaMs }]
+      }
+      if (['finished', 'cancelled', 'abandoned', 'postponed', 'unknown'].includes(snapshot.estado)) return []
+      if (snapshot.estado === 'scheduled' && inicio < ahoraMs - duracionProgramadaMs) return []
+
+      const inicioVentana = inicio - anticipacionCoberturaMs
+      const finVentana = snapshot.estado === 'live' || snapshot.estado === 'halftime'
+        ? Math.max(inicio + duracionEnVivoMs, ahoraMs + 60_000)
+        : inicio + duracionProgramadaMs
+      return finVentana > ahoraMs ? [{ inicio: inicioVentana, fin: finVentana }] : []
+    })
+  const activas = ventanas.filter(ventana => ventana.inicio <= ahoraMs && ventana.fin > ahoraMs).length
+  const pendientes = ventanas.filter(ventana => ventana.fin > ahoraMs).length
+  const franjasCobertura = repartirPresupuestoEnFranjas(ventanas, restantes, ahoraMs)
+
+  if (restantes === 0) {
+    return {
+      esperaMs: esperaHastaMantenimientoDiarioBogota(new Date(ahoraMs)),
+      motivo: 'presupuesto_diario_agotado',
+      solicitudesUsadas: usadas,
+      solicitudesRestantes: 0,
+      partidosEnCobertura: activas,
+      partidosPendientes: pendientes,
+      franjasCobertura
+    }
+  }
+
+  if (!ventanas.length) {
+    return {
+      esperaMs: esperaHastaMantenimientoDiarioBogota(new Date(ahoraMs)),
+      motivo: 'sin_ventanas_de_partidos',
+      solicitudesUsadas: usadas,
+      solicitudesRestantes: restantes,
+      partidosEnCobertura: 0,
+      partidosPendientes: 0,
+      franjasCobertura
+    }
+  }
+
+  if (activas === 0) {
+    const proximas = ventanas.map(ventana => ventana.inicio).filter(inicio => inicio > ahoraMs)
+    const proximaInicio = proximas.length ? Math.min(...proximas) : Number.NaN
+    if (!Number.isFinite(proximaInicio)) {
+      return {
+        esperaMs: esperaHastaMantenimientoDiarioBogota(new Date(ahoraMs)),
+        motivo: 'sin_ventanas_de_partidos',
+        solicitudesUsadas: usadas,
+        solicitudesRestantes: restantes,
+        partidosEnCobertura: 0,
+        partidosPendientes: 0,
+        franjasCobertura
+      }
+    }
+    return {
+      esperaMs: Math.max(esperaMinimaCoberturaMs, proximaInicio - ahoraMs),
+      motivo: 'espera_inicio_ventana',
+      solicitudesUsadas: usadas,
+      solicitudesRestantes: restantes,
+      partidosEnCobertura: 0,
+      partidosPendientes: pendientes,
+      franjasCobertura
+    }
+  }
+
+  const minutosFixturePendientesMs = ventanas.reduce(
+    (total, ventana) => total + Math.max(0, ventana.fin - Math.max(ahoraMs, ventana.inicio)), 0
+  )
+  const solicitudesPorPartidoMs = minutosFixturePendientesMs / restantes
+  const solicitudesDelProximoCiclo = Math.min(
+    Math.max(1, Math.trunc(maxSolicitudesPorActivacion)), activas
+  )
+  const esperaMs = Math.max(
+    esperaMinimaCoberturaMs,
+    Math.ceil(solicitudesPorPartidoMs * solicitudesDelProximoCiclo / activas)
+  )
+
+  return {
+    esperaMs,
+    motivo: 'reparto_presupuesto_por_cobertura',
+    solicitudesUsadas: usadas,
+    solicitudesRestantes: restantes,
+    partidosEnCobertura: activas,
+    partidosPendientes: pendientes,
+    franjasCobertura
+  }
+}
+
+function repartirPresupuestoEnFranjas(
+  ventanas: Array<{ inicio: number; fin: number }>,
+  solicitudes: number,
+  ahoraMs: number
+): FranjaCoberturaWorkerFutbol[] {
+  const limites = [...new Set(ventanas.flatMap(ventana => [Math.max(ahoraMs, ventana.inicio), ventana.fin]))]
+    .sort((a, b) => a - b)
+  const segmentos = limites.slice(0, -1).flatMap((desde, indice) => {
+    const hasta = limites[indice + 1]!
+    if (hasta <= desde) return []
+    const simultaneos = ventanas.filter(ventana => ventana.inicio < hasta && ventana.fin > desde).length
+    return simultaneos > 0 ? [{ desde, hasta, simultaneos, peso: (hasta - desde) * simultaneos }] : []
+  })
+  const pesoTotal = segmentos.reduce((total, segmento) => total + segmento.peso, 0)
+  if (!pesoTotal) return []
+
+  let solicitudesAcumuladas = 0
+  let pesoAcumulado = 0
+  return segmentos.map((segmento) => {
+    pesoAcumulado += segmento.peso
+    const asignadasAcumuladas = Math.round(solicitudes * pesoAcumulado / pesoTotal)
+    const asignadas = asignadasAcumuladas - solicitudesAcumuladas
+    solicitudesAcumuladas = asignadasAcumuladas
+    return {
+      desdeBogota: fechaHoraBogota(segmento.desde),
+      hastaBogota: fechaHoraBogota(segmento.hasta),
+      partidosSimultaneos: segmento.simultaneos,
+      solicitudesAsignadas: asignadas
+    }
+  })
+}
+
+function fechaHoraBogota(instante: number): string {
+  const partes = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Bogota', year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+  }).formatToParts(new Date(instante))
+  const obtener = (tipo: string) => partes.find(parte => parte.type === tipo)?.value || ''
+  return `${obtener('year')}-${obtener('month')}-${obtener('day')} ${obtener('hour')}:${obtener('minute')}`
+}
+
 const minimoReintentoMs = 60_000
 const maximoDescansoMs = 6 * 60 * 60_000
+export const presupuestoDiarioGoalApi = 900
+const anticipacionCoberturaMs = 20 * 60_000
+const duracionProgramadaMs = 150 * 60_000
+const duracionEnVivoMs = 4 * 60 * 60_000
+const esperaMinimaCoberturaMs = 15_000
 
 /** Decide la siguiente activación a partir del siguiente detalle realmente vencido. */
 export function calcularSiguienteEjecucionWorkerFutbol(

@@ -1,1 +1,4 @@
 _RESPALDOS_POR_ELIMINAR/
+fabrica-landings/
+**/node_modules/
+**/.next/

@@ -28,7 +28,7 @@ describe('HU-MON-01/02 · anuncios contextuales', () => {
   it('ubica el anuncio de futbolistas después de actualidad, no antes del perfil', () => {
     const indiceNoticias = paginaJugador.indexOf('aria-labelledby="titulo-noticias-jugador"')
     const indiceAnuncio = paginaJugador.indexOf('<PublicidadAdsterraSlot')
-    const indiceColumnaSecundaria = paginaJugador.indexOf('class="columna-jugador-secundaria"')
+    const indiceColumnaSecundaria = paginaJugador.indexOf('class="columna-lateral-jugador"')
 
     expect(indiceNoticias).toBeGreaterThanOrEqual(0)
     expect(indiceAnuncio).toBeGreaterThan(indiceNoticias)

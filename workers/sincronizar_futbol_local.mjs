@@ -1,14 +1,13 @@
 import { createHmac, randomUUID } from 'node:crypto'
 
 const rutas = [
-  { nombre: 'calendario', ruta: '/api/internal/futbol/calendario', timeoutMs: 20 * 60 * 1000, esperaFalloMs: 30 * 60 * 1000 },
-  { nombre: 'fixtures', ruta: '/api/internal/futbol/fixtures' },
-  { nombre: 'resultados_liga', ruta: '/api/internal/futbol/liga-resultados' },
-  { nombre: 'clasificaciones', ruta: '/api/internal/futbol/clasificaciones', intervaloMs: 15 * 60 * 1000 },
-  { nombre: 'tabla_liga', ruta: '/api/internal/futbol/tabla-dimayor', intervaloMs: 15 * 60 * 1000 }
+  { nombre: 'fixtures', ruta: '/api/internal/futbol/fixtures', intervaloMs: 15 * 1000 },
+  { nombre: 'resultados_liga', ruta: '/api/internal/futbol/liga-resultados', intervaloMs: 15 * 60 * 1000 },
+  { nombre: 'tabla_liga', ruta: '/api/internal/futbol/tabla-dimayor', intervaloMs: 60 * 1000, esperaFalloMs: 60 * 1000 },
+  { nombre: 'calendario', ruta: '/api/internal/futbol/calendario', timeoutMs: 20 * 60 * 1000, esperaFalloMs: 30 * 60 * 1000 }
 ]
 const intervaloPredeterminadoMs = 5 * 60 * 1000
-const intervaloMinimoMs = 5 * 60 * 1000
+const intervaloMinimoMs = 5 * 1000
 const intervaloMaximoMs = 24 * 60 * 60 * 1000
 const esperaBaseFalloMs = 5 * 60 * 1000
 const esperaMaximaFalloMs = 60 * 60 * 1000
@@ -58,6 +57,13 @@ export function crearSincronizadorFutbolLocal({
         try {
           const resultado = await solicitar(endpoint.ruta, secreto, baseUrl, transporte, ahora, endpoint.timeoutMs)
           const resumen = resumir(resultado)
+          if (endpoint.nombre === 'fixtures'
+            && (resumen.detallesActualizados > 0 || resumen.fixturesGuardados > 0)) {
+            proximasEjecuciones.set('resultados_liga', ahora())
+          }
+          if (endpoint.nombre === 'resultados_liga' && resumen.partidosFinalizados > 0) {
+            proximasEjecuciones.set('tabla_liga', ahora())
+          }
           const fallos = resumen.estado === 'fallido'
             ? (fallosPorRuta.get(endpoint.nombre) || 0) + 1
             : 0
@@ -138,17 +144,35 @@ function resumir(resultado) {
   }
   const campos = ['estado', 'provider', 'solicitudes', 'fixturesRecibidos', 'fixturesGuardados',
     'detallesActualizados', 'siguienteEjecucionMs', 'siguienteEjecucionMotivo', 'omitidos',
-    'clasificacionesRecibidas', 'clasificacionesGuardadas', 'posicionesPublicasActualizadas',
-    'fuente', 'marcadoresActualizados', 'partidosRevisados', 'errorCode']
+    'posicionesPublicasActualizadas', 'partidosEnCobertura', 'partidosPendientes',
+    'solicitudesDiariasUsadas', 'solicitudesDiariasRestantes', 'fuente',
+    'marcadoresActualizados', 'partidosRevisados', 'partidosFinalizados', 'errorCode']
   const resumen = Object.fromEntries(campos.flatMap(campo => {
     const valor = resultado[campo]
     return typeof valor === 'string' || (typeof valor === 'number' && Number.isFinite(valor))
       ? [[campo, valor]]
       : []
   }))
+  const franjas = resumirFranjas(resultado.franjasCobertura)
+  if (franjas) resumen.franjasCobertura = franjas
   const omitidos = resumirOmitidos(resultado.omitidos)
   if (omitidos) resumen.omitidos = omitidos
   return resumen
+}
+
+function resumirFranjas(valor) {
+  if (!Array.isArray(valor)) return null
+  const franjas = valor.slice(0, 24).flatMap(franja => {
+    if (!franja || typeof franja !== 'object' || Array.isArray(franja)) return []
+    const { desdeBogota, hastaBogota, partidosSimultaneos, solicitudesAsignadas } = franja
+    if (typeof desdeBogota !== 'string' || typeof hastaBogota !== 'string'
+      || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(desdeBogota)
+      || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(hastaBogota)
+      || !Number.isInteger(partidosSimultaneos) || partidosSimultaneos < 1
+      || !Number.isInteger(solicitudesAsignadas) || solicitudesAsignadas < 0) return []
+    return [{ desdeBogota, hastaBogota, partidosSimultaneos, solicitudesAsignadas }]
+  })
+  return franjas.length ? franjas : null
 }
 
 function resumirOmitidos(valor) {
