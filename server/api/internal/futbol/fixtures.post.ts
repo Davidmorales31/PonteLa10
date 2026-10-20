@@ -8,7 +8,8 @@ import { crearRepositorioSnapshotsSupabase } from '~/server/utils/proveedoresFut
 import { sincronizarFixturesDiariosFutbol } from '~/server/utils/proveedoresFutbol/sincronizadorFixturesDiarios'
 import {
   esperaHastaMantenimientoDiarioBogota,
-  presupuestoDiarioGoalApi
+  presupuestoDiarioGoalApi,
+  type PlanCoberturaWorkerFutbol
 } from '~/utils/politicaWorkerFutbol'
 
 export default defineEventHandler(async (evento) => {
@@ -47,7 +48,7 @@ export default defineEventHandler(async (evento) => {
   const resultado = await sincronizarFixturesDiariosFutbol({ principal, repositorio, fechaNegocio,
     maxActualizacionesPorCiclo: maxActualizaciones,
     puedeConsumir: crearGateReservaClasificaciones(provider => repositorio.reclamarVentanaWorker(provider, 'fixtures_diarios')) })
-  let proxima = {
+  let proxima: PlanCoberturaWorkerFutbol = {
     esperaMs: 5 * 60_000,
     motivo: 'intervalo_seguro_por_defecto',
     solicitudesUsadas: 0,
