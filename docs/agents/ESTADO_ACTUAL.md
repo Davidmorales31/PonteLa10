@@ -1,5 +1,26 @@
 # Estado actual de Pont3la10
 
+## Publicación de Inicio y perfiles de futbolistas (Production, 2026-10-20)
+
+- PR #139 se integró en `main` (`a6b15eb27d2800b491acd775909bde5c0ec57f29`).
+  Vercel Production quedó `READY` en el deployment
+  `dpl_5BQZsdT41w2jYtKDxRLQn6QcZ4HM`, con alias `www.pont3la10.com` y
+  `pont3la10.com`.
+- Smoke HTTP en Production: `/`, `/partidos-hoy`, `/colombianos-en-europa` y
+  `/jugadores/luis-diaz` respondieron 200. Inicio mostró la sección de partidos,
+  el directorio incluyó 14 fichas y los 14 retratos devolvieron HTTP 200. El
+  perfil de Luis Díaz renderizó la sección de noticias relacionadas.
+- La migración de cobertura de fútbol quedó aplicada en Supabase Production.
+  El registro del proyecto es `20261020062327_futbol_cobertura_diaria_y_finales`;
+  columnas y triggers están presentes, RLS sigue habilitado y los RPC privados
+  permiten `service_role` y rechazan `anon`.
+- CI del PR: pruebas unitarias, lint, typecheck, build/Lighthouse y Vercel Preview
+  aprobados. La verificación de Supabase Preview se omitió porque esa rama no está
+  habilitada para el proyecto.
+- La migración local se renombró a la versión registrada por Supabase para que
+  futuras sincronizaciones no intenten aplicarla de nuevo.
+- Handoff: `docs/agents/handoffs/2026-10-20-produccion-inicio.md`.
+
 ## Anuncios previos y noticias en fichas de jugadores (2026-10-20)
 
 - Al tocar una tarjeta de video, si la persona autorizó publicidad, se abre el
