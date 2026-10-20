@@ -25,4 +25,4 @@
 - **Siguiente acción exacta:** Para la próxima migración, comprobar la lista de
   versiones de Supabase Production antes de ejecutar `db push`.
 - **Commit base:** `a6b15eb27d2800b491acd775909bde5c0ec57f29`.
-- **Commit final:** sin commit | `<sha>`
+- **Commit final:** `59e9f30ef41cdbbadb44d14c970dd9ee449df884`.
