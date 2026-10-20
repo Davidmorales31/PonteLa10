@@ -15,13 +15,11 @@ const {
   inicializarConsentimiento
 } = useAnaliticaPublica()
 const { modoBlancoActivo } = useTemaPublico()
-const interfazLista = ref(false)
 const analiticaSeleccionada = ref(decision.value === 'aceptada')
 const publicidadSeleccionada = ref(decisionPublicidad.value === 'aceptada')
 
 onMounted(() => {
   inicializarConsentimiento()
-  interfazLista.value = true
 })
 
 watch(preferenciasAbiertas, (abiertas) => {
@@ -41,7 +39,7 @@ function guardarPreferencias() {
 
 <template>
   <aside
-    v-if="interfazLista && mostrarAviso"
+    v-if="mostrarAviso"
     class="aviso-analitica"
     :class="[
       { 'aviso-analitica--tema-blanco': modoBlancoActivo },
