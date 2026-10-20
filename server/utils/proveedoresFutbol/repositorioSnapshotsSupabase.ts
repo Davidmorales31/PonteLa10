@@ -12,6 +12,7 @@ import type {
 import type { RepositorioWorkerFixturesFutbol } from './sincronizadorFixturesDiarios'
 import {
   calcularSiguienteEjecucionCoberturaFutbol,
+  type PlanCoberturaWorkerFutbol,
   type SnapshotParaSchedulerFutbol
 } from '~/utils/politicaWorkerFutbol'
 
@@ -22,14 +23,9 @@ const diferenciaBogotaUtc = 5 * 60 * 60 * 1000
 export interface RepositorioSnapshotsSupabaseFutbol extends RepositorioWorkerFixturesFutbol {
   cargarFixturesDiarios(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<PartidoFutbolProveedor[] | null>
   calendarioDiarioCompleto(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<boolean>
-  calcularEsperaSiguienteEjecucion(providers: IdentificadorProveedorFutbol[], fechaNegocio: string, ahora?: Date): Promise<{
-    esperaMs: number
-    motivo: string
-    solicitudesUsadas: number
-    solicitudesRestantes: number
-    partidosEnCobertura: number
-    partidosPendientes: number
-  }>
+  calcularEsperaSiguienteEjecucion(
+    providers: IdentificadorProveedorFutbol[], fechaNegocio: string, ahora?: Date
+  ): Promise<PlanCoberturaWorkerFutbol>
   cargarTiemposDetalle(provider: IdentificadorProveedorFutbol, fechaNegocio: string, idsFixture: string[]): Promise<Map<string, string | null>>
   asegurarMappingsIniciales(
     provider: IdentificadorProveedorFutbol,

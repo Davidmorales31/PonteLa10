@@ -65,7 +65,7 @@ describe('hub de Selección Colombia', () => {
   })
 
   it('conserva fuentes oficiales, marcador corroborado y la sustitución de la convocatoria femenina', () => {
-    expect(fechaVerificacionSeleccion).toBe('2026-10-06')
+    expect(fechaVerificacionSeleccion).toBe('2026-10-19')
     expect(resultadosOficialesSeleccion.map(resultado => [
       resultado.local,
       resultado.marcadorLocal,
@@ -108,9 +108,9 @@ describe('hub de Selección Colombia', () => {
   })
 
   it('indexa con suficientes datos oficiales recientes y deja de hacerlo cuando quedan desactualizados', () => {
-    expect(contarContenidoSeleccionVerificado('2026-10-06')).toBeGreaterThanOrEqual(3)
+    expect(contarContenidoSeleccionVerificado('2026-10-19')).toBeGreaterThanOrEqual(3)
     expect(contarContenidoSeleccionVerificado('2026-11-21')).toBeGreaterThanOrEqual(3)
-    expect(contarContenidoSeleccionVerificado('2026-12-15')).toBe(0)
+    expect(contarContenidoSeleccionVerificado('2026-12-19')).toBe(0)
     expect(obtenerFechaColombia(new Date('2026-10-07T04:30:00.000Z'))).toBe('2026-10-06')
   })
 })

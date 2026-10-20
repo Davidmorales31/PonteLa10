@@ -55,11 +55,14 @@ describe('configuración privada de proveedores de fútbol', () => {
       })
 
       const urls = fetchSimulado.mock.calls.map(([url]) => new URL(String(url)))
-      expect(urls).toHaveLength(16)
+      expect(urls).toHaveLength(3)
       expect(urls.every(url => url.pathname === '/v1/fixtures/date/2026-10-01'
         && Boolean(url.searchParams.get('leagueId')))).toBe(true)
-      expect(new Set(urls.map(url => url.searchParams.get('leagueId'))).size).toBe(16)
-      expect(urls.some(url => url.searchParams.get('leagueId') === '356')).toBe(true)
+      expect(new Set(urls.map(url => url.searchParams.get('leagueId')))).toEqual(new Set([
+        'cmr77dvv600aprx06o7y7lnfu',
+        'cmr77dvv600asrx06y051mw74',
+        'cmr77dvv600aqrx068v1tyhd0'
+      ]))
     } finally {
       vi.stubGlobal('fetch', fetchOriginal)
     }

@@ -35,7 +35,7 @@ function respuestaApi(datos: unknown, opciones: { pagination?: unknown; status?:
 }
 
 describe('adaptador privado GOAL API', () => {
-  it('incluye amistosos internacionales en la consulta de respaldo para detectar a Colombia', async () => {
+  it('limita la consulta de respaldo a las tres competencias colombianas priorizadas', async () => {
     const transporte = vi.fn<TransporteGoalApi>(async () => respuestaApi([]))
     const proveedor = crearProveedorGoalApi({
       apiKey: 'secreto-de-prueba',
@@ -45,7 +45,12 @@ describe('adaptador privado GOAL API', () => {
 
     await proveedor.obtenerPartidosPorFecha({ fecha: '2026-10-02', zonaHoraria: 'America/Bogota' })
 
-    expect(transporte.mock.calls.some(([url]) => new URL(url).searchParams.get('leagueId') === '356')).toBe(true)
+    const leagueIds = transporte.mock.calls.map(([url]) => new URL(url).searchParams.get('leagueId'))
+    expect(new Set(leagueIds)).toEqual(new Set([
+      'cmr77dvv600aprx06o7y7lnfu',
+      'cmr77dvv600asrx06y051mw74',
+      'cmr77dvv600aqrx068v1tyhd0'
+    ]))
   })
 
   it('normaliza fixtures y conserva kickoff UTC y cuota', async () => {

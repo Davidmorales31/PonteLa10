@@ -3,15 +3,19 @@ import { jugadoresColombianosEuropa, partidoCorrespondeAClubJugador } from '../.
 import { evaluarIndexabilidad } from '../../utils/indexabilidadPublica'
 
 describe('perfiles públicos de futbolistas colombianos en Europa', () => {
-  const ahora = Date.parse('2026-10-06T20:00:00.000Z')
+  const ahora = Date.parse('2026-10-20T20:00:00.000Z')
 
-  it('incluye solo fichas con datos mínimos, fuente oficial reciente y descripción verificada', () => {
+  it('conserva los 14 perfiles y solo indexa los que cumplen calidad y fuente oficial', () => {
     expect(jugadoresColombianosEuropa.map(perfil => perfil.slug)).toEqual([
-      'luis-diaz', 'jhon-lucumi', 'davinson-sanchez'
+      'luis-diaz', 'jhon-lucumi', 'davinson-sanchez', 'jhon-cordoba',
+      'linda-caicedo', 'jhon-duran', 'camilo-duran', 'cucho-hernandez',
+      'nelson-deossa', 'gustavo-puerta', 'yaser-asprilla', 'jhon-solis',
+      'royer-caicedo', 'luis-suarez'
     ])
-    for (const perfil of jugadoresColombianosEuropa) {
-      expect(evaluarIndexabilidad({ tipo: 'jugador', ...perfil }, ahora)).toBe(true)
-    }
+    expect(jugadoresColombianosEuropa
+      .filter(perfil => evaluarIndexabilidad({ tipo: 'jugador', ...perfil }, ahora))
+      .map(perfil => perfil.slug))
+      .toEqual(['luis-diaz', 'jhon-lucumi', 'davinson-sanchez'])
   })
 
   it('mantiene noindex ante identidad incompleta, fuente no oficial o verificación vencida', () => {
@@ -21,7 +25,7 @@ describe('perfiles públicos de futbolistas colombianos en Europa', () => {
     expect(evaluarIndexabilidad({ ...datos, nacionalidad: 'Desconocida' }, ahora)).toBe(false)
     expect(evaluarIndexabilidad({ ...datos, fuenteOficialUrl: 'https://noticias.example/jugador' }, ahora)).toBe(false)
     expect(evaluarIndexabilidad({ ...datos, verificadoEn: '2026-06-01T00:00:00.000Z' }, ahora)).toBe(false)
-    expect(evaluarIndexabilidad({ ...datos, verificadoEn: '2026-10-07T00:00:00.000Z' }, ahora)).toBe(false)
+    expect(evaluarIndexabilidad({ ...datos, verificadoEn: '2026-10-21T00:00:00.000Z' }, ahora)).toBe(false)
     expect(evaluarIndexabilidad({ ...datos, descripcionVerificada: 'Texto muy corto.' }, ahora)).toBe(false)
   })
 
