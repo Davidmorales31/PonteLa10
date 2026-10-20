@@ -71,10 +71,10 @@ describe('HU-MON-01/02 · anuncios contextuales', () => {
     expect(componenteAnuncio).toContain('.espacio-adsterra--nativo .espacio-adsterra__marco {\n  height: 280px;')
   })
 
-  it('espera al montaje antes de mostrar el consentimiento almacenado en el navegador', () => {
-    expect(avisoAnalitica).toContain('const interfazLista = ref(false)')
+  it('renderiza el aviso de consentimiento en SSR y restaura la decisión al montar', () => {
+    expect(avisoAnalitica).not.toContain('const interfazLista = ref(false)')
     expect(avisoAnalitica).toContain('onMounted(() => {\n  inicializarConsentimiento()')
-    expect(avisoAnalitica).toContain('v-if="interfazLista && mostrarAviso"')
+    expect(avisoAnalitica).toContain('v-if="mostrarAviso"')
   })
 
   it('evita que el control flotante de privacidad tape contenido móvil y conserva acceso en el pie', () => {
