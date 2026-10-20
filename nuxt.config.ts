@@ -1,5 +1,6 @@
 const supabaseUrl = process.env.NUXT_PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseKey = process.env.NUXT_PUBLIC_SUPABASE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || ''
+const apiOrigin = (process.env.NUXT_PUBLIC_API_ORIGIN || '').replace(/\/+$/, '')
 const dominioProduccionVercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : ''
@@ -15,6 +16,14 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-05-15',
   devtools: { enabled: true },
   nitro: {
+    ...(apiOrigin ? {
+      devProxy: {
+        '/api': {
+          target: `${apiOrigin}/api`,
+          changeOrigin: true
+        }
+      }
+    } : {}),
     // El proveedor DeepSeek puede tardar hasta 60 s; deja margen para persistir
     // y responder sin depender de un ajuste manual del límite por defecto.
     vercel: { functions: { maxDuration: 120 } }
@@ -87,6 +96,7 @@ export default defineNuxtConfig({
     theSportsDbBaseUrl: process.env.NUXT_THE_SPORTS_DB_BASE_URL || 'https://www.thesportsdb.com/api/v1/json',
     public: {
       siteUrl: urlPublica || 'http://localhost:3001',
+      apiOrigin,
       supabaseUrl,
       supabaseKey,
       adsterraMatchPromoUrls: process.env.NUXT_PUBLIC_ADSTERRA_MATCH_PROMO_URLS

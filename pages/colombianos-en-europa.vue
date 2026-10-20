@@ -107,7 +107,7 @@ useSeoPont3la10(() => ({
         <ul class="lista-perfiles-europa">
           <li v-for="perfil in jugadoresColombianosEuropa" :key="perfil.slug">
             <NuxtLink :to="`/jugadores/${perfil.slug}`">
-              <span class="iniciales-perfil-europa" aria-hidden="true">{{ perfil.club.slice(0, 2).toLocaleUpperCase('es-CO') }}</span>
+              <img class="imagen-perfil-europa" :src="perfil.imagenPerfil" :alt="`Retrato animado de ${perfil.nombre}`" width="38" height="38" loading="lazy" decoding="async">
               <span><strong>{{ perfil.nombre }}</strong><small>{{ perfil.club }} · {{ perfil.posicion }}</small></span>
               <span aria-hidden="true">→</span>
             </NuxtLink>
@@ -173,7 +173,7 @@ body.tema-publico-blanco main.modulo-colombianos-europa .encabezado-noticias-lis
 .lista-perfiles-europa a > span:nth-child(2) { display: grid; flex: 1; gap: 3px; }
 .lista-perfiles-europa strong { color: #edf3ff; }
 .lista-perfiles-europa small { color: #afc2db; font-size: .78rem; }
-.iniciales-perfil-europa { display: grid; flex: 0 0 38px; width: 38px; height: 38px; place-items: center; border: 1px solid rgba(120,220,244,.6); border-radius: 50%; color: #78dcf4; font-size: .72rem; }
+.imagen-perfil-europa { display: block; flex: 0 0 38px; width: 38px; height: 38px; border: 1px solid rgba(120,220,244,.6); border-radius: 50%; background: #0b2548; object-fit: cover; object-position: center 28%; }
 .panel-jugadores-europa p:not(.etiqueta-seccion), .texto-seo-europa { color: #afc2db; line-height: 1.7; }
 .panel-jugadores-europa a { color: #7be4fb; font-weight: 800; }
 .bloque-noticias-europa { margin-top: 32px; }
@@ -182,6 +182,6 @@ body.tema-publico-blanco .panel-jugadores-europa p:not(.etiqueta-seccion), body.
 body.tema-publico-blanco .panel-jugadores-europa a, body.tema-publico-blanco .navegacion-europa a { color: #145996; }
 body.tema-publico-blanco .lista-perfiles-europa strong { color: #08204a; }
 body.tema-publico-blanco .lista-perfiles-europa small { color: #586980; }
-body.tema-publico-blanco .iniciales-perfil-europa { border-color: #145996; color: #145996; }
+body.tema-publico-blanco .imagen-perfil-europa { border-color: #145996; }
 @media (max-width: 820px) { .noticias-europa-grid { grid-template-columns: minmax(0, 1fr); } }
 </style>

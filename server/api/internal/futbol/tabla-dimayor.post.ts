@@ -11,6 +11,8 @@ import {
 } from '~/server/utils/tablaPosicionesDimayor'
 
 const limiteCuerpoBytes = 1_024
+const esperaReintentoTablaPendienteMs = 60_000
+const intervaloTablaNormalMs = 15 * 60_000
 
 /** Actualiza Liga A y B con sus tablas oficiales, no con cuotas de APIs. */
 export default defineEventHandler(async (evento) => {
@@ -44,12 +46,14 @@ export default defineEventHandler(async (evento) => {
     throw createError({ statusCode: 503, statusMessage: 'No se pudo reservar la actualización segura de DIMAYOR.' })
   }
   if (respuestaReserva.data === null) {
+    const pendiente = await consultarActualizacionPendiente(cliente)
     return {
-      estado: 'omitido',
+      estado: pendiente ? 'pendiente' : 'omitido',
       causa: 'actualizacion_reciente_o_en_curso',
       fuente: 'DIMAYOR',
       solicitudes: 0,
-      posicionesPublicasActualizadas: 0
+      posicionesPublicasActualizadas: 0,
+      siguienteEjecucionMs: pendiente ? esperaReintentoTablaPendienteMs : intervaloTablaNormalMs
     }
   }
 
@@ -107,11 +111,13 @@ export default defineEventHandler(async (evento) => {
       })
     }
 
+    const pendiente = await consultarActualizacionPendiente(cliente)
     return {
       estado: 'completado',
       fuente: 'DIMAYOR',
       solicitudes: 0,
-      posicionesPublicasActualizadas: data
+      posicionesPublicasActualizadas: data,
+      siguienteEjecucionMs: pendiente ? esperaReintentoTablaPendienteMs : intervaloTablaNormalMs
     }
   } catch (error) {
     try {
@@ -130,4 +136,10 @@ export default defineEventHandler(async (evento) => {
 
 function esObjetoVacio(valor: unknown): valor is Record<string, never> {
   return typeof valor === 'object' && valor !== null && !Array.isArray(valor) && Object.keys(valor).length === 0
+}
+
+async function consultarActualizacionPendiente(cliente: ReturnType<typeof obtenerClienteSupabasePrivado>): Promise<boolean> {
+  if (!cliente) return false
+  const respuesta = await cliente.rpc('dimayor_standings_refresh_pending')
+  return !respuesta.error && respuesta.data === true
 }

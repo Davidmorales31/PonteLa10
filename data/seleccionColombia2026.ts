@@ -31,7 +31,7 @@ export interface PartidoSeleccionOficial {
   fuenteUrl: string
 }
 
-export const fechaVerificacionSeleccion = '2026-10-06'
+export const fechaVerificacionSeleccion = '2026-10-19'
 
 export const calendarioOficialSeleccion: PartidoSeleccionOficial[] = [
   {
@@ -74,7 +74,9 @@ export const calendarioOficialSeleccion: PartidoSeleccionOficial[] = [
     visitante: 'Chile',
     seleccion: 'Masculina de mayores',
     competencia: 'Amistoso internacional',
-    fuenteUrl: 'https://www.fcf.com.co/calendario/'
+    estadio: 'Estadio Olímpico Pascual Guerrero',
+    sede: 'Cali, Colombia',
+    fuenteUrl: 'https://fcf.com.co/2026/09/14/la-seleccion-colombia-masculina-de-mayores-disputara-doble-fecha-de-amistosos-ante-chile-en-noviembre/'
   },
   {
     fecha: '2026-11-19',
@@ -92,7 +94,16 @@ export const calendarioOficialSeleccion: PartidoSeleccionOficial[] = [
     visitante: 'Colombia',
     seleccion: 'Femenina de mayores',
     competencia: 'Amistoso internacional',
-    fuenteUrl: 'https://www.fcf.com.co/calendario/'
+    fuenteUrl: 'https://fcf.com.co/calendario/'
+  },
+  {
+    fecha: '2026-12-02',
+    hora: '3:45 p. m. (hora de Colombia)',
+    local: 'Australia',
+    visitante: 'Colombia',
+    seleccion: 'Femenina de mayores',
+    competencia: 'Amistoso internacional',
+    fuenteUrl: 'https://fcf.com.co/calendario/'
   }
 ]
 

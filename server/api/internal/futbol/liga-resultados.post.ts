@@ -32,7 +32,7 @@ export default defineEventHandler(async (evento) => {
       .gte('scheduled_at', desde).lt('scheduled_at', hasta).limit(250),
     cliente.from('football_fixtures_today').select(columnasSnapshots)
       .eq('business_date', fecha).eq('league_country', 'Colombia')
-      .in('provider', ['api-football', 'goal-api']).limit(400)
+      .eq('provider', 'goal-api').limit(400)
   ])
   if (respuestaFixtures.error || !respuestaFixtures.data || respuestaSnapshots.error || !respuestaSnapshots.data) {
     throw createError({ statusCode: 503, statusMessage: 'No se pudieron reconciliar los resultados verificados.' })
@@ -42,6 +42,10 @@ export default defineEventHandler(async (evento) => {
     respuestaFixtures.data as unknown as FixtureLigaPublicado[],
     respuestaSnapshots.data as unknown as SnapshotResultadoLiga[]
   )
+  const estadosPrevios = new Map((respuestaFixtures.data as unknown as FixtureLigaPublicado[])
+    .map(fila => [claveFixture(fila), fila.status] as const))
+  const partidosFinalizados = actualizaciones.filter(fila => fila.status === 'finished'
+    && estadosPrevios.get(claveFixture(fila)) !== 'finished').length
   let guardadas = 0
   for (const fila of actualizaciones) {
     const { error } = await cliente.from('colombian_league_fixtures').update({
@@ -56,8 +60,17 @@ export default defineEventHandler(async (evento) => {
     guardadas += 1
   }
 
-  return { estado: 'completado', partidosRevisados: respuestaFixtures.data.length, marcadoresActualizados: guardadas }
+  return {
+    estado: 'completado',
+    partidosRevisados: respuestaFixtures.data.length,
+    marcadoresActualizados: guardadas,
+    partidosFinalizados
+  }
 })
+
+function claveFixture(fila: Pick<FixtureLigaPublicado, 'competition_slug' | 'season' | 'provider' | 'provider_fixture_id'>): string {
+  return [fila.competition_slug, fila.season, fila.provider, fila.provider_fixture_id].join('\u0000')
+}
 
 function esObjetoVacio(valor: unknown): valor is Record<string, never> {
   return typeof valor === 'object' && valor !== null && !Array.isArray(valor) && Object.keys(valor).length === 0

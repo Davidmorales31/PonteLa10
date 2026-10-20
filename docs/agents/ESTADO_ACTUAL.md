@@ -1,5 +1,142 @@
 # Estado actual de Pont3la10
 
+## Anuncios previos y noticias en fichas de jugadores (2026-10-20)
+
+- Al tocar una tarjeta de video, si la persona autorizó publicidad, se abre el
+  enlace promocional de AdsTerra en otra pestaña. Al volver y pulsar la tarjeta
+  de nuevo se abre la miniatura; el botón de la previa conserva el video original.
+  Si no autorizó publicidad, la miniatura abre directamente. El anuncio previo
+  se recuerda por video durante la sesión del navegador.
+- Las noticias de jugadores combinan relaciones editoriales confirmadas con
+  artículos públicos cuyo título o resumen contiene el nombre del perfil. La
+  comprobación local encontró cero relaciones exactas para Luis Díaz, pero tres
+  artículos públicos por búsqueda; ese desfase explica la sección vacía anterior.
+  El resultado se deduplica, ordena por fecha y limita a seis tarjetas.
+- La comprobación SSR local ya muestra de 1 a 4 artículos en las 14 fichas,
+  con HTTP 200 en todas. ESLint focal y `git diff --check` pasan; no se ejecutaron
+  pruebas, typecheck ni build, y esta sesión no tiene navegador para verificar
+  visualmente el paso de AdsTerra con clic real.
+- Handoff: `docs/agents/handoffs/2026-10-20-perfiles-jugadores-historia-qa.md`.
+
+## Previsualización de videos en perfiles (2026-10-20)
+
+- Las 28 tarjetas de las 14 fichas usan enlaces directos a videos de YouTube y
+  muestran la miniatura correspondiente. El diálogo de miniatura admite Escape,
+  mantiene el foco y lo devuelve a la tarjeta al cerrarse. El paso promocional
+  opcional previo se describe en la sección más reciente.
+- Se comprobó la disponibilidad HTTP de las 28 miniaturas y las 14 rutas locales
+  devuelven HTTP 200 con dos miniaturas cada una. ESLint focal y
+  `git diff --check` pasan. El servidor Nuxt sigue activo; no se ejecutaron
+  build, typecheck ni suite automatizada, y la sesión no dispone de navegador
+  para una prueba visual/clic manual.
+- Handoff: `docs/agents/handoffs/2026-10-20-perfiles-jugadores-historia-qa.md`.
+
+## Recuperación del servidor local y rediseño de perfiles (2026-10-20)
+
+- `npm run dev:qa` ahora deja listos Nuxt y el worker local. Se encontró que el
+  watcher recorría dependencias de proyectos anidados (`fabrica-landings` y
+  otros `node_modules`) mientras Nuxt ya ocupaba el puerto, por lo que una
+  comprobación TCP daba una falsa señal de disponibilidad. `.nuxtignore` excluye
+  esas dependencias y `.next`; `scripts/dev-local.mjs` espera una respuesta HTTP
+  200 real antes de iniciar el worker.
+- Nuxt respondió HTTP 200 en `127.0.0.1:3333`; también respondieron la portada,
+  el recurso estático de disponibilidad y las 14 rutas `/jugadores/<slug>`.
+  El worker arrancó; en el ciclo observado `resultados_liga` terminó y el
+  calendario ya estaba sincronizado. `tabla_liga` devolvió HTTP 503 y `fixtures`
+  encontró un proceso ocupado, así que esas fuentes requieren otro ciclo.
+- Cada ficha ahora tiene portada editorial con retrato, resumen, club y datos
+  clave; historia, cronología por clubes, hito memorable, dos accesos a videos,
+  noticias, agenda y fuentes enlazadas. La interacción de miniaturas se registra
+  en la sección «Previsualización de videos en perfiles».
+  El módulo `data/historiasJugadoresEuropa.ts` contiene los 14 relatos y sus
+  referencias, y `pages/jugadores/[slug].vue` presenta la nueva interfaz con
+  soporte para temas claro/oscuro, móvil, foco visible y movimiento reducido.
+- Validación: ESLint focal sin errores ni avisos, `git diff --check`,
+  `node --check scripts/dev-local.mjs`; HTTP 200 en Inicio y las 14 fichas
+  renderizan cronología y sección de videos. No se ejecutó la suite de pruebas.
+  Build y typecheck quedan pendientes porque el servidor Nuxt continúa activo;
+  no había navegador disponible para captura visual responsive.
+- Handoff: `docs/agents/handoffs/2026-10-20-perfiles-jugadores-historia-qa.md`.
+
+## Retratos animados para colombianos en Europa (2026-10-20)
+
+- Se crearon 14 retratos individuales inspirados en caricatura futbolera tipo
+  Marca Toons, tomando como referencia fotos públicas de cada futbolista. Los
+  WebP optimizados están en `public/images/jugadores-europa/`.
+- Inicio, el listado de colombianos en Europa y cada ficha de jugador usan el
+  retrato correspondiente. El catálogo conserva la URL de referencia por
+  jugador y la ficha enlaza esa fuente. Para Jhon Durán se muestra también la
+  atribución de Sport Lisboa e Benfica vía Wikimedia Commons, la licencia CC
+  BY 4.0 y que la imagen fue adaptada con IA.
+- Se comprobó que existen los 14 archivos y que `/`, `/colombianos-en-europa`
+  y `/jugadores/luis-diaz` responden HTTP 200 con sus retratos en SSR. ESLint
+  focal y `git diff --check` pasan. El lint global falla en código y artefactos
+  preexistentes de `fabrica-landings`; el typecheck global además reporta tipos
+  de worker existentes. Build y revisión visual responsive quedan pendientes:
+  el servidor local en `127.0.0.1:3333` sigue activo y no hay navegador disponible
+  en la sesión. No se ejecutó la suite de pruebas. Handoff:
+  `docs/agents/handoffs/2026-10-20-colombianos-europa-retratos.md`.
+
+## Colombianos en el exterior: perfiles ampliados (2026-10-19)
+
+- Se consultaron las 24 publicaciones públicas con el tema `colombianos-en-europa`
+  en Supabase, en modo lectura. Se encontraron 15 futbolistas distintos; 3 ya
+  tenían ficha y se añadieron 11 perfiles sustentados en fuentes oficiales.
+- `data/jugadoresColombianosEuropa.ts` ahora contiene 14 perfiles únicos con
+  club, posición, competición, aliases, fuentes y calendario oficial. Samuel
+  Martínez no se incluyó porque la noticia encontrada describe una incorporación
+  futura a Liverpool, no actividad actual en el exterior.
+- Inicio muestra la lista completa en vez de limitarla a cuatro tarjetas e
+  indica el total de perfiles verificados. El servidor local existente devolvió
+  HTTP 200 en `/` con 14 enlaces a fichas y HTTP 200 en `/colombianos-en-europa`.
+- ESLint focal, TypeScript focal para el catálogo y `git diff --check` pasan. El
+  lint y typecheck globales fallan por artefactos y errores preexistentes de
+  `fabrica-landings` y tipos de worker; no reportan fallos en los archivos de
+  esta sección. Build no pudo iniciar porque otro servidor Nuxt ya ocupa el
+  proyecto en `127.0.0.1:3333`; no se interrumpió ese proceso. El smoke visual
+  responsive queda pendiente porque no había navegador disponible en la sesión;
+  sí se comprobó el HTML SSR local. No se ejecutó la suite de pruebas. Handoff:
+  `docs/agents/handoffs/2026-10-19-colombianos-europa-perfiles.md`.
+
+## Arranque local de QA con una orden (2026-10-19)
+
+- `npm run dev:qa` carga `.env` si existe, levanta Nuxt en `127.0.0.1:3333`
+  y, si está configurado el secreto, inicia el worker local de fútbol. `Ctrl+C`
+  detiene ambos procesos. El sondeo de disponibilidad usa TCP y no renderiza la
+  portada mientras Nuxt compila.
+- QA usa como origen de datos el `NUXT_PUBLIC_API_ORIGIN` configurado o, por
+  defecto, el origen público de Production. SSR de Inicio consulta ese origen
+  para sus endpoints públicos; el proxy de desarrollo mantiene funcionando las
+  llamadas `/api` del navegador. No depende de `.qa-runtime/nuxt.config.ts`.
+- Verificado en `127.0.0.1:3333`: Inicio HTTP 200 incluye partidos y no muestra
+  el estado vacío; `/api/resultados` HTTP 200 devolvió cinco partidos. Nuxt y el
+  worker arrancaron con `npm run dev:qa`; el worker completó fixtures,
+  resultados y calendario. `tabla_liga` respondió HTTP 503 en ese ciclo.
+- ESLint focal, `node --check scripts/dev-local.mjs` y `git diff --check` pasan.
+  Suite, typecheck y build no se ejecutaron en esta corrección de arranque.
+  Handoff: `docs/agents/handoffs/2026-10-19-arranque-local-qa.md`.
+
+## Partidos de hoy: SSR de QA conectado a Production (2026-10-18)
+
+- En la rama `QA`, `/partidos-hoy` usa `runtimeConfig.public.apiOrigin` durante
+  SSR cuando está configurado; el navegador mantiene `/api/resultados`. La
+  configuración raíz lee `NUXT_PUBLIC_API_ORIGIN`; el `.env` local, ignorado
+  por Git, apunta a Production. `.qa-runtime/nuxt.config.ts`, también ignorado,
+  proxifica `/api` hacia el endpoint de Production conservando el prefijo.
+- Verificado en `localhost:3333`: `/api/resultados` devuelve cinco partidos y
+  `/partidos-hoy` responde HTTP 200 con los cinco equipos en el HTML SSR. No se
+  publicó un nuevo despliegue de Production.
+- El worker local completó `fixtures` con Goal API (3 recibidos, 3 guardados y
+  2 detalles actualizados) y `resultados_liga` (3 marcadores actualizados y 5
+  partidos revisados). `tabla_liga` tuvo respuestas HTTP 503 en algunos ciclos;
+  no impidió mostrar la jornada.
+- Suite completa: 114 archivos y 590 pruebas aprobadas; ESLint focal y build
+  aprobados. El build mantiene avisos de sprites públicos no resueltos y
+  `DEP0155` de `@vue/shared`. El lint global y typecheck fallan al incluir el
+  proyecto anidado sin seguimiento `fabrica-landings` (artefactos `.next` y
+  errores de alias/tipos ajenos a Pont3la10). Handoff:
+  `docs/agents/handoffs/2026-10-18-partidos-hoy-qa.md`.
+
 ## Fichas de partido: datos en vivo y nueva estructura (2026-10-15)
 
 - PR #137 integrado por squash en `7dac629a717441de0c0d2441fda8ba615307c2f8`;
@@ -1913,3 +2050,35 @@ No crear una automatización duplicada ni apuntarla al árbol OneDrive.
 
 - `docs/ARQUITECTURA_INICIAL.md`: conserva el diseño de la primera etapa y no
   sustituye el estado verificado de este documento.
+
+**Próximo partido en Inicio (2026-10-19, local):** el encabezado de calendario
+incluye un icono; la competición se centra con un icono de copa y sin pastilla
+azul; los escudos y el separador `vs` ya no llevan placas de fondo. El CTA
+**Ver en vivo** usa `public/images/ui/boton-ver-en-vivo.webp`, una ilustración
+generada y optimizada para WebP con texto HTML accesible encima. Su primer clic
+abre el Smartlink público de Adsterra configurado para partidos; los siguientes
+clics de esa pestaña van al plan oficial de Win Play. La interfaz avisa de que
+el primer destino es patrocinado. El SSR local devolvió 200, confirmó el CTA y
+20 filas de tabla; el WebP devolvió 200. ESLint focalizado y `git diff --check`
+pasaron. No hubo navegador interactivo disponible para inspección responsive;
+suite, typecheck y build quedan pendientes de una sesión de validación separada.
+Handoff: `docs/agents/handoffs/2026-10-19-proximo-partido-inicio.md`.
+
+**Selección Colombia en Inicio (2026-10-19, local):** la agenda y las
+convocatorias salen de `data/seleccionColombia2026.ts`; no se consultan en vivo.
+Se actualizó la verificación manual al 19 de octubre con el calendario y las
+publicaciones oficiales de la FCF. El próximo partido de mayores es Colombia vs.
+Chile el 13 de noviembre, en el Estadio Olímpico Pascual Guerrero de Cali, con
+hora por confirmar. La ficha enlaza el anuncio específico de la FCF y muestra
+banderas nacionales dibujadas localmente. Las noticias se siguen obteniendo de
+`/api/articulos?tema=seleccion-colombia` y se identifican como contenido de
+Pont3la10. La interfaz muestra que no hay lista vigente registrada en la agenda
+y enlaza las novedades oficiales de la FCF. También se añadió al calendario la
+segunda fecha femenina ante Australia del 2 de diciembre, publicada por la FCF.
+
+ESLint focalizado, `git diff --check` y render SSR local de `/` y
+`/seleccion-colombia` pasaron (HTTP 200; se verificaron banderas, sede, fuente,
+estado de convocatoria y la fecha femenina del 2 de diciembre). No se ejecutaron
+suite, typecheck ni build, ni se inspeccionó la ruta con navegador responsive
+en esta sesión. El servidor local permaneció activo.
+Handoff: `docs/agents/handoffs/2026-10-19-seleccion-colombia-inicio.md`.

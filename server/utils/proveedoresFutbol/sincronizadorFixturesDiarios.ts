@@ -393,12 +393,14 @@ export async function sincronizarFixturesDiariosFutbol(
 }
 
 function esCandidatoDetalle(partido: PartidoFutbolProveedor, ahoraMs: number): boolean {
-  if (['live', 'halftime', 'finished', 'suspended', 'pre-match'].includes(partido.estado)) return true
-  if (partido.estado !== 'scheduled') return false
+  if (['live', 'halftime', 'finished'].includes(partido.estado)) return true
+  if (!['scheduled', 'pre-match', 'suspended'].includes(partido.estado)) return false
   const inicioMs = Date.parse(partido.inicioUtc)
-  // El calendario persistido solo contiene la fecha de negocio vigente. No
-  // excluir los programados vencidos: deben recibir una consulta de confirmación.
-  return Number.isFinite(inicioMs) && inicioMs <= ahoraMs + 90 * 60_000
+  // La cobertura empieza veinte minutos antes y hace una última verificación
+  // hasta tres horas después del kickoff si el proveedor conserva "programado".
+  return Number.isFinite(inicioMs)
+    && inicioMs >= ahoraMs - 3 * 60 * 60_000
+    && inicioMs <= ahoraMs + 20 * 60_000
 }
 
 function prioridadDetalle(partido: PartidoFutbolProveedor, ahoraMs: number): number {

@@ -11,7 +11,7 @@ import type {
 } from './proyectarSnapshots'
 import type { RepositorioWorkerFixturesFutbol } from './sincronizadorFixturesDiarios'
 import {
-  calcularSiguienteEjecucionWorkerFutbol,
+  calcularSiguienteEjecucionCoberturaFutbol,
   type SnapshotParaSchedulerFutbol
 } from '~/utils/politicaWorkerFutbol'
 
@@ -22,7 +22,14 @@ const diferenciaBogotaUtc = 5 * 60 * 60 * 1000
 export interface RepositorioSnapshotsSupabaseFutbol extends RepositorioWorkerFixturesFutbol {
   cargarFixturesDiarios(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<PartidoFutbolProveedor[] | null>
   calendarioDiarioCompleto(provider: IdentificadorProveedorFutbol, fechaNegocio: string): Promise<boolean>
-  calcularEsperaSiguienteEjecucion(providers: IdentificadorProveedorFutbol[], fechaNegocio: string, ahora?: Date): Promise<{ esperaMs: number; motivo: string }>
+  calcularEsperaSiguienteEjecucion(providers: IdentificadorProveedorFutbol[], fechaNegocio: string, ahora?: Date): Promise<{
+    esperaMs: number
+    motivo: string
+    solicitudesUsadas: number
+    solicitudesRestantes: number
+    partidosEnCobertura: number
+    partidosPendientes: number
+  }>
   cargarTiemposDetalle(provider: IdentificadorProveedorFutbol, fechaNegocio: string, idsFixture: string[]): Promise<Map<string, string | null>>
   asegurarMappingsIniciales(
     provider: IdentificadorProveedorFutbol,
@@ -87,11 +94,13 @@ export function crearRepositorioSnapshotsSupabase(
     calendarioDiarioCompleto: async (provider, fechaNegocio) => calendarioDiarioCompleto(cliente, provider, fechaNegocio),
     calcularEsperaSiguienteEjecucion: async (providers, fechaNegocio, ahora = new Date()) => {
       const proveedores = [...new Set(providers)]
-      if (!proveedores.length) return calcularSiguienteEjecucionWorkerFutbol([], ahora.getTime())
+      if (!proveedores.includes('goal-api')) {
+        return calcularSiguienteEjecucionCoberturaFutbol([], 0, ahora.getTime())
+      }
       const { data, error } = await cliente
         .from('football_fixtures_today')
         .select('provider,status,kickoff_at,details_fetched_at')
-        .in('provider', proveedores)
+        .eq('provider', 'goal-api')
         .eq('business_date', fechaNegocio)
         .order('kickoff_at', { ascending: true })
       if (error || !data) throw new Error('No fue posible consultar el calendario para el worker.')
@@ -106,7 +115,18 @@ export function crearRepositorioSnapshotsSupabase(
         inicioUtc: fila.kickoff_at,
         detallesActualizadosEn: fila.details_fetched_at
       }))
-      return calcularSiguienteEjecucionWorkerFutbol(snapshots, ahora.getTime())
+      const respuestaUso = await cliente
+        .from('football_provider_daily_usage')
+        .select('requests_used')
+        .eq('provider', 'goal-api')
+        .eq('business_date', fechaNegocio)
+        .maybeSingle()
+      if (respuestaUso.error) throw new Error('No fue posible consultar el presupuesto diario de Goal API.')
+      return calcularSiguienteEjecucionCoberturaFutbol(
+        snapshots,
+        Number(respuestaUso.data?.requests_used || 0),
+        ahora.getTime()
+      )
     },
     cargarTiemposDetalle: async (provider, fechaNegocio, idsFixture) => {
       const ids = [...new Set(idsFixture.filter(id => typeof id === 'string' && id.trim()))]
