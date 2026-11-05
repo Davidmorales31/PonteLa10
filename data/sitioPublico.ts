@@ -30,6 +30,7 @@ export const categoriasSitio: CategoriaLanding[] = [
   { etiqueta: 'Tech deportiva', icono: 'chip', ruta: '/articulos?categoria=tecnologia' },
   { etiqueta: 'Gaming deportivo', icono: 'control', ruta: '/articulos?categoria=gaming' },
   { etiqueta: 'Tendencias', icono: 'tendencia', ruta: '/articulos?categoria=tendencias' },
+  { etiqueta: 'Especiales', icono: 'balon', ruta: '/especiales' },
   { etiqueta: 'Opinión', icono: 'mensajes', ruta: '/articulos?categoria=opinion' }
 ]
 

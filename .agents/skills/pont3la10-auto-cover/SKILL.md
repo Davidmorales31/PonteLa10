@@ -1,6 +1,6 @@
 ---
 name: pont3la10-auto-cover
-description: Find and prepare an accurately credited source photograph for a Pont3la10 article before falling back to a disclosed AI illustration.
+description: Find and prepare an accurately credited real photograph for a Pont3la10 article; never generate an AI cover.
 ---
 
 # Pont3la10 Sourced Editorial Photos
@@ -15,15 +15,15 @@ not only an image preview. Every delivered Codex draft requires a cover.
    Preserve an available license accurately, but never invent one or use the
    old pilot whitelist as a blanket blocker: Juan authorized the credited
    source path. If a relevant image and truthful credit cannot be obtained,
-   record why and continue through the AI-cover skill; no text-only delivery.
+   record why, leave the candidate incomplete, and continue without delivery.
 3. Download the image from its verified source. Never take a
    thumbnail from a search-results page, remove a watermark, or re-create a
    real player's likeness. The CMS optimizes to WebP; the visible credit must
    identify the actual author/agency or source. Keep the source page URL in
    the CMS so a reviewer can verify the attribution.
-4. If no relevant image and credit can be obtained, use the disclosed AI fallback.
-   If that also fails, retain the local text and deliver no CMS article. Never use an
-   unrelated image just to fill the space.
+4. If no relevant image and credit can be obtained, retain the local text and
+   dossier, mark the candidate incomplete, and deliver no CMS article. Never use
+   an unrelated image or synthetic visual just to fill the space.
 5. For the general credited-source path, prepare metadata with exactly
    `titulo`, `alt`, `pie`, `credito`, and `urlFuente` (HTTPS source page).
    Preserve the literal truthful credit; do not claim a license or ownership.
@@ -45,6 +45,4 @@ not only an image preview. Every delivered Codex draft requires a cover.
    wording; never claim Pont3la10 owns the photograph.
 8. Remove only the exact temporary metadata and payload files after submission.
 
-Fall back only to an explicitly disclosed AI editorial illustration when the
-photo/credit path is unavailable. This Skill cannot
-approve, schedule, or publish content.
+This Skill cannot approve, schedule, or publish content.

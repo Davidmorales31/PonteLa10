@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "zonaHoraria": "America/Bogota",
+  "horarios": ["06:05", "18:05"],
+  "rrule": "FREQ=DAILY;BYHOUR=6,18;BYMINUTE=5;BYSECOND=0",
+  "maxCorridasPorDia": 2,
+  "articulosPorCategoria": 10,
+  "maxOportunidadesPorCategoria": 20,
+  "intervaloPublicacionMinutos": 2,
+  "redactor": "deepseek",
+  "estadoObjetivo": "scheduled",
+  "skill": ".agents/skills/pont3la10-daily-editorial-run/SKILL.md",
+  "prompt": "docs/agents/prompts/editorial-dos-corridas.md"
+}

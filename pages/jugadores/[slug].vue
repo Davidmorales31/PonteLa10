@@ -257,11 +257,7 @@ onMounted(() => {
 
 <template>
   <main class="pagina-contenido pagina-publica-medio pagina-jugador-europa">
-    <nav class="migas-jugador" aria-label="Migas de pan">
-      <NuxtLink to="/">Inicio</NuxtLink><span aria-hidden="true">/</span>
-      <NuxtLink to="/colombianos-en-europa">Colombianos en Europa</NuxtLink><span aria-hidden="true">/</span>
-      <span aria-current="page">{{ ficha.nombre }}</span>
-    </nav>
+    <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Colombianos en Europa', ruta: '/colombianos-en-europa' }, { etiqueta: ficha.nombre }]" />
 
     <header class="portada-jugador">
       <div class="trama-portada" aria-hidden="true" />
@@ -339,14 +335,7 @@ onMounted(() => {
             <NuxtLink class="enlace-mas-jugador" :to="`/articulos?buscar=${encodeURIComponent(ficha.nombre)}`">Más noticias <span aria-hidden="true">→</span></NuxtLink>
           </div>
           <div v-if="noticiasRelacionadas.length" class="grilla-noticias-jugador">
-            <article v-for="noticia in noticiasRelacionadas" :key="noticia.slug" class="tarjeta-noticia-jugador">
-              <NuxtLink v-if="noticia.imagen" :to="`/articulos/${noticia.slug}`" class="imagen-noticia-jugador" tabindex="-1" aria-hidden="true">
-                <ImagenEditorialPublica :src="noticia.imagen" :alt="noticia.titulo" width="640" height="360" :ancho-original="noticia.imagenAncho" sizes="(max-width: 760px) 100vw, 640px" />
-              </NuxtLink>
-              <p class="categoria-noticia-jugador">{{ noticia.categoria }}</p>
-              <h3><NuxtLink :to="`/articulos/${noticia.slug}`">{{ noticia.titulo }}</NuxtLink></h3>
-              <p>{{ noticia.resumen }}</p>
-            </article>
+            <TarjetaNoticiaSecundaria v-for="noticia in noticiasRelacionadas" :key="noticia.slug" :articulo="noticia" mostrar-resumen />
           </div>
           <p v-else-if="!errorNoticiasCarga" class="vacio-noticias-jugador">Aún no hay artículos vinculados editorialmente con {{ ficha.nombre }}. Aquí aparecerán cuando exista cobertura confirmada.</p>
           <p v-else class="vacio-noticias-jugador">No fue posible cargar las noticias relacionadas. <NuxtLink :to="`/articulos?buscar=${encodeURIComponent(ficha.nombre)}`">Busca su cobertura editorial.</NuxtLink></p>
@@ -439,9 +428,6 @@ onMounted(() => {
 <style scoped>
 .pagina-jugador-europa { --jugador-acento: #8de6f6; --jugador-texto: #f4f7fb; --jugador-muted: #bdcadd; --jugador-linea: rgba(255,255,255,.12); --jugador-panel: #10243c; --jugador-titulo: #f4f7fb; width: min(1260px, 100% - 36px); padding-top: 18px; padding-bottom: 70px; color: var(--jugador-texto); }
 .pagina-jugador-europa :is(h1, h2, h3, p) { color: inherit; }
-.migas-jugador { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin: 0 0 18px; color: var(--jugador-muted); font-size: .84rem; }
-.migas-jugador a { color: inherit; text-decoration: none; }
-.migas-jugador a:hover, .migas-jugador a:focus-visible { color: var(--jugador-acento); }
 .portada-jugador { position: relative; isolation: isolate; display: grid; grid-template-columns: 220px minmax(0, 1fr) minmax(170px, 220px); align-items: center; gap: clamp(22px, 4vw, 48px); overflow: hidden; min-height: 340px; padding: clamp(26px, 4vw, 48px); border: 1px solid rgba(130,220,244,.24); border-top: 4px solid #f1c744; border-radius: 24px; background: radial-gradient(ellipse at 75% 20%, rgba(11, 98, 131, .46), transparent 46%), linear-gradient(116deg, #071a31 0%, #0b2842 64%, #12374e 100%); box-shadow: 0 22px 64px rgba(0,0,0,.22); }
 .trama-portada { position: absolute; z-index: -1; inset: 0; opacity: .26; background-image: linear-gradient(33deg, transparent 48%, rgba(255,255,255,.14) 49%, transparent 50%), radial-gradient(circle at 84% 50%, transparent 0 86px, rgba(255,255,255,.24) 87px 88px, transparent 89px); background-size: 34px 34px, auto; mask-image: linear-gradient(90deg, transparent, #000 70%); }
 .retrato-portada { position: relative; justify-self: center; width: clamp(170px, 20vw, 220px); aspect-ratio: 1; padding: 7px; border: 1px solid rgba(141,230,246,.74); border-radius: 50%; background: linear-gradient(155deg, rgba(141,230,246,.18), rgba(241,199,68,.3)); box-shadow: 0 20px 54px rgba(0,0,0,.3); }

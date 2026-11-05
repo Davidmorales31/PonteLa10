@@ -17,6 +17,7 @@ const rutas = {
   media: '/api/internal/codex/media',
   'media-ia': '/api/internal/codex/media-ai',
   propuesta: '/api/internal/codex/proposals',
+  'propuesta-automatica': '/api/internal/codex/auto-proposals',
   portada: '/api/internal/codex/cover',
   salud: '/api/internal/codex/health'
 }
@@ -37,13 +38,18 @@ try {
 }
 
 if (!rutas[recurso] || !archivo) {
-  terminar('Uso: node scripts/codex-editorial-submit.mjs <contexto|agenda|borrador|media|media-ia|propuesta|portada|salud> <archivo-json>')
+  terminar('Uso: node scripts/codex-editorial-submit.mjs <contexto|agenda|borrador|media|media-ia|propuesta|propuesta-automatica|portada|salud> <archivo-json>')
 }
 
 const baseUrl = obtenerBaseUrlEditorial(process.env)
-const secreto = process.env.NUXT_CODEX_EDITORIAL_API_SECRET
+const secreto = recurso === 'propuesta-automatica'
+  ? process.env.NUXT_CODEX_EDITORIAL_PUBLICATION_API_SECRET
+  : process.env.NUXT_CODEX_EDITORIAL_API_SECRET
 if (!baseUrl || !secreto) {
   terminar('Falta configuración local de la API privada editorial.')
+}
+if (recurso === 'propuesta-automatica' && secreto === process.env.NUXT_CODEX_EDITORIAL_API_SECRET) {
+  terminar('La publicación directa requiere una clave independiente de investigación.')
 }
 
 let destino
@@ -71,10 +77,11 @@ if (cuerpo.byteLength > limite) {
   terminar(`El archivo supera el límite de ${limite} bytes.`)
 }
 
-if (recurso === 'propuesta') {
+if (['propuesta', 'propuesta-automatica'].includes(recurso)) {
   let payload
   try {
     payload = JSON.parse(cuerpo.toString('utf8'))
+    if (recurso === 'propuesta-automatica') payload = payload.proposal
   } catch {
     terminar('La propuesta debe ser un JSON válido para validar su extensión.')
   }
@@ -147,11 +154,12 @@ if (['media', 'media-ia'].includes(recurso)) {
     bytes: resultado.bytes,
     yaExistia: resultado.yaExistia
   }) + '\n')
-} else if (recurso === 'propuesta') {
+} else if (['propuesta', 'propuesta-automatica'].includes(recurso)) {
   process.stdout.write(JSON.stringify({
     articleId: resultado.articleId,
     estado: resultado.estado,
-    duplicado: resultado.duplicado
+    duplicado: resultado.duplicado,
+    ...(recurso === 'propuesta-automatica' ? { autoApproved: resultado.autoApproved, programadoPara: resultado.programadoPara, intervaloMinutos: resultado.intervaloMinutos } : {})
   }) + '\n')
 } else {
   process.stdout.write(JSON.stringify(resultado) + '\n')

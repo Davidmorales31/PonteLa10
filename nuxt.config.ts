@@ -78,6 +78,7 @@ export default defineNuxtConfig({
     editorialAiBaseUrl: process.env.NUXT_EDITORIAL_AI_BASE_URL || 'https://api.deepseek.com',
   editorialAiModel: process.env.NUXT_EDITORIAL_AI_MODEL || '',
   codexEditorialApiSecret: process.env.NUXT_CODEX_EDITORIAL_API_SECRET || '',
+  codexEditorialPublicationApiSecret: process.env.NUXT_CODEX_EDITORIAL_PUBLICATION_API_SECRET || '',
     supabaseServiceRoleKey: process.env.NUXT_SUPABASE_SERVICE_ROLE_KEY || '',
     apiSportsKey: process.env.NUXT_API_SPORTS_KEY || process.env.API_SPORTS_KEY || '',
     apiSportsBaseUrl: process.env.NUXT_API_SPORTS_BASE_URL || 'https://v3.football.api-sports.io',

@@ -21,6 +21,16 @@ interface ConfiguracionHub {
 }
 
 const props = defineProps<{ configuracion: ConfiguracionHub }>()
+defineSlots<{
+  cabecera(): unknown
+  intro(): unknown
+  'contenido-adicional'(): unknown
+  noticias(props: {
+    destacada: ResumenArticuloPublico | null
+    recientes: ResumenArticuloPublico[]
+    cantidad: number
+  }): unknown
+}>()
 const configuracionRuntime = useRuntimeConfig()
 const { data: noticias, error } = await useFetch<ResumenArticuloPublico[]>('/api/articulos', {
   key: `hub-editorial-${props.configuracion.categoria}`,
@@ -79,101 +89,49 @@ useSeoPont3la10(() => ({
   ]
 }))
 
-function fechaPublicacion(fecha: string) {
-  return new Intl.DateTimeFormat('es-CO', {
-    dateStyle: 'medium',
-    timeZone: 'America/Bogota'
-  }).format(new Date(fecha))
-}
 </script>
 
 <template>
   <main class="pagina-contenido pagina-publica-medio modulo-hub-editorial">
-    <nav class="migas-navegacion" aria-label="Migas de pan">
-      <ol>
-        <li><NuxtLink to="/">Inicio</NuxtLink></li>
-        <li><span class="miga-actual" aria-current="page">{{ configuracion.titulo }}</span></li>
-      </ol>
-    </nav>
+    <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: configuracion.titulo }]" />
 
-    <header class="cabecera-pagina cabecera-noticias-medio cabecera-hub-editorial">
-      <p class="etiqueta-seccion">{{ configuracion.etiquetaSeccion }}</p>
-      <h1>{{ configuracion.titulo }}</h1>
-      <p>{{ configuracion.descripcion }}</p>
-      <nav class="navegacion-hub-editorial" aria-label="Explorar secciones deportivas">
-        <NuxtLink v-for="enlace in configuracion.enlaces" :key="enlace.ruta" :to="enlace.ruta">{{ enlace.etiqueta }}</NuxtLink>
-      </nav>
-    </header>
+    <slot name="cabecera">
+      <header class="cabecera-pagina cabecera-noticias-medio cabecera-hub-editorial">
+        <p class="etiqueta-seccion">{{ configuracion.etiquetaSeccion }}</p>
+        <h1>{{ configuracion.titulo }}</h1>
+        <p>{{ configuracion.descripcion }}</p>
+        <nav class="navegacion-hub-editorial" aria-label="Explorar secciones deportivas">
+          <NuxtLink v-for="enlace in configuracion.enlaces" :key="enlace.ruta" :to="enlace.ruta">{{ enlace.etiqueta }}</NuxtLink>
+        </nav>
+      </header>
+    </slot>
 
     <slot name="intro" />
 
-    <section v-if="destacada" class="noticias-hub-editorial" aria-label="Cobertura reciente">
-      <article class="noticia-destacada-medio">
-        <NuxtLink
-          v-if="destacada.imagen"
-          :to="`/articulos/${destacada.slug}`"
-          class="imagen-noticia-destacada"
-          tabindex="-1"
-          aria-hidden="true"
-        >
-          <ImagenEditorialPublica
-            :src="destacada.imagen"
-            :alt="destacada.titulo"
-            width="1280"
-            height="720"
-            :ancho-original="destacada.imagenAncho"
-            sizes="(max-width: 760px) 100vw, 1280px"
-            loading="eager"
-            prioridad-alta
-          />
-        </NuxtLink>
-        <div class="contenido-noticia-destacada">
-          <p class="etiqueta-seccion">{{ destacada.categoria }} · DESTACADO</p>
-          <h2><NuxtLink :to="`/articulos/${destacada.slug}`">{{ destacada.titulo }}</NuxtLink></h2>
-          <p>{{ destacada.resumen }}</p>
-          <p class="meta-noticia-medio">{{ fechaPublicacion(destacada.publicadoEn) }}</p>
-          <NuxtLink class="boton-leer-noticia" :to="`/articulos/${destacada.slug}`">Leer noticia <span aria-hidden="true">→</span></NuxtLink>
-        </div>
-      </article>
-      <PublicidadAdsterraSlot v-if="listaNoticias.length >= 3" formato="leaderboard" :contexto="configuracion.titulo" />
-    </section>
+    <template v-if="$slots.noticias">
+      <slot name="noticias" :destacada="destacada" :recientes="noticiasRecientes" :cantidad="listaNoticias.length" />
+    </template>
+    <template v-else>
+      <section v-if="destacada" class="noticias-hub-editorial" aria-label="Cobertura reciente">
+        <TarjetaNoticiaPrincipal :articulo="destacada" nivel-titulo="h2" prioridad-alta />
+        <PublicidadAdsterraSlot v-if="listaNoticias.length >= 3" formato="leaderboard" :contexto="configuracion.titulo" />
+      </section>
 
-    <section class="bloque-noticias-hub-editorial" aria-labelledby="titulo-noticias-hub">
-      <div class="encabezado-noticias-listado">
-        <div><p class="etiqueta-seccion">ACTUALIDAD VERIFICADA</p><h2 id="titulo-noticias-hub">Últimas noticias</h2></div>
-        <span>{{ listaNoticias.length }} {{ listaNoticias.length === 1 ? 'publicación' : 'publicaciones' }}</span>
-      </div>
-      <div v-if="noticiasRecientes.length" class="grilla-noticias-medio">
-        <article v-for="articulo in noticiasRecientes" :key="articulo.slug" class="tarjeta-noticia-medio">
-          <NuxtLink
-            v-if="articulo.imagen"
-            :to="`/articulos/${articulo.slug}`"
-            class="imagen-tarjeta-noticia-medio"
-            tabindex="-1"
-            aria-hidden="true"
-          >
-            <ImagenEditorialPublica
-              :src="articulo.imagen"
-              :alt="articulo.titulo"
-              width="640"
-              height="360"
-              :ancho-original="articulo.imagenAncho"
-              sizes="(max-width: 760px) 100vw, 640px"
-            />
-          </NuxtLink>
-          <div>
-            <p class="etiqueta-seccion">{{ articulo.categoria }}</p>
-            <h3><NuxtLink :to="`/articulos/${articulo.slug}`">{{ articulo.titulo }}</NuxtLink></h3>
-            <p class="meta-noticia-medio">{{ fechaPublicacion(articulo.publicadoEn) }}</p>
-          </div>
-        </article>
-      </div>
-      <div v-else class="estado-vacio-articulos">
-        <h2>Estamos preparando esta cobertura</h2>
-        <p>Mostramos aquí las publicaciones que tienen la categoría editorial correspondiente; no completamos la sección con noticias de otro tema.</p>
-        <NuxtLink class="boton-primario" to="/articulos">Explorar todas las noticias</NuxtLink>
-      </div>
-    </section>
+      <section id="noticias" class="bloque-noticias-hub-editorial" aria-labelledby="titulo-noticias-hub">
+        <div class="encabezado-noticias-listado">
+          <div><p class="etiqueta-seccion">ACTUALIDAD VERIFICADA</p><h2 id="titulo-noticias-hub">Últimas noticias</h2></div>
+          <span>{{ listaNoticias.length }} {{ listaNoticias.length === 1 ? 'publicación' : 'publicaciones' }}</span>
+        </div>
+        <div v-if="noticiasRecientes.length" class="grilla-noticias-medio">
+          <TarjetaNoticiaSecundaria v-for="articulo in noticiasRecientes" :key="articulo.slug" :articulo="articulo" />
+        </div>
+        <div v-else class="estado-vacio-articulos">
+          <h2>Estamos preparando esta cobertura</h2>
+          <p>Mostramos aquí las publicaciones que tienen la categoría editorial correspondiente; no completamos la sección con noticias de otro tema.</p>
+          <NuxtLink class="boton-primario" to="/articulos">Explorar todas las noticias</NuxtLink>
+        </div>
+      </section>
+    </template>
 
     <slot name="contenido-adicional" />
   </main>

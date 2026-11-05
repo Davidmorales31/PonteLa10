@@ -30,7 +30,7 @@ export function crearTransporteConPresupuestoDiario(
     }
 
     // Si no se puede confirmar la reserva atómica, nunca se arriesga una llamada sin tope.
-    const permitido = await reservar(provider, fechaNegocio, fechaListadoDiario).catch(() => false)
+    const permitido = await reservar(provider, fechaNegocio, fechaListadoDiario)
     if (!permitido) throw errorSinPeticion()
 
     const fechaReservadaAhora = fechaListadoDiario

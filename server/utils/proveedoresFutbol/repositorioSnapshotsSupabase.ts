@@ -441,15 +441,42 @@ async function asegurarMappingsIniciales(
     const { data, error } = await cliente.from('sports_fixtures').upsert(filasFixture, { onConflict: 'slug' }).select('id,slug')
     if (error || !data) throw new Error('No fue posible inicializar los partidos canónicos privados de fútbol.')
     const idPorSlug = new Map(data.map(fila => [fila.slug, fila.id]))
-    const mappingsFixture = fixturesNuevos.flatMap(({ partido, slug }) => {
+    const candidatosMappingsFixture = fixturesNuevos.flatMap(({ partido, slug }) => {
       const fixtureId = idPorSlug.get(slug)
       return fixtureId ? [{ provider, entity_type: 'fixture', external_id: partido.idProveedor, fixture_id: fixtureId }] : []
     })
+    // El proveedor puede devolver el mismo partido más de una vez con IDs
+    // distintos. La base solo permite un ID externo por fixture canónico.
+    const mappingsFixture: typeof candidatosMappingsFixture = []
+    const idsExternosAsignados = new Set<string>()
+    const fixturesCanonicosAsignados = new Set<string>()
+    for (const mapping of candidatosMappingsFixture.sort((a, b) =>
+      a.fixture_id.localeCompare(b.fixture_id) || a.external_id.localeCompare(b.external_id))) {
+      if (idsExternosAsignados.has(mapping.external_id) || fixturesCanonicosAsignados.has(mapping.fixture_id)) continue
+      idsExternosAsignados.add(mapping.external_id)
+      fixturesCanonicosAsignados.add(mapping.fixture_id)
+      mappingsFixture.push(mapping)
+    }
     if (mappingsFixture.length) {
       const { error: errorMapping } = await cliente.from('sports_provider_mappings').upsert(mappingsFixture, {
         onConflict: 'provider,entity_type,external_id', ignoreDuplicates: true
       })
-      if (errorMapping) throw new Error('No fue posible guardar los mappings privados de partidos.')
+      if (errorMapping) {
+        if (!esColisionFixtureProveedor(errorMapping)) {
+          throw new Error('No fue posible guardar los mappings privados de partidos.')
+        }
+
+        // Si un lote choca con la unicidad provider/fixture_id, guardar cada
+        // vínculo aparte evita que un duplicado revierta los demás partidos.
+        for (const mapping of mappingsFixture) {
+          const { error } = await cliente.from('sports_provider_mappings').upsert([mapping], {
+            onConflict: 'provider,entity_type,external_id', ignoreDuplicates: true
+          })
+          if (error && !esColisionFixtureProveedor(error)) {
+            throw new Error('No fue posible guardar los mappings privados de partidos.')
+          }
+        }
+      }
     }
   }
 }
@@ -474,6 +501,11 @@ function esPartidoMapeable(partido: PartidoFutbolProveedor): boolean {
   return ids.every(valor => typeof valor === 'string' && valor.trim().length > 0 && valor.length <= 128)
     && nombres.every(valor => typeof valor === 'string' && valor.trim().length > 0 && valor.length <= 160)
     && Number.isFinite(Date.parse(partido.inicioUtc))
+}
+
+function esColisionFixtureProveedor(error: { code?: string; message?: string } | null): boolean {
+  return error?.code === '23505'
+    && error.message?.includes('sports_provider_mappings_fixture_provider_unique') === true
 }
 
 function slugCanonico(tipo: 'competition' | 'team' | 'fixture', clave: string): string {

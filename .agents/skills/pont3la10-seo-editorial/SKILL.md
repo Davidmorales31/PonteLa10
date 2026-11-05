@@ -5,6 +5,17 @@ description: Apply Pont3la10's people-first editorial SEO to researched drafts: 
 
 # Pont3la10 SEO Editorial
 
+Scheduled mode follows `docs/AUTOMATIZACION_EDITORIAL_IA.md`, overriding the legacy
+quota and human-approval boundary below. Aim for ten new scheduled articles per
+active category; DeepSeek drafts and the Codex coordinator reviews and uses the automatic approval API.
+Titles should create supported curiosity through named protagonists, action and
+consequences, inspired by the public El Futbolero headline patterns. Produce three
+alternatives, select the most attractive accurate one, and keep social copy, SEO
+and the article aligned. Do not hide the entire answer or invent urgency, quotes,
+popularity, accusations or facts. A single attributed source may suffice; do not
+describe a sourced synthesis as original reporting. All compatible SEO/taxonomy,
+photo and deduplication requirements below remain in effect.
+
 Apply after research and before submitting a draft. SEO improves discovery and
 clarity; it never overrides accuracy, public value, or the human review gate.
 
@@ -32,6 +43,14 @@ clarity; it never overrides accuracy, public value, or the human review gate.
    current batch; verify entity spelling, dates, canonical source links, image
    attribution if present, and consistency between title, summary, body, and
    primary query. Flag unresolved or sensitive claims for the human editor.
+
+For the scheduled editorial workflow, the batch goal is at least ten unique
+articles confirmed in `review` and at least one in every active category.
+Research all active categories, prioritizing Liga BetPlay and Colombianos en
+Europa. This is a minimum to pursue without weakening verification or
+deduplication. Each delivered article must use a different, pertinent real
+photograph with verified credit and source; do not use AI-generated covers. If
+no suitable photo exists, keep that candidate local and incomplete.
 
 Return only fields required by the current Codex/DeepSeek contract. SEO terms,
 taxonomy, and relationships are proposals; server validation and Juan's review

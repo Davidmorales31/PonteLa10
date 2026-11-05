@@ -44,10 +44,10 @@ function cambiarSeguimiento() {
 .boton-seguimiento-jugador[aria-pressed="true"] { border-color: #0e3154; background: #0e3154; color: #fff; }
 .boton-seguimiento-jugador.compacto { min-height: 34px; padding: 6px 11px; font-size: .74rem; }
 .aviso-limite-seguimiento-jugador { color: #8a4c00; font-size: .76rem; line-height: 1.4; }
-:global(body.tema-publico-azul) .boton-seguimiento-jugador { border-color: #365875; background: #132f4d; color: #a4eaff; }
-:global(body.tema-publico-azul) .boton-seguimiento-jugador:hover,
-:global(body.tema-publico-azul) .boton-seguimiento-jugador:focus-visible { border-color: #59d9ff; background: #1a4164; color: #fff; }
-:global(body.tema-publico-azul) .boton-seguimiento-jugador[aria-pressed="true"] { border-color: #59d9ff; background: #17476b; color: #fff; }
-:global(body.tema-publico-azul) .aviso-limite-seguimiento-jugador { color: #ffe2a6; }
+body.tema-publico-azul .boton-seguimiento-jugador { border-color: #365875; background: #132f4d; color: #a4eaff; }
+body.tema-publico-azul .boton-seguimiento-jugador:hover,
+body.tema-publico-azul .boton-seguimiento-jugador:focus-visible { border-color: #59d9ff; background: #1a4164; color: #fff; }
+body.tema-publico-azul .boton-seguimiento-jugador[aria-pressed="true"] { border-color: #59d9ff; background: #17476b; color: #fff; }
+body.tema-publico-azul .aviso-limite-seguimiento-jugador { color: #ffe2a6; }
 @media (prefers-reduced-motion: reduce) { .boton-seguimiento-jugador { transition: none; } }
 </style>

@@ -21,7 +21,7 @@ describe('integración de fútbol en el worker local', () => {
       }), { status: 200, headers: { 'content-type': 'application/json' } }))
     })
     const sincronizador = crearSincronizadorFutbolLocal({
-      entorno: {
+      entorno: { NODE_ENV: 'test',
         PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
         PONT3LA10_FUTBOL_SYNC_INTERVAL_MS: '300000',
         PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3001',
@@ -49,10 +49,10 @@ describe('integración de fútbol en el worker local', () => {
       expect(encabezados['x-pont3la10-signature']).toBe(esperada)
       expect(cuerpo).toBe('{}')
       expect([
-        '/api/internal/futbol/calendario',
-        '/api/internal/futbol/fixtures',
-        '/api/internal/futbol/liga-resultados',
-        '/api/internal/futbol/tabla-dimayor'
+        '/local-internal/futbol/calendario',
+        '/local-internal/futbol/fixtures',
+        '/local-internal/futbol/liga-resultados',
+        '/local-internal/futbol/tabla-dimayor'
       ]).toContain(ruta)
     }
 
@@ -69,13 +69,13 @@ describe('integración de fútbol en el worker local', () => {
   it('no hace llamadas por omisión y rechaza destinos ajenos al PC', async () => {
     const transporte = vi.fn()
     const deshabilitado = crearSincronizadorFutbolLocal({
-      entorno: { PONT3LA10_FUTBOL_WORKER_ENABLED: 'false' }, transporte
+      entorno: { NODE_ENV: 'test', PONT3LA10_FUTBOL_WORKER_ENABLED: 'false' }, transporte
     })
     expect((await deshabilitado.ejecutarSiCorresponde()).estado).toBe('deshabilitado')
 
     const avisar = vi.fn()
     const destinoExterno = crearSincronizadorFutbolLocal({
-      entorno: {
+      entorno: { NODE_ENV: 'test',
         PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
         NUXT_FUTBOL_WORKER_API_SECRET: secreto,
         PONT3LA10_CODEX_API_BASE_URL: 'https://pont3la10.com'
@@ -94,7 +94,7 @@ describe('integración de fútbol en el worker local', () => {
       estado: 'completado', siguienteEjecucionMs: 8 * 60_000, siguienteEjecucionMotivo: 'fixture_debe_actualizarse'
     }), { status: 200, headers: { 'content-type': 'application/json' } }))
     const sincronizador = crearSincronizadorFutbolLocal({
-      entorno: {
+      entorno: { NODE_ENV: 'test',
         PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
         PONT3LA10_FUTBOL_SYNC_INTERVAL_MS: '300000',
         PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3001',
@@ -120,7 +120,7 @@ describe('integración de fútbol en el worker local', () => {
       estado: 'ocupado', siguienteEjecucionMs: 60_000
     }), { status: 200, headers: { 'content-type': 'application/json' } }))
     const sincronizador = crearSincronizadorFutbolLocal({
-      entorno: {
+      entorno: { NODE_ENV: 'test',
         PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
         PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3001',
         NUXT_FUTBOL_WORKER_API_SECRET: secreto
@@ -142,7 +142,7 @@ describe('integración de fútbol en el worker local', () => {
       estado: 'sin_cuota', siguienteEjecucionMs: 60_000
     }), { status: 200, headers: { 'content-type': 'application/json' } }))
     const sincronizador = crearSincronizadorFutbolLocal({
-      entorno: {
+      entorno: { NODE_ENV: 'test',
         PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
         PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3001',
         NUXT_FUTBOL_WORKER_API_SECRET: secreto
@@ -168,7 +168,7 @@ describe('integración de fútbol en el worker local', () => {
       }), { status: 200, headers: { 'content-type': 'application/json' } })
     })
     const sincronizador = crearSincronizadorFutbolLocal({
-      entorno: {
+      entorno: { NODE_ENV: 'test',
         PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
         PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3001',
         NUXT_FUTBOL_WORKER_API_SECRET: secreto
@@ -185,7 +185,7 @@ describe('integración de fútbol en el worker local', () => {
       return llamada.pathname.endsWith('/fixtures')
     })?.[0]
     const url = ruta instanceof URL ? ruta : new URL(ruta instanceof Request ? ruta.url : String(ruta))
-    expect(url.pathname).toBe('/api/internal/futbol/fixtures')
+    expect(url.pathname).toBe('/local-internal/futbol/fixtures')
   })
 
   it('detiene el ciclo después de la ruta actual sin iniciar otras solicitudes', async () => {
@@ -197,7 +197,7 @@ describe('integración de fútbol en el worker local', () => {
       })
     })
     const sincronizador = crearSincronizadorFutbolLocal({
-      entorno: {
+      entorno: { NODE_ENV: 'test',
         PONT3LA10_FUTBOL_WORKER_ENABLED: 'true',
         PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3011',
         NUXT_FUTBOL_WORKER_API_SECRET: secreto

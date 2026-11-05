@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import { listarArticulosPublicosPorEntidad } from '~/server/utils/repositorioContenidoEditorial'
+import { listarArticulosPublicosEditoriales, listarArticulosPublicosPorEntidad } from '~/server/utils/repositorioContenidoEditorial'
 import { listarEquiposLigaPublicos, type ClasificacionEquipoPublica, type EquipoLigaPublico } from '~/server/utils/equiposLigaPublicos'
 import { listarPartidosSeoPublicos, normalizarClaveEquipoLiga, type PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
@@ -806,9 +806,24 @@ async function listarNoticiasCompeticion(
   cliente: SupabaseClient,
   slug: SlugCompeticionPublica
 ): Promise<NoticiaCompeticionPublica[]> {
-  try {
-    const relacionadas = await listarArticulosPublicosPorEntidad(cliente, 'competition', slug, 6)
-    return relacionadas.map(noticia => ({
+  const limite = 12
+  const [relacionadas, etiquetadas] = await Promise.all([
+    listarArticulosPublicosPorEntidad(cliente, 'competition', slug, limite).catch(() => []),
+    listarArticulosPublicosEditoriales(cliente, limite, 0, {
+      categoria: null,
+      terminosCategoria: [],
+      tema: slug,
+      buscar: null
+    }).catch(() => [])
+  ])
+  const articulosUnicos = new Map<string, (typeof relacionadas)[number]>()
+  for (const noticia of [...relacionadas, ...etiquetadas]) {
+    if (!articulosUnicos.has(noticia.slug)) articulosUnicos.set(noticia.slug, noticia)
+  }
+  return [...articulosUnicos.values()]
+    .sort((a, b) => Date.parse(b.publicadoEn) - Date.parse(a.publicadoEn))
+    .slice(0, limite)
+    .map(noticia => ({
       slug: noticia.slug,
       titulo: noticia.titulo,
       resumen: noticia.resumen,
@@ -819,10 +834,6 @@ async function listarNoticiasCompeticion(
       imagen: noticia.imagen,
       ...(noticia.lecturaMinutos === undefined ? {} : { lecturaMinutos: noticia.lecturaMinutos })
     }))
-  } catch {
-    // No sustituir una relación editorial confirmada por una coincidencia textual.
-    return []
-  }
 }
 
 function normalizarNombreJornada(valor: string | null): string {

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ArrowRight } from '@lucide/vue'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 
 defineProps<{
@@ -18,27 +17,11 @@ defineProps<{
       <h2 id="titulo-articulos-relacionados">Más historias para ti</h2>
     </header>
     <div class="rejilla-articulos-relacionados">
-      <NuxtLink
+      <TarjetaNoticiaSecundaria
         v-for="articulo in articulos"
         :key="articulo.id"
-        :to="`/articulos/${articulo.slug}`"
-      >
-        <span v-if="articulo.imagen" class="imagen-articulo-recomendado">
-          <ImagenEditorialPublica
-            :src="articulo.imagen"
-            :alt="articulo.titulo"
-            width="480"
-            height="270"
-            :ancho-original="articulo.imagenAncho"
-            sizes="(max-width: 760px) 100vw, 480px"
-          />
-        </span>
-        <small>{{ articulo.categoria }}</small>
-        <strong>{{ articulo.titulo }}</strong>
-        <span class="leer-articulo-recomendado">
-          Leer noticia <ArrowRight aria-hidden="true" />
-        </span>
-      </NuxtLink>
+        :articulo="articulo"
+      />
     </div>
   </section>
 </template>

@@ -217,7 +217,7 @@ describe('API privada de propuestas Codex', () => {
     }).success).toBe(false)
   })
 
-  it('exige aporte diferenciado y fuente primaria correctamente identificada antes de redactar', () => {
+  it('conserva el brief diferenciado y permite una fuente secundaria atribuida al redactar', () => {
     const fuentePrimaria = {
       url: 'https://dimayor.example.org/acta',
       titulo: 'Acta oficial del encuentro',
@@ -265,11 +265,13 @@ describe('API privada de propuestas Codex', () => {
     expect(esquemaBorradorCodex.safeParse({
       ...borrador,
       sources: borrador.sources.map(origen => ({ ...origen, tipo: 'secundaria' as const }))
-    }).success).toBe(false)
+    }).success).toBe(true)
     expect(esquemaBorradorCodex.safeParse({
       ...borrador,
       primarySourceUrl: fuenteSecundaria.url
-    }).success).toBe(false)
+    }).success).toBe(true)
+    expect(esquemaBorradorCodex.safeParse({ ...borrador, sources: [] }).success).toBe(false)
+    expect(esquemaBorradorCodex.safeParse({ ...borrador, sources: [fuenteSecundaria], primarySourceUrl: fuenteSecundaria.url }).success).toBe(true)
 
     const brief = {
       targetQuery: 'fútbol regional',
@@ -397,7 +399,7 @@ describe('API privada de propuestas Codex', () => {
       ...agenda,
       categories: [{
         ...agenda.categories[0],
-        opportunities: Array.from({ length: 8 }, (_, indice) => ({
+        opportunities: Array.from({ length: 21 }, (_, indice) => ({
           ...oportunidad,
           fingerprint: indice.toString(16).padStart(64, '0')
         }))

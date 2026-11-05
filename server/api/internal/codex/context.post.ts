@@ -6,6 +6,7 @@ import {
 } from '~/server/utils/codexEditorialPrivado'
 import { esquemaContextoCodex } from '~/server/utils/esquemasCodexEditorial'
 import { clasificarErrorContextoCodex } from '~/server/utils/errorContextoCodex'
+import politicaAutomatizacion from '~/config/automatizacionEditorial.json'
 
 const limiteContextoBytes = 20_000
 
@@ -36,5 +37,5 @@ export default defineEventHandler(async (evento) => {
     })
   }
 
-  return data
+  return { ...data, politicaAutomatizacion }
 })

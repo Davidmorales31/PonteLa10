@@ -36,6 +36,7 @@ import {
   separarJornadaPortada
 } from '~/utils/portadaPublica'
 import { obtenerFechaEnZonaHoraria, zonaHorariaColombia } from '~/utils/zonasHorarias'
+import { combinarArticulosPublicos } from '~/utils/articulosLanding'
 
 type ArticuloPortada = ArticuloResumen & { fechaPublicacion: string }
 interface FilaTablaLigaPortada {
@@ -72,6 +73,10 @@ interface JugadorSeguidoPortada {
   noticias: ResumenArticuloPublico[]
   error: boolean
 }
+interface PaginaNoticiasPortada {
+  articulos: ResumenArticuloPublico[]
+  hayMas: boolean
+}
 
 const instantePortada = useState('portada-instante-renderizado', () => new Date().toISOString())
 const configuracionApi = useRuntimeConfig()
@@ -91,7 +96,9 @@ const claveClicVerEnVivo = 'pont3la10:clic-ver-en-vivo:v1'
 let clicVerEnVivoEnMemoria = false
 const claveClicFuenteSeleccion = 'pont3la10:clic-fuente-seleccion:v1'
 let clicFuenteSeleccionEnMemoria = false
-const urlApiPublica = (ruta: string) => import.meta.server && configuracionApi.public.apiOrigin
+const urlApiPublica = (ruta: string) => import.meta.dev && ruta === '/api/resultados'
+  ? '/partidos-hoy-local'
+  : import.meta.server && configuracionApi.public.apiOrigin
   ? `${String(configuracionApi.public.apiOrigin).replace(/\/$/, '')}${ruta}`
   : ruta
 const respuestaResultadosVacia: RespuestaResultados = {
@@ -107,7 +114,8 @@ const respuestaLigaVacia: RespuestaLigaPortada = {
   consultadoEn: ''
 }
 const [consultaResultados, consultaLiga, consultaArticulos, consultaDestacada,
-  consultaLigaArticulos, consultaSeleccionArticulos, consultaEuropaArticulos, consultaInternacionalArticulos] = await Promise.all([
+  consultaLigaArticulos, consultaSeleccionArticulos, consultaEuropaArticulos, consultaInternacionalArticulos,
+  consultaFeedTodasNoticias] = await Promise.all([
   useFetch<RespuestaResultados>(urlApiPublica('/api/resultados'), {
     key: 'resultados-portada-futbol',
     query: { deporte: 'futbol', timeZone: zonaHorariaColombia },
@@ -153,6 +161,12 @@ const [consultaResultados, consultaLiga, consultaArticulos, consultaDestacada,
     query: { categoria: 'futbol-mundial', limite: 10 },
     default: () => [],
     ignoreResponseError: true
+  }),
+  useFetch<PaginaNoticiasPortada>(urlApiPublica('/api/articulos'), {
+    key: 'todas-noticias-portada',
+    query: { paginado: 'true', limite: 20, desplazamiento: 0 },
+    default: () => ({ articulos: [], hayMas: false }),
+    ignoreResponseError: true
   })
 ])
 const resultados = consultaResultados.data
@@ -163,6 +177,16 @@ const respuestaPublicacionDestacada = consultaDestacada.data
 const respuestaArticulosLiga = consultaLigaArticulos.data
 const respuestaArticulosSeleccion = consultaSeleccionArticulos.data
 const respuestaArticulosEuropa = consultaEuropaArticulos.data
+const articulosFeedCargados = ref(consultaFeedTodasNoticias.data.value?.articulos || [])
+const hayMasArticulosFeed = ref(consultaFeedTodasNoticias.data.value?.hayMas || false)
+const desplazamientoFeed = ref(articulosFeedCargados.value.length)
+const cargandoFeed = ref(false)
+const errorFeed = ref('')
+const sentinelFeed = ref<HTMLElement | null>(null)
+let observadorFeed: IntersectionObserver | null = null
+const articulosFeed = computed(() => articulosFeedCargados.value
+  .filter(esResumenArticuloPublico)
+  .map(mapearArticuloPortada))
 const noticiasInternacionales = computed(() => (Array.isArray(consultaInternacionalArticulos.data.value)
   ? consultaInternacionalArticulos.data.value.filter(esResumenArticuloPublico)
   : []).map(mapearArticuloPortada))
@@ -203,6 +227,34 @@ function mapearArticuloPortada(articulo: ResumenArticuloPublico): ArticuloPortad
     imagenAncho: articulo.imagenAncho
   }
 }
+async function cargarMasFeed() {
+  if (cargandoFeed.value || !hayMasArticulosFeed.value) return
+  cargandoFeed.value = true
+  errorFeed.value = ''
+
+  try {
+    const pagina = await $fetch<PaginaNoticiasPortada>(urlApiPublica('/api/articulos'), {
+      query: { paginado: 'true', limite: 20, desplazamiento: desplazamientoFeed.value }
+    })
+    articulosFeedCargados.value = combinarArticulosPublicos(articulosFeedCargados.value, pagina.articulos)
+    desplazamientoFeed.value += pagina.articulos.length
+    hayMasArticulosFeed.value = pagina.hayMas
+  } catch {
+    errorFeed.value = 'No se pudieron cargar más noticias. Puedes intentarlo de nuevo.'
+  } finally {
+    cargandoFeed.value = false
+  }
+}
+
+onMounted(() => {
+  observadorFeed = new IntersectionObserver((entradas) => {
+    if (!errorFeed.value && entradas.some(entrada => entrada.isIntersecting)) void cargarMasFeed()
+  }, { rootMargin: '500px 0px' })
+  if (sentinelFeed.value) observadorFeed.observe(sentinelFeed.value)
+})
+
+onBeforeUnmount(() => observadorFeed?.disconnect())
+
 const articulosPublicados = computed<ArticuloPortada[]>(() => publicacionesReales.value.map(mapearArticuloPortada))
 const articuloDestacado = computed<ArticuloPortada | null>(() => {
   const articulo = publicacionDestacada.value
@@ -542,9 +594,9 @@ useSeoPont3la10({
           <p>Liga BetPlay, Selección Colombia, fútbol internacional, partidos de hoy, resultados y actualidad deportiva.</p>
         </div>
         <template v-if="portadaPrincipal">
-          <NoticiaPortada :articulo="portadaPrincipal" principal nivel-titulo="h2" />
+          <TarjetaNoticiaPrincipal :articulo="portadaPrincipal" nivel-titulo="h2" prioridad-alta />
           <div v-if="noticiasSecundarias.length" class="medio-secundarias">
-            <NoticiaPortada v-for="articulo in noticiasSecundarias" :key="articulo.slug" :articulo="articulo" />
+            <TarjetaNoticiaSecundaria v-for="articulo in noticiasSecundarias" :key="articulo.slug" :articulo="articulo" />
           </div>
         </template>
         <div v-else class="medio-vacio">
@@ -577,7 +629,7 @@ useSeoPont3la10({
                 </NuxtLink>
               </li>
             </ul>
-            <p v-else class="home-sin-datos">No hay partidos de fútbol publicados para hoy. La agenda se actualizará cuando lleguen fixtures confirmados.</p>
+            <p v-else class="home-sin-datos">{{ resultados?.aviso || 'No hay partidos de fútbol publicados para hoy. La agenda se actualizará cuando lleguen fixtures confirmados.' }}</p>
           </section>
 
           <section class="home-panel" aria-labelledby="titulo-resultados-recientes-home">
@@ -687,7 +739,7 @@ useSeoPont3la10({
               <p v-else class="home-sin-datos">No hay próximo partido confirmado en el calendario público.</p>
             </article>
             <div v-if="noticiasLigaPortada.length" class="home-noticias-modulo">
-              <TarjetaArticuloPortada v-for="articulo in noticiasLigaPortada" :key="articulo.slug" :articulo="articulo" />
+              <TarjetaNoticiaSecundaria v-for="articulo in noticiasLigaPortada" :key="articulo.slug" :articulo="articulo" mostrar-resumen />
             </div>
             <p v-else class="home-sin-datos home-sin-datos-contenido">No hay noticias publicadas que correspondan claramente con la Liga BetPlay.</p>
           </div>
@@ -763,7 +815,7 @@ useSeoPont3la10({
                 <NuxtLink to="/seleccion-colombia">Ver todas <span aria-hidden="true">→</span></NuxtLink>
               </div>
               <div v-if="noticiasSeleccionPortada.length" class="home-noticias-modulo home-noticias-seleccion">
-                <TarjetaArticuloPortada v-for="articulo in noticiasSeleccionPortada" :key="articulo.slug" :articulo="articulo" />
+                <TarjetaNoticiaSecundaria v-for="articulo in noticiasSeleccionPortada" :key="articulo.slug" :articulo="articulo" mostrar-resumen />
               </div>
               <div v-else class="home-seleccion-sin-noticias">
                 <p>Aún no hay noticias recientes de Pont3la10 para esta selección.</p>
@@ -807,7 +859,7 @@ useSeoPont3la10({
           </div>
         </div>
         <div id="noticias-internacionales-portada" class="home-noticias-modulo home-noticias-europa home-noticias-internacionales">
-          <TarjetaArticuloPortada v-for="articulo in noticiasPaginaInternacionales" :key="articulo.slug" :articulo="articulo" />
+          <TarjetaNoticiaSecundaria v-for="articulo in noticiasPaginaInternacionales" :key="articulo.slug" :articulo="articulo" mostrar-resumen />
         </div>
       </section>
 
@@ -823,7 +875,7 @@ useSeoPont3la10({
           </NuxtLink>
         </nav>
         <div v-if="noticiasEuropaPortada.length" class="home-noticias-modulo home-noticias-europa">
-          <TarjetaArticuloPortada v-for="articulo in noticiasEuropaPortada" :key="articulo.slug" :articulo="articulo" />
+          <TarjetaNoticiaSecundaria v-for="articulo in noticiasEuropaPortada" :key="articulo.slug" :articulo="articulo" mostrar-resumen />
         </div>
         <p v-else class="home-sin-datos home-sin-datos-contenido">No hay noticias recientes vinculadas de forma verificable con estos futbolistas.</p>
       </section>
@@ -985,7 +1037,7 @@ useSeoPont3la10({
           <div><p class="home-antetitulo">CONTEXTO Y ANÁLISIS</p><h2 id="titulo-analisis-home">Para entender el juego</h2><p>Historias y explicadores publicados por el equipo editorial.</p></div>
           <NuxtLink to="/especiales">Más especiales <span aria-hidden="true">→</span></NuxtLink>
         </div>
-        <div class="home-analisis-tarjeta"><TarjetaArticuloPortada :articulo="noticiaAnalisis" /></div>
+        <div class="home-analisis-tarjeta"><TarjetaNoticiaSecundaria :articulo="noticiaAnalisis" mostrar-resumen /></div>
       </section>
 
       <section class="medio-explora" aria-label="Explora categorías">
@@ -993,6 +1045,34 @@ useSeoPont3la10({
         <nav aria-label="Categorías">
           <NuxtLink v-for="categoria in categoriasSitio" :key="categoria.ruta" :to="categoria.ruta">{{ categoria.etiqueta === 'Tech deportiva' ? 'Tecnología deportiva' : categoria.etiqueta }} <span aria-hidden="true">↗</span></NuxtLink>
         </nav>
+      </section>
+
+      <section class="medio-seccion home-todas-noticias" aria-labelledby="titulo-todas-noticias">
+        <div class="medio-encabezado home-encabezado-seccion">
+          <div>
+            <p class="home-antetitulo">ACTUALIDAD EDITORIAL</p>
+            <h2 id="titulo-todas-noticias">Todas las noticias</h2>
+            <p>Las lúltimas historias publicadas por nuestro equipo.</p>
+          </div>
+          <NuxtLink to="/articulos">Ver archivo completo <span aria-hidden="true">→</span></NuxtLink>
+        </div>
+        <div v-if="articulosFeed.length" class="home-todas-noticias-grilla">
+          <TarjetaNoticiaSecundaria
+            v-for="articulo in articulosFeed"
+            :key="articulo.slug"
+            :articulo="articulo"
+            mostrar-resumen
+          />
+        </div>
+        <p v-else class="medio-texto-suave">Aún no hay noticias publicadas para mostrar.</p>
+        <div v-if="hayMasArticulosFeed || cargandoFeed || errorFeed" ref="sentinelFeed" class="home-feed-estado" aria-live="polite">
+          <span v-if="cargandoFeed" role="status">Cargando más noticias…</span>
+          <template v-else-if="errorFeed">
+            <span>{{ errorFeed }}</span>
+            <button type="button" @click="cargarMasFeed">Reintentar</button>
+          </template>
+        </div>
+        <p v-else-if="articulosFeed.length" class="home-feed-fin">Ya viste todas las noticias disponibles.</p>
       </section>
 
       <section class="medio-patrocinios" aria-label="Anúnciate con nosotros">
@@ -1300,6 +1380,12 @@ useSeoPont3la10({
 .home-noticias-paginacion > span { min-width: 3.4em; color: #a8bbd5; font-size: .68rem; font-variant-numeric: tabular-nums; text-align: center; }
 .home-sin-datos-contenido { border: 1px solid #294467; border-radius: 10px; background: #0c2443; padding: 16px; }
 .home-analisis-tarjeta { width: min(100%, 420px); }
+.home-todas-noticias { border-top: 1px solid #294467; padding-top: 24px; }
+.home-todas-noticias-grilla { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.home-feed-estado, .home-feed-fin { display: flex; min-height: 48px; align-items: center; justify-content: center; gap: 12px; margin: 14px 0 0; color: #a8bbd5; font-size: .82rem; }
+.home-feed-estado button { border: 1px solid #507096; border-radius: 8px; background: #0c2443; padding: 8px 12px; color: #f5f8ff; font: inherit; font-weight: 750; cursor: pointer; }
+.home-feed-estado button:hover { border-color: #7ce6f5; color: #ffd800; }
+.home-feed-estado button:focus-visible { outline: 3px solid #7ce6f5; outline-offset: 3px; }
 .home-jornada :deep(.espacio-adsterra) { margin-top: 16px; }
 .portada-medio a:focus-visible { outline: 3px solid #7ce6f5; outline-offset: 3px; }
 @media (max-width: 900px) {
@@ -1310,6 +1396,7 @@ useSeoPont3la10({
   .medio-actualidad { gap: 20px; }
   .medio-patrocinios { align-items: start; flex-direction: column; }
   .home-noticias-europa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-todas-noticias-grilla { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .home-perfiles-europa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .home-seleccion-grid { grid-template-columns: 1fr; }
 }
@@ -1317,6 +1404,7 @@ useSeoPont3la10({
   .medio-contenedor { width: calc(100% - 32px); }
   .medio-edicion { font-size: .55rem; letter-spacing: .07em; }
   .medio-apertura, .medio-apertura.sin-secundarias, .medio-actualidad { grid-template-columns: 1fr; }
+  .home-todas-noticias-grilla { grid-template-columns: 1fr; }
   .medio-introduccion { padding: 8px 0 2px; }
   .medio-introduccion h1 { max-width: 19ch; margin: 7px 0 9px; font-size: clamp(1.8rem, 7.6vw, 2.2rem); }
   .medio-introduccion > p:last-child { max-width: 54ch; font-size: .9rem; }

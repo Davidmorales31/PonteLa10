@@ -1,5 +1,91 @@
 # Estado actual de Pont3la10
 
+## Automatización editorial con DeepSeek y aprobación IA (2026-11-04, preparada localmente)
+
+- El responsable confirmó mantener DeepSeek como redactor. Codex investiga y revisa; nueva API privada `auto-proposals` y CLI `propuesta-automatica` preparan creación, brief, aprobación IA y programación en una transacción. Requieren una generación DeepSeek completada de la misma identidad y su brief exacto, además de una clave HMAC de publicación independiente; los actores humanos quedan nulos y la aprobación IA se audita.
+- Política deseada: dos corridas, 06:05/18:05 Bogotá, mínimo diez artículos por categoría activa, separación de publicaciones de dos minutos y agenda de hasta veinte oportunidades por categoría. Tendencias admite actualidad latinoamericana/general y una fuente atribuida puede bastar; títulos atractivos inspirados en los recursos generales de El Futbolero, sin inventar afirmaciones ni popularidad. Facebook bloqueó acceso; se revisó el portal público.
+- La migración `20261105033000_codex_aprobacion_ia_programacion.sql`, la configuración y el prompt están listos en el checkout. No se aplicó la migración remota, no se desplegó la API, no se configuró la clave nueva ni se cambió el objeto real de tarea programada. Producción conserva su flujo previo hasta activar esos pasos y verificar Cron.
+- Validación: 37 pruebas relacionadas pasan; suite completa: 598/602 pasan, cuatro fallan en contratos previos de worker, competiciones y Home. SQL aislado PGlite: 25 comprobaciones pasan ejecutando la migración y el trigger real con dependencias mínimas simuladas; no certifica el historial Supabase completo ni concurrencia multiconexión. ESLint focal, build y diff-check pasan. Lint global falla en archivos ajenos de fabrica-landings y typecheck global informa 193 diagnósticos ajenos, sin diagnósticos en los archivos nuevos. Revisor de seguridad sin bloqueos tras corregir reserva de huecos y conteo de cuota bajo bloqueo.
+- Política: `docs/AUTOMATIZACION_EDITORIAL_IA.md`; configuración: `config/automatizacionEditorial.json`; handoff: `docs/agents/handoffs/2026-11-04-automatizacion-editorial-aprobacion-ia.md`.
+
+## Última corrida editorial (run `09801e54-72ce-4c6b-91b9-cc8c148ff391`, 2026-10-27)
+
+- Producción cerró la corrida como `partial` después de recibir 10/10 propuestas únicas en `review`, con las siete categorías activas y diez oportunidades conciliadas individualmente. Salud confirmó 20 artículos en `review` al cierre (10 previos y 10 de esta corrida); no se aprobó, programó ni publicó ninguno.
+- Distribución: Fútbol colombiano 2; Fútbol mundial 3; Tecnología deportiva, Gaming deportivo, Tendencias, Especiales y Opinión 1 cada una. Las diez portadas persistidas son fotos reales diferentes, con media IDs únicos, crédito, fuente, alt y pie presentes; ninguna es IA. Las 10 entregas fueron confirmadas por recibo y contexto/CMS.
+- Bloqueador de calidad: el artículo [Santa Fe venció a Bucaramanga con gol de Palacios al 90+3](https://www.pont3la10.com/admin/contenidos/957a9495-f785-4c6c-9514-3930b48fb6bf?paso=presentacion) tiene asociado el tema público `América de Cali`, pero ese club no aparece en su cuerpo. La clave idempotente de la propuesta ya fue usada; no se reenvió con otro contenido ni se editó el artículo fuera de la CLI privada. Requiere corregir ese tema desde la edición editorial autenticada antes de considerar esta corrida plenamente válida.
+- Salud, contexto, los diez recibos y el CMS se cotejaron al cierre. Agenda privada: 10 oportunidades guardadas, 0 deduplicadas; todos los checkpoints de categoría quedaron completos. SHA de Producción `f0d0cda7f7ef6bca4a3550741f425be88a3ed717`; contratos de los endpoints privados relevantes comparados con `origin/main` `1a5b6eec8f7b4e6f1193112aba34a22708b1a101`.
+- Checkpoints y conciliación: `.codex/editorial-runs/09801e54-72ce-4c6b-91b9-cc8c148ff391/`; auditoría final `reconciliation-final.json`. Handoff: `docs/agents/handoffs/2026-10-27-corrida-editorial-09801e54-partial.md`.
+
+## Corrida del 20 de octubre (run `3ed39b98-54a2-4f3b-a299-12dd56b6b74c`, último estado documentado 2026-10-20)
+
+- En el último estado guardado para ese corte, salud y contexto de Producción consultados de nuevo a las 17:20 COT mostraban el run `in_progress`, con 9 artículos únicos `review` de 16 propuestas y 20 oportunidades en agenda. Ese estado no fue reabierto ni actualizado por la corrida del 27 de octubre.
+- La décima oportunidad prioritaria es el resultado de Cúcuta–Atlético Nacional, programado para las 18:30 COT. A las 20:05 COT, la cobertura en vivo de Gol Caracol reportaba 1-0 para Cúcuta al descanso, gol de Dayan Pérez, con el segundo tiempo en curso; aún no hay marcador final confirmado. No redactar resultado final ni goleadores antes de verificarlo en fuente primaria. El run conserva una oportunidad de Pedro Bravo en estado incierto, sujeta a revisar el checkpoint y el límite de reintentos antes de cualquier acción.
+- SHA de Production verificado en Vercel: `f0d0cda7f7ef6bca4a3550741f425be88a3ed717`. `origin/main` disponible en el checkout: `1a5b6eec8f7b4e6f1193112aba34a22708b1a101`. `git show` confirmó iguales los contratos de `context.post.ts`, `agenda.post.ts`, `draft.post.ts`, `media.post.ts` y `proposals.post.ts` entre ambos commits.
+- La automatización vigente contiene la meta mínima de 10 review y al menos 1 por categoría activa, además de fotos reales acreditadas y conciliación individual. Memento recibió la misma restricción. Checkpoints del run: `.codex/editorial-runs/3ed39b98-54a2-4f3b-a299-12dd56b6b74c/`.
+- Siguiente acción: verificar el resultado oficial de Cúcuta–Nacional una vez finalice, reanudar la misma identidad y clave del candidato, llevarlo hasta recibo CMS si supera los controles y reconciliar las 20 oportunidades antes del cierre. No aprobar, programar ni publicar.
+- Handoff: `docs/agents/handoffs/2026-10-20-corrida-editorial-3ed39b98-en-progreso.md`.
+
+## Automatización editorial: prueba, meta de diez y evaluación de nube (2026-10-20)
+
+- Se comprobó la cuenta con Codex: plan Plus. Codex Cloud está disponible en
+  Plus con límites de uso y requiere un entorno publicado conectado al
+  repositorio. La automatización actual sigue ligada al proyecto local; la
+  interfaz/API de automatizaciones disponible aquí solo ofrece ejecución local
+  o heartbeat del hilo. No se cambió ni se duplicó la programación. La guía
+  oficial de tareas en web indica que no acceden a carpetas locales; la guía de
+  Cloud describe entornos y tareas aisladas, no una transferencia in-place del
+  heartbeat existente.
+- Corrida privada de Production `3d76af82-1db0-4c32-b31f-63897acd35d6`, fecha
+  Bogotá `2026-10-20`: el primer borrador respondió HTTP 502
+  `IA_REDACCION_INVALIDA` y quedó `uncertain`. Juan autorizó un único reintento
+  pagado con la misma clave; devolvió texto completo. Se corrigieron metacomentario
+  y una afirmación histórica no sustentada y se verificaron datos en FC Bayern,
+  Bundesliga y UEFA. La versión revisada tiene 724 palabras en ocho párrafos.
+- Se entregó el artículo `cac3ffc8-d256-41b9-bab3-fb717c8cbd2b` en `review`,
+  categoría Fútbol mundial, con los temas Colombianos en Europa y Bundesliga,
+  y dos artículos relacionados del contexto. La portada es una fotografía
+  pertinente de Luis Díaz, distinta para esta noticia, con crédito `© Imago` y
+  fuente oficial del Bayern. Producción confirmó el recibo y contexto; una
+  lectura de verificación en Supabase confirmó estado, categoría, 724 palabras,
+  temas, artículos relacionados y metadata de foto persistida.
+- La corrida quedó cerrada como `completed`: Producción confirmó diez artículos
+  únicos en `review`, con las siete categorías activas cubiertas (cuatro en
+  Fútbol colombiano y uno en cada categoría restante). Las diez oportunidades
+  `create` con `addsNewValue=true` se reconciliaron individualmente; el recibo,
+  contexto y estado final de salud coinciden. La verificación de CMS confirmó
+  diez portadas reales distintas y metadata de crédito, fuente y texto alternativo
+  presente en todas. La corrida ya no permanece `in_progress`. La automatización
+  existente fue actualizada, sin cambiar su
+  horario ni su hilo, para apuntar en cada corrida a diez artículos únicos en
+  `review` y al menos uno por categoría activa, empezando por Liga BetPlay y
+  Colombianos en Europa. Se conservaron los filtros de calidad; no se rellena
+  con duplicados o historias débiles. Solo se permiten fotos reales acreditadas;
+  si no hay una, el candidato queda incompleto y no se entrega.
+- Las skills versionadas de corrida, trend, escritura, SEO y fotografía real se
+  alinearon a estas reglas; `pont3la10-ai-editorial-cover` quedó desactivada
+  para la corrida programada. Search Console sigue sin evidencia exacta; no se
+  atribuyó demanda. Los artefactos del run están bajo `.codex/editorial-runs/`
+  (ignorado por Git).
+- Handoff: `docs/agents/handoffs/2026-10-20-prueba-editorial-y-limites-cloud.md`.
+
+## Rediseño visual de Liga Colombiana (2026-10-20)
+
+- pages/liga-colombiana.vue ahora abre con una portada deportiva que reúne accesos a partidos, posiciones y noticias, más cifras derivadas de los datos disponibles. Liga BetPlay, Torneo BetPlay y Copa Colombia tienen tarjetas de navegación diferenciadas.
+- Calendario, resultados, tablas, noticias y estados vacíos comparten una jerarquía visual nueva. Variables de color separan los temas tema-publico-blanco y tema-publico-azul; el diseño adapta la cuadrícula a móvil, conserva foco visible y respeta movimiento reducido.
+- Se mantuvieron las consultas, enlaces y reglas de datos existentes. No se publicó un nuevo deployment.
+- Verificación local: /liga-colombiana respondió HTTP 200 y el HTML SSR incluyó portada, partidos, posiciones y noticias. ESLint focal y git diff --check pasan. No se ejecutó la suite; typecheck y build se omitieron para no interferir con el servidor Nuxt activo que comparte .nuxt. La sesión no ofrece navegador para inspección visual manual responsive.
+- Handoff: docs/agents/handoffs/2026-10-20-redisenio-liga-colombiana.md.
+
+## Ajustes de identidad visual y noticias en Liga Colombiana (2026-10-20)
+
+- Se añadió un distintivo original FPC en WebP optimizado y se reemplazaron los iconos genéricos por los tres logos oficiales publicados por DIMAYOR. Los archivos oficiales disponibles en la portada actual miden 25×25 px y se muestran a tamaño nativo sobre placas blancas.
+- La portada cambia su panel azul interior a blanco en tema claro, con tinta y divisores de alto contraste. Noticias ahora usa una retícula editorial de cuatro columnas con una historia de apertura, tarjetas mixtas, resúmenes y fechas. La consulta solicita 17 noticias: una principal y hasta 16 tarjetas.
+- Se añadieron dos espacios Adsterra entre la portada de actualidad y el cierre de noticias; con los dos existentes hay cuatro. Todos reutilizan el componente que exige consentimiento y carga diferida.
+- Referencias revisadas: DIMAYOR publica los logos en https://www.dimayor.com.co/; la composición editorial tomó como referencia la jerarquía de portada y noticias de https://www.espn.com.co/futbol/liga/_/nombre/col.1, adaptada a Pont3la10 sin reutilizar su código o activos.
+- Validación: ESLint focal y git diff --check pasan; /liga-colombiana y los cuatro activos de imagen respondieron HTTP 200. El payload SSR contiene 17 noticias y la página renderiza 16 tarjetas secundarias, además del titular principal y cuatro espacios publicitarios.
+- No se ejecutaron pruebas, typecheck ni build; Nuxt sigue activo y comparte .nuxt. No había navegador disponible para inspección visual.
+- Handoff: docs/agents/handoffs/2026-10-20-refinamiento-liga-colombiana.md.
+
 ## Publicación de Inicio y perfiles de futbolistas (Production, 2026-10-20)
 
 - PR #139 se integró en `main` (`a6b15eb27d2800b491acd775909bde5c0ec57f29`).
@@ -2103,3 +2189,207 @@ estado de convocatoria y la fecha femenina del 2 de diciembre). No se ejecutaron
 suite, typecheck ni build, ni se inspeccionó la ruta con navegador responsive
 en esta sesión. El servidor local permaneció activo.
 Handoff: `docs/agents/handoffs/2026-10-19-seleccion-colombia-inicio.md`.
+
+## Partidos de hoy y worker local de fútbol (2026-10-21)
+
+- Se encontró que `NUXT_PUBLIC_API_ORIGIN` activa `nitro.devProxy` para todo `/api`; por eso los SSR y el worker local podían terminar llamando a Producción. Inicio y `/partidos-hoy` ahora consultan una ruta local de desarrollo fuera de `/api`, y los avisos vacíos muestran la causa recibida.
+- El worker usa rutas locales firmadas bajo `/local-internal/futbol/*`; estas delegan a los handlers existentes solo en Nuxt dev y conservan la verificación de firma/nonce. `dev-local.mjs` inicia el worker únicamente si están configurados tanto `NUXT_FUTBOL_WORKER_API_SECRET` como `NUXT_SUPABASE_SERVICE_ROLE_KEY`.
+- La ruta local de calendario consulta fixtures canónicos futuros del día de Bogotá y no inventa marcadores ni estado en vivo. La lectura queda limitada a desarrollo; la API pública y las puertas de derechos no cambiaron.
+- Estado observado: Nuxt permanece activo en `127.0.0.1:3333`; Inicio y `/partidos-hoy` responden HTTP 200. La ruta local informa que falta acceso privado de Supabase. `NUXT_SUPABASE_SERVICE_ROLE_KEY` no está configurada en los archivos/entorno local inspeccionados; el worker se omitió para evitar un proceso inoperante o peticiones internas hacia Producción. No se leyó ni se copió ningún secreto de Producción.
+- Un ciclo anterior, antes de corregir el proxy, envió fixtures a la API de Producción y terminó `MAPPINGS_UNAVAILABLE`; Goal API también devolvió `sin_cuota`. El worker actual no se inició, así que el arreglo de mappings aún necesita una corrida local tras configurar la clave y recuperar cuota.
+- Validación: ESLint focalizado y `git diff --check` pasaron; smoke local de Inicio, `/partidos-hoy` y la ruta de calendario pasó. La ruta interna firmada respondió 503 `AUTOMATIZACION_NO_CONFIGURADA` por falta del secreto privado de Supabase. No se ejecutaron suite, typecheck ni build mientras Nuxt estaba activo y compartía `.nuxt`.
+- **Siguiente acción:** añadir `NUXT_SUPABASE_SERVICE_ROLE_KEY` al `.env` local ignorado, reiniciar `npm run dev:qa`, verificar que el worker llame solo a `/local-internal/futbol/*`, y confirmar que se guarde el calendario antes de revalidar la pantalla.
+- Handoff: `docs/agents/handoffs/2026-10-21-worker-partidos-hoy.md`.
+
+## Corrida editorial Pont3la10 (2026-10-25, run `a975ecdf-0ee3-4859-a825-0d6c812f801e`)
+
+- Producción cerró la corrida en `partial`: 13 oportunidades conciliadas, 12 artículos confirmados en `review` y 12 artículos `review` en total al cierre. Distribución: Fútbol mundial 4; Fútbol colombiano 3; Tecnología deportiva, Gaming deportivo, Tendencias, Especiales y Opinión 1 cada una.
+- Se confirmó el artículo `8777be4a-4295-4e4e-96f6-6f2c06e6b428`, “Nacional remontó el clásico ante el DIM y quedó líder de la Liga BetPlay”, en Fútbol colombiano con el tema Liga BetPlay. Tiene 751 palabras, 9 párrafos, tres relacionados y portada real de El Colombiano, crédito `FOTO MANUEL SALDARRIAGA`; media `bb8fee15-cfda-45da-b71a-1f8c903d8705`, fuente verificada y marca `credited_photo_cover`. La consulta de solo lectura a Supabase confirmó que la metadata y portada persistidas coinciden.
+- Un candidato Cali–Fortaleza quedó bloqueado tras HTTP 502 en la solicitud y en el único reintento; no existe `articleId` y el límite de reintento quedó consumido. No repetir la generación.
+- Checkpoints: `.codex/editorial-runs/a975ecdf-0ee3-4859-a825-0d6c812f801e/`; verificación persistida en `cms-verification-final.json`. Se contrastó el contrato versionado de `origin/main` (`1a5b6eec8f7b4e6f1193112aba34a22708b1a101`); el SHA de Producción no se pudo recuperar desde Vercel en esta sesión. Los cambios ajenos visibles en Git se preservaron.
+- Handoff: `docs/agents/handoffs/2026-10-25-corrida-editorial-a975ecdf-partial.md`.
+
+
+## Corrida editorial Pont3la10 (2026-10-27, run `a7deee86-0134-4d31-9acc-4fcc3bd86782`)
+
+- Producción cerró el run como `completed`: las 10 oportunidades `create` con `addsNewValue=true` quedaron reconciliadas individualmente con 10 artículos únicos en `review`, cubriendo las siete categorías activas. No hubo duplicados. La salud final reportó 10 propuestas en revisión.
+- Distribución: Fútbol colombiano 2; Fútbol mundial 3; Tecnología deportiva, Gaming deportivo, Tendencias, Especiales y Opinión 1 cada una.
+- Las 10 presentaciones CMS muestran fotografías reales distintas, alt, pie/crédito y enlace de fuente, con 10 media IDs y hashes únicos, `credited_photo_cover` y ninguna portada IA. La primera portada se corrigió después del cierre: el artículo 1 ahora usa una foto de archivo de Jaguares–Santa Fe acreditada a Andrés López/Colprensa; el pie aclara que no muestra el partido ante Llaneros. La vista previa CMS confirma metadata y fuente; el artículo permanece `review`, versión 2. Se verificaron también temas, temas nuevos, relacionados y marca de revisión para Especiales/Opinión.
+- Un rechazo determinista inicial por longitud de summary/socialBrief se corrigió antes de la entrega válida; no se repitió la generación IA. Los 10 recibos y el contexto final confirman `review`; ningún artículo fue aprobado, programado o publicado.
+- Checkpoints y evidencia: `.codex/editorial-runs/a7deee86-0134-4d31-9acc-4fcc3bd86782/`, incluidas `reconciliation-final.json` y `cms-verification-final.json`. SHA Producción `f0d0cda7f7ef6bca4a3550741f425be88a3ed717`; contratos relevantes de `origin/main` coinciden.
+- Handoff: `docs/agents/handoffs/2026-10-27-corrida-editorial-a7deee86-completed.md`.
+
+## Promo de producto HyperFrames (2026-10-29)
+- Proyecto independiente en `videos/promo-pont3la10/`: 20 s, 1920×1080, cuatro escenas con capturas públicas reales, logo original, identidad marina/amarilla y voz española Kokoro ef_dora sincronizada por segmentos.
+- La URL recibida `pnt3la10.com` no resolvió; se capturó el dominio canónico `https://www.pont3la10.com`, HTTP 200. Captura: 9 screenshots, 129 assets descritos, 11 secciones, 20 encabezados, Montserrat.
+- Studio persistente: `http://localhost:3017/#project/promo-pont3la10`. No se publicó ni exportó MP4; la skill entrega preview y reserva exportación para petición explícita.
+- Lint y validate: cero errores; check completo aprobado, contraste 34/34; inspección y snapshots revisados. Advertencias de estructura monolítica y recursos repetidos, sin fallo visual observado. Transcripción palabra a palabra no disponible por falta de whisper-cpp; `transcript.json` identifica honestamente tiempos medidos por frase.
+- Handoff: `docs/agents/handoffs/2026-10-29-promo-hyperframes.md`. Sin cambios funcionales en la app ni commits.
+
+
+## Corrida editorial Pont3la10 (2026-10-30, run `ff65cea4-afaa-4f8b-bac8-6a853478b40a`)
+
+- Producción cerró el run como `partial`: 13 oportunidades conciliadas individualmente, 10 recibos únicos `review`, dos bloqueos de generación de Fútbol colombiano y un descarte por tendencia vencida. Juan pidió excluir Opinión; las otras seis categorías activas recibieron al menos una propuesta.
+- Distribución al recibo: Fútbol colombiano 2, Fútbol mundial 3, Tecnología deportiva 1, Gaming deportivo 2, Tendencias 1 y Especiales 1. El contexto final muestra ahora cuatro artículos del run en `review` y seis en `published`; sus recibos iniciales confirman `review`. Salud al inicio/final: 0/4 globales en revisión. No se aprobó, programó ni publicó contenido desde esta sesión.
+- Águilas–Fortaleza terminó HTTP 502 `IA_REDACCION_INVALIDA` después del único reintento autorizado; DIM–Alianza terminó HTTP 409 `DEEPSEEK_REINTENTO_INCIERTO_AGOTADO`. No crear artículos ni volver a consumir esas claves. Tigres–Real Cartagena se descartó por tendencia vencida.
+- Checkpoints y conciliación: `.codex/editorial-runs/ff65cea4-afaa-4f8b-bac8-6a853478b40a/`, `reconciliation-final.json`. Handoff: `docs/agents/handoffs/2026-10-30-corrida-editorial-ff65cea4-partial.md`. Contrato de Producción cotejado con `git show origin/main`; el endpoint de salud no expone SHA de despliegue.
+
+## Corrida editorial Pont3la10 (2026-10-30, run `de6824e8-b928-4820-a44b-b1cd2e92626e`)
+
+- Producción cerró el run en `partial`: se guardaron y reconciliaron las 10 oportunidades; se solicitaron 10 borradores, 4 respuestas completas produjeron 4 propuestas únicas confirmadas en `review`, y 6 respuestas terminaron `uncertain` por HTTP 502 `IA_REDACCION_INVALIDA`, sin `articleId`. No se consumió ningún reintento: las autorizaciones por clave no llegaron antes del cierre. Déficit: 6 propuestas para la meta de 10.
+- Salud de propuestas Codex en revisión: 4 al inicio y 4 al cierre. Cobertura: Fútbol mundial 1; Tecnología deportiva 1; Tendencias 1; Especiales 1; Fútbol colombiano 0 (dos generaciones inciertas); Gaming deportivo 0 (una generación incierta). Opinión se excluyó por solicitud expresa de Juan. La revisión de Colombianos en Europa se deduplicó contra artículos existentes antes de guardar la agenda y no se contó entre las 10 oportunidades.
+- Propuestas revisadas en contexto y recibos: Bayern–Dortmund (`e0e00362-9e70-445e-9486-b36f0af4299f`, Fútbol mundial, Bundesliga, crédito `© Bundesliga/Getty Images/Lukas Schulze`); GP de México F1 (`bc6ae576-639b-46b8-9f1f-203ad9d6e3c4`, Tecnología deportiva, Innovación deportiva, crédito `Formula 1`); Le Havre–PSG (`bf627fb6-de34-47a8-bbe8-8268a2a56228`, Tendencias, Ligue 1, crédito `Emmanuel Lelaidier`); torneo femenino Sub-15 de Guatemala (`e4818a16-db80-44ea-bcc2-dbe80ecaf778`, Especiales, Fútbol femenino profesional y FIFA, crédito editorial `FIFA`, con `needs_angle_review`). En cada entrega el recibo y el contexto confirmaron `review`; una consulta SQL de solo lectura a Producción confirmó categoría, tags, estado, banderas, `cover_media_id` y metadata persistida del medio (alt, pie, crédito y URL), coincidentes con el payload.
+- La reconciliación por oportunidad está en `.codex/editorial-runs/de6824e8-b928-4820-a44b-b1cd2e92626e/reconciliation-final.json`; la lectura de producción, en `cms-verification-final.json`. Se contrastó Producción `f0d0cda7f7ef6bca4a3550741f425be88a3ed717` con los contratos de `origin/main` `1a5b6eec8f7b4e6f1193112aba34a22708b1a101`; los cinco contratos privados revisados coinciden.
+- No se aprobó, programó ni publicó contenido. No reabrir este run terminal. Handoff: `docs/agents/handoffs/2026-10-30-corrida-editorial-de6824e8-partial.md`.
+
+## Rediseño de Liga Colombiana: carrusel y tabla (2026-11-02)
+
+- La fila de accesos a Liga BetPlay, Torneo BetPlay y Copa BetPlay antecede a un módulo de dos columnas: carrusel de noticias destacadas y resumen de posiciones.
+- `components/publico/CarruselNoticiasLiga.vue` permite elegir manualmente entre las cinco noticias recientes, con enlaces a los artículos y controles accesibles. El panel de posiciones muestra los primeros cinco equipos de la fase vigente y enlaza a la tabla completa; los datos siguen viniendo de la API.
+- Se preservó la portada con la imagen incorporada en el cambio anterior y se conservaron agenda, resultados y tablas del Torneo.
+- Validación: ESLint focalizado, `git diff --check`, typecheck y build aprobados. El build reportó warnings preexistentes sobre dos sprites editoriales que se resuelven en runtime y una deprecación de `@vue/shared`. No se ejecutó la suite ni se hizo inspección visual responsive en navegador.
+- Handoff: `docs/agents/handoffs/2026-11-02-redisenio-carrusel-tabla-liga.md`.
+
+### Corrección del carrusel (2026-11-02)
+
+- La plantilla ahora invoca el nombre autoimportado por Nuxt para componentes en `components/publico/`: `PublicoCarruselNoticiasLiga`. Ese desacople explicaba que el carrusel no apareciera y que el calendario quedara primero en la columna.
+- El carrusel tiene altura fijada por viewport (con mínimos y máximos responsive), recorte de titular a cinco líneas y resumen a dos; el encuadre ya no depende de las dimensiones de la imagen del artículo. Se ajustaron la etiqueta, tipografía, CTA con icono y paginación a la referencia.
+- ESLint focalizado, `git diff --check` y build pasan. La última ejecución de typecheck falla con errores existentes en el scaffolding `fabrica-landings` y tipos de `tests`; no reportó un fallo de compilación de Nuxt.
+
+## Calendario de Liga Colombiana con tarjetas y filas (2026-11-02)
+
+- La sección `#partidos` ahora ocupa el ancho completo bajo el bloque principal. Conserva el mismo `/api/liga-colombiana`, las agrupaciones temporales, estados, escudos y vínculos de los partidos.
+- Se agregaron los componentes reutilizables `TarjetaPartido`, `PartidoFila` y `EquipoPartido`, con tipo compartido `PartidoLiga` en `types/partidosLiga.ts`. Partidos de hoy se presentan en tarjetas de tres columnas; agenda de 7 y 30 días usa filas con fecha y acceso a la ficha.
+- ESLint focalizado, `git diff --check` y build aprobados. El typecheck global continúa fallando en el proyecto `fabrica-landings` (módulos/JSX no resueltos) y en tipos de tests; la compilación Nuxt no mostró errores de estos componentes. No se ejecutó la suite unitaria ni revisión visual manual en navegador.
+- Handoff: `docs/agents/handoffs/2026-11-02-calendario-partidos-liga.md`.
+
+## Unificaci�n visual de migas de pan (2026-11-02)
+
+- Se renov� el estilo global del componente MigasNavegacion: superficie clara con borde y sombra sutil en tema blanco, contraste azul en tema oscuro, estados de foco visibles y adaptaci�n m�vil/movimiento reducido.
+- Se reemplazaron las migas manuales en Liga Colombiana, Europa, equipos, jugadores, hubs editoriales, competiciones, jornadas y fichas de partido por el componente compartido; noticias, autores y resultados ya lo usaban.
+- Validaci�n pendiente de esta sesi�n: ESLint focal y git diff --check. No se ejecutaron pruebas, typecheck ni build.
+- Handoff: docs/agents/handoffs/2026-11-02-unificacion-migas-pan.md.
+
+## Actualizaci�n de migas de pan (2026-11-02)
+
+Validaci�n de este cambio: ESLint focal, git diff --check, npm.cmd run typecheck y npm.cmd run build terminaron con c�digo 0. El build notific� dos sprites editoriales no resueltos y una deprecaci�n de @vue/shared. No se ejecutaron pruebas ni inspecci�n visual manual en navegador.
+Handoff: docs/agents/handoffs/2026-11-02-unificacion-migas-pan.md.
+
+## Tarjetas editoriales globales (2026-11-02)
+
+Se crearon TarjetaNoticiaPrincipal y TarjetaNoticiaSecundaria, con dise�o basado en el mockup y estilos adaptables a tema y viewport. Se migraron tarjetas editoriales p�blicas en portada, Liga Colombiana, noticias, Europa, hubs, competiciones, equipos, jugadores y relacionados; se preservaron datos y rutas. ESLint focal, git diff --check y build pasan. Typecheck contin�a fallando por imports/tipos ajenos al cambio en fabrica-landings y tests. No se pudo hacer inspecci�n visual manual porque el navegador no estuvo disponible. Handoff: docs/agents/handoffs/2026-11-02-tarjetas-noticias-globales.md.
+
+## Rediseño de la página Liga BetPlay 2026-II (2026-11-02)
+
+- Se rediseñó la parte superior de `/competiciones/liga-betplay` con migas compartidas, hero editorial ilustrado, accesos con iconos, navegación por anclas, selector de temporada y estadísticas en la composición del mockup.
+- Se incorporó un carrusel horizontal de los clubes recibidos por la API, con escudos actuales, figuras destacadas y un atlas local de retratos generados marcados como ilustraciones. La interfaz conserva la ruta y los datos de la API; los nombres destacados se mantienen como presentación editorial estática y deben revisarse al cambiar plantillas.
+- Se agregó el componente reusable `TarjetaEquipoLiga.vue` y dos assets WebP en `public/images/`. Los componentes de noticias y partidos existentes siguen conectados a sus respectivas secciones.
+- Validación: ESLint focal y `git diff --check` pasaron. `npm.cmd run build` terminó correctamente; el build dejó warnings de URL CSS de assets en `public/` resueltas en runtime, dos sprites editoriales preexistentes y deprecación de `@vue/shared`. `npm.cmd run typecheck` continúa fallando en `fabrica-landings` y tipos de tests; al filtrar su salida no aparecieron errores de `PaginaCompeticionPublica.vue` ni `TarjetaEquipoLiga.vue`. No se ejecutó la suite unitaria. No hubo validación visual manual porque el host del navegador reportó indisponibilidad.
+- Handoff: `docs/agents/handoffs/2026-11-02-redisenio-liga-betplay.md`.
+
+## Correccion posterior: pagina Liga BetPlay 2026-II (2026-11-02)
+
+- Se sustituyo el hero anterior por el banner proporcionado por Juan. Sus controles visuales enlazan a tabla, proximos partidos, resultados, jornadas, equipos y noticias; el boton de seguimiento conserva el componente funcional existente.
+- La pagina de Liga ya no hereda el limite de ancho de 780 px. Se sirve un recorte responsive del mismo banner en movil para conservar legibilidad y alcance de los controles.
+- Se retiro el atlas de retratos generados. Las tarjetas de equipos conservan escudos y nombres de la API y no presentan retratos inventados. Gustavo Torres se retiro de la figura del Deportivo Pereira: las fuentes consultadas lo ubican en Cucuta en Liga 2026-II (DIMAYOR: https://dimayor.com.co/wp-content/uploads/2026/02/Pereira-1.pdf; Infobae: https://www.infobae.com/colombia/deportes/2026/08/12/asi-se-reforzaron-los-equipos-de-la-liga-betplay-2026-ii-estos-fueron-los-mejores-fichajes/?outputType=amp-type).
+- ESLint focal, git diff --check y build aprobados. El typecheck global falla en fabrica-landings y tests, sin diagnosticos de los componentes de Liga. No se ejecuto la suite. El recorte movil se inspecciono como imagen; no hubo inspeccion de pagina ni clics en navegador porque el host no estuvo disponible.
+- Handoff: docs/agents/handoffs/2026-11-02-redisenio-liga-betplay.md.
+## Ajuste tras captura 2026-I (2026-11-02)
+
+- La captura mostraba la temporada 2026-I y por eso no entraba en la condicion inicial del banner 2026-II. Ahora la pagina de Liga usa el banner en todas las temporadas; para temporadas distintas de 2026-II, una capa dinamica reemplaza el titulo impreso por el de la temporada activa, evitando mezclar el arte 2026-II con los datos 2026-I.
+- Se conserva la navegacion funcional y el recorte movil. ESLint focal, git diff --check y build pasan. No hubo inspeccion visual del sitio en navegador porque el host no estuvo disponible.
+## Ancho comun para detalle de Liga BetPlay (2026-11-02)
+
+- Se elimino el ancho especial de 1740 px del detalle de Liga BetPlay. La pagina reutiliza `.pagina-publica-medio`, con el mismo maximo de 1240 px de Liga Colombiana y las demas paginas publicas; el banner ocupa el ancho del contenedor compartido. Tambien se quito el override movil propio.
+- Handoff actualizado: docs/agents/handoffs/2026-11-02-redisenio-liga-betplay.md.
+## Selector de temporadas en el detalle de Liga (2026-11-02)
+
+- Se quito el desplazamiento horizontal forzado de los enlaces de temporada; ahora pueden envolver en varias lineas cuando el ancho compartido es menor. Esto elimina la barra con flechas y evita recortar el selector.
+- ESLint focal, git diff --check y build aprobados. Inspeccion visual del sitio en navegador pendiente por indisponibilidad del host.
+## Espacio inicial de tabla de posiciones (2026-11-02)
+
+- Se redujeron los margenes de separacion en el encabezado de posiciones, el nombre de fase y el caption, acortando el espacio antes del encabezado/primera fila sin reducir altura de las filas de equipos.
+- ESLint focal y build aprobados; git diff --check aprobado antes de compilar. Inspeccion en navegador pendiente porque el host no estuvo disponible.
+## Ancho de columna de posicion en tabla (2026-11-02)
+
+- La primera columna de la tabla de posiciones tenia ancho automatico excesivo y generaba una franja vacia antes de la numeracion. Se fijo en 58 px para alinear el numero al inicio de la tabla y dar el espacio restante al nombre/equipo.
+- ESLint focal, git diff --check y build aprobados. Inspeccion visual posterior pendiente.
+## Fotos de figuras en tarjetas de Liga BetPlay (2026-11-02)
+
+- Se importaron las 20 fotos de jugador entregadas por Juan en Drive; cada una se asocio por club y se convirtio a WebP 640x640 (total 622 KB). Las tarjetas globales de equipo muestran el retrato en el lado derecho con un degradado suave hacia el escudo y el texto. Se conserva el nombre de figura alineado con cada archivo y los datos/escudos que entrega la API.
+- ESLint focal y git diff --check aprobados. Validado el mapeo de 20 rutas a archivos. Build pendiente al cierre de esta actualizacion; no inspeccion visual del sitio en navegador.
+## Cierre: fotos de jugadores en tarjetas (2026-11-02)
+
+- El build de Nuxt termino correctamente despues de incluir el mapeo y las 20 variantes WebP. ESLint focal, diff de nombres de fotos y git diff --check pasaron. No se hizo inspeccion manual de la pagina por falta del host de navegador.
+
+## Jornadas interactivas de Liga BetPlay (2026-11-02)
+
+- Se reemplazo la lista plegable de jornadas en `PaginaCompeticionPublica.vue` por un calendario de dos columnas inspirado en el mockup: encabezado con selector de temporada, jornada activa con fecha/estado/partidos, navegacion anterior/siguiente y panel lateral de todas las jornadas. La seleccion cambia los encuentros visibles; los rangos de fecha y estados se derivan de los datos publicos existentes.
+- Las filas de la jornada reutilizan `PartidoFila.vue` en variante `jornada`; el componente conserva su variante `agenda` para los proximos partidos. No se altero la fuente de datos.
+- ESLint focal, `git diff --check` y build de Nuxt pasan. `npm.cmd run typecheck` falla por errores preexistentes en `fabrica-landings` y `tests/unit`; al filtrar la salida no hubo diagnosticos en los dos archivos modificados. La suite unitaria no se ejecuto. El build mantiene warnings existentes de sprites editoriales y deprecacion de `@vue/shared`. Inspeccion visual manual responsive pendiente: navegador no disponible en esta sesion.
+- Handoff: `docs/agents/handoffs/2026-11-02-calendario-jornadas-liga.md`.
+
+## Banner PNG de Selecci?n Colombia (2026-11-03)
+
+- La p?gina conserva su estructura principal, componentes de partidos, navegaci?n por anclas y fuentes oficiales. El banner ahora utiliza el PNG entregado por Juan: se prepar? una versi?n de escritorio que mantiene la cabeza de James sobresaliendo y un recorte PNG m?vil para legibilidad. El CTA integrado en el arte sigue enlazando al calendario mediante un enlace accesible superpuesto.
+- Se retiraron los artes de banner generados que quedaron sustituidos; se conserva el original y los dos recortes usados en la p?gina bajo public/images/seleccion-colombia/.
+- Validaci?n: ESLint focal y git diff --check pasaron; `npm.cmd run build` gener? cliente, servidor y recursos p?blicos correctamente. Permanecen advertencias ya conocidas por dos sprites editoriales y la deprecaci?n de `@vue/shared`. No hubo inspecci?n visual de la ruta en navegador.
+- Handoff: docs/agents/handoffs/2026-11-03-redisenio-seleccion-colombia.md.
+
+## Alineacion del ancho de Seleccion Colombia (2026-11-03)
+
+- Se elimino el ancho especial de 1704 px de la pagina. Se quitaron los overrides de ancho y margen de la pagina, pues incluso width: 100% anulaba el maximo compartido. Ahora hereda directamente el contenedor pagina-publica-medio (maximo 1240 px y centrado), igual que Liga Colombiana. El espacio superior ahora hereda tambien los 26 px compartidos. Se conserva la proporcion propia del PNG para no deformarlo.
+- Validacion: ESLint focal y git diff --check pasaron; build de Nuxt aprobado; se mantienen advertencias conocidas de sprites editoriales y deprecacion de @vue/shared.
+- Handoff: docs/agents/handoffs/2026-11-03-redisenio-seleccion-colombia.md.
+
+## Espacio para el saliente del banner de Seleccion (2026-11-03)
+
+- Se reservo encima del banner el espacio que necesita el recorte de escritorio para que la cabeza y el fondo blanco del PNG no se superpongan al titulo de la pagina. En movil, donde se usa el recorte sin saliente, el margen adicional se elimina.
+- ESLint focal, git diff --check y build de Nuxt pasaron. Build conserva warnings conocidos de sprites editoriales y deprecacion de @vue/shared.
+
+## Noticias editoriales de Seleccion Colombia (2026-11-03)
+
+- HubEditorialPublico expone un slot opcional de noticias con la historia principal, noticias recientes y el total; las demas paginas conservan el diseno predeterminado. Seleccion Colombia reutiliza TarjetaNoticiaPrincipal y TarjetaNoticiaSecundaria en una composicion propia: principal panoramica y carrusel horizontal de secundarias apaisadas, accesible por teclado y tactil. Se conserva la consulta editorial, el estado vacio y el espacio publicitario existente.
+- ESLint focal, git diff --check y build pasan. Typecheck global sigue fallando en fabrica-landings y tests/unit por errores ajenos a este cambio; sin diagnosticos en los archivos de esta tarea. No se ejecutaron pruebas unitarias ni hubo navegador para inspeccion visual manual.
+- Handoff: docs/agents/handoffs/2026-11-03-redisenio-seleccion-colombia.md.
+
+## Contraste del titular principal de noticias de Seleccion (2026-11-03)
+
+- Se fijo en blanco el titular y su enlace dentro de la tarjeta principal, evitando que las reglas de tema claro del hub lo vuelvan azul oscuro sobre la fotografia.
+- ESLint focal, git diff --check y build de Nuxt pasaron; permanecen advertencias conocidas de sprites editoriales y deprecacion de @vue/shared.
+
+## Redise?o de convocatorias de Selecci?n Colombia (2026-11-04)
+
+- La secci?n de convocatorias reproduce la estructura del mockup: franja institucional, t?tulo y descripci?n, filtros Masculina/Femenina/Archivo y tarjetas horizontales con banner, periodo, estado, cantidad, publicaci?n, vigencia, rivales, comunicado de actualizaci?n, lista expandible y fuente FCF. El filtro Archivo muestra por defecto las dos ventanas ya finalizadas; la lista expandible conserva los 26 y 23 nombres y clubes registrados. Rivales salen del calendario/resultados oficiales existentes.
+- Se generaron dos ilustraciones editoriales an?nimas y se optimizaron a WebP 1800x600: public/images/seleccion-colombia/convocatoria-masculina-ilustracion.webp y convocatoria-femenina-ilustracion.webp. Cada tarjeta las identifica visiblemente como ilustraci?n editorial.
+- ESLint focal, git diff --check y build pasan. Typecheck global falla en fabrica-landings/tests por problemas ajenos; no hubo diagn?sticos en pages/seleccion-colombia.vue ni HubEditorialPublico.vue. No se ejecutaron pruebas unitarias ni hubo inspecci?n visual de la ruta en navegador.
+- Handoff: docs/agents/handoffs/2026-11-03-redisenio-seleccion-colombia.md.
+
+## Calendario visual de Seleccion Colombia (2026-11-04)
+
+- Se sustituyo la lista simple de fechas por una composicion de calendario de partidos y resumen lateral: filtros Todos/Masculina/Femenina, cuatro fechas proximas, indicadores de cantidad, ventanas por seleccion y aviso para confirmar horarios/sedes en la FCF. Las filas reutilizan TarjetaPartidoSeleccion y muestran la seleccion y la competencia.
+- Las fechas, horarios, etiquetas de seleccion y enlaces se derivan de la agenda oficial/datos existentes; no se agregaron horarios estimados. El resumen se calcula con los mismos partidos visibles.
+- ESLint focal, git diff --check y build pasan. Typecheck global continua fallando en fabrica-landings y tests/unit por errores ajenos; no se reportaron errores en los archivos de esta seccion. No se ejecutaron pruebas unitarias. No se pudo hacer inspeccion manual responsive: el host del navegador esta indisponible.
+- Handoff: docs/agents/handoffs/2026-11-03-redisenio-seleccion-colombia.md.
+
+## Rediseño completo de Colombianos en Europa (2026-11-04)
+
+- La pestaña reutiliza el ancho común de 1240 px, espaciado, migas, navegación con iconos, carrusel de noticias a cinco segundos y secundarias horizontales. Se añadieron tarjetas globales de futbolistas con los 14 perfiles y retratos existentes, búsqueda sin tildes, filtro por liga, seguimiento y calendarios oficiales.
+- Agenda y resultados usan TarjetaPartido/PartidoFila con rutas opcionales a los snapshots de resultados. El adaptador reconoce alias exactos de clubes, deduplica partidos y conserva goles desconocidos como nulos. La fuente actual es la jornada diaria; cuando faltan partidos se ofrecen calendarios oficiales. No se alteraron jugadores, clubes, fuentes editoriales, SEO ni condiciones publicitarias.
+- Se corrigieron el contraste y los selectores de tema de noticias secundarias/seguimiento, y la capa de controles del carrusel. Se distingue un fallo de carga de una agenda vacía; las anclas no generan diferencias de hidratación.
+- Build, ESLint focal, diff-check y 19 pruebas relacionadas pasan. QA en Edge/Playwright: 1440/1024/768/390 px, temas claro/azul, sin recortes ni overflow; rotación/pausa, desplazamiento de secundarias, filtros, seguimiento y entrada directa con ancla probados. Capturas finales sobre el build de producción local y escenario de error 503 comprobados.
+- Los controles globales conservan fallos ajenos: lint en fabrica-landings; typecheck en fabrica-landings/tests del worker; suite con fallos en contratos de noticias de competiciones, Home y rutas del worker. Un timeout aislado de imágenes pasó al repetir ese archivo (7 pruebas). Detalle y evidencias en docs/agents/handoffs/2026-11-04-redisenio-colombianos-europa.md.
+
+
+## Categorías de portada y feed progresivo (2026-11-04)
+
+- Se agregó el enlace Especiales a Explora en la portada pública. Debajo de Explora, Todas las noticias presenta las tarjetas secundarias existentes con resumen y solicita páginas de 20 artículos al acercarse al final del scroll; la API existente indica si hay más y las respuestas se deduplican por slug.
+- ESLint focal y git diff --check pasan; build pasa con advertencias preexistentes sobre sprites editoriales no resueltos. Typecheck global falla en fabrica-landings y tests por errores ajenos; no se reportaron diagnósticos del archivo de portada. No se ejecutaron pruebas unitarias ni inspección responsive manual.
+- Handoff: docs/agents/handoffs/2026-11-04-portada-especiales-feed-infinito.md.
+
+
+## Detalle de noticia: reproductor de acceso a YouTube (2026-11-04)
+
+- Se corrigio el alcance solicitado: el overlay va sobre la foto principal dentro de cada noticia; las tarjetas del feed conservan su comportamiento normal. Usa la marca y el icono existentes. Primer clic abre Adsterra en otra pestana cuando hay consentimiento y URL disponible; el siguiente clic abre el canal confirmado https://www.youtube.com/@SomosNoobs. El texto de la interfaz revela el paso publicitario.
+- ESLint focal, diff-check y build pasan. Typecheck global sigue fallando con errores ajenos en fabrica-landings/tests. QA visual manual no se completo porque Computer Use se detuvo al no poder determinar la URL activa de Edge con suficiente confianza.
+- Handoff: docs/agents/handoffs/2026-11-04-portada-youtube-adsterra.md.

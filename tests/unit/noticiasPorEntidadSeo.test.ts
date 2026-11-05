@@ -15,8 +15,12 @@ describe('noticias de hubs por relación editorial', () => {
 
     for (const fuente of fuentesHubs) {
       expect(fuente).toContain('listarArticulosPublicosPorEntidad')
-      expect(fuente).not.toMatch(/listarArticulosPublicosEditoriales|combinarNoticiasPorEntidad/)
+      expect(fuente).not.toMatch(/combinarNoticiasPorEntidad/)
     }
+    // Competiciones admite artículos etiquetados explícitamente con su tema;
+    // no amplía noticias por coincidencia libre de texto o por categoría común.
+    expect(fuentesHubs[0]).not.toContain('listarArticulosPublicosEditoriales')
+    expect(fuentesHubs[1]).toMatch(/listarArticulosPublicosEditoriales\(cliente, limite, 0, \{\s*categoria: null,\s*terminosCategoria: \[\],\s*tema: slug,\s*buscar: null/)
   })
 
   it('consulta la RPC pública por tipo y slug y mapea el resumen y su portada', async () => {
