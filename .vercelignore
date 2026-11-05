@@ -6,7 +6,7 @@
 .venv
 __pycache__
 fabrica-landings
-videos
+/videos/
 node_modules
 .nuxt
 .output
