@@ -91,7 +91,7 @@ function tieneCaracteresDeControl(valor: string) {
   })
 }
 
-export const esquemaPropuestaCodex = z.object({
+const esquemaCamposPropuestaCodex = z.object({
   idempotencyKey: z.string().uuid(),
   runId: z.string().uuid(),
   categoryId: z.string().uuid(),
@@ -124,7 +124,13 @@ export const esquemaPropuestaCodex = z.object({
     'credited_photo_cover',
     'ai_generated_cover'
   ])).max(8)
-}).strict().superRefine((propuesta, contexto) => {
+}).strict()
+
+function validarPropuestaCodex(
+  propuesta: z.infer<typeof esquemaCamposPropuestaCodex>,
+  contexto: z.RefinementCtx,
+  exigirPrimaria = true
+) {
   const recogerTexto = (valor: unknown): string => {
     if (!valor || typeof valor !== 'object') return ''
     const nodo = valor as { text?: unknown, content?: unknown }
@@ -168,11 +174,12 @@ export const esquemaPropuestaCodex = z.object({
     })
   }
 
-  if (!propuesta.sources.some(fuente => fuente.url === propuesta.sourceUrl && fuente.tipo === 'primaria')) {
+  if (!propuesta.sources.some(fuente => fuente.url === propuesta.sourceUrl
+    && (!exigirPrimaria || fuente.tipo === 'primaria'))) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['sourceUrl'],
-      message: 'La fuente principal debe aparecer como primaria en las fuentes estructuradas.'
+      message: exigirPrimaria ? 'La fuente principal debe aparecer como primaria en las fuentes estructuradas.' : 'La fuente de la noticia debe aparecer en las fuentes estructuradas.'
     })
   }
 
@@ -197,6 +204,44 @@ export const esquemaPropuestaCodex = z.object({
     })
   }
 
+}
+
+export const esquemaPropuestaCodex = esquemaCamposPropuestaCodex.superRefine((propuesta, contexto) => {
+  validarPropuestaCodex(propuesta, contexto)
+})
+
+const esquemaPropuestaRedactadaCodex = esquemaCamposPropuestaCodex.extend({
+  sources: z.array(esquemaFuenteCodex).min(1).max(10)
+}).superRefine((propuesta, contexto) => validarPropuestaCodex(propuesta, contexto, false))
+
+export const esquemaPublicacionAutomaticaCodex = z.object({
+  proposal: esquemaPropuestaRedactadaCodex,
+  briefSeo: esquemaBriefSeoListoPropuestaCodex,
+  review: z.object({
+    model: z.string().trim().min(2).max(120),
+    categoryId: z.string().uuid(),
+    coverMediaId: z.string().uuid(),
+    tagIds: z.array(z.string().uuid()).max(12),
+    newTopicNames: z.array(z.string().trim().min(2).max(80)).max(3),
+    categoryMatches: z.literal(true),
+    topicsMatch: z.literal(true),
+    imagePresent: z.literal(true),
+    titleFaithful: z.literal(true),
+    notes: z.string().trim().min(30).max(1000)
+  }).strict()
+}).strict().superRefine(({ proposal, review }, contexto) => {
+  const mismosValores = (a: string[], b: string[]) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort())
+  if (proposal.categoryId !== review.categoryId || proposal.coverMediaId !== review.coverMediaId
+    || !mismosValores(proposal.tagIds, review.tagIds)
+    || !mismosValores(proposal.newTopics.map(tema => tema.name), review.newTopicNames)) {
+    contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['review'], message: 'La revisión debe corresponder a la categoría, imagen y temas exactos de la propuesta.' })
+  }
+  if (new Set(proposal.sources.map(fuente => fuente.url)).size !== proposal.sources.length) {
+    contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['proposal', 'sources'], message: 'No se permiten fuentes duplicadas.' })
+  }
+  if (proposal.editorialFlags.includes('ai_generated_cover')) {
+    contexto.addIssue({ code: z.ZodIssueCode.custom, path: ['proposal', 'coverMediaId'], message: 'La corrida automática requiere una fotografía real acreditada.' })
+  }
 })
 
 const esquemaScoresTendenciaV1 = z.object({
@@ -435,7 +480,7 @@ export const esquemaBorradorCodex = z.object({
     ])
   }).strict(),
   primarySourceUrl: esquemaUrlHttps,
-  sources: z.array(esquemaFuenteCodex).min(2).max(10),
+  sources: z.array(esquemaFuenteCodex).min(1).max(10),
   topicCatalog: z.array(z.object({
     id: z.string().uuid(),
     name: z.string().trim().min(2).max(80),
@@ -448,12 +493,12 @@ export const esquemaBorradorCodex = z.object({
     categoryName: z.string().trim().min(2).max(80)
   }).strict()).max(100)
 }).strict().superRefine((entrada, contexto) => {
-  const urlFuentePrincipal = entrada.sources.some(fuente => fuente.url === entrada.primarySourceUrl && fuente.tipo === 'primaria')
+  const urlFuentePrincipal = entrada.sources.some(fuente => fuente.url === entrada.primarySourceUrl)
   if (!urlFuentePrincipal) {
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['primarySourceUrl'],
-      message: 'La URL principal debe pertenecer a una fuente marcada como primaria en el expediente.'
+      message: 'La URL de origen debe pertenecer a una fuente documentada en el expediente.'
     })
   }
 
@@ -478,7 +523,7 @@ export const esquemaAgendaCodex = z.object({
   status: z.enum(['in_progress', 'completed', 'partial', 'failed']),
   categories: z.array(z.object({
     categoryId: z.string().uuid(),
-    opportunities: z.array(esquemaOportunidadCodex).max(7),
+    opportunities: z.array(esquemaOportunidadCodex).max(20),
     omittedReason: z.string().trim().min(20).max(600).optional()
   }).strict()).min(1).max(50)
 }).strict().superRefine((agenda, contexto) => {

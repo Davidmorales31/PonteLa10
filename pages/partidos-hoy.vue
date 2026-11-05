@@ -6,7 +6,9 @@ import { clasificarCategoriaFutbol, type CategoriaFutbol } from '~/utils/clasifi
 
 const configuracion = useRuntimeConfig()
 const zonaHoraria = ref('America/Bogota')
-const urlResultados = import.meta.server && configuracion.public.apiOrigin
+const urlResultados = import.meta.dev
+  ? '/partidos-hoy-local'
+  : import.meta.server && configuracion.public.apiOrigin
   ? `${String(configuracion.public.apiOrigin).replace(/\/$/, '')}/api/resultados`
   : '/api/resultados'
 // Se serializa para que servidor y cliente formateen el mismo instante durante
@@ -155,7 +157,7 @@ useSeoPont3la10(() => ({
     <EstadoDatosResultados v-if="error" descripcion="No fue posible consultar los partidos de hoy. Intenta actualizar la jornada." :permitir-reintento="true" @reintentar="refresh" />
     <div v-else-if="!partidos.length" class="vacio-agenda-futbol">
       <h2>Hoy no hay partidos disponibles</h2>
-      <p>Vuelve más tarde o consulta todos los resultados deportivos.</p>
+      <p>{{ respuesta?.aviso || 'Vuelve más tarde o consulta todos los resultados deportivos.' }}</p>
       <NuxtLink to="/resultados">Ver resultados <ArrowUpRight aria-hidden="true" /></NuxtLink>
     </div>
     <div v-else-if="!partidosFiltrados.length" class="vacio-agenda-futbol vacio-filtro-agenda">

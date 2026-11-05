@@ -50,7 +50,10 @@ servidor.once('exit', (codigo, senal) => {
 console.info(`Iniciando Pont3la10 en ${origenLocal}; datos públicos desde ${origenDatos}.`)
 const servidorListo = await esperarNuxt(servidor, origenLocal)
 
-if (!detener && servidorListo && process.env.NUXT_FUTBOL_WORKER_API_SECRET?.trim()) {
+const tieneSecretoWorker = Boolean(process.env.NUXT_FUTBOL_WORKER_API_SECRET?.trim())
+const tieneAccesoPrivadoSupabase = Boolean(process.env.NUXT_SUPABASE_SERVICE_ROLE_KEY?.trim())
+
+if (!detener && servidorListo && tieneSecretoWorker && tieneAccesoPrivadoSupabase) {
   trabajador = spawn(procesoNuxt, ['--env-file-if-exists=.env', 'workers/ejecutar_futbol_local.mjs'], {
     cwd: process.cwd(),
     env: entornoLocal,
@@ -62,7 +65,11 @@ if (!detener && servidorListo && process.env.NUXT_FUTBOL_WORKER_API_SECRET?.trim
   })
   console.info('Worker local de fútbol iniciado.')
 } else if (!detener && servidorListo) {
-  console.warn('Nuxt está disponible; el worker se omitió porque falta su secreto en la configuración local.')
+  const faltantes = [
+    ...(!tieneSecretoWorker ? ['NUXT_FUTBOL_WORKER_API_SECRET'] : []),
+    ...(!tieneAccesoPrivadoSupabase ? ['NUXT_SUPABASE_SERVICE_ROLE_KEY'] : [])
+  ]
+  console.warn(`Nuxt está disponible; el worker se omitió porque falta configurar: ${faltantes.join(', ')}.`)
 }
 
 if (!detener && servidorListo) {

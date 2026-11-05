@@ -13,6 +13,7 @@ import {
   robotsNoIndex
 } from '~/utils/seo'
 import { seleccionarArticulosRelacionados } from '~/utils/editorial/distribucion'
+import { resolverDestinoPromocionalReproductor } from '~/utils/publicidad/destinoPromocionalReproductor'
 import {
   crearAutorEstructurado,
   obtenerPerfilAutorPublico
@@ -50,6 +51,7 @@ const { data: publicacionesDisponibles } = await useFetch<ResumenArticuloPublico
 )
 
 const analitica = useAnaliticaPublica()
+const publicidadAutorizada = analitica.publicidadAutorizada
 let articuloVisitado = ''
 watch(
   [() => articuloPublicado.value?.id, slugActual, analitica.decision],
@@ -87,6 +89,64 @@ if (!articuloPublicado.value) {
 }
 
 const configuracion = useRuntimeConfig()
+const primerClicAnuncioYoutube = ref(false)
+const urlCanalYoutube = 'https://www.youtube.com/@SomosNoobs'
+const claveAnuncioYoutube = computed(() => `pont3la10:anuncio-articulo-youtube:v1:${slugActual.value}`)
+const urlsPromocionalesYoutube = computed(() => String(configuracion.public.adsterraMatchPromoUrls || '')
+  .split(',')
+  .map((valor) => {
+    try {
+      const url = new URL(valor.trim())
+      return url.protocol === 'https:' && !url.username && !url.password ? url.toString() : ''
+    } catch {
+      return ''
+    }
+  })
+  .filter(Boolean))
+const puedeAbrirAnuncioYoutube = computed(() => publicidadAutorizada.value && urlsPromocionalesYoutube.value.length > 0)
+const rotuloAccesoYoutube = computed(() => {
+  if (!puedeAbrirAnuncioYoutube.value) return 'Abrir en YouTube'
+  return primerClicAnuncioYoutube.value ? 'Continuar a YouTube' : 'Publicidad antes de YouTube'
+})
+
+function restaurarEstadoAnuncioYoutube() {
+  try {
+    primerClicAnuncioYoutube.value = window.sessionStorage.getItem(claveAnuncioYoutube.value) === '1'
+  } catch {
+    primerClicAnuncioYoutube.value = false
+  }
+}
+
+onMounted(restaurarEstadoAnuncioYoutube)
+watch(slugActual, () => {
+  if (import.meta.client) restaurarEstadoAnuncioYoutube()
+})
+
+function abrirDestinoExterno(url: string) {
+  const ventana = window.open(url, '_blank', 'noopener,noreferrer')
+  if (ventana) ventana.opener = null
+}
+
+function abrirAccesoYoutube() {
+  if (!import.meta.client) return
+
+  if (!primerClicAnuncioYoutube.value && puedeAbrirAnuncioYoutube.value) {
+    const destino = resolverDestinoPromocionalReproductor(1, urlsPromocionalesYoutube.value)
+    if (destino) {
+      abrirDestinoExterno(destino)
+      primerClicAnuncioYoutube.value = true
+      try {
+        window.sessionStorage.setItem(claveAnuncioYoutube.value, '1')
+      } catch {
+        // Se mantiene el primer clic en memoria si sessionStorage no esta disponible.
+      }
+      return
+    }
+  }
+
+  abrirDestinoExterno(urlCanalYoutube)
+}
+
 const urlCanonica = computed(() =>
   `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/articulos/${slugActual.value}`
 )
@@ -273,17 +333,34 @@ const fechaActualizacion = computed(() => {
     />
 
     <figure v-if="articuloPublicado.portada" class="portada-articulo-publicado">
-      <ImagenEditorialPublica
-        class="imagen-detalle"
-        :src="articuloPublicado.portada.url"
-        :alt="articuloPublicado.portada.textoAlternativo"
-        :width="articuloPublicado.portada.ancho || 1600"
-        :height="articuloPublicado.portada.alto || 900"
-        :ancho-original="articuloPublicado.portada.ancho"
-        sizes="(max-width: 760px) 100vw, 1200px"
-        loading="eager"
-        prioridad-alta
-      />
+      <div class="portada-reproductor-youtube">
+        <ImagenEditorialPublica
+          class="imagen-detalle"
+          :src="articuloPublicado.portada.url"
+          :alt="articuloPublicado.portada.textoAlternativo"
+          :width="articuloPublicado.portada.ancho || 1600"
+          :height="articuloPublicado.portada.alto || 900"
+          :ancho-original="articuloPublicado.portada.ancho"
+          sizes="(max-width: 760px) 100vw, 1200px"
+          loading="eager"
+          prioridad-alta
+        />
+        <button
+          class="boton-reproductor-youtube"
+          type="button"
+          :aria-label="puedeAbrirAnuncioYoutube && !primerClicAnuncioYoutube ? 'Primer clic: abrir publicidad; segundo clic: canal SomosNoobs en YouTube' : 'Abrir canal SomosNoobs en YouTube'"
+          @click="abrirAccesoYoutube"
+        >
+          <span class="boton-reproducir-youtube" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8 5 12 7-12 7z" /></svg></span>
+          <span class="barra-reproductor-youtube" aria-hidden="true">
+            <img src="/brand/pont3la10_logo_login_blanco-180.webp" alt="" width="118" height="23">
+            <span class="separador-reproductor-youtube" />
+            <span class="rotulo-reproductor-youtube">{{ rotuloAccesoYoutube }}</span>
+            <IconoRedSocial red="youtube" />
+          </span>
+          <span class="aviso-reproductor-youtube">{{ puedeAbrirAnuncioYoutube ? 'Primer clic: publicidad · vuelve y pulsa para YouTube' : 'Abrir canal de Pont3la10 en YouTube' }}</span>
+        </button>
+      </div>
       <figcaption
         v-if="articuloPublicado.portada.pieDeFoto || articuloPublicado.portada.credito || articuloPublicado.portada.fuenteFotoUrl"
       >

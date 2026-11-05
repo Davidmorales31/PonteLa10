@@ -5,6 +5,20 @@ description: Draft a sourced Pont3la10 Spanish-language sports or digital-cultur
 
 # Pont3la10 Investigative Writing
 
+For scheduled mode, follow `docs/AUTOMATIZACION_EDITORIAL_IA.md` before the legacy
+instructions below. Keep DeepSeek as the writer using the supplied dossier;
+Codex reviews and corrects without repeating completed paid calls. A single
+identifiable primary OR secondary source can support an explicitly attributed
+piece. Do not claim original reporting for a sourced synthesis; a clear useful
+explanation can be its differentiator. Do not impose a universal original-reporting
+or two-publisher gate. Preserve facts, attribution and uncertainty rather than
+turning rumors into confirmed claims. Draft three attractive headline alternatives
+and select one using protagonist, action, tension and a supported consequence;
+never invent a controversy, quote or promise. The existing 660-word and structured
+proposal/SEO/photo contracts remain. The coordinator reviews image, taxonomy and
+title fidelity, then may approve and schedule through the authorized direct API.
+The older human-review restrictions below apply only to legacy mode.
+
 Write a publishable-quality draft whose every material factual claim can be
 traced to the dossier. Follow the existing evidence and editorial contracts in
 `docs/HU_ED_08_BORRADOR_IA.md` when present and the current HU-ED-11.
@@ -60,8 +74,9 @@ ingestion without editing or routing through the TikTok worker/provider.
 
 Submit as a structured proposal to the private API. It may create only a private
 `review` draft. Never approve, schedule, publish, or bypass an API validation.
-Every delivery requires a persisted cover. Search a relevant real photo with
-an accurate visible credit and source URL first; if that cannot be obtained,
-use a disclosed AI editorial illustration following the cover skills. Never
-submit `coverMediaId: null`. If both paths fail, retain the completed text as a
-local checkpoint and report an incomplete candidate, without creating a CMS article.
+Every delivery requires a persisted, distinct, relevant real photograph with
+verified credit and source URL. Do not generate or submit AI images, synthetic
+photographs, or illustrations as covers for this workflow. If a suitable real
+photo and its attribution cannot be verified, retain the completed text and
+dossier locally, mark the candidate incomplete, and do not create a CMS article.
+Never submit `coverMediaId: null`.

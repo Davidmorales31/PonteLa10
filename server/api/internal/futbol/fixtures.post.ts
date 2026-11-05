@@ -68,7 +68,7 @@ export default defineEventHandler(async (evento) => {
   const siguienteEjecucionMs = resultado.estado === 'sin_cuota'
     ? esperaHastaMantenimientoDiarioBogota(ahora)
     : resultado.estado === 'ocupado'
-      ? Math.max(proxima.esperaMs, 5 * 60_000)
+      ? 5 * 60_000
       : proxima.esperaMs
   return {
     ...resultado,

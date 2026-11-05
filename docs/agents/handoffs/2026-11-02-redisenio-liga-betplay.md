@@ -1,0 +1,14 @@
+# Handoff
+
+- **Objetivo:** Ajustar `/competiciones/liga-betplay` al banner entregado por Juan y mantener funcionales sus accesos.
+- **Completado:** Se reutiliza el banner proporcionado en todas las temporadas de Liga. Para temporadas diferentes a 2026-II, un panel dinámico tapa el rótulo impreso y muestra la temporada de los datos. Los seis enlaces transparentes llevan a tabla, próximos partidos, resultados, jornadas, equipos y noticias. El botón superpuesto conserva `BotonSeguirCompeticion`. Se corrigió el límite de ancho heredado que comprimía la página y se generó un recorte WebP responsive del mismo banner para móvil.
+- **Ancho compartido:** El detalle elimina el ancho especial de 1740 px y reutiliza el contenedor público común (`.pagina-publica-medio`, máximo de 1240 px), como Liga Colombiana y el resto de páginas públicas. El banner llena ese mismo contenedor.
+- **Ajuste visual:** Los enlaces del selector de temporada ahora se envuelven en varias líneas en lugar de mostrar una barra de scroll horizontal que se veía como flechas y cortaba el contenido.
+- **Tabla:** Se redujo el margen entre el encabezado de posiciones, la fase, el caption y los encabezados de columnas para quitar el hueco antes de la primera fila.
+- **Columna de posiciones:** Se fijó la primera columna de tabla en 58 px para eliminar el bloque vacío resaltado a la izquierda de los números de posición.
+- **Equipos:** `TarjetaEquipoLiga.vue` conserva escudos y nombres de la API e incorpora las 20 imágenes de jugador que Juan compartió en Drive, asociadas a cada club y optimizadas a WebP (total aproximado 622 KB). Un degradado lateral mezcla la fotografía con la tarjeta y mantiene el texto legible. Se retiró el atlas de retratos generados. Los nombres visibles acompañan a las imágenes de Drive.
+- **Archivos de esta actualización:** `components/publico/PaginaCompeticionPublica.vue`; `public/images/liga-betplay-banner-2026-ii.webp`; `public/images/liga-betplay-banner-2026-ii-movil.webp`; `components/TarjetaEquipoLiga.vue`; `docs/agents/ESTADO_ACTUAL.md`.
+- **Validaciones:** ESLint focal, `git diff --check` y `npm.cmd run build` aprobados, también tras incluir las fotografías de jugador. El build conserva avisos previos de sprites editoriales y deprecación de `@vue/shared`. `npm.cmd run typecheck` falla en `fabrica-landings` y `tests`; sin errores reportados para los componentes de Liga. No se ejecutó la suite. El recorte móvil se inspeccionó como imagen; el host del navegador no estuvo disponible para validar la página renderizada o hacer clic en los controles.
+- **Pendiente:** Revisar los enlaces y el estado de seguimiento en navegador cuando el host esté disponible; comprobar tamaños desktop y móvil.
+- **Siguiente acción:** Abrir `/competiciones/liga-betplay` y probar los seis destinos de ancla y el botón de seguimiento.
+- **Commit:** Sin commit.

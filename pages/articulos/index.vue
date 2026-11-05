@@ -294,29 +294,7 @@ useSeoPont3la10(() => {
 
       <div v-if="noticiaPrincipal" class="noticias-medio-grid">
         <main class="noticias-medio-principal">
-          <article class="noticia-destacada-medio" :class="{ 'sin-imagen': !tieneImagen(noticiaPrincipal) }">
-            <NuxtLink v-if="tieneImagen(noticiaPrincipal)" :to="`/articulos/${noticiaPrincipal.slug}`" class="imagen-noticia-destacada" tabindex="-1" aria-hidden="true">
-              <ImagenEditorialPublica
-                :src="noticiaPrincipal.imagen"
-                :alt="noticiaPrincipal.titulo"
-                width="1280"
-                height="720"
-                :ancho-original="noticiaPrincipal.imagenAncho"
-                sizes="(max-width: 760px) 100vw, 1280px"
-                loading="eager"
-                prioridad-alta
-                @error="registrarImagenFallida(noticiaPrincipal.imagen)"
-              />
-            </NuxtLink>
-            <div class="contenido-noticia-destacada">
-              <p class="etiqueta-seccion">{{ noticiaPrincipal.categoria }}</p>
-              <h2>
-                <NuxtLink :to="`/articulos/${noticiaPrincipal.slug}`">{{ noticiaPrincipal.titulo }}</NuxtLink>
-              </h2>
-              <p>{{ noticiaPrincipal.bajada }}</p>
-              <NuxtLink class="boton-leer-noticia" :to="`/articulos/${noticiaPrincipal.slug}`">Leer noticia <span aria-hidden="true">→</span></NuxtLink>
-            </div>
-          </article>
+          <TarjetaNoticiaPrincipal :articulo="noticiaPrincipal" nivel-titulo="h2" prioridad-alta />
 
           <section class="bloque-ultimas-noticias-medio" aria-labelledby="titulo-ultimas-noticias-listado">
             <div class="encabezado-noticias-listado">
@@ -324,33 +302,7 @@ useSeoPont3la10(() => {
               <p>Ordenar por: <strong>Más recientes</strong> <ChevronDown aria-hidden="true" /></p>
             </div>
             <div v-if="ultimasNoticias.length" id="lista-ultimas-noticias" class="grilla-noticias-medio">
-              <article
-                v-for="articulo in ultimasNoticias"
-                :key="articulo.slug"
-                class="tarjeta-noticia-medio"
-                :class="{ 'sin-imagen': !tieneImagen(articulo) }"
-              >
-                <NuxtLink v-if="tieneImagen(articulo)" :to="`/articulos/${articulo.slug}`" class="imagen-tarjeta-noticia-medio" tabindex="-1" aria-hidden="true">
-                  <ImagenEditorialPublica
-                    :src="articulo.imagen"
-                    :alt="articulo.titulo"
-                    width="640"
-                    height="360"
-                    :ancho-original="articulo.imagenAncho"
-                    sizes="(max-width: 760px) 100vw, 640px"
-                    @error="registrarImagenFallida(articulo.imagen)"
-                  />
-                </NuxtLink>
-                <div>
-                  <p class="etiqueta-seccion">{{ articulo.categoria }}</p>
-                  <h3>
-                    <NuxtLink :to="`/articulos/${articulo.slug}`">{{ articulo.titulo }}</NuxtLink>
-                  </h3>
-                  <p class="meta-noticia-medio">
-                    {{ articulo.publicadoHace }}<template v-if="articulo.lecturaMinutos"> · {{ articulo.lecturaMinutos }} min</template>
-                  </p>
-                </div>
-              </article>
+              <TarjetaNoticiaSecundaria v-for="articulo in ultimasNoticias" :key="articulo.slug" :articulo="articulo" />
             </div>
             <button
               v-if="hayMasNoticias"
@@ -420,23 +372,8 @@ useSeoPont3la10(() => {
           <section v-if="noticiaLateral" class="panel-noticias-lateral panel-seleccion-editorial">
             <div class="encabezado-panel-lateral">
               <h2><Trophy aria-hidden="true" /> Selección editorial</h2>
-              <NuxtLink :to="`/articulos/${noticiaLateral.slug}`">Leer <span aria-hidden="true">→</span></NuxtLink>
             </div>
-            <NuxtLink v-if="tieneImagen(noticiaLateral)" :to="`/articulos/${noticiaLateral.slug}`" class="imagen-seleccion-editorial">
-                  <ImagenEditorialPublica
-                    :src="noticiaLateral.imagen"
-                    :alt="noticiaLateral.titulo"
-                    width="480"
-                    height="270"
-                    :ancho-original="noticiaLateral.imagenAncho"
-                    sizes="(max-width: 760px) 100vw, 480px"
-                    @error="registrarImagenFallida(noticiaLateral.imagen)"
-                  />
-            </NuxtLink>
-            <h3>
-              <NuxtLink :to="`/articulos/${noticiaLateral.slug}`">{{ noticiaLateral.titulo }}</NuxtLink>
-            </h3>
-            <p>{{ noticiaLateral.bajada }}</p>
+            <TarjetaNoticiaSecundaria :articulo="noticiaLateral" mostrar-resumen />
           </section>
         </aside>
       </div>

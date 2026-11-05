@@ -1,10 +1,10 @@
 import { createHmac, randomUUID } from 'node:crypto'
 
 const rutas = [
-  { nombre: 'fixtures', ruta: '/api/internal/futbol/fixtures', intervaloMs: 15 * 1000 },
-  { nombre: 'resultados_liga', ruta: '/api/internal/futbol/liga-resultados', intervaloMs: 15 * 60 * 1000 },
-  { nombre: 'tabla_liga', ruta: '/api/internal/futbol/tabla-dimayor', intervaloMs: 60 * 1000, esperaFalloMs: 60 * 1000 },
-  { nombre: 'calendario', ruta: '/api/internal/futbol/calendario', timeoutMs: 20 * 60 * 1000, esperaFalloMs: 30 * 60 * 1000 }
+  { nombre: 'fixtures', ruta: '/local-internal/futbol/fixtures', intervaloMs: 15 * 1000 },
+  { nombre: 'resultados_liga', ruta: '/local-internal/futbol/liga-resultados', intervaloMs: 15 * 60 * 1000 },
+  { nombre: 'tabla_liga', ruta: '/local-internal/futbol/tabla-dimayor', intervaloMs: 60 * 1000, esperaFalloMs: 60 * 1000 },
+  { nombre: 'calendario', ruta: '/local-internal/futbol/calendario', timeoutMs: 20 * 60 * 1000, esperaFalloMs: 30 * 60 * 1000 }
 ]
 const intervaloPredeterminadoMs = 5 * 60 * 1000
 const intervaloMinimoMs = 5 * 1000

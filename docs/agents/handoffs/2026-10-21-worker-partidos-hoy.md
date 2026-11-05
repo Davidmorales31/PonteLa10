@@ -1,0 +1,12 @@
+# Handoff
+
+- **Objetivo de la sesión:** recuperar los partidos locales de hoy y levantar el worker de fútbol sin redirigir sus llamadas a Producción.
+- **Completado:** Inicio y `/partidos-hoy` usan una ruta de calendario local solo durante desarrollo. Se añadió `/local-internal/futbol/:endpoint` para delegar a los handlers firmados sin pasar por el proxy `/api`. El script `dev-local.mjs` exige el secreto del worker y el acceso privado de Supabase antes de iniciar el proceso. Nuxt queda activo en `127.0.0.1:3333`.
+- **Archivos modificados:** `pages/index.vue`, `pages/partidos-hoy.vue`, `scripts/dev-local.mjs`, `workers/sincronizar_futbol_local.mjs`, `server/routes/partidos-hoy-local.get.ts`, `server/routes/local-internal/futbol/[endpoint].post.ts`, los utilitarios/ruta de sincronización de fútbol ya modificados en esta sesión, `docs/agents/ESTADO_ACTUAL.md` y este handoff.
+- **Decisiones:** la ruta local de respaldo muestra solo encuentros futuros del calendario canónico y los identifica como calendario sin marcador en vivo. No se cambia el estado público ni los derechos de publicación. No se lee ni se copia el secreto de Producción.
+- **Validaciones ejecutadas:** ESLint focalizado y `git diff --check` pasaron. Inicio y `/partidos-hoy` responden HTTP 200 y muestran el aviso de configuración. La ruta de calendario responde HTTP 200 con cero partidos porque falta acceso privado local a Supabase. Una llamada firmada al alias local alcanzó el handler y respondió 503 `AUTOMATIZACION_NO_CONFIGURADA` antes de consultar proveedores.
+- **Fallos:** no está configurada `NUXT_SUPABASE_SERVICE_ROLE_KEY` en el entorno local. Por seguridad, `dev-local.mjs` dejó Nuxt activo y omitió el worker. Un ciclo anterior, antes del arreglo del proxy, llegó a la API de Producción y falló con `MAPPINGS_UNAVAILABLE`; Goal API devolvió `sin_cuota`. No se pudo validar el guardado desde el worker local.
+- **Pendientes:** configurar `NUXT_SUPABASE_SERVICE_ROLE_KEY` en `.env` local; reiniciar `npm run dev:qa`; comprobar que el worker solo llame a `/local-internal/futbol/*`; esperar cuota del proveedor y confirmar el guardado de mappings/snapshots y su lectura en la ruta local.
+- **Siguiente acción exacta:** añadir el secreto localmente (sin pegarlo en el chat) y reiniciar `npm run dev:qa`; revisar el primer resumen del worker y `http://127.0.0.1:3333/partidos-hoy-local`.
+- **Commit base:** `f0d0cda`.
+- **Commit final:** sin commit.

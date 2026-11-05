@@ -1,0 +1,11 @@
+# Handoff
+- **Objetivo de la sesión:** promo de 20 segundos del sitio con HyperFrames.
+- **Completado:** composición horizontal de cuatro escenas con capturas, logo, textos españoles y locución de 20 s con pausas. Preview persistente en http://localhost:3017/#project/promo-pont3la10.
+- **Archivos modificados:** nuevos artefactos en videos/promo-pont3la10; estado y este handoff. Scaffold auxiliar videos/promo-base conservado.
+- **Decisiones:** usar www.pont3la10.com porque pnt3la10.com no resuelve; mantener identidad y mostrar interfaz real. No publicar ni exportar sin petición de exportación.
+- **Validaciones ejecutadas:** lint y validate cero errores; check aprobado (34/34 contraste); inspect cero errores/avisos, recorte de paneo intencional; snapshots en .hyperframes/artifacts/snapshots, contacto revisado en cinco tiempos. git diff --check aprobado. No suite/typecheck/build Nuxt: artefacto de video independiente, sin cambio de aplicación/dependencias raíz.
+- **Fallos:** whisper-cpp no instalado: transcript.json conserva tiempos de frases medidas, no timestamps inventados por palabra. Primer intento de captura sobre dominio incorrecto falló; captura canónica completa. Kokoro requirió instalar dependencias Python locales. Descarga auxiliar kokoro-promo.onnx puede estar incompleta; no la usa el proyecto.
+- **Pendientes:** avisos lint de imágenes repetidas en escenas distintas y estructura monolítica; son revisados y no bloquean preview. No hay timestamps por palabra, sin subtítulos solicitados.
+- **Siguiente acción exacta:** revisar Studio; si Juan pide MP4, usar hyperframes render --output renders/promo-pont3la10.mp4 desde el proyecto, con HYPERFRAMES_BROWSER_PATH apuntando a Edge instalado.
+- **Commit base:** f0d0cda.
+- **Commit final:** sin commit.

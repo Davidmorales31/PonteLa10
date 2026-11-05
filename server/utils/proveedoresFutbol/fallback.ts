@@ -1,6 +1,7 @@
 import type { IdentificadorProveedorFutbol } from '~/types/futbolProveedor'
 import { validarProveedorFutbol, type ProveedorFutbol } from './contrato'
 import { ErrorProveedorFutbol } from './errores'
+import { esVentanaWorkerOcupada } from './configuracionWorkerClasificaciones'
 
 export interface RegistroFallbackFutbol {
   operacion: string
@@ -67,6 +68,7 @@ export function crearFallbackProveedorFutbol(opciones: OpcionesFallbackFutbol) {
           })
           return { datos, proveedor: opciones.principal.id, usoFallback: false }
         } catch (error) {
+          if (esVentanaWorkerOcupada(error)) throw error
           // Do not propagate provider response bodies, which can include sensitive data.
           await registrar({
             operacion,
@@ -108,6 +110,7 @@ export function crearFallbackProveedorFutbol(opciones: OpcionesFallbackFutbol) {
         })
         return { datos, proveedor: opciones.secundario.id, usoFallback: true }
       } catch (error) {
+        if (esVentanaWorkerOcupada(error)) throw error
         await registrar({
           operacion,
           proveedor: opciones.secundario.id,

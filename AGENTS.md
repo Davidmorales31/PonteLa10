@@ -30,7 +30,11 @@ código y pruebas prevalecen sobre resúmenes desactualizados.
 - Validar entradas en servidor. Autorizar endpoints privados y respaldarlos con
   RLS; nunca usar `service_role` en el navegador ni como atajo de usuario.
 - Mantener capacidades centralizadas, MFA y auditoría en acciones sensibles.
-- La IA asiste; toda publicación requiere aprobación humana.
+- La publicación manual y las ingestas requieren aprobación humana. La corrida
+  editorial Codex tiene delegación explícita del responsable (2026-11-04) para
+  aprobar y programar mediante la ruta privada y auditada descrita en
+  `docs/AUTOMATIZACION_EDITORIAL_IA.md`; esta excepción no cambia los permisos ni
+  el MFA de las acciones humanas.
 - Supabase y herramientas opcionales no deben romper la ejecución local cuando
   falten variables o programas.
 

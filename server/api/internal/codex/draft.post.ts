@@ -35,7 +35,7 @@ function crearEntradaRedaccion(entrada: ReturnType<typeof esquemaBorradorCodex.p
   return {
     ingestaId: entrada.idempotencyKey,
     tituloSugerido: entrada.titleHint,
-    instrucciones: 'Redacción basada únicamente en el expediente verificado. No agregues hechos que no aparezcan en sus afirmaciones y fuentes.',
+    instrucciones: 'Redacción basada únicamente en el expediente con atribución fiel. Distingue lo confirmado, lo atribuido y lo incierto. No agregues hechos que no aparezcan en sus afirmaciones y fuentes.',
     urlFuente: entrada.primarySourceUrl,
     creditos: 'Fuentes documentadas en el expediente editorial; se mostrarán fuera del cuerpo de la noticia.',
     categoriaId: entrada.categoryId,

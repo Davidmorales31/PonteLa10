@@ -40,7 +40,7 @@ describe('contrato SEO de páginas públicas', () => {
     expect(metadata).toContain("rutaCanonica: '/'")
     expect(portada.match(/<h1\b/g)).toHaveLength(1)
     expect(portada).toContain('Noticias de fútbol colombiano y Selección Colombia</h1>')
-    expect(portada).toContain('principal nivel-titulo="h2"')
+    expect(portada).toMatch(/<TarjetaNoticiaPrincipal\b[^>]*nivel-titulo="h2"[^>]*prioridad-alta/)
     expect(portada).toContain('to="/liga-colombiana"')
     expect(portada).toContain('to="/seleccion-colombia"')
     expect(identidad).toContain("rutaActual.path === '/' ? 'NewsMediaOrganization' : 'Organization'")

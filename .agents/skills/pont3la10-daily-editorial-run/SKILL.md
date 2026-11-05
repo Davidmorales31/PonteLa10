@@ -1,15 +1,60 @@
 ---
 name: pont3la10-daily-editorial-run
-description: Run or resume Pont3la10's daily research-to-review editorial batch through its private API, without approving or publishing stories.
+description: Run Pont3la10's researched DeepSeek editorial batch, with authorized AI review and scheduling through its private API.
 ---
 
 # Pont3la10 Daily Editorial Run
 
+## Current scheduled mode — 2026-11-04
+
+For scheduled runs, follow `docs/AUTOMATIZACION_EDITORIAL_IA.md` and
+`config/automatizacionEditorial.json`. The owner explicitly delegated AI approval
+and scheduling for this pipeline. These rules override the older review-only
+instructions below; that legacy workflow applies only when explicitly requested.
+
+1. Read the current policy and the trend/writing/SEO skills' current-mode notes.
+   Check read-only health, then reserve today's run through `contexto`. Reuse its
+   identity only for today's retries. Maximum two new run IDs per Bogotá day.
+2. Research every active category. Target ten NEW articles per category, seventy
+   when seven are active. Use up to twenty agenda candidates per category; save
+   each dossier and its v2 assessment before drafting. Never duplicate to fill
+   the target; record precise shortfalls and close partial if necessary.
+3. Keep DeepSeek as the writer, as the owner confirmed. Call `borrador` once per
+   stable key with the researched dossier; reuse a completed result. Do not pay
+   for duplicate generations or retry an uncertain paid result without explicit
+   authorization. Codex reviews and can correct the result without a new call.
+   Keep the existing body/bodyJson equality, SEO,
+   taxonomy, structured source metadata and 660-word contract. A single attributed
+   source may suffice; no universal two-source or primary-source gate applies to
+   automatic mode. Never misrepresent uncertainty or manufacture facts.
+4. Use the site's active categories. Tendencias covers Latin American/general
+   current affairs rather than stories about Google Trends. Use actual observed
+   public interest; do not invent popularity or search counts. See the title
+   guide in the policy, inspired by El Futbolero's protagonist/action/consequence.
+5. Find and persist each relevant real photo using auto-cover. Review all exact
+   category/topic IDs and any new topic names against the body, image presence
+   and title fidelity. Build `review` as specified in the policy; persist the
+   exact `{proposal, briefSeo, review}` envelope in the proposal checkpoint.
+6. Call `node scripts/codex-editorial-submit.mjs propuesta-automatica <file.json>`.
+   This uses the separate publication secret and requires a completed DeepSeek
+   generation with the same identity and saved briefSeo. Never substitute the investigation
+   key. On failure, retain the same payload
+   and key; do not bypass a conflict. The API transaction creates, approves as IA
+   and schedules at two-minute spacing. Do not invoke Cron manually.
+7. Persist the receipt and verify CMS/context state, photo and taxonomy. A deduped
+   article from another key has autoApproved=false and does not count. Exact
+   receipt replay is not a new article. Count only unique new scheduled/published
+   articles belonging to this run. Close completed only when each active category
+   reaches ten; otherwise reconcile and close partial with the exact deficit.
+
+## Legacy review-only mode
+
 Use this as the coordinator for the daily scheduled Codex task in its existing
 chat. Read the trend, investigative-writing and SEO skills before producing
-candidates. Read auto-cover first; use AI-cover only as fallback when no suitable
-photo with a verified credit and source is available. Every delivery requires a cover.
-The AI-cover skill is exclusive to this Codex task; never change the TikTok ingestion workflow. Use the
+candidates. Read auto-cover first. Every delivery requires a distinct, relevant
+real photograph with verified credit and source. Never generate or submit an AI
+cover. If no suitable photo can be verified, mark that candidate incomplete and
+continue without delivering it. Never change the TikTok ingestion workflow. Use the
 operational-monitor skill only for a separate read-only health check.
 
 ## Private API configuration
@@ -48,13 +93,17 @@ Do not delete process variables to force a stale `.env` destination.
 2. Prioritize the site's two main focuses in this order: Liga BetPlay
    (competitions, teams, fixtures, results, rules and analysis in Colombia),
    then Colombianos en Europa (verified club news, performances and continuity
-   of Colombian players abroad). Research both focuses before other categories.
-   Match active categories/public topics from context: these focuses are not
-   permission to fabricate new category IDs. National teams or another active
-   category only when there is a distinct, evidence-backed opportunity that
-   serves the product strategy. Review active categories without forcing equal
-   output. There is no per-category or run-wide draft quota: zero drafts is a
-   valid result when no candidate merits `create`. Opinión and Especiales stay
+   of Colombian players abroad). Then investigate every active category from
+   context. Juan's required target for **every run** is at least ten unique
+   proposals confirmed in CMS as `review`, with at least one proposal in each
+   active category. The goal applies across all categories, not only football.
+   Match only active categories/public topics from context; never fabricate IDs.
+   Treat ten and one-per-category as minimums to pursue, not permission to pad:
+   every item still needs a verified primary source, a distinct reader-facing
+   angle, factual review, deduplication and its own verified photo. If evidence,
+   originality, a suitable photo, or safe delivery blocks the goal, reconcile
+   every opportunity, continue with eligible candidates, and report the exact
+   per-category shortfall and concrete blockers. Opinión and Especiales stay
    flagged for human angle/format review.
    Apply the source and differentiation gate in
    `docs/PROGRAMA_CONTENIDO_ORIGINAL.md` to every Codex candidate. Do not advance
@@ -92,15 +141,15 @@ Do not delete process variables to force a stale `.env` destination.
 
    - `expediente`: trend signal, source records, claim/source map, uncertainty.
    - `borrador`: complete structured article proposal, taxonomy and SEO.
-   - `portada` or `portadaIA`: mandatory. Search a relevant real photograph and
+   - `portada`: mandatory. Search a relevant real photograph and
      open its source to identify an accurate visible credit. Keep source URL,
      author/agency when available, and a truthful archival/current caption.
      The CMS already stores/displays these fields. No invented license, creator
      or documentary implication. The user's authorization permits the credited
      source path without the old Commons-only license gate. If no suitable image
-     and credit can be obtained, generate and inspect a disclosed AI illustration.
-     Never deliver `coverMediaId: null`; if both paths fail, checkpoint the
-     candidate as incomplete and deliver no article.
+     and credit can be obtained, checkpoint the candidate as incomplete and
+     deliver no article; never generate or upload AI imagery. Never deliver
+     `coverMediaId: null`.
    - `media`: save the stable persisted media ID and safe
      receipt. On ambiguous persistence, reuse the checkpoint and idempotency
      key rather than regenerating or duplicating the image.

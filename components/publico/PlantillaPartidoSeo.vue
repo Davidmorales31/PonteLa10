@@ -83,14 +83,6 @@ const marcadorDisponible = computed(() => partido.value.golesLocal !== null
   && partido.value.golesVisitante !== null)
 const marcador = computed(() => `${partido.value.golesLocal ?? '—'}–${partido.value.golesVisitante ?? '—'}`)
 const estadoPartido = computed(() => etiquetaEstadoSeoPartido(partido.value.estado))
-const frescuraDesactualizada = computed(() => estadoPartido.value === 'ACTUALIZACIÓN PENDIENTE'
-  || (partido.value.estadoFrescura
-    && ['desactualizado', 'sin_verificar', 'fecha_invalida'].includes(partido.value.estadoFrescura.estado)))
-const etiquetaFrescura = computed(() => estadoPartido.value === 'ACTUALIZACIÓN PENDIENTE'
-  ? 'Estado del encuentro pendiente de confirmación'
-  : partido.value.estadoFrescura?.estado === 'estable'
-  ? 'Resultado estable'
-  : frescuraDesactualizada.value ? 'Dato pendiente de actualización' : 'Dato actualizado')
 const transmisionesConfirmadas = computed(() => (partido.value.transmisiones || [])
   .filter(transmision => transmision.status === 'confirmed'
     && Boolean(transmision.verifiedAt)
@@ -136,16 +128,6 @@ function fechaVerificacion(valor: string) {
     timeZone: 'America/Bogota'
   }).format(fecha)
   return `Verificada el ${fechaHora} (hora de Colombia)`
-}
-
-function fechaHoraActualizacion(valor: string) {
-  const fecha = new Date(valor)
-  if (!Number.isFinite(fecha.getTime())) return 'Fecha de consulta no disponible'
-  return new Intl.DateTimeFormat('es-CO', {
-    dateStyle: 'medium',
-    timeStyle: 'short',
-    timeZone: 'America/Bogota'
-  }).format(fecha)
 }
 
 function modoEstadoParaEtiqueta(estado: string, modo: 'donde-ver' | 'como-quedo') {
@@ -210,13 +192,7 @@ onMounted(() => {
 
 <template>
   <main class="pagina-contenido pagina-publica-medio pagina-partido-seo">
-    <nav class="migas-navegacion" aria-label="Migas de pan">
-      <ol>
-        <li><NuxtLink to="/">Inicio</NuxtLink></li>
-        <li><NuxtLink to="/liga-colombiana">Liga colombiana</NuxtLink></li>
-        <li><span class="miga-actual" aria-current="page">{{ modo === 'partido' ? `${partido.local} vs ${partido.visitante}` : `${modo === 'donde-ver' ? 'Dónde ver' : 'Cómo quedó'} ${partido.local} vs ${partido.visitante}` }}</span></li>
-      </ol>
-    </nav>
+    <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Liga colombiana', ruta: '/liga-colombiana' }, { etiqueta: modo === 'partido' ? `${partido.local} vs ${partido.visitante}` : `${modo === 'donde-ver' ? 'D\u00f3nde ver' : 'C\u00f3mo qued\u00f3'} ${partido.local} vs ${partido.visitante}` }]" />
 
     <div class="contenido-partido-seo-grid">
       <div class="columna-principal-partido">
@@ -302,17 +278,8 @@ onMounted(() => {
             @click="registrarEvento('channel_click')"
           >Consultar programación oficial</a>
           <div v-else class="nota-marcador-partido">El sitio no transmite partidos. Mostramos solo información editorial publicada.</div>
-          <section class="fuente-verificacion-partido" aria-label="Fuente y actualización de los datos">
-            <strong>Fuente y actualización</strong>
-            <p v-if="frescuraDesactualizada" class="aviso-frescura-partido" role="status">
-              {{ etiquetaFrescura }}. Puede haber cambios posteriores; consulta la fuente oficial antes de tomar una decisión.
-            </p>
-            <p v-else class="estado-frescura-partido" role="status">{{ etiquetaFrescura }}<template v-if="partido.estadoFrescura?.umbralMinutos"> · umbral {{ partido.estadoFrescura.umbralMinutos }} min</template>.</p>
-            <p>
-              Datos del encuentro consultados por última vez el
-              <time :datetime="partido.verificadoEn">{{ fechaHoraActualizacion(partido.verificadoEn) }}</time>
-              (hora de Colombia).
-            </p>
+          <section class="fuente-verificacion-partido" aria-label="Fuente de los datos">
+            <strong>Fuente de los datos</strong>
             <a
               v-if="partido.fuenteOficialUrl"
               :href="partido.fuenteOficialUrl"

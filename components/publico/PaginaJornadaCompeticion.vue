@@ -114,22 +114,11 @@ function iniciales(nombre: string): string {
   return nombre.split(/\s+/).filter(Boolean).slice(0, 2).map(palabra => palabra[0]).join('').toLocaleUpperCase('es-CO')
 }
 
-function fechaActualizacion(fecha: string): string {
-  return fechaPartido(fecha)
-}
 </script>
 
 <template>
   <main v-if="ficha" class="pagina-contenido pagina-publica-medio modulo-futbol-colombia pagina-jornada-competicion">
-    <nav class="migas-navegacion" aria-label="Migas de pan">
-      <ol>
-        <li><NuxtLink to="/">Inicio</NuxtLink></li>
-        <li><NuxtLink to="/liga-colombiana">Liga colombiana</NuxtLink></li>
-        <li><NuxtLink :to="urlCompeticion">{{ ficha.competencia.nombre }}</NuxtLink></li>
-        <li><NuxtLink :to="urlTemporada">Temporada {{ ficha.temporada }}</NuxtLink></li>
-        <li><span class="miga-actual" aria-current="page">{{ ficha.jornada.nombre }}</span></li>
-      </ol>
-    </nav>
+    <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Liga colombiana', ruta: '/liga-colombiana' }, { etiqueta: ficha.competencia.nombre, ruta: urlCompeticion }, { etiqueta: `Temporada ${ficha.temporada}`, ruta: urlTemporada }, { etiqueta: ficha.jornada.nombre }]" />
 
     <header class="cabecera-pagina cabecera-noticias-medio cabecera-jornada">
       <p class="etiqueta-seccion">FÚTBOL COLOMBIANO · {{ ficha.competencia.nombre }} · {{ ficha.temporada }}</p>
@@ -168,7 +157,7 @@ function fechaActualizacion(fecha: string): string {
 
     <PublicidadAdsterraSlot formato="leaderboard" :contexto="`${ficha.jornada.nombre} de ${ficha.competencia.nombre}`" />
 
-    <p class="fuente-jornada">La agenda y los resultados se muestran con la información pública verificada de DIMAYOR. Última actualización: {{ fechaActualizacion(ficha.actualizadaEn) }} (hora de Colombia).</p>
+    <p class="fuente-jornada">La agenda y los resultados se muestran con información pública de DIMAYOR.</p>
   </main>
 </template>
 

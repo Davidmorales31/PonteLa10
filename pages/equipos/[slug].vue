@@ -129,13 +129,7 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
 
 <template>
   <main v-if="equipo && ficha" class="pagina-contenido pagina-publica-medio pagina-equipo-publico">
-    <nav class="migas-navegacion" aria-label="Migas de pan">
-      <ol>
-        <li><NuxtLink to="/">Inicio</NuxtLink></li>
-        <li><NuxtLink to="/liga-colombiana">Liga colombiana</NuxtLink></li>
-        <li><span aria-current="page">{{ equipo.nombre }}</span></li>
-      </ol>
-    </nav>
+    <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Liga colombiana', ruta: '/liga-colombiana' }, { etiqueta: equipo.nombre }]" />
 
     <header class="equipo-hero panel-equipo-publico">
       <div class="equipo-identidad">
@@ -169,11 +163,6 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
       :url="urlCanonica"
       etiqueta="la ficha del equipo"
     />
-
-    <p class="nota-verificacion-equipo">Datos públicos de clasificación y fixtures; última verificación {{ fechaBreve(equipo.actualizadoEn) }}.</p>
-    <p v-if="!ficha.frescuraTabla.actualizado" class="aviso-frescura-equipo" role="status">
-      La posición puede estar desactualizada. Última verificación: {{ ficha.frescuraTabla.verificadoEn ? fechaBreve(ficha.frescuraTabla.verificadoEn) : 'sin registro' }}; se mostrará una nueva cuando el proveedor la confirme.
-    </p>
 
     <div class="contenido-equipo-grid">
       <div class="columna-principal-equipo">
@@ -248,22 +237,7 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
     <section id="noticias-equipo" class="seccion-equipo panel-equipo-publico noticias-equipo" aria-labelledby="noticias-del-equipo">
       <div class="encabezado-seccion-equipo"><div><p class="etiqueta-seccion">ACTUALIDAD</p><h2 id="noticias-del-equipo">Noticias de {{ equipo.nombre }}</h2></div><NuxtLink to="/articulos?categoria=futbol-colombiano">Fútbol colombiano <span aria-hidden="true">→</span></NuxtLink></div>
       <div v-if="ficha.noticias.length" class="grilla-noticias-equipo">
-        <article v-for="noticia in ficha.noticias" :key="noticia.slug">
-          <NuxtLink v-if="noticia.imagen" class="imagen-noticia-equipo" :to="`/articulos/${noticia.slug}`" tabindex="-1" aria-hidden="true">
-            <ImagenEditorialPublica
-              :src="noticia.imagen"
-              :alt="noticia.titulo"
-              width="640"
-              height="360"
-              :ancho-original="noticia.imagenAncho"
-              sizes="(max-width: 760px) 100vw, 640px"
-            />
-          </NuxtLink>
-          <p class="etiqueta-seccion">{{ noticia.categoria }}</p>
-          <h3><NuxtLink :to="`/articulos/${noticia.slug}`">{{ noticia.titulo }}</NuxtLink></h3>
-          <p v-if="noticia.resumen">{{ noticia.resumen }}</p>
-          <small>{{ fechaBreve(noticia.publicadoEn) }}</small>
-        </article>
+        <TarjetaNoticiaSecundaria v-for="noticia in ficha.noticias" :key="noticia.slug" :articulo="noticia" mostrar-resumen />
       </div>
       <p v-else class="estado-equipo-vacio">Cuando haya artículos públicos relacionados aparecerán aquí.</p>
     </section>

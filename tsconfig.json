@@ -1,6 +1,9 @@
 {
   "extends": "./.nuxt/tsconfig.json",
   "exclude": [
+    "fabrica-landings/**",
+    "videos/**",
+    ".codex/**",
     "_RESPALDOS_POR_ELIMINAR/**",
     "node_modules",
     "node_modules/runtime/server",
