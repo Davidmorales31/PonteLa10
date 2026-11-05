@@ -192,7 +192,9 @@ useSeoPont3la10(() => ({
 
     <header class="portada-liga-imagen">
       <img
-        src="/images/celebracion-futbol-colombiano.png"
+        src="/images/celebracion-futbol-colombiano-1600.webp"
+        srcset="/images/celebracion-futbol-colombiano-768.webp 768w, /images/celebracion-futbol-colombiano-1600.webp 1600w"
+        sizes="(max-width: 800px) calc(100vw - 32px), 1240px"
         alt="Liga BetPlay DIMAYOR: el pulso del fútbol profesional colombiano, con accesos a posiciones, calendario, noticias y partidos de hoy."
         width="3000"
         height="1000"
