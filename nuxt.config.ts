@@ -5,6 +5,10 @@ const dominioProduccionVercel = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
   : ''
 const urlPublica = process.env.NUXT_PUBLIC_SITE_URL || dominioProduccionVercel
+// El origen local del panel no debe aparecer en las piezas promocionales ni sus enlaces.
+const urlSocial = process.env.NUXT_PUBLIC_SOCIAL_SITE_URL || dominioProduccionVercel
+  || (urlPublica && !['localhost', '127.0.0.1', '[::1]'].includes(new URL(urlPublica).hostname)
+    ? urlPublica : 'https://www.pont3la10.com')
 
 if (process.env.NODE_ENV === 'production' && !urlPublica) {
   throw new Error(
@@ -71,6 +75,15 @@ export default defineNuxtConfig({
     }
   },
   runtimeConfig: {
+    socialSchedulerEnabled: process.env.NUXT_SOCIAL_SCHEDULER_ENABLED === 'true',
+    metaAccessToken: process.env.NUXT_META_ACCESS_TOKEN || '',
+    metaFacebookPageAccessToken: process.env.NUXT_META_FACEBOOK_PAGE_ACCESS_TOKEN || '',
+    metaFacebookPageId: process.env.NUXT_META_FACEBOOK_PAGE_ID || '',
+    metaInstagramAccountId: process.env.NUXT_META_INSTAGRAM_ACCOUNT_ID || '17841472510522793',
+    xClientId: process.env.NUXT_X_CLIENT_ID || '',
+    xClientSecret: process.env.NUXT_X_CLIENT_SECRET || '',
+    xRedirectUri: process.env.NUXT_X_REDIRECT_URI || 'http://localhost:3001/api/admin/redes/oauth/x/callback',
+    socialEncryptionKey: process.env.NUXT_SOCIAL_ENCRYPTION_KEY || '',
     tiktokPythonPath: process.env.NUXT_TIKTOK_PYTHON_PATH || '',
     tiktokWorkerPath: process.env.NUXT_TIKTOK_WORKER_PATH || 'workers/transcribir_tiktok.py',
     tiktokWhisperModel: process.env.NUXT_TIKTOK_WHISPER_MODEL || 'base',
@@ -97,6 +110,7 @@ export default defineNuxtConfig({
     theSportsDbBaseUrl: process.env.NUXT_THE_SPORTS_DB_BASE_URL || 'https://www.thesportsdb.com/api/v1/json',
     public: {
       siteUrl: urlPublica || 'http://localhost:3001',
+      socialSiteUrl: urlSocial,
       apiOrigin,
       supabaseUrl,
       supabaseKey,

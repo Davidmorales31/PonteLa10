@@ -1,5 +1,277 @@
 # Estado actual de Pont3la10
 
+## Pulido visual de Vista rápida (2026-11-13)
+
+- Cabecera fija/cierre visible, pieza con formato y dimensiones, controles de
+  encuadre compactos, guardado destacado, selector de texto y destinos con cuenta,
+  conexiones colapsables. Misma identidad azul/blanco/amarillo y funciones.
+- Montserrat de imágenes con tracking−0,018em e interlineado1,12; medición y SVG
+  usan la misma geometría en vista, descarga y publicación. Sin nuevas fuentes,
+  fotos ni dependencias; cola/autorización intactas. No había trabajos activos.
+- Lint/typecheck/build y693 pruebas pasan (timeout15000 para fixture I/O ajeno).
+  QA Edge aislado1440/390: comparación visual anterior/nueva, arrastre/zoom,
+  guardado/conflicto, programación/confirmación/cancelación, sin overflow/errores.
+  Cero publicaciones o lotes reales. Node compilado actualizado en3001.
+- Handoff: `docs/agents/handoffs/2026-11-13-pulido-vista-rapida.md`.
+
+
+## Encuadre y programación masiva de redes (2026-11-13)
+
+- Vista rápida permite arrastrar foto, zoom y posición con controles accesibles;
+  Guardar encuadre persiste todas las diapositivas con revisión optimista. Publicar
+  queda bloqueado sin guardar. Pie www.pont3la10.com abajo a la derecha en vista,
+  descarga y envío; créditos preservados.
+- Listado permite seleccionar hasta50 noticias entre páginas y pendientes de la
+  página. Panel de lote: hora inicial Colombia, intervalo1–1440min, FB/IG, orden,
+  confirmación humana, cola/resultados y cancelación de pendientes. No incluye X.
+- Migración cola local20261113052608/remota20261113053754 aplicada sola: RLS,
+  grants de servidor, aprobación auditada, claim/CAS y bloqueo de interrumpidos.
+  Worker Node opt-in activado en entorno privado; no requiere navegador abierto,
+  pero PC/proceso deben seguir encendidos hasta migrar a VPS. No despliegue remoto.
+- Se revalidan permisos, versión, revisión y huellas de documento/JPEG aprobados.
+  Predeterminado de pendientes sin guardar ahora usa ID estable por artículo.
+  No reenvía inciertos, conserva intervalo al retomar; atrasos>24h se detienen.
+- Lint/typecheck,693 pruebas en128 archivos y52 comprobaciones SQL (27 cola+25
+  recibos) pasan. Build y QA de app compilada con API simulada pasan: 1440/390,
+  arrastre/zoom, guardar/conflicto, dominio, selección, horario/intervalo,
+  confirmación/cancelación, sin errores JS ni overflow. Revisión sin bloqueos.
+  Build final repetido con todos los ajustes pasa; Node compilado activo en3001.
+- Latido real confirmado, home/noticias HTTP200 y cola privada sin sesión HTTP401;
+  cero lotes/trabajos reales creados. Handoff:
+  `docs/agents/handoffs/2026-11-13-encuadre-cola-social.md`.
+
+
+## Facebook e Instagram integrados en Vista rápida
+
+- Entrega en `.codex/worktrees/redes-sociales`: selección Facebook/Instagram,
+  confirmación humana, publicación de composición completa y resultados por destino.
+  Cuentas verificadas realmente: página Pont3 la 10 Centro Digital y @pont3ladiez.
+  Credenciales exclusivamente en entorno privado; X preservado.
+- Migración local `20261113045958_publicaciones_meta_seguras.sql` aplicada sola
+  con versión remota `20261113051005`. RLS/grants/RPCs/bucket privado comprobados.
+  CAS por intento, huella independiente por red y bloqueo de resultados inciertos.
+- Lint, 678 pruebas (125 archivos), typecheck, build y 25 controles SQL pasan.
+  QA Edge aislado 1440/390 con APIs simuladas: confirmar/cancelar, fallo parcial,
+  reintento de una sola red, foco, sin overflow ni errores JS. Subida/lectura
+  firmada/borrado Storage reales pasan. Revisión de seguridad sin bloqueos.
+- Sitio compilado corriendo en localhost:3001; home y noticias HTTP200 (dos
+  artículos devueltos), endpoints privados sin sesión HTTP401. No se publicó
+  contenido público ni se desplegó a producción. Primera publicación real
+  pendiente de confirmación humana. Tokens Meta sin renovación automática;
+  inciertos y fotos FB huérfanas requieren revisión administrativa/manual.
+- Handoff: `docs/agents/handoffs/2026-11-13-publicacion-meta.md`.
+
+
+## Acceso directo a pagina Facebook verificado (2026-11-12)
+
+- Nuevo token de usuario confirma tres permisos de paginas. Aunque /me/accounts sigue omitiendo Pont3la10, la consulta directa a pagina 1432682403259329 confirma nombre correcto y permite obtener su token de pagina (HTTP200). El listado incompleto no demuestra falta de acceso.
+- Token de usuario, token de pagina e ID guardados solo en .env privado ignorado; token Instagram conservado aparte. No se publico contenido. Integracion y recibos Meta en panel aun pendientes; credenciales disponibles no equivalen a flujo terminado.
+
+
+## Verificacion de permisos Facebook (2026-11-12)
+
+- Segundo token guardado aparte del token Instagram en entorno privado ignorado. Graph confirma pages_show_list, pages_read_engagement y pages_manage_posts concedidos.
+- /me/accounts devuelve dos paginas, ninguna identificada como Pont3la10; no hay mas paginas en la respuesta. No seleccionar ni publicar sobre una pagina ajena al objetivo. Pendiente confirmar pagina correcta y acceso en Meta. No se publico contenido.
+
+
+## Credencial Meta recibida y verificada (2026-11-12)
+
+- Credencial guardada solo en .env ignorado de la raiz; no incorporada al cliente ni a Git. Lecturas Graph v27.0 confirman Instagram @pont3ladiez y permiso instagram_content_publish concedido. No se publico contenido.
+- Es un token de usuario del sistema. /me/accounts devuelve lista vacia y no tiene pages_manage_posts/pages_read_engagement/pages_show_list. Facebook aun requiere asignacion y permisos de pagina.
+- La integracion de Meta en el panel y la publicacion desde Vista rapida siguen pendientes: guardar una variable privada no implementa la conexion. No declarar el modulo listo.
+
+
+## Rechazo de creación X: crédito API y mensaje corregido (2026-11-12)
+
+- Primer intento humano registrado `failed`, `post_rechazado`, sin provider post
+  id y con un intento. Se verificó por `/2/usage/credits` que la cuenta API carece
+  de crédito disponible. Identidad, scopes y subida de imágenes sí estaban
+  verificados; crear posts es una operación de pago. No se reenvió el post ni se
+  compraron créditos durante el diagnóstico. El HTTP exacto del rechazo previo
+  no se conservó; no afirmar que fue 402 a partir del recibo genérico.
+- `crearPublicacionX` ahora clasifica HTTP402/problema credits-depleted con un
+  mensaje de recarga y distingue 429/401/otros4xx. Devuelve solo motivo y estado
+  seguro, nunca cuerpo del proveedor. Los5xx/red siguen siendo inciertos.
+- Lint, 653 pruebas, typecheck y diff-check pasan. Cambio acotado al utilitario
+  de error y sus pruebas; no se requiere nuevo build ni migración por matriz.
+  Siguiente acción: responsable carga créditos API en console.x.com y después
+  vuelve a confirmar el contenido desde Vista rápida X. Conexión sigue válida.
+
+## X conectado y carga de imágenes verificada (2026-11-12)
+
+- Responsable completó consentimiento OAuth desde el panel de localhost:3001.
+  Conexión real @Pont3la10 guardada cifrada por el callback privado/auditado.
+  Lectura de identidad con el token persistido: HTTP200 y cuenta correcta.
+  Scopes tweet.write, media.write y offline.access presentes.
+- Carga real de imagen de marca por `/2/media/upload`: HTTP200 con id válido.
+  No se creó ningún post público. Tokens temporales anteriores sin media.write
+  eliminados después de verificar la conexión nueva; claves de app y servidor
+  permanecen únicamente en el entorno privado.
+- El módulo está activo en `http://localhost:3001/admin/redes`. Siguiente acción
+  humana: abrir Vista rápida, seleccionar X, revisar imagen/texto y confirmar
+  Publicar en X. Persistencia social y recibos ya están migrados. No falta
+  configuración ni autorización de cuenta; conservar MFA y confirmación por post.
+
+## Configuración privada X completa, esperando consentimiento (2026-11-12)
+
+- Clave privada Supabase entregada por el responsable, validada mediante lectura
+  de conexiones HTTP 200 y guardada en `.env` sin mostrarla. Las cuatro variables
+  privadas requeridas ya están presentes. Servidor reiniciado en localhost:3001.
+- App X validada mediante renovación HTTP 200. Los tokens entregados previamente
+  identifican @Pont3la10 pero no incluyen media.write; no activar esos tokens para
+  imágenes. El paso restante es pulsar Conectar X desde `/admin/redes/cuentas`
+  con sesión/MFA y consentir los scopes solicitados, incluido media.write.
+- No hacen falta más credenciales ni autorización del responsable. La herramienta
+  de navegador no tiene host disponible; el consentimiento debe completarse en
+  la ventana del usuario. Comprobar conexión persistida y scopes al volver.
+  No hubo publicación de prueba ni selección de una noticia por el agente.
+
+## Credenciales X comprobadas; falta clave privada Supabase (2026-11-12)
+
+- Juan entregó directamente credenciales OAuth y autorizó su configuración.
+  Verificación real `GET /2/users/me`: HTTP 200, usuario @Pont3la10. Client ID y
+  Client Secret guardados privadamente en el `.env` principal; cifrado generado
+  conservando cualquier clave válida. Renovación real HTTP 200 con credenciales
+  de la app y tokens nuevos persistidos cifrados. No registrar valores en docs,
+  memoria, logs ni mensajes.
+- El scope real incluye `tweet.write` pero NO `media.write`. La carga privada de
+  una imagen de marca por `/2/media/upload` fue rechazada con HTTP 403. No hubo
+  post. Hace falta nueva autorización desde Conectar X, que ya solicita
+  `media.write`, después de completar la clave privada de Supabase.
+- Tokens pendientes cifrados en `.codex/private/x-tokens-pendientes.json` de la
+  rama de redes. Son material temporal, no conexión activa; no importarlos como
+  aptos para imágenes. Configuración OAuth validada y servidor reiniciado en
+  localhost:3001, noticias HTTP 200. Solo falta
+  `NUXT_SUPABASE_SERVICE_ROLE_KEY`; ventana local de un único campo abierta
+  mediante `.codex/configurar-supabase-x.ps1` (PID inicial 29608). Tras guardarla,
+  reinicia 3001 y el responsable pulsa Conectar X con MFA/sesión vigentes.
+
+## Activación local corregida y migraciones sociales aplicadas (2026-11-12)
+
+- Juan autorizó todas las acciones necesarias de conexión. Se detuvieron las
+  instancias Node de 3001/3002 y se inició la rama de redes en `localhost:3001`
+  con `NUXT_PUBLIC_API_ORIGIN` vacío, para ejecutar las APIs locales. La instancia
+  anterior enviaba `/api` a producción. API pública: 200, ocho noticias; portada:
+  200 y primer titular presente en HTML. API privada redes: 401 sin sesión,
+  demostrando que la ruta local existe. 3002 ya no se usa.
+- Aplicadas individualmente en Supabase Pont3la10: `publicar_x_idempotente`
+  (local `20261113024745`, remota `20261113033946`) y
+  `generador_publicaciones_sociales` (local `20261110113715`, remota
+  `20261113034540`). RLS y grants de tablas/RPC verificados. Composiciones y
+  solicitudes de texto admiten usuarios editoriales con política MFA; recibos X
+  permanecen privados al servidor. Advisors: solo INFO esperado por RLS sin
+  políticas en tablas X exclusivas de servicio; sin nuevos avisos de seguridad
+  del módulo. PGlite del generador: 21 comprobaciones pasan.
+- X aún tiene cero conexiones reales y faltan Client ID, Client Secret, cifrado
+  y clave privada Supabase en `.env` (solo booleanos comprobados). CLI Supabase
+  sin sesión y conexión Vercel sin proyectos accesibles impidieron recuperarlas.
+  Navegador automatizado sin host disponible; no se intentó saltar el login.
+- Abierta ventana PowerShell interactiva `Conectar X de Pont3la10`: ejecuta el
+  configurador existente con secretos ocultos y, al completarlo, reinicia esta
+  rama en 3001. Ayudantes temporales en `.codex/configurar-y-arrancar-x.ps1` y
+  `.codex/iniciar-local-redes.mjs`. No pegar secretos en chat. Sigue pendiente
+  entrada privada de claves y consentimiento OAuth real @Pont3la10. No hubo post.
+
+## Publicación manual en X desde Vista rápida (2026-11-12)
+
+- Vista rápida ahora permite publicar en X con confirmación explícita. Nitro lee
+  la composición guardada o el mismo valor predeterminado del preview, renderiza
+  las imágenes en servidor, limita a cuatro imágenes de hasta 5 MB y valida los
+  280 caracteres ponderados de X. Requiere contenido.editarTodos, MFA según la
+  política, origen propio y artículo ya publicado con versión pública.
+- OAuth X renueva tokens vencidos en backend. Los envíos usan una huella única
+  artículo/texto/imágenes, recibos auditados y estados `uncertain` que bloquean
+  reintentos cuando X no confirma el resultado. Tabla/RPC están en la migración
+  local `20261113024745_publicar_x_idempotente.sql`; **no aplicada en Supabase**.
+  No se publicó contenido real ni se compró crédito.
+- UI actualizada para X. Meta sigue sin autorización y YouTube Comunidad conserva
+  carga manual. La composición guardada es opcional para el envío: si su tabla
+  aún no existe, se usa el mismo documento predeterminado que ve el preview.
+- `npm ci`, lint, 651 pruebas, typecheck, 25 pruebas focales y 12 comprobaciones
+  PGlite pasan. Build de producción pasa con salida aislada en `.codex`; el
+  `.output` normal tropieza al borrar una DLL de `sharp` bloqueada por Windows.
+  Revisión de seguridad sin bloqueos; queda una carrera poco frecuente de
+  renovación concurrente que puede pedir repetir el envío, sin duplicarlo.
+- La rama de redes está servida en `http://127.0.0.1:3002`; sin sesión `/admin/redes`
+  responde `302 /login?redirigir=/admin/redes`, comportamiento esperado. El puerto
+  3001 continúa ocupado por otro checkout. Configuración privada de X y conexión
+  real @Pont3la10 siguen pendientes; no se usó Edge para publicar.
+- Handoff: `docs/agents/handoffs/2026-11-12-publicacion-x.md`.
+
+## OAuth X implementado, pendiente de credenciales y consentimiento (2026-11-12)
+
+- Botón Conectar X y callback local registrados, OAuth2/PKCE S256, reserva de uso
+  único, validación de @Pont3la10, permiso configuracion.gestionar y MFA, cifrado
+  AES-GCM y auditoría. No publica ni compra créditos. Meta sigue esperando SMS.
+- Migración propia de conexiones aplicada sola en Supabase Pont3la10: local
+  `20261112131534`, remota `20261112183112`. RLS, tablas/RPC bloqueadas a usuarios
+  y grants de servicio verificados. Cero intentos/conexiones reales al corte;
+  migración del generador anterior permanece pendiente, sin mezclar otros cambios.
+- Entorno local sin Client ID/Secret, clave de cifrado ni clave privada Supabase
+  (solo se comprobaron booleanos). Script `scripts/configurar-oauth-x.ps1` recibe
+  valores ocultos cuando son secretos, preserva otras variables y cifrado existente.
+  Debe ejecutarlo Juan en su terminal; no pegar secretos en chat. Después reiniciar
+  servidor y autorizar desde http://localhost:3001/admin/redes/cuentas.
+- Revisión independiente sin bloqueos tras corregir preservación de clave. Lint,
+  typecheck, 639 pruebas unitarias, 17 comprobaciones SQL aisladas y 15 del configurador
+  pasan. Build y QA de escritorio/móvil pasan; servidor local actualizado. Límites
+  operativos en el handoff de esta conexión.
+- Handoff: `docs/agents/handoffs/2026-11-12-oauth-x.md`. Envío social conjunto y
+  renovación automática siguen pendientes; VPS se retoma después del módulo.
+
+## Vista rápida social y preparación de cuentas (2026-11-12, local)
+
+- Vista rápida desde `/admin/redes`, con composición guardada o valores 60/90,
+  navegación de carrusel, texto por red y exportación existente. Reutiliza el lienzo
+  en modo de consulta. No guarda ni llama IA al abrir. Nuevo `/admin/redes/cuentas`
+  con Instagram @pont3ladiez, Facebook pendiente de resolver, X @Pont3la10 y
+  YouTube @somosnoobs. Las conexiones OAuth y envíos siguen pendientes.
+- El estado de carga de Vista rápida ahora usa una maqueta deportiva de la pieza,
+  esqueleto de texto y movimiento sutil en los colores de marca. Se apila en móvil,
+  no genera desplazamiento horizontal y respeta `prefers-reduced-motion`.
+- Juan pidió empezar el registro de aplicaciones. Navegador automatizado sin host
+  disponible; se solicitó que abra Meta y reporte su pantalla. No se crearon apps,
+  claves ni autorizaciones; tampoco se hicieron publicaciones. La referencia API
+  YouTube no ofrece un recurso de creación de posts de Comunidad con imágenes.
+- VPS pospuesto explícitamente hasta terminar redes. Juan prioriza precio y acepta
+  probar VPS 6 por un mes; no se contrató. El plan completo permanece en el directorio
+  principal: `C:\PONTE LA 10\docs\PLAN_DESPLIEGUE_VPS_UNIFICADO.md`.
+- Validaciones y límites en `docs/agents/handoffs/2026-11-12-vista-rapida-redes.md`.
+
+## Ajustes visuales del generador social (2026-11-10, local)
+
+- En la misma rama del módulo, las diapositivas nuevas usan texto 60 y sombreado
+  90. Se conservan los ajustes de los borradores existentes.
+- CTA predeterminada: imagen promocional creada con ImageGen y guardada en el
+  proyecto como `cta-pont3la10-generada-v2.png`; utiliza `pont3la10.com`. La v2
+  sustituye el diseño plano por estadio nocturno, profundidad y tipografía deportiva. Los tres
+  diseños editables permanecen como alternativas. No se generan imágenes al abrir.
+- Se separó el dominio social mediante `NUXT_PUBLIC_SOCIAL_SITE_URL` para evitar
+  localhost en enlaces y cierres editables. Sin cambios en DB, cuentas o tareas.
+- La suite pasa 628 pruebas; el cierre de validaciones y la actualización local
+  se registran en el handoff del generador.
+
+## Generador manual de publicaciones sociales (2026-11-10, local)
+
+- Rama única `feat/generador-publicaciones-redes`, desde `origin/main` `f3593fc`,
+  en `C:\PONTE LA 10\.codex\worktrees\redes-sociales`. Los cambios funcionales
+  pendientes del directorio principal se conservaron sin mezclar.
+- Nuevo `/admin/redes`: noticias publicadas, editor integrado con foto existente,
+  encuadre/zoom, destacados, cinco formatos, carrusel, tres CTA, exportación PNG
+  backend y enlaces UTM. Sugerencias DeepSeek bajo solicitud con sustento literal,
+  reservas idempotentes, bloqueo de incertidumbre y recuperación por revisión.
+- Guardado preparado en `social_compositions` con RLS, política MFA, auditoría y
+  revisiones. Migración `20261110113715_generador_publicaciones_sociales.sql`
+  solo local: no se aplicó a la base remota. Sin migración se informa que falta
+  persistencia. El módulo no conecta cuentas ni realiza envíos a redes.
+- Lint, typecheck, 626 pruebas y build comprobados; SQL aislado 21 comprobaciones.
+  QA con Edge/Playwright y fixtures a 1672/1440/1024/768/390 px; revisión de
+  seguridad sin bloqueo alto. Pendiente integración autenticada contra CMS/Storage
+  objetivo y revisión final del responsable. No hubo llamadas IA pagadas,
+  publicaciones, commits ni despliegues; la tarea editorial permanece intacta.
+- Referencias/estrategia: `docs/GENERADOR_PUBLICACIONES_SOCIALES.md`.
+  Handoff: `docs/agents/handoffs/2026-11-10-generador-publicaciones-sociales.md`.
+
 ## Automatización editorial con DeepSeek y aprobación IA (2026-11-04, preparada localmente)
 
 - El responsable confirmó mantener DeepSeek como redactor. Codex investiga y revisa; nueva API privada `auto-proposals` y CLI `propuesta-automatica` preparan creación, brief, aprobación IA y programación en una transacción. Requieren una generación DeepSeek completada de la misma identidad y su brief exacto, además de una clave HMAC de publicación independiente; los actores humanos quedan nulos y la aprobación IA se audita.

@@ -60,6 +60,12 @@ const entradasPanel: EntradaPanel[] = [
     permiso: 'contenido.verBorradores'
   },
   {
+    etiqueta: 'Publicaciones para redes',
+    ruta: '/admin/redes',
+    icono: Images,
+    permiso: 'contenido.verBorradores'
+  },
+  {
     etiqueta: 'Ingestas',
     ruta: '/admin/ingestas',
     icono: RadioTower,
