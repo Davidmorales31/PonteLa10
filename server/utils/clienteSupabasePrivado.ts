@@ -2,7 +2,7 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { H3Event } from 'h3'
 
 /** Cliente privilegiado exclusivo de Nitro; la clave nunca se serializa al navegador. */
-export function obtenerClienteSupabasePrivado(evento: H3Event): SupabaseClient | null {
+export function obtenerClienteSupabasePrivado(evento?: H3Event): SupabaseClient | null {
   const configuracion = useRuntimeConfig(evento)
   const url = String(configuracion.public.supabaseUrl || '')
   const clavePrivilegiada = String(configuracion.supabaseServiceRoleKey || '')
