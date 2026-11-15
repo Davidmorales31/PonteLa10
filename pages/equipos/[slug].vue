@@ -312,42 +312,6 @@ function puntajeDeMiEquipo(partido: FichaEquipoLigaPublica['proximosPartidos'][n
 .imagen-noticia-equipo img { width: 100%; height: 100%; object-fit: cover; }
 .estado-equipo-vacio { margin-bottom: 0; }
 
-:global(body.tema-publico-azul) .panel-equipo-publico { color: #e5efff; border-color: #294563; background: #102842; box-shadow: 0 12px 32px rgb(0 0 0 / 18%); }
-:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo) { border-color: #315273; }
-:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo strong) { color: #d3e0ef; }
-:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo button) { border-color: #365875; background: #102842; color: #e8f2ff; }
-:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo button:hover),
-:global(body.tema-publico-azul) .pagina-equipo-publico :deep(.barra-compartir-articulo button:focus-visible) { border-color: #59d9ff; background: #17476b; color: #fff; }
-:global(body.tema-publico-azul) .equipo-hero { background: linear-gradient(120deg, #102a46, #0c2037 64%); }
-:global(body.tema-publico-azul) .equipo-hero h1,
-:global(body.tema-publico-azul) .panel-equipo-publico h2,
-:global(body.tema-publico-azul) .grilla-noticias-equipo h3 a { color: #f1f6ff; }
-:global(body.tema-publico-azul) .equipo-hero .etiqueta-seccion,
-:global(body.tema-publico-azul) .etiqueta-seccion { color: #79dff7; }
-:global(body.tema-publico-azul) .temporada-equipo,
-:global(body.tema-publico-azul) .nota-verificacion-equipo,
-:global(body.tema-publico-azul) .fila-partido-equipo p,
-:global(body.tema-publico-azul) .fila-partido-equipo small,
-:global(body.tema-publico-azul) .lista-partidos-equipo time,
-:global(body.tema-publico-azul) .lista-partidos-equipo li > small,
-:global(body.tema-publico-azul) .estado-equipo-vacio,
-:global(body.tema-publico-azul) .panel-equipo-publico > small,
-:global(body.tema-publico-azul) .panel-sede-equipo small { color: #b4c9df; }
-:global(body.tema-publico-azul) .aviso-frescura-equipo { border-color: #eab338; background: #382d15; color: #ffe2a6; }
-:global(body.tema-publico-azul) .navegacion-equipo { border-color: #294563; }
-:global(body.tema-publico-azul) .navegacion-equipo a,
-:global(body.tema-publico-azul) .estadisticas-clasificacion-equipo > div,
-:global(body.tema-publico-azul) .grilla-noticias-equipo article { color: #e5efff; border-color: #294563; background: #132f4d; }
-:global(body.tema-publico-azul) .navegacion-equipo a { color: #9aeaff; }
-:global(body.tema-publico-azul) .estadisticas-clasificacion-equipo strong,
-:global(body.tema-publico-azul) .duelo-equipo > b { color: #8ce8ff; }
-:global(body.tema-publico-azul) .grilla-noticias-equipo article > p:not(.etiqueta-seccion) { color: #c1d1e2; }
-:global(body.tema-publico-azul) .fila-partido-equipo,
-:global(body.tema-publico-azul) .lista-partidos-equipo li,
-:global(body.tema-publico-azul) .enlace-panel-equipo { border-color: #294563; }
-:global(body.tema-publico-azul) .navegacion-equipo a:hover,
-:global(body.tema-publico-azul) .navegacion-equipo a:focus-visible { background: #1a4164; }
-
 @media (max-width: 800px) {
   .contenido-equipo-grid { grid-template-columns: minmax(0, 1fr); }
   .columna-secundaria-equipo { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }

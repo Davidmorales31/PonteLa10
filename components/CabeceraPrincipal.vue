@@ -1,20 +1,15 @@
 <script setup lang="ts">
-import { ChevronDown, ChevronRight, Menu, Moon, Search, Sun, UserRound, X } from '@lucide/vue'
+import { ChevronDown, ChevronRight, Menu, Search, UserRound, X } from '@lucide/vue'
 import { navegacionMasSitio, navegacionSitio } from '~/data/sitioPublico'
-import { useTemaPublico } from '~/composables/useTemaPublico'
 
 const rutaActual = useRoute()
 const menuAbierto = ref(false)
 const busquedaAbierta = ref(false)
 const terminoBusqueda = ref('')
 const menuMas = ref<HTMLDetailsElement | null>(null)
-const { modoBlancoActivo, etiquetaAlternarTema, alternarTema } = useTemaPublico()
 const { autenticacionConfigurada, usuarioActual, obtenerSesionActual } = useAutenticacionEditorial()
 const { contextoEditorial, cargarContextoEditorial } = useContextoEditorial()
-const logoCabecera = computed(() => modoBlancoActivo.value
-  ? '/brand/pont3la10_logo_modo_blanco.png'
-  : '/brand/pont3la10_logo_login_blanco.png'
-)
+const logoCabecera = ref('/brand/pont3la10_logo_modo_blanco.png')
 const srcsetLogoCabecera = computed(() => {
   const base = logoCabecera.value.slice(0, -'.png'.length)
   return [180, 360, 598].map(ancho => `${base}-${ancho}.webp ${ancho}w`).join(', ')
@@ -115,17 +110,6 @@ async function buscarContenido() {
       </nav>
 
       <div class="acciones-cabecera-landing">
-        <button
-          class="boton-icono-cabecera boton-tema-publico"
-          type="button"
-          :aria-pressed="modoBlancoActivo"
-          :title="etiquetaAlternarTema"
-          @click.prevent="alternarTema"
-        >
-          <Sun v-if="modoBlancoActivo" aria-hidden="true" />
-          <Moon v-else aria-hidden="true" />
-          <span class="solo-lectores-pantalla">{{ etiquetaAlternarTema }}</span>
-        </button>
         <button
           class="boton-icono-cabecera"
           type="button"

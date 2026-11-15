@@ -44,10 +44,5 @@ function cambiarSeguimiento() {
 .boton-seguimiento-competicion[aria-pressed="true"] { border-color: #0e3154; background: #0e3154; color: #fff; }
 .boton-seguimiento-competicion.compacto { min-height: 34px; padding: 6px 11px; font-size: .74rem; }
 .aviso-limite-seguimiento-competicion { color: #8a4c00; font-size: .76rem; line-height: 1.4; }
-:global(body.tema-publico-azul) .boton-seguimiento-competicion { border-color: #365875; background: #132f4d; color: #a4eaff; }
-:global(body.tema-publico-azul) .boton-seguimiento-competicion:hover,
-:global(body.tema-publico-azul) .boton-seguimiento-competicion:focus-visible { border-color: #59d9ff; background: #1a4164; color: #fff; }
-:global(body.tema-publico-azul) .boton-seguimiento-competicion[aria-pressed="true"] { border-color: #59d9ff; background: #17476b; color: #fff; }
-:global(body.tema-publico-azul) .aviso-limite-seguimiento-competicion { color: #ffe2a6; }
 @media (prefers-reduced-motion: reduce) { .boton-seguimiento-competicion { transition: none; } }
 </style>

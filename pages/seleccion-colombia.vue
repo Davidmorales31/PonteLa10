@@ -694,31 +694,8 @@ onBeforeUnmount(() => {
 .carrusel-noticias-seleccion :deep(.tarjeta-noticia-secundaria__resumen) { font-size: .79rem; }
 .carrusel-noticias-seleccion :deep(.tarjeta-noticia-secundaria__fecha) { font-size: .76rem; }
 .estado-vacio-noticias-seleccion { border-radius: 16px; padding: 24px; }
-body.tema-publico-azul .encabezado-seleccion-principal h1, body.tema-publico-azul .encabezado-panel-mock-seleccion h2 { color: #f2f7ff; }
-body.tema-publico-azul .encabezado-seleccion-principal > p:last-child { color: #c2d2e8; }
-body.tema-publico-azul .tarjeta-convocatoria-seleccion .contenido-convocatoria-seleccion > h3 { color: #0b1c3b; }
-body.tema-publico-azul .metadatos-convocatoria-seleccion, body.tema-publico-azul .rivales-convocatoria-seleccion li { color: #243b5c; }
-body.tema-publico-azul .fuente-convocatoria-seleccion, body.tema-publico-azul .lista-jugadores-seleccion li a { color: #075ba9; }
-body.tema-publico-azul .nota-archivo-convocatorias { color: #d5e0ef; }
-body.tema-publico-azul .panel-seleccion { border-color: #2b4564; background: #0d213a; }
-body.tema-publico-azul .encabezado-panel-mock-seleccion > a, body.tema-publico-azul .nota-fuentes-seleccion a { color: #91ddff; }
-body.tema-publico-azul .nota-fuentes-seleccion { color: #c2d2e8; }
-body.tema-publico-azul .partido-seleccion-hoy { background: #142c48; }
-body.tema-publico-azul .partido-seleccion-hoy h3 { color: #f2f7ff; }
-body.tema-publico-azul .partido-seleccion-hoy > p:last-child { color: #c2d2e8; }
-body.tema-publico-azul .bloque-seleccion, body.tema-publico-azul .bloque-seleccion :is(h2, h3) { color: #edf4ff; }
-body.tema-publico-azul .bloque-seleccion a { color: #91ddff; }
-body.tema-publico-azul .encabezado-noticias-seleccion h2 { color: #f2f7ff; }
-body.tema-publico-azul .encabezado-noticias-seleccion > div > p, body.tema-publico-azul .encabezado-noticias-seleccion > a { color: #91ddff; }
 body.tema-publico-blanco .bloque-seleccion, body.tema-publico-blanco .bloque-seleccion :is(h2, h3) { color: #10294a; }
 body.tema-publico-blanco .panel-seleccion { background: #fff; }
-body.tema-publico-azul .panel-calendario-seleccion, body.tema-publico-azul .resumen-calendario-seleccion { border-color: #2b4564; background: #0d213a; }
-body.tema-publico-azul .titulo-calendario-seleccion h2, body.tema-publico-azul .encabezado-panel-calendario h3, body.tema-publico-azul .resumen-calendario-seleccion > h3, body.tema-publico-azul .resumen-calendario-seleccion > h4 { color: #f2f7ff; }
-body.tema-publico-azul .titulo-calendario-seleccion > p:last-child, body.tema-publico-azul .nota-calendario-seleccion { color: #c2d2e8; }
-body.tema-publico-azul .nota-calendario-seleccion strong { color: #f2f7ff; }
-body.tema-publico-azul .enlace-fcf-calendario { border-color: #304b6b; background: #142c48; }
-body.tema-publico-azul .metricas-calendario-seleccion strong, body.tema-publico-azul .ventanas-calendario-seleccion button { color: #102342; }
-body.tema-publico-azul .resumen-calendario-seleccion > h4 { border-color: #304b6b; }
 body.tema-publico-blanco .acciones-convocatoria-seleccion a, body.tema-publico-blanco .lista-jugadores-seleccion summary { color: #145996; }
 @media (max-width: 1050px) {
   .grilla-agenda-resultados-seleccion { grid-template-columns: 1fr; gap: 16px; }

@@ -384,17 +384,6 @@ useSeoPont3la10(() => ({
   padding-bottom: clamp(44px, 7vw, 88px);
 }
 
-:global(body.tema-publico-azul) .modulo-futbol-colombia {
-  --liga-tinta: #edf4fd;
-  --liga-tinta-suave: #b2c5da;
-  --liga-superficie: #102943;
-  --liga-superficie-secundaria: #0b2138;
-  --liga-borde: #2c4b69;
-  --liga-acento: #8ce5f5;
-  --liga-acento-suave: #153d58;
-  --liga-amarillo: #ffd75b;
-}
-
 .modulo-futbol-colombia a:focus-visible {
   outline: 3px solid #e8b629;
   outline-offset: 4px;
@@ -1338,16 +1327,6 @@ useSeoPont3la10(() => ({
 .estado-vacio-articulos a,
 .estado-vacio-articulos .boton-primario {
   color: var(--liga-acento);
-}
-
-:global(body.tema-publico-azul) .modulo-futbol-colombia .aviso-frescura-liga {
-  color: #ffe3a3;
-}
-
-:global(body.tema-publico-azul) .modulo-futbol-colombia .seccion-noticias-liga .tarjeta-noticia-medio h3,
-:global(body.tema-publico-azul) .modulo-futbol-colombia .seccion-noticias-liga .tarjeta-noticia-medio h3 a,
-:global(body.tema-publico-azul) .modulo-futbol-colombia .equipo-tabla-liga a {
-  color: var(--liga-tinta);
 }
 
 @media (max-width: 980px) {

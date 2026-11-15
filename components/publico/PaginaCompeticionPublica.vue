@@ -622,44 +622,7 @@ function fechaActualizacion(fecha: string | null): string {
 .imagen-noticia-competicion img { width: 100%; height: 100%; object-fit: cover; }
 .nota-fuente-competicion { margin: 18px 4px; line-height: 1.6; }
 .estado-sin-tabla a { color: #145e99; font-weight: 700; }
-:global(body.tema-publico-azul) .panel-competicion { color: #e5efff; border-color: #294563; background: #102842; box-shadow: 0 12px 32px rgb(0 0 0 / 18%); }
-:global(body.tema-publico-azul) .panel-competicion h2,
-:global(body.tema-publico-azul) .fase-tabla-liga h3,
-:global(body.tema-publico-azul) .grilla-noticias-competicion h3 a { color: #f1f6ff; }
-:global(body.tema-publico-azul) .selector-temporadas small,
-:global(body.tema-publico-azul) .nota-snapshot-tabla,
-:global(body.tema-publico-azul) .resumen-competicion span,
-:global(body.tema-publico-azul) .encabezado-seccion-competicion > span,
-:global(body.tema-publico-azul) .estado-competicion-vacio,
-:global(body.tema-publico-azul) .nota-fuente-competicion,
-:global(body.tema-publico-azul) .tabla-liga-scroll caption,
-:global(body.tema-publico-azul) .partido-jornada-compacto time { color: #b4c9df; }
-:global(body.tema-publico-azul) .resumen-competicion > div { border-color: #294563; background: #132f4d; }
-:global(body.tema-publico-azul) .aviso-frescura-competicion { border-color: #eab338; background: #382d15; color: #ffe2a6; }
-:global(body.tema-publico-azul) .resumen-competicion strong,
-:global(body.tema-publico-azul) .partido-jornada-compacto p span { color: #8ce8ff; }
-:global(body.tema-publico-azul) .selector-temporadas nav a,
-:global(body.tema-publico-azul) .nota-snapshot-tabla a,
-:global(body.tema-publico-azul) .equipo-tabla-liga,
-:global(body.tema-publico-azul) .partido-jornada-compacto > a,
-:global(body.tema-publico-azul) .enlace-competicion,
-:global(body.tema-publico-azul) .estado-sin-tabla a { color: #9aeaff; }
-:global(body.tema-publico-azul) .selector-temporadas nav a[aria-current="page"] { color: #0b2440; background: #8ce8ff; }
-:global(body.tema-publico-azul) .tabla-liga-scroll th,
-:global(body.tema-publico-azul) .tabla-liga-scroll td,
-:global(body.tema-publico-azul) .lista-jornadas-competicion details,
-:global(body.tema-publico-azul) .partido-jornada-compacto,
-:global(body.tema-publico-azul) .grilla-equipos-competicion li > a,
-:global(body.tema-publico-azul) .equipo-sin-ficha,
-:global(body.tema-publico-azul) .grilla-noticias-competicion article { border-color: #294563; }
-:global(body.tema-publico-azul) .grilla-equipos-competicion li > a,
-:global(body.tema-publico-azul) .equipo-sin-ficha,
-:global(body.tema-publico-azul) .grilla-noticias-competicion article { color: #e5efff; background: #132f4d; }
-:global(body.tema-publico-azul) .grilla-noticias-competicion article > p:not(.etiqueta-seccion) { color: #c1d1e2; }
-:global(body.tema-publico-azul) .sello-verificado { color: #a6f0c1; background: #16472e; }
-:global(body.tema-publico-azul) .selector-temporadas nav a[aria-current="page"] { color: #0b2440; }
 .panel-competicion .etiqueta-seccion { margin: 0; color: #1769a6; font-size: .75rem; font-weight: 800; letter-spacing: .09em; }
-:global(body.tema-publico-azul) .panel-competicion .etiqueta-seccion { color: #79dff7; }
 .solo-lectores { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 @media (max-width: 860px) { .grilla-equipos-competicion { grid-template-columns: repeat(2, minmax(0, 1fr)); } .grilla-noticias-competicion { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .selector-temporadas { grid-template-columns: minmax(0, 1fr); } .selector-temporadas small { grid-column: 1; } .resumen-competicion { grid-template-columns: 1fr; } .resumen-competicion > div { grid-template-columns: auto 1fr; align-items: center; } .grilla-equipos-competicion, .grilla-noticias-competicion { grid-template-columns: minmax(0, 1fr); } .partido-jornada-compacto { grid-template-columns: minmax(0, 1fr) auto; gap: 7px 12px; } .partido-jornada-compacto p { grid-column: 1 / -1; grid-row: 2; justify-content: flex-start; flex-wrap: wrap; } .partido-jornada-compacto > a { grid-column: 2; grid-row: 1; } }
@@ -765,12 +728,6 @@ function fechaActualizacion(fecha: string | null): string {
 .grilla-noticias-competicion article { padding: 0 0 14px; }
 .grilla-noticias-competicion article > :not(.imagen-noticia-competicion) { margin-inline: 14px; }
 .grilla-noticias-competicion .imagen-noticia-competicion { margin: 0 0 12px; }
-:global(body.tema-publico-azul) .fila-temporada-resumen--liga .resumen-competicion > div { border-color: #294563; background: #102842; }
-:global(body.tema-publico-azul) .fila-temporada-resumen--liga .resumen-competicion > div strong { color: #f1f6ff; }
-:global(body.tema-publico-azul) .fila-temporada-resumen--liga .resumen-competicion > div > span:last-child { color: #c1d1e2; }
-:global(body.tema-publico-azul) .icono-temporadas { background: #183c62; color: #91ddff; }
-:global(body.tema-publico-azul) .ver-equipos-liga { color: #91ddff; }
-:global(body.tema-publico-azul) .bloque-equipos-liga .titulo-equipos-liga h2 { color: #f1f6ff; }
 @media (max-width: 1250px) {
   .fila-temporada-resumen--liga { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .fila-temporada-resumen--liga .selector-temporadas { grid-column: 1 / -1; }
@@ -895,25 +852,6 @@ function fechaActualizacion(fecha: string | null): string {
 .estado-jornada-indice { border-radius: 999px; background: #e9eff5; padding: 5px 8px; color: #334b68; font-size: .65rem; font-weight: 850; white-space: nowrap; }
 .jornada-indice-activa .estado-jornada-indice { background: #ffd000; color: #14223b; }
 .flecha-jornada-indice { color: #233b58; }
-:global(body.tema-publico-azul) .titulo-descripcion-jornadas h2 { color: #f1f6ff; }
-:global(body.tema-publico-azul) .identidad-jornadas-betplay > .etiqueta-seccion { color: #79dff7; }
-:global(body.tema-publico-azul) .titulo-descripcion-jornadas > span { border-color: #355271; color: #c1d1e2; }
-:global(body.tema-publico-azul) .selector-jornada-temporada,
-:global(body.tema-publico-azul) .navegador-jornadas-betplay,
-:global(body.tema-publico-azul) .panel-jornada-activa { border-color: #294563; background-color: #102842; color: #e5efff; }
-:global(body.tema-publico-azul) .navegador-jornadas-betplay button { color: #e5efff; }
-:global(body.tema-publico-azul) .panel-indice-jornadas { border-color: #294563; background: #102842; }
-:global(body.tema-publico-azul) .panel-indice-jornadas > ul { background: #102842; }
-:global(body.tema-publico-azul) .indice-jornada-boton { border-color: #294563; background: #132f4d; color: #e5efff; }
-:global(body.tema-publico-azul) .indice-jornada-boton:hover { background: #1a3a5c; }
-:global(body.tema-publico-azul) .indice-jornada-boton.jornada-indice-activa { border-color: #d4ad26; background: #3b331a; }
-:global(body.tema-publico-azul) .texto-jornada-indice small { color: #c1d1e2; }
-:global(body.tema-publico-azul) .estado-jornada-indice { background: #294563; color: #e5efff; }
-:global(body.tema-publico-azul) .jornada-indice-activa .estado-jornada-indice { background: #ffd000; color: #14223b; }
-:global(body.tema-publico-azul) .flecha-jornada-indice { color: #e5efff; }
-:global(body.tema-publico-azul) .filas-partidos-jornada-betplay li { border-color: #294563; }
-:global(body.tema-publico-azul) .filas-partidos-jornada-betplay :deep(.fila-partido--jornada .accion-fila-partido) { background: #203b59; }
-:global(body.tema-publico-azul) .filas-partidos-jornada-betplay :deep(.estado-fila-jornada) { color: #e5efff; }
 @media (max-width: 1080px) {
   .explorador-jornadas-betplay { grid-template-columns: minmax(0, 1fr); }
   .panel-indice-jornadas > ul { max-height: 340px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; }
