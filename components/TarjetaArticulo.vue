@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { obtenerTituloPortada } from '~/utils/editorial/tituloPortada'
 import type { ArticuloResumen } from '~/types/editorial'
 import { obtenerRutaArticulo } from '~/utils/rutasEditoriales'
 
@@ -26,7 +27,7 @@ const tieneImagen = computed(() => Boolean(props.articulo.imagen?.trim()) && ima
     <div class="tarjeta-articulo-cuerpo">
       <p class="etiqueta-seccion">{{ articulo.categoria }}</p>
       <h3>
-        <NuxtLink :to="obtenerRutaArticulo(articulo.slug)">{{ articulo.titulo }}</NuxtLink>
+        <NuxtLink :to="obtenerRutaArticulo(articulo.slug)">{{ obtenerTituloPortada(articulo) }}</NuxtLink>
       </h3>
       <p v-if="variante !== 'compacta'" class="texto-apoyo">{{ articulo.bajada }}</p>
       <p class="meta-articulo">

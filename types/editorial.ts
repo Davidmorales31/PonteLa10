@@ -1,6 +1,7 @@
 export interface ArticuloResumen {
   slug: string
   titulo: string
+  tituloPortada?: string
   bajada: string
   categoria: string
   autor: string

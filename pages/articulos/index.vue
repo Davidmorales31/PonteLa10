@@ -60,6 +60,7 @@ const articulosPublicados = computed<ArticuloListado[]>(() =>
   articulosCargados.value.map(articulo => ({
     slug: articulo.slug,
     titulo: articulo.titulo,
+    tituloPortada: articulo.tituloPortada,
     bajada: articulo.resumen,
     categoria: articulo.categoria,
     autor: articulo.autorNombre,

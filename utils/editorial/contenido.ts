@@ -215,6 +215,10 @@ const esquemaUrlOpcional = z.union([
 
 export const esquemaDatosEditorArticulo = z.object({
   titulo: z.string().trim().min(8).max(160),
+  // Opcional: vacío o entre 8 y 120 caracteres (misma regla que la base de datos).
+  tituloPortada: z.string().trim().max(120)
+    .refine(valor => valor === '' || valor.length >= 8, 'El titular de portada debe tener al menos 8 caracteres.')
+    .default(''),
   slug: z.string()
     .trim()
     .min(3)
@@ -245,12 +249,16 @@ export const esquemaDatosEditorArticulo = z.object({
 })
 
 export const esquemaGuardarArticulo = esquemaDatosEditorArticulo.extend({
+  // Sin valor por defecto: un cliente que no envía el campo conserva el titular
+  // vigente en vez de borrarlo. La cadena vacía sí lo quita.
+  tituloPortada: esquemaDatosEditorArticulo.shape.tituloPortada.removeDefault().optional(),
   versionBloqueo: z.number().int().positive(),
   notaCambio: z.string().trim().max(160).optional().default('')
 })
 
 const esquemaDatosAutoguardadoArticulo = esquemaDatosEditorArticulo.extend({
   titulo: z.string().max(160),
+  tituloPortada: z.string().max(120).default(''),
   slug: z.string().max(120),
   fuente: esquemaDatosEditorArticulo.shape.fuente.extend({
     url: z.string().max(2048)

@@ -211,7 +211,13 @@ export const esquemaPropuestaCodex = esquemaCamposPropuestaCodex.superRefine((pr
 })
 
 const esquemaPropuestaRedactadaCodex = esquemaCamposPropuestaCodex.extend({
-  sources: z.array(esquemaFuenteCodex).min(1).max(10)
+  sources: z.array(esquemaFuenteCodex).min(1).max(10),
+  // Solo la ruta automática lo persiste; la ruta de revisión manual lo rechaza
+  // (contrato estricto) en lugar de descartarlo en silencio.
+  // Titular de la imagen del centro de noticias; el título SEO sigue siendo `title`.
+  coverHeadline: z.string().trim().min(8).max(120)
+    .refine(value => !tieneCaracteresDeControl(value), 'El titular de portada no puede contener caracteres de control.')
+    .optional()
 }).superRefine((propuesta, contexto) => validarPropuestaCodex(propuesta, contexto, false))
 
 export const esquemaPublicacionAutomaticaCodex = z.object({

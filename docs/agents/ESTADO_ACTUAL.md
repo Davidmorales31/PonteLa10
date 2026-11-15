@@ -1,5 +1,14 @@
 # Estado actual de Pont3la10
 
+## Titular de portada (2026-11-15, rama feat/titulo-portada, sin commit)
+
+- Campo opcional `cover_headline` / `tituloPortada` para la imagen del centro de
+  noticias; el H1 y el SEO siguen en el título. Editor CMS, guardado atómico,
+  propuesta automática (`coverHeadline`), API pública y tarjetas/carrusel.
+- Orden obligatorio: migración `20261115150000` antes del código.
+- Lint, 705 pruebas, typecheck, build y 40 comprobaciones SQL (PGlite) pasan.
+  Falta QA manual en navegador. Detalle: docs/agents/handoffs/2026-11-15-titular-portada.md.
+
 ## Apariencia blanca única (2026-11-14)
 
 - Se elimina el selector, el composable de alternancia y 232 reglas específicas
