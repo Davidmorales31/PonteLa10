@@ -59,6 +59,22 @@ Ejemplos inventados de estructura, no noticias reales:
 «De suplente a protagonista: el dato que pone a [jugador] en la mira»;
 «[Medida] entra en vigor: quiénes sentirán primero el cambio en [país]».
 
+## Titular de portada
+
+Cada artículo tiene dos titulares: `title` (SEO, el H1 y los metadatos) y el
+**titular de portada**, que se muestra sobre la imagen del centro de noticias
+(tarjetas, carrusel y destacada). Si falta, la portada usa el título.
+
+- El redactor DeepSeek devuelve `propuesta.tituloPortada` (45–80 caracteres, nunca
+  menos de 8 ni más de 120). Es opcional: si no es utilizable se omite.
+- Al armar la propuesta automática, Codex copia `borrador.propuesta.tituloPortada`
+  a `proposal.coverHeadline` sin reescribir su sentido. Si no existe, se omite
+  `coverHeadline`. La revisión `titleFaithful` aplica también a este titular: debe
+  poder responderse con los dos primeros párrafos y no afirmar nada que el
+  expediente no sostenga.
+- Se guarda como `cover_headline`; el editor del CMS lo muestra como «Titular de
+  portada». La ruta de revisión manual de propuestas no lo acepta.
+
 ## Contrato y aprobación
 
 La ruta `POST /api/internal/codex/auto-proposals` recibe `{proposal, briefSeo,
