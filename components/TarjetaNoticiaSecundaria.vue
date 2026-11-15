@@ -69,9 +69,5 @@ const fechaVisible = computed(() => {
 .tarjeta-noticia-secundaria__fecha svg { width: 18px; height: 18px; color: #33516f; }
 .tarjeta-noticia-secundaria :focus-visible { outline: 3px solid #087ee4; outline-offset: 3px; }
 .tarjeta-noticia-secundaria.sin-imagen { border-top: 3px solid #ffca18; }
-body.tema-publico-azul .tarjeta-noticia-secundaria { border-color: #294467; background: #0d2440; }
-body.tema-publico-azul .tarjeta-noticia-secundaria__titulo { color: #f2f6fb; }
-body.tema-publico-azul .tarjeta-noticia-secundaria__fecha, body.tema-publico-azul .tarjeta-noticia-secundaria__resumen { color: #bdcadd; }
-body.tema-publico-azul .tarjeta-noticia-secundaria__fecha svg { color: #ffd21e; }
 @media(prefers-reduced-motion:reduce) { .tarjeta-noticia-secundaria, .tarjeta-noticia-secundaria__imagen img { transition: none; } .tarjeta-noticia-secundaria:hover { transform: none; } }
 </style>

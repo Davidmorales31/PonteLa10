@@ -294,8 +294,6 @@ useSeoPont3la10(() => ({
 .modulo-colombianos-europa :is(a, button):focus-visible { outline: 3px solid #1689cb; outline-offset: 3px; }
 .buscador-jugadores-europa:focus-within, .selector-liga-europa:focus-within { outline: 3px solid #1689cb; outline-offset: 2px; }
 .solo-lectores { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-body.tema-publico-azul .modulo-colombianos-europa { --europa-tinta: #f2f7ff; --europa-tinta-suave: #bed0e6; --europa-acento: #91ddff; --europa-borde: #2b4564; --europa-superficie: #0d213a; --liga-superficie-secundaria: #142c48; }
-body.tema-publico-azul .navegacion-europa a[aria-current] { background: #183958; color: #a4eaff; }
 @media (max-width: 1050px) { .grilla-jugadores-europa { grid-template-columns: repeat(3, minmax(0, 1fr)); } .paneles-partidos-europa { grid-template-columns: 1fr; } .cabecera-europa { align-items: start; flex-direction: column; gap: 13px; } }
 @media (max-width: 760px) {
   .cabecera-europa { margin-top: 18px; }

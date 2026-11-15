@@ -178,13 +178,6 @@ function iniciales(nombre: string): string {
 .lista-partidos-jornada { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
 .lista-partidos-jornada > li { min-width: 0; }
 .fuente-jornada { margin: 18px 4px; line-height: 1.6; }
-:global(body.tema-publico-azul) .panel-jornada { color: #e5efff; border-color: #294563; background: #102842; }
-:global(body.tema-publico-azul) .encabezado-jornada h2 { color: #f1f6ff; }
-:global(body.tema-publico-azul) .resumen-jornada > div { border-color: #294563; background: #132f4d; }
-:global(body.tema-publico-azul) .resumen-jornada strong { color: #8ce8ff; }
-:global(body.tema-publico-azul) .resumen-jornada span,
-:global(body.tema-publico-azul) .encabezado-jornada > span,
-:global(body.tema-publico-azul) .fuente-jornada { color: #b4c9df; }
 @media (max-width: 700px) { .lista-partidos-jornada { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 540px) { .resumen-jornada { grid-template-columns: minmax(0, 1fr); } .encabezado-jornada { align-items: flex-start; flex-direction: column; } }
 </style>

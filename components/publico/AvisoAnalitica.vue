@@ -14,7 +14,6 @@ const {
   cerrarPreferencias,
   inicializarConsentimiento
 } = useAnaliticaPublica()
-const { modoBlancoActivo } = useTemaPublico()
 const analiticaSeleccionada = ref(decision.value === 'aceptada')
 const publicidadSeleccionada = ref(decisionPublicidad.value === 'aceptada')
 
@@ -40,9 +39,8 @@ function guardarPreferencias() {
 <template>
   <aside
     v-if="mostrarAviso"
-    class="aviso-analitica"
+    class="aviso-analitica aviso-analitica--tema-blanco"
     :class="[
-      { 'aviso-analitica--tema-blanco': modoBlancoActivo },
       { 'aviso-analitica--preferencias': preferenciasAbiertas }
     ]"
     role="dialog"
@@ -95,8 +93,7 @@ function guardarPreferencias() {
   <button
     v-else
     type="button"
-    class="preferencias-privacidad-flotante"
-    :class="{ 'preferencias-privacidad-flotante--tema-blanco': modoBlancoActivo }"
+    class="preferencias-privacidad-flotante preferencias-privacidad-flotante--tema-blanco"
     aria-label="Abrir preferencias de privacidad"
     @click="abrirPreferencias"
   >

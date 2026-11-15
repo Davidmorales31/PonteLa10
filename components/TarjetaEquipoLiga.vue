@@ -64,10 +64,5 @@ defineProps<{
 .accion-tarjeta-equipo { position: absolute; z-index: 2; top: 10px; right: 10px; display: grid; width: 28px; height: 28px; place-items: center; border: 1px solid #d7e4f1; border-radius: 50%; background: rgb(255 255 255 / 86%); color: #145e99; }
 .accion-tarjeta-equipo :deep(svg) { width: 15px; height: 15px; }
 .tarjeta-equipo-liga--sin-ficha { cursor: default; }
-:global(body.tema-publico-azul) .tarjeta-equipo-liga { border-color: #294563; background: #102b47; color: #f1f6ff; }
-:global(body.tema-publico-azul) .imagen-jugador-equipo::after { background: linear-gradient(90deg, #102b47 0%, rgb(16 43 71 / 88%) 16%, rgb(16 43 71 / 48%) 44%, rgb(16 43 71 / 8%) 100%), linear-gradient(0deg, rgb(2 14 29 / 35%) 0%, transparent 60%); }
-:global(body.tema-publico-azul) .contenido-equipo-liga > strong { color: #fff; }
-:global(body.tema-publico-azul) .nombre-figura-equipo { color: #c4d7e8; }
-:global(body.tema-publico-azul) .escudo-equipo-liga { border-color: #294563; background: #fff; }
 @media (prefers-reduced-motion: reduce) { .tarjeta-equipo-liga { transition: none; } }
 </style>

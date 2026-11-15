@@ -2284,82 +2284,10 @@ body.tema-publico-blanco .migas-navegacion .separador-miga {
   }
 }
 
-body.tema-publico-azul {
-  background: #07182f;
-}
-
-body.tema-publico-azul .superficie-principal {
-  background: #07182f;
-}
-
-.boton-tema-publico {
-  border: 1px solid rgba(255, 255, 255, 0.16);
-}
-
 .pagina-publica-medio {
   width: min(1240px, calc(100% - 48px));
   margin-top: 0;
   padding-top: 26px;
-}
-
-body.tema-publico-azul .pagina-publica-medio,
-body.tema-publico-azul .pagina-resultados {
-  color: #f5f8ff;
-}
-
-body.tema-publico-azul .cabecera-pagina {
-  display: grid;
-  max-width: 940px;
-  gap: 10px;
-  margin-bottom: 18px;
-  border-bottom: 1px solid #273c58;
-  padding-bottom: 22px;
-}
-
-body.tema-publico-azul .cabecera-pagina h1,
-body.tema-publico-azul .cabecera-resultados h1,
-body.tema-publico-azul .cabecera-detalle-partido h1 {
-  color: #ffffff;
-  font-size: clamp(2.15rem, 4vw, 3.65rem);
-  line-height: 0.98;
-}
-
-body.tema-publico-azul .cabecera-pagina p:not(.etiqueta-seccion),
-body.tema-publico-azul .cabecera-resultados > div > span {
-  color: #a8bbd5;
-}
-
-body.tema-publico-azul .referencia-horaria-local {
-  border-color: #294467;
-  background: #102c51;
-  color: #dce8f7;
-}
-
-body.tema-publico-azul .referencia-horaria-local span:first-child svg,
-body.tema-publico-azul .enlaces-seo-resultados a svg {
-  color: #78dff2;
-}
-
-body.tema-publico-azul .referencia-horaria-local span + span {
-  border-color: #355473;
-  color: #a9bdd6;
-}
-
-body.tema-publico-azul .enlaces-seo-resultados h2 {
-  color: #afc2da;
-}
-
-body.tema-publico-azul .enlaces-seo-resultados a {
-  border-color: #294467;
-  background: #102c51;
-  color: #dce8f7;
-}
-
-body.tema-publico-azul .enlaces-seo-resultados a:hover,
-body.tema-publico-azul .enlaces-seo-resultados a:focus-visible {
-  border-color: #19c4e5;
-  background: #123b59;
-  color: #fff;
 }
 
 body.tema-publico-blanco .referencia-horaria-local {
@@ -2390,191 +2318,8 @@ body.tema-publico-blanco .enlaces-seo-resultados a:focus-visible {
   color: #123e70;
 }
 
-body.tema-publico-azul .etiqueta-seccion,
-body.tema-publico-azul .cabecera-resultados p {
-  color: #ffd800;
-}
-
 .layout-listado-medio {
   grid-template-columns: minmax(0, 1fr);
-}
-
-body.tema-publico-azul .filtros-rapidos-noticias a,
-body.tema-publico-azul .medio-explora a {
-  border-color: #294467;
-  background: #102c51;
-  color: #dbe6f5;
-}
-
-body.tema-publico-azul .filtros-rapidos-noticias a:hover,
-body.tema-publico-azul .filtros-rapidos-noticias a.activo,
-body.tema-publico-azul .medio-explora a:hover {
-  border-color: #ffd800;
-  background: #ffd800;
-  color: #08204a;
-}
-
-body.tema-publico-azul .contador-resultados,
-body.tema-publico-azul .estado-vacio-articulos p,
-body.tema-publico-azul .grilla-especiales-publicos article span {
-  color: #a8bbd5;
-}
-
-body.tema-publico-azul .grilla-especiales-publicos article p {
-  color: #7ee8ff;
-}
-
-body.tema-publico-azul .estado-vacio-articulos,
-body.tema-publico-azul .lista-articulos .tarjeta-articulo,
-body.tema-publico-azul .grilla-especiales-publicos article,
-body.tema-publico-azul .filtros-deporte,
-body.tema-publico-azul .filtros-estado,
-body.tema-publico-azul .partido-destacado-resultados,
-body.tema-publico-azul .panel-resultados,
-body.tema-publico-azul .seccion-lista-resultados,
-body.tema-publico-azul .pestanas-detalle-partido,
-body.tema-publico-azul .acciones-seguimiento-partido {
-  border-color: #294467;
-  background: #0c2443;
-  color: #edf3ff;
-  box-shadow: none;
-}
-
-body.tema-publico-azul .lista-articulos .tarjeta-articulo:hover,
-body.tema-publico-azul .grilla-especiales-publicos article:hover,
-body.tema-publico-azul .partido-destacado-resultados:hover,
-body.tema-publico-azul .panel-resultados:hover {
-  border-color: rgba(255, 216, 0, 0.55);
-}
-
-body.tema-publico-azul .tarjeta-articulo h3,
-body.tema-publico-azul .tarjeta-articulo h3 a,
-body.tema-publico-azul .grilla-especiales-publicos article h2,
-body.tema-publico-azul .titulo-panel-resultados h2,
-body.tema-publico-azul .panel-resultados h2,
-body.tema-publico-azul .partido-destacado-resultados > header span,
-body.tema-publico-azul .equipo-destacado strong,
-body.tema-publico-azul .resultado-destacado b,
-body.tema-publico-azul .fila-equipo-marcador strong,
-body.tema-publico-azul .fila-equipo-marcador b,
-body.tema-publico-azul .tabla-clasificacion-resultados td,
-body.tema-publico-azul .aviso-fuente-resultados > strong {
-  color: #edf3ff;
-}
-
-body.tema-publico-azul .tarjeta-articulo .texto-apoyo,
-body.tema-publico-azul .tarjeta-articulo .meta-articulo,
-body.tema-publico-azul .titulo-panel-resultados span,
-body.tema-publico-azul .resultado-destacado small,
-body.tema-publico-azul .partido-destacado-resultados > footer,
-body.tema-publico-azul .aviso-fuente-resultados p {
-  color: #a8bbd5;
-}
-
-body.tema-publico-azul .tarjeta-articulo-imagen {
-  background: #102c51;
-}
-
-body.tema-publico-azul .especial-destacado {
-  border: 1px solid #294467;
-  background:
-    radial-gradient(circle at 88% 18%, rgba(35, 193, 255, 0.22), transparent 28%),
-    linear-gradient(135deg, #0c2443 0%, #123f75 62%, #07182f 100%);
-}
-
-body.tema-publico-azul .filtros-deporte a,
-body.tema-publico-azul .filtros-estado button,
-body.tema-publico-azul .pestanas-detalle-partido button {
-  border-right-color: #294467;
-  color: #dbe6f5;
-}
-
-body.tema-publico-azul .filtros-deporte a.activo,
-body.tema-publico-azul .filtros-estado button.activo,
-body.tema-publico-azul .pestanas-detalle-partido button.activo {
-  background: #ffd800;
-  color: #08204a;
-}
-
-body.tema-publico-azul .tabla-clasificacion-resultados td,
-body.tema-publico-azul .partido-destacado-resultados > header,
-body.tema-publico-azul .partido-destacado-resultados > footer,
-body.tema-publico-azul .enlace-detalle-partido {
-  border-color: #294467;
-}
-
-/* Resultados reutiliza estas piezas en la portada, los listados y el detalle.
- * Mantenerlas aquí evita que una pantalla quede con la superficie clara del tema
- * clásico cuando el usuario selecciona el modo azul. */
-body.tema-publico-azul .tarjeta-marcador-compacto {
-  border-color: #294467;
-  background: #0c2443;
-  color: #edf3ff;
-  box-shadow: none;
-}
-
-body.tema-publico-azul .tarjeta-marcador-compacto:hover,
-body.tema-publico-azul .tarjeta-marcador-compacto:focus-visible {
-  border-color: #ffd800;
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
-}
-
-body.tema-publico-azul .tarjeta-marcador-compacto header,
-body.tema-publico-azul .fila-equipo-marcador + .fila-equipo-marcador {
-  border-color: #294467;
-}
-
-body.tema-publico-azul .tarjeta-marcador-compacto header > span,
-body.tema-publico-azul .etiqueta-estado-partido,
-body.tema-publico-azul .estado-vacio-resultados {
-  color: #a8bbd5;
-}
-
-body.tema-publico-azul .tarjeta-marcador-compacto .fila-equipo-marcador strong,
-body.tema-publico-azul .tarjeta-marcador-compacto .fila-equipo-marcador b,
-body.tema-publico-azul .estado-datos-resultados strong {
-  color: #edf3ff;
-}
-
-body.tema-publico-azul .tarjeta-marcador-compacto .flecha-marcador {
-  color: #23c1ff;
-}
-
-body.tema-publico-azul .tarjeta-marcador-compacto .escudo-equipo {
-  background: #102c51;
-  color: #dbe6f5;
-}
-
-body.tema-publico-azul .estado-datos-resultados,
-body.tema-publico-azul .estado-vacio-resultados {
-  border: 1px solid #294467;
-  border-radius: var(--radius);
-  background: #0c2443;
-}
-
-body.tema-publico-azul .estado-datos-resultados {
-  color: #edf3ff;
-}
-
-body.tema-publico-azul .estado-datos-resultados > picture > img {
-  mix-blend-mode: screen;
-}
-
-body.tema-publico-azul .estado-datos-resultados p {
-  color: #a8bbd5;
-}
-
-body.tema-publico-azul .estado-datos-resultados button {
-  border-color: #23c1ff;
-  background: #102c51;
-  color: #edf3ff;
-}
-
-body.tema-publico-azul .estado-datos-resultados button:hover,
-body.tema-publico-azul .estado-datos-resultados button:focus-visible {
-  border-color: #ffd800;
-  background: #ffd800;
-  color: #08204a;
 }
 
 body.tema-publico-blanco {
@@ -2604,10 +2349,6 @@ body.tema-publico-blanco .boton-icono-cabecera:focus-visible {
 body.tema-publico-blanco .boton-icono-cabecera:hover,
 body.tema-publico-blanco .boton-icono-cabecera:focus-visible {
   background: #eaf2ff;
-}
-
-body.tema-publico-blanco .boton-tema-publico {
-  border-color: #dbe2ee;
 }
 
 body.tema-publico-blanco .menu-mas-desplegable {
@@ -3439,149 +3180,6 @@ body.tema-publico-blanco .estado-carga-noticias.error {
 /* Superficies de Resultados: el CSS original se comparte con el modo clásico,
  * por lo que cada bloque claro necesita una variante explícita para el tema
  * azul. Incluye cargas, eventos y la última jugada del detalle. */
-body.tema-publico-azul .esqueleto-marcador-grande,
-body.tema-publico-azul .esqueleto-panel,
-body.tema-publico-azul .selector-esqueleto-admin,
-body.tema-publico-azul .selector-esqueleto-admin button,
-body.tema-publico-azul .lienzo-esqueleto-admin {
-  border-color: #294467;
-  background: #0c2443;
-}
-
-body.tema-publico-azul .esqueleto-titulo-corto,
-body.tema-publico-azul .esqueleto-tarjeta-marcador,
-body.tema-publico-azul .esqueleto-cabecera > *,
-body.tema-publico-azul .esqueleto-marcador-grande > *,
-body.tema-publico-azul .esqueleto-pestanas span,
-body.tema-publico-azul .esqueleto-filtros span,
-body.tema-publico-azul .esqueleto-panel span {
-  background: linear-gradient(90deg, #102c51 22%, #1b4777 42%, #102c51 62%);
-}
-
-body.tema-publico-azul .esqueleto-tarjeta-marcador,
-body.tema-publico-azul .esqueleto-pestanas,
-body.tema-publico-azul .esqueleto-filtros {
-  border-color: #294467;
-}
-
-body.tema-publico-azul .panel-eventos ol {
-  margin-inline: -2px;
-}
-
-body.tema-publico-azul .panel-eventos li {
-  border-bottom-color: #294467;
-  background: #0a203d;
-}
-
-body.tema-publico-azul .panel-eventos time {
-  min-width: 42px;
-  border: 1px solid #294467;
-  border-radius: 7px;
-  background: #102c51;
-  color: #ffd800;
-  padding: 6px 5px;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-}
-
-body.tema-publico-azul .panel-eventos li strong,
-body.tema-publico-azul .ultima-jugada-resumen strong,
-body.tema-publico-azul .fila-estadistica > strong {
-  color: #edf3ff;
-}
-
-body.tema-publico-azul .panel-eventos li small,
-body.tema-publico-azul .ultima-jugada-resumen small,
-body.tema-publico-azul .comparador-estadistica > span {
-  color: #a8bbd5;
-}
-
-body.tema-publico-azul .panel-eventos li b {
-  background: #173d68;
-  color: #edf3ff;
-}
-
-body.tema-publico-azul .icono-evento-partido {
-  border: 1px solid #294467;
-  background: #123967;
-  color: #56d9ff;
-}
-
-body.tema-publico-azul .icono-evento-gol {
-  border-color: #176a58;
-  background: #0d3b34;
-  color: #56e6bc;
-}
-
-body.tema-publico-azul .icono-evento-cambio {
-  border-color: #1d639c;
-  background: #103b68;
-  color: #61c9ff;
-}
-
-body.tema-publico-azul .icono-evento-tarjeta-amarilla {
-  border-color: #81701c;
-  background: #4d4310;
-  color: #ffe46a;
-}
-
-body.tema-publico-azul .icono-evento-tarjeta-roja {
-  border-color: #8d3741;
-  background: #511d2a;
-  color: #ff8995;
-}
-
-body.tema-publico-azul .ultima-jugada-resumen {
-  border-left-color: #ffd800;
-  background: #0a203d;
-}
-
-body.tema-publico-azul .ultima-jugada-resumen > div > span {
-  color: #56d9ff;
-}
-
-body.tema-publico-azul .indicadores-resumen-partido,
-body.tema-publico-azul .indicadores-resumen-partido article {
-  border-color: #294467;
-}
-
-body.tema-publico-azul .indicadores-resumen-partido article {
-  background: #0a203d;
-}
-
-body.tema-publico-azul .indicadores-resumen-partido span,
-body.tema-publico-azul .metadatos-partido,
-body.tema-publico-azul .estado-detalle-en-vivo > span {
-  color: #a8bbd5;
-}
-
-body.tema-publico-azul .icono-evento-partido svg {
-  stroke: currentColor;
-}
-
-/* La franja se reutiliza fuera de Inicio: no puede volver al fondo clásico
- * blanco cuando el lector eligió el modo azul. */
-body.tema-publico-azul .franja-marcadores-home {
-  border-bottom-color: #294467;
-  background: #07182f;
-}
-
-body.tema-publico-azul .encabezado-franja-marcadores h2 {
-  color: #edf3ff;
-}
-
-body.tema-publico-azul .encabezado-franja-marcadores > div > span {
-  color: #a8bbd5;
-}
-
-body.tema-publico-azul .encabezado-franja-marcadores .senal-en-vivo {
-  color: #ff8b96;
-}
-
-body.tema-publico-azul .encabezado-franja-marcadores a {
-  gap: 7px;
-  color: #67ddff;
-}
 
 .icono-enlace-marcadores {
   display: inline-grid;
@@ -3615,9 +3213,6 @@ body.tema-publico-blanco .encabezado-franja-marcadores a {
 body.tema-publico-blanco .encabezado-franja-marcadores .senal-en-vivo {
   color: #cc1e3a;
 }
-
-/* Fondos de reserva: al no existir una foto, tampoco deben parecer una
- * tarjeta del modo azul dentro del tema clásico. */
 body.tema-publico-blanco .imagen-noticia-destacada,
 body.tema-publico-blanco .imagen-tarjeta-noticia-medio,
 body.tema-publico-blanco .imagen-tendencia-medio,
@@ -3631,8 +3226,6 @@ body.tema-publico-blanco .tarjeta-noticia-medio .etiqueta-seccion {
   background: #e9f7ff;
   color: #0b639c;
 }
-
-/* Inicio: las reglas locales del modo azul no deben filtrarse al tema clásico. */
 body.tema-publico-blanco .portada-medio,
 body.tema-publico-blanco .portada-medio :is(.medio-hero, .medio-ultimas, .medio-patrocinios) {
   background: #f4f7fb;
@@ -3712,11 +3305,6 @@ body.tema-publico-blanco .portada-medio .noticia-portada .leer {
   background: #174ea6;
   color: #fff;
 }
-/* Las noticias del tema azul siempre necesitan contraste legible. */
-body.tema-publico-azul .pagina-noticias-medio :is(h1, h2, h3, .tarjeta-noticia-medio h3, .lista-tendencias-medio a) { color: #edf3ff; }
-body.tema-publico-azul .pagina-noticias-medio :is(p, .meta-noticia-medio, .lista-tendencias-medio p) { color: #bfd0e7; }
-
-.acciones-cabecera-landing .boton-tema-publico { align-self: center; flex: 0 0 38px; position: relative; top: 0; }
 .busqueda-cabecera-landing { max-width: min(760px, calc(100% - 32px)); margin: 12px auto; border: 1px solid #2c5f99; border-radius: 12px; background: #0c2443; box-shadow: 0 14px 30px rgba(3, 20, 49, .22); }
 .busqueda-cabecera-landing > div { display: flex; align-items: center; gap: 8px; padding: 8px; }
 .busqueda-cabecera-landing input { min-width: 0; flex: 1; }
@@ -3802,117 +3390,6 @@ body.tema-publico-blanco .busqueda-cabecera-landing input::placeholder {
 body.tema-publico-blanco .busqueda-cabecera-landing input:focus {
   border-color: #174ea6;
   box-shadow: inset 0 0 0 1px #174ea6;
-}
-
-/* Lectura editorial de alto contraste en el tema azul. */
-body.tema-publico-azul .detalle-articulo-publicado {
-  color: #e8eef8;
-}
-body.tema-publico-azul .detalle-articulo-publicado .cabecera-articulo-publicado h1,
-body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado h2,
-body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado h3,
-body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado strong {
-  color: #f4f7fc;
-}
-body.tema-publico-azul .detalle-articulo-publicado .miga-articulo,
-body.tema-publico-azul .detalle-articulo-publicado .resumen-articulo,
-body.tema-publico-azul .detalle-articulo-publicado .meta-articulo,
-body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado,
-body.tema-publico-azul .detalle-articulo-publicado .portada-articulo-publicado figcaption {
-  color: #bdcbe0;
-}
-body.tema-publico-azul .detalle-articulo-publicado .nota-correccion-articulo {
-  border-left-color: #68d9ff;
-  background: #102f4c;
-  color: #dce8f6;
-}
-body.tema-publico-azul .detalle-articulo-publicado .nota-correccion-articulo strong {
-  color: #f4f7fc;
-}
-body.tema-publico-azul .detalle-articulo-publicado .miga-articulo a,
-body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado a {
-  color: #68d9ff;
-}
-body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado p,
-body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado li {
-  color: #dce5f1;
-  font-size: 1.12rem;
-  font-weight: 450;
-  line-height: 1.9;
-}
-body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado h2,
-body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado h3 {
-  margin-top: 2.2em;
-}
-body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado blockquote {
-  border-left-color: #24d9ef;
-  color: #edf5ff;
-}
-body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno {
-  border-color: #315273;
-  border-left-color: #24d9ef;
-  background: #102844;
-  color: #edf5ff;
-}
-body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno :is(h2, h3, p, span) {
-  color: #dce8f6;
-}
-body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno small {
-  color: #a9eaff;
-}
-body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno:hover {
-  border-color: #68d9ff;
-  background: #153656;
-}
-body.tema-publico-azul .detalle-articulo-publicado .fuentes-articulo-publicado {
-  border-color: #315273;
-}
-body.tema-publico-azul .seccion-articulos-relacionados {
-  border-top-color: #315273;
-}
-body.tema-publico-azul .seccion-articulos-relacionados > header .etiqueta-seccion {
-  display: inline-flex;
-  width: fit-content;
-  border: 1px solid #1b728d;
-  border-radius: 999px;
-  padding: 4px 9px;
-  background: #10364e;
-  color: #75e5ff;
-}
-body.tema-publico-azul .seccion-articulos-relacionados h2 {
-  color: #f2f6fc;
-}
-body.tema-publico-azul .rejilla-articulos-relacionados > a {
-  gap: 10px;
-  border: 1px solid #294467;
-  border-radius: 12px;
-  background: #0c2038;
-  color: #eef4fc;
-  padding: 12px;
-  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
-}
-body.tema-publico-azul .rejilla-articulos-relacionados > a:hover {
-  transform: translateY(-2px);
-  border-color: #36c9ed;
-  background: #102b49;
-}
-body.tema-publico-azul .rejilla-articulos-relacionados > a:focus-visible {
-  outline: 3px solid #68d9ff;
-  outline-offset: 3px;
-}
-body.tema-publico-azul .imagen-articulo-recomendado {
-  border: 1px solid #315273;
-  background: linear-gradient(140deg, #173958, #0a1a2e);
-  color: #72dcfa;
-}
-body.tema-publico-azul .rejilla-articulos-relacionados small {
-  color: #70ddfa;
-}
-body.tema-publico-azul .rejilla-articulos-relacionados strong {
-  color: #f0f5fc;
-}
-body.tema-publico-azul .leer-articulo-recomendado {
-  color: #78dfff;
 }
 
 /* El lienzo de lectura debe seguir al tema activo, sin heredar superficies
@@ -4014,30 +3491,6 @@ body.tema-publico-blanco .imagen-articulo-recomendado {
   color: #48627f;
 }
 
-/* En modo azul los subcomponentes editoriales declaran también su propia
- * paleta: así ningún estilo base o scoped deja títulos oscuros sin contraste. */
-body.tema-publico-azul .detalle-articulo-publicado .cuerpo-articulo-publicado :is(p, li) {
-  color: #dce5f1;
-}
-body.tema-publico-azul .detalle-articulo-publicado .tarjeta-enlace-interno :is(h2, h3, p, span, strong) {
-  color: #dce8f6;
-}
-body.tema-publico-azul .detalle-articulo-publicado .barra-compartir-articulo {
-  border-color: #315273;
-}
-body.tema-publico-azul .detalle-articulo-publicado .barra-compartir-articulo strong {
-  color: #c7d5e8;
-}
-body.tema-publico-azul .rejilla-articulos-relacionados > a :is(small, strong, .leer-articulo-recomendado) {
-  color: #eef4fc;
-}
-body.tema-publico-azul .rejilla-articulos-relacionados > a small {
-  color: #a9eaff;
-}
-body.tema-publico-azul .rejilla-articulos-relacionados > a .leer-articulo-recomendado {
-  color: #a9eaff;
-}
-
 /* Páginas legales: jerarquía editorial, lectura cómoda y adaptable. */
 .pagina-legal {
   width: min(1040px, calc(100% - 40px));
@@ -4120,27 +3573,6 @@ body.tema-publico-azul .rejilla-articulos-relacionados > a .leer-articulo-recome
 .contacto-legal svg { width: 20px; height: 20px; color: #0878bd; }
 .contacto-legal span { margin-left: auto; color: #075ea8; font-weight: 800; }
 
-body.tema-publico-azul .pagina-legal { color: #dce6f3; }
-body.tema-publico-azul .cabecera-legal {
-  border-color: #294467;
-  background: radial-gradient(circle at 100% 0, #123e68 0, #0b1d35 52%, #09172a 100%);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, .2);
-}
-body.tema-publico-azul .insignia-legal { color: #6bdcff; }
-body.tema-publico-azul .cabecera-legal h1,
-body.tema-publico-azul .contenido-legal h2,
-body.tema-publico-azul .resumen-legal strong { color: #f1f6ff; }
-body.tema-publico-azul .introduccion-legal,
-body.tema-publico-azul .contenido-legal p,
-body.tema-publico-azul .contenido-legal li { color: #c5d3e5; }
-body.tema-publico-azul .fecha-legal { color: #9fb2ca; }
-body.tema-publico-azul .contenido-legal section { border-color: #294467; }
-body.tema-publico-azul .resumen-legal { border-left-color: #19cde5; background: #102c49; }
-body.tema-publico-azul .nota-legal { background: #342e1d; }
-body.tema-publico-azul .contacto-legal { border-color: #315273; background: #102c49; color: #eef5ff; }
-body.tema-publico-azul .contacto-legal span,
-body.tema-publico-azul .contenido-legal a:not(.contacto-legal) { color: #6bdcff; }
-
 @media (max-width: 640px) {
   .pagina-legal { width: calc(100% - 28px); padding-top: 28px; }
   .cabecera-legal { padding: 25px 22px; border-radius: 15px; }
@@ -4188,32 +3620,6 @@ body.tema-publico-blanco .pagina-especiales .boton-especial-inactivo {
 
 body.tema-publico-blanco .pagina-especiales .ilustracion-especial {
   color: #1765a8;
-}
-
-body.tema-publico-azul .pagina-especiales .especial-destacado h2 {
-  color: #f4f8ff;
-}
-
-body.tema-publico-azul .pagina-especiales .especial-destacado > div > p:not(.etiqueta-seccion) {
-  color: #c5d7ec;
-}
-
-body.tema-publico-azul .pagina-especiales .especial-destacado .etiqueta-seccion {
-  color: #7ee8ff;
-}
-
-body.tema-publico-azul .pagina-especiales .ilustracion-especial {
-  color: #69dfff;
-}
-
-body.tema-publico-azul .pagina-resultados .titulo-panel-resultados svg,
-body.tema-publico-azul .pagina-resultados .enlace-detalle-partido {
-  color: #75dcff;
-}
-
-body.tema-publico-azul .pagina-resultados .estado-vacio-resultados,
-body.tema-publico-azul .pagina-resultados .estado-carga-resultados {
-  color: #c4d4e8;
 }
 
 @media (min-width: 1181px) and (max-width: 1320px) {

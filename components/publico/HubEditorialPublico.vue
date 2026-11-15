@@ -143,9 +143,7 @@ useSeoPont3la10(() => ({
 .navegacion-hub-editorial a { color: #7be4fb; font-weight: 800; }
 .noticias-hub-editorial { display: grid; gap: 22px; margin-top: 24px; }
 .bloque-noticias-hub-editorial { margin-top: 32px; }
-body.tema-publico-azul main.modulo-hub-editorial :is(h2, h3) { color: #edf3ff; }
 body.tema-publico-blanco main.modulo-hub-editorial :is(h2, h3) { color: #08204a; }
-body.tema-publico-azul main.modulo-hub-editorial .etiqueta-seccion { color: #78dcf4; }
 body.tema-publico-blanco main.modulo-hub-editorial .etiqueta-seccion,
 body.tema-publico-blanco main.modulo-hub-editorial .navegacion-hub-editorial a { color: #145996; }
 @media (max-width: 760px) {

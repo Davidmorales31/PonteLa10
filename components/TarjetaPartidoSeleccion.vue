@@ -115,10 +115,5 @@ const marcador = computed(() => props.partido.marcadorPendiente || props.partido
   .marcador-partido-seleccion { min-width: 52px; padding: 4px 6px; font-size: .78rem; }
   .meta-partido-seleccion { font-size: .72rem; }
 }
-:global(body.tema-publico-azul) .tarjeta-partido-seleccion { border-color: #2b4564; background: linear-gradient(110deg, #0e233e, #132d4b); color: #f4f7fc; }
-:global(body.tema-publico-azul) .detalle-partido-seleccion > small, :global(body.tema-publico-azul) .meta-partido-seleccion, :global(body.tema-publico-azul) .meta-partido-seleccion > small { color: #c3d4e9; }
-:global(body.tema-publico-azul) .equipo-partido-seleccion, :global(body.tema-publico-azul) .fecha-partido-seleccion strong, :global(body.tema-publico-azul) .marcador-partido-seleccion { color: #f4f7fc; }
-:global(body.tema-publico-azul) .fecha-partido-seleccion, :global(body.tema-publico-azul) .meta-partido-seleccion { border-color: #324c6a; }
-:global(body.tema-publico-azul) .marcador-partido-seleccion { background: #233b58; }
 @media (prefers-reduced-motion: reduce) { .tarjeta-partido-seleccion { transition: none; } }
 </style>

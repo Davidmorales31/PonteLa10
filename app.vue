@@ -36,6 +36,21 @@ useSeoMeta({
   themeColor: '#08204A'
 })
 
+// El sistema usa una sola apariencia, desde SSR y sin depender del navegador.
+useHead({
+  htmlAttrs: { style: 'color-scheme: only light' },
+  bodyAttrs: { class: 'tema-publico-blanco' },
+  meta: [{ name: 'color-scheme', content: 'only light' }]
+})
+
+onMounted(() => {
+  try {
+    window.localStorage.removeItem('pont3la10:tema-publico')
+  } catch {
+    // El almacenamiento bloqueado no afecta la apariencia fija del sistema.
+  }
+})
+
 useHead(() => ({
   script: [{
     key: 'identidad-estructurada-pont3la10',

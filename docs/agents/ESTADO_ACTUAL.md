@@ -1,5 +1,24 @@
 # Estado actual de Pont3la10
 
+## Apariencia blanca única (2026-11-14)
+
+- Se elimina el selector, el composable de alternancia y 232 reglas específicas
+  del modo azul/oscuro. Cabecera usa logo para fondo blanco; privacidad fija blanca.
+- app.vue aplica blanco desde SSR y color-scheme only light en todas las rutas,
+  incluido panel/login. Al montar elimina la preferencia antigua, sin leerla.
+- Cambios anteriores de escala preservados. Sin despliegue remoto ni cambios de datos.
+- Validaciones y continuidad: docs/agents/handoffs/2026-11-14-modo-blanco-unico.md.
+
+
+## Corrección de escala en PC (2026-11-14)
+
+- Se retira el zoom global 0.6 tras detectar ancho encogido y texto ilegible.
+  La portada ahora usa hasta 1440px, conserva navegación y texto auxiliar legibles,
+  reduce 40% el máximo del título principal y ajusta alturas/espacios de apertura.
+- Ajustes solo desde 1024px en pages/index.vue; móvil conserva sus estilos.
+  Se usan clases reales de TarjetaNoticiaPrincipal/Secundaria, sin selectores obsoletos.
+- Validaciones y servidor local: docs/agents/handoffs/2026-11-14-escala-pc.md.
+
 ## Pulido visual de Vista rápida (2026-11-13)
 
 - Cabecera fija/cierre visible, pieza con formato y dimensiones, controles de

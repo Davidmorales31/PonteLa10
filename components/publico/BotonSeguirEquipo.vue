@@ -44,10 +44,5 @@ function cambiarSeguimiento() {
 .boton-seguimiento-equipo[aria-pressed="true"] { border-color: #0e3154; background: #0e3154; color: #fff; }
 .boton-seguimiento-equipo.compacto { min-height: 34px; padding: 6px 11px; font-size: .74rem; }
 .aviso-limite-seguimiento { color: #8a4c00; font-size: .76rem; line-height: 1.4; }
-:global(body.tema-publico-azul) .boton-seguimiento-equipo { border-color: #365875; background: #132f4d; color: #a4eaff; }
-:global(body.tema-publico-azul) .boton-seguimiento-equipo:hover,
-:global(body.tema-publico-azul) .boton-seguimiento-equipo:focus-visible { border-color: #59d9ff; background: #1a4164; color: #fff; }
-:global(body.tema-publico-azul) .boton-seguimiento-equipo[aria-pressed="true"] { border-color: #59d9ff; background: #17476b; color: #fff; }
-:global(body.tema-publico-azul) .aviso-limite-seguimiento { color: #ffe2a6; }
 @media (prefers-reduced-motion: reduce) { .boton-seguimiento-equipo { transition: none; } }
 </style>
