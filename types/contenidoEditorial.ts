@@ -242,6 +242,8 @@ export interface BriefSeoArticuloEditorial {
 
 export interface DatosEditorArticulo {
   titulo: string
+  /** Titular de la imagen del centro de noticias. Vacío: se usa `titulo`. */
+  tituloPortada: string
   slug: string
   resumen: string
   tipo: TipoContenidoEditorial
@@ -411,6 +413,7 @@ export interface ArticuloPublicoEditorial {
   versionId: string
   slug: string
   titulo: string
+  tituloPortada: string
   resumen: string
   tipo: TipoContenidoEditorial
   documento: DocumentoEditorial
@@ -473,6 +476,7 @@ export interface ResumenArticuloPublico {
   id: string
   slug: string
   titulo: string
+  tituloPortada?: string
   resumen: string
   tipo: TipoContenidoEditorial
   publicadoEn: string

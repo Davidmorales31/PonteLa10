@@ -29,6 +29,7 @@ export default defineEventHandler(async (evento) => {
   const requestId = crypto.randomUUID()
   const hash = hashPromptReescritura({
     titulo: articulo.titulo,
+    tituloPortada: articulo.tituloPortada,
     slug: articulo.slug,
     resumen: articulo.resumen,
     tipo: articulo.tipo,
@@ -57,6 +58,7 @@ export default defineEventHandler(async (evento) => {
   try {
     const datosActuales = {
       titulo: articulo.titulo,
+      tituloPortada: articulo.tituloPortada,
       slug: articulo.slug,
       resumen: articulo.resumen,
       tipo: articulo.tipo,
@@ -72,6 +74,8 @@ export default defineEventHandler(async (evento) => {
     const resultadoIa = await reescribirArticuloConDeepSeek(datosActuales, entrada.instruccion)
     const guardado = await guardarArticuloEditorial(cliente, articuloId, {
       ...resultadoIa.datos,
+      // La reescritura no gestiona el titular de portada: se conserva el vigente.
+      tituloPortada: articulo.tituloPortada,
       versionBloqueo: entrada.versionBloqueo,
       notaCambio: 'Cambios solicitados aplicados con IA'
     })

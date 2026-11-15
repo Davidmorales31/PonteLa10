@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { obtenerTituloPortada } from '~/utils/editorial/tituloPortada'
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import { ArrowRight, Pause, Play } from '@lucide/vue'
 
@@ -83,7 +84,7 @@ onBeforeUnmount(() => {
       <Transition name="contenido-carrusel" mode="out-in">
         <div :key="noticiaActiva.id" class="contenido-tarjeta-carrusel-liga">
           <p class="etiqueta-carrusel-liga">{{ etiqueta }}</p>
-          <h2><NuxtLink :to="`/articulos/${noticiaActiva.slug}`">{{ noticiaActiva.titulo }}</NuxtLink></h2>
+          <h2><NuxtLink :to="`/articulos/${noticiaActiva.slug}`">{{ obtenerTituloPortada(noticiaActiva) }}</NuxtLink></h2>
           <p class="resumen-carrusel-liga">{{ noticiaActiva.resumen }}</p>
           <NuxtLink class="accion-carrusel-liga" :to="`/articulos/${noticiaActiva.slug}`">
             Leer noticia <ArrowRight aria-hidden="true" />
@@ -97,7 +98,7 @@ onBeforeUnmount(() => {
           :key="noticia.id"
           type="button"
           class="indicador-carrusel-liga"
-          :aria-label="`Mostrar noticia ${indice + 1}: ${noticia.titulo}`"
+          :aria-label="`Mostrar noticia ${indice + 1}: ${obtenerTituloPortada(noticia)}`"
           :aria-current="indice === indiceActivo ? 'true' : undefined"
           @click="cambiarNoticia(indice)"
         />

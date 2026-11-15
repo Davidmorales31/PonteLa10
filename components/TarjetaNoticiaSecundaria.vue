@@ -1,9 +1,11 @@
 ﻿<script setup lang="ts">
+import { obtenerTituloPortada } from '~/utils/editorial/tituloPortada'
 import { CalendarDays } from '@lucide/vue'
 
 interface NoticiaTarjeta {
   slug: string
   titulo: string
+  tituloPortada?: string | null
   categoria: string
   imagen?: string | null
   imagenAncho?: number
@@ -46,7 +48,7 @@ const fechaVisible = computed(() => {
     </NuxtLink>
     <div class="tarjeta-noticia-secundaria__contenido">
       <span class="tarjeta-noticia-secundaria__categoria">{{ etiqueta || articulo.categoria }}</span>
-      <component :is="nivelTitulo" class="tarjeta-noticia-secundaria__titulo"><NuxtLink :to="`/articulos/${encodeURIComponent(articulo.slug)}`">{{ articulo.titulo }}</NuxtLink></component>
+      <component :is="nivelTitulo" class="tarjeta-noticia-secundaria__titulo"><NuxtLink :to="`/articulos/${encodeURIComponent(articulo.slug)}`">{{ obtenerTituloPortada(articulo) }}</NuxtLink></component>
       <p v-if="mostrarResumen && (articulo.resumen || articulo.bajada)" class="tarjeta-noticia-secundaria__resumen">{{ articulo.resumen || articulo.bajada }}</p>
       <time v-if="fechaVisible" class="tarjeta-noticia-secundaria__fecha" :datetime="articulo.publicadoEn || undefined"><CalendarDays aria-hidden="true" />{{ fechaVisible }}</time>
     </div>

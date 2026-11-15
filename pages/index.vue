@@ -216,6 +216,7 @@ function mapearArticuloPortada(articulo: ResumenArticuloPublico): ArticuloPortad
   return {
     slug: articulo.slug,
     titulo: articulo.titulo,
+    tituloPortada: articulo.tituloPortada,
     bajada: articulo.resumen,
     categoria: articulo.categoria,
     autor: articulo.autorNombre,

@@ -354,6 +354,8 @@ function serializarDatos(datos: DatosEditorArticulo): string {
 function aplicarDatos(datos: DatosEditorArticulo) {
   formulario.value = {
     ...datos,
+    // Los autoguardados anteriores al campo no lo traen.
+    tituloPortada: datos.tituloPortada ?? '',
     temaIds: [...datos.temaIds],
     etiquetaIds: [...datos.etiquetaIds],
     notaCorreccion: datos.notaCorreccion,
@@ -378,6 +380,7 @@ function extraerDatosDetalle(
 ): DatosEditorArticulo {
   return {
     titulo: detalle.titulo,
+    tituloPortada: detalle.tituloPortada,
     slug: detalle.slug,
     resumen: detalle.resumen,
     tipo: detalle.tipo,
@@ -1386,6 +1389,23 @@ function formatearFecha(fecha: string): string {
                 :disabled="!puedeEditar"
                 placeholder="Copy base para distribución"
               />
+            </label>
+            <label>
+              Titular de portada
+              <input
+                v-model="formulario.tituloPortada"
+                type="text"
+                maxlength="120"
+                :disabled="!puedeEditar"
+                :placeholder="formulario.titulo"
+                aria-describedby="ayuda-titulo-portada"
+              >
+              <span>{{ formulario.tituloPortada.length }}/120</span>
+              <small id="ayuda-titulo-portada">
+                Se muestra en la imagen del centro de noticias (inicio, carrusel y tarjetas).
+                Puede ser más llamativo que el título, pero el artículo debe responderlo.
+                Vacío: se usa el título.
+              </small>
             </label>
 
             <div class="vista-serp-editor">

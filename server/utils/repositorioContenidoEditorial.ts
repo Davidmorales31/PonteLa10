@@ -110,6 +110,7 @@ interface FilaRelacionEtiqueta {
 
 interface FilaArticuloDetalle extends FilaArticulo {
   cover_media_id: string | null
+  cover_headline: string | null
   body_json: unknown
   seo_title: string | null
   seo_description: string | null
@@ -178,6 +179,7 @@ interface FilaArticuloPublicoRpc {
   versionId: string
   slug: string
   titulo: string
+  tituloPortada?: string | null
   resumen: string
   tipo: ArticuloPublicoEditorial['tipo']
   documento: unknown
@@ -206,6 +208,7 @@ interface FilaResumenArticuloPublicoRpc {
   id: string
   slug: string
   titulo: string
+  tituloPortada?: string | null
   resumen: string
   tipo: ResumenArticuloPublico['tipo']
   publicadoEn: string
@@ -472,6 +475,7 @@ export async function obtenerArticuloEditorial(
       correction_note,
       published_version_id,
       cover_media_id,
+      cover_headline,
       categories (
         id,
         slug,
@@ -577,6 +581,7 @@ export async function obtenerArticuloEditorial(
   return {
     id: fila.id,
     titulo: fila.title,
+    tituloPortada: fila.cover_headline || '',
     slug: fila.slug,
     resumen: fila.summary,
     tipo: fila.content_type,
@@ -791,7 +796,8 @@ export async function guardarArticuloEditorial(
     entrada.documento
   )
 
-  const { data, error } = await clienteSupabase.rpc('save_editorial_article_with_correction', {
+  // Guarda el titular de portada y el artículo en una sola transacción.
+  const { data, error } = await clienteSupabase.rpc('save_editorial_article_with_cover_headline', {
     target_article_id: articuloId,
     expected_lock_version: entrada.versionBloqueo,
     next_slug: entrada.slug,
@@ -812,7 +818,8 @@ export async function guardarArticuloEditorial(
     next_tag_ids: entrada.temaIds,
     next_label_ids: entrada.etiquetaIds,
     next_change_note: entrada.notaCambio,
-    next_correction_note: entrada.notaCorreccion
+    next_correction_note: entrada.notaCorreccion,
+    next_cover_headline: entrada.tituloPortada ?? null
   })
 
   if (error) {
@@ -1454,6 +1461,7 @@ export async function obtenerArticuloPublicoEditorial(
     versionId: fila.versionId,
     slug: fila.slug,
     titulo: fila.titulo,
+    tituloPortada: fila.tituloPortada || '',
     resumen: fila.resumen,
     tipo: fila.tipo,
     documento: documentoPublico,
@@ -1543,6 +1551,7 @@ async function mapearResumenesPublicos(
     id: fila.id,
     slug: fila.slug,
     titulo: fila.titulo,
+    tituloPortada: fila.tituloPortada || '',
     resumen: fila.resumen,
     tipo: fila.tipo,
     publicadoEn: fila.publicadoEn,
@@ -1574,6 +1583,7 @@ export async function obtenerUltimaNoticiaPublicaConPortada(
     id: fila.id,
     slug: fila.slug,
     titulo: fila.titulo,
+    tituloPortada: fila.tituloPortada || '',
     resumen: fila.resumen,
     tipo: fila.tipo,
     publicadoEn: fila.publicadoEn,

@@ -279,6 +279,11 @@ export async function reescribirArticuloConDeepSeek(
     throw createError({ statusCode: 502, statusMessage: 'DeepSeek devolvió cambios en un formato inválido. No se aplicaron cambios.', data: { codigo: 'IA_REESCRITURA_INVALIDA' } })
   }
 
+  // El titular de portada es una decisión editorial que la reescritura no
+  // gestiona: se conserva el vigente para no borrarlo ni invalidar el resultado.
+  if (propuesta && typeof propuesta === 'object') {
+    (propuesta as { tituloPortada?: string }).tituloPortada = datos.tituloPortada
+  }
   const validada = esquemaDatosEditorArticulo.safeParse(propuesta)
   if (!validada.success) {
     throw createError({ statusCode: 502, statusMessage: 'La propuesta de cambios no cumple el contrato editorial. No se aplicaron cambios.', data: { codigo: 'IA_REESCRITURA_CONTRATO_INVALIDO' } })
