@@ -45,7 +45,7 @@ export const esquemaDiapositivaPropia = z.object({
   }
 })
 export const esquemaDocumentoPropio = z.object({
-  version: z.literal(1), formato: z.enum(['cuadrado', 'vertical', 'web']),
+  version: z.literal(1), tipo: z.literal('imagenes').optional(), formato: z.enum(['cuadrado', 'vertical', 'web']),
   textos: z.object({ facebook: z.string().max(5000), instagram: z.string().max(2200) }).strict(),
   diapositivas: z.array(esquemaDiapositivaPropia).min(1).max(maximoDiapositivasPropias)
 }).strict().superRefine((valor, contexto) => {
@@ -53,12 +53,28 @@ export const esquemaDocumentoPropio = z.object({
     contexto.addIssue({ code: 'custom', path: ['diapositivas'], message: 'Las diapositivas deben tener identidades distintas.' })
   }
 })
+export const esquemaDocumentoVideoPropio = z.object({
+  version: z.literal(1), tipo: z.literal('video'), video: z.object({ medioId: z.string().uuid().nullable() }).strict(),
+  textos: z.object({ facebook: z.string().max(5000), instagram: z.string().max(2200) }).strict()
+}).strict()
+export const esquemaDocumentoPublicacionPropia = z.union([esquemaDocumentoPropio, esquemaDocumentoVideoPropio])
 export type DocumentoPropio = z.infer<typeof esquemaDocumentoPropio>
+export type DocumentoVideoPropio = z.infer<typeof esquemaDocumentoVideoPropio>
+export type DocumentoPublicacionPropia = DocumentoPropio | DocumentoVideoPropio
+export function esDocumentoVideoPropio(documento: DocumentoPublicacionPropia): documento is DocumentoVideoPropio {
+  return documento.tipo === 'video'
+}
+/** Identificadores de archivos (biblioteca o temporales) que usa una publicación. */
+export function idsMediosDocumentoPropio(documento: DocumentoPublicacionPropia): string[] {
+  const ids = esDocumentoVideoPropio(documento) ? [documento.video.medioId]
+    : documento.diapositivas.flatMap(diapositiva => diapositiva.medios.map(medio => medio.medioId))
+  return [...new Set(ids.filter((id): id is string => !!id))]
+}
 export type DiapositivaPropia = z.infer<typeof esquemaDiapositivaPropia>
 export type ElementoPropio = z.infer<typeof esquemaElementoPropio>
 
 export const esquemaGuardarPublicacionPropia = z.object({
-  titulo: z.string().trim().min(3).max(120), documento: esquemaDocumentoPropio,
+  titulo: z.string().trim().min(3).max(120), documento: esquemaDocumentoPublicacionPropia,
   destinos: z.array(z.enum(['facebook', 'instagram'])).min(1).max(2),
   revision: z.number().int().positive()
 }).strict()
@@ -96,11 +112,24 @@ export function crearDocumentoPropio(): DocumentoPropio {
   return { version: 1, formato: 'cuadrado', textos: { facebook: '', instagram: '' }, diapositivas: [crearDiapositivaPropia('una')] }
 }
 
+export function crearDocumentoVideoPropio(): DocumentoVideoPropio {
+  return { version: 1, tipo: 'video', video: { medioId: null }, textos: { facebook: '', instagram: '' } }
+}
+
+export function avisosVideoPropio(documento: DocumentoVideoPropio, destinos: Array<'facebook' | 'instagram'>): string[] {
+  const avisos: string[] = []
+  if (!documento.video.medioId) avisos.push('Falta elegir el vídeo.')
+  for (const red of destinos) if (!documento.textos[red].trim()) avisos.push(`Escribe la descripción de ${red === 'facebook' ? 'Facebook' : 'Instagram'}.`)
+  return avisos
+}
+
 export function imagenesFaltantesPropias(documento: DocumentoPropio): number {
   return documento.diapositivas.reduce((total, diapositiva) => total + diapositiva.medios.filter(medio => !medio.medioId).length, 0)
 }
 
-export function avisosPublicacionPropia(documento: DocumentoPropio, destinos: Array<'facebook' | 'instagram'>): string[] {
+export function avisosPublicacionPropia(entrada: DocumentoPublicacionPropia, destinos: Array<'facebook' | 'instagram'>): string[] {
+  if (esDocumentoVideoPropio(entrada)) return avisosVideoPropio(entrada, destinos)
+  const documento = entrada
   const avisos: string[] = []
   const faltan = imagenesFaltantesPropias(documento)
   if (faltan) avisos.push(`Faltan ${faltan} imagen(es) por elegir.`)

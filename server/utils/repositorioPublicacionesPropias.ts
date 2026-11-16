@@ -2,8 +2,10 @@ import type { SupabaseClient } from '@supabase/supabase-js'
 import { createError } from 'h3'
 import { z } from 'zod'
 import { obtenerMedioEditorial } from './repositorioMediaEditorial'
-import { esquemaDocumentoPropio } from '~/utils/editorial/publicacionesPropias'
-import type { DocumentoPropio } from '~/utils/editorial/publicacionesPropias'
+import { buscarTemporalesSociales, vistaTemporalSocial } from './mediosTemporalesSociales'
+import { esDocumentoVideoPropio, esquemaDocumentoPublicacionPropia, idsMediosDocumentoPropio } from '~/utils/editorial/publicacionesPropias'
+import type { DocumentoPublicacionPropia } from '~/utils/editorial/publicacionesPropias'
+import type { TemporalSocialVista } from '~/utils/editorial/mediosTemporales'
 import type { MedioEditorial } from '~/types/mediaEditorial'
 
 export type EstadoPublicacionPropia = 'draft' | 'scheduled' | 'publishing' | 'published' | 'failed'
@@ -13,7 +15,7 @@ export interface ResumenPublicacionPropia {
   programadaPara: string | null, revision: number, actualizadaEn: string
 }
 export interface PublicacionPropia extends ResumenPublicacionPropia {
-  documento: DocumentoPropio
+  documento: DocumentoPublicacionPropia
 }
 
 const esquemaFila = z.object({
@@ -41,20 +43,26 @@ export async function leerPublicacionPropia(privado: SupabaseClient, id: string)
   if (error) falla('No se pudo consultar la publicación.')
   if (!data) falla('La publicación no existe.', 404)
   const fila = esquemaFila.parse(data)
-  const documento = esquemaDocumentoPropio.safeParse(fila.document)
+  const documento = esquemaDocumentoPublicacionPropia.safeParse(fila.document)
   if (!documento.success) falla('La publicación guardada tiene una versión incompatible.', 409)
   return { ...resumir(fila), documento: documento.data }
 }
 
-/** Todas las imágenes deben existir en la biblioteca y ser imágenes públicas del propio sitio. */
-export async function validarMediosPropios(cliente: SupabaseClient, documento: DocumentoPropio): Promise<MedioEditorial[]> {
-  const ids = [...new Set(documento.diapositivas.flatMap(diapositiva => diapositiva.medios.flatMap(medio => medio.medioId ? [medio.medioId] : [])))]
-  const medios = await Promise.all(ids.map(id => obtenerMedioEditorial(cliente, id)))
+/** Todo archivo debe existir: en la biblioteca editorial (solo imágenes) o como temporal listo del tipo correcto. */
+export async function validarMediosPropios(cliente: SupabaseClient, privado: SupabaseClient, documento: DocumentoPublicacionPropia): Promise<{ medios: MedioEditorial[], temporales: TemporalSocialVista[] }> {
+  const ids = idsMediosDocumentoPropio(documento)
+  const filas = await buscarTemporalesSociales(privado, ids)
+  const esperado = esDocumentoVideoPropio(documento) ? 'video' : 'imagen'
+  if (filas.some(fila => fila.kind !== esperado)) falla('Un archivo no corresponde al tipo de publicación.', 422)
+  const idsBiblioteca = ids.filter(id => !filas.some(fila => fila.id === id))
+  if (esperado === 'video' && idsBiblioteca.length) falla('El vídeo elegido ya no está disponible. Súbelo de nuevo.', 422)
+  const medios = await Promise.all(idsBiblioteca.map(id => obtenerMedioEditorial(cliente, id)))
   if (medios.some(medio => medio.bucket !== 'editorial-media')) falla('Una imagen no es compatible con las redes.', 422)
-  return medios
+  const temporales = await Promise.all(filas.map(fila => vistaTemporalSocial(privado, fila)))
+  return { medios, temporales }
 }
 
-export async function crearPublicacionPropia(privado: SupabaseClient, actorId: string, titulo: string, documento: DocumentoPropio): Promise<PublicacionPropia> {
+export async function crearPublicacionPropia(privado: SupabaseClient, actorId: string, titulo: string, documento: DocumentoPublicacionPropia): Promise<PublicacionPropia> {
   const { data, error } = await privado.from('social_custom_posts')
     .insert({ title: titulo, document: documento, created_by: actorId, updated_by: actorId }).select(columnas).single()
   if (error || !data) falla('No se pudo crear la publicación.')
@@ -62,7 +70,7 @@ export async function crearPublicacionPropia(privado: SupabaseClient, actorId: s
 }
 
 export async function guardarPublicacionPropia(privado: SupabaseClient, id: string, actorId: string,
-  entrada: { titulo: string, documento: DocumentoPropio, destinos: DestinoPropio[], revision: number }): Promise<PublicacionPropia> {
+  entrada: { titulo: string, documento: DocumentoPublicacionPropia, destinos: DestinoPropio[], revision: number }): Promise<PublicacionPropia> {
   // Editar una pieza programada la devuelve a borrador (y queda auditado): debe revisarse y programarse otra vez.
   const { data, error } = await privado.rpc('save_social_custom_post', { p_actor_id: actorId, p_id: id, p_title: entrada.titulo,
     p_document: entrada.documento, p_destinations: entrada.destinos, p_revision: entrada.revision })

@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { contextoPublicacionPropia } from '~/server/utils/contextoPublicacionPropia'
 import { ejecutarPublicacionMetaPropia } from '~/server/utils/ejecutarPublicacionMetaPropia'
+import { limpiarTemporalesPublicacion } from '~/server/utils/mediosTemporalesSociales'
 import { validarEntradaEditorial } from '~/server/utils/validacionEditorial'
 import { esquemaPublicarPublicacionPropia } from '~/utils/editorial/publicacionesPropias'
 
@@ -18,6 +19,7 @@ export default defineEventHandler(async (evento) => {
     const publicados = new Set((recibos.data || []).map(fila => fila.destination))
     if (destinos.data?.destinations?.every((destino: string) => publicados.has(destino))) {
       await privado.from('social_custom_posts').update({ status: 'published', updated_at: new Date().toISOString() }).eq('id', id).in('status', ['draft', 'failed', 'scheduled'])
+      await limpiarTemporalesPublicacion(privado, id).catch(() => 0) // los archivos temporales no se conservan tras publicar
     }
   }
   return resultado

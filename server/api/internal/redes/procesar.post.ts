@@ -2,6 +2,7 @@ import { obtenerClienteSupabasePrivado } from '~/server/utils/clienteSupabasePri
 import { resolverConfiguracionMetaSocial } from '~/server/utils/configuracionSocialProduccion'
 import { credencialMeta } from '~/server/utils/publicacionMeta'
 import { procesarColaSocial } from '~/server/utils/procesarColaSocial'
+import { barrerTemporalesCaducados } from '~/server/utils/mediosTemporalesSociales'
 import { procesarPublicacionesPropiasProgramadas } from '~/server/utils/procesarPublicacionesPropias'
 
 export default defineEventHandler(async evento => {
@@ -23,6 +24,7 @@ export default defineEventHandler(async evento => {
     if (latido.error) throw new Error('Latido no disponible')
     await procesarColaSocial(cliente, meta, String(config.public.socialSiteUrl || config.public.siteUrl))
     await procesarPublicacionesPropiasProgramadas(cliente, meta)
+    await barrerTemporalesCaducados(cliente).catch(() => 0) // borra subidas olvidadas según la retención configurada
     return { activo: true }
   } catch {
     throw createError({ statusCode: 503, statusMessage: 'No se completó el ciclo del programador social.' })

@@ -7,7 +7,9 @@ import type { ConfiguracionMeta } from './publicacionMeta'
 import { resolverConfiguracionMetaSocial } from './configuracionSocialProduccion'
 import { huellaImagenesPropias, renderizarImagenesPropias } from './renderizadorPublicacionPropia'
 import { leerPublicacionPropia, validarMediosPropios } from './repositorioPublicacionesPropias'
-import { formatosPropios } from '~/utils/editorial/publicacionesPropias'
+import { enviarVideoMeta } from './ejecutarVideoMetaPropia'
+import { buscarTemporalesSociales, configuracionMediosTemporales, retenerTemporalesPublicacion, urlFirmadaVideoTemporal } from './mediosTemporalesSociales'
+import { esDocumentoVideoPropio, formatosPropios } from '~/utils/editorial/publicacionesPropias'
 import type { ResultadoPublicacionMeta } from '~/types/publicacionMeta'
 
 const esquemaReserva = z.object({ id: z.string().uuid(), claim_id: z.string().uuid().nullable(), claimed: z.boolean(),
@@ -28,20 +30,30 @@ entrada: { destino: 'facebook' | 'instagram', revision: number }, huellaAprobada
   if (!texto || [...texto].length > (destino === 'instagram' ? 2200 : 63206)) {
     throw createError({ statusCode: 422, statusMessage: `Revisa la descripción de ${destino}: está vacía o excede su límite.` })
   }
-  const formato = formatosPropios[documento.formato]
-  if (destino === 'instagram' && (formato.ancho / formato.alto < 0.8 || formato.ancho / formato.alto > 1.91)) {
-    throw createError({ statusCode: 422, statusMessage: 'Para el feed de Instagram elige formato cuadrado o vertical.' })
+  if (!esDocumentoVideoPropio(documento)) {
+    const formato = formatosPropios[documento.formato]
+    if (destino === 'instagram' && (formato.ancho / formato.alto < 0.8 || formato.ancho / formato.alto > 1.91)) {
+      throw createError({ statusCode: 422, statusMessage: 'Para el feed de Instagram elige formato cuadrado o vertical.' })
+    }
+    if (destino === 'instagram' && documento.diapositivas.length > 10) throw createError({ statusCode: 422, statusMessage: 'Instagram admite hasta 10 imágenes.' })
   }
-  if (destino === 'instagram' && documento.diapositivas.length > 10) throw createError({ statusCode: 422, statusMessage: 'Instagram admite hasta 10 imágenes.' })
   const configuracion = await resolverConfiguracionMetaSocial(privado, datos.configuracion)
   const acceso = await verificarCuentaMeta(configuracion, destino)
-  await validarMediosPropios(cliente, documento)
-  const imagenes = await renderizarImagenesPropias(cliente, documento)
-  if (huellaAprobada && huellaImagenesPropias(imagenes) !== huellaAprobada) {
-    throw createError({ statusCode: 409, statusMessage: 'Las imágenes cambiaron después de programar. Revisa y programa de nuevo.' })
+  const archivos = await validarMediosPropios(cliente, privado, documento)
+  let imagenes: Buffer[] = []
+  let video: (typeof archivos.temporales)[number] | undefined
+  if (esDocumentoVideoPropio(documento)) {
+    video = archivos.temporales.find(temporal => temporal.id === documento.video.medioId)
+    if (!video) throw createError({ statusCode: 422, statusMessage: 'Falta el vídeo o ya no está disponible. Súbelo de nuevo.' })
+  } else {
+    imagenes = await renderizarImagenesPropias(cliente, privado, documento)
+    if (huellaAprobada && huellaImagenesPropias(imagenes) !== huellaAprobada) {
+      throw createError({ statusCode: 409, statusMessage: 'Las imágenes cambiaron después de programar. Revisa y programa de nuevo.' })
+    }
   }
-  const huella = createHash('sha256').update(JSON.stringify({ cuenta: acceso.id, texto, formato: documento.formato,
-    imagenes: imagenes.map(imagen => createHash('sha256').update(imagen).digest('hex')) })).digest('hex')
+  const huella = createHash('sha256').update(JSON.stringify(esDocumentoVideoPropio(documento)
+    ? { cuenta: acceso.id, texto, tipo: 'video', video: video!.id }
+    : { cuenta: acceso.id, texto, formato: documento.formato, imagenes: imagenes.map(imagen => createHash('sha256').update(imagen).digest('hex')) })).digest('hex')
   const intento = await privado.rpc('begin_social_custom_publication', { p_actor_id: actorId, p_post_id: postId, p_destination: destino, p_content_hash: huella })
   const reserva = esquemaReserva.safeParse(intento.data)
   if (intento.error || !reserva.success) throw createError({ statusCode: 503, statusMessage: 'No se pudo reservar el envío seguro. No se publicó contenido.' })
@@ -57,9 +69,18 @@ entrada: { destino: 'facebook' | 'instagram', revision: number }, huellaAprobada
   const almacen = privado.storage.from('social-meta-private')
   const rutas: string[] = []
   let enviando = false
+  let avisoVideo: string | undefined
   try {
     let respuesta: unknown
-    if (destino === 'facebook') {
+    if (esDocumentoVideoPropio(documento)) {
+      const [filaVideo] = await buscarTemporalesSociales(privado, [documento.video.medioId!])
+      if (!filaVideo) throw createError({ statusCode: 422, statusMessage: 'El vídeo ya no está disponible. Súbelo de nuevo.' })
+      const enviado = await enviarVideoMeta({ token: acceso.token, cuentaId: acceso.id, destino, texto, actualizar,
+        urlVideo: await urlFirmadaVideoTemporal(privado, filaVideo, configuracionMediosTemporales()),
+        antesDeEnviar: async () => { await actualizar('sending'); enviando = true } })
+      respuesta = enviado.respuesta; avisoVideo = enviado.aviso
+      if (avisoVideo) await retenerTemporalesPublicacion(privado, postId, 60)
+    } else if (destino === 'facebook') {
       const adjuntos: { media_fbid: string }[] = []
       for (const imagen of imagenes) {
         const foto = esquemaReciboMeta.parse(await consultarMeta(acceso.token, `${acceso.id}/photos`,
@@ -113,7 +134,7 @@ entrada: { destino: 'facebook' | 'instagram', revision: number }, huellaAprobada
     }
     try { await actualizar('published', { p_post_id: recibo.id, p_url: url }) }
     catch { return { estado: 'published', url, aviso: 'Meta confirmó el envío pero no se guardó el recibo. Conserva el enlace; no vuelvas a enviar esta versión.' } }
-    return { estado: 'published', url }
+    return { estado: 'published', url, ...(avisoVideo ? { aviso: avisoVideo } : {}) }
   } catch (problema) {
     try { await actualizar(enviando ? 'uncertain' : 'failed') } catch { /* La reserva bloquea reenvíos aunque falle la persistencia. */ }
     if (enviando) return { estado: 'uncertain', aviso: 'Meta no confirmó el resultado. Revisa la cuenta antes de cualquier nuevo envío; esta versión queda bloqueada.' }

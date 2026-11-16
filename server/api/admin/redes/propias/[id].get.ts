@@ -7,6 +7,6 @@ export default defineEventHandler(async (evento) => {
   const { cliente, privado } = await contextoPublicacionPropia(evento)
   const id = validarEntradaEditorial(z.string().uuid(), getRouterParam(evento, 'id'))
   const publicacion = await leerPublicacionPropia(privado, id)
-  const [medios, recibos] = await Promise.all([validarMediosPropios(cliente, publicacion.documento).catch(() => []), leerRecibosPublicacionPropia(privado, id)])
-  return { publicacion, medios, recibos }
+  const [archivos, recibos] = await Promise.all([validarMediosPropios(cliente, privado, publicacion.documento).catch(() => ({ medios: [], temporales: [] })), leerRecibosPublicacionPropia(privado, id)])
+  return { publicacion, medios: archivos.medios, temporales: archivos.temporales, recibos }
 })
