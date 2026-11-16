@@ -105,14 +105,31 @@ si DeepSeek no llega con lo investigado, investiga más o descarta la pieza.
 - `review.titleFaithful` = true solo si ambos titulares se sostienen con los dos
   primeros párrafos.
 
-## 6. Imágenes (política mínima)
+## 6. Imágenes (política mínima: la foto debe mostrar al protagonista)
 
-Válida cualquier foto pertinente de cuentas oficiales, medios, periodistas o la
-galería de prensa de DIMAYOR, con: crédito visible y URL de origen; sin quitar
-marcas de agua; sin presentar archivo como actual; sin imágenes IA de personas
-reales. Ruta técnica: `pont3la10-auto-cover` (`credited_photo_cover`), luego
-`scripts/preparar-portada-codex.mjs` y `media`. Toda propuesta automática exige
-`coverMediaId` real: sin foto, la pieza no se entrega.
+El responsable asume los derechos de autor (2026-11-15). Basta con el crédito del
+origen. Lo que se exige es **calidad y pertinencia**:
+
+1. **La foto muestra al protagonista de la noticia**: el jugador, el técnico o el
+   dirigente del que habla el titular; si la noticia es de un club, sus jugadores
+   en partido o celebrando. **Prohibido** usar estadios vacíos, fachadas, balones,
+   logos o montajes genéricos cuando hay una persona o un equipo protagonista.
+2. **Dónde buscarla, en este orden:** la imagen principal (`og:image`) de la nota
+   fuente que usaste o de otra nota del mismo hecho (Win Sports, El País, Infobae,
+   El Tiempo, Futbolred, La FM, ESPN, Semana); fotos de las cuentas o sitios
+   oficiales del club, DIMAYOR o FCF; la galería de prensa de DIMAYOR. Wikimedia
+   Commons solo si no hay nada mejor y la foto muestra a la persona.
+3. **Revísala antes de subirla:** ábrela y confirma que se ve al protagonista (o su
+   equipo con su camiseta) y que no es un montaje con logos ni de otro club.
+4. **Crédito:** el que figure en el pie de foto de la nota (agencia o fotógrafo,
+   por ejemplo «Colprensa», «VizzorImage / nombre», «AFP», «FCF») seguido de «(vía
+   [medio])», y `urlFuente` = la nota de donde salió. Si la foto es de otro momento,
+   el pie dice «foto de archivo». Sin quitar marcas de agua ni imágenes IA de
+   personas reales.
+
+Ruta técnica: `credited_photo_cover`, `scripts/preparar-portada-codex.mjs` (JPEG,
+PNG o WebP de hasta 2,4 MB; convierte con `sharp` si hace falta) y `media`. Toda
+propuesta automática exige `coverMediaId` real: sin foto, la pieza no se entrega.
 
 ## 7. Flujo de cada activación
 
