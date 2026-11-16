@@ -4,6 +4,7 @@ import type { PartidoSeoPublico } from '~/server/utils/partidosSeoPublicos'
 import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
 import { construirSportsEventSeo, etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
+import { construirFaqPartidoSeo, construirPreguntasPartidoSeo } from '~/utils/preguntasPartidoSeo'
 import type { ContextoAnaliticaPagina } from '~/utils/analiticaPublica'
 import type { NavegacionContextualPartidoSeo } from '~/types/navegacionContextualSeo'
 import { obtenerTipoCachePartido } from '~/utils/cachePublica'
@@ -84,6 +85,8 @@ useSeoPont3la10(() => {
     descripcion: descripcion.value
   })
 
+  const faq = construirFaqPartidoSeo(construirPreguntasPartidoSeo(partido.value))
+
   return {
     titulo: titulo.value,
     descripcion: descripcion.value,
@@ -98,6 +101,7 @@ useSeoPont3la10(() => {
     robots: indexable.value ? undefined : robotsNoIndex,
     datosEstructurados: [
       ...(evento ? [evento] : []),
+      ...(faq ? [faq] : []),
       {
         '@context': 'https://schema.org',
         '@type': 'BreadcrumbList',

@@ -191,6 +191,7 @@ useSeoPont3la10(() => ({
     <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Liga colombiana' }]" />
 
     <header class="portada-liga-imagen">
+      <h1 class="solo-lectores-liga">Liga Colombiana: Liga BetPlay, Torneo BetPlay y Copa Colombia</h1>
       <img
         src="/images/celebracion-futbol-colombiano-1600.webp"
         srcset="/images/celebracion-futbol-colombiano-768.webp 768w, /images/celebracion-futbol-colombiano-1600.webp 1600w"
@@ -371,6 +372,18 @@ useSeoPont3la10(() => ({
 </template>
 
 <style scoped>
+.solo-lectores-liga {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .modulo-futbol-colombia {
   --liga-tinta: #132b47;
   --liga-tinta-suave: #536980;

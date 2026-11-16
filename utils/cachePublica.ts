@@ -31,7 +31,9 @@ const politicasCachePublicas: Record<TipoCachePublica, PoliticaCachePublica> = {
   partidoProgramado: { sMaxAge: 30, staleWhileRevalidate: 0 },
   partidoEnVivo: { sMaxAge: 15, staleWhileRevalidate: 0 },
   partidoPendiente: { sMaxAge: 10, staleWhileRevalidate: 0 },
-  partidoFinalizado: { sMaxAge: 300, staleWhileRevalidate: 300 },
+  // Un partido finalizado casi no cambia: caché más larga reduce los TTFB de
+  // 2–13 s que observó Googlebot en frío y mejora la capacidad de rastreo.
+  partidoFinalizado: { sMaxAge: 3600, staleWhileRevalidate: 86400 },
   tabla: { sMaxAge: 30, staleWhileRevalidate: 0 },
   sitemap: { sMaxAge: 300, staleWhileRevalidate: 300 }
 }

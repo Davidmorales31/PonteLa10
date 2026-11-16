@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import { etiquetaEstadoSeoPartido } from '~/utils/schemaPartidoSeo'
+import { construirPreguntasPartidoSeo } from '~/utils/preguntasPartidoSeo'
 import { resolverDestinoPromocionalReproductor } from '~/utils/publicidad/destinoPromocionalReproductor'
 import type { ProgramacionTransmisionPublica } from '~/utils/partidos/programacion'
 import { etiquetasDistribucionProgramacion } from '~/utils/partidos/programacion'
@@ -93,6 +94,9 @@ const textoMarcador = computed(() => {
   if (estadoPartido.value === 'FINALIZADO') return `Resultado registrado: ${marcador.value}`
   return `Marcador registrado: ${marcador.value}`
 })
+// Las dos primeras preguntas (hora y transmisión) conservan su marcado enriquecido
+// con enlaces; el resto sale del mismo origen que alimenta el JSON-LD FAQPage.
+const preguntasAdicionales = computed(() => construirPreguntasPartidoSeo(partido.value).slice(2))
 const nombreCompetencia = computed(() => {
   if (partido.value.competencia === 'torneo-betplay') return 'Torneo BetPlay'
   if (partido.value.competencia === 'copa-colombia') return 'Copa Colombia'
@@ -313,6 +317,7 @@ onMounted(() => {
             <h2 id="faq-partido-seo">Preguntas frecuentes</h2>
             <details open><summary>¿A qué hora juega {{ partido.local }} vs {{ partido.visitante }}?</summary><p>El horario publicado es {{ fechaPartido(partido.fechaIso) }}, hora de Colombia. Si la organización anuncia un cambio, esta ficha se actualizará.</p></details>
             <details><summary>¿Dónde ver {{ partido.local }} vs {{ partido.visitante }}?</summary><p v-if="transmisionesConfirmadas.length">{{ transmisionesConfirmadas.map(item => `${item.channel} (${nombrePais(item.countryCode)})`).join(', ') }}. Revisa la fuente enlazada junto a cada opción porque la disponibilidad puede variar según el país.</p><p v-else>El canal o la plataforma no está confirmado. Revisa la <a :href="urlProgramacionOficial" target="_blank" rel="noopener noreferrer" @click="registrarEvento('channel_click')">programación de DIMAYOR</a>.</p></details>
+            <details v-for="item in preguntasAdicionales" :key="item.pregunta"><summary>{{ item.pregunta }}</summary><p>{{ item.respuesta }}</p></details>
           </section>
           <section v-else class="contexto-partido-seo">
             <h2>Información del partido</h2>
