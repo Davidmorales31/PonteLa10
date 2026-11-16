@@ -14,6 +14,9 @@ const esquemaReferenciaSegmento = z.object({
 export const esquemaPropuestaBorradorIa = z.object({
   versionContrato: z.literal(versionContratoRedaccionIa),
   titulo: z.string().trim().min(8).max(160),
+  // Titular de la imagen del centro de noticias. Opcional: solo lo genera el
+  // redactor de la corrida Codex; la ruta de ingestas no lo usa.
+  tituloPortada: z.string().trim().min(8).max(120).optional(),
   resumen: z.string().trim().min(1).max(320),
   tipo: z.enum(tiposContenidoEditorial as [
     (typeof tiposContenidoEditorial)[number],

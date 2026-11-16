@@ -106,9 +106,18 @@ export function normalizarPropuestaProveedor(propuesta: unknown, entrada: Entrad
     || limitar(`Resumen de la fuente: ${cuerpo}`, 160)
   const resumen = limitar(origen.resumen || origen.summary || origen.descripcion, 320)
     || limitar(cuerpo, 320)
+  // Solo se conserva un titular de portada utilizable (8–120 caracteres, sin
+  // caracteres de control); si no, se omite y la portada usa el título.
+  const tituloPortadaCandidato = limitar(origen.tituloPortada, 120)
+  const sinControl = !Array.from(tituloPortadaCandidato).some((caracter) => {
+    const punto = caracter.codePointAt(0) ?? 0
+    return punto <= 0x1f || (punto >= 0x7f && punto <= 0x9f)
+  })
+  const tituloPortada = tituloPortadaCandidato.length >= 8 && sinControl ? tituloPortadaCandidato : null
   return {
     versionContrato: 1,
     titulo,
+    ...(tituloPortada ? { tituloPortada } : {}),
     resumen,
     tipo: typeof origen.tipo === 'string' && ['breve', 'noticia', 'analisis', 'blog', 'informe', 'opinion', 'especial'].includes(origen.tipo) ? origen.tipo : entrada.tipoSugerido,
     documento: { type: 'doc', content: contenido },
