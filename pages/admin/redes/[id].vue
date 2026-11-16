@@ -3,7 +3,7 @@ import { ArrowLeft, Download, Save, Sparkles, Copy, Plus, Trash2, RotateCcw, Gri
 import LienzoPublicacionSocial from '~/components/admin/LienzoPublicacionSocial.vue'
 import SelectorPortadaEditorial from '~/components/admin/SelectorPortadaEditorial.vue'
 import type { MedioEditorial } from '~/types/mediaEditorial'
-import type { BorradorSocial } from '~/types/publicacionesSociales'
+import type { BorradorSocial, EditorPublicacionSocial } from '~/types/publicacionesSociales'
 import type { DocumentoSocial, PropuestaSocial, RedSocial } from '~/utils/editorial/publicacionesSociales'
 import { formatosSociales, redesSociales, crearDiapositivaSocial, esquemaDocumentoSocial,
   enlaceSocial, componerTextoSocial, avisosCompatibilidadSocial, rutaImagenCtaSocial } from '~/utils/editorial/publicacionesSociales'
@@ -12,7 +12,8 @@ definePageMeta({ layout: 'admin', middleware: 'autenticacion-editorial', permiso
 useSeoMeta({ title: 'Generador de publicaciones | Pont3la10', robots: 'noindex, nofollow' })
 const route = useRoute()
 const { contextoEditorial, tienePermiso } = useContextoEditorial()
-const { data, error, status, refresh } = await useFetch(`/api/admin/redes/${route.params.id}`)
+// Tipo explícito: la ruta fija /api/admin/redes/propias comparte el patrón dinámico.
+const { data, error, status, refresh } = await useFetch<EditorPublicacionSocial>(`/api/admin/redes/${route.params.id}`)
 const documento = ref<DocumentoSocial | null>(data.value ? structuredClone(toRaw(data.value.borrador.documento)) : null)
 const revision = ref(data.value?.borrador.revision || 0)
 const estadoGuardado = ref<'draft' | 'ready'>(data.value?.borrador.estado || 'draft')

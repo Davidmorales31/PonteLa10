@@ -2,6 +2,7 @@ import { obtenerClienteSupabasePrivado } from '~/server/utils/clienteSupabasePri
 import { resolverConfiguracionMetaSocial } from '~/server/utils/configuracionSocialProduccion'
 import { credencialMeta } from '~/server/utils/publicacionMeta'
 import { procesarColaSocial } from '~/server/utils/procesarColaSocial'
+import { procesarPublicacionesPropiasProgramadas } from '~/server/utils/procesarPublicacionesPropias'
 
 export default defineEventHandler(async evento => {
   setHeader(evento, 'Cache-Control', 'private, no-store')
@@ -21,6 +22,7 @@ export default defineEventHandler(async evento => {
     const latido = await cliente.from('social_scheduler_state').upsert({ id: true, last_seen_at: new Date().toISOString() })
     if (latido.error) throw new Error('Latido no disponible')
     await procesarColaSocial(cliente, meta, String(config.public.socialSiteUrl || config.public.siteUrl))
+    await procesarPublicacionesPropiasProgramadas(cliente, meta)
     return { activo: true }
   } catch {
     throw createError({ statusCode: 503, statusMessage: 'No se completó el ciclo del programador social.' })
