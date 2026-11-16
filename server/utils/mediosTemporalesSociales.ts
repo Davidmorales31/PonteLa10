@@ -104,6 +104,35 @@ export async function confirmarTemporalSocial(privado: SupabaseClient, actorId: 
   return vistaTemporalSocial(privado, { ...fila, status: 'ready', size_bytes: tamano, width: ancho, height: alto }, config)
 }
 
+/** Registra un archivo que el servidor ya tiene en memoria (p. ej. importado desde una URL) como temporal listo. */
+export async function registrarTemporalDesdeBuffer(privado: SupabaseClient, actorId: string, entrada: { nombre: string, tipoMime: MimeTemporalSocial, buffer: Buffer, publicacionId?: string },
+  config = configuracionMediosTemporales()): Promise<TemporalSocialVista> {
+  const tipo = tiposTemporalesSociales[entrada.tipoMime]
+  if (tipo.tipo !== 'imagen') falla('Solo se pueden importar imágenes.', 422)
+  if (entrada.buffer.byteLength > config.maxImagenBytes) falla(`La imagen supera el máximo de ${Math.round(config.maxImagenBytes / MB)} MB.`, 413)
+  let ancho: number | null = null, alto: number | null = null
+  try {
+    const meta = await sharp(entrada.buffer, { limitInputPixels: 40_000_000 }).rotate().metadata()
+    const orientada = (meta.orientation ?? 1) >= 5
+    ancho = (orientada ? meta.height : meta.width) ?? null; alto = (orientada ? meta.width : meta.height) ?? null
+  } catch { falla('La imagen no se pudo leer. Usa JPG, PNG o WebP.', 422) }
+  if (!ancho || !alto) falla('La imagen no se pudo leer.', 422)
+  if (entrada.publicacionId) {
+    const post = await privado.from('social_custom_posts').select('id').eq('id', entrada.publicacionId).maybeSingle()
+    if (post.error || !post.data) falla('La publicación no existe.', 404)
+  }
+  const id = randomUUID()
+  const ruta = `${actorId}/${id}.${tipo.extension}`
+  const subida = await privado.storage.from(bucketTemporalSocial).upload(ruta, entrada.buffer, { contentType: entrada.tipoMime, upsert: false })
+  if (subida.error) falla('No se pudo guardar la imagen temporal.')
+  const insercion = await privado.from('social_temp_media').insert({ id, owner_id: actorId, post_id: entrada.publicacionId ?? null, kind: 'imagen',
+    mime_type: entrada.tipoMime, original_name: entrada.nombre.slice(0, 200) || 'imagen', path: ruta, size_bytes: entrada.buffer.byteLength,
+    width: ancho, height: alto, status: 'ready', ready_at: new Date().toISOString() })
+  if (insercion.error) { await privado.storage.from(bucketTemporalSocial).remove([ruta]).catch(() => undefined); falla('No se pudo registrar la imagen.') }
+  return vistaTemporalSocial(privado, { id, owner_id: actorId, post_id: entrada.publicacionId ?? null, kind: 'imagen', mime_type: entrada.tipoMime, original_name: entrada.nombre,
+    path: ruta, size_bytes: entrada.buffer.byteLength, width: ancho, height: alto, status: 'ready', keep_until: null }, config)
+}
+
 export async function vistaTemporalSocial(privado: SupabaseClient, fila: FilaTemporalSocial, config = configuracionMediosTemporales()): Promise<TemporalSocialVista> {
   const firma = await privado.storage.from(bucketTemporalSocial).createSignedUrl(fila.path, Math.min(config.urlFirmadaSegundos, 3600))
   if (firma.error || !firma.data?.signedUrl) falla('No se pudo mostrar el archivo temporal.')
