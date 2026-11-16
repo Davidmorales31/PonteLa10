@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { parse } from 'opentype.js'
 import type { Font } from 'opentype.js'
-import { ArrowLeft, Save, ImagePlus, Plus, Trash2, ChevronLeft, ChevronRight, Type, Send, CalendarClock } from '@lucide/vue'
+import { ArrowLeft, Save, ImagePlus, Plus, Trash2, ChevronLeft, ChevronRight, Type, Send, CalendarClock, Upload } from '@lucide/vue'
 import SelectorPortadaEditorial from '~/components/admin/SelectorPortadaEditorial.vue'
 import ModalSubirMedio from '~/components/admin/ModalSubirMedio.vue'
 import type { MedioEditorial } from '~/types/mediaEditorial'
+import type { TemporalSocialVista } from '~/utils/editorial/mediosTemporales'
 import { cajaElementoPropio, componerSvgPropio, limitarPosicionPropia } from '~/utils/editorial/composicionPropia'
 import type { DocumentoPropio, ElementoPropio, FormatoPropio, PlantillaPropia } from '~/utils/editorial/publicacionesPropias'
 import { avisosPublicacionPropia, cambiarPlantillaPropia, coloresTextoPropio, crearDiapositivaPropia, crearElementoLogo,
-  crearElementoTexto, esquemaDocumentoPropio, formatosPropios, maximoDiapositivasPropias, plantillasPropias } from '~/utils/editorial/publicacionesPropias'
+  crearElementoTexto, esDocumentoVideoPropio, esquemaDocumentoPropio, formatosPropios, maximoDiapositivasPropias, plantillasPropias } from '~/utils/editorial/publicacionesPropias'
 
 definePageMeta({ layout: 'admin', middleware: 'autenticacion-editorial', permisoEditorial: 'contenido.verBorradores' })
 useSeoMeta({ title: 'Publicación propia | Pont3la10', robots: 'noindex, nofollow' })
@@ -16,7 +17,9 @@ const route = useRoute()
 const { tienePermiso } = useContextoEditorial()
 const { data, error } = await useFetch(`/api/admin/redes/propias/${route.params.id}`)
 
-const documento = ref<DocumentoPropio | null>(data.value ? structuredClone(toRaw(data.value.publicacion.documento)) : null)
+// Las publicaciones de vídeo se editan en la vista rápida (también móvil).
+if (data.value && esDocumentoVideoPropio(data.value.publicacion.documento)) await navigateTo(`/admin/redes/movil?id=${route.params.id}`, { replace: true })
+const documento = ref<DocumentoPropio | null>(data.value && !esDocumentoVideoPropio(data.value.publicacion.documento) ? structuredClone(toRaw(data.value.publicacion.documento)) as DocumentoPropio : null)
 const titulo = ref(data.value?.publicacion.titulo || '')
 const destinos = ref<Array<'facebook' | 'instagram'>>(data.value ? [...data.value.publicacion.destinos] : ['facebook', 'instagram'])
 const revision = ref(data.value?.publicacion.revision || 1)
@@ -24,6 +27,9 @@ const estado = ref(data.value?.publicacion.estado || 'draft')
 const programadaPara = ref(data.value?.publicacion.programadaPara || null)
 const recibos = ref<Record<string, { estado: string, url?: string }>>(data.value?.recibos || {})
 const medios = ref<MedioEditorial[]>(data.value?.medios || [])
+const temporales = ref<TemporalSocialVista[]>(data.value?.temporales || [])
+const { subir, progreso, subiendo } = useSubidaTemporalSocial()
+const errorSubida = ref('')
 const firmaGuardada = ref(JSON.stringify({ titulo: titulo.value, documento: documento.value, destinos: destinos.value }))
 const indice = ref(0), celdaActiva = ref(0), elementoActivo = ref<string | null>(null)
 const selectorAbierto = ref(false), subidaAbierta = ref(false)
@@ -38,7 +44,12 @@ const diapositiva = computed(() => documento.value?.diapositivas[indice.value] |
 const formato = computed<FormatoPropio>(() => documento.value?.formato || 'cuadrado')
 const dimensiones = computed(() => formatosPropios[formato.value])
 const celdas = computed(() => diapositiva.value ? plantillasPropias[diapositiva.value.plantilla].celdas : [])
-const medioDeCelda = (posicion: number) => medios.value.find(actual => actual.id === diapositiva.value?.medios[posicion]?.medioId) || null
+const medioDeCelda = (posicion: number): { id: string, urlPublica: string, ancho: number, alto: number } | null => {
+  const id = diapositiva.value?.medios[posicion]?.medioId
+  const temporal = temporales.value.find(actual => actual.id === id && actual.tipo === 'imagen' && actual.ancho && actual.alto)
+  if (temporal) return { id: temporal.id, urlPublica: temporal.url, ancho: temporal.ancho!, alto: temporal.alto! }
+  return medios.value.find(actual => actual.id === id) || null
+}
 const avisos = computed(() => documento.value ? avisosPublicacionPropia(documento.value, destinos.value) : [])
 const elementoSeleccionado = computed(() => diapositiva.value?.elementos.find(actual => actual.id === elementoActivo.value) || null)
 const encuadre = computed(() => diapositiva.value?.medios[celdaActiva.value]?.encuadre || null)
@@ -74,6 +85,18 @@ function usarMedio(medio: MedioEditorial) {
   if (!medios.value.some(actual => actual.id === medio.id)) medios.value.push(medio)
   diapositiva.value.medios[celdaActiva.value]!.medioId = medio.id
   selectorAbierto.value = false; subidaAbierta.value = false
+}
+async function subirDesdeDispositivo(evento: Event) {
+  const entrada = evento.target as HTMLInputElement
+  const archivo = entrada.files?.[0]
+  entrada.value = ''
+  if (!archivo || !diapositiva.value) return
+  errorSubida.value = ''
+  try {
+    const temporal = await subir(archivo, String(route.params.id))
+    temporales.value.push(temporal)
+    diapositiva.value.medios[celdaActiva.value]!.medioId = temporal.id
+  } catch (falla) { errorSubida.value = (falla as { statusMessage?: string, message?: string }).statusMessage || (falla as Error).message || 'No se pudo subir la imagen.' }
 }
 function ponerPlantilla(plantilla: PlantillaPropia) {
   if (!documento.value || !diapositiva.value) return
@@ -156,7 +179,7 @@ async function guardar(): Promise<boolean> {
     const respuesta = await $fetch(`/api/admin/redes/propias/${route.params.id}`, { method: 'PUT',
       body: { titulo: titulo.value, documento: documento.value, destinos: destinos.value, revision: revision.value } })
     revision.value = respuesta.publicacion.revision; estado.value = respuesta.publicacion.estado; programadaPara.value = respuesta.publicacion.programadaPara
-    medios.value = respuesta.medios
+    medios.value = respuesta.medios; temporales.value = respuesta.temporales
     firmaGuardada.value = JSON.stringify({ titulo: titulo.value, documento: documento.value, destinos: destinos.value })
     mensaje.value = estabaProgramada ? 'Guardado. Al editar, la programación se canceló: revisa y vuelve a programar.' : 'Guardado.'
     return true
@@ -239,7 +262,7 @@ v-for="{ elemento, caja } in cajas" :key="elemento.id" class="elemento-arrastrab
             <button type="button" :disabled="indice === documento.diapositivas.length - 1" @click="moverDiapositiva(1)">Después<ChevronRight :size="16" /></button>
             <button type="button" :disabled="documento.diapositivas.length < 2" @click="quitarDiapositiva"><Trash2 :size="16" />Quitar diapositiva</button>
           </div>
-          <p class="nota-propia">Arrastra el logo o el texto sobre la vista previa para ubicarlos. {{ documento.diapositivas.length > 1 ? `Carrusel de ${documento.diapositivas.length} diapositivas.` : 'Agrega diapositivas para hacer un carrusel.' }} Videos: próximamente.</p>
+          <p class="nota-propia">Arrastra el logo o el texto sobre la vista previa para ubicarlos. {{ documento.diapositivas.length > 1 ? `Carrusel de ${documento.diapositivas.length} diapositivas.` : 'Agrega diapositivas para hacer un carrusel.' }} Para videos usa la vista rápida (Nuevo → Video).</p>
         </div>
 
         <aside class="columna-controles" aria-label="Controles de la publicación">
@@ -261,6 +284,9 @@ v-for="{ elemento, caja } in cajas" :key="elemento.id" class="elemento-arrastrab
                 <small>{{ medioDeCelda(posicion) ? `Cambiar imagen ${posicion + 1}` : `Elegir imagen ${posicion + 1}` }}</small>
               </button>
             </div>
+            <label class="subir-dispositivo"><Upload :size="16" aria-hidden="true" />{{ subiendo ? `Subiendo… ${progreso} %` : `Subir desde mi dispositivo (imagen ${celdaActiva + 1})` }}<input type="file" accept="image/jpeg,image/png,image/webp" :disabled="subiendo" @change="subirDesdeDispositivo"></label>
+            <p v-if="errorSubida" class="aviso-propio error" role="alert">{{ errorSubida }}</p>
+            <small class="nota-propia">Las subidas desde el dispositivo son temporales: se borran al publicar.</small>
             <div v-if="encuadre" class="encuadre">
               <label>Zoom de la imagen {{ celdaActiva + 1 }}<input v-model.number="encuadre.zoom" type="range" min="1" max="3" step="0.01"></label>
               <label>Mover horizontal<input v-model.number="encuadre.x" type="range" min="-100" max="100"></label>
@@ -327,6 +353,7 @@ input[type=text],input[type=datetime-local],textarea,select{width:100%;border:1p
 .lienzo-propio{position:relative;width:100%;background:#08204a;overflow:hidden;border-radius:6px;box-shadow:0 12px 35px #08204a20;touch-action:none}
 .svg-propio{line-height:0}.svg-propio :deep(svg){display:block;width:100%;height:auto;pointer-events:none}.vacio-propio{display:grid;place-items:center;height:100%;margin:0;padding:24px;text-align:center;color:white}
 .capa-arrastre{position:absolute;inset:0}.elemento-arrastrable{position:absolute;cursor:grab;outline:2px dashed transparent}.elemento-arrastrable:hover,.elemento-arrastrable.activo,.elemento-arrastrable:focus-visible{outline-color:#ffd800}.elemento-arrastrable:active{cursor:grabbing}
+.subir-dispositivo{display:flex!important;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1px dashed var(--navy);border-radius:6px;cursor:pointer;font-weight:700}.subir-dispositivo input{position:absolute;opacity:0;width:1px;height:1px}
 .acciones-diapositiva{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.nota-propia{font-size:12px;color:var(--muted)}
 .columna-controles{display:grid;gap:14px}fieldset{border:1px solid var(--line);border-radius:8px;padding:14px;margin:0;display:grid;gap:12px;background:white}legend{font-weight:700;padding:0 6px}
 .opciones{display:flex;gap:14px;flex-wrap:wrap}.opciones label{display:flex;align-items:center;gap:6px;margin:0}

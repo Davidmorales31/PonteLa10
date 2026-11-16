@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { ejecutarPublicacionMetaPropia } from './ejecutarPublicacionMetaPropia'
+import { limpiarTemporalesPublicacion } from './mediosTemporalesSociales'
 import type { ConfiguracionMeta } from './publicacionMeta'
 
 const esquemaTrabajo = z.object({ id: z.string().uuid(), revision: z.number().int(), destinations: z.array(z.enum(['facebook', 'instagram'])).min(1).max(2),
@@ -33,4 +34,5 @@ export async function procesarPublicacionesPropiasProgramadas(cliente: SupabaseC
   // El SQL recalcula el estado final desde los recibos publicados (p. ej. si el botón manual ya publicó).
   const cierre = await cliente.rpc('finish_social_custom_post', { p_id: trabajo.id, p_status: estado })
   if (cierre.error) console.error('[social:propias] no se pudo cerrar el envío programado')
+  else await limpiarTemporalesPublicacion(cliente, trabajo.id).catch(() => 0)
 }

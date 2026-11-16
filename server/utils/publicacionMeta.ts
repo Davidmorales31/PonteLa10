@@ -27,7 +27,7 @@ export function credencialMeta(config: ConfiguracionMeta, destino: DestinoMeta) 
 export async function consultarMeta(token: string, ruta: string, opciones: {
   metodo?: 'GET' | 'POST', parametros?: Record<string, string>, archivo?: Buffer
 } = {}, transporte: typeof fetch = fetch): Promise<unknown> {
-  if (!/^(?:me|[0-9]{1,40}(?:_[0-9]{1,40})?)(?:\/(?:permissions|photos|feed|media|media_publish))?$/.test(ruta)) {
+  if (!/^(?:me|[0-9]{1,40}(?:_[0-9]{1,40})?)(?:\/(?:permissions|photos|videos|feed|media|media_publish))?$/.test(ruta)) {
     throw createError({ statusCode: 500, statusMessage: 'Ruta de Meta inválida.' })
   }
   const url = new URL(`https://graph.facebook.com/v27.0/${ruta}`)
@@ -89,6 +89,20 @@ export async function esperarContenedorMeta(token: string, id: string, pausa = (
     if (intento === 0) await pausa(60_000)
   }
   throw createError({ statusCode: 409, statusMessage: 'Instagram todavía no tiene la imagen lista o la rechazó. No se envió la publicación; vuelve a confirmar más tarde.' })
+}
+
+/** Reels e Instagram procesan el vídeo tras recibirlo: se consulta hasta que esté listo (o falle). */
+export async function esperarVideoMeta(token: string, id: string, opciones: { intentos?: number, pausaMs?: number,
+  pausa?: (ms: number) => Promise<void> } = {}) {
+  const intentos = opciones.intentos ?? 8, pausaMs = opciones.pausaMs ?? 15_000
+  const pausa = opciones.pausa ?? ((ms: number) => new Promise<void>(resolver => setTimeout(resolver, ms)))
+  for (let intento = 0; intento < intentos; intento++) {
+    const resultado = z.object({ status_code: z.string() }).safeParse(await consultarMeta(token, id, { parametros: { fields: 'status_code' } }))
+    if (resultado.success && resultado.data.status_code === 'FINISHED') return
+    if (!resultado.success || ['ERROR', 'EXPIRED', 'PUBLISHED'].includes(resultado.data.status_code)) break
+    if (intento < intentos - 1) await pausa(pausaMs)
+  }
+  throw createError({ statusCode: 409, statusMessage: 'Instagram todavía no terminó de procesar el vídeo o lo rechazó. No se envió la publicación; vuelve a intentarlo.' })
 }
 
 export function enlaceReciboMeta(destino: DestinoMeta, id: string) {

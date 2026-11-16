@@ -4,7 +4,7 @@ import { leerPublicacionPropia, programarPublicacionPropia, validarMediosPropios
 import { renderizarImagenesPropias } from '~/server/utils/renderizadorPublicacionPropia'
 import { estadoProgramadorSocial } from '~/server/utils/configuracionSocialProduccion'
 import { validarEntradaEditorial } from '~/server/utils/validacionEditorial'
-import { avisosPublicacionPropia, esquemaProgramarPublicacionPropia } from '~/utils/editorial/publicacionesPropias'
+import { avisosPublicacionPropia, esDocumentoVideoPropio, esquemaProgramarPublicacionPropia } from '~/utils/editorial/publicacionesPropias'
 
 export default defineEventHandler(async (evento) => {
   const { contexto, cliente, privado } = await contextoPublicacionPropia(evento, true)
@@ -18,7 +18,7 @@ export default defineEventHandler(async (evento) => {
   const publicacion = await leerPublicacionPropia(privado, id)
   const avisos = avisosPublicacionPropia(publicacion.documento, publicacion.destinos)
   if (avisos.length) throw createError({ statusCode: 422, statusMessage: avisos[0] })
-  await validarMediosPropios(cliente, publicacion.documento)
-  await renderizarImagenesPropias(cliente, publicacion.documento) // falla ahora, no en la hora programada
+  await validarMediosPropios(cliente, privado, publicacion.documento)
+  if (!esDocumentoVideoPropio(publicacion.documento)) await renderizarImagenesPropias(cliente, privado, publicacion.documento) // falla ahora, no en la hora programada
   return programarPublicacionPropia(privado, id, contexto.usuario.id, new Date(inicio).toISOString(), entrada.data.revision)
 })
