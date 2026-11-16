@@ -38,6 +38,16 @@ en producción; el resto está pendiente.
 15. Reintento seguro por red, sin duplicar la que ya salió.
 16. Video (Reels) para Instagram y Facebook.
 
+## Subida temporal, vídeo y mini app móvil (producción desde #152)
+
+- **Subida directa**: el navegador sube el archivo a Storage privado (`social-temp-uploads`) con URL firmada; el servidor verifica tamaño y contenido y lo marca listo.
+- **Borrado**: al quedar publicada una pieza se borran sus archivos temporales; cada ciclo del programador barre subidas incompletas, borradores viejos y huérfanos.
+- **Vídeo**: Instagram publica Reel (espera el procesamiento) y Facebook publica vídeo; si Facebook sigue procesando se retiene el archivo 60 min antes de borrarlo.
+- **Mini app**: `/admin/redes/movil` (iPhone: Safari → Compartir → Añadir a pantalla de inicio). Mismo login y MFA del panel; no existe restricción por modelo de dispositivo.
+- **Variables privadas (opcionales)**: `SOCIAL_TEMP_BORRAR_AL_PUBLICAR` (true), `SOCIAL_TEMP_RETENCION_BORRADOR_DIAS` (14), `SOCIAL_TEMP_RETENCION_HUERFANOS_HORAS` (24), `SOCIAL_TEMP_MAX_IMAGEN_MB` (15), `SOCIAL_TEMP_MAX_VIDEO_MB` (200), `SOCIAL_TEMP_URL_FIRMADA_MINUTOS` (120).
+- **Límite a vigilar**: el tope global de tamaño de archivo del proyecto Supabase puede ser menor que el del bucket (500 MB).
+- **Sin probar con sesión real**: subida desde iPhone y publicación de Reel/vídeo requieren MFA del responsable.
+
 ## Fases propuestas
 
 1. **Cola automática (#4, #13):** al aprobar una corrida, crear el lote social con
