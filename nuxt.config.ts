@@ -28,9 +28,9 @@ export default defineNuxtConfig({
         }
       }
     } : {}),
-    // El proveedor DeepSeek puede tardar hasta 60 s; deja margen para persistir
-    // y responder sin depender de un ajuste manual del límite por defecto.
-    vercel: { functions: { maxDuration: 120 } }
+    // El carrusel social puede esperar 60 s por Instagram además de renderizar
+    // y enviar a ambas redes; cada ciclo procesa una sola noticia aprobada.
+    vercel: { functions: { maxDuration: 240 } }
   },
   experimental: {
     appManifest: false

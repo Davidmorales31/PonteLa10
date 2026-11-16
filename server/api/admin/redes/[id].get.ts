@@ -3,10 +3,13 @@ import { leerBorradorSocial, validarMediosSociales } from '~/server/utils/reposi
 import { crearDocumentoSocialPredeterminado, esquemaPropuestaSocial } from '~/utils/editorial/publicacionesSociales'
 import { z } from 'zod'
 import type { EditorPublicacionSocial } from '~/types/publicacionesSociales'
+import { clienteOAuthSocial } from '~/server/utils/contextoOAuthSocial'
+import { leerEstadosPublicacionesSociales } from '~/server/utils/estadoPublicacionesSociales'
 
 export default defineEventHandler(async (evento): Promise<EditorPublicacionSocial> => {
   const { cliente, articulo, urlCanonica, dominio } = await contextoPublicacionSocial(evento)
   const guardado = await leerBorradorSocial(cliente, articulo.id)
+  const publicaciones = await leerEstadosPublicacionesSociales(clienteOAuthSocial(evento), [articulo.id])
   const borrador = guardado.borrador || { documento: crearDocumentoSocialPredeterminado(articulo.titulo,
     articulo.portadaId, articulo.seo.textoSocial || articulo.resumen, urlCanonica, articulo.id),
   revision: 0, estado: 'draft' as const, actualizadoEn: null }
@@ -16,6 +19,6 @@ export default defineEventHandler(async (evento): Promise<EditorPublicacionSocia
     const sugerencias = z.object({ propuestas: z.array(esquemaPropuestaSocial).length(5) }).safeParse(ultima.data?.result)
     if (sugerencias.success) borrador.documento.propuestas = sugerencias.data.propuestas
   }
-  return { articulo, urlCanonica, dominio, borrador,
+  return { articulo, urlCanonica, dominio, borrador, publicaciones: publicaciones[articulo.id] || {},
     medios: await validarMediosSociales(cliente, borrador.documento), almacenamientoDisponible: guardado.disponible }
 })

@@ -46,7 +46,7 @@ onBeforeUnmount(() => { if (reloj) clearInterval(reloj) })
   <section class="programacion-masiva" aria-labelledby="titulo-programacion">
     <header><div><h2 id="titulo-programacion">Programar publicaciones en lote</h2><p>{{ seleccion.length }} noticias seleccionadas · hasta 50 por lote</p></div><button type="button" :disabled="guardando" @click="refresh()">Actualizar cola</button></header>
     <p :class="cola?.activo ? 'programador-activo' : 'programador-inactivo'" role="status">{{ cola?.activo ? 'Programador activo' : 'Programador sin conexión: no se crearán nuevos lotes.' }}</p>
-    <p>Las horas corresponden a Colombia. El servidor debe seguir encendido: ahora es tu PC; cuando migremos al VPS podrá ejecutarse allí. Se usará la composición guardada o predeterminada que apruebas en este lote.</p>
+    <p>Las horas corresponden a Colombia. En producción, el programador funciona en la nube sin mantener tu PC encendido. Se usará la composición guardada o predeterminada que apruebas en este lote.</p>
     <form @submit.prevent="confirmando = true">
       <fieldset :disabled="guardando"><legend>Horario y destinos</legend>
         <label>Hora inicial (Colombia)<input v-model="inicio" type="datetime-local" required></label>

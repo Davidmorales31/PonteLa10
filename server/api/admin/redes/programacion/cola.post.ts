@@ -9,6 +9,8 @@ import { esquemaProgramacionSocial } from '~/utils/editorial/programacionSocial'
 import { validarPublicacionSocialLista } from '~/server/utils/recursosComposicionSocial'
 import { verificarCuentaMeta } from '~/server/utils/publicacionMeta'
 import { renderizarImagenesMeta, huellaImagenesMeta } from '~/server/utils/ejecutarPublicacionMeta'
+import { leerEstadosPublicacionesSociales } from '~/server/utils/estadoPublicacionesSociales'
+import { resolverConfiguracionMetaSocial, estadoProgramadorSocial } from '~/server/utils/configuracionSocialProduccion'
 
 export default defineEventHandler(async evento => {
   const contexto = await exigirPermisoEditorial(evento, 'contenido.editarTodos')
@@ -22,10 +24,17 @@ export default defineEventHandler(async evento => {
   if (inicio < Date.now() + 30_000 || inicio > Date.now() + 90 * 86400_000) throw createError({ statusCode: 422, statusMessage: 'Elige una hora inicial entre un minuto y 90 días en el futuro.' })
   const privado = clienteOAuthSocial(evento)
   const latido = await privado.from('social_scheduler_state').select('last_seen_at').eq('id', true).maybeSingle()
-  if (latido.error || !latido.data || Date.parse(latido.data.last_seen_at) < Date.now() - 90_000) throw createError({ statusCode: 503,
+  if (latido.error || !estadoProgramadorSocial(latido.data?.last_seen_at)) throw createError({ statusCode: 503,
     statusMessage: 'El programador no está activo. No se creó el lote. Mantén el servidor Node funcionando para programar.' })
   const runtime = useRuntimeConfig(evento)
-  for (const destino of valores.destinos) await verificarCuentaMeta(runtime, destino)
+  const configuracionMeta = await resolverConfiguracionMetaSocial(privado, runtime)
+  const publicaciones = await leerEstadosPublicacionesSociales(privado, valores.articulos)
+  for (const id of valores.articulos) {
+    const bloqueados = valores.destinos.filter(destino => ['published', 'in_progress', 'uncertain'].includes(publicaciones[id]?.[destino]?.estado || ''))
+    if (bloqueados.length) throw createError({ statusCode: 409,
+      statusMessage: `Una noticia ya fue enviada o tiene un resultado pendiente en ${bloqueados.join(', ')}. Selecciona solo las redes que todavía no se han publicado.` })
+  }
+  for (const destino of valores.destinos) await verificarCuentaMeta(configuracionMeta, destino)
   const cliente = obtenerClienteSupabaseEditorial(evento)
   const sitio = new URL(String(runtime.public.socialSiteUrl || runtime.public.siteUrl))
   const preparados = []

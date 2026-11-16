@@ -2,6 +2,7 @@
 import { ArrowRight, Search, ImagePlus, Eye } from '@lucide/vue'
 import VistaRapidaPublicacionSocial from '~/components/admin/VistaRapidaPublicacionSocial.vue'
 import ProgramacionMasivaSocial from '~/components/admin/ProgramacionMasivaSocial.vue'
+import type { EstadoPublicacionesSociales } from '~/types/publicacionesSociales'
 definePageMeta({ layout: 'admin', middleware: 'autenticacion-editorial', permisoEditorial: 'contenido.verBorradores' })
 useSeoMeta({ title: 'Publicaciones para redes | Pont3la10', robots: 'noindex, nofollow' })
 const buscar = ref(''), termino = ref(''), pagina = ref(1)
@@ -9,17 +10,30 @@ const estado = ref('')
 const { tienePermiso } = useContextoEditorial()
 const seleccion = ref<{ id: string, titulo: string }[]>([])
 function seleccionar(id: string, titulo: string) {
+  const articulo = data.value?.articulos.find(item => item.id === id)
+  if (!articulo || !puedeProgramar(articulo.publicaciones)) return
   if (seleccion.value.some(item => item.id === id)) seleccion.value = seleccion.value.filter(item => item.id !== id)
   else if (seleccion.value.length < 50) seleccion.value.push({ id, titulo })
 }
 function seleccionarPendientes() {
-  for (const articulo of articulos.value.filter(item => item.estado === 'pending')) {
+  for (const articulo of articulos.value.filter(item => item.estado === 'pending' && puedeProgramar(item.publicaciones))) {
     if (!seleccion.value.some(item => item.id === articulo.id) && seleccion.value.length < 50) seleccion.value.push({ id: articulo.id, titulo: articulo.titulo })
   }
 }
+function puedeProgramar(publicaciones?: EstadoPublicacionesSociales) {
+  return (['facebook', 'instagram'] as const).some(destino => !['published', 'in_progress', 'uncertain'].includes(publicaciones?.[destino]?.estado || ''))
+}
+async function cerrarVistaRapida() {
+  articuloVistaRapida.value = null
+  await refresh()
+  seleccion.value = seleccion.value.filter(item => {
+    const actual = data.value?.articulos.find(articulo => articulo.id === item.id)
+    return !actual || puedeProgramar(actual.publicaciones)
+  })
+}
 const articuloVistaRapida = ref<string | null>(null)
 const { data, status, error, refresh } = await useFetch('/api/admin/redes', { query: { buscar: termino, pagina } })
-const etiquetas: Record<string, string> = { pending: 'Por preparar', draft: 'Borrador', ready: 'Listo para compartir' }
+const etiquetas: Record<string, string> = { pending: 'Por preparar', draft: 'Borrador', ready: 'Listo para compartir', published: 'Publicada en Facebook e Instagram', partial: 'Publicada en alguna red' }
 const articulos = computed(() => data.value?.articulos.filter(actual => !estado.value || actual.estado === estado.value) || [])
 function aplicarBusqueda() { pagina.value = 1; termino.value = buscar.value }
 </script>
@@ -39,12 +53,12 @@ function aplicarBusqueda() { pagina.value = 1; termino.value = buscar.value }
       <article v-for="articulo in articulos" :key="articulo.id">
         <img v-if="articulo.portada" :src="articulo.portada" alt="" loading="lazy"><div v-else class="sin-foto"><ImagePlus /></div>
         <div class="datos-noticia"><small>{{ articulo.categoria }} · {{ articulo.publicadoEn ? new Date(articulo.publicadoEn).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) : '' }}</small><h2>{{ articulo.titulo }}</h2><p>{{ articulo.resumen }}</p><a :href="`/articulos/${articulo.slug}`" target="_blank" rel="noopener">Ver noticia ↗</a></div>
-        <div class="accion-noticia"><label v-if="tienePermiso('contenido.editarTodos')" class="seleccionar-noticia"><input type="checkbox" :checked="seleccion.some(item => item.id === articulo.id)" :aria-label="`Programar: ${articulo.titulo}`" @change="seleccionar(articulo.id, articulo.titulo)">Programar</label><span :class="`estado-${articulo.estado}`">{{ etiquetas[articulo.estado] }}</span><button type="button" class="boton-vista-rapida" :aria-label="`Vista rápida: ${articulo.titulo}`" aria-haspopup="dialog" @click="articuloVistaRapida = articulo.id"><Eye :size="17" />Vista rápida</button><NuxtLink :to="`/admin/redes/${articulo.id}`">Editar publicación <ArrowRight :size="17" /></NuxtLink></div>
+        <div class="accion-noticia"><label v-if="tienePermiso('contenido.editarTodos')" class="seleccionar-noticia"><input type="checkbox" :checked="seleccion.some(item => item.id === articulo.id)" :disabled="!puedeProgramar(articulo.publicaciones)" :aria-label="`Programar: ${articulo.titulo}`" @change="seleccionar(articulo.id, articulo.titulo)">Programar</label><span :class="`estado-${articulo.estado}`">{{ etiquetas[articulo.estado] }}</span><button type="button" class="boton-vista-rapida" :aria-label="`Vista rápida: ${articulo.titulo}`" aria-haspopup="dialog" @click="articuloVistaRapida = articulo.id"><Eye :size="17" />Vista rápida</button><NuxtLink :to="`/admin/redes/${articulo.id}`">Editar publicación <ArrowRight :size="17" /></NuxtLink></div>
       </article>
     </div>
     <footer v-if="data"><button :disabled="pagina === 1" @click="pagina--">Anterior</button><span>Página {{ pagina }} · {{ data.total }} noticias</span><button :disabled="pagina * 20 >= data.total" @click="pagina++">Siguiente</button></footer>
     <ProgramacionMasivaSocial v-if="tienePermiso('contenido.editarTodos')" :seleccion="seleccion" @limpiar="seleccion = []" />
-    <VistaRapidaPublicacionSocial v-if="articuloVistaRapida" :key="articuloVistaRapida" :articulo-id="articuloVistaRapida" @cerrar="articuloVistaRapida = null" />
+    <VistaRapidaPublicacionSocial v-if="articuloVistaRapida" :key="articuloVistaRapida" :articulo-id="articuloVistaRapida" @cerrar="cerrarVistaRapida" />
   </section>
 </template>
 <style scoped>
