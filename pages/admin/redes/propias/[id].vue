@@ -18,7 +18,8 @@ useHead({ link: [{ rel: 'manifest', href: '/manifest-redes.webmanifest' }, { rel
     { name: 'theme-color', content: '#0b1220' }] })
 
 interface RespuestaEditor {
-  publicacion: { id: string, titulo: string, estado: string, destinos: Array<'facebook' | 'instagram'>, revision: number, programadaPara: string | null, documento: DocumentoPublicacionPropia }
+  publicacion: { id: string, titulo: string, estado: string, destinos: Array<'facebook' | 'instagram'>, revision: number, programadaPara: string | null, documento: DocumentoPublicacionPropia,
+    agenteId: string | null, solicitudAprobacion: { nota: string | null, solicitadaEn: string, horaSugerida: string | null } | null }
   medios: MedioEditorial[], temporales: TemporalSocialVista[], recibos: Record<string, { estado: string, url?: string }>
 }
 type Seleccion = { tipo: 'celda', indice: number } | { tipo: 'elemento', id: string } | null
@@ -48,10 +49,13 @@ const estado = ref('draft'), revision = ref(1), programadaPara = ref<string | nu
 const temporales = ref<TemporalSocialVista[]>([]), medios = ref<MedioEditorial[]>([])
 const recibos = ref<Record<string, { estado: string, url?: string }>>({})
 const igDistinto = ref(false)
+const solicitud = ref<{ nota: string | null, solicitadaEn: string, horaSugerida: string | null } | null>(null)
+const creadaPorAgente = ref(false)
 if (inicial) {
   const guardado = inicial.publicacion.documento
   if (esDocumentoVideoPropio(guardado)) { tipo.value = 'video'; videoId.value = guardado.video.medioId; documento.value.textos = { ...guardado.textos } }
   else documento.value = structuredClone(toRaw(guardado)) as DocumentoPropio
+  solicitud.value = inicial.publicacion.solicitudAprobacion; creadaPorAgente.value = !!inicial.publicacion.agenteId
   titulo.value = inicial.publicacion.titulo; destinos.value = [...inicial.publicacion.destinos]; estado.value = inicial.publicacion.estado
   revision.value = inicial.publicacion.revision; programadaPara.value = inicial.publicacion.programadaPara
   temporales.value = inicial.temporales; medios.value = inicial.medios; recibos.value = inicial.recibos
@@ -145,9 +149,9 @@ async function guardar(): Promise<boolean> {
     guardando.value = true
     const habiaProgramada = estado.value === 'scheduled'
     try {
-      const respuesta = await $fetch<{ publicacion: { revision: number, estado: string, programadaPara: string | null }, temporales: TemporalSocialVista[], medios: MedioEditorial[] }>(`/api/admin/redes/propias/${idActual.value}`,
+      const respuesta = await $fetch<{ publicacion: { revision: number, estado: string, programadaPara: string | null, solicitudAprobacion: { nota: string | null, solicitadaEn: string, horaSugerida: string | null } | null }, temporales: TemporalSocialVista[], medios: MedioEditorial[] }>(`/api/admin/redes/propias/${idActual.value}`,
         { method: 'PUT', body: { titulo: titulo.value || nombreAutomatico(), documento: documentoGuardable.value, destinos: destinos.value, revision: revision.value } })
-      revision.value = respuesta.publicacion.revision; estado.value = respuesta.publicacion.estado; programadaPara.value = respuesta.publicacion.programadaPara
+      revision.value = respuesta.publicacion.revision; estado.value = respuesta.publicacion.estado; programadaPara.value = respuesta.publicacion.programadaPara; solicitud.value = respuesta.publicacion.solicitudAprobacion
       temporales.value = respuesta.temporales; medios.value = respuesta.medios; sinGuardar.value = false; problema.value = ''
       if (habiaProgramada) mensaje.value = 'Al editar, la programación se canceló. Vuelve a programarla.'
       return true
@@ -354,6 +358,13 @@ function quitarVideo() { videoId.value = null; tipo.value = 'imagenes'; confirma
 function alEditarTexto() { clearTimeout(rueda); rueda = setTimeout(confirmarCambio, 600) }
 function alEditarDescripcion() { if (!igDistinto.value) documento.value.textos.instagram = documento.value.textos.facebook.slice(0, 2200) }
 function alternarDestino(destino: 'facebook' | 'instagram') { destinos.value = destinos.value.includes(destino) ? destinos.value.filter(item => item !== destino) : [...destinos.value, destino] }
+function abrirPublicar() {
+  hoja.value = 'publicar'
+  if (solicitud.value?.horaSugerida && !fechaProgramada.value) {
+    fechaProgramada.value = new Date(Date.parse(solicitud.value.horaSugerida) - 5 * 3600_000).toISOString().slice(0, 16) // hora de Colombia (UTC-5)
+    mostrarProgramar.value = true
+  }
+}
 function abrirDiseno() { hoja.value = 'diseno' }
 function cerrarHoja() { hoja.value = null; confirmarCambio() }
 
@@ -407,7 +418,7 @@ async function abrirPublicacion(id: string) { await guardar(); window.location.a
       <button type="button" class="titulo" aria-label="Publicaciones recientes" @click="abrirRecientes">{{ estado === 'draft' && !idActual ? 'Nueva pieza' : etiquetas[estado] }}<small v-if="guardando"> · guardando…</small><small v-else-if="sinGuardar"> · sin guardar</small></button>
       <button type="button" aria-label="Deshacer" :disabled="!pasado.length || !editable" @click="deshacer"><Undo2 :size="20" /></button>
       <button type="button" aria-label="Rehacer" :disabled="!futuro.length || !editable" @click="rehacer"><Redo2 :size="20" /></button>
-      <button type="button" class="listo" :disabled="!idActual" @click="hoja = 'publicar'">Listo</button>
+      <button type="button" class="listo" :disabled="!idActual" @click="abrirPublicar">Listo</button>
     </header>
 
     <Transition name="toast">
@@ -517,6 +528,8 @@ v-for="{ elemento, caja } in cajas" v-show="seleccion?.tipo === 'elemento' && se
 
         <template v-else-if="hoja === 'publicar'">
           <h2>Publicar</h2>
+          <p v-if="solicitud && estado !== 'published'" class="solicitud" role="status"><strong>Un agente de IA pide tu aprobación.</strong><span v-if="solicitud.nota">{{ solicitud.nota }}</span><span v-if="solicitud.horaSugerida">Hora sugerida: {{ new Date(solicitud.horaSugerida).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'medium', timeStyle: 'short' }) }} (la cargué en «Programar»; revísala y confirma).</span></p>
+          <p v-else-if="creadaPorAgente && estado !== 'published'" class="solicitud" role="status">Creada por un agente de IA. Revísala antes de publicar.</p>
           <textarea v-model="documento.textos.facebook" rows="4" maxlength="5000" placeholder="Descripción de la publicación" aria-label="Descripción" :disabled="!editable" @input="alEditarDescripcion" />
           <label class="casilla"><input v-model="igDistinto" type="checkbox" :disabled="!editable">Descripción distinta en Instagram</label>
           <textarea v-if="igDistinto" v-model="documento.textos.instagram" rows="3" maxlength="2200" aria-label="Descripción de Instagram" :disabled="!editable" />
@@ -624,6 +637,7 @@ input[type=range]{width:100%;accent-color:var(--acento);min-height:32px}input[ty
 .plantillas button{display:grid;justify-items:center;gap:8px;padding:12px 6px;border:1px solid var(--borde);border-radius:var(--radio);background:var(--superficie-2);color:var(--texto)}
 .plantillas .activa{border-color:var(--acento);box-shadow:0 0 0 2px #ffd80066}
 .mini{position:relative;width:54px;height:54px;background:#08204a;display:block;border-radius:4px;overflow:hidden}.mini i{position:absolute;box-sizing:border-box;border:1px solid #fff;background:#2a6ad6}.plantillas small{font-size:12px;text-align:center;color:var(--texto-suave)}
+.solicitud{display:grid;gap:4px;margin:0 0 12px;padding:12px;border:1px solid #6b5a10;border-radius:var(--radio);background:#3a3410;color:#ffe98a;font-size:14px}.solicitud strong{color:#fff}
 .avisos{margin:10px 0;padding:10px 12px 10px 28px;background:#3a3410;border-radius:12px;font-size:14px;color:#ffe98a}.recibo{margin:8px 0;font-size:14px;color:var(--texto-suave)}.recibo a{color:var(--acento)}
 .recientes{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
 .recientes button{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:52px;padding:12px 14px;border:1px solid var(--borde);border-radius:var(--radio);background:var(--superficie-2);color:var(--texto);text-align:left;font:inherit}

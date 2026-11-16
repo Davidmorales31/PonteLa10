@@ -38,6 +38,11 @@ en producción; el resto está pendiente.
 15. Reintento seguro por red, sin duplicar la que ya salió.
 16. Video (Reels) para Instagram y Facebook.
 
+## API para agentes de IA (REST + MCP)
+
+Operaciones, llaves con alcances, aprobación humana y modelo de seguridad:
+`docs/API_AGENTES_REDES.md`. Gestión de llaves en Panel → Contenido para redes → Agentes IA.
+
 ## Fases propuestas
 
 1. **Cola automática (#4, #13):** al aprobar una corrida, crear el lote social con

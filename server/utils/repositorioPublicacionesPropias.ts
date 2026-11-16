@@ -12,7 +12,9 @@ export type EstadoPublicacionPropia = 'draft' | 'scheduled' | 'publishing' | 'pu
 export type DestinoPropio = 'facebook' | 'instagram'
 export interface ResumenPublicacionPropia {
   id: string, titulo: string, estado: EstadoPublicacionPropia, destinos: DestinoPropio[],
-  programadaPara: string | null, revision: number, actualizadaEn: string
+  programadaPara: string | null, revision: number, actualizadaEn: string,
+  agenteId: string | null,
+  solicitudAprobacion: { nota: string | null, solicitadaEn: string, horaSugerida: string | null } | null
 }
 export interface PublicacionPropia extends ResumenPublicacionPropia {
   documento: DocumentoPublicacionPropia
@@ -20,13 +22,17 @@ export interface PublicacionPropia extends ResumenPublicacionPropia {
 
 const esquemaFila = z.object({
   id: z.string().uuid(), title: z.string(), document: z.unknown(), status: z.enum(['draft', 'scheduled', 'publishing', 'published', 'failed']),
-  destinations: z.array(z.enum(['facebook', 'instagram'])), scheduled_at: z.string().nullable(), revision: z.number().int(), updated_at: z.string()
+  destinations: z.array(z.enum(['facebook', 'instagram'])), scheduled_at: z.string().nullable(), revision: z.number().int(), updated_at: z.string(),
+  agent_key_id: z.string().uuid().nullable().optional(), approval_requested_at: z.string().nullable().optional(),
+  approval_note: z.string().nullable().optional(), suggested_at: z.string().nullable().optional()
 })
-const columnas = 'id,title,document,status,destinations,scheduled_at,revision,updated_at'
+export const columnasPublicacionPropia = 'id,title,document,status,destinations,scheduled_at,revision,updated_at,agent_key_id,approval_requested_at,approval_note,suggested_at'
+const columnas = columnasPublicacionPropia
 
 function resumir(fila: z.infer<typeof esquemaFila>): ResumenPublicacionPropia {
   return { id: fila.id, titulo: fila.title, estado: fila.status, destinos: fila.destinations, programadaPara: fila.scheduled_at,
-    revision: fila.revision, actualizadaEn: fila.updated_at }
+    revision: fila.revision, actualizadaEn: fila.updated_at, agenteId: fila.agent_key_id ?? null,
+    solicitudAprobacion: fila.approval_requested_at ? { nota: fila.approval_note ?? null, solicitadaEn: fila.approval_requested_at, horaSugerida: fila.suggested_at ?? null } : null }
 }
 function falla(mensaje: string, codigo = 503): never {
   throw createError({ statusCode: codigo, statusMessage: mensaje })
@@ -34,6 +40,15 @@ function falla(mensaje: string, codigo = 503): never {
 
 export async function listarPublicacionesPropias(privado: SupabaseClient, limite = 20): Promise<ResumenPublicacionPropia[]> {
   const { data, error } = await privado.from('social_custom_posts').select(columnas).order('created_at', { ascending: false }).limit(limite)
+  if (error) falla('No se pudieron consultar las publicaciones propias.')
+  return (data || []).flatMap((fila) => { const lectura = esquemaFila.safeParse(fila); return lectura.success ? [resumir(lectura.data)] : [] })
+}
+
+export async function listarPublicacionesPropiasFiltradas(privado: SupabaseClient, filtros: { agenteId?: string, estado?: EstadoPublicacionPropia, limite: number }): Promise<ResumenPublicacionPropia[]> {
+  let consulta = privado.from('social_custom_posts').select(columnas).order('created_at', { ascending: false }).limit(filtros.limite)
+  if (filtros.agenteId) consulta = consulta.eq('agent_key_id', filtros.agenteId)
+  if (filtros.estado) consulta = consulta.eq('status', filtros.estado)
+  const { data, error } = await consulta
   if (error) falla('No se pudieron consultar las publicaciones propias.')
   return (data || []).flatMap((fila) => { const lectura = esquemaFila.safeParse(fila); return lectura.success ? [resumir(lectura.data)] : [] })
 }

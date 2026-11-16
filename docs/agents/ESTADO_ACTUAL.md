@@ -1,5 +1,15 @@
 # Estado actual de Pont3la10
 
+## API para agentes de IA del módulo de redes (2026-11-17, rama feat/api-agentes-redes)
+
+- REST `/api/agentes/redes/v1`, OpenAPI pública, guía y servidor MCP `/api/agentes/redes/mcp`
+  sobre un solo registro de operaciones. Llaves `p3l_…` (huella SHA-256) con alcances
+  leer/borradores/medios/programar, límite por minuto y vencimiento; gestión en
+  Panel → Contenido para redes → Agentes IA (permiso configuracion.gestionar + MFA).
+- Por defecto el agente no publica: crea borradores y pide aprobación humana. Programar
+  sin aprobación es una delegación opcional por llave, con cuota y auditoría.
+- Migración `20261117100000` antes del código. Documento: docs/API_AGENTES_REDES.md.
+
 ## Titular de portada (2026-11-15, rama feat/titulo-portada, sin commit)
 
 - Campo opcional `cover_headline` / `tituloPortada` para la imagen del centro de
