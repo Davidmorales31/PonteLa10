@@ -11,6 +11,7 @@ import { createError } from 'h3'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { ConfiguracionMeta } from '~/server/utils/publicacionMeta'
 import type { ArticuloDetalleEditorial } from '~/types/contenidoEditorial'
+import { resolverConfiguracionMetaSocial } from '~/server/utils/configuracionSocialProduccion'
 
 const esquemaReservaMeta = z.object({ id: z.string().uuid(), claim_id: z.string().uuid().nullable(), claimed: z.boolean(),
   status: z.enum(['preparing', 'sending', 'published', 'failed', 'uncertain']), post_url: z.string().url().nullable() })
@@ -48,6 +49,7 @@ export async function ejecutarPublicacionMeta(datos: { cliente: SupabaseClient, 
   if (destino === 'instagram' && (formato.ancho / formato.alto < 0.8 || formato.ancho / formato.alto > 1.91)) {
     throw createError({ statusCode: 422, statusMessage: 'Para el feed de Instagram elige formato cuadrado o vertical en el editor.' })
   }
+  configuracion = await resolverConfiguracionMetaSocial(privado, configuracion)
   const acceso = await verificarCuentaMeta(configuracion, destino)
   await validarMediosSociales(cliente, documento)
   const imagenes = await renderizarImagenesMeta(cliente, documento, new URL(urlCanonica).host)

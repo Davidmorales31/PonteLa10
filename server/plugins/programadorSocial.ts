@@ -3,6 +3,8 @@ import { procesarColaSocial } from '~/server/utils/procesarColaSocial'
 
 export default defineNitroPlugin(nitro => {
   const config = useRuntimeConfig()
+  // En funciones efímeras consume el disparador privado, nunca temporizadores.
+  if (process.env.VERCEL) return
   if (String(config.socialSchedulerEnabled) !== 'true') return
   const cliente = obtenerClienteSupabasePrivado()
   if (!cliente) return

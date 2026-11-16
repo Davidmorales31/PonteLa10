@@ -6,6 +6,7 @@ const d = vi.hoisted(() => ({ contexto: vi.fn(), origen: vi.fn(), privado: vi.fn
   subir: vi.fn(), firmar: vi.fn(), eliminar: vi.fn() }))
 vi.mock('~/server/utils/contextoPublicacionSocial', () => ({ contextoPublicacionSocial: d.contexto }))
 vi.mock('~/server/utils/contextoOAuthSocial', () => ({ clienteOAuthSocial: d.privado, validarOrigenOAuthSocial: d.origen }))
+vi.mock('~/server/utils/configuracionSocialProduccion', () => ({ resolverConfiguracionMetaSocial: async (_cliente: unknown, config: unknown) => config }))
 vi.mock('~/server/utils/repositorioPublicacionesSociales', () => ({ leerBorradorSocial: d.leer, validarMediosSociales: d.medios }))
 vi.mock('~/server/utils/renderizadorPublicacionSocial', () => ({ renderizarDiapositivaSocial: d.renderizar }))
 vi.mock('~/server/utils/publicacionMeta', async original => ({ ...await original<typeof import('~/server/utils/publicacionMeta')>(),

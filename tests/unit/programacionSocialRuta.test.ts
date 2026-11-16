@@ -1,6 +1,8 @@
 import { beforeAll, afterAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createError, type H3Event } from 'h3'
-const d = vi.hoisted(() => ({ permiso: vi.fn(),mfa: vi.fn(),origen: vi.fn(),privado: vi.fn(),cliente: vi.fn(),articulo: vi.fn(),leer: vi.fn(),medios: vi.fn(),validar: vi.fn(),verificar: vi.fn(),renderizar: vi.fn(),rpc: vi.fn(),cuerpo: vi.fn(),latido: vi.fn() }))
+const d = vi.hoisted(() => ({ permiso: vi.fn(),mfa: vi.fn(),origen: vi.fn(),privado: vi.fn(),cliente: vi.fn(),articulo: vi.fn(),leer: vi.fn(),medios: vi.fn(),validar: vi.fn(),verificar: vi.fn(),renderizar: vi.fn(),rpc: vi.fn(),cuerpo: vi.fn(),latido: vi.fn(),estados: vi.fn() }))
+vi.mock('~/server/utils/estadoPublicacionesSociales', () => ({ leerEstadosPublicacionesSociales: d.estados }))
+vi.mock('~/server/utils/configuracionSocialProduccion', async original => ({ ...await original<typeof import('~/server/utils/configuracionSocialProduccion')>(), resolverConfiguracionMetaSocial: async (_cliente: unknown, config: unknown) => config }))
 vi.mock('~/server/utils/autorizacionEditorial', () => ({ exigirPermisoEditorial: d.permiso,exigirMfaSegunPoliticaEditorial: d.mfa }))
 vi.mock('~/server/utils/contextoOAuthSocial', () => ({ validarOrigenOAuthSocial: d.origen,clienteOAuthSocial: d.privado }))
 vi.mock('~/server/utils/clienteSupabaseEditorial', () => ({ obtenerClienteSupabaseEditorial: d.cliente }))
@@ -22,6 +24,7 @@ afterAll(()=>vi.unstubAllGlobals())
 beforeEach(()=>{
   vi.resetAllMocks()
   d.permiso.mockResolvedValue({ usuario: { id } })
+  d.estados.mockResolvedValue({})
   d.cuerpo.mockResolvedValue({ operacionId: id,confirmar: true,articulos: [id],destinos: ['facebook','instagram'],inicio: new Date(Date.now()+3600000).toISOString(),intervaloMinutos: 15 })
   d.latido.mockResolvedValue({ data: { last_seen_at: new Date().toISOString() } })
   d.rpc.mockResolvedValue({ data: id,error: null })
@@ -31,6 +34,22 @@ beforeEach(()=>{
   d.medios.mockResolvedValue([]); d.renderizar.mockResolvedValue([Buffer.from('imagen')])
 })
 describe('aprobación humana del lote social',()=>{
+  it('rechaza otra programación en una red ya publicada aunque cambie la composición', async () => {
+    d.estados.mockResolvedValueOnce({ [id]: { facebook: { estado: 'published' } } })
+    await expect(ruta({} as H3Event)).rejects.toMatchObject({ statusCode: 409 })
+    expect(d.renderizar).not.toHaveBeenCalled()
+    expect(d.rpc).not.toHaveBeenCalled()
+  })
+  it('permite programar solo Instagram cuando Facebook ya está publicado', async () => {
+    d.estados.mockResolvedValueOnce({ [id]: { facebook: { estado: 'published' }, instagram: { estado: 'failed' } } })
+    d.cuerpo.mockResolvedValueOnce({ operacionId: id, confirmar: true, articulos: [id], destinos: ['instagram'], inicio: new Date(Date.now()+3600000).toISOString(), intervaloMinutos: 15 })
+    await expect(ruta({} as H3Event)).resolves.toMatchObject({ loteId: id, cantidad: 1 })
+  })
+  it('no programa de nuevo un resultado incierto', async () => {
+    d.estados.mockResolvedValueOnce({ [id]: { instagram: { estado: 'uncertain' } } })
+    await expect(ruta({} as H3Event)).rejects.toMatchObject({ statusCode: 409 })
+    expect(d.rpc).not.toHaveBeenCalled()
+  })
   it('exige permiso, MFA y origen antes de reservar',async()=>{
     d.mfa.mockImplementationOnce(()=>{throw createError({statusCode:403})})
     await expect(ruta({} as H3Event)).rejects.toMatchObject({statusCode:403})

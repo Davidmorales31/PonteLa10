@@ -43,7 +43,8 @@ const resultadoX = ref<{ estado: 'published' | 'in_progress' | 'uncertain' | 'fa
   yaPublicado?: boolean, aviso?: string } | null>(null)
 const redesVista = cuentasSocialesObjetivo.filter(cuenta => cuenta.id !== 'youtube')
 const puedePublicarX = computed(() => red.value === 'x' && puedeExportar.value && conexionX.value?.preparada
-  && Boolean(conexionX.value.cuenta) && !publicandoX.value && !publicandoMeta.value && !guardandoEncuadre.value && !ajustesPendientes.value && !errorLienzo.value)
+  && Boolean(conexionX.value.cuenta) && !['published', 'in_progress', 'uncertain'].includes(resultadoX.value?.estado || '')
+  && !publicandoX.value && !publicandoMeta.value && !guardandoEncuadre.value && !ajustesPendientes.value && !errorLienzo.value)
 let focoAnterior: HTMLElement | null = null
 let desbordamientoAnterior = ''
 
@@ -55,8 +56,7 @@ function marcarEncuadre() {
   ajustesPendientes.value = true
   confirmacionX.value = false
   confirmacionMeta.value = false
-  resultadoX.value = null
-  resultadosMeta.value = {}
+  // Cambiar el encuadre no habilita de nuevo una noticia ya enviada.
   problemasMeta.value = {}
 }
 function moverEncuadre(x: number, y: number) {
@@ -84,6 +84,8 @@ async function cargar() {
     const resultado = await $fetch<EditorPublicacionSocial>(`/api/admin/redes/${props.articuloId}`, { signal: solicitud.signal })
     if (solicitud.signal.aborted) return
     editor.value = resultado
+    resultadosMeta.value = { facebook: resultado.publicaciones?.facebook, instagram: resultado.publicaciones?.instagram }
+    resultadoX.value = resultado.publicaciones?.x || null
     ajustesPendientes.value = false
     red.value = resultado.borrador.documento.red === 'whatsapp' ? 'facebook' : resultado.borrador.documento.red
   } catch (error) {
@@ -281,7 +283,7 @@ onBeforeUnmount(() => {
             <p v-if="conexionMeta && !conexionMeta[destino].preparada">{{ destino }}: {{ conexionMeta[destino].aviso }}</p>
             <p v-if="problemasMeta[destino]" role="alert">{{ destino }}: {{ problemasMeta[destino] }}</p>
             <div v-if="resultadosMeta[destino]" class="resultado-publicacion-x" role="status" aria-live="polite">
-              <strong>{{ destino }}: {{ resultadosMeta[destino]?.estado === 'published' ? (resultadosMeta[destino]?.yaPublicado ? 'Esta versión ya estaba publicada.' : 'Publicación confirmada.') : resultadosMeta[destino]?.estado === 'uncertain' ? 'Resultado sin confirmar. Revisa la cuenta; reenvío bloqueado.' : resultadosMeta[destino]?.estado === 'in_progress' ? 'Envío en proceso. No vuelvas a enviarlo.' : 'No se completó el envío.' }}</strong>
+              <strong>{{ destino }}: {{ resultadosMeta[destino]?.estado === 'published' ? 'Esta noticia ya está publicada. No se permite volver a enviarla.' : resultadosMeta[destino]?.estado === 'uncertain' ? 'Resultado sin confirmar. Revisa la cuenta; reenvío bloqueado.' : resultadosMeta[destino]?.estado === 'in_progress' ? 'Envío en proceso. No vuelvas a enviarlo.' : 'No se completó el envío.' }}</strong>
               <a v-if="resultadosMeta[destino]?.url" :href="resultadosMeta[destino]?.url" target="_blank" rel="noopener noreferrer">{{ resultadosMeta[destino]?.url?.endsWith('/pont3ladiez/') ? 'Abrir perfil de Instagram' : 'Ver publicación en ' + destino }} <ExternalLink :size="15" /></a>
               <p v-if="resultadosMeta[destino]?.aviso">{{ resultadosMeta[destino]?.aviso }}</p>
             </div>
@@ -304,7 +306,7 @@ onBeforeUnmount(() => {
         </section>
         <section v-if="resultadoX" class="resultado-publicacion-x" :class="`resultado-publicacion-x--${resultadoX.estado}`" role="status" aria-live="polite">
           <template v-if="resultadoX.estado === 'published'">
-            <strong>{{ resultadoX.yaPublicado ? 'Esta versión ya se había publicado en X.' : 'Publicación confirmada en X.' }}</strong>
+            <strong>{{ resultadoX.yaPublicado ? 'Esta noticia ya se publicó en X. No se permite volver a enviarla.' : 'Publicación confirmada en X.' }}</strong>
             <a v-if="resultadoX.url" :href="resultadoX.url" target="_blank" rel="noopener noreferrer">Ver publicación <ExternalLink :size="15" /></a>
             <p v-if="resultadoX.aviso">{{ resultadoX.aviso }}</p>
           </template>

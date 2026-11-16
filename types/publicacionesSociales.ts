@@ -2,6 +2,14 @@ import type { ArticuloDetalleEditorial } from './contenidoEditorial'
 import type { MedioEditorial } from './mediaEditorial'
 import type { DocumentoSocial } from '~/utils/editorial/publicacionesSociales'
 
+export type DestinoPublicacionSocial = 'facebook' | 'instagram' | 'x'
+export interface ReciboPublicacionSocial {
+  estado: 'published' | 'in_progress' | 'uncertain' | 'failed'
+  url?: string
+  yaPublicado?: boolean
+}
+export type EstadoPublicacionesSociales = Partial<Record<DestinoPublicacionSocial, ReciboPublicacionSocial>>
+
 export interface BorradorSocial {
   documento: DocumentoSocial
   revision: number
@@ -9,6 +17,7 @@ export interface BorradorSocial {
   actualizadoEn: string | null
 }
 export interface EditorPublicacionSocial {
+  publicaciones?: EstadoPublicacionesSociales
   articulo: ArticuloDetalleEditorial
   urlCanonica: string
   dominio: string
@@ -18,7 +27,8 @@ export interface EditorPublicacionSocial {
 }
 export interface BandejaPublicacionesSociales {
   articulos: Array<{ id: string, titulo: string, resumen: string, slug: string,
-    publicadoEn: string | null, categoria: string, estado: 'pending' | 'draft' | 'ready',
+    publicadoEn: string | null, categoria: string, estado: 'pending' | 'draft' | 'ready' | 'published' | 'partial',
+    publicaciones?: EstadoPublicacionesSociales,
     actualizadoEn: string | null, portada: string | null }>
   total: number
   pagina: number
