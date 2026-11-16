@@ -4,9 +4,10 @@ import type { TemporalSocialVista } from '~/utils/editorial/mediosTemporales'
 export function useSubidaTemporalSocial() {
   const progreso = ref(0)
   const subiendo = ref(false)
+  const fase = ref<'inactiva' | 'subiendo' | 'verificando'>('inactiva')
 
   async function subir(archivo: File, publicacionId?: string): Promise<TemporalSocialVista> {
-    subiendo.value = true; progreso.value = 0
+    subiendo.value = true; progreso.value = 0; fase.value = 'subiendo'
     try {
       const inicio = await $fetch<{ id: string, tipo: string, urlSubida: string }>('/api/admin/redes/temporales', {
         method: 'POST', body: { nombre: archivo.name || 'archivo', tipoMime: archivo.type, tamano: archivo.size, ...(publicacionId ? { publicacionId } : {}) }
@@ -23,8 +24,9 @@ export function useSubidaTemporalSocial() {
         cuerpo.append('', archivo)
         peticion.send(cuerpo)
       })
+      fase.value = 'verificando'
       return await $fetch<TemporalSocialVista>(`/api/admin/redes/temporales/${inicio.id}/confirmar`, { method: 'POST', body: {} })
-    } finally { subiendo.value = false }
+    } finally { subiendo.value = false; fase.value = 'inactiva' }
   }
-  return { subir, progreso, subiendo }
+  return { subir, progreso, subiendo, fase }
 }
