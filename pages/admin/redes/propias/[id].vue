@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { parse } from 'opentype.js'
 import type { Font } from 'opentype.js'
-import { ArrowLeft, Undo2, Redo2, LayoutGrid, Stamp, Type, Layers, Plus, Trash2, Copy, Replace, Crosshair, ZoomIn, ZoomOut, Send, CalendarClock, X, Clock3, ImagePlus, Palette, Droplets } from '@lucide/vue'
+import { ArrowLeft, Undo2, Redo2, LayoutGrid, Stamp, Type, Layers, Plus, Trash2, Copy, Replace, Crosshair, ZoomIn, ZoomOut, Send, CalendarClock, X, Clock3, ImagePlus, Palette, Droplets, CircleAlert, CircleCheck, Check, Film } from '@lucide/vue'
 import type { MedioEditorial } from '~/types/mediaEditorial'
 import type { TemporalSocialVista } from '~/utils/editorial/mediosTemporales'
 import { aceptarImagenesTemporales, aceptarVideosTemporales } from '~/utils/editorial/mediosTemporales'
@@ -26,7 +26,17 @@ type Hoja = 'imagen' | 'elemento' | 'diseno' | 'publicar' | 'recientes' | null
 
 const route = useRoute()
 const { tienePermiso } = useContextoEditorial()
-const { subir, progreso, subiendo } = useSubidaTemporalSocial()
+const { subir, progreso, fase } = useSubidaTemporalSocial()
+const carga = ref<{ indice: number, total: number, vista: string, video: boolean } | null>(null)
+const radioAnillo = 34, circunferencia = 2 * Math.PI * radioAnillo
+const textoCarga = computed(() => {
+  if (!carga.value) return ''
+  const que = carga.value.video ? 'video' : 'foto'
+  if (fase.value === 'subiendo') return carga.value.total > 1 ? `Subiendo ${que} ${carga.value.indice} de ${carga.value.total}` : `Subiendo ${que}`
+  if (fase.value === 'verificando') return 'Verificando archivo'
+  return 'Guardando'
+})
+const porcentajeCarga = computed(() => fase.value === 'subiendo' ? progreso.value : 100)
 const idActual = ref(String(route.params.id) === 'nuevo' ? '' : String(route.params.id))
 const inicial = idActual.value ? (await useFetch<RespuestaEditor>(`/api/admin/redes/propias/${idActual.value}`)).data.value : null
 
@@ -59,6 +69,11 @@ const logoPublico = '/brand/pont3la10_logo_login_blanco.png'
 const etiquetas: Record<string, string> = { draft: 'Borrador', scheduled: 'Programada', publishing: 'Publicando…', published: 'Publicada', failed: 'Con error' }
 const aceptar = `${aceptarImagenesTemporales},${aceptarVideosTemporales}`
 
+let reloj: ReturnType<typeof setTimeout> | undefined
+watch([mensaje, problema], () => {
+  clearTimeout(reloj)
+  if (mensaje.value || problema.value) reloj = setTimeout(() => { mensaje.value = ''; problema.value = '' }, problema.value ? 9000 : 5000)
+})
 const editable = computed(() => tienePermiso('contenido.editarTodos') && ['draft', 'failed', 'scheduled'].includes(estado.value))
 const esVideo = computed(() => tipo.value === 'video')
 const diapositiva = computed(() => documento.value.diapositivas[indice.value]!)
@@ -167,13 +182,20 @@ async function alElegirArchivos(evento: Event) {
   try {
     await asegurarPublicacion()
     const subidos: TemporalSocialVista[] = []
-    for (const [posicion, archivo] of archivos.entries()) { mensaje.value = `Subiendo ${posicion + 1} de ${archivos.length}…`; subidos.push(await subir(archivo, idActual.value)) }
-    temporales.value.push(...subidos); mensaje.value = ''
+    for (const [posicion, archivo] of archivos.entries()) {
+      carga.value = { indice: posicion + 1, total: archivos.length, vista: archivo.type.startsWith('image/') ? URL.createObjectURL(archivo) : '', video: archivo.type.startsWith('video/') }
+      subidos.push(await subir(archivo, idActual.value))
+      if (carga.value.vista) URL.revokeObjectURL(carga.value.vista)
+    }
+    temporales.value.push(...subidos)
     if (video) { tipo.value = 'video'; videoId.value = subidos[0]!.id; seleccion.value = null }
     else colocarImagenes(subidos.map(item => item.id))
     confirmarCambio()
     await guardar()
-  } catch (falla) { problema.value = textoError(falla, 'No se pudo subir. Inténtalo con mejor señal.'); mensaje.value = '' } finally { ocupado.value = false }
+  } catch (falla) { problema.value = textoError(falla, 'No se pudo subir. Inténtalo con mejor señal.') } finally {
+    if (carga.value?.vista) URL.revokeObjectURL(carga.value.vista)
+    carga.value = null; ocupado.value = false
+  }
 }
 function colocarImagenes(ids: string[]) {
   const pendientes = [...ids]
@@ -279,6 +301,7 @@ function alSoltar(evento: PointerEvent) {
 }
 function moverElemento(elemento: ElementoPropio, x: number, y: number) {
   const imantado = { x: Math.abs(x - 50) < 2.2 ? 50 : x, y: Math.abs(y - 50) < 2.2 ? 50 : y }
+  if (typeof navigator !== 'undefined' && 'vibrate' in navigator && ((imantado.x === 50 && !guias.value.v) || (imantado.y === 50 && !guias.value.h))) navigator.vibrate(8)
   guias.value = { v: imantado.x === 50, h: imantado.y === 50 }
   const posicion = limitarPosicionPropia(elemento, formato.value, fuente.value, imantado.x, imantado.y)
   elemento.x = posicion.x; elemento.y = posicion.y
@@ -387,8 +410,11 @@ async function abrirPublicacion(id: string) { await guardar(); window.location.a
       <button type="button" class="listo" :disabled="!idActual" @click="hoja = 'publicar'">Listo</button>
     </header>
 
-    <p v-if="problema" class="aviso error" role="alert" @click="problema = ''">{{ problema }}</p>
-    <p v-else-if="mensaje || subiendo" class="aviso" role="status">{{ subiendo ? `Subiendo… ${progreso} %` : mensaje }}</p>
+    <Transition name="toast">
+      <p v-if="problema || mensaje" :key="problema || mensaje" class="toast" :class="{ error: !!problema }" :role="problema ? 'alert' : 'status'" @click="problema = ''; mensaje = ''">
+        <component :is="problema ? CircleAlert : CircleCheck" :size="18" aria-hidden="true" /><span>{{ problema || mensaje }}</span>
+      </p>
+    </Transition>
 
     <section class="area" aria-label="Lienzo">
       <video v-if="esVideo && videoActual" :src="videoActual.url" class="video-lienzo" controls playsinline preload="metadata" />
@@ -410,6 +436,19 @@ v-for="{ elemento, caja } in cajas" v-show="seleccion?.tipo === 'elemento' && se
           <u v-if="celdaSeleccionada >= 0" :style="{ left: `${plantillasPropias[diapositiva.plantilla].celdas[celdaSeleccionada]![0] * 100}%`, top: `${plantillasPropias[diapositiva.plantilla].celdas[celdaSeleccionada]![1] * 100}%`, width: `${plantillasPropias[diapositiva.plantilla].celdas[celdaSeleccionada]![2] * 100}%`, height: `${plantillasPropias[diapositiva.plantilla].celdas[celdaSeleccionada]![3] * 100}%` }" />
         </div>
       </div>
+      <Transition name="velo">
+        <div v-if="carga" class="subida" role="status" aria-live="polite" aria-busy="true">
+          <img v-if="carga.vista" :src="carga.vista" class="subida-vista" alt="">
+          <div class="subida-centro">
+            <div class="anillo" :class="{ indeterminado: fase !== 'subiendo' }" role="progressbar" :aria-valuenow="porcentajeCarga" aria-valuemin="0" aria-valuemax="100" :aria-label="textoCarga">
+              <svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" :r="radioAnillo" class="pista" /><circle cx="40" cy="40" :r="radioAnillo" class="avance" :style="{ strokeDasharray: circunferencia, strokeDashoffset: circunferencia * (1 - porcentajeCarga / 100) }" /></svg>
+              <span class="centro"><Film v-if="carga.video && fase !== 'subiendo'" :size="22" /><template v-else>{{ porcentajeCarga }}<small>%</small></template></span>
+            </div>
+            <p class="subida-texto">{{ textoCarga }}<span class="puntos" aria-hidden="true"><i /><i /><i /></span></p>
+            <div v-if="carga.total > 1" class="pasos" aria-hidden="true"><i v-for="n in carga.total" :key="n" :class="{ hecho: n < carga.indice, actual: n === carga.indice }" /></div>
+          </div>
+        </div>
+      </Transition>
     </section>
 
     <input ref="entradaArchivo" type="file" class="oculto" :accept="aceptar" multiple @change="alElegirArchivos">
@@ -434,14 +473,16 @@ v-for="{ elemento, caja } in cajas" v-show="seleccion?.tipo === 'elemento' && se
     </div>
 
     <nav v-if="!esVideo" class="dock" aria-label="Herramientas">
-      <button type="button" :disabled="!editable" @click="abrirDiseno"><LayoutGrid :size="22" />Diseño</button>
-      <button type="button" :disabled="!editable" @click="agregarLogo"><Stamp :size="22" />Logo</button>
-      <button type="button" :disabled="!editable" @click="agregarTexto"><Type :size="22" />Texto</button>
-      <button type="button" :disabled="!editable" @click="abrirDiseno"><Layers :size="22" />Formato</button>
+      <button type="button" :disabled="!editable" @click="abrirDiseno"><span class="icono"><LayoutGrid :size="22" /></span>Diseño</button>
+      <button type="button" :disabled="!editable" @click="agregarLogo"><span class="icono"><Stamp :size="22" /></span>Logo</button>
+      <button type="button" :disabled="!editable" @click="agregarTexto"><span class="icono"><Type :size="22" /></span>Texto</button>
+      <button type="button" :disabled="!editable" @click="abrirDiseno"><span class="icono"><Layers :size="22" /></span>Formato</button>
     </nav>
 
+    <Transition name="hoja">
     <div v-if="hoja" class="fondo-hoja" @click.self="cerrarHoja">
       <section class="hoja" role="dialog" aria-modal="true">
+        <span class="asa" aria-hidden="true" />
         <button type="button" class="cerrar" aria-label="Cerrar" @click="cerrarHoja"><X :size="20" /></button>
 
         <template v-if="hoja === 'diseno'">
@@ -479,7 +520,7 @@ v-for="{ elemento, caja } in cajas" v-show="seleccion?.tipo === 'elemento' && se
           <textarea v-model="documento.textos.facebook" rows="4" maxlength="5000" placeholder="Descripción de la publicación" aria-label="Descripción" :disabled="!editable" @input="alEditarDescripcion" />
           <label class="casilla"><input v-model="igDistinto" type="checkbox" :disabled="!editable">Descripción distinta en Instagram</label>
           <textarea v-if="igDistinto" v-model="documento.textos.instagram" rows="3" maxlength="2200" aria-label="Descripción de Instagram" :disabled="!editable" />
-          <div class="chips"><button type="button" :class="{ activa: destinos.includes('facebook') }" :disabled="!editable" @click="alternarDestino('facebook')">Facebook</button><button type="button" :class="{ activa: destinos.includes('instagram') }" :disabled="!editable" @click="alternarDestino('instagram')">Instagram</button></div>
+          <div class="chips"><button type="button" :class="{ activa: destinos.includes('facebook') }" :aria-pressed="destinos.includes('facebook')" :disabled="!editable" @click="alternarDestino('facebook')"><Check v-if="destinos.includes('facebook')" :size="16" />Facebook</button><button type="button" :class="{ activa: destinos.includes('instagram') }" :aria-pressed="destinos.includes('instagram')" :disabled="!editable" @click="alternarDestino('instagram')"><Check v-if="destinos.includes('instagram')" :size="16" />Instagram</button></div>
           <ul v-if="avisos.length && editable" class="avisos"><li v-for="aviso in avisos" :key="aviso">{{ aviso }}</li></ul>
           <p v-for="(recibo, red) in recibos" :key="red" class="recibo">{{ red === 'facebook' ? 'Facebook' : 'Instagram' }}: {{ recibo.estado === 'published' ? 'publicada' : recibo.estado }} <a v-if="recibo.url" :href="recibo.url" target="_blank" rel="noopener noreferrer">ver</a></p>
           <p v-if="estado === 'scheduled'" class="recibo">Programada: {{ programadaPara ? new Date(programadaPara).toLocaleString('es-CO', { timeZone: 'America/Bogota' }) : '' }}</p>
@@ -498,36 +539,97 @@ v-for="{ elemento, caja } in cajas" v-show="seleccion?.tipo === 'elemento' && se
         </template>
       </section>
     </div>
+    </Transition>
   </main>
 </template>
 
 <style scoped>
-.editor{display:flex;flex-direction:column;height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:#0b1220;color:#fff;font-family:system-ui,-apple-system,sans-serif;font-size:14px;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.editor{--fondo:#0b1220;--superficie:#141f36;--superficie-2:#1d2b48;--borde:#2f4068;--texto:#f4f7fc;--texto-suave:#a9b8d4;--acento:#ffd800;--sobre-acento:#08204a;--peligro:#ff8a8a;--ok:#7be2a0;--radio:14px;--ease:cubic-bezier(.2,.8,.2,1)
+  ;display:flex;flex-direction:column;position:relative;height:100dvh;box-sizing:border-box;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);background:var(--fondo);color:var(--texto);font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.35;overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 .editor.bloqueado{cursor:progress}
-.barra-superior{display:flex;align-items:center;gap:4px;padding:6px 8px;min-height:48px}.barra-superior a,.barra-superior button{display:grid;place-items:center;min-width:44px;min-height:44px;border:0;background:none;color:#fff;border-radius:10px}.barra-superior button:disabled{opacity:.35}
-.barra-superior .titulo{flex:1;display:block;text-align:left;font-weight:700;font-size:15px}.titulo small{font-weight:400;opacity:.7}.barra-superior .listo{padding:0 18px;background:#ffd800;color:#08204a;font-weight:800}
-.aviso{margin:0 10px 6px;padding:8px 10px;border-radius:8px;background:#3a3410;font-size:13px}.aviso.error{background:#5a1a1a}
-.area{flex:1;min-height:0;container-type:size;display:grid;place-items:center;padding:6px}
-.lienzo{position:relative;width:min(100cqw, 100cqh * var(--razon));aspect-ratio:var(--razon);touch-action:none;background:#102d5c;border-radius:6px;overflow:hidden;box-shadow:0 10px 40px #0008}
-.svg{line-height:0}.svg :deep(svg){display:block;width:100%;height:auto;pointer-events:none}.cargando{display:grid;place-items:center;aspect-ratio:var(--razon);line-height:1.2}
-.celda-vacia{position:absolute;display:grid;place-items:center;padding:0;border:2px dashed #ffffff90;background:#0b122055;color:#fff;cursor:pointer}.celda-vacia span{display:grid;justify-items:center;gap:4px;padding:8px;text-align:center}.celda-vacia small{font-size:12px;opacity:.9}.celda-vacia:disabled{opacity:.4}
-.seleccion{position:absolute;inset:0;pointer-events:none}.seleccion i{position:absolute;box-sizing:border-box;border:2px solid #ffd800;border-radius:4px}.seleccion u{position:absolute;box-sizing:border-box;border:2px solid #ffd800;text-decoration:none}
-.guia-v{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#ffd800}.guia-h{position:absolute;top:50%;left:0;right:0;height:1px;background:#ffd800}
-.video-lienzo{max-width:100%;max-height:100%;border-radius:6px;background:#000}.vacio-grande{display:grid;place-items:center;gap:8px;width:100%;height:100%;border:2px dashed #ffffff60;border-radius:12px;background:none;color:#fff;font-size:16px}
+.editor button{font-family:inherit;cursor:pointer;transition:background-color .12s,opacity .12s,border-color .12s}.editor button:focus-visible,.editor a:focus-visible{outline:2px solid var(--acento);outline-offset:2px}
+.editor button:disabled{cursor:default}
+
+.barra-superior{display:flex;align-items:center;gap:4px;padding:6px 8px;min-height:56px}
+.barra-superior a,.barra-superior button{display:grid;place-items:center;min-width:44px;min-height:44px;border:0;background:none;color:var(--texto);border-radius:12px}
+.barra-superior a:active,.barra-superior button:not(:disabled):active{background:var(--superficie-2)}.barra-superior button:disabled{opacity:.35}
+.barra-superior .titulo{flex:1;display:flex;align-items:center;gap:8px;justify-content:flex-start;font-weight:700;font-size:16px;text-align:left;min-width:0;overflow:hidden;white-space:nowrap}
+.titulo small{font-weight:500;color:var(--texto-suave);font-size:12px}
+.barra-superior .listo{padding:0 20px;border-radius:999px;background:var(--acento);color:var(--sobre-acento);font-weight:800;font-size:15px}.barra-superior .listo:active:not(:disabled){background:#e6c300}
+
+.toast{position:absolute;z-index:15;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 60px);display:flex;align-items:flex-start;gap:10px;margin:0;padding:12px 14px;border:1px solid var(--borde);border-radius:var(--radio);background:var(--superficie-2);color:var(--texto);font-size:14px;box-shadow:0 12px 32px #0009}
+.toast svg{flex:none;margin-top:1px;color:var(--ok)}.toast.error{border-color:#8a3b3b;background:#321a22}.toast.error svg{color:var(--peligro)}
+.toast-enter-active{transition:transform .22s var(--ease),opacity .22s}.toast-leave-active{transition:transform .16s ease-in,opacity .16s}.toast-enter-from,.toast-leave-to{opacity:0;transform:translateY(-12px)}
+
+.area{position:relative;flex:1;min-height:0;container-type:size;display:grid;place-items:center;padding:6px 12px}
+.lienzo{position:relative;width:min(100cqw, 100cqh * var(--razon));aspect-ratio:var(--razon);touch-action:none;background:#102d5c;border-radius:10px;overflow:hidden;box-shadow:0 0 0 1px #ffffff14,0 16px 48px #0009}
+.svg{line-height:0}.svg :deep(svg){display:block;width:100%;height:auto;pointer-events:none}
+.cargando{display:grid;place-items:center;aspect-ratio:var(--razon);line-height:1.2;background:linear-gradient(100deg,#102d5c 30%,#1a3d78 50%,#102d5c 70%);background-size:200% 100%;animation:brillo 1.4s linear infinite;color:var(--texto-suave)}
+@keyframes brillo{to{background-position:-200% 0}}
+
+.celda-vacia{position:absolute;display:grid;place-items:center;box-sizing:border-box;padding:0;border:1.5px dashed #ffffff80;background:#0b122066;color:var(--texto)}
+.celda-vacia:not(:disabled):active{background:#0b122099}.celda-vacia span{display:grid;justify-items:center;gap:8px;padding:12px;text-align:center}
+.celda-vacia span svg{box-sizing:content-box;padding:12px;border-radius:50%;background:var(--acento);color:var(--sobre-acento)}.celda-vacia small{font-size:13px;font-weight:600;max-width:20ch}.celda-vacia:disabled{opacity:.4}
+.seleccion{position:absolute;inset:0;pointer-events:none}
+.seleccion i{position:absolute;box-sizing:border-box;border:2px solid var(--acento);border-radius:6px;box-shadow:0 0 0 1px #0006,0 0 14px #ffd80055}
+.seleccion u{position:absolute;box-sizing:border-box;border:2px solid var(--acento);text-decoration:none;box-shadow:inset 0 0 0 1px #0005}
+.guia-v{position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--acento);opacity:.9}.guia-h{position:absolute;top:50%;left:0;right:0;height:1px;background:var(--acento);opacity:.9}
+.video-lienzo{max-width:100%;max-height:100%;border-radius:10px;background:#000;box-shadow:0 16px 48px #0009}
+.vacio-grande{display:grid;place-items:center;align-content:center;gap:10px;width:100%;height:100%;border:1.5px dashed #ffffff66;border-radius:var(--radio);background:var(--superficie);color:var(--texto);font-size:16px;font-weight:600}
 .oculto{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
-.paginas{display:flex;gap:6px;justify-content:center;padding:4px 8px}.paginas button{min-width:36px;min-height:36px;border:1px solid #ffffff40;border-radius:999px;background:none;color:#fff;font-weight:700}.paginas .activa{background:#fff;color:#08204a}
-.contextual{display:flex;gap:6px;overflow-x:auto;padding:6px 8px;border-top:1px solid #ffffff18}.contextual button{display:flex;align-items:center;gap:6px;flex:none;min-height:42px;padding:0 14px;border:0;border-radius:999px;background:#1c2a44;color:#fff;font-size:14px}
-.dock{display:grid;grid-template-columns:repeat(4,1fr);padding:4px 6px 8px;border-top:1px solid #ffffff18;background:#0b1220}.dock button{display:grid;justify-items:center;gap:4px;min-height:56px;border:0;background:none;color:#fff;font-size:12px}.dock button:disabled{opacity:.35}
-.fondo-hoja{position:fixed;inset:0;display:flex;align-items:flex-end;background:#0007;z-index:20}
-.hoja{position:relative;width:100%;max-height:78dvh;overflow-y:auto;box-sizing:border-box;padding:18px 16px max(18px,env(safe-area-inset-bottom));border-radius:18px 18px 0 0;background:#fff;color:#08204a;user-select:text;-webkit-user-select:text}
-.hoja h2{margin:0 0 12px;font-size:18px}.cerrar{position:absolute;right:8px;top:8px;display:grid;place-items:center;width:44px;height:44px;border:0;background:none;color:#08204a}
-.hoja label{display:grid;gap:6px;margin:10px 0}.hoja .casilla{display:flex;align-items:center;gap:8px}.ayuda{display:block;margin:6px 0;color:#4a5a73;font-size:12px}
-textarea,input[type=datetime-local]{width:100%;box-sizing:border-box;padding:10px;border:1px solid #c5d0e0;border-radius:10px;font:inherit;font-size:16px;color:#08204a;background:#fff}textarea{resize:none}input[type=range]{width:100%}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.chips button,.acciones button,.fila button{min-height:44px;padding:0 16px;border:1px solid #08204a;border-radius:999px;background:#fff;color:#08204a;font:inherit;font-weight:700}.chips .activa{background:#08204a;color:#fff}
-.acciones{display:grid;gap:8px;margin-top:10px}.acciones button{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;min-height:50px}.primario{background:#08204a!important;color:#fff!important}.fila{display:flex;gap:8px;margin-top:8px}
-.plantillas{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.plantillas button{display:grid;justify-items:center;gap:6px;padding:8px;border:1px solid #c5d0e0;border-radius:10px;background:#fff;color:#08204a}.plantillas .activa{border-color:#08204a;box-shadow:0 0 0 2px #ffd800}
-.mini{position:relative;width:54px;height:54px;background:#08204a;display:block}.mini i{position:absolute;box-sizing:border-box;border:1px solid #fff;background:#174ea6}.plantillas small{font-size:10px;text-align:center}
-.avisos{margin:8px 0;padding:8px 8px 8px 24px;background:#fff6c2;border-radius:8px;font-size:13px}.recibo{margin:6px 0;font-size:13px}
-.recientes{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}.recientes button{display:flex;justify-content:space-between;gap:8px;width:100%;padding:12px;border:1px solid #dde5f1;border-radius:10px;background:#fff;color:#08204a;text-align:left;font:inherit}.recientes span{display:flex;align-items:center;gap:4px;font-size:12px;color:#4a5a73}
-.nuevo{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 16px;border-radius:999px;background:#08204a;color:#fff;text-decoration:none;font-weight:700}
+
+.subida{position:absolute;inset:0;z-index:10;display:grid;place-items:center;overflow:hidden;background:#0b1220cc;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.subida-vista{position:absolute;inset:-12%;width:124%;height:124%;object-fit:cover;filter:blur(22px) saturate(1.2) brightness(.55);opacity:.9}
+.subida-centro{position:relative;display:grid;justify-items:center;gap:14px;padding:24px 28px;border-radius:20px;background:#0b1220b3;border:1px solid #ffffff1f;box-shadow:0 20px 50px #000a}
+.anillo{position:relative;width:88px;height:88px}.anillo svg{width:100%;height:100%;transform:rotate(-90deg)}
+.anillo circle{fill:none;stroke-width:6;stroke-linecap:round}.anillo .pista{stroke:#ffffff26}.anillo .avance{stroke:var(--acento);transition:stroke-dashoffset .25s linear;filter:drop-shadow(0 0 6px #ffd80080)}
+.anillo.indeterminado svg{animation:girar 1.1s linear infinite}.anillo.indeterminado .avance{stroke-dashoffset:150!important;transition:none}
+@keyframes girar{to{transform:rotate(270deg)}}
+.centro{position:absolute;inset:0;display:grid;place-items:center;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}.centro small{font-size:12px;font-weight:600;margin-left:1px;align-self:center;color:var(--texto-suave)}
+.subida-texto{display:flex;align-items:baseline;margin:0;font-weight:700;font-size:15px}
+.puntos{display:inline-flex;gap:3px;margin-left:5px}.puntos i{width:4px;height:4px;border-radius:50%;background:var(--acento);animation:punto 1.2s infinite ease-in-out}.puntos i:nth-child(2){animation-delay:.15s}.puntos i:nth-child(3){animation-delay:.3s}
+@keyframes punto{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.pasos{display:flex;gap:6px}.pasos i{width:18px;height:4px;border-radius:2px;background:#ffffff33}.pasos .hecho{background:var(--ok)}.pasos .actual{background:var(--acento)}
+.velo-enter-active{transition:opacity .2s}.velo-leave-active{transition:opacity .25s}.velo-enter-from,.velo-leave-to{opacity:0}
+
+.paginas{display:flex;gap:8px;justify-content:center;padding:4px 12px}
+.paginas button{min-width:44px;min-height:44px;border:1px solid var(--borde);border-radius:999px;background:var(--superficie);color:var(--texto);font-weight:700}
+.paginas button:active{background:var(--superficie-2)}.paginas .activa{background:var(--texto);border-color:var(--texto);color:var(--sobre-acento)}
+.contextual{display:flex;gap:8px;overflow-x:auto;padding:8px 12px;scrollbar-width:none;scroll-snap-type:x proximity;animation:subir .2s var(--ease)}.contextual::-webkit-scrollbar{display:none}
+.contextual button{display:flex;align-items:center;gap:8px;flex:none;min-height:44px;padding:0 16px;border:1px solid var(--borde);border-radius:999px;background:var(--superficie);color:var(--texto);font-size:14px;font-weight:600;scroll-snap-align:start}
+.contextual button:active{background:var(--superficie-2)}
+@keyframes subir{from{opacity:0;transform:translateY(8px)}}
+.dock{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:6px 8px 10px;border-top:1px solid #ffffff14;background:#0d1628}
+.dock button{display:grid;justify-items:center;gap:4px;min-height:56px;padding:4px 0;border:0;background:none;color:var(--texto-suave);font-size:12px;font-weight:600;border-radius:12px}
+.dock .icono{display:grid;place-items:center;width:52px;height:30px;border-radius:999px;transition:background-color .12s}.dock button:not(:disabled):active .icono{background:var(--superficie-2)}.dock button:not(:disabled):active{color:var(--texto)}.dock button:disabled{opacity:.35}
+
+.fondo-hoja{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;background:#04091299}
+.hoja{position:relative;width:100%;max-height:80dvh;overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;padding:22px 16px max(20px,env(safe-area-inset-bottom));border-radius:22px 22px 0 0;background:var(--superficie);color:var(--texto);border-top:1px solid var(--borde);user-select:text;-webkit-user-select:text;box-shadow:0 -12px 40px #0008}
+.asa{position:absolute;left:50%;top:8px;width:40px;height:4px;margin-left:-20px;border-radius:2px;background:#ffffff40}
+.hoja-enter-active{transition:opacity .2s}.hoja-enter-active .hoja{transition:transform .28s var(--ease)}.hoja-leave-active{transition:opacity .18s}.hoja-leave-active .hoja{transition:transform .18s ease-in}
+.hoja-enter-from,.hoja-leave-to{opacity:0}.hoja-enter-from .hoja,.hoja-leave-to .hoja{transform:translateY(100%)}
+.hoja h2{margin:4px 0 14px;font-size:19px}.cerrar{position:absolute;right:8px;top:10px;display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:12px;background:none;color:var(--texto-suave)}.cerrar:active{background:var(--superficie-2)}
+.hoja label{display:grid;gap:8px;margin:12px 0;font-size:14px;color:var(--texto-suave)}.hoja .casilla{display:flex;align-items:center;gap:10px;min-height:44px}.ayuda{display:block;margin:8px 0;color:var(--texto-suave);font-size:13px}
+textarea,input[type=datetime-local]{width:100%;box-sizing:border-box;padding:12px;border:1px solid var(--borde);border-radius:12px;background:var(--fondo);color:var(--texto);font:inherit;font-size:16px;user-select:text;-webkit-user-select:text}
+textarea:focus,input[type=datetime-local]:focus{outline:2px solid var(--acento);outline-offset:1px;border-color:transparent}textarea{resize:none}
+input[type=range]{width:100%;accent-color:var(--acento);min-height:32px}input[type=checkbox]{width:20px;height:20px;accent-color:var(--acento)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.chips button,.fila button{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:0 18px;border:1px solid var(--borde);border-radius:999px;background:var(--superficie-2);color:var(--texto);font-weight:700;font-size:14px}
+.chips button:not(:disabled):active{opacity:.75}.chips .activa{background:var(--acento);border-color:var(--acento);color:var(--sobre-acento)}.chips button:disabled{opacity:.45}
+.acciones{display:grid;gap:10px;margin-top:14px}
+.acciones button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;border:1px solid var(--borde);border-radius:var(--radio);background:var(--superficie-2);color:var(--texto);font-weight:700;font-size:16px}
+.acciones .primario,.fila .primario{background:var(--acento);border-color:var(--acento);color:var(--sobre-acento)}.acciones .primario:not(:disabled):active,.fila .primario:not(:disabled):active{background:#e6c300}
+.acciones button:disabled,.fila button:disabled{opacity:.45}.fila{display:flex;gap:8px;margin-top:10px}
+.plantillas{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.plantillas button{display:grid;justify-items:center;gap:8px;padding:12px 6px;border:1px solid var(--borde);border-radius:var(--radio);background:var(--superficie-2);color:var(--texto)}
+.plantillas .activa{border-color:var(--acento);box-shadow:0 0 0 2px #ffd80066}
+.mini{position:relative;width:54px;height:54px;background:#08204a;display:block;border-radius:4px;overflow:hidden}.mini i{position:absolute;box-sizing:border-box;border:1px solid #fff;background:#2a6ad6}.plantillas small{font-size:12px;text-align:center;color:var(--texto-suave)}
+.avisos{margin:10px 0;padding:10px 12px 10px 28px;background:#3a3410;border-radius:12px;font-size:14px;color:#ffe98a}.recibo{margin:8px 0;font-size:14px;color:var(--texto-suave)}.recibo a{color:var(--acento)}
+.recientes{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.recientes button{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;min-height:52px;padding:12px 14px;border:1px solid var(--borde);border-radius:var(--radio);background:var(--superficie-2);color:var(--texto);text-align:left;font:inherit}
+.recientes span{display:flex;align-items:center;gap:4px;font-size:13px;color:var(--texto-suave);white-space:nowrap}
+.nuevo{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 20px;border-radius:999px;background:var(--acento);color:var(--sobre-acento);text-decoration:none;font-weight:800}
+
+@media (prefers-reduced-motion:reduce){.editor *,.editor *::before,.editor *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}.anillo.indeterminado svg{animation:none}}
+@media (max-height:640px){.dock button{min-height:48px}.barra-superior{min-height:48px}}
 </style>
