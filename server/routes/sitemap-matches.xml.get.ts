@@ -4,6 +4,7 @@ import {
   listarSlugsConTransmisionVerificada
 } from '~/server/utils/partidosSeoPublicos'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
+import { partidoEnVentanaSitemap } from '~/utils/ventanaSitemapPartidos'
 import {
   construirUrlsetSitemapPublico,
   type EntradaSitemapPublico,
@@ -18,7 +19,9 @@ export default defineEventHandler(async (evento) => {
     const clienteSupabase = obtenerClienteSupabaseAnonimo(evento)
     const partidos = await listarPartidosSeoPublicos(clienteSupabase)
     const partidosConTransmisionVerificada = await listarSlugsConTransmisionVerificada(clienteSupabase)
+    const ahora = Date.now()
     const entradas: EntradaSitemapPublico[] = partidos.flatMap((partido) => {
+      if (!partidoEnVentanaSitemap(partido.fechaIso, ahora)) return []
       if (!evaluarIndexabilidad({
         ...partido,
         transmisionVerificada: partidosConTransmisionVerificada.has(partido.slug)

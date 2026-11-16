@@ -130,7 +130,9 @@ useSeoPont3la10(() => {
     descripcion,
     rutaCanonica,
     imagen: partido?.equipoLocal.logo || partido?.equipoVisitante.logo || imagenSeoPredeterminada,
-    robots: error.value ? robotsNoIndex : undefined,
+    // Solo el fútbol es el foco editorial: baloncesto, béisbol y tenis son datos
+    // de terceros con poco contenido propio y no deben competir por indexación.
+    robots: error.value || (partido && partido.deporte !== 'futbol') ? robotsNoIndex : undefined,
     datosEstructurados: partido
       ? {
           '@context': 'https://schema.org',

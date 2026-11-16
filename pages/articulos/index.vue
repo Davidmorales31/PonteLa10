@@ -114,6 +114,14 @@ const rutaCanonica = computed(() => {
   if (rutaActual.query.tema) return `/articulos?tema=${encodeURIComponent(String(rutaActual.query.tema))}`
   return '/articulos'
 })
+// Los filtros sin hub canónico propio (opinión, tecnología, gaming, tendencias) y
+// los temas son listados repetidos de artículos ya indexables: noindex, follow.
+const debeEvitarIndexacion = computed(() => {
+  if (esBusquedaInterna.value) return true
+  const categoria = String(rutaActual.query.categoria || '')
+  if (categoria && !rutasCanonicasCategoria[categoria]) return true
+  return Boolean(rutaActual.query.tema)
+})
 const filtrosRapidos = [
   { etiqueta: 'Todos', ruta: '/articulos', categoria: '', icono: LayoutGrid },
   { etiqueta: 'Selección Colombia', ruta: '/articulos?categoria=colombia', categoria: 'colombia', icono: Flag },
@@ -243,7 +251,7 @@ useSeoPont3la10(() => {
     titulo,
     descripcion,
     rutaCanonica: rutaCanonica.value,
-    robots: esBusquedaInterna.value ? robotsNoIndex : undefined,
+    robots: debeEvitarIndexacion.value ? robotsNoIndex : undefined,
     datosEstructurados: esBusquedaInterna.value
       ? undefined
       : {
