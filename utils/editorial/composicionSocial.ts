@@ -18,7 +18,7 @@ function palabrasVisuales(texto: string): PalabraVisual[] {
 
 export function distribuirTitularSocial(fuente: Font, titular: string, ancho: number, tamano: number) {
   const palabras = palabrasVisuales(titular)
-  for (let medida = tamano; medida >= 32; medida -= 2) {
+  for (let medida = tamano; medida >= Math.min(32, tamano); medida -= 2) {
     const lineas: PalabraVisual[][] = [[]]
     let anchoLinea = 0
     let palabraLarga = false

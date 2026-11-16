@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowRight, Search, ImagePlus, Eye } from '@lucide/vue'
+import { ArrowRight, Search, ImagePlus, Eye, Plus } from '@lucide/vue'
 import VistaRapidaPublicacionSocial from '~/components/admin/VistaRapidaPublicacionSocial.vue'
 import ProgramacionMasivaSocial from '~/components/admin/ProgramacionMasivaSocial.vue'
 import type { EstadoPublicacionesSociales } from '~/types/publicacionesSociales'
@@ -32,6 +32,17 @@ async function cerrarVistaRapida() {
   })
 }
 const articuloVistaRapida = ref<string | null>(null)
+const { data: propias, refresh: refrescarPropias } = await useFetch('/api/admin/redes/propias')
+const creando = ref(false), errorCrear = ref('')
+const etiquetasPropias: Record<string, string> = { draft: 'Borrador', scheduled: 'Programada', publishing: 'Publicando…', published: 'Publicada', failed: 'Con error' }
+async function crearPropia() {
+  creando.value = true; errorCrear.value = ''
+  try {
+    const nueva = await $fetch<{ id: string }>('/api/admin/redes/propias', { method: 'POST', body: {} })
+    await refrescarPropias()
+    await navigateTo(`/admin/redes/propias/${nueva.id}`)
+  } catch (falla) { errorCrear.value = (falla as { statusMessage?: string }).statusMessage || 'No se pudo crear la publicación.' } finally { creando.value = false }
+}
 const { data, status, error, refresh } = await useFetch('/api/admin/redes', { query: { buscar: termino, pagina } })
 const etiquetas: Record<string, string> = { pending: 'Por preparar', draft: 'Borrador', ready: 'Listo para compartir', published: 'Publicada en Facebook e Instagram', partial: 'Publicada en alguna red' }
 const articulos = computed(() => data.value?.articulos.filter(actual => !estado.value || actual.estado === estado.value) || [])
@@ -39,7 +50,9 @@ function aplicarBusqueda() { pagina.value = 1; termino.value = buscar.value }
 </script>
 <template>
   <section class="bandeja-redes">
-    <header><div><h1>Publicaciones para redes</h1><p>Una noticia, una historia que merece compartirse.</p></div><NuxtLink to="/admin/redes/cuentas">Conectar cuentas</NuxtLink></header>
+    <header><div><h1>Publicaciones para redes</h1><p>Una noticia, una historia que merece compartirse.</p></div><div class="acciones-cabecera"><button v-if="tienePermiso('contenido.editarTodos')" type="button" class="boton-nuevo" :disabled="creando" @click="crearPropia"><Plus :size="17" />{{ creando ? 'Creando…' : 'Nuevo' }}</button><NuxtLink to="/admin/redes/cuentas">Conectar cuentas</NuxtLink></div></header>
+    <p v-if="errorCrear" class="aviso-redes" role="alert">{{ errorCrear }}</p>
+    <section v-if="propias?.publicaciones.length" class="propias-redes" aria-label="Publicaciones propias"><h2>Publicaciones propias</h2><ul><li v-for="propia in propias.publicaciones" :key="propia.id"><NuxtLink :to="`/admin/redes/propias/${propia.id}`"><strong>{{ propia.titulo }}</strong><span>{{ etiquetasPropias[propia.estado] }}<template v-if="propia.programadaPara"> · {{ new Date(propia.programadaPara).toLocaleString('es-CO', { timeZone: 'America/Bogota' }) }}</template></span></NuxtLink></li></ul></section>
     <p v-if="data && !data.almacenamientoDisponible" class="aviso-redes">El editor está disponible. Para guardar borradores en el CMS falta instalar la migración social.</p>
     <form class="filtros-redes" @submit.prevent="aplicarBusqueda">
       <label><span>Buscar noticia</span><div><input v-model="buscar" type="search" placeholder="Equipo, protagonista o titular"><button type="submit" aria-label="Buscar"><Search :size="19" /></button></div></label>
@@ -62,6 +75,7 @@ function aplicarBusqueda() { pagina.value = 1; termino.value = buscar.value }
   </section>
 </template>
 <style scoped>
+.acciones-cabecera{display:flex;gap:12px;align-items:center}.boton-nuevo{display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:10px 16px;border:0;border-radius:6px;background:var(--navy);color:white;font:inherit;font-weight:700}.propias-redes{margin:0 0 24px;padding:16px;border:1px solid var(--line);border-radius:8px;background:white}.propias-redes h2{margin:0 0 10px;font-size:16px}.propias-redes ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}.propias-redes a{display:flex;justify-content:space-between;gap:12px;padding:10px;border:1px solid var(--line);border-radius:6px;color:var(--navy);text-decoration:none}.propias-redes span{font-size:12px;color:var(--muted)}
 .seleccion-masiva{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0;font-size:13px}.seleccion-masiva button{padding:12px;border:1px solid var(--line);border-radius:6px;background:white;color:var(--navy)}.seleccionar-noticia{display:flex;gap:8px;align-items:center;min-height:44px}.seleccionar-noticia input{width:18px;height:18px}.accion-noticia{flex-wrap:wrap}
 .boton-vista-rapida{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border:1px solid var(--line);border-radius:6px;color:var(--navy);background:white;font:inherit;font-weight:700}.boton-vista-rapida:focus-visible{outline:3px solid #2376cf;outline-offset:3px}
 .bandeja-redes{max-width:1300px;margin:auto;color:var(--navy)}header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:28px}h1{font-size:30px;margin:0 0 8px}header p{color:var(--muted);margin:0}header>span{font-size:13px;border-left:3px solid var(--yellow);padding:8px 14px}.filtros-redes{display:flex;gap:20px;margin-bottom:24px}.filtros-redes label:first-child{flex:1}.filtros-redes label>span{display:block;font-size:12px;margin-bottom:7px}.filtros-redes label>div{display:flex}.filtros-redes input,.filtros-redes select{min-height:44px;border:1px solid var(--line);background:white;border-radius:6px;padding:10px;color:var(--navy)}.filtros-redes input{flex:1;min-width:0}.filtros-redes button{background:var(--navy);color:white;border:0;padding:10px 18px;border-radius:6px}.lista-redes{border-top:1px solid var(--line)}article{display:grid;grid-template-columns:160px 1fr 180px;gap:24px;padding:24px 0;border-bottom:1px solid var(--line);align-items:center}article>img,.sin-foto{width:160px;height:118px;object-fit:cover;border-radius:7px}.sin-foto{display:grid;place-items:center;background:var(--soft-blue)}small{color:var(--muted);font-size:12px}h2{font-size:18px;line-height:1.4;margin:7px 0}.datos-noticia p{font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0 0 10px}.datos-noticia a{font-size:12px}.accion-noticia{display:grid;gap:20px;font-size:12px}.accion-noticia>span{justify-self:start;padding:5px 9px;background:var(--soft-blue);border-radius:4px}.accion-noticia .estado-ready{background:#e7f3dc}.accion-noticia a{display:flex;align-items:center;gap:8px;font-weight:700}footer{display:flex;align-items:center;justify-content:space-between;margin-top:24px;font-size:13px}button{cursor:pointer}button:disabled{opacity:.5;cursor:default}footer button{border:1px solid var(--line);background:white;padding:10px;border-radius:5px}.aviso-redes{padding:14px;background:var(--soft-yellow)}@media(max-width:800px){article{grid-template-columns:90px 1fr;gap:14px}article>img,.sin-foto{width:90px;height:90px}.accion-noticia{grid-column:2;display:flex;align-items:center;justify-content:space-between}.filtros-redes{flex-direction:column}header{align-items:start;flex-direction:column}h1{font-size:24px}}
