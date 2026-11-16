@@ -26,8 +26,8 @@ const estado = ref('draft'), revision = ref(1), programadaPara = ref<string | nu
 const temporales = ref<TemporalSocialVista[]>([]), miniaturasBiblioteca = ref<Record<string, string>>({})
 const recibos = ref<Record<string, { estado: string, url?: string }>>({})
 const descripcion = ref(''), conLogo = ref(false), fechaProgramada = ref('')
+const mostrarProgramar = ref(false)
 const ocupado = ref(false), mensaje = ref(''), problema = ref('')
-const esVideo = computed(() => !!documento.value && esDocumentoVideoPropio(documento.value))
 const avisos = computed(() => documento.value ? avisosPublicacionPropia(documento.value, destinos.value) : [])
 const editable = computed(() => tienePermiso('contenido.editarTodos') && ['draft', 'failed', 'scheduled'].includes(estado.value))
 const miniaturas = computed(() => {
@@ -148,9 +148,9 @@ const etiquetas: Record<string, string> = { draft: 'Borrador', scheduled: 'Progr
 <template>
   <main class="movil">
     <header>
-      <NuxtLink v-if="idActual" to="/admin/redes/movil" external aria-label="Inicio"><ArrowLeft :size="22" /></NuxtLink>
+      <NuxtLink v-if="idActual" to="/admin/redes/movil" external aria-label="Inicio"><ArrowLeft :size="20" /></NuxtLink>
       <h1>Redes · Pont3la10</h1>
-      <NuxtLink to="/admin/redes" class="escritorio">Panel completo</NuxtLink>
+      <NuxtLink to="/admin/redes" class="escritorio">Panel</NuxtLink>
     </header>
     <p v-if="problema" class="aviso error" role="alert">{{ problema }}</p>
     <p v-else-if="mensaje || subiendo" class="aviso" role="status">{{ subiendo ? `Subiendo… ${progreso} %` : mensaje }}</p>
@@ -158,55 +158,66 @@ const etiquetas: Record<string, string> = { draft: 'Borrador', scheduled: 'Progr
     <template v-if="!documento">
       <p v-if="!tienePermiso('contenido.editarTodos')" class="aviso error">No tienes permiso para crear publicaciones.</p>
       <div v-else class="elegir">
-        <label class="boton grande"><Camera :size="26" aria-hidden="true" />Subir foto(s)<input type="file" :accept="aceptarImagenesTemporales" multiple :disabled="ocupado" @change="empezar($event, 'imagenes')"></label>
-        <label class="boton grande"><Video :size="26" aria-hidden="true" />Subir video / Reel<input type="file" :accept="aceptarVideosTemporales" :disabled="ocupado" @change="empezar($event, 'video')"></label>
-        <small>Se suben directo desde tu teléfono a un almacenamiento temporal y se borran al publicar. Varias fotos forman un carrusel.</small>
+        <label class="boton"><Camera :size="24" aria-hidden="true" />Foto(s)<input type="file" :accept="aceptarImagenesTemporales" multiple :disabled="ocupado" @change="empezar($event, 'imagenes')"></label>
+        <label class="boton"><Video :size="24" aria-hidden="true" />Video / Reel<input type="file" :accept="aceptarVideosTemporales" :disabled="ocupado" @change="empezar($event, 'video')"></label>
       </div>
+      <small class="nota">Se suben directo desde tu teléfono y se borran al publicar. Varias fotos = carrusel.</small>
       <section v-if="lista?.publicaciones.length" class="recientes"><h2>Recientes</h2>
-        <ul><li v-for="item in lista.publicaciones" :key="item.id"><a :href="`/admin/redes/movil?id=${item.id}`" @click.prevent="abrir(item.id)"><strong>{{ item.titulo }}</strong><span>{{ etiquetas[item.estado] }}</span></a></li></ul>
+        <ul><li v-for="item in lista.publicaciones.slice(0, 8)" :key="item.id"><a :href="`/admin/redes/movil?id=${item.id}`" @click.prevent="abrir(item.id)"><strong>{{ item.titulo }}</strong><span>{{ etiquetas[item.estado] }}</span></a></li></ul>
       </section>
     </template>
 
     <template v-else>
-      <section class="vista" aria-label="Contenido">
-        <video v-if="video" :src="video.url" controls playsinline preload="metadata" />
-        <div v-else-if="miniaturas.length" class="fotos"><img v-for="foto in miniaturas" :key="foto.id" :src="foto.url" alt="Imagen de la publicación"></div>
-        <p v-else class="aviso">No se puede mostrar la vista previa (los archivos temporales ya se borraron o aún no hay archivo).</p>
-        <span class="estado" :class="`e-${estado}`">{{ etiquetas[estado] }}</span>
-      </section>
-      <fieldset :disabled="!editable || ocupado">
-        <label>Descripción (Facebook e Instagram)<textarea v-model="descripcion" rows="5" maxlength="2200" placeholder="Escribe el texto de la publicación" /></label>
-        <div class="redes"><label><input type="checkbox" :checked="destinos.includes('facebook')" @change="alternarDestino('facebook')">Facebook</label><label><input type="checkbox" :checked="destinos.includes('instagram')" @change="alternarDestino('instagram')">Instagram</label></div>
-        <template v-if="!esVideo && documento && !esDocumentoVideoPropio(documento)">
-          <label>Formato<select v-model="documento.formato"><option value="vertical">Vertical 4:5 (recomendado)</option><option value="cuadrado">Cuadrado</option><option value="web">Horizontal (solo Facebook)</option></select></label>
-          <label class="casilla"><input v-model="conLogo" type="checkbox">Poner el logo de Pont3la10</label>
-          <NuxtLink :to="`/admin/redes/propias/${idActual}`" external class="enlace">Editar con más detalle (posición, texto, plantillas)</NuxtLink>
-        </template>
-      </fieldset>
-      <ul v-if="avisos.length && editable" class="avisos"><li v-for="aviso in avisos" :key="aviso">{{ aviso }}</li></ul>
-      <p v-for="(recibo, red) in recibos" :key="red" class="recibo">{{ red === 'facebook' ? 'Facebook' : 'Instagram' }}: {{ recibo.estado === 'published' ? 'publicada' : recibo.estado }} <a v-if="recibo.url" :href="recibo.url" target="_blank" rel="noopener noreferrer">ver</a></p>
-      <div v-if="editable" class="acciones">
-        <button type="button" class="primario" :disabled="ocupado || avisos.length > 0 || estado === 'scheduled'" @click="publicarAhora"><Send :size="18" />Publicar ahora</button>
-        <div v-if="estado === 'scheduled'" class="programada"><p>Programada: {{ programadaPara ? new Date(programadaPara).toLocaleString('es-CO', { timeZone: 'America/Bogota' }) : '' }}</p><button type="button" :disabled="ocupado" @click="cancelarProgramacion">Cancelar programación</button></div>
-        <div v-else class="programar"><label>Programar (hora Colombia)<input v-model="fechaProgramada" type="datetime-local"></label><button type="button" :disabled="ocupado || avisos.length > 0" @click="programar"><CalendarClock :size="18" />Programar</button></div>
-        <button type="button" :disabled="ocupado" @click="guardar().then(ok => { if (ok) mensaje = 'Guardado.' })"><Upload :size="18" />Guardar borrador</button>
+      <div class="cuerpo">
+        <section class="vista" aria-label="Contenido">
+          <video v-if="video" :src="video.url" controls playsinline preload="metadata" />
+          <div v-else-if="miniaturas.length" class="fotos"><img v-for="foto in miniaturas" :key="foto.id" :src="foto.url" alt="Imagen de la publicación"></div>
+          <p v-else class="nota">Sin vista previa (los archivos temporales ya se borraron o aún no hay archivo).</p>
+          <span class="estado" :class="`e-${estado}`">{{ etiquetas[estado] }}</span>
+        </section>
+        <fieldset :disabled="!editable || ocupado">
+          <textarea v-model="descripcion" rows="3" maxlength="2200" placeholder="Descripción (Facebook e Instagram)" aria-label="Descripción" />
+          <div class="opciones">
+            <label class="chip"><input type="checkbox" :checked="destinos.includes('facebook')" @change="alternarDestino('facebook')">Facebook</label>
+            <label class="chip"><input type="checkbox" :checked="destinos.includes('instagram')" @change="alternarDestino('instagram')">Instagram</label>
+            <template v-if="documento && !esDocumentoVideoPropio(documento)">
+              <label class="chip"><input v-model="conLogo" type="checkbox">Logo</label>
+              <select v-model="documento.formato" aria-label="Formato"><option value="vertical">4:5</option><option value="cuadrado">1:1</option><option value="web">Horizontal</option></select>
+            </template>
+          </div>
+        </fieldset>
+        <ul v-if="avisos.length && editable" class="avisos"><li v-for="aviso in avisos" :key="aviso">{{ aviso }}</li></ul>
+        <p v-for="(recibo, red) in recibos" :key="red" class="recibo">{{ red === 'facebook' ? 'Facebook' : 'Instagram' }}: {{ recibo.estado === 'published' ? 'publicada' : recibo.estado }} <a v-if="recibo.url" :href="recibo.url" target="_blank" rel="noopener noreferrer">ver</a></p>
+        <p v-if="estado === 'scheduled'" class="recibo">Programada: {{ programadaPara ? new Date(programadaPara).toLocaleString('es-CO', { timeZone: 'America/Bogota' }) : '' }}</p>
+        <NuxtLink v-if="documento && !esDocumentoVideoPropio(documento)" :to="`/admin/redes/propias/${idActual}`" external class="enlace">Editor detallado</NuxtLink>
+      </div>
+      <div v-if="editable" class="barra">
+        <div v-if="mostrarProgramar && estado !== 'scheduled'" class="fila"><input v-model="fechaProgramada" type="datetime-local" aria-label="Fecha y hora (Colombia)"><button type="button" class="primario" :disabled="ocupado || avisos.length > 0" @click="programar"><CalendarClock :size="18" />OK</button></div>
+        <div class="fila">
+          <button v-if="estado !== 'scheduled'" type="button" class="primario" :disabled="ocupado || avisos.length > 0" @click="publicarAhora"><Send :size="18" />Publicar</button>
+          <button v-if="estado === 'scheduled'" type="button" class="primario" :disabled="ocupado" @click="cancelarProgramacion">Cancelar programación</button>
+          <button v-else type="button" :disabled="ocupado" aria-label="Programar" @click="mostrarProgramar = !mostrarProgramar"><CalendarClock :size="18" />Programar</button>
+          <button type="button" :disabled="ocupado" aria-label="Guardar borrador" @click="guardar().then(ok => { if (ok) mensaje = 'Guardado.' })"><Upload :size="18" /></button>
+        </div>
       </div>
     </template>
   </main>
 </template>
 
 <style scoped>
-.movil{min-height:100dvh;padding:max(16px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));max-width:560px;margin:auto;color:#08204a;background:#f4f7fb;font-family:system-ui,-apple-system,sans-serif}
-header{display:flex;align-items:center;gap:12px;margin-bottom:16px}header h1{flex:1;margin:0;font-size:20px}header a{color:#08204a}.escritorio{font-size:13px}
-.aviso{padding:12px;border-radius:8px;background:#fff6c2;margin:0 0 14px}.aviso.error{background:#fde2e2}
-.elegir{display:grid;gap:14px}.elegir small{color:#4a5a73}
-.boton{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;padding:14px;border-radius:12px;background:#08204a;color:white;font-weight:700;font-size:17px;cursor:pointer}.boton input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
-.recientes{margin-top:28px}.recientes h2{font-size:16px}.recientes ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}.recientes a{display:flex;justify-content:space-between;gap:10px;padding:14px;background:white;border-radius:10px;color:#08204a;text-decoration:none}.recientes span{font-size:12px;color:#4a5a73}
-.vista{position:relative;margin-bottom:14px}.vista video{width:100%;max-height:60dvh;border-radius:12px;background:black}.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}.fotos img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:10px}
-.estado{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;background:#dde7f7;font-size:12px}.e-published{background:#e1f3d4}.e-failed{background:#fde2e2}.e-scheduled{background:#fff0a8}
-fieldset{border:0;padding:0;margin:0 0 14px;display:grid;gap:14px}fieldset label{display:grid;gap:6px;font-size:14px}
-textarea,select,input[type=datetime-local]{width:100%;box-sizing:border-box;padding:12px;border:1px solid #c5d0e0;border-radius:10px;background:white;color:#08204a;font:inherit;font-size:16px}
-.redes{display:flex;gap:18px}.redes label,.casilla{display:flex!important;align-items:center;gap:8px;min-height:44px}.enlace{font-size:14px;color:#08204a}
-.acciones{display:grid;gap:12px}.acciones button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px;border:1px solid #08204a;border-radius:12px;background:white;color:#08204a;font:inherit;font-weight:700;font-size:16px}.acciones .primario{background:#08204a;color:white}button:disabled{opacity:.5}
-.programar{display:grid;gap:8px}.programada p{margin:0 0 8px}.avisos{margin:0 0 12px;padding:12px 12px 12px 28px;background:#fff6c2;border-radius:8px;font-size:14px}.recibo{margin:0 0 8px;font-size:14px}
+.movil{display:flex;flex-direction:column;height:100dvh;box-sizing:border-box;padding:max(10px,env(safe-area-inset-top)) 12px max(10px,env(safe-area-inset-bottom));max-width:560px;margin:auto;color:#08204a;background:#f4f7fb;font-family:system-ui,-apple-system,sans-serif;font-size:15px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:8px}header h1{flex:1;margin:0;font-size:17px}header a{color:#08204a;display:grid;place-items:center;min-width:32px;min-height:32px}.escritorio{font-size:13px}
+.aviso{padding:8px 10px;border-radius:8px;background:#fff6c2;margin:0 0 8px;font-size:13px}.aviso.error{background:#fde2e2}.nota{color:#4a5a73;font-size:12px}
+.elegir{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px}
+.boton{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:84px;padding:10px;border-radius:12px;background:#08204a;color:white;font-weight:700;font-size:15px;cursor:pointer}.boton input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.recientes{margin-top:10px;min-height:0;display:flex;flex-direction:column}.recientes h2{font-size:14px;margin:0 0 6px}.recientes ul{list-style:none;margin:0;padding:0;display:grid;gap:6px;overflow-y:auto}.recientes a{display:flex;justify-content:space-between;gap:8px;padding:10px;background:white;border-radius:10px;color:#08204a;text-decoration:none;font-size:14px}.recientes span{font-size:12px;color:#4a5a73;white-space:nowrap}
+.cuerpo{flex:1;min-height:0;overflow-y:auto;display:grid;align-content:start;gap:8px}
+.vista{display:flex;align-items:center;gap:10px}.vista video{height:22dvh;max-width:55%;border-radius:10px;background:black;object-fit:contain}.fotos{display:flex;gap:6px;overflow-x:auto;flex:1}.fotos img{height:22dvh;width:auto;max-width:44vw;aspect-ratio:auto;object-fit:cover;border-radius:8px}
+.estado{padding:3px 10px;border-radius:999px;background:#dde7f7;font-size:12px;white-space:nowrap}.e-published{background:#e1f3d4}.e-failed{background:#fde2e2}.e-scheduled{background:#fff0a8}
+fieldset{border:0;padding:0;margin:0;display:grid;gap:8px}
+textarea,select,input[type=datetime-local]{width:100%;box-sizing:border-box;padding:10px;border:1px solid #c5d0e0;border-radius:10px;background:white;color:#08204a;font:inherit;font-size:16px}textarea{resize:none}
+.opciones{display:flex;gap:6px;flex-wrap:wrap;align-items:center}.opciones select{width:auto;padding:8px;font-size:14px}.chip{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border:1px solid #c5d0e0;border-radius:999px;background:white;font-size:14px}
+.enlace{font-size:13px;color:#08204a}.avisos{margin:0;padding:8px 8px 8px 24px;background:#fff6c2;border-radius:8px;font-size:13px}.recibo{margin:0;font-size:13px}
+.barra{padding-top:8px;display:grid;gap:8px}.fila{display:flex;gap:8px}.fila input{flex:1}
+.barra button{display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:0 14px;border:1px solid #08204a;border-radius:12px;background:white;color:#08204a;font:inherit;font-weight:700;font-size:15px}.barra .primario{flex:1;background:#08204a;color:white}button:disabled{opacity:.5}
 </style>
