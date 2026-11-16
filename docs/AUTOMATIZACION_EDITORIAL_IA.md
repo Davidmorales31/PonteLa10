@@ -1,5 +1,12 @@
 # Corrida editorial con aprobación IA
 
+> **Modo vigente desde el 2026-11-15:** fútbol colombiano, publicado por dos
+> agentes (Codex 08:00 y 15:00; Claude 11:30 y 19:30, America/Bogota) con un tope
+> de cuatro corridas diarias. Las metas, el enfoque, la verificación mínima, los
+> dos títulos y la política de fotos están en
+> `.agents/skills/pont3la10-futbol-colombiano-run/SKILL.md` y mandan sobre este
+> documento. De aquí sigue vigente la mecánica del contrato y la aprobación.
+
 El responsable autorizó el 4 de noviembre de 2026 la aprobación IA por API y
 programación automática, y confirmó que mantiene DeepSeek como redactor. Esta política sustituye
 la obligación anterior de revisión humana exclusivamente para las propuestas

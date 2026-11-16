@@ -1,14 +1,27 @@
 {
-  "version": 2,
+  "version": 3,
   "zonaHoraria": "America/Bogota",
-  "horarios": ["06:05", "18:05"],
-  "rrule": "FREQ=DAILY;BYHOUR=6,18;BYMINUTE=5;BYSECOND=0",
-  "maxCorridasPorDia": 2,
-  "articulosPorCategoria": 10,
+  "horarios": {
+    "codex": [
+      "08:00",
+      "15:00"
+    ],
+    "claude": [
+      "11:30",
+      "19:30"
+    ]
+  },
+  "maxCorridasPorDia": 4,
   "maxOportunidadesPorCategoria": 20,
   "intervaloPublicacionMinutos": 2,
   "redactor": "deepseek",
   "estadoObjetivo": "scheduled",
-  "skill": ".agents/skills/pont3la10-daily-editorial-run/SKILL.md",
-  "prompt": "docs/agents/prompts/editorial-dos-corridas.md"
+  "skill": ".agents/skills/pont3la10-futbol-colombiano-run/SKILL.md",
+  "prompt": "docs/agents/prompts/editorial-dos-corridas.md",
+  "enfoque": "futbol-colombiano",
+  "articulosPorCorrida": {
+    "minimo": 8,
+    "maximo": 12
+  },
+  "fuentes": "config/fuentesFutbolColombiano.json"
 }
