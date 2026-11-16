@@ -2,7 +2,7 @@
   "name": "Pont3la10 Redes",
   "short_name": "Redes",
   "description": "Sube fotos y videos, publica o programa en Facebook e Instagram.",
-  "start_url": "/admin/redes/movil",
+  "start_url": "/admin/redes/propias/nuevo",
   "scope": "/admin/redes/",
   "display": "standalone",
   "orientation": "portrait",

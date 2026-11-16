@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { parse } from 'opentype.js'
-import { cajaElementoPropio, componerSvgPropio, limitarPosicionPropia } from '~/utils/editorial/composicionPropia'
+import { cajaElementoPropio, celdaEnPuntoPropio, componerSvgPropio, geometriaCeldaPropia, limitarPosicionPropia } from '~/utils/editorial/composicionPropia'
 import {
   avisosPublicacionPropia, cambiarPlantillaPropia, crearDiapositivaPropia, crearDocumentoPropio, crearElementoLogo, crearElementoTexto,
   esquemaDocumentoPropio, esquemaGuardarPublicacionPropia, esquemaProgramarPublicacionPropia, formatosPropios, plantillasPropias
@@ -149,5 +149,22 @@ describe('publicaciones propias: composición', () => {
     base.medios[0]!.medioId = '11111111-1111-4111-8111-111111111111'
     const imagen = { url: 'data:image/png;base64,AAAA', ancho: 100, alto: 100 }
     expect(() => componerSvgPropio({ diapositiva: base, formato: 'cuadrado', fuente, logo: 'data:image/png;base64,AAAA', imagenes: [imagen] })).not.toThrow()
+  })
+  it('el texto nuevo usa el degradado de las noticias y las celdas vacías se pueden previsualizar', () => {
+    const diapositiva = crearDiapositivaPropia('dos-lado', [null, null])
+    diapositiva.elementos = [crearElementoTexto('Titular con **fuerza**')]
+    const vista = componerSvgPropio({ diapositiva, formato: 'vertical', fuente, logo: 'data:image/png;base64,AAAA', imagenes: [null, null], permitirVacias: true })
+    expect(vista).toContain('linearGradient')
+    expect(vista).toContain('#ffd800')
+    expect(() => componerSvgPropio({ diapositiva, formato: 'vertical', fuente, logo: 'data:image/png;base64,AAAA', imagenes: [null, null] })).toThrow('Falta la imagen 1')
+  })
+
+  it('la geometría de celdas permite ubicar el toque y calcular la holgura para mover la imagen', () => {
+    const diapositiva = crearDiapositivaPropia('dos-lado', [null, null])
+    expect(celdaEnPuntoPropio(diapositiva, 'cuadrado', 100, 500)).toBe(0)
+    expect(celdaEnPuntoPropio(diapositiva, 'cuadrado', 900, 500)).toBe(1)
+    const g = geometriaCeldaPropia(diapositiva, 'cuadrado', 0, { ancho: 1600, alto: 1000 })
+    expect(g.iw).toBeGreaterThan(g.w)
+    expect(g.ih).toBeCloseTo(g.h)
   })
 })
