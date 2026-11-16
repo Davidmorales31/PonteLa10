@@ -101,7 +101,7 @@ describe('contrato de las rutas y la migración de temporales', () => {
   it('la app móvil es instalable en iPhone', () => {
     const manifiesto = JSON.parse(leer('public/manifest-redes.webmanifest'))
     expect(manifiesto.display).toBe('standalone')
-    expect(manifiesto.start_url).toBe('/admin/redes/movil')
-    expect(leer('pages/admin/redes/movil.vue')).toContain('apple-mobile-web-app-capable')
+    expect(manifiesto.start_url).toBe('/admin/redes/propias/nuevo')
+    expect(leer('pages/admin/redes/propias/[id].vue')).toContain('apple-mobile-web-app-capable')
   })
 })

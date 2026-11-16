@@ -33,7 +33,7 @@ export const esquemaElementoPropio = z.discriminatedUnion('tipo', [
   z.object({ id: z.string().uuid(), tipo: z.literal('logo'), x: porcentaje, y: porcentaje, ancho: z.number().min(8).max(80) }).strict(),
   z.object({ id: z.string().uuid(), tipo: z.literal('texto'), x: porcentaje, y: porcentaje,
     texto: z.string().trim().min(1).max(220), tamano: z.number().min(24).max(140),
-    color: z.enum(['blanco', 'amarillo', 'azul']), banda: z.boolean() }).strict()
+    color: z.enum(['blanco', 'amarillo', 'azul']), banda: z.boolean(), degradado: z.boolean().optional() }).strict()
 ])
 export const esquemaDiapositivaPropia = z.object({
   id: z.string().uuid(), plantilla: z.enum(idsPlantillasPropias),
@@ -105,7 +105,7 @@ export function crearElementoLogo(): ElementoPropio {
   return { id: crypto.randomUUID(), tipo: 'logo', x: 50, y: 10, ancho: 34 }
 }
 export function crearElementoTexto(texto = 'Escribe aquí tu titular'): ElementoPropio {
-  return { id: crypto.randomUUID(), tipo: 'texto', x: 50, y: 82, texto, tamano: 64, color: 'blanco', banda: true }
+  return { id: crypto.randomUUID(), tipo: 'texto', x: 50, y: 82, texto, tamano: 64, color: 'blanco', banda: false, degradado: true }
 }
 
 export function crearDocumentoPropio(): DocumentoPropio {
