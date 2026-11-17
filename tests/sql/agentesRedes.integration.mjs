@@ -16,12 +16,15 @@ const filas = async (sql, params) => (await db.query(sql, params)).rows
 
 try {
   await db.exec(`
-    create role anon; create role authenticated; create role service_role;
+    create role anon; create role authenticated; create role service_role bypassrls;
     create schema auth; create table auth.users(id uuid primary key);
     create table public.editorial_audit_log(actor_id uuid, action text, entity_type text, entity_id uuid, metadata jsonb, created_at timestamptz not null default now());
   `)
   await db.exec(await readFile('supabase/migrations/20261116150000_publicaciones_sociales_propias.sql', 'utf8'))
   await db.exec(await readFile('supabase/migrations/20261117100000_api_agentes_redes.sql', 'utf8'))
+  await db.exec(await readFile('supabase/migrations/20261117120000_agentes_redes_borrado.sql', 'utf8'))
+  // El servidor llama como service_role, no como superusuario: así se detectan permisos que falten.
+  await db.exec(`grant usage on schema public, auth to service_role; grant select, insert on public.editorial_audit_log to service_role; grant select on auth.users to service_role;`)
   const dueno = randomUUID()
   await db.query('insert into auth.users values($1)', [dueno])
   const nuevaLlave = async (extra = {}) => {
@@ -31,6 +34,7 @@ try {
     return { id, h }
   }
 
+  await db.exec('set role service_role')
   // Restricciones de la tabla de llaves.
   await esperarError(() => db.query("insert into public.social_agent_keys(name,key_prefix,key_hash,owner_id,scopes) values('Agente','p3l_abcdefgh',$1,$2,array['admin'])", [hash('x'), dueno]), e => e.code === '23514')
   await esperarError(() => db.query("insert into public.social_agent_keys(name,key_prefix,key_hash,owner_id) values('Agente','p3l_abcdefgh','no-es-hash',$1)", [dueno]), e => e.code === '23514')
