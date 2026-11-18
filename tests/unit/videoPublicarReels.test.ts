@@ -15,9 +15,9 @@ const textosReel = publicar.textosReel as (d: string) => { facebook: string, ins
 const tituloInterno = publicar.tituloInterno as (r: { id: string, club?: string, descripcion?: string }) => string
 const destinoPermitido = publicar.destinoPermitido as (base: string) => boolean
 const crearClienteRedes = publicar.crearClienteRedes as (o: { llave?: string, base?: string, fetchFn?: unknown }) => Cliente
-const publicarReel = publicar.publicarReel as (o: Record<string, unknown>) => Promise<Resultado>
-const cancelarProgramacionReel = publicar.cancelarProgramacionReel as (o: Record<string, unknown>) => Promise<{ estado: string }>
-const refrescarEstados = publicar.refrescarEstados as (o: Record<string, unknown>) => Promise<Record<string, { estado: string }>>
+const publicarReel = publicar.publicarReel as unknown as (o: Record<string, unknown>) => Promise<Resultado>
+const cancelarProgramacionReel = publicar.cancelarProgramacionReel as unknown as (o: Record<string, unknown>) => Promise<{ estado: string }>
+const refrescarEstados = publicar.refrescarEstados as unknown as (o: Record<string, unknown>) => Promise<Record<string, { estado: string }>>
 const leerEstadoPublicaciones = publicar.leerEstadoPublicaciones as (c: string) => Promise<Record<string, { estado: string, publicacionId: string }>>
 
 const AHORA = Date.parse('2026-11-18T12:00:00-05:00')
