@@ -81,7 +81,9 @@ En el estudio, **Crear Reels** (se habilita al terminar el render) o por comando
 - **Formato:** vertical 1080×1920, 30 fps, H.264/AAC. El video 16:9 va centrado sobre su propio fondo desenfocado, con el logo y la etiqueta del club arriba y subtítulos grandes abajo (la palabra que dices en amarillo, una sola línea a la vez).
 - **Subtítulos:** `scripts/video-transcribir.py` transcribe la voz con faster-whisper (modelo `small`, en este equipo y sin red) y da el tiempo de cada palabra.
 - **Salida:** `videos/diario/<proyecto>/renders/reels/` con los MP4 y `reels.json`, que trae por Reel la descripción lista para pegar (titular, resumen, enlace a la nota, crédito de la foto y etiquetas). El estudio los muestra en una ventana con «Copiar texto» y «Descargar».
-- **Lo que no hace:** no publica. Subir los Reels a Instagram sigue siendo manual por ahora.
+- **Publicar y programar:** en la ventana de Reels cada uno trae su fecha y los botones **Programar**, **Solo borrador** y **Cancelar programación**, más **Programar todos** (primer Reel y un intervalo de 2 a 24 h). Pide confirmación antes de programar. Publica en Facebook e Instagram (Reel) con la misma API de agentes de redes y el mismo programador que las fotos: `scripts/video-publicar-reels.mjs` sube el MP4, crea una publicación de tipo «video», la valida y la programa (entre 10 minutos y 30 días). La llave `PONT3LA10_AGENTES_REDES_KEY` se lee del `.env` en el servidor local y nunca llega a la página; sin ella la ventana avisa y deja solo copiar y descargar. El estado (borrador, programada, publicada, falló) queda en `renders/reels/publicaciones.json` y se refresca desde la API al abrir la ventana. Cada llave tiene un máximo de programaciones por día.
+- **Instagram:** el texto no lleva el enlace completo (no es clicable); dice «Nota completa en pont3la10.com». Facebook conserva el enlace.
+- **Lo que no hace:** YouTube (Shorts) todavía no.
 
 ## Límites conocidos
 

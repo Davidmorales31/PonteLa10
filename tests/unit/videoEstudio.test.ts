@@ -5,6 +5,7 @@ import * as estudio from '../../scripts/video-estudio.mjs'
 const proyectoValido = estudio.proyectoValido as (n: string) => boolean
 const tramoValido = estudio.tramoValido as (n: string) => boolean
 const claveFotosValida = estudio.claveFotosValida as (n: string) => boolean
+const idReelValido = estudio.idReelValido as (n: string) => boolean
 const rutaSegura = estudio.rutaSegura as (base: string, relativa: string) => string | null
 const peticionPermitida = estudio.peticionPermitida as (p: { host?: string, origin?: string, metodo: string }, puerto?: number) => boolean
 
@@ -18,6 +19,11 @@ describe('estudio local del video diario', () => {
     for (const t of ['b1', 'b1-otro', '../gancho', 'gancho.mp4']) expect(tramoValido(t)).toBe(false)
     expect(claveFotosValida('b3')).toBe(true)
     expect(claveFotosValida('b3/../x')).toBe(false)
+  })
+
+  it('acepta solo ids de Reel simples (sin rutas ni caracteres raros)', () => {
+    for (const id of ['b1', 'b12', 'b_3']) expect(idReelValido(id)).toBe(true)
+    for (const id of ['', '../b1', 'b1/publicar', 'B1', 'b'.repeat(21)]) expect(idReelValido(id)).toBe(false)
   })
 
   it('no deja salir de la carpeta del proyecto', () => {
