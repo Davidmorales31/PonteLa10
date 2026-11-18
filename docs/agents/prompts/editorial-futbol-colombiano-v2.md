@@ -8,6 +8,13 @@ titular de portada ya existe en la rama `feat/titulo-portada`: en la propuesta
 automática se envía como `coverHeadline` (8–120 caracteres) y se guarda como
 `cover_headline`; el editor del CMS lo muestra como «Titular de portada».
 
+> **Actualización 2026-11-17:** los umbrales vigentes (longitud por tipo, fuentes
+> ampliadas, foto real obligatoria sin IA, banco evergreen y flujo sin cerrar
+> `partial` antes de producir) están en
+> `.agents/skills/pont3la10-futbol-colombiano-run/SKILL.md` y mandan sobre este
+> borrador. Los requisitos más duros descritos abajo se consideran superados en lo
+> que choque con ese skill.
+
 ---
 
 ## Rol

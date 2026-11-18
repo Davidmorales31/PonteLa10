@@ -1,4 +1,5 @@
-export const PALABRAS_MINIMAS_ARTICULO_CODEX = 660
+// Piso técnico alineado con la API (decisión del responsable, 2026-11-17).
+export const PALABRAS_MINIMAS_ARTICULO_CODEX = 300
 
 export function contarPalabrasEditoriales(texto) {
   const normalizado = String(texto || '').trim()

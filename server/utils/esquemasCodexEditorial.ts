@@ -1,9 +1,10 @@
 import { z } from 'zod'
 import { esquemaDocumentoEditorial } from '~/utils/editorial/contenido'
 
-// El estimador editorial usa 220 palabras por minuto: 660 palabras garantizan
-// un cuerpo de al menos tres minutos, sin confiar únicamente en el prompt.
-export const PALABRAS_MINIMAS_BORRADOR_CODEX = 660
+// Piso técnico del cuerpo (decisión del responsable, 2026-11-17): 300 palabras.
+// El objetivo editorial por tipo (300 noticia breve, 450 previa o noticia,
+// 600 análisis o evergreen) vive en el skill de la corrida y no lo impone la API.
+export const PALABRAS_MINIMAS_BORRADOR_CODEX = 300
 export const CREDITO_PORTADA_IA_CODEX = 'Imagen generada con IA'
 export const PIE_PORTADA_IA_CODEX = 'Ilustración editorial generada con IA. No es una fotografía documental del evento.'
 
@@ -153,7 +154,7 @@ function validarPropuestaCodex(
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['body'],
-      message: `El cuerpo debe tener al menos ${PALABRAS_MINIMAS_BORRADOR_CODEX} palabras para alcanzar tres minutos de lectura.`
+      message: `El cuerpo debe tener al menos ${PALABRAS_MINIMAS_BORRADOR_CODEX} palabras.`
     })
   }
 
@@ -233,6 +234,9 @@ export const esquemaPublicacionAutomaticaCodex = z.object({
     topicsMatch: z.literal(true),
     imagePresent: z.literal(true),
     titleFaithful: z.literal(true),
+    // Quién redactó el cuerpo. Ausente o `deepseek` exige una generación DeepSeek
+    // completada; `agent` indica que el propio agente (Claude o Codex) lo escribió.
+    writer: z.enum(['deepseek', 'agent']).optional(),
     notes: z.string().trim().min(30).max(1000)
   }).strict()
 }).strict().superRefine(({ proposal, review }, contexto) => {

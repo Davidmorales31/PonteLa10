@@ -11,10 +11,10 @@ describe('contrato de extensión de propuestas Codex', () => {
     expect(contarPalabrasEditoriales('  primera\n segunda   tercera ')).toBe(3)
   })
 
-  it('exige 660 palabras en el cuerpo, sin contar metadatos', () => {
-    expect(PALABRAS_MINIMAS_ARTICULO_CODEX).toBe(660)
-    expect(cumpleMinimoLecturaCodex(Array(660).fill('palabra').join(' '))).toBe(true)
-    expect(cumpleMinimoLecturaCodex(Array(659).fill('palabra').join(' '))).toBe(false)
+  it('exige 300 palabras en el cuerpo, sin contar metadatos', () => {
+    expect(PALABRAS_MINIMAS_ARTICULO_CODEX).toBe(300)
+    expect(cumpleMinimoLecturaCodex(Array(300).fill('palabra').join(' '))).toBe(true)
+    expect(cumpleMinimoLecturaCodex(Array(299).fill('palabra').join(' '))).toBe(false)
     expect(cumpleMinimoLecturaCodex('')).toBe(false)
   })
 
