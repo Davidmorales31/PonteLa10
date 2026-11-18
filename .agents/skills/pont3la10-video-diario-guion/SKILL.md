@@ -35,7 +35,9 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
 ```json
 {
   "fecha": "2026-11-18",
-  "tituloVideo": "…",
+  "tituloVideo": "(el primero de titulos)",
+  "titulos": ["…", "…", "…"],
+  "miniatura": { "texto": "2 a 5 palabras", "resaltar": "una de esas palabras" },
   "gancho": { "texto": "…", "fuente": "…" },
   "presentacion": { "texto": "…" },
   "bloques": [
@@ -77,9 +79,17 @@ Juan le habla a su gente como un amigo que sabe de fútbol, no como un noticiero
 - Nada de salud, vida privada ni acusaciones sobre personas reales sin fuente de primer nivel.
 - Sin relleno: si un bloque queda corto, añade contexto real del artículo o cambia de historia.
 
-## Título del video
+## Títulos (3 para la prueba A/B de YouTube) y texto de miniatura
 
-40–110 caracteres. Un gancho concreto (primicia o dato) y los nombres propios del día. Usa « | » solo si de verdad hay 3 o 4 historias de peso (máximo 4 partes); el estudio mostró que la barra por sí sola no mejora las vistas.
+YouTube permite probar hasta 3 títulos y 3 miniaturas; gana el de más tiempo de visualización, no el de más clics. Escribe **3 títulos distintos** en `titulos` (el primero también va en `tituloVideo`):
+
+- **45–75 caracteres** (en la muestra de 389 títulos de canales de fútbol, los de 51–70 rinden 1,3 veces la mediana del canal). Lo clave (nombre propio y hecho) en los **primeros 40**, que es lo que se ve en el celular.
+- Molde que más rinde: **reacción o gancho + nombre propio + hecho concreto** (cifra o dato si lo hay). Ejemplos de forma: «¡Once da el golpe! …», «Así fue la tapada de Vigouroux en el penal a Colombia», «La dolorosa lesión de … en …».
+- Un ángulo distinto por título: (1) el dato o la primicia, (2) la reacción o emoción, (3) la pregunta o la polémica.
+- Máximo 2 palabras en MAYÚSCULAS para énfasis, como mucho 1 emoji, una sola exclamación. Usa « | » solo si hay 3 o 4 historias de peso.
+- Nunca prometas lo que el video no cuenta: el título debe ser fiel al contenido (la prueba A/B premia la retención, no el clic).
+
+**Miniatura** (`miniatura`): 2 a 5 palabras en mayúsculas que **sumen** al título sin repetirlo (máx. 32 caracteres) y la palabra a resaltar en amarillo. Las miniaturas las diseña Codex desde el estudio («Títulos y miniaturas» → «Preparar encargo para Codex») con las fotos reales del día y la cara de Juan; nunca con imágenes generadas de personas o escenas.
 
 ## Rúbrica (obligatoria)
 

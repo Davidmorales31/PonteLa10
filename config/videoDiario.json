@@ -1,5 +1,5 @@
 {
-  "version": 2,
+  "version": 3,
   "descripcion": "Parámetros del video diario de Pont3la10. Salen del estudio docs/ESTUDIO_COMPETENCIA_VIDEO_DIARIO.md.",
   "formato": {
     "duracionObjetivoSegundos": 480,
@@ -97,5 +97,18 @@
       "me parece",
       "creo"
     ]
+  },
+  "titulos": {
+    "cantidad": 3,
+    "caracteresMinimos": 45,
+    "caracteresMaximos": 75,
+    "claveEnLosPrimeros": 40,
+    "maximoPalabrasEnMayusculas": 2,
+    "maximoEmojis": 1
+  },
+  "miniatura": {
+    "palabrasMinimas": 2,
+    "palabrasMaximas": 5,
+    "caracteresMaximos": 32
   }
 }

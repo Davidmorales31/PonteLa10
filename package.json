@@ -19,7 +19,8 @@
     "worker:ingestas": "node --env-file=.env workers/procesar_ingestas_durable.mjs",
     "video:estudio": "node scripts/video-estudio.mjs",
     "video:generar": "node scripts/video-generar-proyecto.mjs",
-    "video:reels": "node scripts/video-reels.mjs"
+    "video:reels": "node scripts/video-reels.mjs",
+    "video:musica": "node scripts/video-musica.mjs"
   },
   "dependencies": {
     "@lucide/vue": "^1.25.0",

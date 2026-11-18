@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "descripcion": "Biblioteca de música de fondo del video diario. Solo pistas instrumentales con licencia CC0 o CC BY (sin NC, ND ni SA), verificadas en Openverse. CC BY exige atribución: el texto de «atribucion» se añade solo a las descripciones de YouTube y de los Reels. Ninguna licencia libre garantiza que no haya reclamos de Content ID: si llega uno, se disputa con el enlace de la licencia.",
+  "volumenCama": 0.32,
+  "pistas": [
+    {
+      "id": "high-voltage",
+      "openverseId": "17ceb6a5-0ac9-4b25-86d5-9af59bedb4f0",
+      "titulo": "High Voltage",
+      "autor": "ANtarcticbreeze",
+      "licencia": "CC BY 3.0",
+      "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "pagina": "https://www.jamendo.com/track/1210825",
+      "archivo": "https://prod-1.storage.jamendo.com/?trackid=1210825&format=mp32",
+      "estilo": "Energética, deportiva",
+      "atribucion": "Música: «High Voltage» de ANtarcticbreeze (CC BY 3.0) https://www.jamendo.com/track/1210825"
+    },
+    {
+      "id": "pulse-of-life",
+      "openverseId": "e65213cb-0b9c-45ca-9031-e13d75e87354",
+      "titulo": "Pulse of Life",
+      "autor": "ANtarcticbreeze",
+      "licencia": "CC BY 3.0",
+      "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "pagina": "https://www.jamendo.com/track/1210828",
+      "archivo": "https://prod-1.storage.jamendo.com/?trackid=1210828&format=mp32",
+      "estilo": "Energética, aventura",
+      "atribucion": "Música: «Pulse of Life» de ANtarcticbreeze (CC BY 3.0) https://www.jamendo.com/track/1210828"
+    },
+    {
+      "id": "boomshakalaka",
+      "openverseId": "ea3e3c17-60f3-4285-b898-6aad4e342d01",
+      "titulo": "BoomShaKaLaKa (Instrumental)",
+      "autor": "David Amber",
+      "licencia": "CC BY 3.0",
+      "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "pagina": "https://www.jamendo.com/track/1296792",
+      "archivo": "https://prod-1.storage.jamendo.com/?trackid=1296792&format=mp32",
+      "estilo": "Himno deportivo, muy rápida",
+      "atribucion": "Música: «BoomShaKaLaKa (Instrumental)» de David Amber (CC BY 3.0) https://www.jamendo.com/track/1296792"
+    },
+    {
+      "id": "just-for-fun",
+      "openverseId": "0e83a8b3-4571-4308-a2d2-4f7cd26bbd3c",
+      "titulo": "Just For Fun",
+      "autor": "Daniel Bautista",
+      "licencia": "CC BY 3.0",
+      "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "pagina": "https://www.jamendo.com/track/1892649",
+      "archivo": "https://prod-1.storage.jamendo.com/?trackid=1892649&format=mp32",
+      "estilo": "Guitarra eléctrica, potente",
+      "atribucion": "Música: «Just For Fun» de Daniel Bautista (CC BY 3.0) https://www.jamendo.com/track/1892649"
+    },
+    {
+      "id": "upbeat-corporate",
+      "openverseId": "3b4580e1-1454-4b4c-a03a-e03bf4af0849",
+      "titulo": "Upbeat Corporate",
+      "autor": "Soundrider/Dope",
+      "licencia": "CC BY 3.0",
+      "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "pagina": "https://www.jamendo.com/track/1670486",
+      "archivo": "https://prod-1.storage.jamendo.com/?trackid=1670486&format=mp32",
+      "estilo": "Noticiero, ligera",
+      "atribucion": "Música: «Upbeat Corporate» de Soundrider/Dope (CC BY 3.0) https://www.jamendo.com/track/1670486"
+    },
+    {
+      "id": "empty-the-rubbish",
+      "openverseId": "07327605-06d3-4474-b93c-d41772964c99",
+      "titulo": "Empty the rubbish",
+      "autor": "Abrids",
+      "licencia": "CC BY 3.0",
+      "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "pagina": "https://www.jamendo.com/track/1009352",
+      "archivo": "https://prod-1.storage.jamendo.com/?trackid=1009352&format=mp32",
+      "estilo": "Rock con batería, media",
+      "atribucion": "Música: «Empty the rubbish» de Abrids (CC BY 3.0) https://www.jamendo.com/track/1009352"
+    },
+    {
+      "id": "passionate-supporters",
+      "openverseId": "52e6a0e1-5e50-4532-ab4b-549bcdb9466d",
+      "titulo": "Professional Sports Require Passionate Supporters",
+      "autor": "Ambient Samurai - Ichiro Nakagawa",
+      "licencia": "CC BY 3.0",
+      "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/",
+      "pagina": "https://www.jamendo.com/track/653424",
+      "archivo": "https://prod-1.storage.jamendo.com/?trackid=653424&format=mp32",
+      "estilo": "Tranquila, para análisis",
+      "atribucion": "Música: «Professional Sports Require Passionate Supporters» de Ambient Samurai - Ichiro Nakagawa (CC BY 3.0) https://www.jamendo.com/track/653424"
+    },
+    {
+      "id": "energetic-rock-135",
+      "openverseId": "ce9866cb-3414-4190-96a6-0f3ec2145aa5",
+      "titulo": "Energetic Rock, 135 BPM",
+      "autor": "carloseton",
+      "licencia": "CC0 1.0",
+      "licenciaUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "pagina": "https://freesound.org/people/carloseton/sounds/724498",
+      "archivo": "https://cdn.freesound.org/previews/724/724498_9825531-hq.mp3",
+      "estilo": "Batería rock (sin melodía)",
+      "atribucion": "Música: «Energetic Rock, 135 BPM» de carloseton (CC0)"
+    }
+  ]
+}

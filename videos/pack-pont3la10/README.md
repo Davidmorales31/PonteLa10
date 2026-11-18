@@ -42,7 +42,7 @@ Nunca: imágenes generadas por IA, ilustraciones, montajes con logos, capturas d
 
 ## Sonido (`assets/sonidos/`)
 
-Efectos incluidos en HyperFrames (`media-use`, fuente «bundled»): `whoosh-a` y `whoosh-b` (la segunda es una variante grave de la primera) para cortes, `pop` para etiquetas y cifras, `clic` para el cursor e `impacto` (subida y golpe) para el logo. En el muestrario el pico de cada efecto cae un cuadro después de su imagen. No hay cama musical: no hay catálogo musical sin cuenta de HeyGen ni MusicGen local instalado.
+Efectos incluidos en HyperFrames (`media-use`, fuente «bundled»): `whoosh-a` y `whoosh-b` (la segunda es una variante grave de la primera) para cortes, `pop` para etiquetas y cifras, `clic` para el cursor e `impacto` (subida y golpe) para el logo. En el muestrario el pico de cada efecto cae un cuadro después de su imagen. La cama musical va aparte (sección «Música, títulos y miniaturas»).
 
 ## Uso
 
@@ -84,6 +84,19 @@ En el estudio, **Crear Reels** (se habilita al terminar el render) o por comando
 - **Publicar y programar:** en la ventana de Reels cada uno trae su fecha y los botones **Programar**, **Solo borrador** y **Cancelar programación**, más **Programar todos** (primer Reel y un intervalo de 2 a 24 h). Pide confirmación antes de programar. Publica en Facebook e Instagram (Reel) con la misma API de agentes de redes y el mismo programador que las fotos: `scripts/video-publicar-reels.mjs` sube el MP4, crea una publicación de tipo «video», la valida y la programa (entre 10 minutos y 30 días). La llave `PONT3LA10_AGENTES_REDES_KEY` se lee del `.env` en el servidor local y nunca llega a la página; sin ella la ventana avisa y deja solo copiar y descargar. El estado (borrador, programada, publicada, falló) queda en `renders/reels/publicaciones.json` y se refresca desde la API al abrir la ventana. Cada llave tiene un máximo de programaciones por día.
 - **Instagram:** el texto no lleva el enlace completo (no es clicable); dice «Nota completa en pont3la10.com». Facebook conserva el enlace.
 - **Lo que no hace:** YouTube (Shorts) todavía no.
+
+## Música, títulos y miniaturas (fase 6)
+
+**Música de fondo.** `config/musicaLibre.json` trae 8 pistas con licencia verificada en Openverse (CC BY 3.0 de Jamendo y una CC0 de Freesound), cada una con su atribución. En el estudio se elige en el pie («Música») y se escucha antes. Al renderizar, `scripts/video-musica.mjs` descarga la pista (vuelve a verificar que la licencia siga siendo libre para uso comercial: solo CC0, CC BY o dominio público), la repite hasta cubrir el video y la mezcla sobre `renders/final-voz.mp4` → `renders/final.mp4`: entra y sale con fundido y baja sola cuando hablas (compresión con la voz como llave; medido: −24 LUFS sin voz, unos −36 bajo la voz) y el total se normaliza a −14 LUFS. La atribución se añade sola a la descripción de YouTube y de los Reels. Las pistas descargadas quedan en `videos/musica/` (no se versiona).
+
+- No se usa MusicGen (sus pesos son CC BY-NC: no comercial) ni la Biblioteca de audio de YouTube (solo vale dentro de YouTube, y los Reels van a Meta).
+- «Libre de regalías» no garantiza que no salte Content ID: si una pista recibe un reclamo, se quita de la biblioteca.
+
+**Títulos A/B.** El guion trae `titulos` (3, para «Probar y comparar» de YouTube, que elige por tiempo de visualización) y `miniatura { texto, resaltar }`. La rúbrica revisa: 45–75 caracteres, nombre propio en los primeros 40, que sean distintos, máximo 2 palabras en mayúsculas y 1 emoji; y para la miniatura de 2 a 5 palabras (máx. 32 caracteres) que no repitan el título. En el estudio, **Títulos y miniaturas** los muestra con botón de copiar.
+
+**Miniaturas (las hace Codex).** En esa misma ventana, **Preparar encargo para Codex** crea `renders/miniaturas/` con `ENCARGO-CODEX.md` y la carpeta `insumos/`: una foto real por noticia (hasta 3, con su crédito), el logo y un fotograma de tu cara tomado del gancho. El encargo pide 3 variantes de 1280×720 (A: cara + titular, B: foto del protagonista, C: pantalla dividida) y prohíbe generar personas, escenas o escudos. Copias el encargo, se lo das a Codex y luego subes las imágenes (o Codex las deja en la carpeta como `miniatura-a/b/c.jpg`); el estudio las normaliza a JPG 1280×720 de menos de 2 MB.
+
+**Descripción de YouTube.** También en esa ventana, lista para copiar: resumen, capítulos con los tiempos reales del video (desde 0:00, al menos 3 y separados 10 s o más), enlaces a las notas con UTM de YouTube, créditos de las fotos, atribución de la música y etiquetas.
 
 ## Límites conocidos
 

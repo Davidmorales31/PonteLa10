@@ -25,3 +25,5 @@ supabase/.temp/
 
 # Proyectos diarios generados (scripts/video-generar-proyecto.mjs)
 videos/diario/
+# Música descargada de la biblioteca (config/musicaLibre.json)
+videos/musica/
