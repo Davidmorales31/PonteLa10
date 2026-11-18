@@ -18,7 +18,8 @@
     "typecheck": "nuxt typecheck",
     "worker:ingestas": "node --env-file=.env workers/procesar_ingestas_durable.mjs",
     "video:estudio": "node scripts/video-estudio.mjs",
-    "video:generar": "node scripts/video-generar-proyecto.mjs"
+    "video:generar": "node scripts/video-generar-proyecto.mjs",
+    "video:reels": "node scripts/video-reels.mjs"
   },
   "dependencies": {
     "@lucide/vue": "^1.25.0",

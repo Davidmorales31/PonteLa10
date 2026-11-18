@@ -40,6 +40,7 @@ export function peticionPermitida({ host, origin, metodo }, puerto = PUERTO) {
 }
 
 const renders = new Map()
+const trabajosReels = new Map()
 const ocupados = new Set()
 
 function responder(res, estado, cuerpo) {
@@ -84,8 +85,16 @@ async function detalleProyecto(proyecto) {
   if (!manifiesto) return null
   const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
   const render = renders.get(proyecto)
+  const trabajoReels = trabajosReels.get(proyecto)
   const final = join(carpeta, 'renders', 'final.mp4')
-  return { proyecto, manifiesto, estudio, render: render ? { estado: render.estado, registro: render.registro.slice(-1200) } : null, videoFinal: existsSync(final) ? `/archivos/${proyecto}/renders/final.mp4?v=${(await stat(final)).mtimeMs}` : null }
+  const reels = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
+  return {
+    proyecto, manifiesto, estudio,
+    render: render ? { estado: render.estado, registro: render.registro.slice(-1200) } : null,
+    videoFinal: existsSync(final) ? `/archivos/${proyecto}/renders/final.mp4?v=${(await stat(final)).mtimeMs}` : null,
+    reelsEstado: trabajoReels ? { estado: trabajoReels.estado, registro: trabajoReels.registro.slice(-600) } : null,
+    reels: reels ? reels.reels.map(r => ({ ...r, url: `/archivos/${proyecto}/${r.archivo}?v=${Date.parse(reels.creado)}` })) : []
+  }
 }
 
 async function guardarEstudio(proyecto, cambio) {
@@ -185,6 +194,18 @@ function renderizar(proyecto) {
   proceso.on('close', codigo => { estado.estado = codigo === 0 ? 'listo' : 'error'; ocupados.delete(proyecto) })
 }
 
+// Reels: lanza scripts/video-reels.mjs (sin shell) y deja el avance en `trabajosReels`.
+function crearReelsProyecto(proyecto) {
+  const estado = { estado: 'creando', registro: '' }
+  trabajosReels.set(proyecto, estado)
+  const proceso = spawn(process.execPath, [join(RAIZ, 'scripts', 'video-reels.mjs'), proyecto], { cwd: RAIZ, windowsHide: true })
+  const anotar = parte => { estado.registro = (estado.registro + parte.toString()).slice(-4000) }
+  proceso.stdout.on('data', anotar)
+  proceso.stderr.on('data', anotar)
+  proceso.on('error', error => { estado.registro += error.message })
+  proceso.on('close', codigo => { estado.estado = codigo === 0 ? 'listo' : 'error'; ocupados.delete(proyecto) })
+}
+
 async function servirArchivo(req, res, proyecto, relativo) {
   const archivo = rutaSegura(carpetaDe(proyecto), decodeURIComponent(relativo))
   if (!archivo || !existsSync(archivo)) return responder(res, 404, { error: 'No encontrado.' })
@@ -230,10 +251,12 @@ export function crearServidor() {
         if (req.method === 'POST') return responder(res, 200, await guardarFoto(proyecto, partes[4], await leerCuerpo(req, LIMITE_FOTO), decodeURIComponent(String(req.headers['x-credito'] || ''))))
         if (req.method === 'DELETE' && /^\d{1,3}$/.test(partes[5] || '')) { await borrarFoto(proyecto, partes[4], Number(partes[5])); return responder(res, 200, { ok: true }) }
       }
-      if ((accion === 'armar' || accion === 'render') && req.method === 'POST') {
+      if ((accion === 'armar' || accion === 'render' || accion === 'reels') && req.method === 'POST') {
         if (ocupados.has(proyecto)) return responder(res, 409, { error: 'El proyecto está ocupado: espera a que termine.' })
+        if (accion === 'reels' && !existsSync(join(carpetaDe(proyecto), 'renders', 'final.mp4'))) return responder(res, 409, { error: 'Primero renderiza el video final.' })
         ocupados.add(proyecto)
         if (accion === 'render') { renderizar(proyecto); return responder(res, 202, { estado: 'renderizando' }) }
+        if (accion === 'reels') { crearReelsProyecto(proyecto); return responder(res, 202, { estado: 'creando' }) }
         try { return responder(res, 200, await armar(proyecto)) } finally { ocupados.delete(proyecto) }
       }
       return responder(res, 404, { error: 'No encontrado.' })
