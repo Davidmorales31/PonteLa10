@@ -4,7 +4,7 @@ import * as generador from '../../scripts/video-generar-proyecto.mjs'
 
 interface Escena { escena: string, inicio: number, duracion: number, capa: number, variables?: Record<string, unknown>, instancia?: string }
 interface Segmento { tipo: 'cara' | 'voz', etiqueta: string, inicio: number, fin: number, texto: string }
-interface Plan { duracion: number, escenas: Escena[], sonidos: Array<{ archivo: string, inicio: number }>, segmentos: Segmento[] }
+interface Plan { duracion: number, escenas: Escena[], sonidos: Array<{ archivo: string, inicio: number, volumen: number }>, segmentos: Array<Segmento & { id: string, grabado: boolean }>, medios: Array<{ tipo: string, id: string, archivo: string, inicio: number, duracion: number }>, resumenFotos: Array<{ clave: string, fotos: number, espacios: number, vacios: number }> }
 interface Galeria { inicio: number, duracion: number, segundosPorFoto: number, espacios: Array<{ url: string, credito: string }> }
 
 const planificar = generador.planificar as (guion: unknown, opciones?: Record<string, unknown>) => Plan
@@ -107,6 +107,38 @@ describe('generador del video diario', () => {
     expect(suscribete).toHaveLength(1)
     expect(suscribete[0].inicio).toBeCloseTo(gancho.fin, 2)
     expect(plan.sonidos.filter(s => s.archivo === 'clic').every(s => s.inicio < gancho.fin + 5)).toBe(true)
+  })
+
+  it('usa las grabaciones de Juan: duración real, video en lugar del hueco y audio de voz', () => {
+    const estudio = { grabaciones: { gancho: { archivo: 'assets/grabaciones/gancho.mp4', duracion: 7.5 }, 'b1-voz': { archivo: 'assets/grabaciones/b1-voz.m4a', duracion: 52.25 } } }
+    const sin = planificar(guion, { ppm: 155 })
+    const con = planificar(guion, { ppm: 155, estudio })
+    const gancho = con.segmentos.find(s => s.id === 'gancho')!
+    expect(gancho.fin - gancho.inicio).toBeCloseTo(7.5, 2)
+    expect(gancho.grabado).toBe(true)
+    expect(con.segmentos.find(s => s.id === 'b1-voz')!.fin - con.segmentos.find(s => s.id === 'b1-voz')!.inicio).toBeCloseTo(52.25, 2)
+    expect(con.medios.map(m => m.tipo)).toEqual(['video', 'audio'])
+    expect(con.escenas.filter(e => e.escena === 'cara').length).toBe(sin.escenas.filter(e => e.escena === 'cara').length - 1)
+    expect(con.sonidos[0].volumen).toBeLessThan(sin.sonidos[0].volumen)
+    const index = armarIndex(con, 'x')
+    expect(index).toContain('<video id="grabacion-1" class="clip" src="assets/grabaciones/gancho.mp4"')
+    expect(index).toContain('data-has-audio="true"')
+    expect(index).toContain('<audio id="grabacion-2" class="clip" src="assets/grabaciones/b1-voz.m4a"')
+  })
+
+  it('suma las fotos que sube Juan a su noticia y reduce los espacios vacíos', () => {
+    const sin = planificar(guion, { ppm: 155 })
+    const con = planificar(guion, { ppm: 155, estudio: { fotosExtra: { b1: [{ ruta: 'assets/fotos/subida-1.jpg', credito: 'Juan' }, { ruta: 'assets/fotos/subida-2.jpg', credito: 'Juan' }] } } })
+    const antes = sin.resumenFotos.find(r => r.clave === 'b1')!
+    const despues = con.resumenFotos.find(r => r.clave === 'b1')!
+    expect(despues.fotos).toBe(antes.fotos + 2)
+    expect(despues.vacios).toBe(antes.vacios - 2)
+    expect(JSON.stringify(con.escenas)).toContain('assets/fotos/subida-1.jpg')
+  })
+
+  it('da ids estables a todos los tramos', () => {
+    const plan = planificar(guion, { ppm: 155 })
+    expect(plan.segmentos.map(s => s.id)).toEqual(['gancho', 'presentacion', 'b1-cara', 'b1-voz', 'b2-cara', 'b2-voz', 'b3-cara', 'b3-voz', 'pregunta', 'cierre'])
   })
 
   it('genera un index con ids únicos y variables escapadas', () => {

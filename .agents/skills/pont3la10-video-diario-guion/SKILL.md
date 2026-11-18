@@ -93,7 +93,7 @@ Con el guion aprobado, ejecuta:
 node scripts/video-generar-proyecto.mjs guion.json
 ```
 
-Crea `videos/diario/<fecha>/` (no se versiona) con el proyecto de HyperFrames armado con el pack `videos/pack-pont3la10`: intro, huecos de toma a cámara con la frase de cada uno, galerías de fotos (un espacio cada ~7 s; los que no tienen foto quedan marcados), rótulo con el titular de portada, marcador y cifra pequeños, transiciones y efectos de sonido. También deja `teleprompter.txt` (con tiempos, CARA/VOZ) y `manifiesto.json`. Valida con `npx hyperframes check` desde esa carpeta. No renderices ni publiques: Juan graba su voz y su cara, y aprueba.
+Crea `videos/diario/<fecha>/` (no se versiona) con el proyecto de HyperFrames armado con el pack `videos/pack-pont3la10`: intro, huecos de toma a cámara con la frase de cada uno, galerías de fotos (un espacio cada ~7 s; los que no tienen foto quedan marcados), rótulo con el titular de portada, marcador y cifra pequeños, transiciones y efectos de sonido. También deja `teleprompter.txt` (con tiempos, CARA/VOZ) y `manifiesto.json`. Valida con `npx hyperframes check` desde esa carpeta. No renderices ni publiques: Juan abre el estudio local (`npm run video:estudio`, http://localhost:4810), graba su voz y su cara tramo por tramo, sube fotos con crédito a los espacios vacíos, pulsa «Armar video» y aprueba el render.
 
 ## Entrega
 

@@ -59,6 +59,20 @@ Las fotos de ejemplo (`assets/foto-a.jpg`, `assets/foto-b.jpg`) no se versionan:
 
 `node scripts/video-generar-proyecto.mjs <guion.json> [--salida <dir>] [--repetir-fotos] [--sin-red]` arma el video del día en `videos/diario/<fecha>/` con estas escenas: copia cada escena por instancia (ids con sufijo, p. ej. `gal3-slot-1`), descarga las fotos del guion y las pasa a JPG, toma el titular de portada de cada artículo para el rótulo y escribe `teleprompter.txt` y `manifiesto.json`. Con `--repetir-fotos` reutiliza las fotos del bloque en lugar de dejar espacios vacíos.
 
+## Estudio local (fase 4)
+
+```bash
+npm run video:estudio      # abre http://localhost:4810 en Chrome o Edge
+```
+
+Trabaja sobre `videos/diario/<proyecto>/` en este equipo (solo escucha en 127.0.0.1 y rechaza peticiones de otros orígenes):
+
+1. **Tramos:** gancho, presentación, toma a cámara y voz de cada noticia, pregunta y cierre, con su estado.
+2. **Teleprompter:** texto grande con desplazamiento a la velocidad elegida (110–210 ppm), tamaño de letra y modo espejo.
+3. **Grabar** (barra espaciadora): cuenta 3-2-1, graba con cámara (tramos CARA) o solo micrófono (tramos VOZ), deja revisar la toma y la guarda. El servidor la convierte (H.264 con un cuadro clave por segundo; voz normalizada a −16 LUFS) y mide su duración.
+4. **Fotos por noticia:** subir fotos reales con crédito obligatorio; llenan los espacios «Espacio para imagen».
+5. **Armar video:** vuelve a generar el proyecto con las tomas (duración real), la voz y las fotos (`estudio.json`). **Renderizar:** `renders/final.mp4`.
+
 ## Límites conocidos
 
 - Una misma escena no se puede montar dos veces sin duplicar ids: por eso el generador crea una copia por instancia.
