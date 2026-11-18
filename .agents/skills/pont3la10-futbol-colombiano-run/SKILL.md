@@ -47,21 +47,21 @@ que ninguna corrida termine con cero noticias. Decisiones:
    (sección 7). Cerrarla antes consume la identidad y bloquea los borradores.
 7. Tope de corridas: seis por día.
 
-**Qué rige hoy y qué espera al despliegue.** Rige desde ya: sección 2 (evergreen y
-meta), sección 3 (fuentes), sección 6 (foto) y sección 7 (flujo). El código del
-repositorio ya implementa (2026-11-17): piso técnico de **300** palabras
-(`esquemasCodexEditorial.ts` y `scripts/codex-editorial-contract.mjs`), campo
-`review.writer` (`agent` o `deepseek`) y la migración
-`supabase/migrations/20261117210000_redaccion_por_agentes_y_seis_corridas.sql`
-(tope de seis corridas y aprobación sin generación DeepSeek cuando
-`writer = 'agent'`). **La migración ya está aplicada en producción** (tope de seis
-corridas vigente; la base acepta `writer = 'agent'`). **El código de la API aún no
-está desplegado**: producción sigue exigiendo 660 palabras y rechaza el campo
-`writer` (422), así que hasta el despliegue hay que seguir usando `borrador`
-(DeepSeek) y piezas de 660 palabras o más; una pieza que no cumpla será rechazada
-por la API: no la rellenes, redacta más con datos reales o reemplázala. Cuando se
-despliegue el código, quita esta advertencia y rigen la tabla de la decisión 1 y
-la redacción por agentes (sección 7, paso 5).
+**Qué rige y cómo comprobarlo.** Todo lo de este archivo rige desde la fusión de
+la PR #159 (2026-11-18): piso técnico de **300** palabras (`esquemasCodexEditorial.ts`
+y `scripts/codex-editorial-contract.mjs`), campo `review.writer` (`agent` o
+`deepseek`), tope de seis corridas y aprobación sin generación DeepSeek cuando
+`writer = "agent"` (migración
+`20261117210000_redaccion_por_agentes_y_seis_corridas.sql`, aplicada en producción).
+La migración `20261117220000_tope_doce_articulos_por_corrida.sql` pone un tope de
+12 artículos aprobados por corrida en la base; mientras no esté aplicada, respeta
+tú el máximo de 12.
+
+**Si la API rechaza lo nuevo** (422 por `writer` o por menos de 660 palabras), el
+despliegue del código aún no llegó a producción: usa `borrador` (DeepSeek) y piezas
+de 660 palabras o más, no rellenes ni envíes piezas que sabes que serán rechazadas, e
+informa el bloqueo en el reporte. Cuando `borrador` devuelva 402 (sin saldo), no
+consumas más corridas.
 
 ## 1. Nicho (cerrado)
 
@@ -238,14 +238,16 @@ propuesta automática exige `coverMediaId` real.
    agente (tras el despliegue):** el propio agente escribe el cuerpo, el resumen,
    los títulos y el `briefSeo` (`editorialDifferentiator` de 20 a 500 caracteres),
    elige `tagIds` solo del catálogo del contexto, omite `borrador` y envía
-   `review.writer = "agent"`. Mientras no esté desplegado, usa `borrador`
+   `review.writer = "agent"`. Si la API rechaza `writer`, usa `borrador`
    (DeepSeek) una vez por clave, reutiliza resultados completos y nunca reintentes
    un resultado incierto sin autorización. Si una pieza falla (proveedor, foto,
    longitud), sigue con la siguiente y completa con evergreen (sección 2).
 6. **Solo al final**, tras haber intentado todas las piezas viables, verifica
    recibos y CMS (`scheduled`/`published`), foto y taxonomía, cuenta solo artículos
    nuevos de esta corrida y cierra la agenda (`completed` si se cumplió la meta;
-   `partial` con el déficit exacto por club si no). Cerrar `partial` antes de
+   `partial` con el déficit exacto por club si no; el servidor puede registrar
+   `partial` aunque envíes `completed` si alguna categoría activa queda por
+   debajo de su umbral histórico, y no es un error tuyo). Cerrar `partial` antes de
    producir consume la identidad y bloquea los borradores.
 7. Reporta: corrida, artículos programados por club, clubes del día aún sin
    cobertura, descartes y bloqueos. Sin secretos.
