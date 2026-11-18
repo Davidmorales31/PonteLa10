@@ -87,6 +87,12 @@ describe('rúbrica del guion del video diario', () => {
     expect(resultado.aprobado).toBe(false)
   })
 
+  it('exige al menos una foto real por bloque (las tarjetas no bastan)', () => {
+    const guion = guionBase()
+    guion.bloques[0].planos = guion.bloques[0].planos.map(plano => ({ ...plano, imagen: '' }))
+    expect(evaluar(guion, config).criterios.find(c => c.id === 'fotos_con_credito')?.detalle).toContain('b1')
+  })
+
   it('rechaza una duración fuera de rango y un título con demasiados ganchos', () => {
     const corto = guionBase()
     corto.bloques = corto.bloques.slice(0, 2)

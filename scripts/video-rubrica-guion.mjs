@@ -79,7 +79,7 @@ export function evaluarGuion(guion, config) {
   agregar('cambio_visual', `Un plano o zoom cada ${cfgBloques.segundosPorPlano} s`, 10, bloques.length > 0 && !pocosPlanos.length,
     pocosPlanos.length ? `planos insuficientes: ${pocosPlanos.join(', ')}` : 'ok')
 
-  const sinCredito = bloques.filter(bloque => !(bloque.planos || []).length || (bloque.planos || []).some(plano => plano.imagen && !plano.credito)).map(bloque => bloque.id)
+  const sinCredito = bloques.filter(bloque => !(bloque.planos || []).some(plano => plano.imagen) || (bloque.planos || []).some(plano => plano.imagen && !plano.credito)).map(bloque => bloque.id)
   agregar('fotos_con_credito', 'Toda foto lleva crédito', 10, bloques.length > 0 && !sinCredito.length,
     sinCredito.length ? `foto sin crédito o bloque sin foto: ${sinCredito.join(', ')}` : 'ok')
 
