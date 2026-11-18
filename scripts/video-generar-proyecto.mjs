@@ -4,7 +4,7 @@
 //   node scripts/video-generar-proyecto.mjs <guion.json> [--salida videos/diario/<fecha>] [--repetir-fotos] [--sin-red]
 // Reglas: siempre hay una imagen en pantalla; los gráficos son pequeños y van encima; un espacio sin
 // foto queda marcado para que Juan ponga la suya (con --repetir-fotos se reutilizan las fotos del bloque).
-import { readFile, writeFile, mkdir, copyFile, readdir } from 'node:fs/promises'
+import { readFile, writeFile, mkdir, copyFile, readdir, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -106,12 +106,16 @@ function variablesGaleria(galeria, rutaFoto) {
 }
 
 // Arma la línea de tiempo completa sin tocar disco ni red.
-export function planificar(guion, { ppm = 155, repetirFotos = false, titulares = {}, rutaFoto = url => url } = {}) {
+export function planificar(guion, { ppm = 155, repetirFotos = false, titulares = {}, rutaFoto = url => url, estudio = {} } = {}) {
   const escenas = []
   const sonidos = []
   const segmentos = []
+  const medios = []
+  const resumenFotos = []
+  const grabaciones = estudio.grabaciones || {}
+  const extra = clave => (estudio.fotosExtra?.[clave] || []).filter(f => f?.ruta).map(f => ({ url: f.ruta, credito: f.credito || '' }))
   const bloques = Array.isArray(guion?.bloques) ? guion.bloques : []
-  const fotosPorBloque = bloques.map(fotosDeBloque)
+  const fotosPorBloque = bloques.map(bloque => [...fotosDeBloque(bloque), ...extra(bloque.id)])
   const portada = fotosPorBloque.find(fotos => fotos.length)?.[0]
   let t = 0
   let transiciones = 0
@@ -126,19 +130,26 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
     sonido(transiciones % 2 === 0 ? 'whoosh-a' : 'whoosh-b', enSegundo, 0.75)
     transiciones++
   }
-  const cara = (texto, etiqueta, bloque) => {
-    const duracion = segundosDeTexto(texto, ppm)
-    escenas.push({ escena: 'cara', inicio: t, duracion, capa: 1, variables: { duracion: `${String(duracion).replace('.', ',')} segundos`, guion: `«${String(texto || '').trim()}»` }, duracionInterna: duracion })
-    segmentos.push({ tipo: 'cara', etiqueta, bloque, inicio: t, fin: redondear(t + duracion), texto: String(texto || '').trim() })
+  const cara = (id, texto, etiqueta, bloque) => {
+    const grabada = grabaciones[id]
+    const duracion = grabada?.duracion > 0 ? redondear(grabada.duracion) : segundosDeTexto(texto, ppm)
+    if (grabada?.archivo) medios.push({ tipo: 'video', id, archivo: grabada.archivo, inicio: t, duracion })
+    else escenas.push({ escena: 'cara', inicio: t, duracion, capa: 1, variables: { duracion: `${String(duracion).replace('.', ',')} segundos`, guion: `«${String(texto || '').trim()}»` }, duracionInterna: duracion })
+    segmentos.push({ id, tipo: 'cara', etiqueta, bloque, inicio: t, fin: redondear(t + duracion), texto: String(texto || '').trim(), grabado: Boolean(grabada?.archivo) })
     t = redondear(t + duracion)
   }
-  const voz = (texto, etiqueta, bloque, fotos) => {
-    const duracion = segundosDeTexto(texto, ppm)
+  const voz = (id, texto, etiqueta, bloque, fotos, claveFotos) => {
+    const grabada = grabaciones[id]
+    const duracion = grabada?.duracion > 0 ? redondear(grabada.duracion) : segundosDeTexto(texto, ppm)
     const inicio = t
-    for (const galeria of repartirGalerias(duracion, fotos, repetirFotos)) {
+    if (grabada?.archivo) medios.push({ tipo: 'audio', id, archivo: grabada.archivo, inicio, duracion })
+    const galerias = repartirGalerias(duracion, fotos, repetirFotos)
+    for (const galeria of galerias) {
       escenas.push({ escena: 'galeria', inicio: redondear(inicio + galeria.inicio), duracion: galeria.duracion, capa: 1, variables: variablesGaleria(galeria, rutaFoto), duracionInterna: galeria.duracion })
     }
-    segmentos.push({ tipo: 'voz', etiqueta, bloque, inicio, fin: redondear(inicio + duracion), texto: String(texto || '').trim() })
+    const espacios = galerias.reduce((suma, g) => suma + g.espacios.length, 0)
+    resumenFotos.push({ clave: claveFotos, etiqueta, fotos: fotos.length, espacios, vacios: galerias.reduce((suma, g) => suma + g.espacios.filter(e => !e.url).length, 0) })
+    segmentos.push({ id, tipo: 'voz', etiqueta, bloque, inicio, fin: redondear(inicio + duracion), texto: String(texto || '').trim(), grabado: Boolean(grabada?.archivo) })
     t = redondear(inicio + duracion)
     return { inicio, duracion }
   }
@@ -149,21 +160,21 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
   t = DURACIONES.intro
   transicion(t)
 
-  cara(guion?.gancho?.texto, 'Gancho', null)
+  cara('gancho', guion?.gancho?.texto, 'Gancho', null)
   // Suscríbete al inicio (decisión de Juan): entra justo después del gancho, sobre la presentación.
   const inicioSuscribete = t
   escenas.push({ escena: 'suscribete', inicio: inicioSuscribete, duracion: DURACIONES.suscribete, capa: 5 })
   sonido('clic', inicioSuscribete + 1.35, 0.8)
   sonido('clic', inicioSuscribete + 2.4, 0.8)
   if (guion?.presentacion?.texto) {
-    const fotos = fotosPorBloque.slice(0, 3).map(lista => lista[0]).filter(Boolean)
-    voz(guion.presentacion.texto, 'Presentación', null, fotos)
+    const fotos = [...fotosPorBloque.slice(0, 3).map(lista => lista[0]).filter(Boolean), ...extra('presentacion')]
+    voz('presentacion', guion.presentacion.texto, 'Presentación', null, fotos, 'presentacion')
   }
 
   bloques.forEach((bloque, i) => {
     transicion(t)
-    cara(bloque.caraBreve, `Noticia ${i + 1} · toma a cámara`, bloque.id)
-    const { inicio, duracion } = voz(bloque.voz, `Noticia ${i + 1} · voz`, bloque.id, fotosPorBloque[i])
+    cara(`${bloque.id}-cara`, bloque.caraBreve, `Noticia ${i + 1} · toma a cámara`, bloque.id)
+    const { inicio, duracion } = voz(`${bloque.id}-voz`, bloque.voz, `Noticia ${i + 1} · voz`, bloque.id, fotosPorBloque[i], bloque.id)
     const titular = bloque.titular || titulares[bloque.articuloSlug] || ''
     if (titular) {
       escenas.push({ escena: 'rotulo', inicio: redondear(inicio + 0.3), duracion: DURACIONES.rotulo, capa: 5, variables: { etiqueta: String(bloque.club || '').toUpperCase(), titular, fuente: bloque.fuente ? `Según ${bloque.fuente}` : '' } })
@@ -182,19 +193,21 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
 
   if (guion?.preguntaFinal) {
     transicion(t)
-    const ultimas = fotosPorBloque.slice().reverse().find(lista => lista.length) || []
-    const { inicio } = voz(guion.preguntaFinal, 'Pregunta final', null, ultimas)
+    const ultimas = [...extra('pregunta'), ...(fotosPorBloque.slice().reverse().find(lista => lista.length) || [])]
+    const { inicio } = voz('pregunta', guion.preguntaFinal, 'Pregunta final', null, ultimas, 'pregunta')
     escenas.push({ escena: 'rotulo', inicio: redondear(inicio + 0.2), duracion: DURACIONES.rotulo, capa: 5, variables: { etiqueta: 'TU OPINIÓN', titular: guion.preguntaFinal, fuente: 'Déjalo en los comentarios' } })
     sonido('pop', inicio + 0.3, 0.55)
   }
 
-  if (guion?.cierre?.texto) cara(guion.cierre.texto, 'Cierre', null)
+  if (guion?.cierre?.texto) cara('cierre', guion.cierre.texto, 'Cierre', null)
 
   transicion(t)
   escenas.push({ escena: 'cierre', inicio: t, duracion: DURACIONES.cierre, capa: 1, variables: { fondo: portada ? rutaFoto(portada.url) : '', web: 'pont3la10.com' } })
   t = redondear(t + DURACIONES.cierre)
 
-  return { duracion: t, escenas, sonidos, segmentos }
+  // Con voz grabada, los efectos bajan para no taparla.
+  if (medios.length) for (const s of sonidos) s.volumen = redondear(s.volumen * 0.6)
+  return { duracion: t, escenas, sonidos, segmentos, medios, resumenFotos }
 }
 
 export function armarIndex(plan, titulo) {
@@ -207,6 +220,9 @@ export function armarIndex(plan, titulo) {
     const valores = escena.variables ? ` data-variable-values='${atributo(JSON.stringify(escena.variables))}'` : ''
     return `      <div id="${id}"${valores} data-composition-id="${id}" data-composition-src="compositions/${id}.html" data-start="${escena.inicio}" data-duration="${escena.duracion}" data-track-index="${escena.capa === 1 ? 1 : escena.capa === 9 ? 5 : 3 + (i % 2)}" data-track-kind="graphics" data-width="1920" data-height="1080" style="z-index: ${escena.capa}"></div>`
   })
+  const grabaciones = (plan.medios || []).map((m, i) => m.tipo === 'video'
+    ? `      <video id="grabacion-${i + 1}" class="clip" src="${atributo(m.archivo)}" data-start="${m.inicio}" data-duration="${m.duracion}" data-track-index="2" playsinline data-has-audio="true" style="position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; z-index: 1"></video>`
+    : `      <audio id="grabacion-${i + 1}" class="clip" src="${atributo(m.archivo)}" data-start="${m.inicio}" data-duration="${m.duracion}" data-track-index="9" data-volume="1"></audio>`)
   const audios = plan.sonidos.map((s, i) => `      <audio id="sfx-${i + 1}" class="clip" src="assets/sonidos/${s.archivo}.mp3" data-start="${s.inicio}"${s.mediaStart ? ` data-media-start="${s.mediaStart}"` : ''} data-duration="${s.duracion}" data-track-index="${6 + (i % 3)}" data-volume="${s.volumen}"></audio>`)
   return `<!doctype html>
 <html lang="es">
@@ -226,6 +242,7 @@ export function armarIndex(plan, titulo) {
          la voz se graba aparte y se agrega como <audio> en la fase de estudio. -->
     <div id="root" data-composition-id="main" data-start="0" data-duration="${plan.duracion}" data-width="1920" data-height="1080">
 ${hosts.join('\n')}
+${grabaciones.join('\n')}
 ${audios.join('\n')}
     </div>
     <script>
@@ -249,21 +266,14 @@ async function descargarFoto(url, destino) {
   await writeFile(temporal, Buffer.from(await respuesta.arrayBuffer()))
   // Normaliza a JPG (las portadas llegan en WebP).
   execFileSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', temporal, '-q:v', '2', destino])
-  await import('node:fs/promises').then(fs => fs.rm(temporal, { force: true }))
+  await rm(temporal, { force: true })
 }
 
-async function main() {
-  const args = process.argv.slice(2)
-  const archivo = args.find(a => !a.startsWith('--'))
-  const valor = nombre => { const i = args.indexOf(nombre); return i >= 0 ? args[i + 1] : undefined }
-  if (!archivo) {
-    process.stderr.write('Uso: node scripts/video-generar-proyecto.mjs <guion.json> [--salida <dir>] [--repetir-fotos] [--sin-red]\n')
-    process.exit(2)
-  }
-  const guion = JSON.parse(await readFile(resolve(archivo), 'utf8'))
+// Arma (o vuelve a armar) el proyecto. Si la carpeta tiene estudio.json, usa las grabaciones y fotos de Juan.
+export async function generarProyecto({ guion, salida, repetirFotos = false, sinRed = false }) {
   const config = JSON.parse(await readFile(join(RAIZ, 'config', 'videoDiario.json'), 'utf8'))
-  const salida = resolve(valor('--salida') || join(RAIZ, 'videos', 'diario', String(guion.fecha || 'sin-fecha')))
-  const sinRed = args.includes('--sin-red')
+  const rutaEstudio = join(salida, 'estudio.json')
+  const estudio = existsSync(rutaEstudio) ? JSON.parse(await readFile(rutaEstudio, 'utf8')) : {}
 
   // Titulares de portada de cada artículo (para el rótulo), si el bloque no trae uno.
   const titulares = {}
@@ -280,20 +290,28 @@ async function main() {
   await mkdir(join(salida, 'compositions'), { recursive: true })
   await mkdir(join(salida, 'assets', 'fotos'), { recursive: true })
   await mkdir(join(salida, 'assets', 'sonidos'), { recursive: true })
+  await writeFile(join(salida, 'guion.json'), JSON.stringify(guion, null, 1))
 
-  // Fotos: una por URL única; si falla la descarga, el espacio queda marcado.
+  // Fotos: una por URL única (se reutilizan si ya se descargaron); si falla, el espacio queda marcado.
   const rutas = new Map()
   const urls = [...new Set((guion.bloques || []).flatMap(b => (b.planos || []).map(p => p?.imagen).filter(Boolean)))]
   for (const [i, url] of urls.entries()) {
     const destino = `assets/fotos/foto-${i + 1}.jpg`
+    if (existsSync(join(salida, destino))) { rutas.set(url, destino); continue }
     if (sinRed) { rutas.set(url, ''); continue }
     try { await descargarFoto(url, join(salida, destino)); rutas.set(url, destino) } catch (error) {
       process.stderr.write(`No se pudo descargar una foto (${error.message}); su espacio queda vacío.\n`)
       rutas.set(url, '')
     }
   }
+  // Las fotos que sube Juan ya son rutas locales del proyecto.
+  const rutaFoto = url => (String(url).startsWith('assets/') ? (existsSync(join(salida, url)) ? url : '') : (rutas.get(url) ?? ''))
 
-  const plan = planificar(guion, { ppm: config.formato.palabrasPorMinuto, repetirFotos: args.includes('--repetir-fotos'), titulares, rutaFoto: url => rutas.get(url) ?? '' })
+  const plan = planificar(guion, { ppm: config.formato.palabrasPorMinuto, repetirFotos, titulares, rutaFoto, estudio })
+  // Se borran las escenas de una generación anterior: el número de instancias cambia con los tiempos.
+  for (const nombre of await readdir(join(salida, 'compositions'))) {
+    if (nombre.endsWith('.html')) await rm(join(salida, 'compositions', nombre), { force: true })
+  }
   await writeFile(join(salida, 'index.html'), armarIndex(plan, guion.tituloVideo || `Pont3la10 · ${guion.fecha}`))
   for (const escena of plan.escenas) {
     const html = await readFile(join(PACK, 'compositions', `${escena.escena}.html`), 'utf8')
@@ -306,11 +324,26 @@ async function main() {
     if (existsSync(join(PACK, nombre))) await copyFile(join(PACK, nombre), join(salida, nombre))
   }
   await writeFile(join(salida, 'teleprompter.txt'), textoTeleprompter(plan))
-  await writeFile(join(salida, 'manifiesto.json'), JSON.stringify({ fecha: guion.fecha, tituloVideo: guion.tituloVideo, duracion: plan.duracion, segmentos: plan.segmentos }, null, 2))
+  await writeFile(join(salida, 'manifiesto.json'), JSON.stringify({ fecha: guion.fecha, tituloVideo: guion.tituloVideo, duracion: plan.duracion, segmentos: plan.segmentos, fotos: plan.resumenFotos }, null, 2))
 
-  const caras = plan.segmentos.filter(s => s.tipo === 'cara')
-  const vacios = plan.escenas.filter(e => e.escena === 'galeria').flatMap(e => [1, 2, 3].slice(0, e.variables.cantidad).filter(i => !e.variables[`foto${i}`])).length
-  process.stdout.write(`Proyecto en ${salida}\nDuración: ${plan.duracion} s · ${plan.escenas.length} escenas · ${caras.length} tomas a cámara · ${vacios} espacios de foto por llenar\n`)
+  const vacios = plan.resumenFotos.reduce((suma, r) => suma + r.vacios, 0)
+  return { salida, duracion: plan.duracion, escenas: plan.escenas.length, tomas: plan.segmentos.filter(s => s.tipo === 'cara').length, grabados: plan.segmentos.filter(s => s.grabado).length, tramos: plan.segmentos.length, vacios }
+}
+
+async function main() {
+  const args = process.argv.slice(2)
+  const archivo = args.find(a => !a.startsWith('--'))
+  const valor = nombre => { const i = args.indexOf(nombre); return i >= 0 ? args[i + 1] : undefined }
+  if (!archivo) {
+    process.stderr.write('Uso: node scripts/video-generar-proyecto.mjs <guion.json> [--salida <dir>] [--repetir-fotos] [--sin-red]\n')
+    process.exit(2)
+  }
+  const guion = JSON.parse(await readFile(resolve(archivo), 'utf8'))
+  const salida = resolve(valor('--salida') || join(RAIZ, 'videos', 'diario', String(guion.fecha || 'sin-fecha')))
+  const r = await generarProyecto({ guion, salida, repetirFotos: args.includes('--repetir-fotos'), sinRed: args.includes('--sin-red') })
+  process.stdout.write(`Proyecto en ${r.salida}
+Duración: ${r.duracion} s · ${r.escenas} escenas · ${r.tomas} tomas a cámara · ${r.grabados}/${r.tramos} tramos grabados · ${r.vacios} espacios de foto por llenar
+`)
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
