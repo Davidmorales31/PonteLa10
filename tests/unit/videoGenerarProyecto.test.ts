@@ -9,7 +9,7 @@ interface Galeria { inicio: number, duracion: number, segundosPorFoto: number, e
 
 const planificar = generador.planificar as (guion: unknown, opciones?: Record<string, unknown>) => Plan
 const repartirGalerias = generador.repartirGalerias as (duracion: number, fotos: Array<{ url: string, credito: string }>, repetir: boolean) => Galeria[]
-const instanciarEscena = generador.instanciarEscena as (html: string, escena: string, n: number, duracionInterna?: number) => string
+const instanciarEscena = generador.instanciarEscena as (html: string, escena: string, n: number, duracionInterna?: number, variables?: Record<string, string>) => string
 const armarIndex = generador.armarIndex as (plan: Plan, titulo: string) => string
 const fechaLarga = generador.fechaLarga as (fecha: string) => string
 
