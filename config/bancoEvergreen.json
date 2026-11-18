@@ -1,0 +1,157 @@
+{
+  "version": 1,
+  "actualizadoEn": "2026-11-17",
+  "decididoPor": "responsable del sitio, 2026-11-17",
+  "proposito": "Reserva de piezas de baja caducidad para completar la meta de la corrida (8 a 12) cuando no hay suficientes noticias del día. Ninguna corrida debe cerrar en cero.",
+  "reglas": {
+    "usarSoloSiHayMenosDe": 8,
+    "maximoPorClubPorSemana": 2,
+    "maximoPorcentajeDeLaCorrida": 50,
+    "frescuraDias": 0,
+    "antesDePublicar": [
+      "Revisar el feed y los últimos 100 artículos para no repetir la misma plantilla sobre el mismo club en la semana.",
+      "Tomar los datos del sitio (tabla, calendario, perfiles, historial) o de DIMAYOR; cada cifra con fuente identificable.",
+      "Sin dato verificable no se publica la plantilla: se elige otra o se registra el déficit.",
+      "La foto real sigue siendo obligatoria (foto de archivo del club o de sus jugadores, con crédito)."
+    ],
+    "longitudObjetivoPalabras": 600
+  },
+  "plantillas": [
+    {
+      "id": "historia-titulos",
+      "formato": "perfil",
+      "aplicaA": "club",
+      "titulo": "Así ha sido la historia de {club} en el fútbol colombiano",
+      "datosDelSitio": ["perfil del club", "palmarés", "historial de temporadas"],
+      "intencion": "perfil"
+    },
+    {
+      "id": "estadio-como-ver",
+      "formato": "explicacion",
+      "aplicaA": "club",
+      "titulo": "Estadio de {club}: capacidad, cómo llegar y cómo ver sus partidos",
+      "datosDelSitio": ["sede", "calendario", "transmisión"],
+      "intencion": "explicacion"
+    },
+    {
+      "id": "idolos-goleadores",
+      "formato": "dato",
+      "aplicaA": "club",
+      "titulo": "Los máximos goleadores e ídolos de {club}",
+      "datosDelSitio": ["estadísticas históricas", "jugadores del plantel"],
+      "intencion": "perfil"
+    },
+    {
+      "id": "clasicos-rivalidades",
+      "formato": "analisis",
+      "aplicaA": "club",
+      "titulo": "Las rivalidades de {club}: historial y claves de sus clásicos",
+      "datosDelSitio": ["historial de enfrentamientos", "resultados recientes"],
+      "intencion": "analisis"
+    },
+    {
+      "id": "que-necesita-clasificar",
+      "formato": "analisis",
+      "aplicaA": "club",
+      "titulo": "Qué necesita {club} para avanzar en el torneo actual",
+      "datosDelSitio": ["tabla de posiciones", "calendario restante"],
+      "intencion": "calendario"
+    },
+    {
+      "id": "plantel-jugadores-clave",
+      "formato": "dato",
+      "aplicaA": "club",
+      "titulo": "Plantel de {club}: los jugadores clave de la temporada",
+      "datosDelSitio": ["plantel", "estadísticas de la temporada"],
+      "intencion": "perfil"
+    },
+    {
+      "id": "canteras-promesas",
+      "formato": "perfil",
+      "aplicaA": "club",
+      "titulo": "Las promesas de la cantera de {club}",
+      "datosDelSitio": ["jugadores juveniles", "debuts recientes"],
+      "intencion": "perfil"
+    },
+    {
+      "id": "rendimiento-local-visitante",
+      "formato": "analisis",
+      "aplicaA": "club",
+      "titulo": "{club} como local y visitante: lo que dicen los números",
+      "datosDelSitio": ["resultados del torneo", "tabla"],
+      "intencion": "analisis"
+    },
+    {
+      "id": "uniformes-colores",
+      "formato": "explicacion",
+      "aplicaA": "club",
+      "titulo": "Camiseta, escudo y colores de {club}: su historia",
+      "datosDelSitio": ["perfil del club"],
+      "intencion": "explicacion"
+    },
+    {
+      "id": "records-marcas",
+      "formato": "dato",
+      "aplicaA": "club",
+      "titulo": "Récords y marcas históricas de {club}",
+      "datosDelSitio": ["estadísticas históricas", "palmarés"],
+      "intencion": "perfil"
+    },
+    {
+      "id": "colombianos-en-el-exterior",
+      "formato": "dato",
+      "aplicaA": "futbol-mundial",
+      "titulo": "Colombianos en el exterior: cómo les va esta temporada",
+      "datosDelSitio": ["perfiles de jugadores", "estadísticas"],
+      "intencion": "actualidad",
+      "nota": "Solo futbolistas colombianos; cada dato con fuente identificable."
+    },
+    {
+      "id": "seleccion-convocados-historial",
+      "formato": "analisis",
+      "aplicaA": "seleccion",
+      "titulo": "Selección Colombia: balance y claves de la última convocatoria",
+      "datosDelSitio": ["convocatorias", "resultados recientes"],
+      "intencion": "analisis"
+    },
+    {
+      "id": "seleccion-historial-rival",
+      "formato": "dato",
+      "aplicaA": "seleccion",
+      "titulo": "Colombia y su historial frente al próximo rival",
+      "datosDelSitio": ["partidos anteriores", "calendario FIFA"],
+      "intencion": "calendario"
+    },
+    {
+      "id": "tabla-reclasificacion",
+      "formato": "explicacion",
+      "aplicaA": "liga",
+      "titulo": "Cómo funciona la tabla de reclasificación de la Liga BetPlay",
+      "datosDelSitio": ["reglamento", "tabla acumulada"],
+      "intencion": "explicacion"
+    },
+    {
+      "id": "descenso-promedio",
+      "formato": "explicacion",
+      "aplicaA": "liga",
+      "titulo": "El descenso en Colombia: cómo se calcula el promedio",
+      "datosDelSitio": ["reglamento DIMAYOR", "tabla del descenso"],
+      "intencion": "explicacion"
+    },
+    {
+      "id": "calendario-cuadrangulares",
+      "formato": "calendario",
+      "aplicaA": "liga",
+      "titulo": "Calendario de los cuadrangulares: fechas, grupos y dónde ver",
+      "datosDelSitio": ["calendario DIMAYOR", "transmisión"],
+      "intencion": "calendario"
+    }
+  ],
+  "reservaTendencia": [
+    "fichajes y rumores de mercado con fuente identificable y atribuidos",
+    "polémicas arbitrales y designaciones",
+    "tabla acumulada de torneos cortos",
+    "crisis económicas y salariales de clubes con la versión de cada parte atribuida"
+  ],
+  "alcanceDeClubes": "Los 20 clubes de config/fuentesFutbolColombiano.json → cuentasOficiales.clubes. Reemplaza {club} por el nombre exacto de la ficha."
+}

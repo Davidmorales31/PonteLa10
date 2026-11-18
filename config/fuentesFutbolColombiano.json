@@ -75,11 +75,35 @@
     { "nombre": "FCF / Selección", "url": "https://fcf.com.co", "uso": "convocatorias, partidos, comunicados" },
     { "nombre": "Google Noticias RSS por club", "url": "https://news.google.com/rss/search?q=%22<club>%22+when:2d&hl=es-419&gl=CO&ceid=CO:es-419", "uso": "radar de lo ocurrido hoy; no es fuente" }
   ],
+  "fuentesAmpliadas": {
+    "decididoPor": "responsable del sitio, 2026-11-17",
+    "nota": "Una fuente identificable basta. Estas categorías se citan siempre atribuidas y se tratan como rumor si no hay confirmación oficial. No se inventan usuarios: solo los de esta ficha o los que el agente haya visto en una búsqueda.",
+    "estables": [
+      { "tipo": "rssMedios", "uso": "RSS propios de Win Sports, Futbolred, El País, El Tiempo, Infobae, La FM, Caracol, ESPN, Semana, AS Colombia y Pulzo", "estado": "verificar la URL de cada feed antes de usarla" },
+      { "tipo": "youtube", "uso": "canales de clubes, DIMAYOR, FCF y programas deportivos", "patron": "https://www.youtube.com/feeds/videos.xml?channel_id=<ID>", "estado": "completar los channel_id verificados" },
+      { "tipo": "reddit", "uso": "subreddits de fútbol colombiano (JSON/RSS público)", "estado": "completar los subreddits verificados" },
+      { "tipo": "telegram", "uso": "canales públicos de noticias del fútbol colombiano", "patron": "https://t.me/s/<canal>", "estado": "completar los canales verificados" },
+      { "tipo": "sitiosOficiales", "uso": "dimayor.com.co, fcf.com.co y los sitios de los clubes" }
+    ],
+    "fragiles": [
+      { "tipo": "x", "herramientas": ["Scweet", "twscrape"], "riesgo": "dependen de cookies de una cuenta, rompen con cambios de X e incumplen los términos de X; usar solo una cuenta desechable", "estado": "no instalada; fase de fuentes" },
+      { "tipo": "instagramFacebookTiktok", "herramientas": ["RSS-Bridge", "RSSHub"], "riesgo": "Instagram y Facebook son inestables y pueden exigir cuenta; TikTok por usuario", "estado": "no instalada; fase de fuentes" }
+    ],
+    "comunidad": {
+      "uso": "cuentas y portales de aficionados, foros y excompañeros o familiares que hablen en público",
+      "tratamiento": "siempre atribuidos («según…»); rumor si nada oficial lo confirma",
+      "estado": "lista por completar con cuentas vistas en búsquedas reales"
+    }
+  },
   "fotos": {
     "politica": "minima",
     "decididoPor": "responsable del sitio, 2026-11-15",
+    "regla": "La foto real es obligatoria en toda pieza; sin IA ni ilustración. Si una historia no tiene foto tras agotar la escalera del skill (sección 6), se sustituye por otra historia.",
+    "decididoPor2": "responsable del sitio, 2026-11-17",
     "permitidas": [
       "Fotos y videos de cuentas oficiales de clubes, DIMAYOR y FCF/Selección",
+      "Imágenes de posts públicos de jugadores, periodistas y aficionados, con crédito a la cuenta y enlace al post",
+      "Foto de archivo del mismo protagonista de una nota anterior, marcada «foto de archivo»",
       "Fotos de medios y periodistas publicadas en sus cuentas o artículos",
       "Galería de prensa de DIMAYOR (https://galeriaprensa.dimayor.com.co), que pide registro como medio",
       "Embeds oficiales de X, Instagram, YouTube o TikTok cuando el post es la noticia"
