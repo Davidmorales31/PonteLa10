@@ -83,6 +83,14 @@ export function evaluarGuion(guion, config) {
   agregar('fotos_con_credito', 'Toda foto lleva crédito', 10, bloques.length > 0 && !sinCredito.length,
     sinCredito.length ? `foto sin crédito o bloque sin foto: ${sinCredito.join(', ')}` : 'ok')
 
+  if (config.tono) {
+    const marcas = config.tono.marcas.map(marca => new RegExp(`(^|[^\\p{L}])${marca.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=$|[^\\p{L}])`, 'iu'))
+    const cercanos = bloques.filter(bloque => marcas.some(re => re.test(`${bloque.caraBreve || ''} ${bloque.voz || ''}`)))
+    const proporcion = bloques.length ? cercanos.length / bloques.length : 0
+    agregar('tono_cercano', 'Narración cercana (primera persona, le habla al público)', 5, proporcion >= config.tono.proporcionMinimaBloques,
+      `${cercanos.length} de ${bloques.length} bloques con voz cercana (mínimo ${Math.round(config.tono.proporcionMinimaBloques * 100)} %)`)
+  }
+
   agregar('pregunta_final', 'Pregunta final que invita a comentar', 5, /\?/.test(guion?.preguntaFinal || ''),
     /\?/.test(guion?.preguntaFinal || '') ? 'ok' : 'falta la pregunta final')
 

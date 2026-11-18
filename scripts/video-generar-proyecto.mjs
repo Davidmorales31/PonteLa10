@@ -150,6 +150,11 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
   transicion(t)
 
   cara(guion?.gancho?.texto, 'Gancho', null)
+  // Suscríbete al inicio (decisión de Juan): entra justo después del gancho, sobre la presentación.
+  const inicioSuscribete = t
+  escenas.push({ escena: 'suscribete', inicio: inicioSuscribete, duracion: DURACIONES.suscribete, capa: 5 })
+  sonido('clic', inicioSuscribete + 1.35, 0.8)
+  sonido('clic', inicioSuscribete + 2.4, 0.8)
   if (guion?.presentacion?.texto) {
     const fotos = fotosPorBloque.slice(0, 3).map(lista => lista[0]).filter(Boolean)
     voz(guion.presentacion.texto, 'Presentación', null, fotos)
@@ -183,13 +188,7 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
     sonido('pop', inicio + 0.3, 0.55)
   }
 
-  if (guion?.cierre?.texto) {
-    const inicioCierre = t
-    cara(guion.cierre.texto, 'Cierre', null)
-    escenas.push({ escena: 'suscribete', inicio: inicioCierre, duracion: DURACIONES.suscribete, capa: 5 })
-    sonido('clic', inicioCierre + 1.35, 0.8)
-    sonido('clic', inicioCierre + 2.4, 0.8)
-  }
+  if (guion?.cierre?.texto) cara(guion.cierre.texto, 'Cierre', null)
 
   transicion(t)
   escenas.push({ escena: 'cierre', inicio: t, duracion: DURACIONES.cierre, capa: 1, variables: { fondo: portada ? rutaFoto(portada.url) : '', web: 'pont3la10.com' } })

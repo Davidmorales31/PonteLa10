@@ -1,6 +1,6 @@
 ---
 name: pont3la10-video-diario-guion
-description: Escribe el guion del video diario de Pont3la10 (~5 min, 16:9) a partir de los artículos publicados hoy: gancho, bloques por noticia con fuente, tomas breves con cara, planos con foto acreditada, pregunta final y cierre. Lo valida con la rúbrica ejecutable antes de entregarlo.
+description: Escribe el guion del video diario de Pont3la10 (mínimo 8 min, 16:9, voz cercana) a partir de los artículos publicados hoy: gancho, bloques por noticia con fuente, tomas breves con cara, planos con foto acreditada, pregunta final y cierre. Lo valida con la rúbrica ejecutable antes de entregarlo.
 ---
 
 # Guion del video diario
@@ -14,19 +14,19 @@ Un archivo `guion.json` para el día (fecha de Bogotá) que pase `node scripts/v
 ## Antes de escribir
 
 1. Lista los artículos del día: `https://www.pont3la10.com/api/articulos?categoria=futbol-colombiano&limite=50`, filtrados por la fecha de Bogotá (UTC−5, no confíes en la variable TZ del shell).
-2. Elige 4 a 7 historias. Orden de preferencia: la de mayor consecuencia deportiva, una primicia o dato nuevo, un «cómo queda» (tabla, cruces, cuadrangulares), después el resto. Una historia por club mientras sea posible. No repitas la del día anterior.
+2. Elige 8 a 12 historias (el video dura **mínimo 8 minutos**). Cubre muchos clubes, no solo la Selección: usa los artículos del día y, si faltan, los de la noche anterior que no salieron en el video de ayer. Orden de preferencia: la de mayor consecuencia deportiva, una primicia o dato nuevo, un «cómo queda» (tabla, cruces, cuadrangulares), después el resto. Una historia por club mientras sea posible. No repitas la del día anterior.
 3. Lee de cada artículo el cuerpo completo y sus fuentes (`sources`); el guion se apoya en ellas, no en el titular.
 4. Una historia sin foto real con crédito no entra al video.
 
-## Estructura (≈ 300 s a 155 palabras por minuto)
+## Estructura (8–10 minutos: 450–600 s a 155 palabras por minuto, unas 1.250 palabras)
 
 | Pieza | Reglas |
 |---|---|
 | `gancho` (cara) | La noticia más fuerte del día en ≤ 28 palabras, con cifra, cita o fuente. **Nunca** empieza con saludo («hola», «bienvenidos»…). |
-| `presentacion` | Una frase que anuncia los 3 temas que vienen («Hoy en Pont3la10: …»). |
-| `bloques` (4–7) | Cada uno cuenta una noticia en 70–130 palabras de voz, con este molde: dato duro → fuente nombrada («según Win Sports», «informó el club») → contexto en una o dos frases → qué implica. Un `caraBreve` (≤ 30 palabras) que Juan dice a cámara al abrir el bloque. |
+| `presentacion` | Saludo corto y cercano, invitación a suscribirse (en pantalla entra la animación de suscríbete justo aquí) y los 3 temas fuertes que vienen. |
+| `bloques` (8–12) | Cada uno cuenta una noticia en 80–160 palabras de voz, con este molde: dato duro → fuente nombrada («según Win Sports», «informó el club») → contexto en una o dos frases → qué implica. Un `caraBreve` (≤ 30 palabras) que Juan dice a cámara al abrir el bloque. |
 | `preguntaFinal` | Una pregunta que invite a comentar sobre la historia más discutible del día. |
-| `cierre` (cara) | ≤ 45 palabras: suscripción, campana y despedida. |
+| `cierre` (cara) | ≤ 45 palabras: recordatorio de suscripción y campana, y despedida personal. |
 
 Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un plano o zoom por cada 8 segundos de bloque (un bloque de 45 s necesita 6). Cada plano usa una foto real del artículo con su `credito` exacto (el de `media_files.credit`). Nada de imágenes de partidos ni de video ajeno, ni ilustraciones, ni montajes con logos.
 
@@ -62,9 +62,16 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
 
 **Regla visual (decisión de Juan):** nunca gráficos a pantalla completa. Los planos son **solo fotos reales**; las cifras van en `dato` (tarjeta pequeña sobre la foto) y los resultados en `marcador` (marcador de esquina), ambos opcionales y solo con datos que estén en la fuente. Añade más fotos de la misma noticia cuando las encuentres con crédito o licencia CC0, CC BY o CC BY-SA (con atribución); si no hay, el generador deja el espacio marcado para que Juan ponga la suya. Nunca imágenes generadas por IA ni montajes.
 
-## Estilo de locución
+## Estilo de locución: cercano y de confianza
 
-- Español neutro, frases cortas, una idea por frase; Juan lo lee en voz alta a 150–165 palabras por minuto.
+Juan le habla a su gente como un amigo que sabe de fútbol, no como un noticiero. La rúbrica exige voz cercana en al menos el 60 % de los bloques.
+
+- Primera persona y hablándole al público: «les cuento», «miren esto», «ojo con este dato», «para mí», «la verdad», «imagínense», «vamos con…».
+- Opiniones sí, pero marcadas como opinión («yo creo que…», «para mí…») y separadas del dato con su fuente. Nunca opiniones sobre salud, vida privada o acusaciones.
+- Expresiones colombianas con naturalidad y sin exagerar; nada de groserías ni burlas a hinchadas o personas.
+- Reacciones breves que suenen reales («¡qué partidazo!», «esto se puso bueno») solo cuando el hecho lo justifica.
+- Transiciones conversadas entre bloques («y hablando de cuadrangulares…», «cambiemos de ciudad…»).
+- Frases cortas, una idea por frase; Juan lo lee en voz alta a 150–165 palabras por minuto.
 - Números y siglas legibles en voz alta («tres a dos», «Dimayor»). Marcadores y fechas solo si están en la fuente.
 - Los rumores se cuentan como rumor («según X, sin confirmación oficial»). Si dos fuentes se contradicen, no afirmes el dato.
 - Nada de salud, vida privada ni acusaciones sobre personas reales sin fuente de primer nivel.
@@ -76,7 +83,7 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
 
 ## Rúbrica (obligatoria)
 
-Ejecuta `node scripts/video-rubrica-guion.mjs guion.json` y corrige hasta **APROBADO** (puntaje ≥ 85 y sin fallos en los criterios obligatorios): duración total (240–360 s), gancho sin saludo, fuente atribuida en cada bloque, crédito en cada foto y rumores atribuidos. Informa el puntaje y los criterios que fallaron si no llegas a aprobar; no maquilles el JSON para que pase.
+Ejecuta `node scripts/video-rubrica-guion.mjs guion.json` y corrige hasta **APROBADO** (puntaje ≥ 85 y sin fallos en los criterios obligatorios): duración total (450–600 s), gancho sin saludo, fuente atribuida en cada bloque, crédito en cada foto y rumores atribuidos. Informa el puntaje y los criterios que fallaron si no llegas a aprobar; no maquilles el JSON para que pase.
 
 ## Armar el proyecto de video
 
