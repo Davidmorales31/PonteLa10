@@ -20,6 +20,38 @@ function palabrasDeBloque(bloque) {
   return contarPalabras(bloque.caraBreve) + contarPalabras(bloque.voz)
 }
 
+const EMOJI = /\p{Extended_Pictographic}/gu
+const palabrasEnMayusculas = texto => (String(texto).match(/\b[A-ZÁÉÍÓÚÑ]{3,}\b/g) || []).length
+// Nombre propio: una palabra con mayúscula inicial que no abre la frase, o una sigla (DIM, VAR).
+const tieneNombrePropio = texto => String(texto).split(/\s+/).some((palabra, i) => (i > 0 && /^[¡¿"«(]?[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+/.test(palabra)) || /^[¡¿"«(]?[A-ZÁÉÍÓÚÑ]{2,}\b/.test(palabra))
+
+// Revisa los títulos A/B: cantidad, largo, distintos entre sí y con un nombre propio en los primeros caracteres.
+export function revisarTitulos(titulos, reglas) {
+  const lista = Array.isArray(titulos) ? titulos.map(t => String(t || '').trim()) : []
+  const problemas = []
+  if (lista.length !== reglas.cantidad) problemas.push(`se esperan ${reglas.cantidad} títulos y hay ${lista.length}`)
+  if (new Set(lista.map(t => t.toLowerCase())).size !== lista.length) problemas.push('hay títulos repetidos')
+  lista.forEach((t, i) => {
+    if (t.length < reglas.caracteresMinimos || t.length > reglas.caracteresMaximos) problemas.push(`título ${i + 1}: ${t.length} caracteres (rango ${reglas.caracteresMinimos}–${reglas.caracteresMaximos})`)
+    if (!tieneNombrePropio(t.slice(0, reglas.claveEnLosPrimeros))) problemas.push(`título ${i + 1}: sin nombre propio en los primeros ${reglas.claveEnLosPrimeros} caracteres`)
+    if (palabrasEnMayusculas(t) > reglas.maximoPalabrasEnMayusculas) problemas.push(`título ${i + 1}: demasiadas palabras en mayúsculas`)
+    if ((t.match(EMOJI) || []).length > reglas.maximoEmojis) problemas.push(`título ${i + 1}: más de ${reglas.maximoEmojis} emoji`)
+  })
+  return problemas
+}
+
+// El texto de la miniatura es corto (2–5 palabras), no copia el título y marca una palabra a resaltar que está en el texto.
+export function revisarMiniatura(miniatura, titulos, reglas) {
+  const texto = String(miniatura?.texto || '').trim()
+  const problemas = []
+  const palabras = texto.split(/\s+/).filter(Boolean)
+  if (palabras.length < reglas.palabrasMinimas || palabras.length > reglas.palabrasMaximas) problemas.push(`${palabras.length} palabras (rango ${reglas.palabrasMinimas}–${reglas.palabrasMaximas})`)
+  if (texto.length > reglas.caracteresMaximos) problemas.push(`${texto.length} caracteres (máximo ${reglas.caracteresMaximos})`)
+  if (texto && titulos.some(t => String(t).toLowerCase().includes(texto.toLowerCase()))) problemas.push('repite el título; debe sumar información')
+  if (miniatura?.resaltar && !texto.toLowerCase().includes(String(miniatura.resaltar).toLowerCase())) problemas.push('la palabra a resaltar no está en el texto')
+  return problemas
+}
+
 export function evaluarGuion(guion, config) {
   const { formato, gancho, bloques: cfgBloques, cierre, tituloVideo, atribucion, aprobacion } = config
   const bloques = Array.isArray(guion?.bloques) ? guion.bloques : []
@@ -99,11 +131,20 @@ export function evaluarGuion(guion, config) {
     contarPalabras(cierreTexto) > 0 && contarPalabras(cierreTexto) <= cierre.maximoPalabras && contieneAlguno(cierreTexto, cierre.debeInvitarA),
     `${contarPalabras(cierreTexto)} palabras (máximo ${cierre.maximoPalabras})`)
 
-  const titulo = String(guion?.tituloVideo || '')
+  const titulo = String(guion?.tituloVideo || guion?.titulos?.[0] || '')
   const partes = titulo.split('|').map(parte => parte.trim()).filter(Boolean)
   agregar('titulo_video', 'Título con largo adecuado y sin exceso de ganchos', 5,
     titulo.length >= tituloVideo.caracteresMinimos && titulo.length <= tituloVideo.caracteresMaximos && partes.length <= tituloVideo.maximoGanchosConBarra,
     `${titulo.length} caracteres, ${partes.length} parte(s)`)
+
+  if (config.titulos) {
+    const problemas = revisarTitulos(guion?.titulos, config.titulos)
+    agregar('titulos_ab', `${config.titulos.cantidad} títulos distintos para la prueba A/B`, 5, !problemas.length, problemas.length ? problemas.join('; ') : 'ok')
+  }
+  if (config.miniatura) {
+    const problemas = revisarMiniatura(guion?.miniatura, guion?.titulos || [titulo], config.miniatura)
+    agregar('miniatura_texto', 'Texto corto de miniatura que no repite el título', 5, !problemas.length, problemas.length ? problemas.join('; ') : 'ok')
+  }
 
   const pesoTotal = criterios.reduce((suma, criterio) => suma + criterio.peso, 0)
   const pesoLogrado = criterios.filter(criterio => criterio.ok).reduce((suma, criterio) => suma + criterio.peso, 0)

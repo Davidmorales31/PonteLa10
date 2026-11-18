@@ -176,6 +176,22 @@
   .reel .error-reel { color: #ffb4bd; font-size: 12px; min-height: 16px; }
   .reel .fila { display: flex; gap: 8px; }
   .reel .fila .boton { flex: 1; min-height: 40px; padding: 0 8px; font-size: 13px; }
+  .control-musica { display: inline-flex; align-items: center; gap: 6px; color: var(--texto-2); }
+  .control-musica select { max-width: 220px; }
+  dialog#dialogo-publicacion { max-width: 980px; width: calc(100vw - 40px); max-height: 90vh; overflow: auto; }
+  .seccion-pub { padding: 14px 0; border-top: 1px solid var(--borde-suave); }
+  .seccion-pub h3 { margin: 0 0 4px; font-size: 15px; }
+  .lista-titulos { display: grid; gap: 8px; margin: 8px 0 0; padding-left: 22px; }
+  .lista-titulos li { padding: 8px 10px; border: 1px solid var(--borde-suave); border-radius: 8px; background: var(--panel-2); }
+  .lista-titulos .fila-titulo { display: flex; align-items: center; gap: 10px; justify-content: space-between; }
+  .lista-titulos .largo { font-size: 12px; color: var(--texto-3); white-space: nowrap; }
+  .fila-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+  .lista-miniaturas { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; }
+  .lista-miniaturas figure { margin: 0; display: grid; gap: 6px; }
+  .lista-miniaturas img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; border: 1px solid var(--borde-suave); }
+  .lista-miniaturas .fila { display: flex; gap: 6px; }
+  .lista-miniaturas .fila .boton { flex: 1; min-height: 36px; padding: 0 8px; font-size: 13px; }
+  #descripcion-youtube { width: 100%; padding: 10px; border: 1px solid var(--borde); border-radius: 8px; background: var(--fondo); color: var(--texto); font: inherit; font-size: 13px; margin: 8px 0; resize: vertical; }
   .atajos { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 14px; color: var(--texto-2); }
   .vacio { display: grid; place-items: center; gap: 10px; padding: 40px; text-align: center; color: var(--texto-2); }
   .vacio code { padding: 6px 10px; border-radius: 6px; background: var(--panel-2); color: var(--amarillo); }
@@ -206,6 +222,8 @@
   <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
   <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 13h.01M12 13h.01M16 13h.01M7 16h10"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-music" viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 6a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></symbol>
   <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></symbol>
   <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></symbol>
@@ -297,7 +315,15 @@
 
 <footer>
   <button class="boton primario" id="armar"><svg class="icono"><use href="#i-wand"/></svg><span>Armar video</span></button>
+  <label class="control-musica" title="Música de fondo: baja sola cuando hablas">
+    <svg class="icono" aria-hidden="true"><use href="#i-music"/></svg>
+    <span class="oculto">Música de fondo</span>
+    <select id="musica" aria-label="Música de fondo"></select>
+  </label>
+  <button class="boton icono-solo" id="escuchar-musica" aria-label="Escuchar la pista elegida" title="Escuchar la pista"><svg class="icono"><use href="#i-play"/></svg></button>
+  <audio id="vista-musica" preload="none"></audio>
   <button class="boton" id="render"><svg class="icono"><use href="#i-film"/></svg><span>Renderizar</span></button>
+  <button class="boton" id="ver-publicacion"><svg class="icono"><use href="#i-image"/></svg><span>Títulos y miniaturas</span></button>
   <button class="boton" id="crear-reels" disabled title="Primero renderiza el video final"><svg class="icono"><use href="#i-phone"/></svg><span>Crear Reels</span></button>
   <button class="boton" id="ver-reels" hidden><svg class="icono"><use href="#i-play"/></svg><span>Ver Reels</span></button>
   <div class="progreso-render" id="progreso-render" aria-hidden="true"><div></div></div>
@@ -306,6 +332,34 @@
 </footer>
 
 <div id="avisos"></div>
+
+<dialog id="dialogo-publicacion" aria-labelledby="t-publicacion">
+  <h2 id="t-publicacion">Títulos, miniaturas y descripción</h2>
+  <section class="seccion-pub">
+    <h3>Títulos para la prueba A/B</h3>
+    <p class="etiqueta-chica">En YouTube Studio → <em>Probar y comparar</em> sube los 3. Gana el de más tiempo de visualización.</p>
+    <ol id="lista-titulos" class="lista-titulos"></ol>
+  </section>
+  <section class="seccion-pub">
+    <h3>Miniaturas</h3>
+    <p class="etiqueta-chica" id="texto-miniatura"></p>
+    <div class="fila-acciones">
+      <button class="boton primario" id="preparar-encargo"><svg class="icono"><use href="#i-wand"/></svg><span>Preparar encargo para Codex</span></button>
+      <button class="boton" id="copiar-encargo" hidden><svg class="icono"><use href="#i-copy"/></svg><span>Copiar encargo</span></button>
+      <button class="boton" id="abrir-carpeta"><svg class="icono"><use href="#i-folder"/></svg><span>Abrir carpeta</span></button>
+    </div>
+    <p class="etiqueta-chica">Pega el encargo en Codex: allí están las fotos reales, tu cara y las reglas. Cuando Codex entregue las miniaturas, arrástralas aquí.</p>
+    <label class="zona-subida" id="zona-miniaturas" tabindex="0"><svg class="icono" aria-hidden="true"><use href="#i-upload"/></svg><span>Arrastra las miniaturas de Codex o haz clic (JPG o PNG)</span><input type="file" class="oculto" id="archivo-miniaturas" accept="image/jpeg,image/png,image/webp" multiple></label>
+    <div id="lista-miniaturas" class="lista-miniaturas"></div>
+  </section>
+  <section class="seccion-pub">
+    <h3>Descripción de YouTube</h3>
+    <p class="etiqueta-chica">Con capítulos, enlaces a las notas, créditos de fotos y de la música.</p>
+    <textarea id="descripcion-youtube" readonly rows="10" aria-label="Descripción de YouTube"></textarea>
+    <button class="boton" id="copiar-descripcion"><svg class="icono"><use href="#i-copy"/></svg><span>Copiar descripción</span></button>
+  </section>
+  <form method="dialog" style="margin-top:16px;text-align:right"><button class="boton primario">Cerrar</button></form>
+</dialog>
 
 <dialog id="dialogo-reels" aria-labelledby="t-reels">
   <h2 id="t-reels">Tus Reels</h2>
@@ -404,6 +458,7 @@ const grabacionDe = id => detalle.estudio.grabaciones?.[id]
 const siguientePendiente = (desde = -1) => detalle.manifiesto.segmentos.find((s, i) => i > desde && !grabacionDe(s.id)) || detalle.manifiesto.segmentos.find(s => !grabacionDe(s.id))
 
 function pintarPasos() {
+  pintarMusica()
   const segs = detalle.manifiesto.segmentos
   const grabados = segs.filter(s => grabacionDe(s.id)).length
   const vacios = (detalle.manifiesto.fotos || []).reduce((s, f) => s + f.vacios, 0)
@@ -862,6 +917,72 @@ async function crearReels() {
   } catch (err) { avisar(err.message, 'error') }
 }
 
+/* ---------- Música ---------- */
+function pintarMusica() {
+  const m = detalle.musica || { pistas: [] }
+  $('#musica').innerHTML = '<option value="">Sin música</option>' + m.pistas.map(p => `<option value="${escapar(p.id)}">${escapar(p.titulo)} · ${escapar(p.estilo)}</option>`).join('')
+  $('#musica').value = m.elegida || ''
+  $('#escuchar-musica').disabled = !m.elegida
+}
+
+async function elegirMusica() {
+  const id = $('#musica').value
+  try {
+    $('#musica').disabled = true
+    await api(`/api/proyectos/${proyecto}/musica`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) })
+    detalle = await api(`/api/proyectos/${proyecto}`)
+    pintarMusica()
+    avisar(id ? 'Música elegida. Se mezcla al renderizar y baja sola cuando hablas.' : 'Video sin música.', 'ok')
+  } catch (err) { avisar(err.message, 'error') } finally { $('#musica').disabled = false }
+}
+
+function escucharMusica() {
+  const reproductor = $('#vista-musica')
+  if (!reproductor.paused) { reproductor.pause(); return }
+  reproductor.src = `/musica/${detalle.musica.elegida}.m4a`
+  reproductor.currentTime = 0
+  reproductor.play().catch(() => avisar('No se pudo reproducir la pista.', 'error'))
+}
+
+/* ---------- Títulos, miniaturas y descripción ---------- */
+function pintarPublicacion() {
+  $('#lista-titulos').innerHTML = (detalle.titulos || []).map((t, i) => `<li><div class="fila-titulo"><span>${escapar(t)}</span><span class="largo">${t.length} car.</span><button class="boton icono-solo" data-copiar-titulo="${i}" aria-label="Copiar título ${i + 1}">${icono('copy')}</button></div></li>`).join('') || '<li>El guion de este proyecto no trae títulos A/B.</li>'
+  const mini = detalle.miniaturaTexto
+  $('#texto-miniatura').textContent = mini?.texto ? `Texto de la miniatura: «${mini.texto}»${mini.resaltar ? ` (resaltar ${mini.resaltar})` : ''}` : 'El guion no trae texto de miniatura: Codex lo propondrá.'
+  $('#copiar-encargo').hidden = !detalle.encargo
+  $('#lista-miniaturas').innerHTML = (detalle.miniaturas || []).map(m => `<figure><img src="${escapar(m.url)}" alt="Miniatura ${escapar(m.nombre)}"><div class="fila"><a class="boton" href="${escapar(m.url)}" download="${escapar(m.nombre)}">${icono('download')}<span>Descargar</span></a><button class="boton" data-borrar-miniatura="${escapar(m.nombre)}">${icono('trash')}<span>Quitar</span></button></div></figure>`).join('')
+  $('#descripcion-youtube').value = detalle.descripcionYoutube || ''
+  document.querySelectorAll('[data-copiar-titulo]').forEach(b => b.addEventListener('click', () => copiar(detalle.titulos[Number(b.dataset.copiarTitulo)], 'Título copiado.')))
+  document.querySelectorAll('[data-borrar-miniatura]').forEach(b => b.addEventListener('click', async () => {
+    await api(`/api/proyectos/${proyecto}/miniaturas/${b.dataset.borrarMiniatura}`, { method: 'DELETE' })
+    detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion()
+  }))
+}
+
+async function copiar(texto, mensaje) {
+  try { await navigator.clipboard.writeText(texto); avisar(mensaje, 'ok') } catch { avisar('No se pudo copiar. Selecciona el texto y cópialo.', 'error') }
+}
+
+async function prepararEncargo() {
+  try {
+    const r = await ocupado($('#preparar-encargo'), 'Preparando…', () => api(`/api/proyectos/${proyecto}/miniaturas/encargo`, { method: 'POST' }))
+    detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion()
+    await copiar(r.texto, `Encargo listo y copiado (${r.fotos} fotos${r.conCara ? ' y tu cara' : ', sin cara todavía'}). Pégalo en Codex.`)
+  } catch (err) { avisar(err.message, 'error') }
+}
+
+async function subirMiniaturas(archivos) {
+  const imagenes = [...archivos].filter(a => a.type.startsWith('image/'))
+  if (!imagenes.length) { avisar('Elige imágenes JPG, PNG o WebP.', 'error'); return }
+  for (const archivo of imagenes) {
+    try { await api(`/api/proyectos/${proyecto}/miniaturas`, { method: 'POST', headers: { 'content-type': archivo.type }, body: archivo }) } catch (err) { avisar(err.message, 'error') }
+  }
+  detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion()
+  avisar('Miniaturas guardadas en 1280×720.', 'ok')
+}
+
+function verPublicacion() { pintarPublicacion(); $('#dialogo-publicacion').showModal() }
+
 /* ---------- Eventos ---------- */
 $('#proyecto').addEventListener('change', async e => { proyecto = e.target.value; preferencias.proyecto = proyecto; guardarPreferencias(); tramo = null; await cargarDetalle(false) })
 $('#grabar').addEventListener('click', () => (grabador ? detener() : grabar()))
@@ -875,6 +996,18 @@ $('#armar').addEventListener('click', armar)
 $('#render').addEventListener('click', render)
 $('#crear-reels').addEventListener('click', crearReels)
 $('#ver-reels').addEventListener('click', verReels)
+$('#musica').addEventListener('change', elegirMusica)
+$('#escuchar-musica').addEventListener('click', escucharMusica)
+$('#ver-publicacion').addEventListener('click', verPublicacion)
+$('#preparar-encargo').addEventListener('click', prepararEncargo)
+$('#copiar-encargo').addEventListener('click', () => copiar(detalle.encargo, 'Encargo copiado. Pégalo en Codex.'))
+$('#abrir-carpeta').addEventListener('click', () => api(`/api/proyectos/${proyecto}/miniaturas/abrir`, { method: 'POST' }).catch(err => avisar(err.message, 'error')))
+$('#copiar-descripcion').addEventListener('click', () => copiar($('#descripcion-youtube').value, 'Descripción copiada.'))
+$('#archivo-miniaturas').addEventListener('change', e => subirMiniaturas(e.target.files))
+$('#zona-miniaturas').addEventListener('dragover', e => { e.preventDefault(); $('#zona-miniaturas').classList.add('sobre') })
+$('#zona-miniaturas').addEventListener('dragleave', () => $('#zona-miniaturas').classList.remove('sobre'))
+$('#zona-miniaturas').addEventListener('drop', e => { e.preventDefault(); $('#zona-miniaturas').classList.remove('sobre'); subirMiniaturas(e.dataTransfer.files) })
+$('#zona-miniaturas').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#archivo-miniaturas').click() } })
 $('#todos-programar').addEventListener('click', programarTodos)
 $('#todos-cada').addEventListener('change', () => { $('#todos-inicio').value = $('#todos-inicio').value || sugerida(0) })
 $('#ayuda').addEventListener('click', () => $('#dialogo-atajos').showModal())
@@ -889,7 +1022,7 @@ $('#sel-mic').addEventListener('change', e => { preferencias.mic = e.target.valu
 $('#sel-cam').addEventListener('change', e => { preferencias.cam = e.target.value; guardarPreferencias(); prepararDispositivos(true) })
 
 document.addEventListener('keydown', e => {
-  const escribiendo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || $('#dialogo-atajos').open
+  const escribiendo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || Boolean(document.querySelector('dialog[open]'))
   if (escribiendo || e.ctrlKey || e.metaKey || e.altKey) return
   const tecla = e.key.toLowerCase()
   if (e.code === 'Space') { e.preventDefault(); grabador ? detener() : grabar() }

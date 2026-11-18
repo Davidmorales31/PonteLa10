@@ -3,12 +3,15 @@
 // Uso: npm run video:estudio   (o node scripts/video-estudio.mjs) y abrir http://localhost:4810
 import http from 'node:http'
 import { createReadStream, existsSync } from 'node:fs'
-import { readFile, writeFile, readdir, stat, mkdir, rm, rename } from 'node:fs/promises'
+import { readFile, writeFile, readdir, stat, mkdir, rm, rename, copyFile } from 'node:fs/promises'
 import { join, resolve, extname, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { generarProyecto } from './video-generar-proyecto.mjs'
+import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionDe } from './video-musica.mjs'
+import { crearEncargo } from './video-encargo-miniaturas.mjs'
+import { descripcionYoutube } from './video-descripcion.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
 
 const ejecutar = promisify(execFile)
@@ -103,12 +106,23 @@ async function detalleProyecto(proyecto) {
   const final = join(carpeta, 'renders', 'final.mp4')
   const reels = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
   const publicaciones = await leerEstadoPublicaciones(carpeta)
+  const guion = (await leerJson(join(carpeta, 'guion.json'))) || {}
+  const biblioteca = await leerBiblioteca()
+  const carpetaMiniaturas = join(carpeta, 'renders', 'miniaturas')
+  const miniaturas = existsSync(carpetaMiniaturas) ? (await readdir(carpetaMiniaturas)).filter(n => /^miniatura-[a-z0-9-]{1,30}\.jpg$/.test(n)).sort() : []
+  const encargo = join(carpetaMiniaturas, 'ENCARGO-CODEX.md')
   return {
     proyecto, manifiesto, estudio,
     render: render ? { estado: render.estado, registro: render.registro.slice(-1200) } : null,
     videoFinal: existsSync(final) ? `/archivos/${proyecto}/renders/final.mp4?v=${(await stat(final)).mtimeMs}` : null,
     reelsEstado: trabajoReels ? { estado: trabajoReels.estado, registro: trabajoReels.registro.slice(-600) } : null,
     redes: { disponible: redesDisponibles() },
+    musica: { elegida: estudio.musica || null, pistas: biblioteca.pistas.map(p => ({ id: p.id, titulo: p.titulo, autor: p.autor, licencia: p.licencia, estilo: p.estilo, descargada: existsSync(rutaPista(p.id)) })) },
+    titulos: guion.titulos?.length ? guion.titulos : [guion.tituloVideo].filter(Boolean),
+    miniaturaTexto: guion.miniatura || null,
+    descripcionYoutube: descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionDe(estudio.musica) }),
+    miniaturas: await Promise.all(miniaturas.map(async n => ({ nombre: n, url: `/archivos/${proyecto}/renders/miniaturas/${n}?v=${(await stat(join(carpetaMiniaturas, n))).mtimeMs}` }))),
+    encargo: existsSync(encargo) ? await readFile(encargo, 'utf8') : null,
     reels: reels ? reels.reels.map(r => ({ ...r, url: `/archivos/${proyecto}/${r.archivo}?v=${Date.parse(reels.creado)}`, publicacion: publicaciones[r.id] || null })) : []
   }
 }
@@ -192,6 +206,31 @@ async function borrarFoto(proyecto, clave, indice) {
   if (archivo) await rm(archivo, { force: true })
 }
 
+// Miniatura entregada (por Codex o a mano): se normaliza a JPG 1280×720 de menos de 2 MB, como pide YouTube.
+async function guardarMiniatura(proyecto, cuerpo) {
+  if (cuerpo.length < 1000) throw Object.assign(new Error('La imagen está vacía.'), { estado: 422 })
+  const carpeta = join(carpetaDe(proyecto), 'renders', 'miniaturas')
+  await mkdir(carpeta, { recursive: true })
+  const existentes = (await readdir(carpeta)).filter(n => /^miniatura-[a-z]\.jpg$/.test(n))
+  const letra = 'abcdefghij'.split('').find(l => !existentes.includes(`miniatura-${l}.jpg`))
+  if (!letra) throw Object.assign(new Error('Ya hay 10 miniaturas: borra alguna.'), { estado: 409 })
+  const original = join(carpeta, `subida-${Date.now()}.original`)
+  const nombre = `miniatura-${letra}.jpg`
+  await writeFile(original, cuerpo)
+  try {
+    await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-i', original, '-vf', 'scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720', '-q:v', '3', join(carpeta, nombre)])
+  } catch {
+    throw Object.assign(new Error('No se pudo leer la imagen. Usa JPG, PNG o WebP.'), { estado: 422 })
+  } finally {
+    await rm(original, { force: true })
+  }
+  if ((await stat(join(carpeta, nombre))).size > 2 * 1024 * 1024) {
+    await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-i', join(carpeta, nombre), '-q:v', '6', join(carpeta, `${nombre}.tmp.jpg`)])
+    await rename(join(carpeta, `${nombre}.tmp.jpg`), join(carpeta, nombre))
+  }
+  return { nombre }
+}
+
 async function armar(proyecto) {
   const carpeta = carpetaDe(proyecto)
   const guion = await leerJson(join(carpeta, 'guion.json'))
@@ -203,11 +242,22 @@ function renderizar(proyecto) {
   const carpeta = carpetaDe(proyecto)
   const estado = { estado: 'renderizando', registro: '' }
   renders.set(proyecto, estado)
-  const proceso = spawn('npx', ['hyperframes', 'render', '--output', 'renders/final.mp4'], { cwd: carpeta, shell: true, windowsHide: true })
+  const proceso = spawn('npx', ['hyperframes', 'render', '--output', 'renders/final-voz.mp4'], { cwd: carpeta, shell: true, windowsHide: true })
   const anotar = parte => { estado.registro = (estado.registro + parte.toString()).slice(-20000) }
   proceso.stdout.on('data', anotar)
   proceso.stderr.on('data', anotar)
-  proceso.on('close', codigo => { estado.estado = codigo === 0 ? 'listo' : 'error'; ocupados.delete(proyecto) })
+  proceso.on('close', async codigo => {
+    if (codigo !== 0) { estado.estado = 'error'; ocupados.delete(proyecto); return }
+    // Con la voz ya renderizada se mezcla la música elegida (baja sola cuando hablas).
+    try {
+      const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
+      const voz = join(carpeta, 'renders', 'final-voz.mp4')
+      const final = join(carpeta, 'renders', 'final.mp4')
+      if (estudio.musica) { estado.registro += '\nMezclando la música…\n'; await mezclarMusica({ video: voz, id: estudio.musica, salida: final }) } else await copyFile(voz, final)
+      estado.estado = 'listo'
+    } catch (error) { estado.registro += `\nNo se pudo mezclar la música: ${error.message}\n`; estado.estado = 'error' }
+    ocupados.delete(proyecto)
+  })
 }
 
 // Reels: lanza scripts/video-reels.mjs (sin shell) y deja el avance en `trabajosReels`.
@@ -223,7 +273,10 @@ function crearReelsProyecto(proyecto) {
 }
 
 async function servirArchivo(req, res, proyecto, relativo) {
-  const archivo = rutaSegura(carpetaDe(proyecto), decodeURIComponent(relativo))
+  return servirRuta(req, res, rutaSegura(carpetaDe(proyecto), decodeURIComponent(relativo)))
+}
+
+async function servirRuta(req, res, archivo) {
   if (!archivo || !existsSync(archivo)) return responder(res, 404, { error: 'No encontrado.' })
   const info = await stat(archivo)
   const tipo = TIPOS[extname(archivo).toLowerCase()] || 'application/octet-stream'
@@ -251,6 +304,7 @@ export function crearServidor() {
         return res.end(await readFile(PAGINA))
       }
       if (partes[0] === 'archivos' && req.method === 'GET' && proyectoValido(partes[1])) return servirArchivo(req, res, partes[1], partes.slice(2).join('/'))
+      if (partes[0] === 'musica' && req.method === 'GET' && /^[a-z0-9-]{1,40}\.m4a$/.test(partes[1] || '')) return servirRuta(req, res, rutaPista(partes[1].slice(0, -4)))
       if (partes[0] !== 'api' || partes[1] !== 'proyectos') return responder(res, 404, { error: 'No encontrado.' })
       if (partes.length === 2 && req.method === 'GET') return responder(res, 200, { proyectos: await listarProyectos() })
 
@@ -266,6 +320,28 @@ export function crearServidor() {
       if (accion === 'fotos' && claveFotosValida(partes[4])) {
         if (req.method === 'POST') return responder(res, 200, await guardarFoto(proyecto, partes[4], await leerCuerpo(req, LIMITE_FOTO), decodeURIComponent(String(req.headers['x-credito'] || ''))))
         if (req.method === 'DELETE' && /^\d{1,3}$/.test(partes[5] || '')) { await borrarFoto(proyecto, partes[4], Number(partes[5])); return responder(res, 200, { ok: true }) }
+      }
+      if (accion === 'musica' && req.method === 'POST') {
+        let datos = {}
+        try { datos = JSON.parse((await leerCuerpo(req, 2048)).toString('utf8') || '{}') } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
+        const biblioteca = await leerBiblioteca()
+        const id = datos.id ? String(datos.id) : ''
+        if (id && !biblioteca.pistas.some(p => p.id === id)) return responder(res, 404, { error: 'Esa pista no está en la biblioteca.' })
+        if (id) await descargarPista(id)
+        await guardarEstudio(proyecto, estudio => { estudio.musica = id || null })
+        return responder(res, 200, { musica: id || null })
+      }
+      if (accion === 'miniaturas') {
+        const carpetaMiniaturas = join(carpetaDe(proyecto), 'renders', 'miniaturas')
+        if (partes[4] === 'encargo' && req.method === 'POST') return responder(res, 200, await crearEncargo(carpetaDe(proyecto)))
+        if (partes[4] === 'abrir' && req.method === 'POST') {
+          await mkdir(carpetaMiniaturas, { recursive: true })
+          spawn('explorer.exe', [carpetaMiniaturas], { detached: true, stdio: 'ignore' }).unref()
+          return responder(res, 200, { ok: true })
+        }
+        if (!partes[4] && req.method === 'POST') return responder(res, 200, await guardarMiniatura(proyecto, await leerCuerpo(req, LIMITE_FOTO)))
+        if (req.method === 'DELETE' && /^miniatura-[a-z0-9-]{1,30}\.jpg$/.test(partes[4] || '')) { await rm(join(carpetaMiniaturas, partes[4]), { force: true }); return responder(res, 200, { ok: true }) }
+        return responder(res, 404, { error: 'No encontrado.' })
       }
       if (accion === 'reels' && partes[4]) {
         const carpeta = carpetaDe(proyecto)

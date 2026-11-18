@@ -324,7 +324,7 @@ export async function generarProyecto({ guion, salida, repetirFotos = false, sin
     if (existsSync(join(PACK, nombre))) await copyFile(join(PACK, nombre), join(salida, nombre))
   }
   await writeFile(join(salida, 'teleprompter.txt'), textoTeleprompter(plan))
-  await writeFile(join(salida, 'manifiesto.json'), JSON.stringify({ fecha: guion.fecha, tituloVideo: guion.tituloVideo, duracion: plan.duracion, segmentos: plan.segmentos, fotos: plan.resumenFotos }, null, 2))
+  await writeFile(join(salida, 'manifiesto.json'), JSON.stringify({ fecha: guion.fecha, tituloVideo: guion.tituloVideo, duracion: plan.duracion, segmentos: plan.segmentos, fotos: plan.resumenFotos, titulares }, null, 2))
 
   const vacios = plan.resumenFotos.reduce((suma, r) => suma + r.vacios, 0)
   return { salida, duracion: plan.duracion, escenas: plan.escenas.length, tomas: plan.segmentos.filter(s => s.tipo === 'cara').length, grabados: plan.segmentos.filter(s => s.grabado).length, tramos: plan.segmentos.length, vacios }
