@@ -10,6 +10,9 @@ const articulo = {
 }
 const medioId = '11111111-1111-4111-8111-111111111111'
 
+interface PlanPendientes { crear: Array<{ slug: string }>, reanudar: Array<{ id: string }>, omitidos: Array<{ slug: string, motivo: string }> }
+const planificar = (...args: unknown[]) => (planificarPendientes as (...a: unknown[]) => unknown)(...args) as PlanPendientes
+
 describe('publicación social de un artículo', () => {
   it('resalta las dos últimas palabras del titular', () => {
     expect(resaltarFinal('América sufrió hasta el 87 y jugará la final de la Copa')).toBe('América sufrió hasta el 87 y jugará la final de **la Copa**')
@@ -67,18 +70,18 @@ describe('publicación social de un artículo', () => {
     ]
 
     it('crea las que no tienen pieza y reanuda los borradores', () => {
-      const plan = planificarPendientes(lista, piezas, ahora)
+      const plan = planificar(lista, piezas, ahora)
       expect(plan.crear.map(a => a.slug)).toEqual(['sin-pieza'])
       expect(plan.reanudar).toEqual([expect.objectContaining({ id: 'b1' })])
     })
 
     it('omite publicadas, programadas, fallidas, sin foto, futuras y antiguas', () => {
-      const plan = planificarPendientes(lista, piezas, ahora)
+      const plan = planificar(lista, piezas, ahora)
       expect(plan.omitidos.map(o => o.slug).sort()).toEqual(['fallida', 'programada', 'sin-foto', 'ya-publicada'].sort())
     })
 
     it('prefiere la pieza cerrada sobre un borrador duplicado del mismo titular', () => {
-      const plan = planificarPendientes([lista[1]], [...piezas, { id: 'p9', titulo: 'Titular en-borrador', estado: 'published' }], ahora)
+      const plan = planificar([lista[1]], [...piezas, { id: 'p9', titulo: 'Titular en-borrador', estado: 'published' }], ahora)
       expect(plan.reanudar).toEqual([])
       expect(plan.omitidos[0].motivo).toContain('published')
     })
