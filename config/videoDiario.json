@@ -1,28 +1,36 @@
 {
-  "version": 1,
+  "version": 2,
   "descripcion": "Parámetros del video diario de Pont3la10. Salen del estudio docs/ESTUDIO_COMPETENCIA_VIDEO_DIARIO.md.",
   "formato": {
-    "duracionObjetivoSegundos": 300,
-    "duracionMinimaSegundos": 240,
-    "duracionMaximaSegundos": 360,
+    "duracionObjetivoSegundos": 480,
+    "duracionMinimaSegundos": 450,
+    "duracionMaximaSegundos": 600,
     "palabrasPorMinuto": 155,
     "relacionAspecto": "16:9"
   },
   "gancho": {
     "maximoPalabras": 28,
-    "prohibidoEmpezarCon": ["hola", "buenas", "bienvenid", "qué tal", "saludos"]
+    "prohibidoEmpezarCon": [
+      "hola",
+      "buenas",
+      "bienvenid",
+      "qué tal",
+      "saludos"
+    ]
   },
   "bloques": {
-    "minimo": 4,
-    "maximo": 7,
-    "palabrasMinimas": 70,
-    "palabrasMaximas": 130,
+    "minimo": 8,
+    "maximo": 12,
+    "palabrasMinimas": 80,
+    "palabrasMaximas": 160,
     "caraBreveMaximoPalabras": 30,
     "segundosPorPlano": 8
   },
   "cierre": {
     "maximoPalabras": 45,
-    "debeInvitarA": ["suscr"]
+    "debeInvitarA": [
+      "suscr"
+    ]
   },
   "tituloVideo": {
     "caracteresMinimos": 40,
@@ -30,11 +38,64 @@
     "maximoGanchosConBarra": 4
   },
   "atribucion": {
-    "verbosValidos": ["según", "dijo", "dijeron", "informó", "informaron", "confirmó", "confirmaron", "reportó", "aseguró", "publicó", "anunció", "comunicado", "explicó", "afirmó", "indicó"],
-    "marcasDeRumor": ["versión", "según", "no hay confirmación", "sin confirmar", "presunto", "habría", "tendría", "no ha sido confirmad"]
+    "verbosValidos": [
+      "según",
+      "dijo",
+      "dijeron",
+      "informó",
+      "informaron",
+      "confirmó",
+      "confirmaron",
+      "reportó",
+      "aseguró",
+      "publicó",
+      "anunció",
+      "comunicado",
+      "explicó",
+      "afirmó",
+      "indicó"
+    ],
+    "marcasDeRumor": [
+      "versión",
+      "según",
+      "no hay confirmación",
+      "sin confirmar",
+      "presunto",
+      "habría",
+      "tendría",
+      "no ha sido confirmad"
+    ]
   },
   "aprobacion": {
     "puntajeMinimo": 85,
-    "criteriosObligatorios": ["gancho_sin_saludo", "bloques_con_fuente", "fotos_con_credito", "rumor_atribuido", "duracion_total"]
+    "criteriosObligatorios": [
+      "gancho_sin_saludo",
+      "bloques_con_fuente",
+      "fotos_con_credito",
+      "rumor_atribuido",
+      "duracion_total"
+    ]
+  },
+  "tono": {
+    "descripcion": "Narración cercana y de confianza: Juan habla en primera persona y le habla al público.",
+    "proporcionMinimaBloques": 0.6,
+    "marcas": [
+      "yo",
+      "para mí",
+      "les cuento",
+      "ojo",
+      "mi gente",
+      "ustedes",
+      "nosotros",
+      "les digo",
+      "miren",
+      "imagínense",
+      "la verdad",
+      "fíjense",
+      "vamos con",
+      "les confieso",
+      "me parece",
+      "creo"
+    ]
   }
 }

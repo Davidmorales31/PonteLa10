@@ -100,6 +100,15 @@ describe('generador del video diario', () => {
     expect(plan.sonidos.filter(s => s.archivo.startsWith('whoosh')).length).toBe(plan.escenas.filter(e => e.escena.startsWith('transicion')).length)
   })
 
+  it('pone el suscríbete al inicio, justo después del gancho', () => {
+    const plan = planificar(guion, { ppm: 155 })
+    const gancho = plan.segmentos.find(s => s.etiqueta === 'Gancho')!
+    const suscribete = plan.escenas.filter(e => e.escena === 'suscribete')
+    expect(suscribete).toHaveLength(1)
+    expect(suscribete[0].inicio).toBeCloseTo(gancho.fin, 2)
+    expect(plan.sonidos.filter(s => s.archivo === 'clic').every(s => s.inicio < gancho.fin + 5)).toBe(true)
+  })
+
   it('genera un index con ids únicos y variables escapadas', () => {
     const plan = planificar({ ...guion, bloques: [bloque('b1', { titular: "Once's final <b>" })] }, { ppm: 155 })
     const index = armarIndex(plan, 'Título')

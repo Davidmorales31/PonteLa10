@@ -20,8 +20,8 @@ function bloque(id: string, extra: Partial<Bloque> = {}): Bloque {
     fuente: 'Win Sports',
     rumor: false,
     caraBreve: 'Esto pasó hoy en el fútbol colombiano.',
-    voz: `Según Win Sports, ${relleno(100)}`,
-    planos: Array.from({ length: 6 }, (_, i) => ({ imagen: `https://x/${id}-${i}.jpg`, credito: 'Colprensa (vía Win Sports)', movimiento: 'zoom-in' })),
+    voz: `Según Win Sports, les cuento que ${relleno(120)}`,
+    planos: Array.from({ length: 8 }, (_, i) => ({ imagen: `https://x/${id}-${i}.jpg`, credito: 'Colprensa (vía Win Sports)', movimiento: 'zoom-in' })),
     ...extra
   }
 }
@@ -32,7 +32,7 @@ function guionBase(): Guion {
     tituloVideo: 'América y Once Caldas van a la final de la Copa BetPlay: lo que dejó la noche',
     gancho: { texto: 'América y Once Caldas jugarán la final de la Copa BetPlay, según Dimayor.', fuente: 'Dimayor' },
     presentacion: { texto: 'Hoy en Pont3la10: la final de Copa, los cuadrangulares y el debut de Cali.' },
-    bloques: ['b1', 'b2', 'b3', 'b4', 'b5', 'b6'].map(id => bloque(id)),
+    bloques: ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9'].map(id => bloque(id)),
     preguntaFinal: '¿Quién crees que levanta la Copa?',
     cierre: { texto: 'Suscríbete, activa la campana y nos vemos en el siguiente video.' }
   }
@@ -50,7 +50,7 @@ describe('rúbrica del guion del video diario', () => {
     expect(resultado.criterios.filter(c => !c.ok)).toEqual([])
     expect(resultado.aprobado).toBe(true)
     expect(resultado.puntaje).toBe(100)
-    expect(resultado.duracionEstimadaSegundos).toBeGreaterThan(240)
+    expect(resultado.duracionEstimadaSegundos).toBeGreaterThanOrEqual(450)
   })
 
   it('rechaza un gancho con saludo', () => {
@@ -109,6 +109,15 @@ describe('rúbrica del guion del video diario', () => {
     const resultado = evaluar(guion, config)
     expect(resultado.criterios.find(c => c.id === 'pregunta_final')?.ok).toBe(false)
     expect(resultado.criterios.find(c => c.id === 'cierre')?.ok).toBe(false)
+  })
+
+  it('exige narración cercana en la mayoría de los bloques', () => {
+    const guion = guionBase()
+    guion.bloques = guion.bloques.map(b => ({ ...b, voz: b.voz.replace('les cuento que ', 'se informó que ') }))
+    const resultado = evaluar(guion, config)
+    expect(resultado.criterios.find(c => c.id === 'tono_cercano')?.ok).toBe(false)
+    guion.bloques[0].voz = 'Para mí ' + guion.bloques[0].voz
+    expect(evaluar(guion, config).criterios.find(c => c.id === 'tono_cercano')?.detalle).toContain('1 de 9')
   })
 
   it('tolera un guion vacío sin lanzar', () => {
