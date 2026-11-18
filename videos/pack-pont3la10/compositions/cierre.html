@@ -1,0 +1,37 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; }
+    #cierre-escena { position: absolute; inset: 0; background: #08204a; }
+    #cierre-rayas { position: absolute; inset: -200px; background: repeating-linear-gradient(118deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 46px); }
+    #cierre-logo { position: absolute; left: 50%; top: 96px; width: 620px; margin-left: -310px; }
+    #cierre-titulo { position: absolute; left: 0; right: 0; top: 270px; text-align: center; color: #ffffff; font-size: 54px; font-weight: 900; }
+    #cierre-titulo span { color: #ffd800; }
+    /* Zonas reservadas para los elementos de pantalla final de YouTube. */
+    .cierre-video { position: absolute; top: 400px; width: 640px; height: 360px; border: 5px solid #ffd800; border-radius: 16px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; color: #c9d4ea; font-size: 28px; font-weight: 700; }
+    #cierre-video-a { left: 110px; }
+    #cierre-video-b { right: 110px; }
+    #cierre-sus { position: absolute; left: 50%; top: 440px; width: 280px; height: 280px; margin-left: -140px; border-radius: 50%; border: 5px solid #ffffff; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; text-align: center; color: #ffffff; font-size: 30px; font-weight: 800; }
+    #cierre-web { position: absolute; left: 0; right: 0; bottom: 110px; text-align: center; color: #ffffff; font-size: 40px; font-weight: 800; letter-spacing: 0.04em; }
+  </style>
+  <div id="root" data-composition-id="cierre" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"web","type":"string","label":"Sitio web","default":"pont3la10.com"}]'>
+    <div id="cierre-escena" class="clip" data-start="0" data-duration="6">
+      <div id="cierre-rayas"></div>
+      <img id="cierre-logo" src="assets/logo-blanco.png" alt="Pont3la10" />
+      <div id="cierre-titulo">¿Quieres más? <span>Mira esto</span></div>
+      <div id="cierre-video-a" class="cierre-video">Video recomendado</div>
+      <div id="cierre-sus">SUSCRÍBETE</div>
+      <div id="cierre-video-b" class="cierre-video">Último video</div>
+      <div id="cierre-web" data-var-text="web">pont3la10.com</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#cierre-rayas", { x: 0 }, { x: -160, duration: 6, ease: "none" }, 0);
+    tl.fromTo("#cierre-logo", { opacity: 0, y: -30, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.45, ease: "expo.out" }, 0.1);
+    tl.fromTo("#cierre-titulo", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power4.out" }, 0.45);
+    tl.fromTo(["#cierre-video-a", "#cierre-sus", "#cierre-video-b"], { opacity: 0, y: 60 }, { opacity: 1, y: 0, duration: 0.55, ease: "expo.out", stagger: 0.08 }, 0.65);
+    tl.fromTo("#cierre-web", { opacity: 0 }, { opacity: 1, duration: 0.35, ease: "power2.out" }, 1.1);
+    window.__timelines["cierre"] = tl;
+  </script>
+</template>

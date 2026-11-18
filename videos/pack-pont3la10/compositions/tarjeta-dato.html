@@ -1,0 +1,48 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; }
+    #dato-escena { position: absolute; inset: 0; background: #08204a; }
+    #dato-fondo { position: absolute; inset: 0; background: radial-gradient(circle at 78% 30%, rgba(255,216,0,0.16), transparent 45%), repeating-linear-gradient(118deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 46px); }
+    #dato-esquina { position: absolute; right: -160px; bottom: -160px; width: 620px; height: 620px; background: #ffd800; }
+    #dato-caja { position: absolute; left: 180px; top: 230px; width: 1200px; }
+    #dato-etiqueta { color: #ffd800; font-size: 34px; font-weight: 800; letter-spacing: 0.08em; }
+    #dato-fila { display: flex; align-items: baseline; gap: 24px; margin-top: 6px; }
+    #dato-numero { color: #ffffff; font-size: 300px; font-weight: 900; line-height: 1; letter-spacing: -0.04em; font-variant-numeric: tabular-nums; }
+    #dato-sufijo { color: #ffffff; font-size: 80px; font-weight: 900; }
+    #dato-descripcion { margin-top: 10px; color: #ffffff; font-size: 46px; font-weight: 700; line-height: 1.2; }
+    #dato-pista { margin-top: 40px; width: 1000px; height: 14px; background: rgba(255,255,255,0.15); border-radius: 7px; overflow: hidden; }
+    #dato-relleno { width: 1000px; height: 14px; background: #ffd800; border-radius: 7px; transform-origin: 0 50%; }
+    #dato-fuente { margin-top: 26px; color: #c9d4ea; font-size: 30px; font-weight: 600; }
+  </style>
+  <div id="root" data-composition-id="tarjeta-dato" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"etiqueta","type":"string","label":"Etiqueta","default":"FASE REGULAR"},{"id":"valor","type":"number","label":"Cifra","default":40,"min":0,"max":100000},{"id":"maximo","type":"number","label":"Máximo de la barra","default":57,"min":1,"max":100000},{"id":"sufijo","type":"string","label":"Sufijo","default":"PTS"},{"id":"descripcion","type":"string","label":"Descripción","default":"Atlético Nacional terminó primero"},{"id":"fuente","type":"string","label":"Fuente","default":"Fuente: Win Sports"}]'>
+    <div id="dato-escena" class="clip" data-start="0" data-duration="5">
+      <div id="dato-fondo"></div>
+      <div id="dato-esquina"></div>
+      <div id="dato-caja">
+        <div id="dato-etiqueta" data-var-text="etiqueta">FASE REGULAR</div>
+        <div id="dato-fila"><div id="dato-numero">0</div><div id="dato-sufijo" data-var-text="sufijo">PTS</div></div>
+        <div id="dato-descripcion" data-var-text="descripcion">Atlético Nacional terminó primero</div>
+        <div id="dato-pista"><div id="dato-relleno"></div></div>
+        <div id="dato-fuente" data-var-text="fuente">Fuente: Win Sports</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const variables = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const valor = Number(variables.valor ?? 40);
+    const maximo = Math.max(1, Number(variables.maximo ?? 57));
+    const numero = document.querySelector("#dato-numero");
+    const contador = { v: 0 };
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#dato-esquina", { rotation: 45, scale: 0 }, { rotation: 45, scale: 1, duration: 0.6, ease: "expo.out" }, 0);
+    tl.fromTo("#dato-etiqueta", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, 0.15);
+    // La cifra cuenta hasta su valor y aterriza; el texto depende solo del tiempo del timeline.
+    tl.fromTo(contador, { v: 0 }, { v: valor, duration: 1.3, ease: "power3.out", onUpdate: () => { numero.textContent = Math.round(contador.v).toLocaleString("es-CO"); } }, 0.3);
+    tl.fromTo("#dato-relleno", { scaleX: 0 }, { scaleX: Math.min(1, valor / maximo), duration: 1.3, ease: "power3.out" }, 0.3);
+    tl.fromTo("#dato-sufijo", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 1.4);
+    tl.fromTo("#dato-descripcion", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power4.out" }, 1.6);
+    tl.fromTo("#dato-fuente", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 1.9);
+    window.__timelines["tarjeta-dato"] = tl;
+  </script>
+</template>

@@ -1,0 +1,49 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; }
+    #intro-escena { position: absolute; inset: 0; background: #08204a; }
+    #intro-rayas { position: absolute; inset: -200px; background: repeating-linear-gradient(118deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 46px); }
+    .intro-banda { position: absolute; top: -300px; left: 0; width: 900px; height: 1700px; }
+    #intro-banda-a { background: #ffd800; }
+    #intro-banda-b { background: #0d2c63; }
+    #intro-centro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 34px; }
+    #intro-logo { width: 1040px; height: auto; }
+    #intro-anillo { position: absolute; left: 50%; top: 50%; width: 560px; height: 560px; margin: -371px 0 0 -280px; border: 10px solid #ffd800; border-radius: 50%; opacity: 0; }
+    #intro-kicker { display: flex; gap: 18px; color: #ffffff; font-size: 44px; font-weight: 800; letter-spacing: 0.06em; }
+    #intro-fecha { padding: 10px 26px; background: #ffd800; color: #08204a; font-size: 30px; font-weight: 900; letter-spacing: 0.08em; border-radius: 6px; }
+    #intro-destello { position: absolute; inset: 0; background: #ffffff; opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="intro" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"kicker","type":"string","label":"Línea bajo el logo","default":"NOTICIAS DEL FÚTBOL COLOMBIANO"},{"id":"fecha","type":"string","label":"Fecha","default":"MIÉRCOLES 18 DE NOVIEMBRE"}]'>
+    <div id="intro-escena" class="clip" data-start="0" data-duration="4.1">
+      <div id="intro-rayas"></div>
+      <div id="intro-banda-b" class="intro-banda"></div>
+      <div id="intro-banda-a" class="intro-banda"></div>
+      <div id="intro-anillo"></div>
+      <div id="intro-centro">
+        <img id="intro-logo" src="assets/logo-blanco.png" alt="Pont3la10" />
+        <div id="intro-kicker" data-var-text="kicker">NOTICIAS DEL FÚTBOL COLOMBIANO</div>
+        <div id="intro-fecha" data-var-text="fecha">MIÉRCOLES 18 DE NOVIEMBRE</div>
+      </div>
+      <div id="intro-destello"></div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // Rayas de fondo: deriva lenta y constante.
+    tl.fromTo("#intro-rayas", { x: 0 }, { x: -140, duration: 4.1, ease: "none" }, 0);
+    // Dos bandas diagonales barren la pantalla y abren el escenario.
+    tl.fromTo("#intro-banda-b", { x: -1200, skewX: -18 }, { x: 2400, skewX: -18, duration: 0.7, ease: "power3.inOut" }, 0);
+    tl.fromTo("#intro-banda-a", { x: -1300, skewX: -18 }, { x: 2500, skewX: -18, duration: 0.7, ease: "power3.inOut" }, 0.08);
+    // Logo: golpe de entrada, un anillo y un destello.
+    tl.fromTo("#intro-logo", { scale: 1.7, opacity: 0, filter: "blur(14px)" }, { scale: 1, opacity: 1, filter: "blur(0px)", duration: 0.32, ease: "expo.out" }, 0.55);
+    tl.fromTo("#intro-anillo", { scale: 0.5, opacity: 1 }, { scale: 2.2, opacity: 0, duration: 0.7, ease: "power2.out" }, 0.82);
+    tl.fromTo("#intro-destello", { opacity: 0.85 }, { opacity: 0, duration: 0.22, ease: "power2.out" }, 0.84);
+    // Kicker por palabras y fecha.
+    tl.fromTo("#intro-kicker", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power4.out" }, 1.25);
+    tl.fromTo("#intro-fecha", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.4, ease: "expo.out" }, 1.5);
+    // Salida: todo se acerca y se desenfoca hacia la transición.
+    tl.to("#intro-centro", { scale: 1.12, opacity: 0, filter: "blur(10px)", duration: 0.35, ease: "power3.in" }, 3.65);
+    window.__timelines["intro"] = tl;
+  </script>
+</template>

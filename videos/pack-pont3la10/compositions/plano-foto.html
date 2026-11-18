@@ -1,0 +1,29 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; background: #000; }
+    #foto-mov { position: absolute; inset: 0; }
+    #foto-img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #foto-degradado { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,0) 50%, rgba(8,32,74,0.55) 80%, rgba(8,32,74,0.85) 100%); }
+    #foto-credito { position: absolute; right: 96px; bottom: 60px; padding: 8px 16px; background: rgba(8,32,74,0.8); color: #ffffff; font-size: 28px; font-weight: 600; border-left: 5px solid #ffd800; }
+    #foto-marca { position: absolute; left: 96px; top: 60px; width: 220px; height: auto; opacity: 0.92; }
+  </style>
+  <div id="root" data-composition-id="plano-foto" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"foto","type":"string","label":"Foto (ruta)","default":"assets/foto-a.jpg"},{"id":"credito","type":"string","label":"Crédito de la foto","default":"Foto: Photosport (vía AS Colombia)"}]'>
+    <div id="foto-escena" class="clip" data-start="0" data-duration="8">
+      <div id="foto-mov">
+        <img id="foto-img" src="assets/foto-a.jpg" data-var-src="foto" alt="" />
+      </div>
+      <div id="foto-degradado"></div>
+      <img id="foto-marca" src="assets/logo-blanco.png" alt="" />
+      <div id="foto-credito" data-var-text="credito">Foto: Photosport (vía AS Colombia)</div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // Ken Burns: acercamiento con paneo leve; a los 4 s cambia de dirección (un cambio visual cada ≤ 8 s).
+    tl.fromTo("#foto-mov", { scale: 1.04, x: 0, y: 0 }, { scale: 1.13, x: -50, y: -14, duration: 4, ease: "power1.inOut" }, 0);
+    tl.to("#foto-mov", { scale: 1.2, x: 40, y: -30, duration: 4, ease: "power1.inOut" }, 4);
+    tl.fromTo("#foto-credito", { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.45, ease: "expo.out" }, 0.4);
+    window.__timelines["plano-foto"] = tl;
+  </script>
+</template>
