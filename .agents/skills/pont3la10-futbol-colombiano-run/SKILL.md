@@ -13,11 +13,12 @@ la misma API privada auditada.
 | Codex (automatización `pont3la10-propuestas-editoriales-diarias`) | 08:00 y 15:00 | modelo de Codex |
 | Claude (tarea programada `pont3la10-corrida-futbol-claude`) | 11:30 y 19:30 | `claude-...` vigente |
 
-Tope técnico vigente: **cuatro identidades de corrida por fecha de Bogotá**
-(migración `20261116020000`). Cada activación reserva **una** corrida nueva;
-reanudar el mismo día reutiliza la misma identidad. Nunca reabras corridas de otra
-fecha. (El responsable aprobó subir el tope a seis; solo rige cuando se despliegue
-la migración nueva, ver «Estado de transición».)
+Tope vigente: **seis identidades de corrida por fecha de Bogotá** (migración
+`20261117210000`, aplicada en producción) y **12 artículos aprobados por corrida**
+(migración `20261117220000`). Cada activación reserva **una** corrida nueva; reanudar
+el mismo día reutiliza la misma identidad. Nunca reabras corridas de otra fecha. La
+fecha de la corrida la asigna el servidor con su reloj de Bogotá (UTC menos 5
+horas); el reloj del shell puede ignorar `TZ`, así que calcúlala desde UTC.
 
 Este skill **reemplaza** las metas por categoría, la modalidad de tendencias y
 los límites de contenido de `pont3la10-daily-editorial-run`,
@@ -48,14 +49,13 @@ que ninguna corrida termine con cero noticias. Decisiones:
 7. Tope de corridas: seis por día.
 
 **Qué rige y cómo comprobarlo.** Todo lo de este archivo rige desde la fusión de
-la PR #159 (2026-11-18): piso técnico de **300** palabras (`esquemasCodexEditorial.ts`
+la PR #160 (2026-11-18): piso técnico de **300** palabras (`esquemasCodexEditorial.ts`
 y `scripts/codex-editorial-contract.mjs`), campo `review.writer` (`agent` o
 `deepseek`), tope de seis corridas y aprobación sin generación DeepSeek cuando
 `writer = "agent"` (migración
 `20261117210000_redaccion_por_agentes_y_seis_corridas.sql`, aplicada en producción).
-La migración `20261117220000_tope_doce_articulos_por_corrida.sql` pone un tope de
-12 artículos aprobados por corrida en la base; mientras no esté aplicada, respeta
-tú el máximo de 12.
+La migración `20261117220000_tope_doce_articulos_por_corrida.sql` (aplicada en producción) pone
+un tope de 12 artículos aprobados por corrida en la base: el 13.º será rechazado.
 
 **Si la API rechaza lo nuevo** (422 por `writer` o por menos de 660 palabras), el
 despliegue del código aún no llegó a producción: usa `borrador` (DeepSeek) y piezas
@@ -249,8 +249,20 @@ propuesta automática exige `coverMediaId` real.
    `partial` aunque envíes `completed` si alguna categoría activa queda por
    debajo de su umbral histórico, y no es un error tuyo). Cerrar `partial` antes de
    producir consume la identidad y bloquea los borradores.
-7. Reporta: corrida, artículos programados por club, clubes del día aún sin
-   cobertura, descartes y bloqueos. Sin secretos.
+7. **Redes sociales.** Cada artículo publicado merece su publicación en Facebook e
+   Instagram con la foto y el titular de portada encima. Con la llave de agentes de
+   redes en el `.env` (`PONT3LA10_AGENTES_REDES_KEY`, creada por una persona en
+   Panel → Contenido para redes → Agentes IA; no la abras ni la imprimas), cuando
+   el artículo ya esté publicado (el script lee el feed público):
+   `node scripts/redes-publicar-articulo.mjs <slug> --credito "<crédito de la foto>" --borrador --previsualizacion <archivo.jpg>`;
+   abre la imagen y confirma que se ve bien (foto del protagonista, logo y titular
+   legible); después el mismo comando con `--programar <ISO con -05:00>`, entre 15 y
+   20 minutos después de la publicación anterior y más de 10 desde ahora. Sin
+   `--programar` ni `--borrador` la pieza queda pendiente de aprobación humana.
+   Los artículos aún sin publicar al cierre se procesan en la siguiente activación.
+8. Reporta: corrida, artículos programados por club, publicaciones en redes
+   programadas con su hora, clubes del día aún sin cobertura, descartes y
+   bloqueos. Sin secretos.
 
 ## 8. Seguridad
 
