@@ -1,0 +1,28 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; background: transparent; }
+    #ticker-franja { position: absolute; left: 0; right: 0; bottom: 0; height: 84px; display: flex; background: #08204a; border-top: 4px solid #ffd800; }
+    #ticker-etiqueta { position: relative; z-index: 2; flex: none; display: flex; align-items: center; gap: 14px; padding: 0 34px; background: #ffd800; color: #08204a; font-size: 30px; font-weight: 900; letter-spacing: 0.08em; }
+    #ticker-punto { width: 16px; height: 16px; border-radius: 50%; background: #d7263d; }
+    #ticker-ventana { position: relative; flex: 1; overflow: hidden; }
+    #ticker-texto { position: absolute; left: 0; top: 0; height: 80px; display: flex; align-items: center; white-space: nowrap; color: #ffffff; font-size: 32px; font-weight: 700; }
+  </style>
+  <div id="root" data-composition-id="ticker" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"etiqueta","type":"string","label":"Etiqueta","default":"ÚLTIMA HORA"},{"id":"texto","type":"string","label":"Titulares","default":"Cuadrangulares: Medellín–Santa Fe abre el viernes 20 a las 4:30 p. m.  •  Once Caldas recibe a Nacional el sábado 21  •  Cali vende boletería desde $60.000  •  "}]'>
+    <div id="ticker-escena" class="clip" data-start="0" data-duration="5" data-layout-allow-overflow>
+      <div id="ticker-franja">
+        <div id="ticker-etiqueta"><span id="ticker-punto"></span><span data-var-text="etiqueta">ÚLTIMA HORA</span></div>
+        <div id="ticker-ventana"><div id="ticker-texto" data-var-text="texto">Cuadrangulares: Medellín–Santa Fe abre el viernes 20 a las 4:30 p. m.  •  Once Caldas recibe a Nacional el sábado 21  •  Cali vende boletería desde $60.000  •  </div></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#ticker-franja", { yPercent: 110 }, { yPercent: 0, duration: 0.45, ease: "expo.out" }, 0);
+    // Desplazamiento a velocidad constante: aquí lineal es lo correcto.
+    tl.fromTo("#ticker-texto", { x: 1500 }, { x: -900, duration: 5, ease: "none" }, 0);
+    tl.fromTo("#ticker-punto", { opacity: 1 }, { opacity: 0.25, duration: 0.4, ease: "none", repeat: 11, yoyo: true }, 0);
+    tl.to("#ticker-franja", { yPercent: 110, duration: 0.3, ease: "power3.in" }, 4.65);
+    window.__timelines["ticker"] = tl;
+  </script>
+</template>

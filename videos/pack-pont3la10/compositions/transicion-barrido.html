@@ -1,0 +1,28 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: transparent; }
+    .barrido-banda { position: absolute; top: -400px; left: 0; height: 1900px; }
+    #barrido-a { width: 1100px; background: #ffd800; }
+    #barrido-b { width: 2900px; background: #08204a; }
+    #barrido-c { width: 140px; background: #ffffff; }
+    #barrido-logo { position: absolute; left: 50%; top: 50%; width: 300px; margin: -150px 0 0 -150px; }
+  </style>
+  <div id="root" data-composition-id="transicion-barrido" data-width="1920" data-height="1080">
+    <div id="barrido-escena" class="clip" data-start="0" data-duration="1" data-layout-allow-overflow>
+      <div id="barrido-a" class="barrido-banda"></div>
+      <div id="barrido-b" class="barrido-banda"></div>
+      <div id="barrido-c" class="barrido-banda"></div>
+      <img id="barrido-logo" src="assets/isotipo.png" alt="" />
+    </div>
+  </div>
+  <script>
+    // Cortinilla: tres bandas diagonales cubren la pantalla en 0,5 s (el corte va ahí) y salen por la derecha.
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#barrido-a", { x: -1700, skewX: -20 }, { x: 2400, skewX: -20, duration: 0.95, ease: "power3.inOut" }, 0);
+    tl.fromTo("#barrido-b", { x: -3500, skewX: -20 }, { x: 2400, skewX: -20, duration: 0.95, ease: "power3.inOut" }, 0.04);
+    tl.fromTo("#barrido-c", { x: -700, skewX: -20 }, { x: 2700, skewX: -20, duration: 0.95, ease: "power3.inOut" }, 0.08);
+    tl.fromTo("#barrido-logo", { scale: 0.4, opacity: 0, rotation: -12 }, { scale: 1, opacity: 1, rotation: 0, duration: 0.22, ease: "back.out(1.6)" }, 0.34);
+    tl.to("#barrido-logo", { scale: 1.6, opacity: 0, filter: "blur(10px)", duration: 0.18, ease: "power3.in" }, 0.62);
+    window.__timelines["transicion-barrido"] = tl;
+  </script>
+</template>

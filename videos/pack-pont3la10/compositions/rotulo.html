@@ -1,0 +1,33 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; background: transparent; }
+    #rotulo-caja { position: absolute; left: 96px; bottom: 150px; width: 1300px; }
+    #rotulo-etiqueta { display: inline-block; padding: 10px 22px; background: #ffd800; color: #08204a; font-size: 28px; font-weight: 900; letter-spacing: 0.08em; }
+    #rotulo-barra { margin-top: 0; padding: 22px 30px 24px; background: #08204a; border-left: 10px solid #ffd800; }
+    #rotulo-titular { color: #ffffff; font-size: 50px; font-weight: 800; line-height: 1.12; letter-spacing: -0.01em; }
+    #rotulo-fuente { margin-top: 10px; color: #c9d4ea; font-size: 30px; font-weight: 600; }
+  </style>
+  <div id="root" data-composition-id="rotulo" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"etiqueta","type":"string","label":"Etiqueta","default":"SELECCIÓN COLOMBIA"},{"id":"titular","type":"string","label":"Titular","default":"Colombia cerró el año con un 0-0 en Santiago"},{"id":"fuente","type":"string","label":"Fuente","default":"Según AS Colombia"}]'>
+    <div id="rotulo-escena" class="clip" data-start="0" data-duration="5" data-layout-allow-overflow>
+      <div id="rotulo-caja">
+        <div id="rotulo-etiqueta" data-var-text="etiqueta">SELECCIÓN COLOMBIA</div>
+        <div id="rotulo-barra">
+          <div id="rotulo-titular" data-var-text="titular">Colombia cerró el año con un 0-0 en Santiago</div>
+          <div id="rotulo-fuente" data-var-text="fuente">Según AS Colombia</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+    // Entrada: la etiqueta se abre de izquierda a derecha y la barra la sigue; el texto entra desenfocado.
+    tl.fromTo("#rotulo-etiqueta", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.35, ease: "expo.out" }, 0.1);
+    tl.fromTo("#rotulo-barra", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "expo.out" }, 0.22);
+    tl.fromTo("#rotulo-titular", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power4.out" }, 0.45);
+    tl.fromTo("#rotulo-fuente", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out" }, 0.7);
+    // Salida en un solo movimiento, más corta que la entrada.
+    tl.to("#rotulo-caja", { clipPath: "inset(0 100% 0 0)", duration: 0.3, ease: "power3.in" }, 4.55);
+    window.__timelines["rotulo"] = tl;
+  </script>
+</template>

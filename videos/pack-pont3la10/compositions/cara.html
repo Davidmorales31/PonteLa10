@@ -1,0 +1,34 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; }
+    #cara-escena { position: absolute; inset: 0; background: #14171f; }
+    #cara-marco { position: absolute; left: 192px; top: 108px; width: 1536px; height: 864px; border: 4px dashed rgba(255,216,0,0.7); border-radius: 18px; }
+    #cara-centro { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+    #cara-icono { width: 120px; height: 120px; }
+    #cara-titulo { color: #ffd800; font-size: 64px; font-weight: 900; letter-spacing: 0.04em; }
+    #cara-duracion { color: #ffffff; font-size: 34px; font-weight: 700; }
+    #cara-guion { max-width: 1200px; text-align: center; color: #c9d4ea; font-size: 34px; font-weight: 600; font-style: italic; line-height: 1.35; }
+    #cara-rec { position: absolute; left: 240px; top: 150px; display: flex; align-items: center; gap: 12px; color: #ffffff; font-size: 30px; font-weight: 800; letter-spacing: 0.1em; }
+    #cara-punto { width: 18px; height: 18px; border-radius: 50%; background: #d7263d; }
+  </style>
+  <div id="root" data-composition-id="cara" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"duracion","type":"string","label":"Duración","default":"3 segundos"},{"id":"guion","type":"string","label":"Lo que se dice","default":"«Empezamos con la Selección: así cerró el año en Santiago.»"}]'>
+    <div id="cara-escena" class="clip" data-start="0" data-duration="3">
+      <div id="cara-marco"></div>
+      <div id="cara-rec"><span id="cara-punto"></span>REC</div>
+      <div id="cara-centro">
+        <svg id="cara-icono" viewBox="0 0 24 24" fill="none" stroke="#ffd800" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+        <div id="cara-titulo">AQUÍ VA TU TOMA A CÁMARA</div>
+        <div id="cara-duracion" data-var-text="duracion">3 segundos</div>
+        <div id="cara-guion" data-var-text="guion">«Empezamos con la Selección: así cerró el año en Santiago.»</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Marcador de posición: el editor reemplaza esta escena por el clip grabado.
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#cara-centro", { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.4, ease: "expo.out" }, 0);
+    tl.fromTo("#cara-punto", { opacity: 1 }, { opacity: 0.2, duration: 0.5, ease: "none", repeat: 5, yoyo: true }, 0);
+    window.__timelines["cara"] = tl;
+  </script>
+</template>
