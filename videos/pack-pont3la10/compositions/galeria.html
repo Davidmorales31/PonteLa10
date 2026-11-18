@@ -1,0 +1,69 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; background: #000; }
+    .gal-slot { position: absolute; inset: 0; opacity: 0; overflow: hidden; }
+    .gal-mov { position: absolute; inset: 0; }
+    .gal-img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    .gal-vacio { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: #14171f; }
+    .gal-vacio-marco { position: absolute; left: 96px; top: 54px; right: 96px; bottom: 54px; border: 4px dashed rgba(255,216,0,0.7); border-radius: 18px; }
+    .gal-vacio-titulo { color: #ffd800; font-size: 56px; font-weight: 900; letter-spacing: 0.04em; }
+    .gal-vacio-texto { color: #c9d4ea; font-size: 32px; font-weight: 600; }
+    .gal-degradado { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,0) 50%, rgba(8,32,74,0.5) 80%, rgba(8,32,74,0.82) 100%); }
+    .gal-credito { position: absolute; right: 96px; bottom: 60px; padding: 8px 16px; background: rgba(8,32,74,0.8); color: #ffffff; font-size: 28px; font-weight: 600; border-left: 5px solid #ffd800; }
+    #gal-marca { position: absolute; right: 96px; top: 60px; width: 200px; height: auto; opacity: 0.92; }
+  </style>
+  <div id="root" data-composition-id="galeria" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"cantidad","type":"number","label":"Fotos usadas (1–3)","default":3,"min":1,"max":3},{"id":"segundosPorFoto","type":"number","label":"Segundos por foto","default":4,"min":2,"max":8,"step":0.5},{"id":"foto1","type":"string","label":"Foto 1","default":"assets/foto-a.jpg"},{"id":"credito1","type":"string","label":"Crédito 1","default":"Foto: Photosport (vía AS Colombia)"},{"id":"foto2","type":"string","label":"Foto 2","default":"assets/foto-b.jpg"},{"id":"credito2","type":"string","label":"Crédito 2","default":"Foto: VizzorImage (vía Win Sports)"},{"id":"foto3","type":"string","label":"Foto 3 (vacía = espacio para tu imagen)","default":""},{"id":"credito3","type":"string","label":"Crédito 3","default":""}]'>
+    <div id="gal-escena" class="clip" data-start="0" data-duration="24">
+      <div id="gal-slot-1" class="gal-slot">
+        <div id="gal-mov-1" class="gal-mov"><img id="gal-img-1" class="gal-img" src="assets/foto-a.jpg" data-var-src="foto1" alt="" /></div>
+        <div id="gal-vacio-1" class="gal-vacio"><div class="gal-vacio-marco"></div><div class="gal-vacio-titulo">ESPACIO PARA IMAGEN</div><div class="gal-vacio-texto">Agrega una foto real con su crédito</div></div>
+        <div class="gal-degradado"></div>
+        <div id="gal-credito-1" class="gal-credito" data-var-text="credito1">Foto: Photosport (vía AS Colombia)</div>
+      </div>
+      <div id="gal-slot-2" class="gal-slot">
+        <div id="gal-mov-2" class="gal-mov"><img id="gal-img-2" class="gal-img" src="assets/foto-b.jpg" data-var-src="foto2" alt="" /></div>
+        <div id="gal-vacio-2" class="gal-vacio"><div class="gal-vacio-marco"></div><div class="gal-vacio-titulo">ESPACIO PARA IMAGEN</div><div class="gal-vacio-texto">Agrega una foto real con su crédito</div></div>
+        <div class="gal-degradado"></div>
+        <div id="gal-credito-2" class="gal-credito" data-var-text="credito2">Foto: VizzorImage (vía Win Sports)</div>
+      </div>
+      <div id="gal-slot-3" class="gal-slot">
+        <div id="gal-mov-3" class="gal-mov"><img id="gal-img-3" class="gal-img" src="assets/foto-a.jpg" data-var-src="foto3" alt="" /></div>
+        <div id="gal-vacio-3" class="gal-vacio"><div class="gal-vacio-marco"></div><div class="gal-vacio-titulo">ESPACIO PARA IMAGEN</div><div class="gal-vacio-texto">Agrega una foto real con su crédito</div></div>
+        <div class="gal-degradado"></div>
+        <div id="gal-credito-3" class="gal-credito" data-var-text="credito3"></div>
+      </div>
+      <img id="gal-marca" src="assets/logo-blanco.png" alt="" />
+    </div>
+  </div>
+  <script>
+    // Galería: hasta 3 fotos, cada una con su Ken Burns y su crédito. Un espacio sin foto queda marcado
+    // para que el editor ponga una imagen (nunca un gráfico a pantalla completa).
+    const variables = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const cantidad = Math.min(3, Math.max(1, Number(variables.cantidad ?? 3)));
+    const segundos = Math.max(2, Number(variables.segundosPorFoto ?? 4));
+    const movimientos = [
+      [{ scale: 1.04, x: 0, y: 0 }, { scale: 1.16, x: -50, y: -16 }],
+      [{ scale: 1.16, x: 40, y: -20 }, { scale: 1.04, x: 0, y: 0 }],
+      [{ scale: 1.05, x: -40, y: 10 }, { scale: 1.15, x: 50, y: -10 }]
+    ];
+    const tl = gsap.timeline({ paused: true });
+    for (let i = 1; i <= 3; i++) {
+      const foto = String(variables["foto" + i] ?? (i === 1 ? "assets/foto-a.jpg" : i === 2 ? "assets/foto-b.jpg" : "")).trim();
+      if (!foto) {
+        document.querySelector("#gal-img-" + i).style.display = "none";
+        document.querySelector("#gal-vacio-" + i).style.display = "flex";
+        document.querySelector("#gal-credito-" + i).style.display = "none";
+      }
+      if (i > cantidad) continue;
+      const inicio = (i - 1) * segundos;
+      const [desde, hasta] = movimientos[i - 1];
+      tl.fromTo("#gal-slot-" + i, { opacity: i === 1 ? 1 : 0 }, { opacity: 1, duration: i === 1 ? 0.01 : 0.45, ease: "power2.inOut" }, Math.max(0, inicio - 0.45));
+      tl.fromTo("#gal-mov-" + i, desde, { ...hasta, duration: segundos + 0.45, ease: "power1.inOut" }, Math.max(0, inicio - 0.45));
+      tl.fromTo("#gal-credito-" + i, { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, inicio + 0.3);
+      // El crédito sale antes del cruce para no encimarse con el de la foto siguiente.
+      if (i < cantidad) tl.to("#gal-credito-" + i, { opacity: 0, duration: 0.25, ease: "power2.in" }, inicio + segundos - 0.75);
+    }
+    window.__timelines["galeria"] = tl;
+  </script>
+</template>

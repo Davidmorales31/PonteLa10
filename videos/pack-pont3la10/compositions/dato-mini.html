@@ -1,0 +1,36 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; background: transparent; }
+    #dm-caja { position: absolute; right: 96px; top: 200px; width: 470px; padding: 22px 26px 24px; background: rgba(8,32,74,0.92); border-top: 6px solid #ffd800; border-radius: 6px; box-shadow: 0 14px 40px rgba(0,0,0,0.35); }
+    #dm-etiqueta { color: #ffd800; font-size: 28px; font-weight: 800; letter-spacing: 0.08em; }
+    #dm-fila { display: flex; align-items: baseline; gap: 12px; margin-top: 4px; }
+    #dm-numero { color: #ffffff; font-size: 110px; font-weight: 900; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    #dm-sufijo { color: #ffffff; font-size: 40px; font-weight: 900; }
+    #dm-descripcion { margin-top: 6px; color: #ffffff; font-size: 30px; font-weight: 700; line-height: 1.2; }
+    #dm-fuente { margin-top: 10px; color: #c9d4ea; font-size: 28px; font-weight: 600; }
+  </style>
+  <div id="root" data-composition-id="dato-mini" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"etiqueta","type":"string","label":"Etiqueta","default":"FASE REGULAR"},{"id":"valor","type":"number","label":"Cifra","default":40,"min":0,"max":100000},{"id":"sufijo","type":"string","label":"Sufijo","default":"PTS"},{"id":"descripcion","type":"string","label":"Descripción","default":"Nacional terminó primero"},{"id":"fuente","type":"string","label":"Fuente","default":"Win Sports"}]'>
+    <div id="dm-escena" class="clip" data-start="0" data-duration="5" data-layout-allow-overflow>
+      <div id="dm-caja">
+        <div id="dm-etiqueta" data-var-text="etiqueta">FASE REGULAR</div>
+        <div id="dm-fila"><div id="dm-numero">0</div><div id="dm-sufijo" data-var-text="sufijo">PTS</div></div>
+        <div id="dm-descripcion" data-var-text="descripcion">Nacional terminó primero</div>
+        <div id="dm-fuente" data-var-text="fuente">Win Sports</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Tarjeta pequeña sobre la foto: la cifra cuenta hasta su valor y aterriza quieta.
+    const variables = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const valor = Number(variables.valor ?? 40);
+    const numero = document.querySelector("#dm-numero");
+    const contador = { v: 0 };
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#dm-caja", { opacity: 0, x: 40, filter: "blur(8px)" }, { opacity: 1, x: 0, filter: "blur(0px)", duration: 0.45, ease: "expo.out" }, 0.1);
+    tl.fromTo(contador, { v: 0 }, { v: valor, duration: 1.1, ease: "power3.out", onUpdate: () => { numero.textContent = Math.round(contador.v).toLocaleString("es-CO"); } }, 0.3);
+    tl.fromTo(["#dm-sufijo", "#dm-descripcion", "#dm-fuente"], { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power2.out", stagger: 0.08 }, 1.0);
+    tl.to("#dm-caja", { opacity: 0, x: 30, duration: 0.3, ease: "power3.in" }, 4.6);
+    window.__timelines["dato-mini"] = tl;
+  </script>
+</template>

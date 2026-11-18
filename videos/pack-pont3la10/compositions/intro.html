@@ -12,10 +12,15 @@
     #intro-kicker { display: flex; gap: 18px; color: #ffffff; font-size: 44px; font-weight: 800; letter-spacing: 0.06em; }
     #intro-fecha { padding: 10px 26px; background: #ffd800; color: #08204a; font-size: 30px; font-weight: 900; letter-spacing: 0.08em; border-radius: 6px; }
     #intro-destello { position: absolute; inset: 0; background: #ffffff; opacity: 0; }
+    #intro-fondo-mov { position: absolute; inset: 0; }
+    #intro-fondo { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    #intro-tinte { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,0.78), rgba(8,32,74,0.9)); }
   </style>
   <div id="root" data-composition-id="intro" data-width="1920" data-height="1080"
-    data-composition-variables='[{"id":"kicker","type":"string","label":"Línea bajo el logo","default":"NOTICIAS DEL FÚTBOL COLOMBIANO"},{"id":"fecha","type":"string","label":"Fecha","default":"MIÉRCOLES 18 DE NOVIEMBRE"}]'>
+    data-composition-variables='[{"id":"fondo","type":"string","label":"Foto de fondo (la noticia principal)","default":"assets/foto-a.jpg"},{"id":"kicker","type":"string","label":"Línea bajo el logo","default":"NOTICIAS DEL FÚTBOL COLOMBIANO"},{"id":"fecha","type":"string","label":"Fecha","default":"MIÉRCOLES 18 DE NOVIEMBRE"}]'>
     <div id="intro-escena" class="clip" data-start="0" data-duration="4.1">
+      <div id="intro-fondo-mov"><img id="intro-fondo" src="assets/foto-a.jpg" data-var-src="fondo" alt="" /></div>
+      <div id="intro-tinte"></div>
       <div id="intro-rayas"></div>
       <div id="intro-banda-b" class="intro-banda"></div>
       <div id="intro-banda-a" class="intro-banda"></div>
@@ -32,6 +37,7 @@
     const tl = gsap.timeline({ paused: true });
     // Rayas de fondo: deriva lenta y constante.
     tl.fromTo("#intro-rayas", { x: 0 }, { x: -140, duration: 4.1, ease: "none" }, 0);
+    tl.fromTo("#intro-fondo-mov", { scale: 1.12 }, { scale: 1.02, duration: 4.1, ease: "power1.out" }, 0);
     // Dos bandas diagonales barren la pantalla y abren el escenario.
     tl.fromTo("#intro-banda-b", { x: -1200, skewX: -18 }, { x: 2400, skewX: -18, duration: 0.7, ease: "power3.inOut" }, 0);
     tl.fromTo("#intro-banda-a", { x: -1300, skewX: -18 }, { x: 2500, skewX: -18, duration: 0.7, ease: "power3.inOut" }, 0.08);

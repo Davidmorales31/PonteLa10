@@ -1,0 +1,32 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; background: transparent; }
+    #mm-caja { position: absolute; left: 96px; top: 96px; display: flex; flex-direction: column; box-shadow: 0 14px 40px rgba(0,0,0,0.35); }
+    #mm-fila { display: flex; align-items: stretch; height: 76px; }
+    .mm-equipo { display: flex; align-items: center; padding: 0 22px; background: #08204a; color: #ffffff; font-size: 34px; font-weight: 900; letter-spacing: 0.04em; }
+    #mm-goles { display: flex; align-items: center; gap: 10px; padding: 0 22px; background: #ffffff; color: #08204a; font-size: 44px; font-weight: 900; font-variant-numeric: tabular-nums; }
+    #mm-estado { align-self: flex-start; padding: 6px 16px; background: #ffd800; color: #08204a; font-size: 28px; font-weight: 900; letter-spacing: 0.06em; }
+  </style>
+  <div id="root" data-composition-id="marcador-mini" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"local","type":"string","label":"Local (sigla)","default":"CHI"},{"id":"visita","type":"string","label":"Visitante (sigla)","default":"COL"},{"id":"golesLocal","type":"string","label":"Goles local","default":"0"},{"id":"golesVisita","type":"string","label":"Goles visitante","default":"0"},{"id":"estado","type":"string","label":"Estado","default":"FINAL"}]'>
+    <div id="mm-escena" class="clip" data-start="0" data-duration="5" data-layout-allow-overflow>
+      <div id="mm-caja">
+        <div id="mm-fila">
+          <div id="mm-local" class="mm-equipo" data-var-text="local">CHI</div>
+          <div id="mm-goles"><span id="mm-gl" data-var-text="golesLocal">0</span><span>-</span><span id="mm-gv" data-var-text="golesVisita">0</span></div>
+          <div id="mm-visita" class="mm-equipo" data-var-text="visita">COL</div>
+        </div>
+        <div id="mm-estado" data-var-text="estado">FINAL</div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Marcador de esquina, estilo transmisión: entra, se queda quieto y sale.
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#mm-fila", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.45, ease: "expo.out" }, 0.1);
+    tl.fromTo(["#mm-gl", "#mm-gv"], { opacity: 0, yPercent: -50 }, { opacity: 1, yPercent: 0, duration: 0.35, ease: "expo.out", stagger: 0.08 }, 0.4);
+    tl.fromTo("#mm-estado", { opacity: 0, y: -10 }, { opacity: 1, y: 0, duration: 0.3, ease: "expo.out" }, 0.6);
+    tl.to("#mm-caja", { clipPath: "inset(0 100% 0 0)", duration: 0.3, ease: "power3.in" }, 4.6);
+    window.__timelines["marcador-mini"] = tl;
+  </script>
+</template>
