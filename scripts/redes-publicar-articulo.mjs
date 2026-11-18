@@ -51,7 +51,10 @@ const ESTADOS_CERRADOS = ['scheduled', 'publishing', 'published']
 
 // Decide qué hacer con cada artículo reciente según las publicaciones sociales ya existentes.
 // Devuelve { crear, reanudar, omitidos } sin tocar la red.
-export function planificarPendientes(articulos, publicaciones, ahora = Date.now(), horas = 48) {
+// `propias` (opcional) son las publicaciones creadas con la llave en uso: un borrador ajeno no se puede
+// modificar (403 no_es_tuya), así que se recrea bajo esta llave.
+export function planificarPendientes(articulos, publicaciones, ahora = Date.now(), horas = 24, propias = null) {
+  const idsPropios = propias ? new Set(propias.map(p => p.id)) : null
   const desde = ahora - horas * 3_600_000
   const porTitulo = new Map()
   for (const p of publicaciones) {
@@ -66,6 +69,7 @@ export function planificarPendientes(articulos, publicaciones, ahora = Date.now(
     if (!articulo.imagen) { plan.omitidos.push({ slug: articulo.slug, motivo: 'sin imagen' }); continue }
     const existente = porTitulo.get(String(articulo.titulo).slice(0, 120))
     if (!existente) plan.crear.push(articulo)
+    else if (existente.estado === 'draft' && idsPropios && !idsPropios.has(existente.id)) plan.crear.push(articulo)
     else if (existente.estado === 'draft') plan.reanudar.push({ articulo, id: existente.id })
     else if (existente.estado === 'failed') plan.omitidos.push({ slug: articulo.slug, motivo: 'envío fallido: revisar en el panel' })
     else plan.omitidos.push({ slug: articulo.slug, motivo: `ya está ${existente.estado}` })
@@ -187,7 +191,8 @@ async function main() {
   const creditos = JSON.parse(await readFile(resolve(archivoCreditos), 'utf8'))
   const horas = Number(valor('--horas') || 24)
   const existentes = (await llamar(base, llave, 'GET', '/publicaciones?ambito=todas&limite=50'))?.publicaciones || []
-  const plan = planificarPendientes(lista, existentes, Date.now(), horas)
+  const propias = (await llamar(base, llave, 'GET', '/publicaciones?ambito=mias&limite=50'))?.publicaciones || []
+  const plan = planificarPendientes(lista, existentes, Date.now(), horas, propias)
   const trabajo = [...plan.reanudar.map(r => ({ articulo: r.articulo, idExistente: r.id })), ...plan.crear.map(articulo => ({ articulo }))]
   for (const o of plan.omitidos) process.stdout.write(`Omitido ${o.slug}: ${o.motivo}\n`)
   if (!trabajo.length) { process.stdout.write('No hay artículos pendientes de publicación social.\n'); return }

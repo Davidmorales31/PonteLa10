@@ -80,6 +80,12 @@ describe('publicación social de un artículo', () => {
       expect(plan.omitidos.map(o => o.slug).sort()).toEqual(['fallida', 'programada', 'sin-foto', 'ya-publicada'].sort())
     })
 
+    it('recrea un borrador creado con otra llave y reanuda el propio', () => {
+      const plan = planificar(lista, piezas, ahora, 24, [{ id: 'otro' }])
+      expect(plan.crear.map(a => a.slug)).toContain('en-borrador')
+      expect(planificar(lista, piezas, ahora, 24, [{ id: 'b1' }]).reanudar).toEqual([expect.objectContaining({ id: 'b1' })])
+    })
+
     it('prefiere la pieza cerrada sobre un borrador duplicado del mismo titular', () => {
       const plan = planificar([lista[1]], [...piezas, { id: 'p9', titulo: 'Titular en-borrador', estado: 'published' }], ahora)
       expect(plan.reanudar).toEqual([])
