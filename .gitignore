@@ -22,3 +22,6 @@ supabase/.temp/
 .env.*
 !.env.example
 .lighthouseci/
+
+# Proyectos diarios generados (scripts/video-generar-proyecto.mjs)
+videos/diario/

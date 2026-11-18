@@ -47,7 +47,10 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
       "rumor": false,
       "caraBreve": "…",
       "voz": "…",
-      "planos": [{ "imagen": "https://…", "credito": "Colprensa (vía X)", "movimiento": "zoom-in" }]
+      "planos": [{ "imagen": "https://…", "credito": "Colprensa (vía X)", "movimiento": "zoom-in" }],
+      "titular": "opcional: rótulo del bloque (si falta, se usa el titular de portada del artículo)",
+      "marcador": { "local": "CHI", "visita": "COL", "golesLocal": "0", "golesVisita": "0", "estado": "FINAL" },
+      "dato": { "etiqueta": "FASE REGULAR", "valor": 40, "sufijo": "PTS", "descripcion": "Nacional terminó primero" }
     }
   ],
   "preguntaFinal": "…?",
@@ -56,6 +59,8 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
 ```
 
 `movimiento` admite `zoom-in`, `zoom-out`, `paneo-izquierda`, `paneo-derecha` y `fijo`; alterna para no repetir el mismo en dos planos seguidos.
+
+**Regla visual (decisión de Juan):** nunca gráficos a pantalla completa. Los planos son **solo fotos reales**; las cifras van en `dato` (tarjeta pequeña sobre la foto) y los resultados en `marcador` (marcador de esquina), ambos opcionales y solo con datos que estén en la fuente. Añade más fotos de la misma noticia cuando las encuentres con crédito o licencia CC0, CC BY o CC BY-SA (con atribución); si no hay, el generador deja el espacio marcado para que Juan ponga la suya. Nunca imágenes generadas por IA ni montajes.
 
 ## Estilo de locución
 
@@ -73,9 +78,19 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
 
 Ejecuta `node scripts/video-rubrica-guion.mjs guion.json` y corrige hasta **APROBADO** (puntaje ≥ 85 y sin fallos en los criterios obligatorios): duración total (240–360 s), gancho sin saludo, fuente atribuida en cada bloque, crédito en cada foto y rumores atribuidos. Informa el puntaje y los criterios que fallaron si no llegas a aprobar; no maquilles el JSON para que pase.
 
+## Armar el proyecto de video
+
+Con el guion aprobado, ejecuta:
+
+```bash
+node scripts/video-generar-proyecto.mjs guion.json
+```
+
+Crea `videos/diario/<fecha>/` (no se versiona) con el proyecto de HyperFrames armado con el pack `videos/pack-pont3la10`: intro, huecos de toma a cámara con la frase de cada uno, galerías de fotos (un espacio cada ~7 s; los que no tienen foto quedan marcados), rótulo con el titular de portada, marcador y cifra pequeños, transiciones y efectos de sonido. También deja `teleprompter.txt` (con tiempos, CARA/VOZ) y `manifiesto.json`. Valida con `npx hyperframes check` desde esa carpeta. No renderices ni publiques: Juan graba su voz y su cara, y aprueba.
+
 ## Entrega
 
-Deja `guion.json` y el texto del teleprompter (gancho, presentación, y por bloque `caraBreve` + `voz`, pregunta final y cierre, en orden) en el directorio de trabajo indicado. Reporta: fecha, historias elegidas con su club, duración estimada, puntaje de la rúbrica, y qué historias descartaste con su motivo. No publiques nada: la publicación la decide y aprueba Juan.
+Reporta: fecha, historias elegidas con su club, duración estimada, puntaje de la rúbrica, ruta del proyecto generado, cuántos espacios de foto quedaron por llenar y qué historias descartaste con su motivo. No publiques nada: la publicación la decide y aprueba Juan.
 
 ## Métricas después de publicar (lectura semanal)
 

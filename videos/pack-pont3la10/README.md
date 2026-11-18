@@ -55,8 +55,12 @@ npx hyperframes render --output renders/muestrario-pack.mp4
 
 Las fotos de ejemplo (`assets/foto-a.jpg`, `assets/foto-b.jpg`) no se versionan: son portadas de artículos con crédito de agencia. Para probar el muestrario, coloca dos fotos con esos nombres.
 
+## Generador (fase 3)
+
+`node scripts/video-generar-proyecto.mjs <guion.json> [--salida <dir>] [--repetir-fotos] [--sin-red]` arma el video del día en `videos/diario/<fecha>/` con estas escenas: copia cada escena por instancia (ids con sufijo, p. ej. `gal3-slot-1`), descarga las fotos del guion y las pasa a JPG, toma el titular de portada de cada artículo para el rótulo y escribe `teleprompter.txt` y `manifiesto.json`. Con `--repetir-fotos` reutiliza las fotos del bloque en lugar de dejar espacios vacíos.
+
 ## Límites conocidos
 
-- Una misma escena no se puede montar dos veces en una composición sin duplicar ids; el generador debe crear una copia por instancia con ids con sufijo.
+- Una misma escena no se puede montar dos veces sin duplicar ids: por eso el generador crea una copia por instancia.
 - El ticker desplaza los titulares más rápido de lo que alcanza a leerse en 5 s; en el video real debe durar más o llevar menos texto.
 - `check` avisa que el primer cuadro es la intro (opaca): es intencional, la miniatura se sube aparte.
