@@ -5,311 +5,739 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Estudio · Pont3la10</title>
 <style>
-  :root { --navy: #08204a; --amarillo: #ffd800; --tinta: #111; --gris: #5f6878; --linea: #dbe2ee; --fondo: #f3f5f9; --rojo: #d7263d; --verde: #1f8a4c; }
+  :root {
+    --fondo: #050f24; --panel: #0b1b3a; --panel-2: #10244a; --borde: #213a68; --borde-suave: #1a2f57;
+    --texto: #f3f6fc; --texto-2: #b9c6de; --texto-3: #8ea0c2;
+    --amarillo: #ffd800; --sobre-amarillo: #08204a; --rojo: #ff4d5e; --rojo-oscuro: #c81e33; --verde: #3ddc84; --sobre-verde: #04210f;
+    --radio: 12px; --sombra: 0 10px 30px rgba(0, 0, 0, .35);
+    --t-rapida: 160ms; --t-media: 240ms;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; font-family: Montserrat, "Segoe UI", Arial, sans-serif; background: var(--fondo); color: var(--tinta); }
-  header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; background: var(--navy); color: #fff; }
-  header h1 { margin: 0; font-size: 20px; }
-  header h1 span { color: var(--amarillo); }
-  header select { min-height: 40px; padding: 0 10px; border-radius: 6px; border: 0; font: inherit; }
-  #resumen { margin-left: auto; font-size: 14px; opacity: .9; }
-  main { display: grid; grid-template-columns: 300px 1fr 340px; gap: 16px; padding: 16px; min-height: calc(100vh - 140px); }
-  section.panel { background: #fff; border: 1px solid var(--linea); border-radius: 10px; padding: 14px; overflow: auto; }
-  h2 { margin: 0 0 10px; font-size: 16px; }
-  #tramos { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
-  #tramos button { width: 100%; text-align: left; display: grid; gap: 2px; padding: 10px; border: 1px solid var(--linea); border-radius: 8px; background: #fff; font: inherit; cursor: pointer; }
-  #tramos button[aria-current="true"] { border-color: var(--navy); box-shadow: 0 0 0 2px #ffd80088; }
-  .chip { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; letter-spacing: .05em; }
-  .chip.cara { background: var(--amarillo); color: var(--navy); }
-  .chip.voz { background: var(--navy); color: #fff; }
-  .estado { font-size: 12px; color: var(--gris); }
-  .estado.ok { color: var(--verde); font-weight: 700; }
-  #centro { display: grid; grid-template-rows: auto 1fr auto; gap: 12px; }
-  #controles, #acciones { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  button.boton { min-height: 44px; padding: 0 16px; border-radius: 8px; border: 1px solid var(--linea); background: #fff; color: var(--navy); font: inherit; font-weight: 700; cursor: pointer; }
-  button.boton.primario { background: var(--navy); color: #fff; border-color: var(--navy); }
-  button.boton.grabar { background: var(--rojo); color: #fff; border-color: var(--rojo); }
-  button.boton:disabled { opacity: .45; cursor: default; }
-  label.control { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; }
-  #escenario { position: relative; display: grid; grid-template-columns: 1fr; gap: 12px; }
-  #escenario.con-camara { grid-template-columns: 1fr 360px; }
-  #prompter { height: 52vh; overflow: hidden; background: #0b0d12; color: #fff; border-radius: 10px; padding: 14vh 48px 40vh; font-size: 46px; font-weight: 700; line-height: 1.45; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; }
+  body { display: grid; grid-template-rows: auto auto minmax(0, 1fr) auto; height: 100vh; font-family: Montserrat, "Segoe UI", system-ui, Arial, sans-serif; background: var(--fondo); color: var(--texto); font-size: 16px; line-height: 1.5; }
+  button, input, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 3px solid var(--amarillo); outline-offset: 2px; border-radius: 6px; }
+  .icono { width: 20px; height: 20px; flex: none; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  kbd { display: inline-block; min-width: 22px; padding: 1px 6px; border: 1px solid var(--borde); border-bottom-width: 2px; border-radius: 5px; background: var(--panel-2); color: var(--texto-2); font-size: 12px; font-family: inherit; text-align: center; }
+
+  /* Cabecera y pasos */
+  body > header { display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: center; padding: 12px 20px; background: var(--panel); border-bottom: 1px solid var(--borde); }
+  .marca { display: flex; flex-direction: column; line-height: 1.1; }
+  .marca strong { font-size: 18px; } .marca span { color: var(--amarillo); font-weight: 800; }
+  .pasos { display: flex; gap: 8px; justify-content: center; list-style: none; margin: 0; padding: 0; }
+  .paso { display: flex; align-items: center; gap: 10px; padding: 8px 14px; border: 1px solid var(--borde); border-radius: 999px; background: var(--panel-2); color: var(--texto-2); font-size: 14px; }
+  .paso .num { display: grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--borde); color: var(--texto); font-weight: 800; font-size: 13px; }
+  .paso.actual { border-color: var(--amarillo); color: var(--texto); }
+  .paso.actual .num { background: var(--amarillo); color: var(--sobre-amarillo); }
+  .paso.hecho .num { background: var(--verde); color: var(--sobre-verde); }
+  .paso b { color: var(--texto); }
+  .proyecto { display: flex; align-items: center; gap: 8px; }
+  .proyecto label { font-size: 13px; color: var(--texto-3); }
+  select { min-height: 40px; padding: 0 10px; border: 1px solid var(--borde); border-radius: 8px; background: var(--panel-2); cursor: pointer; }
+  .barra-progreso { height: 4px; background: var(--borde-suave); }
+  .barra-progreso > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--amarillo), var(--verde)); transition: width var(--t-media) ease-out; }
+
+  /* Distribución */
+  main { display: grid; grid-template-columns: 300px minmax(0, 1fr) 340px; gap: 16px; padding: 16px; min-height: 0; }
+  body.enfoque main { grid-template-columns: minmax(0, 1fr); }
+  body.enfoque #col-tramos, body.enfoque #col-fotos, body.enfoque .pasos { display: none; }
+  .panel { background: var(--panel); border: 1px solid var(--borde-suave); border-radius: var(--radio); min-height: 0; display: flex; flex-direction: column; }
+  .panel > h2 { margin: 0; padding: 14px 16px 10px; font-size: 15px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .desplazable { position: relative; overflow: auto; padding: 0 12px 14px; min-height: 0; }
+  .etiqueta-chica { color: var(--texto-3); font-size: 13px; font-weight: 600; }
+
+  /* Tramos */
+  .grupo { margin: 10px 0 4px; padding: 0 4px; font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--texto-3); }
+  .tramo { width: 100%; display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 10px; padding: 10px; margin-bottom: 6px; border: 1px solid var(--borde-suave); border-radius: 10px; background: var(--panel-2); text-align: left; cursor: pointer; transition: border-color var(--t-rapida), background var(--t-rapida); min-height: 52px; }
+  .tramo:hover:not(:disabled) { border-color: var(--borde); background: #142b57; }
+  .tramo:disabled { cursor: not-allowed; opacity: .6; }
+  .tramo[aria-current="true"] { border-color: var(--amarillo); background: #172f5e; }
+  .tramo .tipo { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 8px; background: var(--borde); color: var(--texto-2); }
+  .tramo .tipo.cara { background: var(--amarillo); color: var(--sobre-amarillo); }
+  .tramo .tipo .icono { width: 16px; height: 16px; }
+  .tramo .titulo { font-size: 14px; font-weight: 600; line-height: 1.25; }
+  .tramo .sub { font-size: 12px; color: var(--texto-3); }
+  .estado-tramo { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; color: var(--texto-3); white-space: nowrap; }
+  .estado-tramo .icono { width: 16px; height: 16px; }
+  .estado-tramo.ok { color: var(--verde); }
+
+  /* Centro */
+  #col-centro { padding: 12px; gap: 12px; }
+  .barra-herramientas { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .separador { flex: 1; }
+  .boton { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid var(--borde); border-radius: 10px; background: var(--panel-2); color: var(--texto); font-weight: 700; cursor: pointer; text-decoration: none; transition: background var(--t-rapida), border-color var(--t-rapida), transform var(--t-rapida); }
+  .boton:hover:not(:disabled) { border-color: var(--texto-3); background: #18305d; }
+  .boton:active:not(:disabled) { transform: translateY(1px); }
+  .boton:disabled { opacity: .45; cursor: not-allowed; }
+  .boton.primario { background: var(--amarillo); color: var(--sobre-amarillo); border-color: var(--amarillo); }
+  .boton.primario:hover:not(:disabled) { background: #ffe34d; }
+  .boton.grabar { background: var(--rojo-oscuro); border-color: var(--rojo-oscuro); color: #fff; }
+  .boton.grabar:hover:not(:disabled) { background: #e0263c; }
+  .boton.icono-solo { width: 44px; padding: 0; }
+  .boton.primario kbd { background: rgba(8, 32, 74, .12); border-color: rgba(8, 32, 74, .35); color: var(--sobre-amarillo); }
+  .boton.grabar kbd { background: rgba(255, 255, 255, .15); border-color: rgba(255, 255, 255, .4); color: #fff; }
+  .control { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--texto-2); }
+  input[type=range] { accent-color: var(--amarillo); width: 100%; }
+  input[type=checkbox] { accent-color: var(--amarillo); width: 18px; height: 18px; }
+  details.ajustes { position: relative; }
+  details.ajustes summary { list-style: none; }
+  details.ajustes summary::-webkit-details-marker { display: none; }
+  .menu-ajustes { position: absolute; right: 0; top: 52px; z-index: 5; width: 320px; display: grid; gap: 12px; padding: 14px; background: var(--panel-2); border: 1px solid var(--borde); border-radius: var(--radio); box-shadow: var(--sombra); }
+  .menu-ajustes label { display: grid; gap: 4px; font-size: 13px; color: var(--texto-2); }
+  .menu-ajustes label.control { display: flex; }
+  .menu-ajustes select { width: 100%; }
+
+  .escenario { position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .escenario.con-camara { grid-template-columns: minmax(0, 1fr) 300px; }
+  .prompter-caja { position: relative; min-height: 220px; border-radius: var(--radio); overflow: hidden; background: #000; border: 1px solid var(--borde-suave); }
+  #prompter { height: 100%; overflow: hidden; padding: 70px 7% 60vh; font-size: 46px; font-weight: 700; line-height: 1.45; color: #fff; }
   #prompter.espejo #texto { transform: scaleX(-1); }
-  #prompter .marca { position: absolute; }
-  #guia { position: absolute; left: 0; right: 0; top: 18vh; height: 3px; background: #ffd80088; pointer-events: none; }
-  #camara { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; object-fit: cover; display: none; }
-  #escenario.con-camara #camara { display: block; }
-  #cuenta { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; font-size: 160px; font-weight: 900; color: var(--amarillo); background: #0009; border-radius: 10px; }
-  #toma { display: grid; gap: 8px; }
-  #toma video, #toma audio { width: 100%; max-height: 220px; background: #000; border-radius: 8px; }
-  #aviso { min-height: 22px; font-size: 14px; }
-  #aviso.error { color: var(--rojo); font-weight: 700; }
-  .foto-bloque { border: 1px solid var(--linea); border-radius: 8px; padding: 10px; margin-bottom: 10px; }
-  .foto-bloque h3 { margin: 0 0 4px; font-size: 14px; }
-  .miniaturas { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
-  .miniaturas figure { margin: 0; position: relative; }
-  .miniaturas img { width: 84px; height: 48px; object-fit: cover; border-radius: 4px; display: block; }
-  .miniaturas button { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border: 0; border-radius: 50%; background: #000a; color: #fff; cursor: pointer; }
-  .subir { display: grid; gap: 6px; }
-  .subir input[type=text] { min-height: 36px; padding: 0 8px; border: 1px solid var(--linea); border-radius: 6px; font: inherit; }
-  footer { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 20px; background: #fff; border-top: 1px solid var(--linea); }
-  #registro { font-size: 13px; color: var(--gris); white-space: pre-wrap; max-height: 64px; overflow: auto; flex: 1; }
-  #final { width: 100%; max-width: 640px; display: none; border-radius: 8px; }
-  @media (max-width: 1100px) { main { grid-template-columns: 1fr; } #prompter { height: 40vh; } }
+  .guia { position: absolute; left: 0; right: 0; top: 100px; height: 2px; background: rgba(255, 216, 0, .55); pointer-events: none; }
+  .guia::before, .guia::after { content: ""; position: absolute; top: -7px; border: 8px solid transparent; }
+  .guia::before { left: 0; border-left-color: var(--amarillo); }
+  .guia::after { right: 0; border-right-color: var(--amarillo); }
+  .desvanecido { position: absolute; left: 0; right: 0; bottom: 0; height: 30%; background: linear-gradient(transparent, #000); pointer-events: none; }
+  #cuenta { position: absolute; inset: 0; display: none; place-items: center; font-size: 180px; font-weight: 900; color: var(--amarillo); background: rgba(0, 0, 0, .65); }
+  .lado-camara { display: none; flex-direction: column; gap: 10px; min-height: 0; }
+  .escenario.con-camara .lado-camara { display: flex; }
+  #camara { width: 100%; aspect-ratio: 16/9; background: #000; border-radius: var(--radio); object-fit: cover; transform: scaleX(-1); border: 1px solid var(--borde-suave); }
+  .tarjeta { padding: 12px; border: 1px solid var(--borde-suave); border-radius: 10px; background: var(--panel-2); font-size: 13px; color: var(--texto-2); }
+
+  /* Indicador de grabación y medidor */
+  .rec { display: none; align-items: center; gap: 10px; padding: 6px 12px; border-radius: 999px; background: rgba(255, 77, 94, .15); border: 1px solid var(--rojo); color: #ffd3d8; font-weight: 800; font-size: 14px; }
+  body.grabando .rec { display: inline-flex; }
+  .rec .punto { width: 12px; height: 12px; border-radius: 50%; background: var(--rojo); animation: latido 1s ease-in-out infinite; }
+  @keyframes latido { 50% { opacity: .3; } }
+  .medidor { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--texto-3); }
+  .medidor .pista { width: 120px; height: 8px; border-radius: 4px; background: var(--borde-suave); overflow: hidden; }
+  .medidor .nivel { height: 100%; width: 0; background: linear-gradient(90deg, var(--verde) 70%, var(--amarillo) 85%, var(--rojo)); transition: width 80ms linear; }
+
+  /* Toma */
+  .toma { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--borde-suave); border-radius: var(--radio); background: var(--panel-2); }
+  .toma .info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .toma video, .toma audio { max-height: 90px; max-width: 260px; border-radius: 8px; background: #000; }
+  .toma .texto-estado { font-size: 14px; color: var(--texto-2); }
+  .toma .acciones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+
+  /* Fotos */
+  .bloque-fotos { padding: 12px; margin-bottom: 10px; border: 1px solid var(--borde-suave); border-radius: 10px; background: var(--panel-2); }
+  .bloque-fotos .cabeza { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .bloque-fotos h3 { margin: 0; font-size: 14px; }
+  .insignia { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 800; white-space: nowrap; }
+  .insignia .icono { width: 14px; height: 14px; }
+  .insignia.pendiente { background: rgba(255, 216, 0, .15); color: var(--amarillo); border: 1px solid rgba(255, 216, 0, .5); }
+  .insignia.ok { background: rgba(61, 220, 132, .12); color: var(--verde); border: 1px solid rgba(61, 220, 132, .45); }
+  .miniaturas { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .miniaturas figure { position: relative; margin: 0; }
+  .miniaturas img { display: block; width: 88px; height: 50px; object-fit: cover; border-radius: 6px; }
+  .miniaturas button { position: absolute; top: 3px; right: 3px; display: grid; place-items: center; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .75); color: #fff; cursor: pointer; }
+  .miniaturas button .icono { width: 14px; height: 14px; }
+  .zona-subida { display: grid; place-items: center; gap: 4px; margin-top: 8px; padding: 12px; border: 2px dashed var(--borde); border-radius: 10px; text-align: center; color: var(--texto-2); font-size: 13px; cursor: pointer; transition: border-color var(--t-rapida), background var(--t-rapida); }
+  .zona-subida:hover, .zona-subida.sobre { border-color: var(--amarillo); background: rgba(255, 216, 0, .06); }
+  .zona-subida img { max-width: 100%; max-height: 110px; border-radius: 6px; }
+  .campo { display: grid; gap: 4px; margin-top: 8px; font-size: 13px; color: var(--texto-2); }
+  .campo input { min-height: 40px; padding: 0 10px; border: 1px solid var(--borde); border-radius: 8px; background: var(--fondo); }
+  .campo .error { color: #ffb4bd; font-size: 12px; min-height: 16px; }
+  .bloque-fotos .boton { width: 100%; margin-top: 4px; }
+
+  /* Pie */
+  body > footer { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: var(--panel); border-top: 1px solid var(--borde); }
+  #estado-armado { flex: 1; min-width: 0; font-size: 14px; color: var(--texto-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .progreso-render { display: none; width: 180px; height: 8px; border-radius: 4px; background: var(--borde-suave); overflow: hidden; }
+  .progreso-render.activo { display: block; }
+  .progreso-render > div { height: 100%; width: 0; background: var(--amarillo); transition: width var(--t-media); }
+  .progreso-render.indeterminado > div { width: 35%; animation: deslizar 1.2s ease-in-out infinite; }
+  @keyframes deslizar { 0% { transform: translateX(-100%); } 100% { transform: translateX(290%); } }
+
+  /* Avisos */
+  #avisos { position: fixed; right: 20px; bottom: 92px; z-index: 20; display: grid; gap: 8px; width: min(380px, calc(100vw - 40px)); }
+  .aviso { display: flex; gap: 10px; align-items: flex-start; padding: 12px 14px; border-radius: 10px; background: var(--panel-2); border: 1px solid var(--borde); box-shadow: var(--sombra); font-size: 14px; animation: entrar var(--t-media) ease-out; }
+  .aviso.ok { border-color: rgba(61, 220, 132, .6); } .aviso.ok .icono { color: var(--verde); }
+  .aviso.error { border-color: rgba(255, 77, 94, .7); } .aviso.error .icono { color: var(--rojo); }
+  @keyframes entrar { from { opacity: 0; transform: translateY(8px); } }
+
+  dialog { max-width: 520px; padding: 20px 22px; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--panel); color: var(--texto); box-shadow: var(--sombra); }
+  dialog::backdrop { background: rgba(0, 0, 0, .6); }
+  dialog h2 { margin-top: 0; font-size: 18px; }
+  .atajos { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 14px; color: var(--texto-2); }
+  .vacio { display: grid; place-items: center; gap: 10px; padding: 40px; text-align: center; color: var(--texto-2); }
+  .vacio code { padding: 6px 10px; border-radius: 6px; background: var(--panel-2); color: var(--amarillo); }
+
+  @media (max-width: 1180px) { body { height: auto; } main { grid-template-columns: 260px minmax(0, 1fr); } #col-fotos { grid-column: 1 / -1; } .pasos { display: none; } .escenario { min-height: 60vh; } }
+  @media (max-width: 760px) { main { grid-template-columns: 1fr; } .escenario.con-camara { grid-template-columns: 1fr; } #prompter { font-size: 32px; } body > header { grid-template-columns: 1fr; } }
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1M12 18v4"/></symbol>
+  <symbol id="i-video" viewBox="0 0 24 24"><path d="m22 8-6 4 6 4V8Z"/><rect x="2" y="6" width="14" height="12" rx="2"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+  <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="currentColor"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4v16l13-8Z"/></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 3h11l3 3v15H5z"/><path d="M8 3v5h7M8 21v-7h8v7"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></symbol>
+  <symbol id="i-wand" viewBox="0 0 24 24"><path d="m15 4 5 5L9 20H4v-5Z"/><path d="m13 6 5 5"/></symbol>
+  <symbol id="i-film" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M7 3v18M17 3v18M3 8h4M3 16h4M17 8h4M17 16h4"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-focus" viewBox="0 0 24 24"><path d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M8 13h.01M12 13h.01M16 13h.01M7 16h10"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></symbol>
+  <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></symbol>
+</svg>
+
 <header>
-  <h1>Estudio <span>Pont3la10</span></h1>
-  <select id="proyecto" aria-label="Proyecto del día"></select>
-  <div id="resumen"></div>
+  <div class="marca"><strong>Estudio</strong><span>Pont3la10</span></div>
+  <ol class="pasos" aria-label="Pasos del video">
+    <li class="paso" id="paso-1"><span class="num">1</span><span>Grabar · <b id="paso-1-dato">0/0</b></span></li>
+    <li class="paso" id="paso-2"><span class="num">2</span><span>Fotos · <b id="paso-2-dato">0 vacíos</b></span></li>
+    <li class="paso" id="paso-3"><span class="num">3</span><span>Armar y renderizar</span></li>
+  </ol>
+  <div class="proyecto">
+    <label for="proyecto">Proyecto</label>
+    <select id="proyecto"></select>
+    <button class="boton icono-solo" id="ayuda" aria-label="Atajos de teclado" title="Atajos de teclado (?)"><svg class="icono"><use href="#i-keyboard"/></svg></button>
+  </div>
 </header>
-<main>
-  <section class="panel" aria-label="Tramos del video">
-    <h2>Tramos</h2>
-    <ul id="tramos"></ul>
+<div class="barra-progreso" role="progressbar" aria-label="Tramos grabados" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progreso"></div></div>
+
+<main id="principal">
+  <section class="panel" id="col-tramos" aria-labelledby="t-tramos">
+    <h2 id="t-tramos">Tramos <span class="etiqueta-chica" id="tramos-conteo"></span></h2>
+    <div class="desplazable" id="tramos"></div>
   </section>
-  <section class="panel" id="centro">
-    <div id="controles">
-      <button class="boton grabar" id="grabar">● Grabar (barra espaciadora)</button>
-      <button class="boton" id="detener" disabled>■ Detener</button>
-      <button class="boton" id="leer">▶ Solo leer</button>
-      <label class="control">Velocidad <input type="range" id="ppm" min="110" max="210" value="155"> <span id="ppm-valor">155</span> ppm</label>
-      <label class="control">Letra <input type="range" id="letra" min="28" max="72" value="46"></label>
-      <label class="control"><input type="checkbox" id="espejo"> Espejo</label>
-    </div>
-    <div id="escenario">
-      <div style="position: relative">
-        <div id="prompter"><div id="texto">Elige un tramo a la izquierda.</div></div>
-        <div id="guia"></div>
-        <div id="cuenta"></div>
+
+  <section class="panel" id="col-centro" aria-labelledby="tramo-titulo">
+    <div class="barra-herramientas">
+      <button class="boton icono-solo" id="anterior" aria-label="Tramo anterior" title="Tramo anterior (←)"><svg class="icono"><use href="#i-left"/></svg></button>
+      <div>
+        <div id="tramo-titulo" style="font-weight:800">Elige un tramo</div>
+        <div class="etiqueta-chica" id="tramo-sub"></div>
       </div>
-      <video id="camara" autoplay muted playsinline></video>
+      <button class="boton icono-solo" id="siguiente" aria-label="Tramo siguiente" title="Tramo siguiente (→)"><svg class="icono"><use href="#i-right"/></svg></button>
+      <span class="rec"><span class="punto" aria-hidden="true"></span>REC <span id="cronometro">0:00</span> <span id="objetivo" style="opacity:.8"></span></span>
+      <span class="separador"></span>
+      <div class="medidor" title="Nivel del micrófono"><svg class="icono" aria-hidden="true"><use href="#i-mic"/></svg><div class="pista" role="meter" aria-label="Nivel del micrófono" aria-valuemin="0" aria-valuemax="100"><div class="nivel" id="nivel"></div></div></div>
+      <button class="boton" id="leer" title="Mover el texto sin grabar (E)"><svg class="icono"><use href="#i-play"/></svg><span>Ensayar</span></button>
+      <details class="ajustes">
+        <summary class="boton icono-solo" aria-label="Ajustes de lectura y dispositivos" title="Ajustes"><svg class="icono"><use href="#i-settings"/></svg></summary>
+        <div class="menu-ajustes">
+          <label>Velocidad de lectura: <span><b id="ppm-valor">155</b> palabras por minuto</span><input type="range" id="ppm" min="110" max="210" value="155"></label>
+          <label>Tamaño de letra <input type="range" id="letra" min="28" max="72" value="46"></label>
+          <label class="control"><input type="checkbox" id="espejo"> Texto en espejo (para cristal de teleprompter)</label>
+          <label>Micrófono <select id="sel-mic"></select></label>
+          <label>Cámara <select id="sel-cam"></select></label>
+        </div>
+      </details>
+      <button class="boton icono-solo" id="enfoque" aria-label="Modo enfoque" aria-pressed="false" title="Modo enfoque (F)"><svg class="icono"><use href="#i-focus"/></svg></button>
     </div>
-    <div id="toma">
-      <div id="aviso" role="status"></div>
-      <div id="reproductor"></div>
-      <div id="acciones">
-        <button class="boton primario" id="guardar" disabled>Guardar esta toma</button>
-        <button class="boton" id="descartar" disabled>Descartar</button>
-        <button class="boton" id="borrar-guardada" disabled>Borrar toma guardada</button>
+
+    <div class="escenario" id="escenario">
+      <div class="prompter-caja">
+        <div id="prompter"><div id="texto"></div></div>
+        <div class="guia" aria-hidden="true"></div>
+        <div class="desvanecido" aria-hidden="true"></div>
+        <div id="cuenta" aria-live="assertive"></div>
+      </div>
+      <div class="lado-camara">
+        <video id="camara" autoplay muted playsinline aria-label="Vista previa de la cámara"></video>
+        <div class="tarjeta">Mira a la cámara en las frases cortas. La vista previa está en espejo; el video se guarda normal.</div>
+      </div>
+    </div>
+
+    <div class="toma">
+      <div class="info">
+        <div id="reproductor"></div>
+        <div class="texto-estado" id="toma-estado" role="status" aria-live="polite"></div>
+      </div>
+      <div class="acciones">
+        <button class="boton grabar" id="grabar"><svg class="icono"><use href="#i-circle"/></svg><span id="grabar-texto">Grabar</span> <kbd>Espacio</kbd></button>
+        <button class="boton primario" id="guardar" disabled><svg class="icono"><use href="#i-save"/></svg><span>Guardar toma</span> <kbd>Enter</kbd></button>
+        <button class="boton icono-solo" id="descartar" disabled aria-label="Descartar toma" title="Descartar toma"><svg class="icono"><use href="#i-x"/></svg></button>
+        <button class="boton icono-solo" id="borrar-guardada" disabled aria-label="Borrar toma guardada" title="Borrar toma guardada"><svg class="icono"><use href="#i-trash"/></svg></button>
       </div>
     </div>
   </section>
-  <section class="panel" aria-label="Fotos por noticia">
-    <h2>Fotos por noticia</h2>
-    <p class="estado">Sube fotos reales con su crédito. Llenan los espacios marcados «Espacio para imagen».</p>
-    <div id="fotos"></div>
+
+  <section class="panel" id="col-fotos" aria-labelledby="t-fotos">
+    <h2 id="t-fotos">Fotos por noticia <span class="etiqueta-chica" id="fotos-conteo"></span></h2>
+    <div class="desplazable">
+      <p class="etiqueta-chica" style="margin-top:0">Solo fotos reales con su crédito. Cada una llena un «Espacio para imagen» de su noticia.</p>
+      <div id="fotos"></div>
+    </div>
   </section>
 </main>
+
 <footer>
-  <button class="boton primario" id="armar">Armar video</button>
-  <button class="boton" id="render">Renderizar</button>
-  <div id="registro"></div>
-  <video id="final" controls></video>
+  <button class="boton primario" id="armar"><svg class="icono"><use href="#i-wand"/></svg><span>Armar video</span></button>
+  <button class="boton" id="render"><svg class="icono"><use href="#i-film"/></svg><span>Renderizar</span></button>
+  <div class="progreso-render" id="progreso-render" aria-hidden="true"><div></div></div>
+  <div id="estado-armado" role="status" aria-live="polite">Graba los tramos, sube fotos y luego arma el video.</div>
+  <a class="boton" id="ver-final" href="#" target="_blank" rel="noopener" hidden><svg class="icono"><use href="#i-play"/></svg><span>Ver video final</span></a>
 </footer>
+
+<div id="avisos"></div>
+
+<dialog id="dialogo-atajos" aria-labelledby="t-atajos">
+  <h2 id="t-atajos">Atajos de teclado</h2>
+  <div class="atajos">
+    <kbd>Espacio</kbd><span>Grabar / detener</span>
+    <kbd>Enter</kbd><span>Guardar la toma</span>
+    <kbd>R</kbd><span>Repetir (vuelve a grabar)</span>
+    <kbd>←</kbd><span>Tramo anterior</span>
+    <kbd>→</kbd><span>Tramo siguiente</span>
+    <kbd>E</kbd><span>Ensayar (mover el texto sin grabar)</span>
+    <kbd>F</kbd><span>Modo enfoque</span>
+    <kbd>?</kbd><span>Ver estos atajos</span>
+  </div>
+  <form method="dialog" style="margin-top:16px;text-align:right"><button class="boton primario">Entendido</button></form>
+</dialog>
+
 <script>
 const $ = s => document.querySelector(s)
+const icono = id => `<svg class="icono" aria-hidden="true"><use href="#i-${id}"/></svg>`
+const escapar = t => String(t ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const palabras = t => String(t || '').trim().split(/\s+/).filter(Boolean).length
+const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
+const reducirMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches
+
 let proyecto = null, detalle = null, tramo = null
 let grabador = null, trozos = [], tomaBlob = null, flujo = null, desplazando = null
+let inicioGrabacion = 0, relojGrabacion = null, medidorActivo = null, audioCtx = null
+const preferencias = (() => { try { return JSON.parse(localStorage.getItem('estudio-pont3la10') || '{}') } catch { return {} } })()
+const guardarPreferencias = () => { try { localStorage.setItem('estudio-pont3la10', JSON.stringify(preferencias)) } catch { /* sin almacenamiento */ } }
 
-const api = async (ruta, opciones = {}) => {
+function avisar(texto, tipo = 'info') {
+  const el = document.createElement('div')
+  el.className = `aviso ${tipo}`
+  el.setAttribute('role', tipo === 'error' ? 'alert' : 'status')
+  el.innerHTML = `${icono(tipo === 'ok' ? 'check' : 'alert')}<div>${escapar(texto)}</div>`
+  $('#avisos').append(el)
+  setTimeout(() => el.remove(), tipo === 'error' ? 8000 : 4000)
+}
+
+async function api(ruta, opciones = {}) {
   const r = await fetch(ruta, opciones)
   const datos = await r.json().catch(() => ({}))
   if (!r.ok) throw new Error(datos.error || `Error ${r.status}`)
   return datos
 }
-const aviso = (texto, error = false) => { $('#aviso').textContent = texto; $('#aviso').className = error ? 'error' : '' }
-const palabras = t => String(t || '').trim().split(/\s+/).filter(Boolean).length
-const seg = s => `${Math.floor(s / 60)}:${String(Math.round(s % 60)).padStart(2, '0')}`
 
-async function cargarProyectos() {
-  const { proyectos } = await api('/api/proyectos')
-  $('#proyecto').innerHTML = proyectos.map(p => `<option value="${p.nombre}">${p.nombre} · ${p.grabados}/${p.tramos} grabados</option>`).join('') || '<option>Sin proyectos: genera uno con el script</option>'
-  if (proyectos.length) { proyecto = proyectos[0].nombre; await cargarDetalle() }
+async function ocupado(boton, texto, tarea) {
+  const original = boton.innerHTML
+  boton.disabled = true
+  boton.setAttribute('aria-busy', 'true')
+  const etiqueta = boton.querySelector('span')
+  if (etiqueta) etiqueta.textContent = texto
+  try { return await tarea() } finally { boton.innerHTML = original; boton.disabled = false; boton.removeAttribute('aria-busy') }
 }
 
-async function cargarDetalle(mantenerTramo = true) {
+/* ---------- Carga ---------- */
+async function cargarProyectos() {
+  const { proyectos } = await api('/api/proyectos')
+  if (!proyectos.length) {
+    $('#principal').innerHTML = `<div class="panel vacio" style="grid-column:1/-1">${icono('film')}<h2>No hay proyectos todavía</h2><p>Genera el del día con el guion aprobado:</p><code>npm run video:generar -- guion.json</code></div>`
+    return
+  }
+  $('#proyecto').innerHTML = proyectos.map(p => `<option value="${escapar(p.nombre)}">${escapar(p.nombre)}</option>`).join('')
+  proyecto = proyectos.some(p => p.nombre === preferencias.proyecto) ? preferencias.proyecto : proyectos[0].nombre
+  $('#proyecto').value = proyecto
+  await cargarDetalle()
+}
+
+async function cargarDetalle(mantener = true) {
   detalle = await api(`/api/proyectos/${proyecto}`)
-  const { manifiesto, estudio } = detalle
-  const grabados = manifiesto.segmentos.filter(s => estudio.grabaciones?.[s.id]).length
-  const vacios = (manifiesto.fotos || []).reduce((s, f) => s + f.vacios, 0)
-  $('#resumen').textContent = `${seg(manifiesto.duracion)} · ${grabados}/${manifiesto.segmentos.length} tramos grabados · ${vacios} espacios de foto vacíos`
-  $('#tramos').innerHTML = manifiesto.segmentos.map(s => {
-    const g = estudio.grabaciones?.[s.id]
-    return `<li><button data-id="${s.id}" aria-current="${tramo?.id === s.id}"><span><span class="chip ${s.tipo}">${s.tipo === 'cara' ? 'CARA' : 'VOZ'}</span> ${s.etiqueta}</span><span class="estado ${g ? 'ok' : ''}">${g ? `✓ grabado · ${g.duracion.toFixed(1)} s` : `pendiente · ~${(s.fin - s.inicio).toFixed(0)} s`}</span></button></li>`
-  }).join('')
-  $('#tramos').querySelectorAll('button').forEach(b => b.addEventListener('click', () => elegirTramo(b.dataset.id)))
+  pintarPasos()
+  pintarTramos()
   pintarFotos()
-  if (detalle.videoFinal) { $('#final').src = detalle.videoFinal; $('#final').style.display = 'block' }
-  if (mantenerTramo && tramo) elegirTramo(tramo.id)
-  else if (manifiesto.segmentos.length) elegirTramo(manifiesto.segmentos.find(s => !estudio.grabaciones?.[s.id])?.id || manifiesto.segmentos[0].id)
+  $('#ver-final').hidden = !detalle.videoFinal
+  if (detalle.videoFinal) $('#ver-final').href = detalle.videoFinal
+  const actual = mantener && tramo && detalle.manifiesto.segmentos.find(s => s.id === tramo.id)
+  await elegirTramo(actual ? actual.id : (siguientePendiente()?.id || detalle.manifiesto.segmentos[0]?.id))
+}
+
+const grabacionDe = id => detalle.estudio.grabaciones?.[id]
+const siguientePendiente = (desde = -1) => detalle.manifiesto.segmentos.find((s, i) => i > desde && !grabacionDe(s.id)) || detalle.manifiesto.segmentos.find(s => !grabacionDe(s.id))
+
+function pintarPasos() {
+  const segs = detalle.manifiesto.segmentos
+  const grabados = segs.filter(s => grabacionDe(s.id)).length
+  const vacios = (detalle.manifiesto.fotos || []).reduce((s, f) => s + f.vacios, 0)
+  $('#paso-1-dato').textContent = `${grabados}/${segs.length}`
+  $('#paso-2-dato').textContent = vacios ? `${vacios} vacíos` : 'completas'
+  const listo1 = grabados === segs.length
+  const listo2 = vacios === 0
+  $('#paso-1').className = `paso ${listo1 ? 'hecho' : 'actual'}`
+  $('#paso-2').className = `paso ${listo2 ? 'hecho' : listo1 ? 'actual' : ''}`
+  $('#paso-3').className = `paso ${detalle.videoFinal ? 'hecho' : listo1 && listo2 ? 'actual' : ''}`
+  const pct = Math.round(grabados / Math.max(1, segs.length) * 100)
+  $('#progreso').style.width = `${pct}%`
+  document.querySelector('.barra-progreso').setAttribute('aria-valuenow', String(pct))
+  $('#tramos-conteo').textContent = `${grabados} de ${segs.length} grabados`
+  $('#fotos-conteo').textContent = vacios ? `${vacios} por llenar` : 'sin vacíos'
+}
+
+function grupoDe(s) {
+  if (['gancho', 'presentacion'].includes(s.id)) return 'Apertura'
+  if (['pregunta', 'cierre'].includes(s.id)) return 'Cierre'
+  return s.etiqueta.split(' · ')[0]
+}
+
+function pintarTramos() {
+  let grupoActual = ''
+  $('#tramos').innerHTML = detalle.manifiesto.segmentos.map(s => {
+    const g = grabacionDe(s.id)
+    const grupo = grupoDe(s)
+    const cabecera = grupo !== grupoActual ? `<div class="grupo">${escapar(grupo)}</div>` : ''
+    grupoActual = grupo
+    const nombre = s.etiqueta.includes(' · ') ? (s.tipo === 'cara' ? 'A cámara' : 'Voz') : s.etiqueta
+    return `${cabecera}<button class="tramo" data-id="${escapar(s.id)}" aria-current="false">
+      <span class="tipo ${s.tipo}" aria-hidden="true">${icono(s.tipo === 'cara' ? 'video' : 'mic')}</span>
+      <span><span class="titulo">${escapar(nombre)}</span><br><span class="sub">${s.tipo === 'cara' ? 'Cámara y voz' : 'Solo voz'} · ${palabras(s.texto)} palabras</span></span>
+      <span class="estado-tramo ${g ? 'ok' : ''}">${g ? `${icono('check')}<span>${g.duracion.toFixed(0)} s</span><span class="oculto">grabado</span>` : `<span>~${(s.fin - s.inicio).toFixed(0)} s</span><span class="oculto">pendiente</span>`}</span>
+    </button>`
+  }).join('')
+  $('#tramos').querySelectorAll('.tramo').forEach(b => b.addEventListener('click', () => elegirTramo(b.dataset.id)))
 }
 
 function pintarFotos() {
-  const { manifiesto, estudio } = detalle
-  $('#fotos').innerHTML = (manifiesto.fotos || []).map(f => {
-    const subidas = estudio.fotosExtra?.[f.clave] || []
-    return `<div class="foto-bloque"><h3>${f.etiqueta.replace(' · voz', '')}</h3>
-      <div class="estado">${f.fotos} foto(s) · ${f.espacios} espacios · <strong>${f.vacios} vacíos</strong></div>
-      <div class="miniaturas">${subidas.map((s, i) => `<figure><img src="/archivos/${proyecto}/${s.ruta}" alt="" title="${s.credito.replace(/"/g, '&quot;')}"><button data-clave="${f.clave}" data-i="${i}" aria-label="Quitar foto">×</button></figure>`).join('')}</div>
-      <form class="subir" data-clave="${f.clave}"><input type="file" accept="image/jpeg,image/png,image/webp" required><input type="text" placeholder="Crédito, p. ej. Colprensa (vía El Tiempo)" required maxlength="120"><button class="boton">Subir foto</button></form></div>`
+  $('#fotos').innerHTML = (detalle.manifiesto.fotos || []).map(f => {
+    const subidas = detalle.estudio.fotosExtra?.[f.clave] || []
+    const nombre = f.etiqueta.replace(' · voz', '')
+    return `<div class="bloque-fotos">
+      <div class="cabeza"><h3>${escapar(nombre)}</h3><span class="insignia ${f.vacios ? 'pendiente' : 'ok'}">${f.vacios ? `${f.vacios} vacíos` : `${icono('check')} completa`}</span></div>
+      <div class="etiqueta-chica">${f.fotos} foto(s) para ${f.espacios} espacios</div>
+      ${subidas.length ? `<div class="miniaturas">${subidas.map((s, i) => `<figure><img src="/archivos/${escapar(proyecto)}/${escapar(s.ruta)}" alt="Foto subida: ${escapar(s.credito)}" title="${escapar(s.credito)}"><button data-clave="${escapar(f.clave)}" data-i="${i}" aria-label="Quitar foto de ${escapar(s.credito)}">${icono('x')}</button></figure>`).join('')}</div>` : ''}
+      <form class="subir" data-clave="${escapar(f.clave)}" novalidate>
+        <label class="zona-subida" tabindex="0">${icono('image')}<span>Arrastra una foto o haz clic para elegirla</span><input type="file" class="oculto" accept="image/jpeg,image/png,image/webp"></label>
+        <label class="campo">Crédito de la foto<input type="text" maxlength="120" placeholder="Colprensa (vía El Tiempo)"><span class="error" aria-live="polite"></span></label>
+        <button class="boton">${icono('upload')}<span>Subir foto</span></button>
+      </form>
+    </div>`
   }).join('')
-  $('#fotos').querySelectorAll('form').forEach(f => f.addEventListener('submit', subirFoto))
+  $('#fotos').querySelectorAll('form.subir').forEach(prepararSubida)
   $('#fotos').querySelectorAll('.miniaturas button').forEach(b => b.addEventListener('click', async () => {
-    await api(`/api/proyectos/${proyecto}/fotos/${b.dataset.clave}/${b.dataset.i}`, { method: 'DELETE' }); aviso('Foto quitada. Pulsa «Armar video» para aplicarlo.'); await cargarDetalle()
+    await api(`/api/proyectos/${proyecto}/fotos/${b.dataset.clave}/${b.dataset.i}`, { method: 'DELETE' })
+    avisar('Foto quitada. Arma el video para aplicarlo.', 'ok')
+    await cargarDetalle()
   }))
 }
 
-async function subirFoto(e) {
-  e.preventDefault()
-  const [archivo, credito] = e.target.querySelectorAll('input')
-  if (!archivo.files[0]) return
-  try {
-    aviso('Subiendo foto…')
-    await api(`/api/proyectos/${proyecto}/fotos/${e.target.dataset.clave}`, { method: 'POST', headers: { 'content-type': archivo.files[0].type || 'application/octet-stream', 'x-credito': encodeURIComponent(credito.value) }, body: archivo.files[0] })
-    aviso('Foto guardada. Pulsa «Armar video» para verla en su espacio.')
-    await cargarDetalle()
-  } catch (error) { aviso(error.message, true) }
+function prepararSubida(form) {
+  const zona = form.querySelector('.zona-subida')
+  const archivo = form.querySelector('input[type=file]')
+  const credito = form.querySelector('input[type=text]')
+  const error = form.querySelector('.error')
+  const mostrar = file => {
+    if (!file) return
+    const lector = new FileReader()
+    lector.onload = () => { zona.innerHTML = `<img src="${lector.result}" alt="Vista previa de la foto elegida"><span class="etiqueta-chica">${escapar(file.name)}</span>`; zona.append(archivo) }
+    lector.readAsDataURL(file)
+  }
+  archivo.addEventListener('change', () => mostrar(archivo.files[0]))
+  zona.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); archivo.click() } })
+  zona.addEventListener('dragover', e => { e.preventDefault(); zona.classList.add('sobre') })
+  zona.addEventListener('dragleave', () => zona.classList.remove('sobre'))
+  zona.addEventListener('drop', e => {
+    e.preventDefault()
+    zona.classList.remove('sobre')
+    const file = [...e.dataTransfer.files].find(f => f.type.startsWith('image/'))
+    if (!file) { error.textContent = 'Ese archivo no es una imagen.'; return }
+    const dt = new DataTransfer(); dt.items.add(file); archivo.files = dt.files; mostrar(file)
+  })
+  form.addEventListener('submit', async e => {
+    e.preventDefault()
+    error.textContent = ''
+    if (!archivo.files[0]) { error.textContent = 'Elige una foto primero.'; zona.focus(); return }
+    if (credito.value.trim().length < 2) { error.textContent = 'Escribe el crédito: quién tomó la foto o de dónde sale.'; credito.focus(); return }
+    try {
+      await ocupado(form.querySelector('button'), 'Subiendo…', () => api(`/api/proyectos/${proyecto}/fotos/${form.dataset.clave}`, { method: 'POST', headers: { 'content-type': archivo.files[0].type || 'application/octet-stream', 'x-credito': encodeURIComponent(credito.value.trim()) }, body: archivo.files[0] }))
+      avisar('Foto guardada. Arma el video para verla en su espacio.', 'ok')
+      await cargarDetalle()
+    } catch (err) { error.textContent = err.message }
+  })
 }
 
+/* ---------- Tramo actual ---------- */
 async function elegirTramo(id) {
+  if (!id || grabador) return
   detenerLectura()
+  descartarToma(false)
   tramo = detalle.manifiesto.segmentos.find(s => s.id === id)
-  document.querySelectorAll('#tramos button').forEach(b => b.setAttribute('aria-current', String(b.dataset.id === id)))
+  document.querySelectorAll('.tramo').forEach(b => b.setAttribute('aria-current', String(b.dataset.id === id)))
+  // Solo se desplaza la lista de tramos, nunca la página completa.
+  const lista = $('#tramos')
+  const boton = lista.querySelector(`.tramo[data-id="${CSS.escape(id)}"]`)
+  if (boton && (boton.offsetTop < lista.scrollTop || boton.offsetTop + boton.offsetHeight > lista.scrollTop + lista.clientHeight)) {
+    lista.scrollTo({ top: Math.max(0, boton.offsetTop - lista.clientHeight / 3), behavior: reducirMovimiento ? 'auto' : 'smooth' })
+  }
+  const indice = detalle.manifiesto.segmentos.indexOf(tramo)
+  $('#tramo-titulo').textContent = tramo.etiqueta
+  $('#tramo-sub').textContent = `${tramo.tipo === 'cara' ? 'Cámara y voz' : 'Solo voz'} · ${palabras(tramo.texto)} palabras · tramo ${indice + 1} de ${detalle.manifiesto.segmentos.length}`
+  $('#anterior').disabled = indice <= 0
+  $('#siguiente').disabled = indice >= detalle.manifiesto.segmentos.length - 1
   $('#texto').textContent = tramo.texto
   $('#prompter').scrollTop = 0
-  descartarToma()
-  const guardada = detalle.estudio.grabaciones?.[id]
+  const guardada = grabacionDe(id)
   $('#borrar-guardada').disabled = !guardada
-  $('#reproductor').innerHTML = guardada ? (guardada.tipo === 'cara' ? `<video controls src="/archivos/${proyecto}/${guardada.archivo}?v=${Date.now()}"></video>` : `<audio controls src="/archivos/${proyecto}/${guardada.archivo}?v=${Date.now()}"></audio>`) : ''
-  aviso(guardada ? `Toma guardada de ${guardada.duracion.toFixed(1)} s. Puedes repetirla.` : `${tramo.tipo === 'cara' ? 'Toma a cámara' : 'Solo voz'} · ${palabras(tramo.texto)} palabras`)
+  const ruta = guardada ? `/archivos/${escapar(proyecto)}/${escapar(guardada.archivo)}?v=${Date.now()}` : ''
+  $('#reproductor').innerHTML = guardada ? (guardada.tipo === 'cara' ? `<video controls preload="metadata" src="${ruta}"></video>` : `<audio controls preload="metadata" src="${ruta}"></audio>`) : ''
+  $('#grabar-texto').textContent = guardada ? 'Repetir' : 'Grabar'
+  $('#toma-estado').textContent = guardada ? `Toma guardada (${guardada.duracion.toFixed(1)} s). Puedes repetirla.` : `Listo para grabar · objetivo ~${Math.round(palabras(tramo.texto) / Number($('#ppm').value) * 60)} s`
+  $('#escenario').classList.toggle('con-camara', tramo.tipo === 'cara')
   await prepararDispositivos()
 }
 
-async function prepararDispositivos() {
-  const conCamara = tramo?.tipo === 'cara'
-  $('#escenario').classList.toggle('con-camara', conCamara)
-  const necesitaVideo = conCamara
-  if (flujo && (flujo.getVideoTracks().length > 0) === necesitaVideo) return
-  if (flujo) flujo.getTracks().forEach(t => t.stop())
-  try {
-    flujo = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: necesitaVideo ? { width: { ideal: 1920 }, height: { ideal: 1080 } } : false })
-    $('#camara').srcObject = necesitaVideo ? flujo : null
-  } catch { aviso('No hay permiso para el micrófono o la cámara. Permítelo en el navegador.', true); flujo = null }
+/* ---------- Dispositivos y medidor ---------- */
+async function listarDispositivos() {
+  const dispositivos = await navigator.mediaDevices.enumerateDevices()
+  const opciones = (tipo, sel, guardado) => {
+    const lista = dispositivos.filter(d => d.kind === tipo)
+    sel.innerHTML = lista.map((d, i) => `<option value="${escapar(d.deviceId)}">${escapar(d.label || `${tipo === 'audioinput' ? 'Micrófono' : 'Cámara'} ${i + 1}`)}</option>`).join('')
+    if (guardado && lista.some(d => d.deviceId === guardado)) sel.value = guardado
+  }
+  opciones('audioinput', $('#sel-mic'), preferencias.mic)
+  opciones('videoinput', $('#sel-cam'), preferencias.cam)
 }
 
+async function prepararDispositivos(forzar = false) {
+  const conVideo = tramo?.tipo === 'cara'
+  if (!forzar && flujo && (flujo.getVideoTracks().length > 0) === conVideo) return
+  if (flujo) flujo.getTracks().forEach(t => t.stop())
+  try {
+    flujo = await navigator.mediaDevices.getUserMedia({
+      audio: { deviceId: preferencias.mic ? { exact: preferencias.mic } : undefined, echoCancellation: true, noiseSuppression: true },
+      video: conVideo ? { deviceId: preferencias.cam ? { exact: preferencias.cam } : undefined, width: { ideal: 1920 }, height: { ideal: 1080 } } : false
+    })
+    $('#camara').srcObject = conVideo ? flujo : null
+    iniciarMedidor()
+    await listarDispositivos()
+  } catch {
+    flujo = null
+    $('#toma-estado').textContent = 'Sin acceso al micrófono o la cámara. Permítelo en el candado de la barra de direcciones y recarga.'
+    avisar('Sin permiso para el micrófono o la cámara.', 'error')
+  }
+}
+
+function iniciarMedidor() {
+  if (medidorActivo) cancelAnimationFrame(medidorActivo)
+  try {
+    audioCtx = audioCtx || new AudioContext()
+    const analizador = audioCtx.createAnalyser()
+    analizador.fftSize = 512
+    audioCtx.createMediaStreamSource(flujo).connect(analizador)
+    const datos = new Uint8Array(analizador.fftSize)
+    const pista = document.querySelector('.medidor .pista')
+    const pintar = () => {
+      analizador.getByteTimeDomainData(datos)
+      let pico = 0
+      for (const v of datos) pico = Math.max(pico, Math.abs(v - 128))
+      const nivel = Math.min(100, Math.round(pico / 128 * 140))
+      $('#nivel').style.width = `${nivel}%`
+      pista.setAttribute('aria-valuenow', String(nivel))
+      medidorActivo = requestAnimationFrame(pintar)
+    }
+    pintar()
+  } catch { /* sin medidor */ }
+}
+
+/* ---------- Teleprompter ---------- */
 function leer() {
   detenerLectura()
-  const ppm = Number($('#ppm').value)
   const caja = $('#prompter')
   const total = caja.scrollHeight - caja.clientHeight
-  const segundos = Math.max(2, palabras(tramo.texto) / ppm * 60)
+  const segundos = Math.max(2, palabras(tramo.texto) / Number($('#ppm').value) * 60)
   const inicio = performance.now()
   const paso = ahora => {
     const avance = Math.min(1, (ahora - inicio) / 1000 / segundos)
     caja.scrollTop = total * avance
-    if (avance < 1) desplazando = requestAnimationFrame(paso)
+    desplazando = avance < 1 ? requestAnimationFrame(paso) : null
+    if (!desplazando) $('#leer').querySelector('span').textContent = 'Ensayar'
   }
   caja.scrollTop = 0
   desplazando = requestAnimationFrame(paso)
+  $('#leer').querySelector('span').textContent = 'Detener ensayo'
 }
-function detenerLectura() { if (desplazando) cancelAnimationFrame(desplazando); desplazando = null }
+function detenerLectura() {
+  if (desplazando) cancelAnimationFrame(desplazando)
+  desplazando = null
+  $('#leer').querySelector('span').textContent = 'Ensayar'
+}
 
+/* ---------- Grabación ---------- */
 async function grabar() {
   if (!tramo || grabador) return
   await prepararDispositivos()
   if (!flujo) return
-  descartarToma()
+  descartarToma(false)
   const cuenta = $('#cuenta')
-  cuenta.style.display = 'flex'
-  for (const n of [3, 2, 1]) { cuenta.textContent = n; await new Promise(r => setTimeout(r, 800)) }
+  cuenta.style.display = 'grid'
+  for (const n of [3, 2, 1]) { cuenta.textContent = n; await new Promise(r => setTimeout(r, 750)) }
   cuenta.style.display = 'none'
   const tipos = tramo.tipo === 'cara' ? ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'] : ['audio/webm;codecs=opus', 'audio/webm']
   const mimeType = tipos.find(t => MediaRecorder.isTypeSupported(t)) || ''
   trozos = []
   grabador = new MediaRecorder(flujo, mimeType ? { mimeType } : undefined)
   grabador.ondataavailable = e => { if (e.data.size) trozos.push(e.data) }
-  grabador.onstop = () => {
-    tomaBlob = new Blob(trozos, { type: grabador.mimeType || 'video/webm' })
-    grabador = null
-    const url = URL.createObjectURL(tomaBlob)
-    $('#reproductor').innerHTML = tramo.tipo === 'cara' ? `<video controls src="${url}"></video>` : `<audio controls src="${url}"></audio>`
-    $('#guardar').disabled = false; $('#descartar').disabled = false
-    $('#grabar').disabled = false; $('#detener').disabled = true
-    aviso('Revisa la toma y guárdala, o graba otra.')
-  }
+  grabador.onstop = alTerminarGrabacion
   grabador.start(1000)
-  $('#grabar').disabled = true; $('#detener').disabled = false
-  aviso('● Grabando… lee el texto a tu ritmo. Barra espaciadora para detener.')
+  document.body.classList.add('grabando')
+  inicioGrabacion = performance.now()
+  $('#cronometro').textContent = '0:00'
+  $('#objetivo').textContent = `/ ~${mmss(Math.round(palabras(tramo.texto) / Number($('#ppm').value) * 60))}`
+  relojGrabacion = setInterval(() => { $('#cronometro').textContent = mmss((performance.now() - inicioGrabacion) / 1000) }, 250)
+  $('#grabar').classList.remove('grabar')
+  $('#grabar').innerHTML = `${icono('stop')}<span id="grabar-texto">Detener</span> <kbd>Espacio</kbd>`
+  $('#toma-estado').textContent = 'Grabando… lee a tu ritmo.'
+  bloquearNavegacion(true)
   leer()
 }
-function detener() { if (grabador) { grabador.stop(); detenerLectura() } }
-function descartarToma() { tomaBlob = null; $('#guardar').disabled = true; $('#descartar').disabled = true }
+
+function detener() { if (grabador && grabador.state !== 'inactive') { grabador.stop(); detenerLectura() } }
+
+function alTerminarGrabacion() {
+  tomaBlob = new Blob(trozos, { type: grabador.mimeType || 'video/webm' })
+  grabador = null
+  clearInterval(relojGrabacion)
+  document.body.classList.remove('grabando')
+  bloquearNavegacion(false)
+  $('#grabar').classList.add('grabar')
+  $('#grabar').innerHTML = `${icono('repeat')}<span id="grabar-texto">Repetir</span> <kbd>R</kbd>`
+  const url = URL.createObjectURL(tomaBlob)
+  $('#reproductor').innerHTML = tramo.tipo === 'cara' ? `<video controls src="${url}"></video>` : `<audio controls src="${url}"></audio>`
+  $('#guardar').disabled = false
+  $('#descartar').disabled = false
+  $('#toma-estado').textContent = `Toma de ${$('#cronometro').textContent}. Revísala y guárdala, o repite.`
+  $('#guardar').focus()
+}
+
+function bloquearNavegacion(si) {
+  const indice = detalle.manifiesto.segmentos.indexOf(tramo)
+  $('#anterior').disabled = si || indice <= 0
+  $('#siguiente').disabled = si || indice >= detalle.manifiesto.segmentos.length - 1
+  for (const id of ['#proyecto', '#armar', '#render', '#leer']) $(id).disabled = si
+  document.querySelectorAll('.tramo').forEach(b => { b.disabled = si })
+}
+
+function descartarToma(anunciar = true) {
+  tomaBlob = null
+  $('#guardar').disabled = true
+  $('#descartar').disabled = true
+  if (anunciar) { $('#reproductor').innerHTML = ''; $('#toma-estado').textContent = 'Toma descartada.' }
+}
 
 async function guardarToma() {
   if (!tomaBlob) return
   try {
-    $('#guardar').disabled = true
-    aviso('Guardando y convirtiendo la toma…')
-    const r = await api(`/api/proyectos/${proyecto}/grabaciones/${tramo.id}`, { method: 'POST', headers: { 'content-type': tomaBlob.type }, body: tomaBlob })
-    aviso(`Toma guardada: ${r.duracion.toFixed(1)} s.`)
-    const siguiente = detalle.manifiesto.segmentos[detalle.manifiesto.segmentos.findIndex(s => s.id === tramo.id) + 1]
-    await cargarDetalle(false)
+    const r = await ocupado($('#guardar'), 'Guardando…', () => api(`/api/proyectos/${proyecto}/grabaciones/${tramo.id}`, { method: 'POST', headers: { 'content-type': tomaBlob.type }, body: tomaBlob }))
+    avisar(`Toma guardada: ${r.duracion.toFixed(1)} s.`, 'ok')
+    const indice = detalle.manifiesto.segmentos.indexOf(tramo)
+    tomaBlob = null
+    detalle = await api(`/api/proyectos/${proyecto}`)
+    pintarPasos()
+    pintarTramos()
+    const siguiente = siguientePendiente(indice)
     if (siguiente) await elegirTramo(siguiente.id)
-  } catch (error) { aviso(error.message, true); $('#guardar').disabled = false }
+    else { await elegirTramo(tramo.id); avisar('¡Grabaste todos los tramos! Sube fotos y arma el video.', 'ok') }
+  } catch (err) { avisar(err.message, 'error') }
 }
 
 async function borrarGuardada() {
-  if (!confirm('¿Borrar la toma guardada de este tramo?')) return
+  if (!confirm('¿Borrar la toma guardada de este tramo? No se puede deshacer.')) return
   await api(`/api/proyectos/${proyecto}/grabaciones/${tramo.id}`, { method: 'DELETE' })
+  avisar('Toma borrada.', 'ok')
   await cargarDetalle()
 }
 
+function moverTramo(paso) {
+  const lista = detalle.manifiesto.segmentos
+  const i = lista.indexOf(tramo) + paso
+  if (i >= 0 && i < lista.length) elegirTramo(lista[i].id)
+}
+
+/* ---------- Armar y renderizar ---------- */
 async function armar() {
-  $('#armar').disabled = true
-  $('#registro').textContent = 'Armando el video con tus tomas y fotos…'
   try {
-    const r = await api(`/api/proyectos/${proyecto}/armar`, { method: 'POST' })
-    $('#registro').textContent = `Listo: ${seg(r.duracion)} · ${r.grabados}/${r.tramos} tramos grabados · ${r.vacios} espacios de foto vacíos. Ábrelo en la app de HyperFrames para revisarlo o pulsa «Renderizar».`
+    $('#estado-armado').textContent = 'Armando el video con tus tomas y fotos…'
+    const r = await ocupado($('#armar'), 'Armando…', () => api(`/api/proyectos/${proyecto}/armar`, { method: 'POST' }))
+    $('#estado-armado').textContent = `Video armado: ${mmss(r.duracion)} · ${r.grabados}/${r.tramos} tramos con tu voz · ${r.vacios} espacios de foto vacíos.`
+    avisar('Video armado. Ya puedes renderizarlo.', 'ok')
     await cargarDetalle()
-  } catch (error) { $('#registro').textContent = error.message }
-  $('#armar').disabled = false
+  } catch (err) { $('#estado-armado').textContent = err.message; avisar(err.message, 'error') }
 }
 
 async function render() {
   try {
     await api(`/api/proyectos/${proyecto}/render`, { method: 'POST' })
     $('#render').disabled = true
+    const barra = $('#progreso-render')
+    barra.classList.add('activo', 'indeterminado')
+    $('#estado-armado').textContent = 'Renderizando… puede tardar varios minutos; puedes seguir trabajando.'
     const sondeo = setInterval(async () => {
       const d = await api(`/api/proyectos/${proyecto}`)
-      $('#registro').textContent = d.render?.registro?.split('\n').filter(Boolean).slice(-2).join('\n') || 'Renderizando…'
+      const registro = d.render?.registro || ''
+      const pct = [...registro.matchAll(/(\d{1,3})\s?%/g)].map(m => Number(m[1])).filter(n => n <= 100).pop()
+      if (pct !== undefined) { barra.classList.remove('indeterminado'); barra.firstElementChild.style.width = `${pct}%`; $('#estado-armado').textContent = `Renderizando… ${pct} %` }
       if (d.render?.estado !== 'renderizando') {
-        clearInterval(sondeo); $('#render').disabled = false
-        if (d.render?.estado === 'listo') { $('#final').src = d.videoFinal; $('#final').style.display = 'block'; $('#registro').textContent = 'Video renderizado: renders/final.mp4' }
+        clearInterval(sondeo)
+        $('#render').disabled = false
+        barra.classList.remove('activo', 'indeterminado')
+        if (d.render?.estado === 'listo') { $('#estado-armado').textContent = 'Video renderizado: renders/final.mp4'; avisar('¡Video listo!', 'ok'); $('#ver-final').hidden = false; $('#ver-final').href = d.videoFinal }
+        else { $('#estado-armado').textContent = 'El render falló. Revisa el proyecto en la app de HyperFrames.'; avisar('El render falló.', 'error') }
       }
-    }, 4000)
-  } catch (error) { $('#registro').textContent = error.message }
+    }, 3000)
+  } catch (err) { avisar(err.message, 'error') }
 }
 
-$('#proyecto').addEventListener('change', async e => { proyecto = e.target.value; tramo = null; await cargarDetalle(false) })
-$('#grabar').addEventListener('click', grabar)
-$('#detener').addEventListener('click', detener)
-$('#leer').addEventListener('click', () => (desplazando ? detenerLectura() : leer()))
+/* ---------- Eventos ---------- */
+$('#proyecto').addEventListener('change', async e => { proyecto = e.target.value; preferencias.proyecto = proyecto; guardarPreferencias(); tramo = null; await cargarDetalle(false) })
+$('#grabar').addEventListener('click', () => (grabador ? detener() : grabar()))
 $('#guardar').addEventListener('click', guardarToma)
-$('#descartar').addEventListener('click', () => { descartarToma(); $('#reproductor').innerHTML = ''; aviso('Toma descartada.') })
+$('#descartar').addEventListener('click', () => descartarToma())
 $('#borrar-guardada').addEventListener('click', borrarGuardada)
+$('#leer').addEventListener('click', () => (desplazando ? detenerLectura() : leer()))
+$('#anterior').addEventListener('click', () => moverTramo(-1))
+$('#siguiente').addEventListener('click', () => moverTramo(1))
 $('#armar').addEventListener('click', armar)
 $('#render').addEventListener('click', render)
-$('#ppm').addEventListener('input', e => { $('#ppm-valor').textContent = e.target.value })
-$('#letra').addEventListener('input', e => { $('#prompter').style.fontSize = `${e.target.value}px` })
-$('#espejo').addEventListener('change', e => $('#prompter').classList.toggle('espejo', e.target.checked))
-document.addEventListener('keydown', e => {
-  if (e.code !== 'Space' || ['INPUT', 'TEXTAREA', 'SELECT', 'BUTTON'].includes(e.target.tagName)) return
-  e.preventDefault()
-  grabador ? detener() : grabar()
+$('#ayuda').addEventListener('click', () => $('#dialogo-atajos').showModal())
+$('#enfoque').addEventListener('click', () => {
+  const activo = document.body.classList.toggle('enfoque')
+  $('#enfoque').setAttribute('aria-pressed', String(activo))
 })
-cargarProyectos().catch(error => aviso(error.message, true))
+$('#ppm').addEventListener('input', e => { $('#ppm-valor').textContent = e.target.value; preferencias.ppm = e.target.value; guardarPreferencias() })
+$('#letra').addEventListener('input', e => { $('#prompter').style.fontSize = `${e.target.value}px`; preferencias.letra = e.target.value; guardarPreferencias() })
+$('#espejo').addEventListener('change', e => { $('#prompter').classList.toggle('espejo', e.target.checked); preferencias.espejo = e.target.checked; guardarPreferencias() })
+$('#sel-mic').addEventListener('change', e => { preferencias.mic = e.target.value; guardarPreferencias(); prepararDispositivos(true) })
+$('#sel-cam').addEventListener('change', e => { preferencias.cam = e.target.value; guardarPreferencias(); prepararDispositivos(true) })
+
+document.addEventListener('keydown', e => {
+  const escribiendo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || $('#dialogo-atajos').open
+  if (escribiendo || e.ctrlKey || e.metaKey || e.altKey) return
+  const tecla = e.key.toLowerCase()
+  if (e.code === 'Space') { e.preventDefault(); grabador ? detener() : grabar() }
+  else if (e.key === 'Enter' && !$('#guardar').disabled && e.target.tagName !== 'BUTTON') { e.preventDefault(); guardarToma() }
+  else if (tecla === 'r' && !grabador) { e.preventDefault(); grabar() }
+  else if (e.key === 'ArrowLeft' && !grabador) moverTramo(-1)
+  else if (e.key === 'ArrowRight' && !grabador) moverTramo(1)
+  else if (tecla === 'e' && !grabador) { desplazando ? detenerLectura() : leer() }
+  else if (tecla === 'f') $('#enfoque').click()
+  else if (e.key === '?') $('#dialogo-atajos').showModal()
+})
+window.addEventListener('beforeunload', e => { if (grabador || tomaBlob) { e.preventDefault(); e.returnValue = '' } })
+
+if (preferencias.ppm) { $('#ppm').value = preferencias.ppm; $('#ppm-valor').textContent = preferencias.ppm }
+if (preferencias.letra) { $('#letra').value = preferencias.letra; $('#prompter').style.fontSize = `${preferencias.letra}px` }
+if (preferencias.espejo) { $('#espejo').checked = true; $('#prompter').classList.add('espejo') }
+cargarProyectos().catch(err => avisar(err.message, 'error'))
 </script>
 </body>
 </html>
