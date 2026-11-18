@@ -88,6 +88,8 @@
   .menu-ajustes label { display: grid; gap: 4px; font-size: 13px; color: var(--texto-2); }
   .menu-ajustes label.control { display: flex; }
   .menu-ajustes select { width: 100%; }
+  .nota-dispositivos { margin: 0; font-size: 12px; line-height: 1.45; color: var(--texto-2); }
+  #reintentar-dispositivos { margin-top: 8px; }
 
   .escenario { position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
   .escenario.con-camara { grid-template-columns: minmax(0, 1fr) 300px; }
@@ -272,6 +274,7 @@
           <label class="control"><input type="checkbox" id="espejo"> Texto en espejo (para cristal de teleprompter)</label>
           <label>Micrófono <select id="sel-mic"></select></label>
           <label>Cámara <select id="sel-cam"></select></label>
+          <p class="nota-dispositivos">¿iPhone como cámara? En Windows necesitas una app de cámara web (Camo o Iriun): instálala en el iPhone y en el PC, conéctalos por cable y elige esa cámara aquí.</p>
         </div>
       </details>
       <button class="boton icono-solo" id="enfoque" aria-label="Modo enfoque" aria-pressed="false" title="Modo enfoque (F)"><svg class="icono"><use href="#i-focus"/></svg></button>
@@ -294,6 +297,7 @@
       <div class="info">
         <div id="reproductor"></div>
         <div class="texto-estado" id="toma-estado" role="status" aria-live="polite"></div>
+        <button class="boton" id="reintentar-dispositivos" hidden>Reintentar micrófono y cámara</button>
       </div>
       <div class="acciones">
         <button class="boton grabar" id="grabar"><svg class="icono"><use href="#i-circle"/></svg><span id="grabar-texto">Grabar</span> <kbd>Espacio</kbd></button>
@@ -594,34 +598,103 @@ async function elegirTramo(id) {
 }
 
 /* ---------- Dispositivos y medidor ---------- */
-async function listarDispositivos() {
-  const dispositivos = await navigator.mediaDevices.enumerateDevices()
-  const opciones = (tipo, sel, guardado) => {
-    const lista = dispositivos.filter(d => d.kind === tipo)
-    sel.innerHTML = lista.map((d, i) => `<option value="${escapar(d.deviceId)}">${escapar(d.label || `${tipo === 'audioinput' ? 'Micrófono' : 'Cámara'} ${i + 1}`)}</option>`).join('')
-    if (guardado && lista.some(d => d.deviceId === guardado)) sel.value = guardado
-  }
-  opciones('audioinput', $('#sel-mic'), preferencias.mic)
-  opciones('videoinput', $('#sel-cam'), preferencias.cam)
+// Cámaras virtuales que no muestran a nadie (p. ej. la de EShare): no se eligen solas.
+const CAMARA_VIRTUAL = /eshare|virtual/i
+// Si no hay una elección guardada, se prefiere un micrófono USB (el de solapa) y una cámara real.
+function elegirDispositivo(lista, guardado, { preferir, evitar } = {}) {
+  if (guardado && lista.some(d => d.deviceId === guardado)) return guardado
+  // «default» y «communications» son alias de Windows, no aparatos.
+  const conNombre = lista.filter(d => d.label && !['default', 'communications'].includes(d.deviceId))
+  return (preferir && conNombre.find(d => preferir.test(d.label)))?.deviceId
+    || (evitar && conNombre.find(d => !evitar.test(d.label)))?.deviceId
+    || ''
 }
 
-async function prepararDispositivos(forzar = false) {
-  const conVideo = tramo?.tipo === 'cara'
-  if (!forzar && flujo && (flujo.getVideoTracks().length > 0) === conVideo) return
-  if (flujo) flujo.getTracks().forEach(t => t.stop())
+let dispositivosElegidos = { mic: '', cam: '' }
+async function listarDispositivos() {
+  const dispositivos = await navigator.mediaDevices.enumerateDevices()
+  const opciones = (tipo, sel, elegido) => {
+    const lista = dispositivos.filter(d => d.kind === tipo && d.deviceId)
+    sel.innerHTML = lista.length
+      ? lista.map((d, i) => `<option value="${escapar(d.deviceId)}">${escapar(d.label || `${tipo === 'audioinput' ? 'Micrófono' : 'Cámara'} ${i + 1}`)}</option>`).join('')
+      : `<option value="">${dispositivos.some(d => d.kind === tipo) ? 'Da permiso para ver la lista' : tipo === 'audioinput' ? 'No se encontró ningún micrófono' : 'No se encontró ninguna cámara'}</option>`
+    if (elegido && lista.some(d => d.deviceId === elegido)) sel.value = elegido
+    return lista
+  }
+  const mics = dispositivos.filter(d => d.kind === 'audioinput' && d.deviceId)
+  const cams = dispositivos.filter(d => d.kind === 'videoinput' && d.deviceId)
+  dispositivosElegidos = {
+    mic: elegirDispositivo(mics, preferencias.mic, { preferir: /usb/i }),
+    cam: elegirDispositivo(cams, preferencias.cam, { evitar: CAMARA_VIRTUAL })
+  }
+  opciones('audioinput', $('#sel-mic'), dispositivosElegidos.mic)
+  opciones('videoinput', $('#sel-cam'), dispositivosElegidos.cam)
+}
+
+// Traduce el error del navegador a lo que de verdad pasó (no todo es «falta de permiso»).
+function motivoDispositivo(err, cual) {
+  const nombre = err?.name || ''
+  if (nombre === 'NotAllowedError' || nombre === 'SecurityError') return `El navegador o Windows no dejan usar ${cual}. Revisa el candado de la barra de direcciones y, en Windows, Configuración › Privacidad y seguridad › ${cual === 'la cámara' ? 'Cámara' : 'Micrófono'} › «Permitir que las aplicaciones de escritorio accedan».`
+  if (nombre === 'NotReadableError' || nombre === 'AbortError') return `${cual === 'la cámara' ? 'La cámara' : 'El micrófono'} está ocupado por otro programa (Zoom, Teams, Meet, la app de la cámara, EShare…). Ciérralo y pulsa «Reintentar».`
+  if (nombre === 'NotFoundError' || nombre === 'OverconstrainedError') return `No se encontró ${cual}. Conéctalo (o abre la app del iPhone como cámara) y elígelo en Ajustes.`
+  return `No se pudo abrir ${cual} (${nombre || 'error desconocido'}).`
+}
+
+async function abrirPista(tipo, conVideo) {
+  const id = dispositivosElegidos[tipo === 'audio' ? 'mic' : 'cam']
+  const restricciones = tipo === 'audio'
+    // Micrófono de solapa: sin cancelación de eco ni ganancia automática (sube y baja el volumen sola);
+    // el servidor normaliza la voz después.
+    ? { audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: false, autoGainControl: false, noiseSuppression: true }, video: false }
+    : { audio: false, video: conVideo ? { deviceId: id ? { exact: id } : undefined, width: { ideal: 1920 }, height: { ideal: 1080 } } : false }
   try {
-    flujo = await navigator.mediaDevices.getUserMedia({
-      audio: { deviceId: preferencias.mic ? { exact: preferencias.mic } : undefined, echoCancellation: true, noiseSuppression: true },
-      video: conVideo ? { deviceId: preferencias.cam ? { exact: preferencias.cam } : undefined, width: { ideal: 1920 }, height: { ideal: 1080 } } : false
-    })
+    return await navigator.mediaDevices.getUserMedia(restricciones)
+  } catch (err) {
+    // El dispositivo guardado ya no está (se desconectó): se olvida y se usa el predeterminado.
+    if (id && (err.name === 'OverconstrainedError' || err.name === 'NotFoundError')) {
+      if (tipo === 'audio') delete preferencias.mic; else delete preferencias.cam
+      guardarPreferencias()
+      dispositivosElegidos[tipo === 'audio' ? 'mic' : 'cam'] = ''
+      return abrirPista(tipo, conVideo)
+    }
+    throw err
+  }
+}
+
+async function prepararDispositivos(forzar = false, cambioAutomatico = false) {
+  const conVideo = tramo?.tipo === 'cara'
+  if (!forzar && flujo && (flujo.getVideoTracks().length > 0) === conVideo && flujo.getAudioTracks().length) return
+  if (flujo) flujo.getTracks().forEach(t => t.stop())
+  flujo = null
+  try { await listarDispositivos() } catch { /* sin lista */ }
+  const fallas = []
+  const pistas = []
+  try { pistas.push(...(await abrirPista('audio')).getTracks()) } catch (err) { fallas.push(motivoDispositivo(err, 'el micrófono')) }
+  if (conVideo) {
+    try { pistas.push(...(await abrirPista('video', true)).getTracks()) } catch (err) { fallas.push(motivoDispositivo(err, 'la cámara')) }
+  }
+  // Con permiso ya dado, la lista trae los nombres reales: se elige el micrófono USB si no había elección.
+  try { await listarDispositivos() } catch { /* sin lista */ }
+  const audio = pistas.find(p => p.kind === 'audio')
+  const video = pistas.find(p => p.kind === 'video')
+  const otroMic = audio && !preferencias.mic && dispositivosElegidos.mic && audio.getSettings().deviceId !== dispositivosElegidos.mic
+  const otraCam = video && !preferencias.cam && dispositivosElegidos.cam && video.getSettings().deviceId !== dispositivosElegidos.cam
+  if (!cambioAutomatico && (otroMic || otraCam)) {
+    pistas.forEach(p => p.stop())
+    return prepararDispositivos(true, true)
+  }
+  if (audio && (!conVideo || video)) {
+    flujo = new MediaStream(pistas)
     $('#camara').srcObject = conVideo ? flujo : null
     iniciarMedidor()
-    await listarDispositivos()
-  } catch {
-    flujo = null
-    $('#toma-estado').textContent = 'Sin acceso al micrófono o la cámara. Permítelo en el candado de la barra de direcciones y recarga.'
-    avisar('Sin permiso para el micrófono o la cámara.', 'error')
+    $('#reintentar-dispositivos').hidden = true
+    return
   }
+  pistas.forEach(p => p.stop())
+  $('#camara').srcObject = null
+  $('#toma-estado').textContent = fallas.join(' ')
+  $('#reintentar-dispositivos').hidden = false
+  avisar(fallas[0] || 'No se pudo abrir el micrófono o la cámara.', 'error')
 }
 
 function iniciarMedidor() {
@@ -1020,6 +1093,13 @@ $('#letra').addEventListener('input', e => { $('#prompter').style.fontSize = `${
 $('#espejo').addEventListener('change', e => { $('#prompter').classList.toggle('espejo', e.target.checked); preferencias.espejo = e.target.checked; guardarPreferencias() })
 $('#sel-mic').addEventListener('change', e => { preferencias.mic = e.target.value; guardarPreferencias(); prepararDispositivos(true) })
 $('#sel-cam').addEventListener('change', e => { preferencias.cam = e.target.value; guardarPreferencias(); prepararDispositivos(true) })
+$('#reintentar-dispositivos').addEventListener('click', () => prepararDispositivos(true))
+// Al conectar o desconectar un micrófono o una cámara (o abrir la app del iPhone) se actualiza la lista.
+navigator.mediaDevices.addEventListener?.('devicechange', () => {
+  const activos = flujo ? flujo.getTracks().filter(p => p.readyState === 'live').length : 0
+  if (!grabador && (!flujo || activos < flujo.getTracks().length)) prepararDispositivos(true)
+  else listarDispositivos().catch(() => {})
+})
 
 document.addEventListener('keydown', e => {
   const escribiendo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(e.target.tagName) || Boolean(document.querySelector('dialog[open]'))
