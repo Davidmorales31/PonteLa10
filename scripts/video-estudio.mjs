@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { generarProyecto } from './video-generar-proyecto.mjs'
+import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
@@ -39,7 +40,20 @@ export function peticionPermitida({ host, origin, metodo }, puerto = PUERTO) {
   return Boolean(origin) && hosts.some(h => origin === `http://${h}`)
 }
 
+export const idReelValido = id => /^[a-z0-9_]{1,20}$/.test(String(id))
+
+// La llave de redes vive en el .env de la raíz y solo la usa este servidor; nunca viaja a la página.
+function cargarEntorno() {
+  try { process.loadEnvFile(join(RAIZ, '.env')) } catch { /* sin .env: las funciones de redes avisan que falta la llave */ }
+}
+export function redesDisponibles() { cargarEntorno(); return Boolean(process.env.PONT3LA10_AGENTES_REDES_KEY) }
+function clienteRedes() {
+  cargarEntorno()
+  return crearClienteRedes({ llave: process.env.PONT3LA10_AGENTES_REDES_KEY, base: process.env.PONT3LA10_AGENTES_REDES_BASE_URL || undefined })
+}
+
 const renders = new Map()
+const publicando = new Set()
 const trabajosReels = new Map()
 const ocupados = new Set()
 
@@ -88,12 +102,14 @@ async function detalleProyecto(proyecto) {
   const trabajoReels = trabajosReels.get(proyecto)
   const final = join(carpeta, 'renders', 'final.mp4')
   const reels = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
+  const publicaciones = await leerEstadoPublicaciones(carpeta)
   return {
     proyecto, manifiesto, estudio,
     render: render ? { estado: render.estado, registro: render.registro.slice(-1200) } : null,
     videoFinal: existsSync(final) ? `/archivos/${proyecto}/renders/final.mp4?v=${(await stat(final)).mtimeMs}` : null,
     reelsEstado: trabajoReels ? { estado: trabajoReels.estado, registro: trabajoReels.registro.slice(-600) } : null,
-    reels: reels ? reels.reels.map(r => ({ ...r, url: `/archivos/${proyecto}/${r.archivo}?v=${Date.parse(reels.creado)}` })) : []
+    redes: { disponible: redesDisponibles() },
+    reels: reels ? reels.reels.map(r => ({ ...r, url: `/archivos/${proyecto}/${r.archivo}?v=${Date.parse(reels.creado)}`, publicacion: publicaciones[r.id] || null })) : []
   }
 }
 
@@ -250,6 +266,27 @@ export function crearServidor() {
       if (accion === 'fotos' && claveFotosValida(partes[4])) {
         if (req.method === 'POST') return responder(res, 200, await guardarFoto(proyecto, partes[4], await leerCuerpo(req, LIMITE_FOTO), decodeURIComponent(String(req.headers['x-credito'] || ''))))
         if (req.method === 'DELETE' && /^\d{1,3}$/.test(partes[5] || '')) { await borrarFoto(proyecto, partes[4], Number(partes[5])); return responder(res, 200, { ok: true }) }
+      }
+      if (accion === 'reels' && partes[4]) {
+        const carpeta = carpetaDe(proyecto)
+        if (partes[4] === 'estado' && req.method === 'GET') return responder(res, 200, { publicaciones: redesDisponibles() ? await refrescarEstados({ carpeta, cliente: clienteRedes() }) : await leerEstadoPublicaciones(carpeta) })
+        if (!idReelValido(partes[4]) || req.method !== 'POST') return responder(res, 404, { error: 'No encontrado.' })
+        const lista = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
+        const reel = lista?.reels.find(r => r.id === partes[4])
+        if (!reel) return responder(res, 404, { error: 'Ese Reel no existe en el proyecto.' })
+        const clave = `${proyecto}:${reel.id}`
+        if (publicando.has(clave)) return responder(res, 409, { error: 'Este Reel ya se está procesando: espera a que termine.' })
+        publicando.add(clave)
+        try {
+          if (partes[5] === 'publicar') {
+            let datos = {}
+            try { datos = JSON.parse((await leerCuerpo(req, 8 * 1024)).toString('utf8') || '{}') } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
+            if (!MODOS.includes(datos.modo)) return responder(res, 422, { error: 'Modo de publicación no válido.' })
+            return responder(res, 200, await publicarReel({ proyecto, carpeta, reel, creado: lista.creado, modo: datos.modo, fecha: datos.fecha, cliente: clienteRedes() }))
+          }
+          if (partes[5] === 'cancelar') return responder(res, 200, await cancelarProgramacionReel({ carpeta, reel, cliente: clienteRedes() }))
+        } finally { publicando.delete(clave) }
+        return responder(res, 404, { error: 'No encontrado.' })
       }
       if ((accion === 'armar' || accion === 'render' || accion === 'reels') && req.method === 'POST') {
         if (ocupados.has(proyecto)) return responder(res, 409, { error: 'El proyecto está ocupado: espera a que termine.' })

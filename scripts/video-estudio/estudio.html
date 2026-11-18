@@ -166,6 +166,14 @@
   .reel { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--borde-suave); border-radius: 10px; background: var(--panel-2); }
   .reel video { width: 100%; aspect-ratio: 9/16; max-height: 420px; object-fit: contain; border-radius: 8px; background: #000; }
   .reel textarea { width: 100%; min-height: 96px; padding: 8px; border: 1px solid var(--borde); border-radius: 8px; background: var(--fondo); color: var(--texto); font: inherit; font-size: 13px; resize: vertical; }
+  .aviso-redes { margin: 8px 0; padding: 10px 12px; border: 1px solid rgba(255, 216, 0, .5); border-radius: 10px; background: rgba(255, 216, 0, .08); font-size: 14px; }
+  .programar-todos { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin: 12px 0 16px; padding: 12px; border: 1px solid var(--borde-suave); border-radius: 10px; background: var(--panel-2); }
+  .programar-todos .campo { margin-top: 0; }
+  .programar-todos select, .reel .campo input[type=datetime-local] { min-height: 40px; padding: 0 8px; border: 1px solid var(--borde); border-radius: 8px; background: var(--fondo); color: var(--texto); }
+  .programar-todos input { min-height: 40px; padding: 0 8px; border: 1px solid var(--borde); border-radius: 8px; background: var(--fondo); color: var(--texto); color-scheme: dark; }
+  .reel .campo input[type=datetime-local] { color-scheme: dark; }
+  .reel .estado-publicacion { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .reel .error-reel { color: #ffb4bd; font-size: 12px; min-height: 16px; }
   .reel .fila { display: flex; gap: 8px; }
   .reel .fila .boton { flex: 1; min-height: 40px; padding: 0 8px; font-size: 13px; }
   .atajos { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 14px; color: var(--texto-2); }
@@ -301,7 +309,15 @@
 
 <dialog id="dialogo-reels" aria-labelledby="t-reels">
   <h2 id="t-reels">Tus Reels</h2>
-  <p class="etiqueta-chica" style="margin-top:0">Vertical 1080×1920 con subtítulos. Revísalos, copia la descripción y publícalos desde Instagram. Aún no se publican solos.</p>
+  <p class="etiqueta-chica" style="margin-top:0">Vertical 1080×1920 con subtítulos. Se publican en <strong>Facebook e Instagram</strong> con el mismo programador de las fotos.</p>
+  <div id="aviso-redes" class="aviso-redes" hidden></div>
+  <div class="programar-todos" id="programar-todos">
+    <label class="campo">Primer Reel el<input type="datetime-local" id="todos-inicio"></label>
+    <label class="campo">Uno cada
+      <select id="todos-cada"><option value="2">2 horas</option><option value="3" selected>3 horas</option><option value="4">4 horas</option><option value="6">6 horas</option><option value="24">1 día</option></select>
+    </label>
+    <button class="boton primario" id="todos-programar">Programar todos</button>
+  </div>
   <div id="lista-reels" class="lista-reels"></div>
   <form method="dialog" style="margin-top:16px;text-align:right"><button class="boton primario">Cerrar</button></form>
 </dialog>
@@ -724,21 +740,107 @@ async function render() {
 }
 
 /* ---------- Reels ---------- */
+const ESTADOS_REEL = {
+  borrador: ['pendiente', 'Borrador en redes'],
+  programada: ['ok', 'Programada'],
+  aprobacion: ['pendiente', 'Pide tu aprobación en el panel'],
+  publicando: ['pendiente', 'Publicando…'],
+  publicada: ['ok', 'Publicada'],
+  fallida: ['pendiente', 'Falló: revisa el panel de redes']
+}
+const aLocalInput = fecha => { const d = new Date(fecha.getTime() - fecha.getTimezoneOffset() * 60000); return d.toISOString().slice(0, 16) }
+const fechaCorta = iso => new Date(iso).toLocaleString('es-CO', { weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+// Sugerencia: mañana a las 7:30 de la mañana (hora de este equipo), y los siguientes cada 3 horas.
+function sugerida(i, cadaHoras = 3) {
+  const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(7, 30, 0, 0)
+  return aLocalInput(new Date(d.getTime() + i * cadaHoras * 3_600_000))
+}
+
 function pintarReels() {
-  $('#lista-reels').innerHTML = (detalle.reels || []).map((r, i) => `<div class="reel">
-    <strong>${i + 1}. ${escapar(r.club || r.id)} · ${Math.round(r.duracion)} s</strong>
+  const sinLlave = detalle.redes && !detalle.redes.disponible
+  $('#aviso-redes').hidden = !sinLlave
+  if (sinLlave) $('#aviso-redes').textContent = 'Falta la llave de redes en el archivo .env (PONT3LA10_AGENTES_REDES_KEY). Mientras tanto puedes copiar la descripción y descargar cada Reel.'
+  $('#programar-todos').hidden = sinLlave || !(detalle.reels || []).length
+  if (!$('#todos-inicio').value) $('#todos-inicio').value = sugerida(0)
+  $('#lista-reels').innerHTML = (detalle.reels || []).map((r, i) => {
+    const p = r.publicacion
+    const [clase, texto] = p ? (ESTADOS_REEL[p.estado] || ['pendiente', p.estado]) : ['pendiente', 'Sin publicar']
+    const detalleFecha = p?.estado === 'programada' && p.fecha ? ` · ${escapar(fechaCorta(p.fecha))}` : ''
+    const bloqueada = ['programada', 'publicada', 'publicando'].includes(p?.estado)
+    return `<div class="reel" data-reel="${escapar(r.id)}">
+    <div class="estado-publicacion"><strong>${i + 1}. ${escapar(r.club || r.id)} · ${Math.round(r.duracion)} s</strong><span class="insignia ${clase}">${escapar(texto)}${detalleFecha}</span></div>
     <video controls preload="metadata" src="${escapar(r.url)}"></video>
     <textarea readonly aria-label="Descripción del Reel ${i + 1}">${escapar(r.descripcion)}</textarea>
     <div class="fila">
       <button class="boton" data-copiar="${i}">${icono('copy')}<span>Copiar texto</span></button>
       <a class="boton" href="${escapar(r.url)}" download="${escapar(`pont3la10-reel-${i + 1}.mp4`)}">${icono('download')}<span>Descargar</span></a>
-    </div></div>`).join('')
+    </div>
+    ${sinLlave || p?.estado === 'publicada' ? '' : `<label class="campo">Publicar el<input type="datetime-local" data-fecha value="${escapar(p?.fecha && p.estado === 'programada' ? aLocalInput(new Date(p.fecha)) : sugerida(i))}" ${bloqueada ? 'disabled' : ''}></label>
+    <div class="fila">
+      ${p?.estado === 'programada' ? `<button class="boton" data-cancelar="${escapar(r.id)}">${icono('x')}<span>Cancelar programación</span></button>` : `<button class="boton primario" data-programar="${escapar(r.id)}" ${bloqueada ? 'disabled' : ''}><span>Programar</span></button>
+      <button class="boton" data-borrador="${escapar(r.id)}" ${bloqueada ? 'disabled' : ''} title="Lo deja listo en el panel de redes, sin fecha"><span>Solo borrador</span></button>`}
+    </div>
+    <div class="error-reel" role="alert"></div>`}
+  </div>`
+  }).join('')
   $('#lista-reels').querySelectorAll('[data-copiar]').forEach(b => b.addEventListener('click', async () => {
     try { await navigator.clipboard.writeText(detalle.reels[Number(b.dataset.copiar)].descripcion); avisar('Descripción copiada.', 'ok') } catch { avisar('No se pudo copiar. Selecciona el texto y cópialo.', 'error') }
   }))
+  $('#lista-reels').querySelectorAll('[data-programar]').forEach(b => b.addEventListener('click', () => accionReel(b, 'programar')))
+  $('#lista-reels').querySelectorAll('[data-borrador]').forEach(b => b.addEventListener('click', () => accionReel(b, 'borrador')))
+  $('#lista-reels').querySelectorAll('[data-cancelar]').forEach(b => b.addEventListener('click', () => accionReel(b, 'cancelar')))
 }
 
-function verReels() { pintarReels(); $('#dialogo-reels').showModal() }
+async function accionReel(boton, modo) {
+  const id = boton.dataset.programar || boton.dataset.borrador || boton.dataset.cancelar
+  const tarjeta = boton.closest('.reel')
+  const error = tarjeta.querySelector('.error-reel')
+  const reel = detalle.reels.find(r => r.id === id)
+  error.textContent = ''
+  const entrada = tarjeta.querySelector('[data-fecha]')
+  const fecha = entrada?.value ? new Date(entrada.value).toISOString() : ''
+  if (modo === 'programar') {
+    if (!entrada?.value) { error.textContent = 'Elige la fecha y la hora.'; entrada?.focus(); return }
+    if (!confirm(`Se publicará en Facebook e Instagram:\n\n• ${reel.club || reel.id} — ${fechaCorta(fecha)}\n\nQuedará publicado a esa hora. ¿Confirmas?`)) return
+  }
+  try {
+    await ocupado(boton, modo === 'cancelar' ? 'Cancelando…' : 'Subiendo y programando…', () => api(`/api/proyectos/${proyecto}/reels/${id}/${modo === 'cancelar' ? 'cancelar' : 'publicar'}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: modo === 'cancelar' ? '{}' : JSON.stringify({ modo, fecha }) }))
+    avisar(modo === 'programar' ? `Reel programado para ${fechaCorta(fecha)}.` : modo === 'borrador' ? 'Reel guardado como borrador en redes.' : 'Programación cancelada.', 'ok')
+    detalle = await api(`/api/proyectos/${proyecto}`)
+    pintarReels()
+  } catch (err) { error.textContent = err.message }
+}
+
+async function programarTodos() {
+  const lista = (detalle.reels || []).filter(r => !['programada', 'publicada', 'publicando'].includes(r.publicacion?.estado))
+  if (!lista.length) { avisar('Todos los Reels ya están programados o publicados.', 'error'); return }
+  const inicio = new Date($('#todos-inicio').value)
+  if (Number.isNaN(inicio.getTime())) { avisar('Elige la fecha y la hora del primer Reel.', 'error'); return }
+  const cada = Number($('#todos-cada').value)
+  const horas = lista.map((_, i) => new Date(inicio.getTime() + i * cada * 3_600_000))
+  if (!confirm(`Se publicarán en Facebook e Instagram:\n\n${lista.map((r, i) => `• ${r.club || r.id} — ${fechaCorta(horas[i])}`).join('\n')}\n\nQuedarán publicados a esas horas. ¿Confirmas?`)) return
+  const boton = $('#todos-programar')
+  try {
+    await ocupado(boton, 'Programando…', async () => {
+      for (const [i, r] of lista.entries()) {
+        await api(`/api/proyectos/${proyecto}/reels/${r.id}/publicar`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ modo: 'programar', fecha: horas[i].toISOString() }) })
+        $('#todos-programar span').textContent = `Programando ${i + 1} de ${lista.length}…`
+      }
+    })
+    avisar(`${lista.length} Reels programados.`, 'ok')
+  } catch (err) { avisar(err.message, 'error') }
+  detalle = await api(`/api/proyectos/${proyecto}`)
+  pintarReels()
+}
+
+async function verReels() {
+  pintarReels()
+  $('#dialogo-reels').showModal()
+  // Al abrir, se refresca el estado real (¿ya se publicó? ¿falló?) sin bloquear la ventana.
+  if (detalle.redes?.disponible && (detalle.reels || []).some(r => r.publicacion)) {
+    try { await api(`/api/proyectos/${proyecto}/reels/estado`); detalle = await api(`/api/proyectos/${proyecto}`); if ($('#dialogo-reels').open) pintarReels() } catch { /* se conserva lo mostrado */ }
+  }
+}
 
 async function crearReels() {
   try {
@@ -773,6 +875,8 @@ $('#armar').addEventListener('click', armar)
 $('#render').addEventListener('click', render)
 $('#crear-reels').addEventListener('click', crearReels)
 $('#ver-reels').addEventListener('click', verReels)
+$('#todos-programar').addEventListener('click', programarTodos)
+$('#todos-cada').addEventListener('change', () => { $('#todos-inicio').value = $('#todos-inicio').value || sugerida(0) })
 $('#ayuda').addEventListener('click', () => $('#dialogo-atajos').showModal())
 $('#enfoque').addEventListener('click', () => {
   const activo = document.body.classList.toggle('enfoque')
