@@ -260,6 +260,19 @@ propuesta automática exige `coverMediaId` real.
    20 minutos después de la publicación anterior y más de 10 desde ahora. Sin
    `--programar` ni `--borrador` la pieza queda pendiente de aprobación humana.
    Los artículos aún sin publicar al cierre se procesan en la siguiente activación.
+   **Antes de empezar este paso**, completa lo que dejó pendiente la corrida anterior:
+   escribe un JSON `{"<slug>": "<crédito de la foto>"}` (el crédito está en
+   `media_files.credit` o en la nota de la corrida) y ejecuta
+   `node scripts/redes-publicar-articulo.mjs --pendientes --horas 24 --creditos <archivo.json> --borrador --carpeta <directorio temporal>`;
+   revisa cada imagen (que la foto corresponda al hecho del titular: si muestra a
+   otro equipo o jugador, no la programes) y repite con
+   `--programar-desde <ISO con -05:00>` (a más de 10 minutos; el script separa cada
+   pieza 15 minutos). El script salta lo que ya tiene pieza y reanuda borradores;
+   solo procesa los slugs que figuran en tu JSON.
+   Si la API responde 429 `limite_excedido` (cada llave tiene un máximo de
+   programaciones por día), **detente, no insistas ni uses otra vía**, deja los
+   borradores como están y repórtalo con los slugs pendientes: una persona debe subir
+   el límite de la llave en Panel → Contenido para redes → Agentes IA.
 8. Reporta: corrida, artículos programados por club, publicaciones en redes
    programadas con su hora, clubes del día aún sin cobertura, descartes y
    bloqueos. Sin secretos.
