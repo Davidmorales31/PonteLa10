@@ -179,7 +179,7 @@ describe('API privada de propuestas Codex', () => {
       ...propuesta,
       editorialFlags: ['needs_angle_review', 'licensed_photo_cover', 'ai_generated_cover']
     }).success).toBe(false)
-    const cuerpoCorto = crearCuerpoDePrueba(659)
+    const cuerpoCorto = crearCuerpoDePrueba(299)
     expect(esquemaPropuestaCodex.safeParse({
       ...propuesta,
       body: cuerpoCorto.texto,

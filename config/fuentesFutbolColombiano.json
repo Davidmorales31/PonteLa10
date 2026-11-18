@@ -1,0 +1,118 @@
+{
+  "version": 2,
+  "actualizadoEn": "2026-11-15",
+  "nicho": "futbol-colombiano",
+  "zonaHoraria": "America/Bogota",
+  "cobertura": {
+    "minimoPorClub": 1,
+    "minimoClubesDeMayorInteres": 3,
+    "minimoSeleccionColombia": 2,
+    "maximoPorcentajePorFormato": 35
+  },
+  "clubesDeMayorInteres": [
+    "Atlético Nacional",
+    "Millonarios",
+    "América de Cali",
+    "Junior",
+    "Independiente Santa Fe"
+  ],
+  "clubesDeMayorInteresNota": "Lista inicial editorial. Validar con Search Console y Google Trends antes de afirmar que son los más buscados.",
+  "verificacion": {
+    "clubes": "Redes tomadas de la ficha oficial de cada club en dimayor.com.co (2026-11-15). Los 20 clubes salen de las jornadas 1 y 2 de la Liga BetPlay 2026-II publicadas en pont3la10.com.",
+    "periodistas": "Usuarios confirmados por publicaciones propias en x.com encontradas por búsqueda (2026-11-15). No se pudo abrir X sin sesión; revisar antes de pagar lecturas por API.",
+    "pendiente": "Instagram y Facebook de periodistas no verificados; no se incluyen."
+  },
+  "cuentasOficiales": {
+    "liga": [
+      { "nombre": "DIMAYOR", "x": "Dimayor", "instagram": "dimayoroficial", "facebook": "DimayorOficial", "youtube": "@divisionmayor1379", "web": "https://dimayor.com.co" }
+    ],
+    "seleccion": [
+      { "nombre": "Selección Colombia (FCF)", "x": "FCFSeleccionCol", "instagram": "fcfseleccioncol", "facebook": "FCFSeleccionColPage", "tiktok": "fcfseleccioncolombia", "web": "https://fcf.com.co" },
+      { "nombre": "Selección Colombia Femenina", "instagram": "lafcfem" }
+    ],
+    "clubes": [
+      { "club": "Alianza", "x": "alianzafc_ofic", "instagram": "alianzafc.official", "facebook": "APetroleraCF" },
+      { "club": "América de Cali", "x": "AmericadeCali", "instagram": "americadecali", "facebook": "Americadecalisad" },
+      { "club": "Atlético Bucaramanga", "x": "ABucaramanga", "instagram": "bucaramangaoficial", "facebook": "AtleticoBucaramangaOficial" },
+      { "club": "Atlético Nacional", "x": "nacionaloficial", "instagram": "nacionaloficial", "facebook": "nacionaloficial" },
+      { "club": "Boyacá Chicó", "x": "BCHICOFCOFICIAL", "instagram": "boyacachico_oficial", "facebook": "BoyacaChicoFutbolClub" },
+      { "club": "Cúcuta Deportivo", "x": "Cucutaoficial", "instagram": "cucutaoficial", "facebook": "Cucutaoficial" },
+      { "club": "Deportes Tolima", "x": "cdtolima", "instagram": "cdtolima", "facebook": "ClubDeportesTolimaSA" },
+      { "club": "Deportivo Cali", "x": "AsoDeporCali", "instagram": "deportivocalioficial", "facebook": "DeportivoCaliOficial" },
+      { "club": "Deportivo Pasto", "x": "DeporPasto", "instagram": "deportivopastooficial", "facebook": "deportivopasto" },
+      { "club": "Deportivo Pereira", "x": "DeporPereiraFC", "instagram": "corpereira", "facebook": "Corpereira" },
+      { "club": "Fortaleza CEIF", "x": "FortalezaFC", "instagram": "fortaleza_ceif", "facebook": "FortalezaCEIFOficial" },
+      { "club": "Independiente Medellín", "x": "dim_oficial", "instagram": "dimoficialcom", "facebook": "DIM.Oficial" },
+      { "club": "Independiente Santa Fe", "x": "SantaFe", "instagram": "santafe_oficial" },
+      { "club": "Internacional de Bogotá", "x": "interbogoficial", "instagram": "interbogotaoficial", "nota": "Antes La Equidad; ficha DIMAYOR 'equidad-3'." },
+      { "club": "Jaguares de Córdoba", "x": "jaguaresdecord", "instagram": "jaguaresfc", "facebook": "jaguaresfcoficial" },
+      { "club": "Junior", "x": "JuniorClubSA", "instagram": "juniorclubsa", "facebook": "JuniorClubSA" },
+      { "club": "Llaneros", "x": "clubllanerosfc", "instagram": "clubllanerosfc", "facebook": "ClubLlanerosFC" },
+      { "club": "Millonarios", "x": "MillosFCoficial", "instagram": "millosfcoficial", "facebook": "millosfcoficial" },
+      { "club": "Once Caldas", "x": "oncecaldas", "instagram": "oncecaldasoficial", "facebook": "oncecaldasoficial" },
+      { "club": "Águilas Doradas", "x": "AguilasDoradas", "instagram": "aguilasdoradasr", "facebook": "AguilasDoradasoficial" }
+    ]
+  },
+  "periodistas": [
+    { "nombre": "Carlos Antonio Vélez", "x": "velezfutbol", "medio": "Palabras Mayores / RCN", "perfil": "opinión, Selección" },
+    { "nombre": "Iván Mejía Álvarez", "x": "PajaritoDeIvan", "medio": "Radio Nacional (RTVC)", "perfil": "opinión" },
+    { "nombre": "César Augusto Londoño", "x": "cesaralo", "medio": "Caracol Radio", "perfil": "opinión, liga" },
+    { "nombre": "Javier Hernández Bonnet", "x": "BonnetHJavier", "medio": "Gol Caracol / Blu Radio", "perfil": "primicias, Selección" },
+    { "nombre": "Juan Felipe Cadavid", "x": "JFCadavid", "medio": "La FM / RCN", "perfil": "mercado, liga" },
+    { "nombre": "Eduardo Luis López", "x": "EduardoLuisFut", "medio": "Win Sports", "perfil": "liga, polémica" },
+    { "nombre": "Andrés Marocco", "x": "andresmarocco", "medio": "ESPN Colombia / El Espectador", "perfil": "opinión, Selección" },
+    { "nombre": "Hernán Peláez Restrepo", "x": "eldoctorpelaez", "medio": "Caracol Radio / W Radio", "perfil": "historia, análisis", "nota": "Existen otras cuentas con su nombre; confirmar esta antes de usar la API." }
+  ],
+  "medios": [
+    { "nombre": "Win Sports", "x": "WinSportsTV", "web": "https://www.winsports.co", "uso": "programación oficial de TV, resultados, declaraciones" },
+    { "nombre": "Gol Caracol", "x": "GolCaracol", "web": "https://www.noticiascaracol.com/golcaracol" },
+    { "nombre": "Futbolred", "x": "futbolred", "web": "https://www.futbolred.com" },
+    { "nombre": "Claro Sports Colombia", "x": "ClaroSportsCo", "web": "https://www.clarosports.com/colombia" },
+    { "nombre": "Deportes RCN", "x": "DeportesRCN" }
+  ],
+  "fuentesWeb": [
+    { "nombre": "DIMAYOR noticias", "url": "https://dimayor.com.co", "uso": "clasificados, fixture, resoluciones, designaciones arbitrales" },
+    { "nombre": "FCF / Selección", "url": "https://fcf.com.co", "uso": "convocatorias, partidos, comunicados" },
+    { "nombre": "Google Noticias RSS por club", "url": "https://news.google.com/rss/search?q=%22<club>%22+when:2d&hl=es-419&gl=CO&ceid=CO:es-419", "uso": "radar de lo ocurrido hoy; no es fuente" }
+  ],
+  "fuentesAmpliadas": {
+    "decididoPor": "responsable del sitio, 2026-11-17",
+    "nota": "Una fuente identificable basta. Estas categorías se citan siempre atribuidas y se tratan como rumor si no hay confirmación oficial. No se inventan usuarios: solo los de esta ficha o los que el agente haya visto en una búsqueda.",
+    "estables": [
+      { "tipo": "rssMedios", "uso": "RSS propios de Win Sports, Futbolred, El País, El Tiempo, Infobae, La FM, Caracol, ESPN, Semana, AS Colombia y Pulzo", "estado": "verificar la URL de cada feed antes de usarla" },
+      { "tipo": "youtube", "uso": "canales de clubes, DIMAYOR, FCF y programas deportivos", "patron": "https://www.youtube.com/feeds/videos.xml?channel_id=<ID>", "estado": "completar los channel_id verificados" },
+      { "tipo": "reddit", "uso": "subreddits de fútbol colombiano (JSON/RSS público)", "estado": "completar los subreddits verificados" },
+      { "tipo": "telegram", "uso": "canales públicos de noticias del fútbol colombiano", "patron": "https://t.me/s/<canal>", "estado": "completar los canales verificados" },
+      { "tipo": "sitiosOficiales", "uso": "dimayor.com.co, fcf.com.co y los sitios de los clubes" }
+    ],
+    "fragiles": [
+      { "tipo": "x", "herramientas": ["Scweet", "twscrape"], "riesgo": "dependen de cookies de una cuenta, rompen con cambios de X e incumplen los términos de X; usar solo una cuenta desechable", "estado": "no instalada; fase de fuentes" },
+      { "tipo": "instagramFacebookTiktok", "herramientas": ["RSS-Bridge", "RSSHub"], "riesgo": "Instagram y Facebook son inestables y pueden exigir cuenta; TikTok por usuario", "estado": "no instalada; fase de fuentes" }
+    ],
+    "comunidad": {
+      "uso": "cuentas y portales de aficionados, foros y excompañeros o familiares que hablen en público",
+      "tratamiento": "siempre atribuidos («según…»); rumor si nada oficial lo confirma",
+      "estado": "lista por completar con cuentas vistas en búsquedas reales"
+    }
+  },
+  "fotos": {
+    "politica": "minima",
+    "decididoPor": "responsable del sitio, 2026-11-15",
+    "regla": "La foto real es obligatoria en toda pieza; sin IA ni ilustración. Si una historia no tiene foto tras agotar la escalera del skill (sección 6), se sustituye por otra historia.",
+    "decididoPor2": "responsable del sitio, 2026-11-17",
+    "permitidas": [
+      "Fotos y videos de cuentas oficiales de clubes, DIMAYOR y FCF/Selección",
+      "Imágenes de posts públicos de jugadores, periodistas y aficionados, con crédito a la cuenta y enlace al post",
+      "Foto de archivo del mismo protagonista de una nota anterior, marcada «foto de archivo»",
+      "Fotos de medios y periodistas publicadas en sus cuentas o artículos",
+      "Galería de prensa de DIMAYOR (https://galeriaprensa.dimayor.com.co), que pide registro como medio",
+      "Embeds oficiales de X, Instagram, YouTube o TikTok cuando el post es la noticia"
+    ],
+    "requisitosMinimos": [
+      "Crédito visible con el nombre de la cuenta o medio y enlace al post o página de origen",
+      "No quitar marcas de agua ni recortar el crédito incrustado",
+      "No presentar una foto de archivo como si fuera del día",
+      "No generar con IA imágenes de jugadores u otras personas reales"
+    ]
+  }
+}

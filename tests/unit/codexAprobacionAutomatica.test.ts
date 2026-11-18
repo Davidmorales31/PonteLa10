@@ -48,6 +48,36 @@ describe('aprobación IA de borradores DeepSeek', () => {
       expect(esquemaPublicacionAutomaticaCodex.safeParse({ ...entrada, proposal: { ...entrada.proposal, ...cambio } }).success).toBe(false)
     }
   })
+  it('exige un piso de 300 palabras en el cuerpo, ni una menos', () => {
+    const entrada = crearPublicacionAutomaticaPrueba()
+    const conPalabras = (cantidad: number) => {
+      const texto = Array(cantidad).fill('palabra').join(' ')
+      return { ...entrada, proposal: { ...entrada.proposal, body: texto, bodyJson: { type: 'doc' as const, content: [{ type: 'paragraph' as const, content: [{ type: 'text' as const, text: texto }] }] } } }
+    }
+    expect(esquemaPublicacionAutomaticaCodex.safeParse(conPalabras(300)).success).toBe(true)
+    expect(esquemaPublicacionAutomaticaCodex.safeParse(conPalabras(299)).success).toBe(false)
+  })
+  it('acepta writer deepseek o agent en la revisión, o ausente, y rechaza otros valores', () => {
+    const entrada = crearPublicacionAutomaticaPrueba()
+    for (const writer of [undefined, 'deepseek', 'agent']) {
+      const review = writer ? { ...entrada.review, writer } : entrada.review
+      expect(esquemaPublicacionAutomaticaCodex.safeParse({ ...entrada, review }).success).toBe(true)
+    }
+    for (const writer of ['humano', 'DeepSeek', '', null]) {
+      expect(esquemaPublicacionAutomaticaCodex.safeParse({ ...entrada, review: { ...entrada.review, writer } }).success).toBe(false)
+    }
+  })
+  it('conserva el campo writer al enviar el RPC, sin añadirlo cuando falta', async () => {
+    const entrada = crearPublicacionAutomaticaPrueba()
+    dobles.leer.mockResolvedValue(Buffer.from(JSON.stringify({ ...entrada, review: { ...entrada.review, writer: 'agent' } })))
+    await handler(evento)
+    expect(dobles.rpc).toHaveBeenCalledExactlyOnceWith('submit_and_schedule_codex_proposal', expect.objectContaining({ p_review: expect.objectContaining({ writer: 'agent' }) }))
+    dobles.rpc.mockClear()
+    dobles.leer.mockResolvedValue(Buffer.from(JSON.stringify(entrada)))
+    await handler(evento)
+    expect(dobles.rpc.mock.calls[0]?.[1]).toHaveProperty('p_review')
+    expect(dobles.rpc.mock.calls[0]?.[1].p_review).not.toHaveProperty('writer')
+  })
   it('usa clave de publicación y un RPC atómico; no invoca proveedores de IA', async () => {
     await handler(evento)
     expect(dobles.leer).toHaveBeenCalledWith(evento, 1_000_000)
