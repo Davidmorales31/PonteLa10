@@ -34,12 +34,19 @@ export interface SaludFrescuraFutbol {
   filasRecibidas: { calendario: number, tablas: number }
   limitesConsulta: { calendario: number, tablas: number }
   coberturaCompleta: boolean
+  /** Datos de México (Liga MX); solo lo calcula el endpoint del panel, no el constructor. */
+  mexico?: SaludFrescuraFutbol
 }
 
 const COMPETENCIAS: Record<string, string> = {
   'liga-betplay': 'Liga BetPlay',
   'torneo-betplay': 'Torneo BetPlay',
   'copa-colombia': 'Copa Colombia'
+}
+
+export const COMPETENCIAS_MEXICO: Record<string, string> = {
+  'liga-mx': 'Liga MX',
+  'liga-mx-femenil': 'Liga MX Femenil'
 }
 
 export function construirSaludFrescuraFutbol(
@@ -49,21 +56,24 @@ export function construirSaludFrescuraFutbol(
   totalPartidos = partidos.length,
   totalFilasTabla = tablas.length,
   limitePartidos = 1000,
-  limiteTablas = 500
+  limiteTablas = 500,
+  competencias: Record<string, string> = COMPETENCIAS
 ): SaludFrescuraFutbol {
-  const calendario = Object.keys(COMPETENCIAS).map(competencia => resumirCompetencia(
+  const calendario = Object.keys(competencias).map(competencia => resumirCompetencia(
     competencia,
     partidos.filter(partido => partido.competition_slug === competencia),
     partido => evaluarFrescuraPartido({
       estado: partido.status,
       fechaIso: partido.scheduled_at,
       verificadoEn: partido.checked_at || ''
-    }, ahoraMs)
+    }, ahoraMs),
+    competencias
   ))
-  const resumenTablas = Object.keys(COMPETENCIAS).map(competencia => resumirCompetencia(
+  const resumenTablas = Object.keys(competencias).map(competencia => resumirCompetencia(
     competencia,
     tablas.filter(fila => fila.competition_slug === competencia),
-    fila => evaluarFrescuraTabla(fila.checked_at, ahoraMs)
+    fila => evaluarFrescuraTabla(fila.checked_at, ahoraMs),
+    competencias
   ))
   const coberturaCompleta = totalPartidos <= limitePartidos && totalFilasTabla <= limiteTablas
 
@@ -80,7 +90,8 @@ export function construirSaludFrescuraFutbol(
 function resumirCompetencia<T extends { checked_at: string | null }>(
   slug: string,
   filas: T[],
-  evaluar: (fila: T) => EvaluacionFrescuraDeportiva
+  evaluar: (fila: T) => EvaluacionFrescuraDeportiva,
+  nombres: Record<string, string> = COMPETENCIAS
 ): ResumenFrescuraPorCompetencia {
   const evaluaciones = filas.map(evaluar)
   const fechas = evaluaciones.map(evaluacion => evaluacion.verificadoEn).filter((fecha): fecha is string => Boolean(fecha))
@@ -88,7 +99,7 @@ function resumirCompetencia<T extends { checked_at: string | null }>(
   const desactualizados = evaluaciones.filter(evaluacion => evaluacion.estado === 'desactualizado').length
   const sinVerificacion = evaluaciones.filter(evaluacion => ['sin_verificar', 'fecha_invalida'].includes(evaluacion.estado)).length
   return {
-    competencia: COMPETENCIAS[slug] || slug,
+    competencia: nombres[slug] || slug,
     estado: !filas.length ? 'sin_datos' : desactualizados || sinVerificacion ? 'atencion' : 'saludable',
     registros: filas.length,
     actualizados: evaluaciones.filter(evaluacion => evaluacion.actualizado).length,
