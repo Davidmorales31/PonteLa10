@@ -50,6 +50,8 @@ const navegacionMexico: ItemNavegacionLanding[] = [
   { etiqueta: 'Inicio', ruta: '/', exacta: true },
   { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' },
   { etiqueta: 'Liga MX', ruta: '/liga-mx' },
+  { etiqueta: 'Selección Mexicana', ruta: '/seleccion-mexicana' },
+  { etiqueta: 'Mexicanos en el exterior', ruta: '/mexicanos-en-el-exterior' },
   { etiqueta: 'Resultados', ruta: '/resultados' },
   { etiqueta: 'Noticias', ruta: '/articulos' }
 ]
@@ -73,8 +75,8 @@ const categoriasMexico: CategoriaLanding[] = [
 const pieMexico: FooterLanding = {
   descripcion: 'Liga MX, Selección Mexicana, deportes y tendencias con la jugada clara.',
   columnas: [
-    { titulo: 'Navegación', enlaces: [{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Noticias', ruta: '/articulos' }, { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' }, { etiqueta: 'Liga MX', ruta: '/liga-mx' }, { etiqueta: 'Resultados', ruta: '/resultados' }] },
-    { titulo: 'Categorías', enlaces: [{ etiqueta: 'Fútbol mexicano', ruta: '/futbol-mexicano' }, { etiqueta: 'Fútbol internacional', ruta: '/futbol-internacional' }, { etiqueta: 'Especiales', ruta: '/especiales' }] },
+    { titulo: 'Navegación', enlaces: [{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Noticias', ruta: '/articulos' }, { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' }, { etiqueta: 'Liga MX', ruta: '/liga-mx' }, { etiqueta: 'Selección Mexicana', ruta: '/seleccion-mexicana' }, { etiqueta: 'Resultados', ruta: '/resultados' }] },
+    { titulo: 'Categorías', enlaces: [{ etiqueta: 'Fútbol mexicano', ruta: '/futbol-mexicano' }, { etiqueta: 'Mexicanos en el exterior', ruta: '/mexicanos-en-el-exterior' }, { etiqueta: 'Fútbol internacional', ruta: '/futbol-internacional' }, { etiqueta: 'Especiales', ruta: '/especiales' }] },
     // Las páginas legales y editoriales son comunes a los dos sitios.
     pieSitio.columnas[2]!
   ]

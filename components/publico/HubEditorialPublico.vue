@@ -15,6 +15,8 @@ interface ConfiguracionHub {
   descripcion: string
   etiquetaSeccion: string
   categoria: string
+  /** Alternativa a la categoría: filtra por tema (por ejemplo `seleccion-mexicana`). */
+  tema?: string
   rutaCanonica: string
   enlaces: EnlaceHub[]
   datosEstructuradosAdicionales?: Record<string, unknown>[]
@@ -34,8 +36,12 @@ defineSlots<{
 }>()
 const configuracionRuntime = useRuntimeConfig()
 const { data: noticias, error } = await useFetch<ResumenArticuloPublico[]>('/api/articulos', {
-  key: `hub-editorial-${props.configuracion.categoria}`,
-  query: { categoria: props.configuracion.categoria, limite: '24' },
+  key: `hub-editorial-${props.configuracion.categoria || props.configuracion.tema}`,
+  query: {
+    ...(props.configuracion.categoria ? { categoria: props.configuracion.categoria } : {}),
+    ...(props.configuracion.tema ? { tema: props.configuracion.tema } : {}),
+    limite: '24'
+  },
   default: () => [],
   ignoreResponseError: true
 })
