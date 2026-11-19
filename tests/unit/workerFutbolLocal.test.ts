@@ -214,3 +214,37 @@ describe('integración de fútbol en el worker local', () => {
     expect(transporte).toHaveBeenCalledOnce()
   })
 })
+
+describe('Liga MX en el worker local', () => {
+  const entornoBase = {
+    NODE_ENV: 'test', PONT3LA10_FUTBOL_WORKER_ENABLED: 'true', PONT3LA10_FUTBOL_SYNC_INTERVAL_MS: '300000',
+    PONT3LA10_CODEX_API_BASE_URL: 'http://127.0.0.1:3001', NUXT_FUTBOL_WORKER_API_SECRET: secreto
+  }
+  const respuesta = () => Promise.resolve(new Response(JSON.stringify({ estado: 'completado', provider: 'goal-api', solicitudes: 3 }), { status: 200 }))
+
+  it('es opt-in: sin PONT3LA10_FUTBOL_MX_ENABLED nunca llama a la ruta de México', async () => {
+    const rutas: string[] = []
+    const transporte = vi.fn((input: URL | RequestInfo) => { rutas.push(new URL(String(input)).pathname); return respuesta() })
+    const sincronizador = crearSincronizadorFutbolLocal({ entorno: entornoBase, transporte, ahora: () => 1_000_000, registrar: vi.fn(), avisar: vi.fn() })
+    await sincronizador.ejecutarSiCorresponde()
+    expect(rutas).not.toContain('/local-internal/futbol/liga-mx')
+    expect(rutas).toHaveLength(4)
+  })
+
+  it('habilitado, firma la ruta de México y la repite cada 3 horas, no cada 5 minutos', async () => {
+    let ahora = Date.parse('2026-11-19T15:00:00Z')
+    const rutas: string[] = []
+    const transporte = vi.fn((input: URL | RequestInfo) => { rutas.push(new URL(String(input)).pathname); return respuesta() })
+    const sincronizador = crearSincronizadorFutbolLocal({
+      entorno: { ...entornoBase, PONT3LA10_FUTBOL_MX_ENABLED: 'true' }, transporte, ahora: () => ahora, registrar: vi.fn(), avisar: vi.fn()
+    })
+    await sincronizador.ejecutarSiCorresponde()
+    expect(rutas.filter(ruta => ruta.endsWith('/liga-mx'))).toHaveLength(1)
+    ahora += 5 * 60 * 1000
+    await sincronizador.ejecutarSiCorresponde()
+    expect(rutas.filter(ruta => ruta.endsWith('/liga-mx'))).toHaveLength(1)
+    ahora += 3 * 60 * 60 * 1000
+    await sincronizador.ejecutarSiCorresponde()
+    expect(rutas.filter(ruta => ruta.endsWith('/liga-mx'))).toHaveLength(2)
+  })
+})

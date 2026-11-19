@@ -3,12 +3,14 @@ import activarFixtures from '~/server/api/internal/futbol/fixtures.post'
 import actualizarResultadosLiga from '~/server/api/internal/futbol/liga-resultados.post'
 import actualizarTablaDimayor from '~/server/api/internal/futbol/tabla-dimayor.post'
 import sincronizarCalendario from '~/server/api/internal/futbol/calendario.post'
+import sincronizarLigaMx from '~/server/api/internal/futbol/liga-mx.post'
 
 const handlers: Record<string, EventHandler> = {
   fixtures: activarFixtures,
   'liga-resultados': actualizarResultadosLiga,
   'tabla-dimayor': actualizarTablaDimayor,
-  calendario: sincronizarCalendario
+  calendario: sincronizarCalendario,
+  'liga-mx': sincronizarLigaMx
 }
 
 export default defineEventHandler((evento) => {
