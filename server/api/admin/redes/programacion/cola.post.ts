@@ -9,6 +9,7 @@ import { esquemaProgramacionSocial } from '~/utils/editorial/programacionSocial'
 import { validarPublicacionSocialLista } from '~/server/utils/recursosComposicionSocial'
 import { verificarCuentaMeta } from '~/server/utils/publicacionMeta'
 import { renderizarImagenesMeta, huellaImagenesMeta } from '~/server/utils/ejecutarPublicacionMeta'
+import { urlBaseSocialDeArticulo } from '~/server/utils/origenSocialPorSitio'
 import { leerEstadosPublicacionesSociales } from '~/server/utils/estadoPublicacionesSociales'
 import { resolverConfiguracionMetaSocial, estadoProgramadorSocial } from '~/server/utils/configuracionSocialProduccion'
 
@@ -36,11 +37,12 @@ export default defineEventHandler(async evento => {
   }
   for (const destino of valores.destinos) await verificarCuentaMeta(configuracionMeta, destino)
   const cliente = obtenerClienteSupabaseEditorial(evento)
-  const sitio = new URL(String(runtime.public.socialSiteUrl || runtime.public.siteUrl))
+  const sitioConfigurado = String(runtime.public.socialSiteUrl || runtime.public.siteUrl)
   const preparados = []
   for (const id of valores.articulos) {
     const articulo = await obtenerArticuloEditorial(cliente, id, contexto.usuario.id, { editarTodos: true, editarPropio: false })
     if (articulo.estado !== 'published' || !articulo.tieneVersionPublica) throw createError({ statusCode: 409, statusMessage: 'El lote solo admite noticias publicadas en el sitio.' })
+    const sitio = await urlBaseSocialDeArticulo(cliente, id, sitioConfigurado)
     const guardado = await leerBorradorSocial(cliente, id)
     const documento = guardado.borrador?.documento || crearDocumentoSocialPredeterminado(articulo.titulo, articulo.portadaId,
       articulo.seo.textoSocial || articulo.resumen, new URL(`/articulos/${articulo.slug}`, sitio).toString(), articulo.id)

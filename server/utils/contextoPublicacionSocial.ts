@@ -4,6 +4,7 @@ import { exigirPermisoEditorial, exigirMfaSegunPoliticaEditorial } from './autor
 import { obtenerClienteSupabaseEditorial } from './clienteSupabaseEditorial'
 import { obtenerArticuloEditorial } from './repositorioContenidoEditorial'
 import { validarEntradaEditorial } from './validacionEditorial'
+import { urlBaseSocialDeArticulo } from './origenSocialPorSitio'
 
 export async function contextoPublicacionSocial(evento: H3Event, escritura = false) {
   const contexto = await exigirPermisoEditorial(evento, escritura ? 'contenido.editarTodos' : 'contenido.verBorradores')
@@ -20,7 +21,7 @@ export async function contextoPublicacionSocial(evento: H3Event, escritura = fal
     editarTodos: contexto.permisos.includes('contenido.editarTodos'), editarPropio: false
   })
   const configuracion = useRuntimeConfig(evento)
-  const sitio = new URL(String(configuracion.public.socialSiteUrl || configuracion.public.siteUrl))
+  const sitio = await urlBaseSocialDeArticulo(cliente, articulo.id, String(configuracion.public.socialSiteUrl || configuracion.public.siteUrl))
   const urlCanonica = new URL(`/articulos/${articulo.slug}`, sitio).toString()
   setHeader(evento, 'Cache-Control', 'private, no-store')
   return { cliente, articulo, urlCanonica, dominio: sitio.host, contexto }
