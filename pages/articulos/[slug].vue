@@ -19,6 +19,7 @@ import {
   obtenerPerfilAutorPublico
 } from '~/utils/perfilesAutoresPublicos'
 import type { ContextoAnaliticaPagina, EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 const ruta = useRoute()
@@ -149,7 +150,7 @@ function abrirAccesoYoutube() {
 }
 
 const urlCanonica = computed(() =>
-  `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/articulos/${slugActual.value}`
+  `${origenSitio.value.replace(/\/+$/, '')}/articulos/${slugActual.value}`
 )
 const tituloSeo = computed(() => articuloPublicado.value
   ? articuloPublicado.value.seoTitulo || articuloPublicado.value.titulo
@@ -169,7 +170,7 @@ const imagenAltSeo = computed(() => articuloPublicado.value?.portada?.textoAlter
 )
 const autorEstructurado = computed(() => {
   const nombre = articuloPublicado.value?.autorNombre || 'Equipo Pont3la10'
-  return crearAutorEstructurado(nombre, String(configuracion.public.siteUrl))
+  return crearAutorEstructurado(nombre, origenSitio.value)
 })
 
 useSeoPont3la10(() => ({
@@ -219,22 +220,22 @@ useSeoPont3la10(() => ({
             .map(relacion => ({
               '@type': 'Thing',
               name: relacion.nombre,
-              url: construirUrlAbsoluta(String(configuracion.public.siteUrl), relacion.ruta)
+              url: construirUrlAbsoluta(origenSitio.value, relacion.ruta)
             })),
           mentions: articuloPublicado.value.relacionesEntidades
             ?.filter(relacion => relacion.relacion === 'mentions')
             .map(relacion => ({
               '@type': 'Thing',
               name: relacion.nombre,
-              url: construirUrlAbsoluta(String(configuracion.public.siteUrl), relacion.ruta)
+              url: construirUrlAbsoluta(origenSitio.value, relacion.ruta)
             })),
           publisher: {
             '@type': 'Organization',
-            '@id': `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/#organizacion`,
+            '@id': `${origenSitio.value.replace(/\/+$/, '')}/#organizacion`,
             name: 'Pont3la10',
             logo: {
               '@type': 'ImageObject',
-              url: `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/brand/pont3la10_logo_06_horizontal_sobre_blanco.png`
+              url: `${origenSitio.value.replace(/\/+$/, '')}/brand/pont3la10_logo_06_horizontal_sobre_blanco.png`
             }
           }
         },
@@ -246,13 +247,13 @@ useSeoPont3la10(() => ({
               '@type': 'ListItem',
               position: 1,
               name: 'Inicio',
-              item: String(configuracion.public.siteUrl).replace(/\/+$/, '')
+              item: origenSitio.value.replace(/\/+$/, '')
             },
             {
               '@type': 'ListItem',
               position: 2,
               name: 'Noticias',
-              item: `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/articulos`
+              item: `${origenSitio.value.replace(/\/+$/, '')}/articulos`
             },
             {
               '@type': 'ListItem',

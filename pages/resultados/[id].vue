@@ -3,6 +3,7 @@ import { Bell, CalendarDays, MapPin, RefreshCw, Star } from '@lucide/vue'
 import type { DetallePartidoResultado, EquipoResultado, RespuestaMarcadorPartido } from '~/types/resultados'
 import { agruparGoleadoresPartido } from '~/utils/goleadoresPartido'
 import { construirUrlAbsoluta, imagenSeoPredeterminada, robotsNoIndex } from '~/utils/seo'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 const ruta = useRoute()
@@ -63,7 +64,6 @@ const pestanaSeleccionada = computed(() => pestanas.value.some(pestana => pestan
   : pestanas.value[0]?.id)
 const goleadores = computed(() => agruparGoleadoresPartido(detalle.value))
 const siguiendoPartido = computed(() => detalle.value ? estaSiguiendo(detalle.value.partido.id) : false)
-const configuracion = useRuntimeConfig()
 
 const textoActualizacion = computed(() => {
   if (actualizandoMarcador.value) return 'Actualizando marcador'
@@ -124,7 +124,7 @@ useSeoPont3la10(() => {
     ? `${nombrePartido}${marcador}: marcador, resumen, estadísticas, eventos y alineaciones disponibles en Pont3la10.`
     : 'Marcador, resumen, estadísticas, eventos y alineaciones disponibles del partido.'
   const rutaCanonica = `/resultados/${String(ruta.params.id)}`
-  const urlCanonica = construirUrlAbsoluta(String(configuracion.public.siteUrl), rutaCanonica)
+  const urlCanonica = construirUrlAbsoluta(origenSitio.value, rutaCanonica)
 
   return {
     titulo: `${nombrePartido}${marcador} | Pont3la10`,
@@ -145,13 +145,13 @@ useSeoPont3la10(() => {
                   '@type': 'ListItem',
                   position: 1,
                   name: 'Inicio',
-                  item: construirUrlAbsoluta(String(configuracion.public.siteUrl), '/')
+                  item: construirUrlAbsoluta(origenSitio.value, '/')
                 },
                 {
                   '@type': 'ListItem',
                   position: 2,
                   name: 'Resultados',
-                  item: construirUrlAbsoluta(String(configuracion.public.siteUrl), '/resultados')
+                  item: construirUrlAbsoluta(origenSitio.value, '/resultados')
                 },
                 {
                   '@type': 'ListItem',
