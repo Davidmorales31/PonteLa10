@@ -55,7 +55,7 @@ export default defineEventHandler(async (evento) => {
     })
     const resultado = await sincronizarLigasMexico({
       proveedor,
-      derechosPublicacionConfirmados: config.futbolDerechosPublicacionConfirmados === true,
+      derechosPublicacionConfirmados: config.futbolMxDerechosPublicacionConfirmados === true,
       repositorio: {
         upsertPartidos: async (filas: FilaPartidoLiga[]) => {
           const { error } = await cliente.from('league_fixtures')

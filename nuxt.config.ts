@@ -100,6 +100,8 @@ export default defineNuxtConfig({
     footballPrimaryProvider: process.env.NUXT_FUTBOL_PRIMARY_PROVIDER || 'api-football',
     footballFallbackProvider: process.env.NUXT_FUTBOL_FALLBACK_PROVIDER || 'goal-api',
     futbolDerechosPublicacionConfirmados: process.env.NUXT_FUTBOL_DERECHOS_PUBLICACION_CONFIRMADOS === 'true',
+    // Derechos de publicación de la Liga MX (México): bandera propia para no tocar los datos de Colombia.
+    futbolMxDerechosPublicacionConfirmados: process.env.NUXT_FUTBOL_MX_DERECHOS_PUBLICACION_CONFIRMADOS === 'true',
     footballWorkerApiSecret: process.env.NUXT_FUTBOL_WORKER_API_SECRET || '',
     footballStandingsAllowlist: process.env.NUXT_FUTBOL_STANDINGS_ALLOWLIST || '',
     footballMaxDetailsPerSync: process.env.NUXT_FUTBOL_MAX_DETALLES_POR_CICLO || '3',
