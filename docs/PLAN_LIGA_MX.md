@@ -10,7 +10,7 @@ Avance por fase (detalle en `docs/agents/handoffs/2026-11-19-sitios-liga-mx-fase
 | 3 Lecturas públicas y panel por sitio | Hecha (#181) |
 | 4A/4B/4C Datos de Liga MX, páginas, clubes | Hechas (#182–#184); derechos de publicación confirmados por el responsable el 2026-11-19 (bandera propia `NUXT_FUTBOL_MX_DERECHOS_PUBLICACION_CONFIRMADOS`, solo afecta a México) |
 | 5 Selección Mexicana y Mexicanos en el exterior | Hecha (#186); sin fichas estáticas (se verifican una a una) |
-| 6 Corridas y tareas programadas de México | Hecha (#185); tarea de Claude pausada con interruptor; falta la de Codex |
+| 6 Corridas y tareas programadas de México | Hecha (#185); tarea de Claude ACTIVADA el 2026-11-19 por el responsable (`habilitada:true`); falta la de Codex |
 | 7 Redes por sitio (dominio de la pieza) | Hecha (#187); sin prueba de publicación real |
 | 8A Mapas y feed listos | Hecha (#188) |
 | 8B Idioma/zona por sitio, Partidos de hoy, filtros de Noticias y Quiénes somos de México | Hecha (#189–#192) |

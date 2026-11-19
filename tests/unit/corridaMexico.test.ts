@@ -17,8 +17,8 @@ describe('corrida editorial de México', () => {
     expect(esquemaContextoCodex.safeParse({ runId: idCorrida, site: 'mx', otro: 1 }).success).toBe(false)
   })
 
-  it('arranca deshabilitada y apunta a archivos que existen', () => {
-    expect(politicaMx.habilitada).toBe(false)
+  it('tiene interruptor explícito y apunta a archivos que existen', () => {
+    expect(typeof politicaMx.habilitada).toBe('boolean')
     expect(politicaMx.sitio).toBe('mx')
     for (const ruta of [politicaMx.skill, politicaMx.prompt, politicaMx.fuentes, politicaMx.bancoEvergreen]) {
       expect(existsSync(new URL(`../../${ruta}`, import.meta.url)), ruta).toBe(true)
