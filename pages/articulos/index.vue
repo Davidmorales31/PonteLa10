@@ -101,16 +101,19 @@ const tituloListado = computed(() => {
 })
 const configuracion = useRuntimeConfig()
 const esBusquedaInterna = computed(() => Boolean(rutaActual.query.buscar))
-const rutasCanonicasCategoria: Record<string, string> = {
+const esSitioMexico = computed(() => sitioActivo.value.id === 'mx')
+const rutasCanonicasMexico: Record<string, string> = { 'futbol-mexicano': '/futbol-mexicano', 'futbol-mundial': '/futbol-internacional' }
+const rutasCanonicasColombia: Record<string, string> = {
   colombia: '/seleccion-colombia',
   'futbol-colombiano': '/futbol-colombiano',
   'futbol-mundial': '/futbol-internacional',
   'colombianos-en-europa': '/colombianos-en-europa'
 }
+const rutasCanonicasCategoria = computed(() => esSitioMexico.value ? rutasCanonicasMexico : rutasCanonicasColombia)
 const rutaCanonica = computed(() => {
   if (esBusquedaInterna.value) return '/articulos'
   const categoria = String(rutaActual.query.categoria || '')
-  if (categoria && rutasCanonicasCategoria[categoria]) return rutasCanonicasCategoria[categoria]!
+  if (categoria && rutasCanonicasCategoria.value[categoria]) return rutasCanonicasCategoria.value[categoria]!
   if (categoria) return `/articulos?categoria=${encodeURIComponent(categoria)}`
   if (rutaActual.query.tema) return `/articulos?tema=${encodeURIComponent(String(rutaActual.query.tema))}`
   return '/articulos'
@@ -120,17 +123,21 @@ const rutaCanonica = computed(() => {
 const debeEvitarIndexacion = computed(() => {
   if (esBusquedaInterna.value) return true
   const categoria = String(rutaActual.query.categoria || '')
-  if (categoria && !rutasCanonicasCategoria[categoria]) return true
+  if (categoria && !rutasCanonicasCategoria.value[categoria]) return true
   return Boolean(rutaActual.query.tema)
 })
-const filtrosRapidos = [
+const filtrosRapidos = computed(() => [
   { etiqueta: 'Todos', ruta: '/articulos', categoria: '', icono: LayoutGrid },
-  { etiqueta: 'Selección Colombia', ruta: '/articulos?categoria=colombia', categoria: 'colombia', icono: Flag },
-  { etiqueta: 'Liga BetPlay', ruta: '/articulos?categoria=futbol-colombiano', categoria: 'futbol-colombiano', icono: Trophy },
+  ...(esSitioMexico.value
+    ? [{ etiqueta: 'Fútbol mexicano', ruta: '/articulos?categoria=futbol-mexicano', categoria: 'futbol-mexicano', icono: Trophy }]
+    : [
+        { etiqueta: 'Selección Colombia', ruta: '/articulos?categoria=colombia', categoria: 'colombia', icono: Flag },
+        { etiqueta: 'Liga BetPlay', ruta: '/articulos?categoria=futbol-colombiano', categoria: 'futbol-colombiano', icono: Trophy }
+      ]),
   { etiqueta: 'Internacional', ruta: '/articulos?categoria=futbol-mundial', categoria: 'futbol-mundial', icono: Globe2 },
   { etiqueta: 'Opinión', ruta: '/articulos?categoria=opinion', categoria: 'opinion', icono: MessageCircle },
   { etiqueta: 'Tech', ruta: '/articulos?categoria=tecnologia', categoria: 'tecnologia', icono: Cpu }
-]
+])
 const noticiaPrincipal = computed(() => articulosFiltrados.value[0] || null)
 const todasUltimasNoticias = computed(() => articulosFiltrados.value
   .filter(articulo => articulo.slug !== noticiaPrincipal.value?.slug)
