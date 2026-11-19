@@ -2,43 +2,45 @@
 import BloqueoInterfazGlobal from '~/components/BloqueoInterfazGlobal.vue'
 import AlertasEditorialesGlobales from '~/components/AlertasEditorialesGlobales.vue'
 import { construirUrlAbsoluta, normalizarUrlSitio, serializarJsonLd } from '~/utils/seo'
+import { origenDelSitio } from '~/utils/sitio'
 
 const configuracion = useRuntimeConfig()
 const rutaActual = useRoute()
-const urlSitio = normalizarUrlSitio(String(configuracion.public.siteUrl))
+const { id: idSitio, sitio } = useSitio()
+const urlSitio = computed(() => normalizarUrlSitio(origenDelSitio(idSitio.value, String(configuracion.public.siteUrl))))
 const identidadSeo = computed(() => ({
   '@context': 'https://schema.org',
   '@graph': [
     {
       '@type': rutaActual.path === '/' ? 'NewsMediaOrganization' : 'Organization',
-      '@id': `${urlSitio}/#organizacion`,
-      name: 'Pont3la10',
-      url: urlSitio,
+      '@id': `${urlSitio.value}/#organizacion`,
+      name: sitio.value.nombre,
+      url: urlSitio.value,
       logo: {
         '@type': 'ImageObject',
-        url: construirUrlAbsoluta(urlSitio, '/brand/pont3la10_logo_06_horizontal_sobre_blanco.png')
+        url: construirUrlAbsoluta(urlSitio.value, '/brand/pont3la10_logo_06_horizontal_sobre_blanco.png')
       }
     },
     {
       '@type': 'WebSite',
-      '@id': `${urlSitio}/#sitio-web`,
-      name: 'Pont3la10',
-      url: urlSitio,
-      inLanguage: 'es-CO',
-      publisher: { '@id': `${urlSitio}/#organizacion` }
+      '@id': `${urlSitio.value}/#sitio-web`,
+      name: sitio.value.nombre,
+      url: urlSitio.value,
+      inLanguage: sitio.value.idioma,
+      publisher: { '@id': `${urlSitio.value}/#organizacion` }
     }
   ]
 }))
 
 useSeoMeta({
-  ogSiteName: 'Pont3la10',
-  ogLocale: 'es_CO',
+  ogSiteName: sitio.value.nombre,
+  ogLocale: sitio.value.ogLocale,
   themeColor: '#08204A'
 })
 
 // El sistema usa una sola apariencia, desde SSR y sin depender del navegador.
 useHead({
-  htmlAttrs: { style: 'color-scheme: only light' },
+  htmlAttrs: { lang: sitio.value.idioma, style: 'color-scheme: only light' },
   bodyAttrs: { class: 'tema-publico-blanco' },
   meta: [{ name: 'color-scheme', content: 'only light' }]
 })

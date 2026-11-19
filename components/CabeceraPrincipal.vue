@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ChevronDown, ChevronRight, Menu, Search, UserRound, X } from '@lucide/vue'
-import { navegacionMasSitio, navegacionSitio } from '~/data/sitioPublico'
+import { navegacionDe, navegacionMasDe } from '~/data/sitioPublico'
 
 const rutaActual = useRoute()
+const { id: idSitio, esMexico } = useSitio()
+const navegacionSitio = computed(() => navegacionDe(idSitio.value))
+const navegacionMasSitio = computed(() => navegacionMasDe(idSitio.value))
 const menuAbierto = ref(false)
 const busquedaAbierta = ref(false)
 const terminoBusqueda = ref('')
@@ -85,6 +88,7 @@ async function buscarContenido() {
           <source :srcset="srcsetLogoCabecera" type="image/webp" sizes="170px">
           <img :src="logoCabecera" alt="Pont3la10" width="598" height="115" fetchpriority="high" decoding="async">
         </picture>
+        <span v-if="esMexico" class="etiqueta-sitio-cabecera">México</span>
       </NuxtLink>
 
       <nav class="navegacion-landing-escritorio" aria-label="Navegación principal">

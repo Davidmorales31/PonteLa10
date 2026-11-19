@@ -1,11 +1,17 @@
 import { normalizarUrlSitio } from '~/utils/seo'
+import { configuracionDelSitio, origenDelSitio } from '~/utils/sitio'
+import { sitioDeSolicitud } from '~/server/utils/sitioDeSolicitud'
 
 export default defineEventHandler((evento) => {
   const configuracion = useRuntimeConfig()
-  const urlSitio = normalizarUrlSitio(String(configuracion.public.siteUrl))
+  const sitio = configuracionDelSitio(sitioDeSolicitud(evento))
+  const urlSitio = normalizarUrlSitio(origenDelSitio(sitio.id, String(configuracion.public.siteUrl)))
 
   evento.node?.res?.setHeader('Content-Type', 'text/plain; charset=utf-8')
   evento.node?.res?.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=86400')
+
+  // Sitio sin lanzar: se bloquea todo hasta tener contenido propio.
+  if (!sitio.indexable) return ['User-agent: *', 'Disallow: /'].join('\n')
 
   return [
     'User-agent: *',

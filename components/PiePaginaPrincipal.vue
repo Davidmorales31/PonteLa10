@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ShieldCheck } from '@lucide/vue'
-import { pieSitio } from '~/data/sitioPublico'
+import { pieDe } from '~/data/sitioPublico'
 
 const anioActual = Number(new Intl.DateTimeFormat('en', { year: 'numeric', timeZone: 'America/Bogota' }).format(new Date()))
 const { abrirPreferencias } = useAnaliticaPublica()
+const { id: idSitio } = useSitio()
+const pieSitio = computed(() => pieDe(idSitio.value))
 </script>
 
 <template>
