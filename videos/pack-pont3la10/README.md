@@ -72,6 +72,8 @@ Trabaja sobre `videos/diario/<proyecto>/` en este equipo (solo escucha en 127.0.
 3. **Grabar** (barra espaciadora): cuenta 3-2-1, graba con cámara (tramos CARA) o solo micrófono (tramos VOZ), deja revisar la toma y la guarda. El servidor la convierte (H.264 con un cuadro clave por segundo; voz normalizada a −16 LUFS) y mide su duración.
 4. **Fotos por noticia:** subir fotos reales con crédito obligatorio; llenan los espacios «Espacio para imagen».
 5. **Armar video:** vuelve a generar el proyecto con las tomas (duración real), la voz y las fotos (`estudio.json`). **Renderizar:** `renders/final.mp4`.
+6. **Sin cámara** (interruptor de la cabecera, por proyecto): el gancho, el cierre y la entrada de cada noticia se graban solo con voz y van sobre fotos de esa noticia; sus espacios se suman a la tarjeta de fotos de la noticia. Se puede apagar después: los tramos vuelven a ser a cámara (una toma ya grabada solo con voz sigue como voz hasta que la repitas).
+7. **Proyectos:** el botón con el nombre del proyecto abre la lista de todos (`videos/diario/<carpeta>/`) con fecha, carpeta, tramos grabados, fotos por llenar, si va sin cámara, si ya tiene video y Reels. Cada uno guarda sus propias tomas, fotos, música, render y Reels; se le puede poner un nombre para distinguirlo (se guarda en `estudio.json`). Para un segundo proyecto del mismo día: `node scripts/video-generar-proyecto.mjs guion.json --salida videos/diario/<fecha>-<nombre>`.
 
 ## Reels (fase 5)
 

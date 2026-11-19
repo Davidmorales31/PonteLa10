@@ -136,6 +136,30 @@ describe('generador del video diario', () => {
     expect(JSON.stringify(con.escenas)).toContain('assets/fotos/subida-1.jpg')
   })
 
+  it('sin cámara: las entradas a cámara pasan a ser voz sobre fotos, con los mismos ids', () => {
+    const con = planificar(guion, { ppm: 155 })
+    const sin = planificar(guion, { ppm: 155, estudio: { sinCamara: true, grabaciones: { 'b1-cara': { archivo: 'assets/grabaciones/b1-cara.m4a', duracion: 6 } } } })
+    expect(sin.segmentos.map(s => s.id)).toEqual(con.segmentos.map(s => s.id))
+    expect(sin.segmentos.every(s => s.tipo === 'voz')).toBe(true)
+    expect(sin.escenas.some(e => e.escena === 'cara')).toBe(false)
+    expect(sin.medios).toEqual([expect.objectContaining({ tipo: 'audio', id: 'b1-cara', archivo: 'assets/grabaciones/b1-cara.m4a' })])
+    // Una sola tarjeta de fotos por noticia, con más espacios para llenar.
+    expect(sin.resumenFotos.map(r => r.clave)).toEqual(con.resumenFotos.map(r => r.clave))
+    const b1 = (plan: Plan) => plan.resumenFotos.find(r => r.clave === 'b1')!
+    expect(b1(sin).espacios).toBeGreaterThan(b1(con).espacios)
+    // La entrada de la noticia muestra la foto de la noticia.
+    const entrada = sin.segmentos.find(s => s.id === 'b1-cara')!
+    const galeria = sin.escenas.find(e => e.escena === 'galeria' && e.inicio >= entrada.inicio && e.inicio < entrada.fin)!
+    expect(JSON.stringify(galeria.variables)).toContain('https://x/b1.jpg')
+  })
+
+  it('una toma grabada solo con voz se trata como voz aunque el proyecto tenga cámara', () => {
+    const plan = planificar(guion, { ppm: 155, estudio: { grabaciones: { gancho: { archivo: 'assets/grabaciones/gancho.m4a', duracion: 8 } } } })
+    expect(plan.segmentos.find(s => s.id === 'gancho')!.tipo).toBe('voz')
+    expect(plan.segmentos.find(s => s.id === 'b1-cara')!.tipo).toBe('cara')
+    expect(plan.medios[0]).toEqual(expect.objectContaining({ tipo: 'audio', id: 'gancho' }))
+  })
+
   it('da ids estables a todos los tramos', () => {
     const plan = planificar(guion, { ppm: 155 })
     expect(plan.segmentos.map(s => s.id)).toEqual(['gancho', 'presentacion', 'b1-cara', 'b1-voz', 'b2-cara', 'b2-voz', 'b3-cara', 'b3-voz', 'pregunta', 'cierre'])
