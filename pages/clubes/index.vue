@@ -4,7 +4,8 @@ import { clubesDeLigaMx, torneoActual } from '~/utils/ligaMxVista'
 
 const { data } = await useFetch<RespuestaLigaMx>('/api/liga-mx', { key: 'liga-mx-clubes', default: () => respuestaLigaMxVacia, ignoreResponseError: true })
 const datos = computed(() => data.value || respuestaLigaMxVacia)
-const ahora = Date.now()
+// El instante se comparte entre servidor y navegador para que las listas hidraten igual.
+const ahora = useState<number>('clubes-mx-ahora', () => Date.now()).value
 const clubes = computed(() => clubesDeLigaMx(datos.value.tabla, datos.value.partidos, torneoActual(datos.value.partidos, datos.value.tabla, ahora)))
 
 useSeoPont3la10({
