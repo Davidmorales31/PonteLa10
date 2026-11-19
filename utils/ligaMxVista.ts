@@ -1,3 +1,4 @@
+import { claveEquipo } from '~/utils/claveEquipo'
 import type { PartidoLigaMx, PosicionLigaMx } from '~/types/ligaMx'
 
 const estadosFinalizados = new Set(['finished'])
@@ -64,4 +65,46 @@ export function proximosYRecientes(partidos: PartidoLigaMx[], ahora: number, lim
 export function marcador(partido: PartidoLigaMx): string {
   if (partido.golesLocal === null || partido.golesVisitante === null) return 'vs'
   return `${partido.golesLocal} – ${partido.golesVisitante}`
+}
+
+export interface ClubLigaMx {
+  clave: string
+  nombre: string
+  posicion: number | null
+  puntos: number | null
+  jugados: number | null
+  fase: string | null
+}
+
+/**
+ * Clubes de la Liga MX a partir de la tabla (con respaldo en los partidos): la fuente es el
+ * proveedor, así que un club que sube, baja o cambia de nombre aparece sin tocar el código.
+ */
+export function clubesDeLigaMx(tabla: PosicionLigaMx[], partidos: PartidoLigaMx[], torneo: string | null): ClubLigaMx[] {
+  const clubes = new Map<string, ClubLigaMx>()
+  const fases = fasesDeTabla(tabla, 'liga-mx', torneo)
+  for (const fila of filasDeTabla(tabla, 'liga-mx', fases[0] ?? null)) {
+    clubes.set(fila.equipoClave, { clave: fila.equipoClave, nombre: fila.equipo, posicion: fila.posicion, puntos: fila.puntos, jugados: fila.jugados, fase: fila.fase })
+  }
+  for (const partido of partidos.filter(p => p.competencia === 'liga-mx')) {
+    for (const nombre of [partido.local, partido.visitante]) {
+      const clave = claveEquipo(nombre)
+      if (clave && !clubes.has(clave)) clubes.set(clave, { clave, nombre, posicion: null, puntos: null, jugados: null, fase: null })
+    }
+  }
+  return [...clubes.values()].sort((a, b) => (a.posicion ?? 99) - (b.posicion ?? 99) || a.nombre.localeCompare(b.nombre, 'es'))
+}
+
+export function partidosDelClub(partidos: PartidoLigaMx[], clave: string): PartidoLigaMx[] {
+  return partidos.filter(p => p.competencia === 'liga-mx' && (claveEquipo(p.local) === clave || claveEquipo(p.visitante) === clave))
+}
+
+/** Estadio donde más veces juega de local, según los partidos; null si el proveedor no lo informa. */
+export function estadioDelClub(partidos: PartidoLigaMx[], clave: string): string | null {
+  const conteo = new Map<string, number>()
+  for (const partido of partidos) {
+    if (claveEquipo(partido.local) !== clave || !partido.estadio) continue
+    conteo.set(partido.estadio, (conteo.get(partido.estadio) || 0) + 1)
+  }
+  return [...conteo.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
 }

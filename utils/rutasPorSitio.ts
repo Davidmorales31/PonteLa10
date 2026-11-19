@@ -11,7 +11,7 @@ export const rutasSoloColombia = [
   '/equipos', '/jugadores', '/competiciones', '/jornadas', '/partidos', '/como-quedo', '/donde-ver'
 ] as const
 
-export const rutasSoloMexico = ['/liga-mx', '/futbol-mexicano'] as const
+export const rutasSoloMexico = ['/liga-mx', '/futbol-mexicano', '/clubes'] as const
 
 function coincide(ruta: string, base: string): boolean {
   return ruta === base || ruta.startsWith(`${base}/`)

@@ -55,3 +55,22 @@ describe('vista de la Liga MX', () => {
     expect(marcador(p('x', '2026-11-23T01:00:00Z', { golesLocal: 3, golesVisitante: 1 }))).toBe('3 – 1')
   })
 })
+
+describe('clubes de la Liga MX', () => {
+  it('toma los clubes de la tabla, completa con los partidos y ordena por posición', async () => {
+    const { clubesDeLigaMx, partidosDelClub, estadioDelClub } = await import('../../utils/ligaMxVista')
+    const tabla = [{ ...t('Cruz Azul', 1), equipoClave: 'cruz-azul' }, { ...t('Pumas UNAM', 2), equipoClave: 'pumas-unam' }]
+    const partidos = [
+      p('1', '2026-11-21T01:00:00Z', { local: 'Cruz Azul', visitante: 'Atlético San Luis', estadio: 'Estadio Ciudad de los Deportes' }),
+      p('2', '2026-11-28T01:00:00Z', { local: 'Cruz Azul', visitante: 'Pumas UNAM', estadio: 'Estadio Ciudad de los Deportes' }),
+      p('3', '2026-11-29T01:00:00Z', { local: 'Pumas UNAM', visitante: 'Cruz Azul', estadio: 'Estadio Olímpico' }),
+      p('4', '2026-11-29T01:00:00Z', { competencia: 'liga-mx-femenil', local: 'Rayadas', visitante: 'Tigres' })
+    ]
+    const clubes = clubesDeLigaMx(tabla, partidos, 'Apertura')
+    expect(clubes.map(c => c.clave)).toEqual(['cruz-azul', 'pumas-unam', 'atletico-san-luis'])
+    expect(clubes[2]).toMatchObject({ nombre: 'Atlético San Luis', posicion: null })
+    expect(partidosDelClub(partidos, 'cruz-azul').map(x => x.id)).toEqual(['1', '2', '3'])
+    expect(estadioDelClub(partidos, 'cruz-azul')).toBe('Estadio Ciudad de los Deportes')
+    expect(estadioDelClub(partidos, 'atletico-san-luis')).toBeNull()
+  })
+})

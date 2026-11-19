@@ -88,7 +88,7 @@ describe('rutas por sitio', () => {
       expect(rutaNoDisponibleEnSitio(ruta, 'mx')).toBe(true)
       expect(rutaNoDisponibleEnSitio(ruta, 'co')).toBe(false)
     }
-    for (const ruta of ['/liga-mx', '/futbol-mexicano', '/liga-mx/']) {
+    for (const ruta of ['/liga-mx', '/futbol-mexicano', '/liga-mx/', '/clubes', '/clubes/cruz-azul']) {
       expect(rutaNoDisponibleEnSitio(ruta, 'co')).toBe(true)
       expect(rutaNoDisponibleEnSitio(ruta, 'mx')).toBe(false)
     }

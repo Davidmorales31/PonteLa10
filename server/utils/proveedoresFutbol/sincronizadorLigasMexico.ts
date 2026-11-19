@@ -1,5 +1,6 @@
 import type { ClasificacionFutbolProveedor, EstadoFixtureFutbol, PartidoFutbolProveedor } from '~/types/futbolProveedor'
 import type { ProveedorFutbol } from './contrato'
+import { claveEquipo } from '~/utils/claveEquipo'
 import { inicioTemporadaLigaMx, ligasMexico, temporadaLigaMx, torneoLigaMx } from '~/data/ligaMx'
 
 const TAMANO_PAGINA = 100
@@ -163,10 +164,7 @@ function resultado(
   return { estado, solicitudes, partidosGuardados, posicionesGuardadas, ligasProcesadas, ...(errorCode ? { errorCode } : {}) }
 }
 
-export function claveEquipo(nombre: string): string {
-  return nombre.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120)
-}
+export { claveEquipo }
 
 function normalizarMarcador(valor: number | null): number | null {
   return typeof valor === 'number' && Number.isInteger(valor) && valor >= 0 && valor <= 99 ? valor : null

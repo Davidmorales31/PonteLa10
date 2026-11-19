@@ -56,6 +56,7 @@ const navegacionMexico: ItemNavegacionLanding[] = [
 
 const navegacionMasMexico: ItemNavegacionLanding[] = [
   { etiqueta: 'Fútbol mexicano', ruta: '/futbol-mexicano' },
+  { etiqueta: 'Clubes', ruta: '/clubes' },
   { etiqueta: 'Fútbol internacional', ruta: '/futbol-internacional' },
   { etiqueta: 'Especiales', ruta: '/especiales' },
   { etiqueta: 'Tech deportiva', ruta: '/articulos?categoria=tecnologia' },
