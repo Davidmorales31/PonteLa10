@@ -13,8 +13,17 @@ Avance por fase (detalle en `docs/agents/handoffs/2026-11-19-sitios-liga-mx-fase
 | 6 Corridas y tareas programadas de México | Hecha (#185); tarea de Claude pausada con interruptor; falta la de Codex |
 | 7 Redes por sitio (dominio de la pieza) | Hecha (#187); sin prueba de publicación real |
 | 8A Mapas y feed listos | Hecha (#188) |
-| 8B Idioma/zona por sitio y Partidos de hoy de México | En curso |
+| 8B Idioma/zona por sitio, Partidos de hoy, filtros de Noticias y Quiénes somos de México | Hecha (#189–#192) |
 | Lanzamiento (DNS, Search Console, GA4, `indexable`) | Pendiente del responsable (ver handoff 8A) |
+
+Pendientes técnicos conocidos (no bloquean el lanzamiento, mejoran México):
+- Grafo de entidades SEO con clubes y competiciones de México (hoy los artículos de México no generan enlaces a `/clubes/...`).
+- Frescura y salud de los datos de México en el panel de Operación (hoy solo muestra Colombia).
+- «Dónde ver» y fichas de jugadores de México (requieren datos verificados).
+- Separación de 15 minutos entre publicaciones y detección de duplicados de la agenda: hoy comparten fila los dos sitios.
+- Alcance por sitio en las llaves de agentes de redes y prueba de publicación real en redes con un artículo de México.
+- Textos legales: privacidad y términos citan la ley colombiana; el responsable decide si añade la mexicana.
+- Automatización de Codex para México (12:30 y 20:30) por quien administre las automatizaciones de Codex.
 
 Texto original de la investigación (se conserva abajo). Los datos de «Hoy» describen el estado ANTES de construir.
 
