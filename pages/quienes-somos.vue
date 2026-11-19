@@ -4,6 +4,7 @@ const { sitio: sitioActivo } = useSitio()
 
 const correoContacto = 'juanavimoralesparra31@gmail.com'
 const fechaActualizacion = '7 de octubre de 2026'
+const esMexico = computed(() => sitioActivo.value.id === 'mx')
 
 useSeoPont3la10({
   titulo: 'Quiénes somos | Pont3la10',
@@ -26,7 +27,7 @@ useSeoPont3la10({
       <span class="insignia-legal"><ShieldCheck aria-hidden="true" /> Sobre Pont3la10</span>
       <h1 id="titulo-legal">Fútbol y deporte, con contexto.</h1>
       <p class="introduccion-legal">
-        Pont3la10 es un producto digital de Pont3la10 Labs para seguir la actualidad deportiva, con especial atención al fútbol colombiano y a sus protagonistas.
+        Pont3la10 es un producto digital de Pont3la10 Labs para seguir la actualidad deportiva, con especial atención al {{ esMexico ? 'fútbol mexicano' : 'fútbol colombiano' }} y a sus protagonistas.
       </p>
       <p class="fecha-legal">Última actualización: <time datetime="2026-10-07">{{ fechaActualizacion }}</time></p>
     </header>
@@ -39,7 +40,8 @@ useSeoPont3la10({
 
       <section>
         <h2>El proyecto y su foco</h2>
-        <p>Organizamos la cobertura alrededor del fútbol colombiano —incluidas sus competiciones y selecciones—, los colombianos que juegan en el exterior y otras noticias deportivas de interés. También abordamos tecnología y tendencias cuando tienen una relación clara con el deporte.</p>
+        <p v-if="esMexico">Organizamos la cobertura alrededor del fútbol mexicano —la Liga MX, la Liga MX Femenil y la Selección Mexicana—, los mexicanos que juegan en el exterior y otras noticias deportivas de interés. También abordamos tecnología y tendencias cuando tienen una relación clara con el deporte.</p>
+        <p v-else>Organizamos la cobertura alrededor del fútbol colombiano —incluidas sus competiciones y selecciones—, los colombianos que juegan en el exterior y otras noticias deportivas de interés. También abordamos tecnología y tendencias cuando tienen una relación clara con el deporte.</p>
         <p>Buscamos que cada página responda una pregunta concreta del aficionado: qué ocurrió, qué se sabe, de dónde viene la información y dónde ampliar el contexto.</p>
       </section>
 
