@@ -6,14 +6,15 @@ const props = withDefaults(defineProps<{
   titulo: string
   limite?: number
   compacta?: boolean
-}>(), { limite: 0, compacta: false })
+  oscuro?: boolean
+}>(), { limite: 0, compacta: false, oscuro: false })
 
 const visibles = computed(() => props.limite > 0 ? props.filas.slice(0, props.limite) : props.filas)
 </script>
 
 <template>
   <div class="tabla-mx-envoltura">
-    <table class="tabla-mx" :class="{ compacta }">
+    <table class="tabla-mx" :class="{ compacta, oscuro }">
       <caption>{{ titulo }}</caption>
       <thead>
         <tr>
@@ -47,15 +48,21 @@ const visibles = computed(() => props.limite > 0 ? props.filas.slice(0, props.li
 
 <style scoped>
 .tabla-mx-envoltura { overflow-x: auto; }
-.tabla-mx { width: 100%; border-collapse: collapse; font-size: .86rem; color: #f5f8ff; }
-.tabla-mx caption { padding: 0 0 8px; text-align: left; color: #9eafc8; font-size: .7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
-.tabla-mx th, .tabla-mx td { padding: 8px 6px; border-bottom: 1px solid rgba(255, 255, 255, .1); text-align: left; font-weight: 600; }
-.tabla-mx thead th { color: #9eafc8; font-size: .7rem; font-weight: 800; }
+.tabla-mx { width: 100%; border-collapse: collapse; font-size: .88rem; color: #08204a; }
+.tabla-mx caption { padding: 0 0 8px; text-align: left; color: #5f6878; font-size: .7rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.tabla-mx th, .tabla-mx td { padding: 9px 6px; border-bottom: 1px solid #dbe2ee; text-align: left; font-weight: 600; }
+.tabla-mx thead th { color: #5f6878; font-size: .7rem; font-weight: 800; }
 .tabla-mx .num { width: 2.4rem; text-align: right; font-variant-numeric: tabular-nums; }
-.tabla-mx .puntos { color: #ffd800; font-weight: 850; }
+.tabla-mx .puntos { color: #145996; font-weight: 850; }
 .tabla-mx tbody th { font-weight: 700; }
+.tabla-mx tbody tr:hover { background: #f4f7fb; }
 .equipo-mx { display: inline-flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; }
 .equipo-mx:hover { text-decoration: underline; }
 .equipo-mx b { display: inline-grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: #174ea6; color: #fff; font-size: .72rem; }
 .tabla-mx.compacta { font-size: .82rem; }
+.tabla-mx.oscuro { color: #f5f8ff; }
+.tabla-mx.oscuro caption, .tabla-mx.oscuro thead th { color: #9eafc8; }
+.tabla-mx.oscuro th, .tabla-mx.oscuro td { border-bottom-color: rgba(255, 255, 255, .1); }
+.tabla-mx.oscuro .puntos { color: #ffd800; }
+.tabla-mx.oscuro tbody tr:hover { background: rgba(255, 255, 255, .05); }
 </style>
