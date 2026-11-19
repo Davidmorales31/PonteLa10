@@ -1,11 +1,13 @@
 import { createHmac, randomUUID } from 'node:crypto'
 
-const rutas = [
+const rutasBase = [
   { nombre: 'fixtures', ruta: '/local-internal/futbol/fixtures', intervaloMs: 15 * 1000 },
   { nombre: 'resultados_liga', ruta: '/local-internal/futbol/liga-resultados', intervaloMs: 15 * 60 * 1000 },
   { nombre: 'tabla_liga', ruta: '/local-internal/futbol/tabla-dimayor', intervaloMs: 60 * 1000, esperaFalloMs: 60 * 1000 },
   { nombre: 'calendario', ruta: '/local-internal/futbol/calendario', timeoutMs: 20 * 60 * 1000, esperaFalloMs: 30 * 60 * 1000 }
 ]
+// México es opt-in: solo corre si el entorno privado lo habilita (PONT3LA10_FUTBOL_MX_ENABLED=true).
+const rutaLigaMx = { nombre: 'liga_mx', ruta: '/local-internal/futbol/liga-mx', intervaloMs: 3 * 60 * 60 * 1000, timeoutMs: 10 * 60 * 1000, esperaFalloMs: 30 * 60 * 1000 }
 const intervaloPredeterminadoMs = 5 * 60 * 1000
 const intervaloMinimoMs = 5 * 1000
 const intervaloMaximoMs = 24 * 60 * 60 * 1000
@@ -22,6 +24,7 @@ export function crearSincronizadorFutbolLocal({
   avisar = console.warn
 } = {}) {
   const habilitado = entorno.PONT3LA10_FUTBOL_WORKER_ENABLED === 'true'
+  const rutas = entorno.PONT3LA10_FUTBOL_MX_ENABLED === 'true' ? [...rutasBase, rutaLigaMx] : rutasBase
   const intervaloMs = leerIntervalo(entorno.PONT3LA10_FUTBOL_SYNC_INTERVAL_MS)
   const secreto = entorno.NUXT_FUTBOL_WORKER_API_SECRET || ''
   const baseUrl = leerUrlLocal(entorno.PONT3LA10_CODEX_API_BASE_URL || 'http://127.0.0.1:3001')
