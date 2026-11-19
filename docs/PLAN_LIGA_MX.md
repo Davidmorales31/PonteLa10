@@ -1,6 +1,23 @@
 # Plan Liga MX: el mismo sitio en `mx.pont3la10.com`
 
-Estado: **solo investigación, nada construido** (2026-11-19). Autor: Claude.
+Estado (2026-11-19, noche): **construido y fusionado casi todo; México NO está lanzado.** Autor: Claude.
+Avance por fase (detalle en `docs/agents/handoffs/2026-11-19-sitios-liga-mx-fase-*.md`):
+
+| Fase | Estado |
+| --- | --- |
+| 1 Base (`sites`, `site`, host → sitio) | Hecha (#179) |
+| 2 Marca, menú, pie, SEO; México noindex | Hecha (#180) |
+| 3 Lecturas públicas y panel por sitio | Hecha (#181) |
+| 4A/4B/4C Datos de Liga MX, páginas, clubes | Hechas (#182–#184); datos ocultos hasta confirmar derechos de publicación |
+| 5 Selección Mexicana y Mexicanos en el exterior | Hecha (#186); sin fichas estáticas (se verifican una a una) |
+| 6 Corridas y tareas programadas de México | Hecha (#185); tarea de Claude pausada con interruptor; falta la de Codex |
+| 7 Redes por sitio (dominio de la pieza) | Hecha (#187); sin prueba de publicación real |
+| 8A Mapas y feed listos | Hecha (#188) |
+| 8B Idioma/zona por sitio y Partidos de hoy de México | En curso |
+| Lanzamiento (DNS, Search Console, GA4, `indexable`) | Pendiente del responsable (ver handoff 8A) |
+
+Texto original de la investigación (se conserva abajo). Los datos de «Hoy» describen el estado ANTES de construir.
+
 Decisiones del responsable: dominio gratis `mx.pont3la10.com`; mismo código, misma
 cuenta y mismo panel; **tareas programadas distintas** para México; compartir todo
 lo posible.

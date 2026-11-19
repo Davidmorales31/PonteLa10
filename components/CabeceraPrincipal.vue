@@ -88,7 +88,7 @@ async function buscarContenido() {
           <source :srcset="srcsetLogoCabecera" type="image/webp" sizes="170px">
           <img :src="logoCabecera" alt="Pont3la10" width="598" height="115" fetchpriority="high" decoding="async">
         </picture>
-        <span v-if="esMexico" class="etiqueta-sitio-cabecera">México</span>
+        <span v-if="esMexico" class="etiqueta-sitio-cabecera"><span class="etiqueta-larga">México</span><span class="etiqueta-corta" aria-hidden="true">MX</span></span>
       </NuxtLink>
 
       <nav class="navegacion-landing-escritorio" aria-label="Navegación principal">
