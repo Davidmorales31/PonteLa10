@@ -31,14 +31,14 @@ La escena `galeria` dura `cantidad × segundosPorFoto`: el host le da ese espaci
 
 ## Imágenes: de dónde salen y licencias
 
-En orden, y siempre con el crédito exacto en pantalla:
+Las consigue el agente, no Juan (decisión de Juan, 2026-11-18: criterio de licencia bajo, pero siempre fotos reales y siempre con crédito en pantalla). En orden:
 
-1. Las portadas de los artículos del día (ya acreditadas en `media_files.credit`).
-2. Otras fotos de la misma noticia en las fuentes del artículo, con su crédito («Fotógrafo (vía medio)»), igual que en el sitio.
-3. Wikimedia Commons u Openverse, solo con licencia CC0, CC BY o CC BY-SA y atribución completa (autor, licencia).
-4. Si no hay foto apta, el espacio queda vacío para que Juan ponga la suya.
+1. Las portadas de los artículos del día (ya acreditadas).
+2. Las que el agente de las 6 p. m. encuentra en cualquier medio (4 a 6 por noticia), con su crédito.
+3. `scripts/video-buscar-fotos.mjs` (botón **Buscar fotos automáticamente** del estudio): la imagen principal y las del cuerpo de la nota original y de la página de la portada (solo si su texto nombra al club o a los protagonistas, para no traer «noticias relacionadas»), las de las notas de otros medios que el agente pone en `fuentesFotos` del bloque, las portadas de otras notas del sitio cuya foto describe al mismo club y hasta 2 fotos de Wikimedia Commons de autores distintos. Revisión: `npm run video:fotos -- <proyecto> --hoja` crea `renders/fotos-auto.jpg` (6 por fila, índice en `fotos-auto.txt`) y `--quitar 3,7` quita esas fotos y vuelve a armar. Descarta miniaturas, fotos verticales, logos, gráficos y tablas, y la misma foto en otro tamaño (huella visual). Quedan marcadas «auto» en el estudio; las que quites no vuelven a aparecer.
+4. Si aun así faltan, el proyecto repite las fotos de la noticia (`repetirFotos` en `estudio.json`): nunca queda un hueco en el video.
 
-Nunca: imágenes generadas por IA, ilustraciones, montajes con logos, capturas de transmisiones ni resultados de buscadores sin licencia identificada.
+Nunca: imágenes generadas por IA, ilustraciones, gráficos, montajes con logos ni capturas de transmisiones.
 
 ## Sonido (`assets/sonidos/`)
 
