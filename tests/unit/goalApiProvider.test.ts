@@ -301,3 +301,12 @@ describe('adaptador privado GOAL API', () => {
     expect(transporte).not.toHaveBeenCalled()
   })
 })
+
+describe('estadio del partido en GOAL API', () => {
+  it('lee matchStadium como sede del partido', async () => {
+    const transporte = vi.fn<TransporteGoalApi>(async () => respuestaApi({ fixtures: [{ ...fixtureGoal, matchStadium: 'Estadio La Corregidora' }] }))
+    const proveedor = crearProveedorGoalApi({ apiKey: 'clave-de-prueba', transporte })
+    const respuesta = await proveedor.obtenerFixturesLiga!('liga-a', 10, 0)
+    expect(respuesta.elementos[0]?.sede).toBe('Estadio La Corregidora')
+  })
+})

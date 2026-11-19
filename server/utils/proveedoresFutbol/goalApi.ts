@@ -378,7 +378,7 @@ function mapearPartido(valor: unknown): PartidoFutbolProveedor {
     visitante,
     golesLocal,
     golesVisitante,
-    ...(leerCadena(objeto, 'venue', 'venueName') ? { sede: leerCadena(objeto, 'venue', 'venueName') } : {}),
+    ...(leerCadena(objeto, 'venue', 'venueName', 'matchStadium') ? { sede: leerCadena(objeto, 'venue', 'venueName', 'matchStadium') } : {}),
     ...(leerCadena(objeto, 'city', 'venueCity') ? { ciudad: leerCadena(objeto, 'city', 'venueCity') } : {})
   }
 }
