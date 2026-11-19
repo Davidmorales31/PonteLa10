@@ -26,7 +26,7 @@ describe('contenido fuera del foco de fútbol no compite por indexación', () =>
   it('los filtros de artículos sin hub canónico y los temas son noindex', () => {
     const listado = leer('../../pages/articulos/index.vue')
     expect(listado).toContain('debeEvitarIndexacion')
-    expect(listado).toContain('!rutasCanonicasCategoria[categoria]')
+    expect(listado).toContain('!rutasCanonicasCategoria.value[categoria]')
     expect(listado).toContain('robots: debeEvitarIndexacion.value ? robotsNoIndex : undefined')
   })
 })
