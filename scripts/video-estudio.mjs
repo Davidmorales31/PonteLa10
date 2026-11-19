@@ -10,6 +10,7 @@ import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { generarProyecto } from './video-generar-proyecto.mjs'
 import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionDe } from './video-musica.mjs'
+import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
@@ -222,6 +223,9 @@ async function borrarFoto(proyecto, clave, indice) {
   await guardarEstudio(proyecto, estudio => {
     const lista = estudio.fotosExtra?.[clave] || []
     ruta = lista[indice]?.ruta || null
+    // Una foto automática que Juan quita no vuelve a aparecer en la siguiente búsqueda.
+    const origen = lista[indice]?.auto && lista[indice].origenImagen
+    if (origen) estudio.fotosDescartadas = [...new Set([...(estudio.fotosDescartadas || []), origen])].slice(-500)
     estudio.fotosExtra[clave] = lista.filter((_, i) => i !== indice)
   })
   const archivo = ruta && rutaSegura(carpeta, ruta)
@@ -352,6 +356,14 @@ export function crearServidor() {
         if (id) await descargarPista(id)
         await guardarEstudio(proyecto, estudio => { estudio.musica = id || null })
         return responder(res, 200, { musica: id || null })
+      }
+      if (accion === 'buscar-fotos' && req.method === 'POST') {
+        if (ocupados.has(proyecto)) return responder(res, 409, { error: 'El proyecto está ocupado: espera a que termine.' })
+        ocupados.add(proyecto)
+        try {
+          const r = await buscarFotosProyecto({ carpeta: carpetaDe(proyecto), registro: () => {} })
+          return responder(res, 200, { agregadas: r.agregadas, vacios: r.vacios, resumen: r.resumen })
+        } finally { ocupados.delete(proyecto) }
       }
       if ((accion === 'nombre' || accion === 'sin-camara') && req.method === 'POST') {
         let datos = {}

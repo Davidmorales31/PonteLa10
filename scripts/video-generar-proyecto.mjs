@@ -153,14 +153,17 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
     }
     const espacios = galerias.reduce((suma, g) => suma + g.espacios.length, 0)
     const vacios = galerias.reduce((suma, g) => suma + g.espacios.filter(e => !e.url).length, 0)
+    // Espacios sin una foto propia (con «repetir» se rellenan con otra foto de la noticia).
+    const sinFotoPropia = Math.max(0, espacios - fotos.length)
     // Una sola tarjeta de fotos por noticia: la entrada sin cámara suma sus espacios a los de la voz.
     const previo = resumenFotos.find(r => r.clave === claveFotos)
     if (previo) {
       previo.espacios += espacios
       previo.vacios += vacios
+      previo.sinFotoPropia = (previo.sinFotoPropia || 0) + sinFotoPropia
       previo.fotos = Math.max(previo.fotos, fotos.length)
       if (!enLugarDeCara) previo.etiqueta = etiqueta
-    } else resumenFotos.push({ clave: claveFotos, etiqueta, fotos: fotos.length, espacios, vacios })
+    } else resumenFotos.push({ clave: claveFotos, etiqueta, fotos: fotos.length, espacios, vacios, sinFotoPropia })
     segmentos.push({ id, tipo: 'voz', etiqueta, bloque, inicio, fin: redondear(inicio + duracion), texto: String(texto || '').trim(), grabado: Boolean(grabada?.archivo) })
     t = redondear(inicio + duracion)
     return { inicio, duracion }
@@ -319,7 +322,8 @@ export async function generarProyecto({ guion, salida, repetirFotos = false, sin
   // Las fotos que sube Juan ya son rutas locales del proyecto.
   const rutaFoto = url => (String(url).startsWith('assets/') ? (existsSync(join(salida, url)) ? url : '') : (rutas.get(url) ?? ''))
 
-  const plan = planificar(guion, { ppm: config.formato.palabrasPorMinuto, repetirFotos, titulares, rutaFoto, estudio })
+  // El proyecto puede pedir repetir fotos (lo activa el buscador automático) para no dejar huecos en el video.
+  const plan = planificar(guion, { ppm: config.formato.palabrasPorMinuto, repetirFotos: repetirFotos || Boolean(estudio.repetirFotos), titulares, rutaFoto, estudio })
   // Se borran las escenas de una generación anterior: el número de instancias cambia con los tiempos.
   for (const nombre of await readdir(join(salida, 'compositions'))) {
     if (nombre.endsWith('.html')) await rm(join(salida, 'compositions', nombre), { force: true })

@@ -20,7 +20,8 @@
     "video:estudio": "node scripts/video-estudio.mjs",
     "video:generar": "node scripts/video-generar-proyecto.mjs",
     "video:reels": "node scripts/video-reels.mjs",
-    "video:musica": "node scripts/video-musica.mjs"
+    "video:musica": "node scripts/video-musica.mjs",
+    "video:fotos": "node scripts/video-buscar-fotos.mjs"
   },
   "dependencies": {
     "@lucide/vue": "^1.25.0",

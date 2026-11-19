@@ -152,6 +152,7 @@
   .insignia.ok { background: rgba(61, 220, 132, .12); color: var(--verde); border: 1px solid rgba(61, 220, 132, .45); }
   .miniaturas { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
   .miniaturas figure { position: relative; margin: 0; }
+  .miniaturas figure.auto::after { content: 'auto'; position: absolute; left: 3px; bottom: 3px; padding: 0 5px; border-radius: 4px; background: rgba(0, 0, 0, .75); color: var(--amarillo); font-size: 10px; font-weight: 800; }
   .miniaturas img { display: block; width: 88px; height: 50px; object-fit: cover; border-radius: 6px; }
   .miniaturas button { position: absolute; top: 3px; right: 3px; display: grid; place-items: center; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .75); color: #fff; cursor: pointer; }
   .miniaturas button .icono { width: 14px; height: 14px; }
@@ -330,7 +331,8 @@
   <section class="panel" id="col-fotos" aria-labelledby="t-fotos">
     <h2 id="t-fotos">Fotos por noticia <span class="etiqueta-chica" id="fotos-conteo"></span></h2>
     <div class="desplazable">
-      <p class="etiqueta-chica" style="margin-top:0">Solo fotos reales con su crédito. Cada una llena un «Espacio para imagen» de su noticia.</p>
+      <button class="boton primario" id="buscar-fotos" style="width:100%;margin-bottom:8px" title="Busca fotos reales con crédito para cada noticia: la nota original, otras notas del sitio y Wikimedia Commons"><svg class="icono"><use href="#i-wand"/></svg><span>Buscar fotos automáticamente</span></button>
+      <p class="etiqueta-chica" style="margin-top:0">Solo fotos reales con su crédito. Las que agrega la búsqueda llevan «auto»: quita con la X las que no te sirvan. Si a una noticia le faltan fotos, se repiten las suyas.</p>
       <div id="fotos"></div>
     </div>
   </section>
@@ -547,9 +549,9 @@ function pintarFotos() {
     const subidas = detalle.estudio.fotosExtra?.[f.clave] || []
     const nombre = f.etiqueta.replace(' · voz', '')
     return `<div class="bloque-fotos">
-      <div class="cabeza"><h3>${escapar(nombre)}</h3><span class="insignia ${f.vacios ? 'pendiente' : 'ok'}">${f.vacios ? `${f.vacios} vacíos` : `${icono('check')} completa`}</span></div>
+      <div class="cabeza"><h3>${escapar(nombre)}</h3><span class="insignia ${f.vacios ? 'pendiente' : f.sinFotoPropia ? 'neutra' : 'ok'}">${f.vacios ? `${f.vacios} vacíos` : f.sinFotoPropia ? `${f.sinFotoPropia} repiten foto` : `${icono('check')} completa`}</span></div>
       <div class="etiqueta-chica">${f.fotos} foto(s) para ${f.espacios} espacios</div>
-      ${subidas.length ? `<div class="miniaturas">${subidas.map((s, i) => `<figure><img src="/archivos/${escapar(proyecto)}/${escapar(s.ruta)}" alt="Foto subida: ${escapar(s.credito)}" title="${escapar(s.credito)}"><button data-clave="${escapar(f.clave)}" data-i="${i}" aria-label="Quitar foto de ${escapar(s.credito)}">${icono('x')}</button></figure>`).join('')}</div>` : ''}
+      ${subidas.length ? `<div class="miniaturas">${subidas.map((s, i) => `<figure${s.auto ? ' class="auto"' : ''}><img src="/archivos/${escapar(proyecto)}/${escapar(s.ruta)}" alt="Foto ${s.auto ? 'automática' : 'subida'}: ${escapar(s.credito)}" title="${escapar(s.credito)}${s.auto ? ' · búsqueda automática' : ''}"><button data-clave="${escapar(f.clave)}" data-i="${i}" aria-label="Quitar foto de ${escapar(s.credito)}">${icono('x')}</button></figure>`).join('')}</div>` : ''}
       <form class="subir" data-clave="${escapar(f.clave)}" novalidate>
         <label class="zona-subida" tabindex="0">${icono('image')}<span>Arrastra una foto o haz clic para elegirla</span><input type="file" class="oculto" accept="image/jpeg,image/png,image/webp"></label>
         <label class="campo">Crédito de la foto<input type="text" maxlength="120" placeholder="Colprensa (vía El Tiempo)"><span class="error" aria-live="polite"></span></label>
@@ -1192,6 +1194,13 @@ async function cambiarSinCamara(activo) {
 $('#proyecto').addEventListener('click', verProyectos)
 $('#sin-camara').addEventListener('change', e => cambiarSinCamara(e.target.checked))
 $('#form-apodo').addEventListener('submit', guardarApodo)
+$('#buscar-fotos').addEventListener('click', e => ocupado(e.currentTarget, 'Buscando fotos (1–2 min)…', async () => {
+  try {
+    const r = await api(`/api/proyectos/${proyecto}/buscar-fotos`, { method: 'POST' })
+    await cargarDetalle()
+    avisar(`${r.agregadas} foto(s) nuevas.${r.vacios ? ` ${r.vacios} espacios repiten fotos de su noticia.` : ''}`, 'ok')
+  } catch (err) { avisar(err.message, 'error') }
+}))
 $('#grabar').addEventListener('click', () => (grabador ? detener() : grabar()))
 $('#guardar').addEventListener('click', guardarToma)
 $('#descartar').addEventListener('click', () => descartarToma())
