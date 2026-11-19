@@ -1,8 +1,8 @@
 {
   "version": 1,
   "sitio": "mx",
-  "habilitada": false,
-  "habilitadaNota": "México aún no está lanzado. Mientras sea false, las corridas de México no producen: informan y terminan. El responsable la pasa a true cuando quiera empezar a publicar contenido de México.",
+  "habilitada": true,
+  "habilitadaNota": "Activada por el responsable el 2026-11-19 (el sitio aún no está lanzado: noindex). Mientras sea false, las corridas de México no producen: informan y terminan. El responsable la pasa a true cuando quiera empezar a publicar contenido de México.",
   "zonaHoraria": "America/Bogota",
   "zonaHorariaEditorial": "America/Mexico_City",
   "horarios": {
