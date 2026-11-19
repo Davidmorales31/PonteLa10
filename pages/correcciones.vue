@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Mail, ShieldCheck } from '@lucide/vue'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 const correoContacto = 'juanavimoralesparra31@gmail.com'
@@ -15,7 +16,7 @@ useSeoPont3la10({
     name: 'Correcciones y actualizaciones | Pont3la10',
     description: 'Canal y proceso para reportar errores y solicitar la revisión de una publicación.',
     inLanguage: sitioActivo.value.idioma,
-    isPartOf: { '@id': `${String(useRuntimeConfig().public.siteUrl).replace(/\/+$/, '')}/#sitio-web` }
+    isPartOf: { '@id': `${origenSitio.value.replace(/\/+$/, '')}/#sitio-web` }
   }
 })
 </script>

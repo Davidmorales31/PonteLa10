@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Mail, ShieldCheck } from '@lucide/vue'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 useSeoPont3la10({
@@ -12,7 +13,7 @@ useSeoPont3la10({
     name: 'Política de privacidad de Pont3la10',
     description: 'Información sobre el tratamiento de datos y privacidad en Pont3la10.',
     inLanguage: sitioActivo.value.idioma,
-    isPartOf: { '@id': `${String(useRuntimeConfig().public.siteUrl).replace(/\/+$/, '')}/#sitio-web` }
+    isPartOf: { '@id': `${origenSitio.value.replace(/\/+$/, '')}/#sitio-web` }
   }
 })
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { RespuestaResultados } from '~/types/resultados'
 import { construirUrlAbsoluta } from '~/utils/seo'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
-const configuracion = useRuntimeConfig()
 const { data: respuestaSeo } = await useFetch<RespuestaResultados>('/api/resultados', {
   key: 'seo-centro-resultados',
   lazy: true
@@ -25,7 +25,7 @@ useSeoPont3la10(() => ({
         '@type': 'ListItem',
         position: indice + 1,
         name: `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}`,
-        url: construirUrlAbsoluta(String(configuracion.public.siteUrl), `/resultados/${partido.id}`)
+        url: construirUrlAbsoluta(origenSitio.value, `/resultados/${partido.id}`)
       }))
     }
   }

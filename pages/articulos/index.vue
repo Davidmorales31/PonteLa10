@@ -23,6 +23,7 @@ import {
 } from '~/utils/articulosLanding'
 import { construirConsultaArticulosPublicos } from '~/utils/consultaArticulosPublicos'
 import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 type ArticuloListado = ArticuloResumen & { fechaPublicacion: string }
@@ -99,7 +100,6 @@ const tituloListado = computed(() => {
 
   return 'Noticias'
 })
-const configuracion = useRuntimeConfig()
 const esBusquedaInterna = computed(() => Boolean(rutaActual.query.buscar))
 const esSitioMexico = computed(() => sitioActivo.value.id === 'mx')
 const rutasCanonicasMexico: Record<string, string> = { 'futbol-mexicano': '/futbol-mexicano', 'futbol-mundial': '/futbol-internacional' }
@@ -275,7 +275,7 @@ useSeoPont3la10(() => {
               position: indice + 1,
               name: articulo.titulo,
               url: construirUrlAbsoluta(
-                String(configuracion.public.siteUrl),
+                origenSitio.value,
                 `/articulos/${articulo.slug}`
               )
             }))

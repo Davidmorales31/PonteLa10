@@ -2,6 +2,7 @@
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { PerfilAutorPublico } from '~/utils/perfilesAutoresPublicos'
 import { robotsIndexables } from '~/utils/seo'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 interface RespuestaPerfilAutor {
@@ -29,8 +30,7 @@ if (!data.value) {
 const perfil = computed(() => data.value?.perfil)
 const articulos = computed(() => data.value?.articulos || [])
 const fechaActualizacion = computed(() => perfil.value?.fechaActualizacion || '')
-const configuracion = useRuntimeConfig()
-const urlPerfil = computed(() => `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/autores/${slug.value}`)
+const urlPerfil = computed(() => `${origenSitio.value.replace(/\/+$/, '')}/autores/${slug.value}`)
 
 function formatearFecha(fecha: string): string {
   return new Intl.DateTimeFormat(sitioActivo.value.locale, {

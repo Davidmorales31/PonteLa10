@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { BookOpenCheck, Mail } from '@lucide/vue'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 const correoContacto = 'juanavimoralesparra31@gmail.com'
@@ -15,7 +16,7 @@ useSeoPont3la10({
     name: 'Política editorial de Pont3la10',
     description: 'Principios de fuentes, verificación, automatización, publicidad y datos deportivos.',
     inLanguage: sitioActivo.value.idioma,
-    isPartOf: { '@id': `${String(useRuntimeConfig().public.siteUrl).replace(/\/+$/, '')}/#sitio-web` }
+    isPartOf: { '@id': `${origenSitio.value.replace(/\/+$/, '')}/#sitio-web` }
   }
 })
 </script>

@@ -7,6 +7,8 @@ import {
   obtenerOpcionesLecturaSnapshotsPartidosSeo
 } from '~/server/utils/partidosSeoPublicos'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
+import { listarClubesMexicoPublicos, relacionarClubesMexico } from '~/server/utils/relacionesClubesMexico'
+import { extraerTextoDocumento } from '~/utils/editorial/documento'
 import { sitioDeSolicitud } from '~/server/utils/sitioDeSolicitud'
 import { seleccionarProximoPartidoArticuloSeo } from '~/utils/editorial/navegacionContextualSeo'
 
@@ -35,6 +37,19 @@ export default defineEventHandler(async (
 
   articulo.relacionesEntidades = await listarRelacionesPublicasSeo(clienteSupabase, articulo.id)
   articulo.proximoPartidoEntidad = null
+
+  // México no usa el grafo de entidades de Colombia: enlaza los clubes de la Liga MX que el texto nombra.
+  if (sitioDeSolicitud(evento) === 'mx' && !articulo.relacionesEntidades.length) {
+    try {
+      const clubes = await listarClubesMexicoPublicos(clienteSupabase)
+      articulo.relacionesEntidades = relacionarClubesMexico(
+        [articulo.titulo, articulo.resumen, extraerTextoDocumento(articulo.documento)].join(' . '),
+        clubes
+      )
+    } catch {
+      // Los enlaces a clubes son complementarios.
+    }
+  }
 
   if (articulo.relacionesEntidades.some(relacion => relacion.relacion === 'about')) {
     try {

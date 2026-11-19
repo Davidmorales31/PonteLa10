@@ -17,7 +17,7 @@ Avance por fase (detalle en `docs/agents/handoffs/2026-11-19-sitios-liga-mx-fase
 | Lanzamiento (DNS, Search Console, GA4, `indexable`) | Pendiente del responsable (ver handoff 8A) |
 
 Pendientes técnicos conocidos (no bloquean el lanzamiento, mejoran México):
-- Grafo de entidades SEO con clubes y competiciones de México (hoy los artículos de México no generan enlaces a `/clubes/...`).
+- Grafo de entidades SEO de México: los artículos de México enlazan los clubes de la Liga MX que nombran (`/clubes/...`, relación «mentions», sin tocar el grafo de Colombia); falta el grafo completo con competiciones y partidos.
 - ~~Frescura y salud de los datos de México en el panel de Operación~~ (hecho: bloque «México» en Operación y alerta si hay datos vencidos).
 - «Dónde ver» y fichas de jugadores de México (requieren datos verificados).
 - Separación de 15 minutos entre publicaciones y detección de duplicados de la agenda: hoy comparten fila los dos sitios.
@@ -381,3 +381,10 @@ registrarlas como otro destino. **[decisión pendiente]**
 4. ¿Hay video diario de México o solo corridas editoriales?
 5. ¿Femenil entra desde el primer día o en una segunda etapa?
 6. ¿Dónde está desplegado el sitio (Vercel u otro) para dar de alta el subdominio?
+
+## Corrección 2026-11-19: origen por sitio en datos estructurados
+
+Las páginas compartidas (artículo, autores, resultados, Partidos de hoy general, Noticias y legales) armaban URLs
+absolutas, `@id` y migas de JSON-LD con `siteUrl` (www). En México apuntaban a Colombia. Ahora usan
+`useOrigenSitio()` (`composables/useOrigenSitio.ts`): Colombia conserva el origen configurado; México usa
+`https://mx.pont3la10.com`.

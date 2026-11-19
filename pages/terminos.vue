@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { BookOpenCheck, Mail } from '@lucide/vue'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 useSeoPont3la10({
@@ -12,7 +13,7 @@ useSeoPont3la10({
     name: 'Términos y condiciones de Pont3la10',
     description: 'Condiciones de uso del sitio web Pont3la10.',
     inLanguage: sitioActivo.value.idioma,
-    isPartOf: { '@id': `${String(useRuntimeConfig().public.siteUrl).replace(/\/+$/, '')}/#sitio-web` }
+    isPartOf: { '@id': `${origenSitio.value.replace(/\/+$/, '')}/#sitio-web` }
   }
 })
 

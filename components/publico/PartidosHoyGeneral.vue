@@ -3,6 +3,7 @@ import { ArrowUpRight, Clock3 } from '@lucide/vue'
 import type { EstadoPartido, RespuestaResultados } from '~/types/resultados'
 import { construirUrlAbsoluta } from '~/utils/seo'
 import { clasificarCategoriaFutbol, type CategoriaFutbol } from '~/utils/clasificacionFutbol'
+const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 const configuracion = useRuntimeConfig()
@@ -101,8 +102,8 @@ useSeoPont3la10(() => ({
     '@graph': [{
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Inicio', item: construirUrlAbsoluta(String(configuracion.public.siteUrl), '/') },
-        { '@type': 'ListItem', position: 2, name: 'Partidos de hoy', item: construirUrlAbsoluta(String(configuracion.public.siteUrl), '/partidos-hoy') }
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: construirUrlAbsoluta(origenSitio.value, '/') },
+        { '@type': 'ListItem', position: 2, name: 'Partidos de hoy', item: construirUrlAbsoluta(origenSitio.value, '/partidos-hoy') }
       ]
     }, {
       '@type': 'CollectionPage',
@@ -112,7 +113,7 @@ useSeoPont3la10(() => ({
         itemListElement: partidos.value.map((partido, posicion) => ({
           '@type': 'ListItem', position: posicion + 1,
           name: `${partido.equipoLocal.nombre} vs ${partido.equipoVisitante.nombre}`,
-          url: construirUrlAbsoluta(String(configuracion.public.siteUrl), `/resultados/${partido.id}`)
+          url: construirUrlAbsoluta(origenSitio.value, `/resultados/${partido.id}`)
         }))
       }
     }]
