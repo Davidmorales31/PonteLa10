@@ -1,6 +1,8 @@
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
 import { construirUrlAbsoluta, escaparXml } from '~/utils/seo'
+import { sitioDeSolicitud } from '~/server/utils/sitioDeSolicitud'
+import { origenDelSitio } from '~/utils/sitio'
 import {
   filtrarPublicacionesVentanaNews,
   prepararRespuestaSitemap,
@@ -12,7 +14,8 @@ const MAX_NOTICIAS_GOOGLE = 1000
 const MAX_FILAS_EXAMINADAS_GOOGLE = 5000
 
 export default defineEventHandler(async (evento) => {
-  const urlSitio = String(useRuntimeConfig().public.siteUrl)
+  const sitioPeticion = sitioDeSolicitud(evento)
+  const urlSitio = origenDelSitio(sitioPeticion, String(useRuntimeConfig().public.siteUrl))
   const ahora = Date.now()
   const limite = new Date(ahora - horasNoticiasGoogle * 60 * 60 * 1000)
   const publicaciones: Awaited<ReturnType<typeof listarArticulosPublicosEditoriales>> = []
@@ -36,7 +39,9 @@ export default defineEventHandler(async (evento) => {
       const pagina = await listarArticulosPublicosEditoriales(
         clienteSupabase,
         limitePagina,
-        desplazamiento
+        desplazamiento,
+        undefined,
+        sitioPeticion
       )
       if (!pagina.length) {
         ventanaCompletada = true
@@ -66,7 +71,7 @@ export default defineEventHandler(async (evento) => {
       && publicaciones.length < MAX_NOTICIAS_GOOGLE
       && desplazamiento >= MAX_FILAS_EXAMINADAS_GOOGLE
     ) {
-      const siguiente = await listarArticulosPublicosEditoriales(clienteSupabase, 1, desplazamiento)
+      const siguiente = await listarArticulosPublicosEditoriales(clienteSupabase, 1, desplazamiento, undefined, sitioPeticion)
       const fechaSiguiente = siguiente[0] ? Date.parse(siguiente[0].publicadoEn) : Number.NaN
       const existeFinDeVentana = !siguiente.length
         || (Number.isFinite(fechaSiguiente) && fechaSiguiente < limite.getTime())
