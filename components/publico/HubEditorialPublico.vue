@@ -2,6 +2,7 @@
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
 import { evaluarIndexabilidad } from '~/utils/indexabilidadPublica'
+import { origenDelSitio } from '~/utils/sitio'
 
 interface EnlaceHub {
   etiqueta: string
@@ -48,8 +49,10 @@ const puedeIndexarse = computed(() => evaluarIndexabilidad({
   fuenteDisponible: !error.value || (props.configuracion.entidadesVerificadas ?? 0) >= 3,
   entidadesVerificadas: props.configuracion.entidadesVerificadas
 }))
+const { id: idSitio, sitio: sitioHub } = useSitio()
+const origenHub = computed(() => origenDelSitio(idSitio.value, String(configuracionRuntime.public.siteUrl)))
 const urlHub = computed(() => construirUrlAbsoluta(
-  String(configuracionRuntime.public.siteUrl),
+  origenHub.value,
   props.configuracion.rutaCanonica
 ))
 
@@ -65,7 +68,7 @@ useSeoPont3la10(() => ({
       '@type': 'CollectionPage',
       name: props.configuracion.titulo,
       description: props.configuracion.descripcion,
-      inLanguage: 'es-CO',
+      inLanguage: sitioHub.value.idioma,
       url: urlHub.value,
       mainEntity: {
         '@type': 'ItemList',
@@ -73,7 +76,7 @@ useSeoPont3la10(() => ({
           '@type': 'ListItem',
           position: indice + 1,
           name: noticia.titulo,
-          url: construirUrlAbsoluta(String(configuracionRuntime.public.siteUrl), `/articulos/${noticia.slug}`)
+          url: construirUrlAbsoluta(origenHub.value, `/articulos/${noticia.slug}`)
         }))
       }
     },
@@ -81,7 +84,7 @@ useSeoPont3la10(() => ({
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Inicio', item: construirUrlAbsoluta(String(configuracionRuntime.public.siteUrl), '/') },
+        { '@type': 'ListItem', position: 1, name: 'Inicio', item: construirUrlAbsoluta(origenHub.value, '/') },
         { '@type': 'ListItem', position: 2, name: props.configuracion.titulo, item: urlHub.value }
       ]
     },

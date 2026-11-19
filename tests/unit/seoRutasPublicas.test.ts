@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 const paginas = [
   {
     tipo: 'home',
-    archivos: ['../../pages/index.vue']
+    archivos: ['../../components/publico/PortadaColombia.vue']
   },
   {
     tipo: 'artículo',
@@ -30,7 +30,7 @@ const paginas = [
 
 describe('contrato SEO de páginas públicas', () => {
   it('mantiene identidad de Home, H1 y tarjeta social independientes de la noticia principal', () => {
-    const portada = readFileSync(new URL('../../pages/index.vue', import.meta.url), 'utf8')
+    const portada = readFileSync(new URL('../../components/publico/PortadaColombia.vue', import.meta.url), 'utf8')
     const identidad = readFileSync(new URL('../../app.vue', import.meta.url), 'utf8')
     const metadata = portada.slice(portada.indexOf('useSeoPont3la10('), portada.indexOf('</script>'))
 
