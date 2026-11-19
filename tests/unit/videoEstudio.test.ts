@@ -38,6 +38,17 @@ describe('estudio local del video diario', () => {
     expect(estudio.CODIGO_REINICIO).toBe(75)
   })
 
+  it('sin tomas grabadas no exige voz en el render', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const vozPresente = estudio.vozPresente as unknown as (carpeta: string, video: string) => Promise<{ ok: boolean, medidos: number }>
+    const carpeta = mkdtempSync(join(tmpdir(), 'estudio-voz-'))
+    writeFileSync(join(carpeta, 'manifiesto.json'), JSON.stringify({ segmentos: [{ id: 'gancho', inicio: 4, fin: 20 }] }))
+    writeFileSync(join(carpeta, 'estudio.json'), JSON.stringify({ grabaciones: {} }))
+    expect(await vozPresente(carpeta, join(carpeta, 'no-existe.mp4'))).toEqual({ ok: true, medidos: 0 })
+  })
+
   it('reconoce los tramos de cámara y valida el nombre del proyecto', () => {
     const tramoDeCara = estudio.tramoDeCara as unknown as (id: string) => boolean
     const nombreValido = estudio.nombreValido as unknown as (n: unknown) => boolean

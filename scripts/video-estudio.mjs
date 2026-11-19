@@ -264,6 +264,30 @@ async function armar(proyecto) {
   return generarProyecto({ guion, salida: carpeta })
 }
 
+// Volumen medio (dB) de un tramo del video; null si no se pudo medir.
+async function volumenMedio(archivo, inicio, duracion) {
+  try {
+    const { stderr } = await ejecutar('ffmpeg', ['-hide_banner', '-ss', String(inicio), '-t', String(duracion), '-i', archivo, '-vn', '-af', 'volumedetect', '-f', 'null', '-'], { maxBuffer: 10 * 1024 * 1024 })
+    const medio = /mean_volume:\s*(-?[\d.]+|-inf)/.exec(stderr)?.[1]
+    return medio === undefined ? null : medio === '-inf' ? -120 : Number(medio)
+  } catch { return null }
+}
+
+// Comprueba que la voz grabada se oye en el video renderizado (la voz de Juan debe quedar por encima de −35 dB).
+export async function vozPresente(carpeta, video) {
+  const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
+  const manifiesto = (await leerJson(join(carpeta, 'manifiesto.json'))) || { segmentos: [] }
+  const grabados = manifiesto.segmentos.filter(s => estudio.grabaciones?.[s.id] && s.fin - s.inicio >= 6)
+  if (!grabados.length) return { ok: true, medidos: 0 }
+  const muestras = [grabados[0], grabados[Math.floor(grabados.length / 2)], grabados.at(-1)]
+  const niveles = []
+  for (const s of muestras) {
+    const nivel = await volumenMedio(video, s.inicio + 1, Math.min(5, s.fin - s.inicio - 1))
+    if (nivel !== null) niveles.push(nivel)
+  }
+  return { ok: niveles.length === 0 || niveles.some(n => n > -35), medidos: niveles.length, niveles }
+}
+
 function renderizar(proyecto) {
   const carpeta = carpetaDe(proyecto)
   const estado = { estado: 'renderizando', registro: '' }
@@ -279,6 +303,13 @@ function renderizar(proyecto) {
       const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
       const voz = join(carpeta, 'renders', 'final-voz.mp4')
       const final = join(carpeta, 'renders', 'final.mp4')
+      const control = await vozPresente(carpeta, voz)
+      if (!control.ok) {
+        estado.registro += '\nEl video salió SIN tu voz (las tomas no quedaron dentro del render). Pulsa Renderizar otra vez; si se repite, avísale a Claude.\n'
+        estado.estado = 'error'
+        ocupados.delete(proyecto)
+        return
+      }
       if (estudio.musica) { estado.registro += '\nMezclando la música…\n'; await mezclarMusica({ video: voz, id: estudio.musica, salida: final }) } else await copyFile(voz, final)
       estado.estado = 'listo'
     } catch (error) { estado.registro += `\nNo se pudo mezclar la música: ${error.message}\n`; estado.estado = 'error' }
@@ -439,7 +470,13 @@ export function crearServidor() {
         if (ocupados.has(proyecto)) return responder(res, 409, { error: 'El proyecto está ocupado: espera a que termine.' })
         if (accion === 'reels' && !existsSync(join(carpetaDe(proyecto), 'renders', 'final.mp4'))) return responder(res, 409, { error: 'Primero renderiza el video final.' })
         ocupados.add(proyecto)
-        if (accion === 'render') { renderizar(proyecto); return responder(res, 202, { estado: 'renderizando' }) }
+        if (accion === 'render') {
+          // Siempre se vuelve a armar antes de renderizar: si las tomas o las fotos son más nuevas que el último
+          // armado, el render saldría con los huecos del teleprompter y sin la voz (pasó el 2026-11-18).
+          try { await armar(proyecto) } catch (error) { ocupados.delete(proyecto); throw error }
+          renderizar(proyecto)
+          return responder(res, 202, { estado: 'renderizando' })
+        }
         if (accion === 'reels') { crearReelsProyecto(proyecto); return responder(res, 202, { estado: 'creando' }) }
         try { return responder(res, 200, await armar(proyecto)) } finally { ocupados.delete(proyecto) }
       }
