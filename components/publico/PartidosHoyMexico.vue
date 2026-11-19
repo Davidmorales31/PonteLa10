@@ -43,40 +43,34 @@ useSeoPont3la10({
 </script>
 
 <template>
-  <main class="pagina-partidos-hoy-mx">
-    <div class="contenedor-partidos-hoy-mx">
-      <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Partidos de hoy' }]" />
-      <header>
-        <p class="antetitulo-partidos-hoy-mx">AGENDA DE FÚTBOL</p>
-        <h1>Partidos de hoy de la Liga MX</h1>
-        <p class="fecha-partidos-hoy-mx">{{ fechaLarga }} · horarios de Ciudad de México</p>
-      </header>
+  <main class="pagina-contenido pagina-publica-medio pagina-partidos-hoy-mx">
+    <MigasNavegacion :elementos="[{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Partidos de hoy' }]" />
+    <header class="cabecera-pagina cabecera-noticias-medio">
+      <p class="etiqueta-seccion">AGENDA DE FÚTBOL</p>
+      <h1>Partidos de hoy de la Liga MX</h1>
+      <p class="fecha-partidos-hoy-mx">{{ fechaLarga }} · horarios de Ciudad de México</p>
+    </header>
 
-      <p v-if="datos.estado !== 'disponible'" class="aviso-partidos-hoy-mx">Estamos verificando los datos de la Liga MX. Vuelve pronto para ver la agenda del día.</p>
+    <p v-if="datos.estado !== 'disponible'" class="aviso-partidos-hoy-mx">Estamos verificando los datos de la Liga MX. Vuelve pronto para ver la agenda del día.</p>
 
-      <template v-else>
-        <PublicoListaPartidosMx v-if="enVivo.length" :partidos="enVivo" titulo="En vivo" mostrar-liga />
-        <PublicoListaPartidosMx v-if="proximos.length" :partidos="proximos" titulo="Próximos hoy" mostrar-liga />
-        <PublicoListaPartidosMx v-if="finalizados.length" :partidos="finalizados" titulo="Finalizados hoy" mostrar-liga />
-        <section v-if="!hoy.length" class="sin-partidos-mx" aria-label="Sin partidos hoy">
-          <p class="aviso-partidos-hoy-mx">Hoy no hay partidos de la Liga MX ni de la Liga MX Femenil. Estos son los siguientes:</p>
-          <PublicoListaPartidosMx :partidos="siguientes" titulo="Próximos partidos" mostrar-liga />
-        </section>
-        <p class="enlace-liga-mx"><NuxtLink to="/liga-mx">Tabla y calendario completos de la Liga MX <span aria-hidden="true">→</span></NuxtLink></p>
-      </template>
+    <div v-else class="listas-partidos-hoy-mx">
+      <div v-if="enVivo.length" class="panel-partidos-hoy-mx"><PublicoListaPartidosMx :partidos="enVivo" titulo="En vivo" mostrar-liga /></div>
+      <div v-if="proximos.length" class="panel-partidos-hoy-mx"><PublicoListaPartidosMx :partidos="proximos" titulo="Próximos hoy" mostrar-liga /></div>
+      <div v-if="finalizados.length" class="panel-partidos-hoy-mx"><PublicoListaPartidosMx :partidos="finalizados" titulo="Finalizados hoy" mostrar-liga /></div>
+      <section v-if="!hoy.length" class="panel-partidos-hoy-mx" aria-label="Sin partidos hoy">
+        <p class="aviso-partidos-hoy-mx">Hoy no hay partidos de la Liga MX ni de la Liga MX Femenil. Estos son los siguientes:</p>
+        <PublicoListaPartidosMx :partidos="siguientes" titulo="Próximos partidos" mostrar-liga />
+      </section>
+      <p class="enlace-liga-mx"><NuxtLink to="/liga-mx">Tabla y calendario completos de la Liga MX <span aria-hidden="true">→</span></NuxtLink></p>
     </div>
   </main>
 </template>
 
 <style scoped>
-.pagina-partidos-hoy-mx { min-height: 60vh; background: #07182f; color: #f5f8ff; padding: 20px 0 48px; }
-.contenedor-partidos-hoy-mx { display: grid; gap: 22px; width: min(900px, calc(100% - 48px)); margin: 0 auto; }
-.antetitulo-partidos-hoy-mx { margin: 0; color: #ffd800; font-size: .7rem; font-weight: 800; letter-spacing: .1em; }
-.contenedor-partidos-hoy-mx h1 { margin: 6px 0 8px; color: #f5f8ff; font-size: clamp(1.7rem, 3vw, 2.4rem); font-weight: 850; letter-spacing: -.04em; }
-.fecha-partidos-hoy-mx { margin: 0; color: #a8bbd5; }
 .fecha-partidos-hoy-mx::first-letter { text-transform: uppercase; }
-.aviso-partidos-hoy-mx { margin: 0 0 12px; padding: 14px; border-radius: 8px; background: rgba(255, 255, 255, .06); color: #cbd8ee; line-height: 1.5; }
-.enlace-liga-mx a { color: #ffd800; font-weight: 750; text-decoration: none; }
-.pagina-partidos-hoy-mx :focus-visible { outline: 3px solid #7ce6f5; outline-offset: 3px; }
-@media (max-width: 640px) { .contenedor-partidos-hoy-mx { width: calc(100% - 32px); } }
+.listas-partidos-hoy-mx { display: grid; gap: 16px; max-width: 900px; margin-top: 18px; }
+.panel-partidos-hoy-mx { padding: 18px; border: 1px solid #dbe2ee; border-radius: 8px; background: #fff; box-shadow: 0 18px 46px rgba(8, 32, 74, .06); }
+.aviso-partidos-hoy-mx { margin: 0 0 12px; padding: 14px; border: 1px solid #dbe2ee; border-radius: 8px; background: #f4f7fb; color: #45566e; line-height: 1.5; }
+.enlace-liga-mx a { color: #145996; font-weight: 750; text-decoration: none; }
+.pagina-partidos-hoy-mx :focus-visible { outline: 3px solid #145996; outline-offset: 3px; }
 </style>

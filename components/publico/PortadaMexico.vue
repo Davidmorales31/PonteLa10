@@ -72,10 +72,10 @@ useSeoPont3la10({
           <NuxtLink to="/liga-mx">Tabla y calendario completos <span aria-hidden="true">→</span></NuxtLink>
         </div>
         <div v-if="tablaLiga.length || partidosLiga.proximos.length || partidosLiga.recientes.length" class="liga-mx-columnas">
-          <PublicoTablaPosicionesMx v-if="tablaLiga.length" :filas="tablaLiga" :limite="8" compacta :titulo="`Posiciones ${faseTabla || ''}`" />
+          <PublicoTablaPosicionesMx v-if="tablaLiga.length" :filas="tablaLiga" :limite="8" compacta oscuro :titulo="`Posiciones ${faseTabla || ''}`" />
           <div class="partidos-columna-mx">
-            <PublicoListaPartidosMx :partidos="partidosLiga.proximos" titulo="Próximos partidos" />
-            <PublicoListaPartidosMx v-if="partidosLiga.recientes.length" :partidos="partidosLiga.recientes" titulo="Últimos resultados" />
+            <PublicoListaPartidosMx :partidos="partidosLiga.proximos" titulo="Próximos partidos" oscuro />
+            <PublicoListaPartidosMx v-if="partidosLiga.recientes.length" :partidos="partidosLiga.recientes" titulo="Últimos resultados" oscuro />
           </div>
         </div>
         <p v-else class="sin-noticias-mx">Estamos verificando los datos de la Liga MX. Pronto verás aquí la tabla y el calendario.</p>
