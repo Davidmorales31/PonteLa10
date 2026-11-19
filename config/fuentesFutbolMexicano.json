@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "actualizadoEn": "2026-11-19",
+  "nicho": "futbol-mexicano",
+  "zonaHoraria": "America/Mexico_City",
+  "cobertura": {
+    "minimoPorClub": 1,
+    "minimoClubesDeMayorInteres": 3,
+    "minimoSeleccionMexicana": 2,
+    "maximoPorcentajePorFormato": 35
+  },
+  "clubesDeMayorInteres": [
+    "Club América",
+    "Guadalajara",
+    "Cruz Azul",
+    "Pumas UNAM",
+    "Tigres UANL",
+    "Monterrey"
+  ],
+  "clubesDeMayorInteresNota": "Lista inicial editorial. Validar con Search Console y Google Trends antes de afirmar que son los más buscados.",
+  "verificacion": {
+    "clubes": "Los 18 nombres salen de la tabla y el calendario del Apertura 2026 en el proveedor de datos del sitio (GOAL API), 2026-11-19. Se usan tal cual (Club América, Guadalajara, Pumas UNAM, Tigres UANL...). Cuando suban o bajen clubes, esta lista se corrige desde la tabla del sitio (/api/liga-mx).",
+    "redes": "NO verificadas. No se pudo confirmar ninguna cuenta oficial de clubes en X, Instagram o Facebook (ligamx.net no respondió desde el PC y la búsqueda web no las listó). El agente solo cita una cuenta que haya visto enlazada desde el sitio oficial del club o de la Liga MX.",
+    "pendiente": "Cuentas oficiales de cada club, periodistas de referencia y feeds RSS. Se llenan en una revisión con el responsable; no se inventan."
+  },
+  "clubes": [
+    "Atlante",
+    "Atlas",
+    "Atlético San Luis",
+    "Club América",
+    "Cruz Azul",
+    "Guadalajara",
+    "Juárez",
+    "León",
+    "Monterrey",
+    "Necaxa",
+    "Pachuca",
+    "Puebla",
+    "Pumas UNAM",
+    "Querétaro",
+    "Santos Laguna",
+    "Tigres UANL",
+    "Tijuana",
+    "Toluca"
+  ],
+  "cuentasOficiales": {
+    "liga": [
+      { "nombre": "Liga MX", "web": "https://www.ligamx.net" }
+    ],
+    "seleccion": [
+      { "nombre": "Selección Nacional de México (FMF)", "web": "https://www.fmf.mx" }
+    ]
+  },
+  "periodistas": [],
+  "medios": [
+    { "nombre": "TUDN", "web": "https://www.tudn.com", "uso": "resultados, declaraciones, transmisión" },
+    { "nombre": "Récord", "web": "https://www.record.com.mx" },
+    { "nombre": "Mediotiempo", "web": "https://www.mediotiempo.com" },
+    { "nombre": "Claro Sports", "web": "https://www.clarosports.com" },
+    { "nombre": "Fox Sports México", "web": "https://www.foxsports.com.mx" },
+    { "nombre": "Excélsior", "web": "https://www.excelsior.com.mx" },
+    { "nombre": "El Universal", "web": "https://www.eluniversal.com.mx" },
+    { "nombre": "Infobae México", "web": "https://www.infobae.com/mexico" },
+    { "nombre": "Publimetro México", "web": "https://www.publimetro.com.mx" }
+  ],
+  "fuentesWeb": [
+    { "nombre": "Liga MX", "url": "https://www.ligamx.net", "uso": "calendario, sanciones, comunicados" },
+    { "nombre": "FMF / Selección Mexicana", "url": "https://www.fmf.mx", "uso": "convocatorias, partidos, comunicados" },
+    { "nombre": "Datos del sitio", "url": "https://www.pont3la10.com/api/liga-mx?sitio=mx", "uso": "tabla, calendario y resultados de Liga MX y Liga MX Femenil" },
+    { "nombre": "Google Noticias RSS por club", "url": "https://news.google.com/rss/search?q=%22<club>%22+when:2d&hl=es-419&gl=MX&ceid=MX:es-419", "uso": "radar de lo ocurrido hoy; no es fuente" }
+  ],
+  "fuentesAmpliadas": {
+    "nota": "Mismas reglas de fuentes amplias que Colombia (una fuente identificable basta; lo social, siempre atribuido y como rumor si nada oficial lo confirma). No se inventan usuarios."
+  },
+  "fotos": {
+    "politica": "minima",
+    "regla": "La foto real es obligatoria en toda pieza; sin IA ni ilustración. Escalera de búsqueda y crédito como en el skill de Colombia, con cuentas oficiales de los clubes, la Liga MX y la FMF.",
+    "permitidas": ["Fotos de cuentas oficiales de clubes, Liga MX y FMF", "Imágenes de notas de medios con su crédito", "Wikimedia Commons con crédito"]
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "actualizadoEn": "2026-11-19",
+  "proposito": "Reserva de piezas de baja caducidad para completar la meta de la corrida de México cuando no hay suficientes noticias del día. Ninguna corrida debe cerrar en cero.",
+  "reglas": {
+    "usarSoloSiHayMenosDe": 6,
+    "maximoPorClubPorSemana": 2,
+    "maximoPorcentajeDeLaCorrida": 50,
+    "frescuraDias": 0,
+    "antesDePublicar": [
+      "Revisar el feed de México y los últimos 100 artículos del sitio para no repetir la misma plantilla sobre el mismo club en la semana.",
+      "Tomar los datos del sitio (tabla y calendario de /api/liga-mx, fichas de /clubes) o de la Liga MX; cada cifra con fuente identificable.",
+      "Sin dato verificable no se publica la plantilla: se elige otra o se registra el déficit.",
+      "La foto real sigue siendo obligatoria (foto de archivo del club o de sus jugadores, con crédito)."
+    ],
+    "longitudObjetivoPalabras": 600
+  },
+  "reservaTendencia": [
+    "fichajes y rumores de mercado con fuente identificable y atribuidos",
+    "designaciones y polémicas arbitrales",
+    "tabla general y calificación a la Liguilla",
+    "situación económica de clubes con la versión de cada parte atribuida"
+  ],
+  "alcanceDeClubes": "Los 18 clubes de config/fuentesFutbolMexicano.json → clubes. Reemplaza {club} por el nombre exacto de la lista.",
+  "plantillas": [
+    { "id": "historia-titulos", "formato": "perfil", "aplicaA": "club", "titulo": "Así ha sido la historia de {club} en la Liga MX", "datosDelSitio": ["ficha del club", "tabla"], "intencion": "perfil" },
+    { "id": "que-necesita-liguilla", "formato": "analisis", "aplicaA": "club", "titulo": "Qué necesita {club} para llegar a la Liguilla", "datosDelSitio": ["tabla de posiciones", "calendario restante"], "intencion": "calendario" },
+    { "id": "rendimiento-local-visitante", "formato": "analisis", "aplicaA": "club", "titulo": "{club} como local y visitante: lo que dicen los números", "datosDelSitio": ["resultados del torneo", "tabla"], "intencion": "analisis" },
+    { "id": "clasicos-rivalidades", "formato": "analisis", "aplicaA": "club", "titulo": "Las rivalidades de {club}: historial y claves de sus clásicos", "datosDelSitio": ["resultados recientes"], "intencion": "analisis" },
+    { "id": "plantel-jugadores-clave", "formato": "dato", "aplicaA": "club", "titulo": "Plantel de {club}: los jugadores clave del torneo", "datosDelSitio": ["plantel", "estadísticas del torneo"], "intencion": "perfil" },
+    { "id": "idolos-goleadores", "formato": "dato", "aplicaA": "club", "titulo": "Los máximos goleadores e ídolos de {club}", "datosDelSitio": ["estadísticas históricas"], "intencion": "perfil" },
+    { "id": "canteras-promesas", "formato": "perfil", "aplicaA": "club", "titulo": "Las promesas de la cantera de {club}", "datosDelSitio": ["debuts recientes"], "intencion": "perfil" },
+    { "id": "records-marcas", "formato": "dato", "aplicaA": "club", "titulo": "Récords y marcas históricas de {club}", "datosDelSitio": ["palmarés"], "intencion": "perfil" },
+    { "id": "mexicanos-en-el-exterior", "formato": "dato", "aplicaA": "futbol-mundial", "titulo": "Mexicanos en el exterior: cómo les va esta temporada", "datosDelSitio": ["perfiles de jugadores"], "intencion": "actualidad", "nota": "Solo futbolistas mexicanos; cada dato con fuente identificable y club contrastado el mismo día." },
+    { "id": "seleccion-convocados-historial", "formato": "analisis", "aplicaA": "seleccion", "titulo": "Selección Mexicana: balance y claves de la última convocatoria", "datosDelSitio": ["convocatorias", "resultados recientes"], "intencion": "analisis" },
+    { "id": "como-funciona-liguilla", "formato": "explicacion", "aplicaA": "liga", "titulo": "Cómo funciona la Liguilla de la Liga MX: clasificación y cruces", "datosDelSitio": ["reglamento de la Liga MX", "tabla"], "intencion": "explicacion", "nota": "Verificar el formato vigente del torneo en el sitio de la Liga MX antes de publicar (cambia entre temporadas)." },
+    { "id": "como-funciona-descenso", "formato": "explicacion", "aplicaA": "liga", "titulo": "Liga MX y el ascenso y descenso: qué se sabe del esquema actual", "datosDelSitio": ["reglamento de la Liga MX"], "intencion": "explicacion", "nota": "Verificar el reglamento vigente; si no hay certeza, no publicar." },
+    { "id": "liga-femenil-formato", "formato": "explicacion", "aplicaA": "liga", "titulo": "Liga MX Femenil: cómo es el formato del torneo actual", "datosDelSitio": ["tabla Femenil", "reglamento"], "intencion": "explicacion" }
+  ]
+}
