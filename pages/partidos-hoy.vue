@@ -3,9 +3,10 @@ import { ArrowUpRight, Clock3 } from '@lucide/vue'
 import type { EstadoPartido, RespuestaResultados } from '~/types/resultados'
 import { construirUrlAbsoluta } from '~/utils/seo'
 import { clasificarCategoriaFutbol, type CategoriaFutbol } from '~/utils/clasificacionFutbol'
+const { sitio: sitioActivo } = useSitio()
 
 const configuracion = useRuntimeConfig()
-const zonaHoraria = ref('America/Bogota')
+const zonaHoraria = ref(sitioActivo.value.zonaHoraria)
 const urlResultados = import.meta.dev
   ? '/partidos-hoy-local'
   : import.meta.server && configuracion.public.apiOrigin
@@ -31,10 +32,10 @@ onUnmounted(() => {
   if (intervaloActualizacion) clearInterval(intervaloActualizacion)
 })
 
-const fechaLocal = computed(() => new Intl.DateTimeFormat('es-CO', {
+const fechaLocal = computed(() => new Intl.DateTimeFormat(sitioActivo.value.locale, {
   weekday: 'long', day: 'numeric', month: 'long', timeZone: zonaHoraria.value
 }).format(new Date(instanteRenderizado.value)))
-const nombreZonaHoraria = computed(() => new Intl.DateTimeFormat('es-CO', {
+const nombreZonaHoraria = computed(() => new Intl.DateTimeFormat(sitioActivo.value.locale, {
   timeZone: zonaHoraria.value,
   timeZoneName: 'longGeneric'
 }).formatToParts(new Date(instanteRenderizado.value)).find(parte => parte.type === 'timeZoneName')?.value || 'tu hora local')

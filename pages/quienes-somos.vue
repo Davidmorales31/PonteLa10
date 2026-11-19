@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Mail, ShieldCheck } from '@lucide/vue'
+const { sitio: sitioActivo } = useSitio()
 
 const correoContacto = 'juanavimoralesparra31@gmail.com'
 const fechaActualizacion = '7 de octubre de 2026'
@@ -13,7 +14,7 @@ useSeoPont3la10({
     '@type': 'AboutPage',
     name: 'Quiénes somos | Pont3la10',
     description: 'Información sobre el proyecto editorial Pont3la10 y su modelo de revisión.',
-    inLanguage: 'es-CO',
+    inLanguage: sitioActivo.value.idioma,
     isPartOf: { '@id': `${String(useRuntimeConfig().public.siteUrl).replace(/\/+$/, '')}/#sitio-web` }
   }
 })

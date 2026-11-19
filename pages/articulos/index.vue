@@ -23,6 +23,7 @@ import {
 } from '~/utils/articulosLanding'
 import { construirConsultaArticulosPublicos } from '~/utils/consultaArticulosPublicos'
 import { construirUrlAbsoluta, robotsNoIndex } from '~/utils/seo'
+const { sitio: sitioActivo } = useSitio()
 
 type ArticuloListado = ArticuloResumen & { fechaPublicacion: string }
 type PaginaArticulosPublicos = {
@@ -64,9 +65,9 @@ const articulosPublicados = computed<ArticuloListado[]>(() =>
     bajada: articulo.resumen,
     categoria: articulo.categoria,
     autor: articulo.autorNombre,
-    publicadoHace: new Intl.DateTimeFormat('es-CO', {
+    publicadoHace: new Intl.DateTimeFormat(sitioActivo.value.locale, {
       dateStyle: 'medium',
-      timeZone: 'America/Bogota'
+      timeZone: sitioActivo.value.zonaHoraria
     }).format(new Date(articulo.publicadoEn)),
     fechaPublicacion: articulo.publicadoEn,
     lecturaMinutos: articulo.lecturaMinutos,
@@ -259,7 +260,7 @@ useSeoPont3la10(() => {
           '@type': 'CollectionPage',
           name: tituloListado.value,
           description: descripcion,
-          inLanguage: 'es-CO',
+          inLanguage: sitioActivo.value.idioma,
           mainEntity: {
             '@type': 'ItemList',
             itemListElement: articulosFiltrados.value.map((articulo, indice) => ({

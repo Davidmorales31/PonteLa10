@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { RespuestaResultados } from '~/types/resultados'
 import { construirUrlAbsoluta } from '~/utils/seo'
+const { sitio: sitioActivo } = useSitio()
 
 const configuracion = useRuntimeConfig()
 const { data: respuestaSeo } = await useFetch<RespuestaResultados>('/api/resultados', {
@@ -17,7 +18,7 @@ useSeoPont3la10(() => ({
     '@type': 'CollectionPage',
     name: 'Resultados deportivos y marcadores',
     description: 'Partidos, resultados recientes y próximos encuentros de múltiples deportes.',
-    inLanguage: 'es-CO',
+    inLanguage: sitioActivo.value.idioma,
     mainEntity: {
       '@type': 'ItemList',
       itemListElement: (respuestaSeo.value?.partidos || []).map((partido, indice) => ({
