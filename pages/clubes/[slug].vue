@@ -13,7 +13,8 @@ const [{ data }, { data: noticias }] = await Promise.all([
   useFetch<ResumenArticuloPublico[]>(`/api/articulos/entidad/team/${slug.value}`, { key: `club-mx-noticias-${slug.value}`, default: () => [], ignoreResponseError: true })
 ])
 const datos = computed(() => data.value || respuestaLigaMxVacia)
-const ahora = Date.now()
+// El instante se comparte entre servidor y navegador para que las listas hidraten igual.
+const ahora = useState<number>('club-mx-ahora', () => Date.now()).value
 const torneo = computed(() => torneoActual(datos.value.partidos, datos.value.tabla, ahora))
 const club = computed(() => clubesDeLigaMx(datos.value.tabla, datos.value.partidos, torneo.value).find(c => c.clave === slug.value) ?? null)
 if (datos.value.estado === 'disponible' && !club.value) throw createError({ statusCode: 404, statusMessage: 'Club no encontrado', fatal: true })

@@ -7,7 +7,8 @@ const { data: liga } = await useFetch<RespuestaLigaMx>('/api/liga-mx', {
   key: 'liga-mx-pagina', default: () => respuestaLigaMxVacia, ignoreResponseError: true
 })
 const datos = computed(() => liga.value || respuestaLigaMxVacia)
-const ahora = Date.now()
+// El instante se comparte entre servidor y navegador para que las listas hidraten igual.
+const ahora = useState<number>('liga-mx-ahora', () => Date.now()).value
 
 const competencia = ref<string>(ligasMexico[0].slug)
 const torneo = computed(() => torneoActual(datos.value.partidos.filter(p => p.competencia === competencia.value), datos.value.tabla, ahora))

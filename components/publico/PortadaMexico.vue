@@ -33,7 +33,8 @@ const secciones = computed(() => [
 ].filter(seccion => seccion.noticias.length))
 
 const datosLiga = computed(() => liga.data.value || respuestaLigaMxVacia)
-const ahora = Date.now()
+// El instante se comparte entre servidor y navegador para que las listas hidraten igual.
+const ahora = useState<number>('portada-mx-ahora', () => Date.now()).value
 const torneo = computed(() => torneoActual(datosLiga.value.partidos, datosLiga.value.tabla, ahora))
 const faseTabla = computed(() => fasesDeTabla(datosLiga.value.tabla, 'liga-mx', torneo.value)[0] ?? null)
 const tablaLiga = computed(() => filasDeTabla(datosLiga.value.tabla, 'liga-mx', faseTabla.value))
