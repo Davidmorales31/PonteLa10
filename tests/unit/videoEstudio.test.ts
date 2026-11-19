@@ -21,6 +21,23 @@ describe('estudio local del video diario', () => {
     expect(claveFotosValida('b3/../x')).toBe(false)
   })
 
+  it('detecta cuándo cambió el código del estudio (para reiniciarse solo)', async () => {
+    const { mkdtempSync, writeFileSync, utimesSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const { join } = await import('node:path')
+    const huellaCodigo = estudio.huellaCodigo as unknown as (carpeta?: string) => string
+    const carpeta = mkdtempSync(join(tmpdir(), 'estudio-'))
+    writeFileSync(join(carpeta, 'video-a.mjs'), 'x')
+    writeFileSync(join(carpeta, 'otro.mjs'), 'x')
+    utimesSync(join(carpeta, 'video-a.mjs'), 1000, 1000)
+    const antes = huellaCodigo(carpeta)
+    utimesSync(join(carpeta, 'otro.mjs'), 5000, 5000)
+    expect(huellaCodigo(carpeta)).toBe(antes)
+    utimesSync(join(carpeta, 'video-a.mjs'), 2000, 2000)
+    expect(huellaCodigo(carpeta)).not.toBe(antes)
+    expect(estudio.CODIGO_REINICIO).toBe(75)
+  })
+
   it('reconoce los tramos de cámara y valida el nombre del proyecto', () => {
     const tramoDeCara = estudio.tramoDeCara as unknown as (id: string) => boolean
     const nombreValido = estudio.nombreValido as unknown as (n: unknown) => boolean
