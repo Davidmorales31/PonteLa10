@@ -3,6 +3,7 @@ import { z } from 'zod'
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { obtenerArticuloEditorial } from './repositorioContenidoEditorial'
 import { leerBorradorSocial } from './repositorioPublicacionesSociales'
+import { urlBaseSocialDeArticulo } from './origenSocialPorSitio'
 import { crearDocumentoSocialPredeterminado } from '~/utils/editorial/publicacionesSociales'
 import { ejecutarPublicacionMeta } from './ejecutarPublicacionMeta'
 import type { ConfiguracionMeta } from './publicacionMeta'
@@ -29,7 +30,7 @@ export async function procesarColaSocial(cliente: SupabaseClient, configuracion:
     const permisos = await cliente.from('editorial_role_permissions').select('permission').in('role', roles.data.map(fila => fila.role))
     if (permisos.error || !['panel.acceder','contenido.editarTodos'].every(permiso => permisos.data?.some(fila => fila.permission === permiso))) throw new Error('Permiso revocado')
     const articulo = await obtenerArticuloEditorial(cliente, trabajo.article_id, trabajo.actor_id, { editarTodos: true, editarPropio: false })
-    const urlCanonica = new URL(`/articulos/${articulo.slug}`, sitio).toString()
+    const urlCanonica = new URL(`/articulos/${articulo.slug}`, await urlBaseSocialDeArticulo(cliente, articulo.id, sitio)).toString()
     const guardado = await leerBorradorSocial(cliente, trabajo.article_id)
     const documento = guardado.borrador?.documento || crearDocumentoSocialPredeterminado(articulo.titulo, articulo.portadaId,
       articulo.seo.textoSocial || articulo.resumen, urlCanonica, articulo.id)
