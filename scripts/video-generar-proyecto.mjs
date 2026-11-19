@@ -130,15 +130,19 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
     sonido(transiciones % 2 === 0 ? 'whoosh-a' : 'whoosh-b', enSegundo, 0.75)
     transiciones++
   }
-  const cara = (id, texto, etiqueta, bloque) => {
+  // Sin cámara (decisión de Juan por proyecto): cada toma a cámara pasa a ser voz sobre fotos. Una toma grabada
+  // solo con audio también se trata así.
+  const sinCamara = Boolean(estudio.sinCamara)
+  const cara = (id, texto, etiqueta, bloque, fotos = [], claveFotos = 'presentacion') => {
     const grabada = grabaciones[id]
+    if (sinCamara || /\.m4a$/i.test(grabada?.archivo || '')) return voz(id, texto, etiqueta.replace(' · toma a cámara', ' · entrada'), bloque, fotos, claveFotos, true)
     const duracion = grabada?.duracion > 0 ? redondear(grabada.duracion) : segundosDeTexto(texto, ppm)
     if (grabada?.archivo) medios.push({ tipo: 'video', id, archivo: grabada.archivo, inicio: t, duracion })
     else escenas.push({ escena: 'cara', inicio: t, duracion, capa: 1, variables: { duracion: `${String(duracion).replace('.', ',')} segundos`, guion: `«${String(texto || '').trim()}»` }, duracionInterna: duracion })
     segmentos.push({ id, tipo: 'cara', etiqueta, bloque, inicio: t, fin: redondear(t + duracion), texto: String(texto || '').trim(), grabado: Boolean(grabada?.archivo) })
     t = redondear(t + duracion)
   }
-  const voz = (id, texto, etiqueta, bloque, fotos, claveFotos) => {
+  const voz = (id, texto, etiqueta, bloque, fotos, claveFotos, enLugarDeCara = false) => {
     const grabada = grabaciones[id]
     const duracion = grabada?.duracion > 0 ? redondear(grabada.duracion) : segundosDeTexto(texto, ppm)
     const inicio = t
@@ -148,7 +152,15 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
       escenas.push({ escena: 'galeria', inicio: redondear(inicio + galeria.inicio), duracion: galeria.duracion, capa: 1, variables: variablesGaleria(galeria, rutaFoto), duracionInterna: galeria.duracion })
     }
     const espacios = galerias.reduce((suma, g) => suma + g.espacios.length, 0)
-    resumenFotos.push({ clave: claveFotos, etiqueta, fotos: fotos.length, espacios, vacios: galerias.reduce((suma, g) => suma + g.espacios.filter(e => !e.url).length, 0) })
+    const vacios = galerias.reduce((suma, g) => suma + g.espacios.filter(e => !e.url).length, 0)
+    // Una sola tarjeta de fotos por noticia: la entrada sin cámara suma sus espacios a los de la voz.
+    const previo = resumenFotos.find(r => r.clave === claveFotos)
+    if (previo) {
+      previo.espacios += espacios
+      previo.vacios += vacios
+      previo.fotos = Math.max(previo.fotos, fotos.length)
+      if (!enLugarDeCara) previo.etiqueta = etiqueta
+    } else resumenFotos.push({ clave: claveFotos, etiqueta, fotos: fotos.length, espacios, vacios })
     segmentos.push({ id, tipo: 'voz', etiqueta, bloque, inicio, fin: redondear(inicio + duracion), texto: String(texto || '').trim(), grabado: Boolean(grabada?.archivo) })
     t = redondear(inicio + duracion)
     return { inicio, duracion }
@@ -160,20 +172,21 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
   t = DURACIONES.intro
   transicion(t)
 
-  cara('gancho', guion?.gancho?.texto, 'Gancho', null)
+  const fotosApertura = [...fotosPorBloque.slice(0, 3).map(lista => lista[0]).filter(Boolean), ...extra('presentacion')]
+  const fotosFinal = [...extra('pregunta'), ...(fotosPorBloque.slice().reverse().find(lista => lista.length) || [])]
+  cara('gancho', guion?.gancho?.texto, 'Gancho', null, fotosApertura, 'presentacion')
   // Suscríbete al inicio (decisión de Juan): entra justo después del gancho, sobre la presentación.
   const inicioSuscribete = t
   escenas.push({ escena: 'suscribete', inicio: inicioSuscribete, duracion: DURACIONES.suscribete, capa: 5 })
   sonido('clic', inicioSuscribete + 1.35, 0.8)
   sonido('clic', inicioSuscribete + 2.4, 0.8)
   if (guion?.presentacion?.texto) {
-    const fotos = [...fotosPorBloque.slice(0, 3).map(lista => lista[0]).filter(Boolean), ...extra('presentacion')]
-    voz('presentacion', guion.presentacion.texto, 'Presentación', null, fotos, 'presentacion')
+    voz('presentacion', guion.presentacion.texto, 'Presentación', null, fotosApertura, 'presentacion')
   }
 
   bloques.forEach((bloque, i) => {
     transicion(t)
-    cara(`${bloque.id}-cara`, bloque.caraBreve, `Noticia ${i + 1} · toma a cámara`, bloque.id)
+    cara(`${bloque.id}-cara`, bloque.caraBreve, `Noticia ${i + 1} · toma a cámara`, bloque.id, fotosPorBloque[i], bloque.id)
     const { inicio, duracion } = voz(`${bloque.id}-voz`, bloque.voz, `Noticia ${i + 1} · voz`, bloque.id, fotosPorBloque[i], bloque.id)
     const titular = bloque.titular || titulares[bloque.articuloSlug] || ''
     if (titular) {
@@ -193,13 +206,12 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
 
   if (guion?.preguntaFinal) {
     transicion(t)
-    const ultimas = [...extra('pregunta'), ...(fotosPorBloque.slice().reverse().find(lista => lista.length) || [])]
-    const { inicio } = voz('pregunta', guion.preguntaFinal, 'Pregunta final', null, ultimas, 'pregunta')
+    const { inicio } = voz('pregunta', guion.preguntaFinal, 'Pregunta final', null, fotosFinal, 'pregunta')
     escenas.push({ escena: 'rotulo', inicio: redondear(inicio + 0.2), duracion: DURACIONES.rotulo, capa: 5, variables: { etiqueta: 'TU OPINIÓN', titular: guion.preguntaFinal, fuente: 'Déjalo en los comentarios' } })
     sonido('pop', inicio + 0.3, 0.55)
   }
 
-  if (guion?.cierre?.texto) cara('cierre', guion.cierre.texto, 'Cierre', null)
+  if (guion?.cierre?.texto) cara('cierre', guion.cierre.texto, 'Cierre', null, fotosFinal, 'pregunta')
 
   transicion(t)
   escenas.push({ escena: 'cierre', inicio: t, duracion: DURACIONES.cierre, capa: 1, variables: { fondo: portada ? rutaFoto(portada.url) : '', web: 'pont3la10.com' } })
@@ -324,7 +336,7 @@ export async function generarProyecto({ guion, salida, repetirFotos = false, sin
     if (existsSync(join(PACK, nombre))) await copyFile(join(PACK, nombre), join(salida, nombre))
   }
   await writeFile(join(salida, 'teleprompter.txt'), textoTeleprompter(plan))
-  await writeFile(join(salida, 'manifiesto.json'), JSON.stringify({ fecha: guion.fecha, tituloVideo: guion.tituloVideo, duracion: plan.duracion, segmentos: plan.segmentos, fotos: plan.resumenFotos, titulares }, null, 2))
+  await writeFile(join(salida, 'manifiesto.json'), JSON.stringify({ fecha: guion.fecha, tituloVideo: guion.tituloVideo, sinCamara: Boolean(estudio.sinCamara), duracion: plan.duracion, segmentos: plan.segmentos, fotos: plan.resumenFotos, titulares }, null, 2))
 
   const vacios = plan.resumenFotos.reduce((suma, r) => suma + r.vacios, 0)
   return { salida, duracion: plan.duracion, escenas: plan.escenas.length, tomas: plan.segmentos.filter(s => s.tipo === 'cara').length, grabados: plan.segmentos.filter(s => s.grabado).length, tramos: plan.segmentos.length, vacios }

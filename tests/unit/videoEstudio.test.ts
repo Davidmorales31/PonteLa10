@@ -21,6 +21,15 @@ describe('estudio local del video diario', () => {
     expect(claveFotosValida('b3/../x')).toBe(false)
   })
 
+  it('reconoce los tramos de cámara y valida el nombre del proyecto', () => {
+    const tramoDeCara = estudio.tramoDeCara as unknown as (id: string) => boolean
+    const nombreValido = estudio.nombreValido as unknown as (n: unknown) => boolean
+    for (const t of ['gancho', 'cierre', 'b1-cara']) expect(tramoDeCara(t)).toBe(true)
+    for (const t of ['presentacion', 'pregunta', 'b1-voz']) expect(tramoDeCara(t)).toBe(false)
+    for (const n of ['', 'Diario 18-nov · sin cámara', 'a'.repeat(60)]) expect(nombreValido(n)).toBe(true)
+    for (const n of ['a'.repeat(61), '<b>hola</b>', 'linea\nnueva', 12, null]) expect(nombreValido(n)).toBe(false)
+  })
+
   it('acepta solo ids de Reel simples (sin rutas ni caracteres raros)', () => {
     for (const id of ['b1', 'b12', 'b_3']) expect(idReelValido(id)).toBe(true)
     for (const id of ['', '../b1', 'b1/publicar', 'B1', 'b'.repeat(21)]) expect(idReelValido(id)).toBe(false)

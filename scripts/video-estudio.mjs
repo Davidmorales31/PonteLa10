@@ -26,6 +26,9 @@ const TIPOS = { '.html': 'text/html; charset=utf-8', '.json': 'application/json;
 
 export const proyectoValido = nombre => /^\d{4}-\d{2}-\d{2}(-[a-z0-9-]{1,30})?$/.test(String(nombre))
 export const tramoValido = id => /^(gancho|presentacion|pregunta|cierre|[a-z0-9_]{1,20}-(cara|voz))$/.test(String(id))
+// Tramos que se graban a cámara (salvo que el proyecto esté en modo «sin cámara»).
+export const tramoDeCara = id => ['gancho', 'cierre'].includes(String(id)) || String(id).endsWith('-cara')
+export const nombreValido = nombre => typeof nombre === 'string' && nombre.trim().length <= 60 && !/[<>]/.test(nombre) && ![...nombre].some(c => c.charCodeAt(0) < 32)
 export const claveFotosValida = clave => /^(presentacion|pregunta|[a-z0-9_]{1,20})$/.test(String(clave))
 
 // Resuelve una ruta relativa dentro de una carpeta base; null si intenta salir de ella.
@@ -89,9 +92,27 @@ async function listarProyectos() {
   const salida = []
   for (const nombre of (await readdir(DIARIO)).sort().reverse()) {
     if (!proyectoValido(nombre)) continue
-    const manifiesto = await leerJson(join(DIARIO, nombre, 'manifiesto.json'))
+    const carpeta = join(DIARIO, nombre)
+    const manifiesto = await leerJson(join(carpeta, 'manifiesto.json'))
     if (!manifiesto) continue
-    salida.push({ nombre, fecha: manifiesto.fecha, titulo: manifiesto.tituloVideo, duracion: manifiesto.duracion, tramos: manifiesto.segmentos.length, grabados: manifiesto.segmentos.filter(s => s.grabado).length })
+    const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
+    const grabaciones = estudio.grabaciones || {}
+    const reels = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
+    const final = join(carpeta, 'renders', 'final.mp4')
+    salida.push({
+      nombre,
+      apodo: estudio.nombre || '',
+      fecha: manifiesto.fecha,
+      titulo: manifiesto.tituloVideo,
+      duracion: manifiesto.duracion,
+      tramos: manifiesto.segmentos.length,
+      grabados: manifiesto.segmentos.filter(s => grabaciones[s.id]).length,
+      vacios: (manifiesto.fotos || []).reduce((suma, f) => suma + (f.vacios || 0), 0),
+      sinCamara: Boolean(estudio.sinCamara),
+      renderizado: existsSync(final),
+      reels: reels?.reels?.length || 0,
+      actualizado: estudio.actualizado || (await stat(join(carpeta, 'manifiesto.json'))).mtime.toISOString()
+    })
   }
   return salida
 }
@@ -145,7 +166,8 @@ async function guardarGrabacion(proyecto, tramo, cuerpo) {
   await mkdir(join(carpeta, 'assets', 'grabaciones'), { recursive: true })
   const original = join(carpeta, 'assets', 'grabaciones', `${tramo}.original.webm`)
   await writeFile(original, cuerpo)
-  const esVideo = segmento.tipo === 'cara'
+  const estudioActual = (await leerJson(join(carpeta, 'estudio.json'))) || {}
+  const esVideo = tramoDeCara(tramo) && !estudioActual.sinCamara
   const relativo = `assets/grabaciones/${tramo}.${esVideo ? 'mp4' : 'm4a'}`
   const destino = join(carpeta, relativo)
   const temporal = `${destino}.tmp${esVideo ? '.mp4' : '.m4a'}`
@@ -157,7 +179,7 @@ async function guardarGrabacion(proyecto, tramo, cuerpo) {
   const duracion = await duracionDe(destino)
   await guardarEstudio(proyecto, estudio => {
     estudio.grabaciones = estudio.grabaciones || {}
-    estudio.grabaciones[tramo] = { archivo: relativo, duracion, tipo: segmento.tipo, guardado: new Date().toISOString() }
+    estudio.grabaciones[tramo] = { archivo: relativo, duracion, tipo: esVideo ? 'cara' : 'voz', guardado: new Date().toISOString() }
   })
   return { tramo, archivo: relativo, duracion }
 }
@@ -330,6 +352,23 @@ export function crearServidor() {
         if (id) await descargarPista(id)
         await guardarEstudio(proyecto, estudio => { estudio.musica = id || null })
         return responder(res, 200, { musica: id || null })
+      }
+      if ((accion === 'nombre' || accion === 'sin-camara') && req.method === 'POST') {
+        let datos = {}
+        try { datos = JSON.parse((await leerCuerpo(req, 2048)).toString('utf8') || '{}') } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
+        if (accion === 'nombre') {
+          if (!nombreValido(datos.nombre)) return responder(res, 422, { error: 'El nombre debe tener máximo 60 caracteres.' })
+          await guardarEstudio(proyecto, estudio => { estudio.nombre = datos.nombre.trim() })
+          return responder(res, 200, { nombre: datos.nombre.trim() })
+        }
+        if (typeof datos.activo !== 'boolean') return responder(res, 422, { error: 'Indica si el proyecto va sin cámara.' })
+        if (ocupados.has(proyecto)) return responder(res, 409, { error: 'El proyecto está ocupado: espera a que termine.' })
+        ocupados.add(proyecto)
+        try {
+          await guardarEstudio(proyecto, estudio => { estudio.sinCamara = datos.activo })
+          // Se vuelve a armar para que las entradas a cámara pasen a ser voz sobre fotos (o al revés).
+          return responder(res, 200, { sinCamara: datos.activo, ...(await armar(proyecto)) })
+        } finally { ocupados.delete(proyecto) }
       }
       if (accion === 'miniaturas') {
         const carpetaMiniaturas = join(carpetaDe(proyecto), 'renders', 'miniaturas')

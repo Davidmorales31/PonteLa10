@@ -35,6 +35,24 @@
   .paso b { color: var(--texto); }
   .proyecto { display: flex; align-items: center; gap: 8px; }
   .proyecto label { font-size: 13px; color: var(--texto-3); }
+  .boton-proyecto { flex-direction: column; align-items: flex-start; gap: 0; min-height: 44px; max-width: 320px; padding: 4px 14px; text-align: left; }
+  .boton-proyecto .p-nombre { max-width: 290px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; font-size: 14px; color: var(--texto); }
+  .boton-proyecto .p-sub { font-size: 12px; font-weight: 600; color: var(--texto-3); }
+  .proyecto label.interruptor { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid var(--borde); border-radius: 999px; background: var(--panel-2); color: var(--texto-2); font-size: 13px; font-weight: 700; cursor: pointer; }
+  .interruptor input { width: 18px; height: 18px; margin: 0; accent-color: var(--amarillo); cursor: pointer; }
+  .proyecto label.interruptor.activo { border-color: var(--amarillo); color: var(--amarillo); }
+  .interruptor[aria-busy="true"] { opacity: .6; cursor: progress; }
+  dialog#dialogo-proyectos { max-width: 760px; width: calc(100vw - 40px); max-height: 90vh; overflow: auto; }
+  .renombrar { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin: 4px 0 8px; }
+  .renombrar label { display: grid; gap: 4px; flex: 1; min-width: 220px; font-size: 13px; color: var(--texto-2); }
+  .renombrar input { min-height: 40px; padding: 0 10px; border: 1px solid var(--borde); border-radius: 8px; background: var(--fondo); color: var(--texto); font: inherit; }
+  .lista-proyectos { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .tarjeta-proyecto { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 12px; align-items: center; padding: 12px 14px; border: 1px solid var(--borde-suave); border-radius: 10px; background: var(--panel-2); }
+  .tarjeta-proyecto[aria-current="true"] { border-color: var(--amarillo); box-shadow: inset 4px 0 0 var(--amarillo); }
+  .tarjeta-proyecto h3 { margin: 0; font-size: 15px; overflow-wrap: anywhere; }
+  .tarjeta-proyecto .sub { margin-top: 2px; font-size: 12px; color: var(--texto-3); overflow-wrap: anywhere; }
+  .tarjeta-proyecto .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 6px; }
+  .insignia.neutra { background: var(--fondo); color: var(--texto-2); border: 1px solid var(--borde); }
   select { min-height: 40px; padding: 0 10px; border: 1px solid var(--borde); border-radius: 8px; background: var(--panel-2); cursor: pointer; }
   .barra-progreso { height: 4px; background: var(--borde-suave); }
   .barra-progreso > div { height: 100%; width: 0; background: linear-gradient(90deg, var(--amarillo), var(--verde)); transition: width var(--t-media) ease-out; }
@@ -120,7 +138,8 @@
   .toma { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 12px; border: 1px solid var(--borde-suave); border-radius: var(--radio); background: var(--panel-2); }
   .toma .info { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .toma video, .toma audio { max-height: 90px; max-width: 260px; border-radius: 8px; background: #000; }
-  .toma .texto-estado { font-size: 14px; color: var(--texto-2); }
+  .toma .info { flex-wrap: wrap; }
+  .toma .texto-estado { flex: 1 1 240px; min-width: 0; font-size: 14px; color: var(--texto-2); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .toma .acciones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 
   /* Fotos */
@@ -241,8 +260,8 @@
     <li class="paso" id="paso-4"><span class="num">4</span><span>Reels · <b id="paso-4-dato">0</b></span></li>
   </ol>
   <div class="proyecto">
-    <label for="proyecto">Proyecto</label>
-    <select id="proyecto"></select>
+    <label class="interruptor" id="interruptor-camara" title="Graba todo solo con voz: las entradas a cámara pasan a ser voz sobre fotos"><input type="checkbox" id="sin-camara"> Sin cámara</label>
+    <button class="boton boton-proyecto" id="proyecto" aria-haspopup="dialog" title="Ver y cambiar de proyecto"><span class="p-nombre" id="proyecto-nombre">Proyecto</span><span class="p-sub" id="proyecto-sub">Cambiar de proyecto</span></button>
     <button class="boton icono-solo" id="ayuda" aria-label="Atajos de teclado" title="Atajos de teclado (?)"><svg class="icono"><use href="#i-keyboard"/></svg></button>
   </div>
 </header>
@@ -380,6 +399,17 @@
   <form method="dialog" style="margin-top:16px;text-align:right"><button class="boton primario">Cerrar</button></form>
 </dialog>
 
+<dialog id="dialogo-proyectos" aria-labelledby="t-proyectos">
+  <h2 id="t-proyectos">Proyectos</h2>
+  <form class="renombrar" id="form-apodo" novalidate>
+    <label>Nombre del proyecto abierto (para distinguirlo)<input type="text" id="apodo" maxlength="60" placeholder="Ej.: Diario 18-nov · sin cámara"></label>
+    <button class="boton">Guardar nombre</button>
+  </form>
+  <p class="etiqueta-chica">Cada proyecto es una carpeta en <code>videos/diario/</code> con sus propias tomas, fotos, música, render y Reels. Lo que grabas en uno no toca a los demás.</p>
+  <ul class="lista-proyectos" id="lista-proyectos"></ul>
+  <form method="dialog" style="margin-top:16px;text-align:right"><button class="boton">Cerrar</button></form>
+</dialog>
+
 <dialog id="dialogo-atajos" aria-labelledby="t-atajos">
   <h2 id="t-atajos">Atajos de teclado</h2>
   <div class="atajos">
@@ -403,7 +433,10 @@ const palabras = t => String(t || '').trim().split(/\s+/).filter(Boolean).length
 const mmss = s => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`
 const reducirMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches
 
-let proyecto = null, detalle = null, tramo = null
+let proyecto = null, detalle = null, tramo = null, proyectos = []
+// Tramos de cámara (gancho, cierre y la entrada de cada noticia); en modo «sin cámara» se graban solo con voz.
+const tramoDeCara = id => ['gancho', 'cierre'].includes(String(id)) || String(id).endsWith('-cara')
+const seGrabaConCamara = s => Boolean(s) && tramoDeCara(s.id) && !detalle?.estudio?.sinCamara
 let grabador = null, trozos = [], tomaBlob = null, flujo = null, desplazando = null
 let inicioGrabacion = 0, relojGrabacion = null, medidorActivo = null, audioCtx = null
 const preferencias = (() => { try { return JSON.parse(localStorage.getItem('estudio-pont3la10') || '{}') } catch { return {} } })()
@@ -436,19 +469,18 @@ async function ocupado(boton, texto, tarea) {
 
 /* ---------- Carga ---------- */
 async function cargarProyectos() {
-  const { proyectos } = await api('/api/proyectos')
+  ;({ proyectos } = await api('/api/proyectos'))
   if (!proyectos.length) {
     $('#principal').innerHTML = `<div class="panel vacio" style="grid-column:1/-1">${icono('film')}<h2>No hay proyectos todavía</h2><p>Genera el del día con el guion aprobado:</p><code>npm run video:generar -- guion.json</code></div>`
     return
   }
-  $('#proyecto').innerHTML = proyectos.map(p => `<option value="${escapar(p.nombre)}">${escapar(p.nombre)}</option>`).join('')
   proyecto = proyectos.some(p => p.nombre === preferencias.proyecto) ? preferencias.proyecto : proyectos[0].nombre
-  $('#proyecto').value = proyecto
   await cargarDetalle()
 }
 
 async function cargarDetalle(mantener = true) {
   detalle = await api(`/api/proyectos/${proyecto}`)
+  pintarCabeceraProyecto()
   pintarPasos()
   pintarTramos()
   pintarFotos()
@@ -499,10 +531,11 @@ function pintarTramos() {
     const grupo = grupoDe(s)
     const cabecera = grupo !== grupoActual ? `<div class="grupo">${escapar(grupo)}</div>` : ''
     grupoActual = grupo
-    const nombre = s.etiqueta.includes(' · ') ? (s.tipo === 'cara' ? 'A cámara' : 'Voz') : s.etiqueta
+    const conCamara = seGrabaConCamara(s)
+    const nombre = s.etiqueta.includes(' · ') ? (conCamara ? 'A cámara' : tramoDeCara(s.id) ? 'Entrada' : 'Voz') : s.etiqueta
     return `${cabecera}<button class="tramo" data-id="${escapar(s.id)}" aria-current="false">
-      <span class="tipo ${s.tipo}" aria-hidden="true">${icono(s.tipo === 'cara' ? 'video' : 'mic')}</span>
-      <span><span class="titulo">${escapar(nombre)}</span><br><span class="sub">${s.tipo === 'cara' ? 'Cámara y voz' : 'Solo voz'} · ${palabras(s.texto)} palabras</span></span>
+      <span class="tipo ${conCamara ? 'cara' : 'voz'}" aria-hidden="true">${icono(conCamara ? 'video' : 'mic')}</span>
+      <span><span class="titulo">${escapar(nombre)}</span><br><span class="sub">${conCamara ? 'Cámara y voz' : 'Solo voz'} · ${palabras(s.texto)} palabras</span></span>
       <span class="estado-tramo ${g ? 'ok' : ''}">${g ? `${icono('check')}<span>${g.duracion.toFixed(0)} s</span><span class="oculto">grabado</span>` : `<span>~${(s.fin - s.inicio).toFixed(0)} s</span><span class="oculto">pendiente</span>`}</span>
     </button>`
   }).join('')
@@ -582,7 +615,7 @@ async function elegirTramo(id) {
   }
   const indice = detalle.manifiesto.segmentos.indexOf(tramo)
   $('#tramo-titulo').textContent = tramo.etiqueta
-  $('#tramo-sub').textContent = `${tramo.tipo === 'cara' ? 'Cámara y voz' : 'Solo voz'} · ${palabras(tramo.texto)} palabras · tramo ${indice + 1} de ${detalle.manifiesto.segmentos.length}`
+  $('#tramo-sub').textContent = `${seGrabaConCamara(tramo) ? 'Cámara y voz' : 'Solo voz'} · ${palabras(tramo.texto)} palabras · tramo ${indice + 1} de ${detalle.manifiesto.segmentos.length}`
   $('#anterior').disabled = indice <= 0
   $('#siguiente').disabled = indice >= detalle.manifiesto.segmentos.length - 1
   $('#texto').textContent = tramo.texto
@@ -590,10 +623,10 @@ async function elegirTramo(id) {
   const guardada = grabacionDe(id)
   $('#borrar-guardada').disabled = !guardada
   const ruta = guardada ? `/archivos/${escapar(proyecto)}/${escapar(guardada.archivo)}?v=${Date.now()}` : ''
-  $('#reproductor').innerHTML = guardada ? (guardada.tipo === 'cara' ? `<video controls preload="metadata" src="${ruta}"></video>` : `<audio controls preload="metadata" src="${ruta}"></audio>`) : ''
+  $('#reproductor').innerHTML = guardada ? (guardada.archivo.endsWith('.mp4') ? `<video controls preload="metadata" src="${ruta}"></video>` : `<audio controls preload="metadata" src="${ruta}"></audio>`) : ''
   $('#grabar-texto').textContent = guardada ? 'Repetir' : 'Grabar'
   $('#toma-estado').textContent = guardada ? `Toma guardada (${guardada.duracion.toFixed(1)} s). Puedes repetirla.` : `Listo para grabar · objetivo ~${Math.round(palabras(tramo.texto) / Number($('#ppm').value) * 60)} s`
-  $('#escenario').classList.toggle('con-camara', tramo.tipo === 'cara')
+  $('#escenario').classList.toggle('con-camara', seGrabaConCamara(tramo))
   await prepararDispositivos()
 }
 
@@ -662,7 +695,7 @@ async function abrirPista(tipo, conVideo) {
 }
 
 async function prepararDispositivos(forzar = false, cambioAutomatico = false) {
-  const conVideo = tramo?.tipo === 'cara'
+  const conVideo = seGrabaConCamara(tramo)
   if (!forzar && flujo && (flujo.getVideoTracks().length > 0) === conVideo && flujo.getAudioTracks().length) return
   if (flujo) flujo.getTracks().forEach(t => t.stop())
   flujo = null
@@ -693,9 +726,14 @@ async function prepararDispositivos(forzar = false, cambioAutomatico = false) {
   pistas.forEach(p => p.stop())
   $('#camara').srcObject = null
   $('#toma-estado').textContent = fallas.join(' ')
+  $('#toma-estado').title = fallas.join(' ')
   $('#reintentar-dispositivos').hidden = false
-  avisar(fallas[0] || 'No se pudo abrir el micrófono o la cámara.', 'error')
+  // Un mismo aviso no se repite en ráfaga (al cambiar de tramo o de proyecto se reintenta varias veces).
+  const mensaje = fallas[0] || 'No se pudo abrir el micrófono o la cámara.'
+  if (mensaje !== ultimoAvisoDispositivos.texto || Date.now() - ultimoAvisoDispositivos.momento > 15000) avisar(mensaje, 'error')
+  ultimoAvisoDispositivos = { texto: mensaje, momento: Date.now() }
 }
+let ultimoAvisoDispositivos = { texto: '', momento: 0 }
 
 function iniciarMedidor() {
   if (medidorActivo) cancelAnimationFrame(medidorActivo)
@@ -752,7 +790,7 @@ async function grabar() {
   cuenta.style.display = 'grid'
   for (const n of [3, 2, 1]) { cuenta.textContent = n; await new Promise(r => setTimeout(r, 750)) }
   cuenta.style.display = 'none'
-  const tipos = tramo.tipo === 'cara' ? ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'] : ['audio/webm;codecs=opus', 'audio/webm']
+  const tipos = seGrabaConCamara(tramo) ? ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'] : ['audio/webm;codecs=opus', 'audio/webm']
   const mimeType = tipos.find(t => MediaRecorder.isTypeSupported(t)) || ''
   trozos = []
   grabador = new MediaRecorder(flujo, mimeType ? { mimeType } : undefined)
@@ -782,7 +820,7 @@ function alTerminarGrabacion() {
   $('#grabar').classList.add('grabar')
   $('#grabar').innerHTML = `${icono('repeat')}<span id="grabar-texto">Repetir</span> <kbd>R</kbd>`
   const url = URL.createObjectURL(tomaBlob)
-  $('#reproductor').innerHTML = tramo.tipo === 'cara' ? `<video controls src="${url}"></video>` : `<audio controls src="${url}"></audio>`
+  $('#reproductor').innerHTML = seGrabaConCamara(tramo) ? `<video controls src="${url}"></video>` : `<audio controls src="${url}"></audio>`
   $('#guardar').disabled = false
   $('#descartar').disabled = false
   $('#toma-estado').textContent = `Toma de ${$('#cronometro').textContent}. Revísala y guárdala, o repite.`
@@ -793,7 +831,7 @@ function bloquearNavegacion(si) {
   const indice = detalle.manifiesto.segmentos.indexOf(tramo)
   $('#anterior').disabled = si || indice <= 0
   $('#siguiente').disabled = si || indice >= detalle.manifiesto.segmentos.length - 1
-  for (const id of ['#proyecto', '#armar', '#render', '#leer', '#crear-reels']) $(id).disabled = si || (id === '#crear-reels' && !detalle.videoFinal)
+  for (const id of ['#proyecto', '#sin-camara', '#armar', '#render', '#leer', '#crear-reels']) $(id).disabled = si || (id === '#crear-reels' && !detalle.videoFinal)
   document.querySelectorAll('.tramo').forEach(b => { b.disabled = si })
 }
 
@@ -1056,8 +1094,104 @@ async function subirMiniaturas(archivos) {
 
 function verPublicacion() { pintarPublicacion(); $('#dialogo-publicacion').showModal() }
 
+/* ---------- Proyectos ---------- */
+const diaDelProyecto = iso => { try { return new Date(`${iso}T12:00:00`).toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' }) } catch { return iso } }
+const haceCuanto = iso => {
+  const minutos = Math.round((Date.now() - Date.parse(iso)) / 60000)
+  if (!(minutos >= 0)) return ''
+  if (minutos < 1) return 'hace un momento'
+  if (minutos < 60) return `hace ${minutos} min`
+  if (minutos < 1440) return `hace ${Math.round(minutos / 60)} h`
+  return `hace ${Math.round(minutos / 1440)} d`
+}
+const nombreVisible = p => p.apodo || p.titulo || p.nombre
+
+function pintarCabeceraProyecto() {
+  const p = proyectos.find(x => x.nombre === proyecto) || { nombre: proyecto }
+  p.apodo = detalle.estudio.nombre || ''
+  p.sinCamara = Boolean(detalle.estudio.sinCamara)
+  $('#proyecto-nombre').textContent = nombreVisible(p)
+  $('#proyecto-sub').textContent = `${p.fecha ? diaDelProyecto(p.fecha) : ''} · ${proyecto}${proyectos.length > 1 ? ` · ${proyectos.length} proyectos` : ''}`
+  $('#proyecto').title = `Proyecto abierto: ${nombreVisible(p)} (carpeta ${proyecto}). Clic para ver y cambiar de proyecto.`
+  document.title = `${nombreVisible(p)} · Estudio Pont3la10`
+  $('#sin-camara').checked = p.sinCamara
+  $('#interruptor-camara').classList.toggle('activo', p.sinCamara)
+}
+
+function pintarProyectos() {
+  $('#apodo').value = detalle.estudio.nombre || ''
+  $('#lista-proyectos').innerHTML = proyectos.map(p => {
+    const actual = p.nombre === proyecto
+    const insignias = [
+      `<span class="insignia ${p.grabados === p.tramos ? 'ok' : 'neutra'}">${p.grabados}/${p.tramos} grabados</span>`,
+      `<span class="insignia ${p.vacios ? 'pendiente' : 'ok'}">${p.vacios ? `${p.vacios} fotos por llenar` : 'Fotos completas'}</span>`,
+      p.sinCamara ? '<span class="insignia neutra">Sin cámara</span>' : '',
+      p.renderizado ? '<span class="insignia ok">Video listo</span>' : '',
+      p.reels ? `<span class="insignia ok">${p.reels} Reels</span>` : ''
+    ].join('')
+    return `<li class="tarjeta-proyecto" aria-current="${actual}">
+      <div><h3>${escapar(nombreVisible(p))}</h3><div class="sub">${escapar(p.fecha ? diaDelProyecto(p.fecha) : '')} · carpeta ${escapar(p.nombre)}${p.apodo && p.titulo ? ` · ${escapar(p.titulo)}` : ''}${p.actualizado ? ` · ${haceCuanto(p.actualizado)}` : ''}</div></div>
+      ${actual ? '<span class="insignia pendiente">Abierto</span>' : `<button class="boton primario" data-abrir="${escapar(p.nombre)}">Abrir</button>`}
+      <div class="meta">${insignias}</div>
+    </li>`
+  }).join('')
+  $('#lista-proyectos').querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => abrirProyecto(b.dataset.abrir)))
+}
+
+async function verProyectos() {
+  try { ({ proyectos } = await api('/api/proyectos')) } catch { /* se muestra la lista anterior */ }
+  pintarProyectos()
+  $('#dialogo-proyectos').showModal()
+}
+
+async function abrirProyecto(nombre) {
+  if (grabador) return avisar('Termina la grabación antes de cambiar de proyecto.', 'error')
+  proyecto = nombre
+  preferencias.proyecto = proyecto
+  guardarPreferencias()
+  tramo = null
+  $('#dialogo-proyectos').close()
+  await cargarDetalle(false)
+  avisar(`Proyecto abierto: ${$('#proyecto-nombre').textContent}`, 'ok')
+}
+
+async function guardarApodo(e) {
+  e.preventDefault()
+  const nombre = $('#apodo').value.trim()
+  try {
+    await api(`/api/proyectos/${proyecto}/nombre`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nombre }) })
+    detalle.estudio.nombre = nombre
+    const p = proyectos.find(x => x.nombre === proyecto)
+    if (p) p.apodo = nombre
+    pintarCabeceraProyecto()
+    pintarProyectos()
+    avisar(nombre ? 'Nombre guardado.' : 'Nombre quitado: se muestra el título del video.', 'ok')
+  } catch (err) { avisar(err.message, 'error') }
+}
+
+async function cambiarSinCamara(activo) {
+  const interruptor = $('#interruptor-camara')
+  interruptor.setAttribute('aria-busy', 'true')
+  $('#sin-camara').disabled = true
+  try {
+    await api(`/api/proyectos/${proyecto}/sin-camara`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ activo }) })
+    const p = proyectos.find(x => x.nombre === proyecto)
+    if (p) p.sinCamara = activo
+    await cargarDetalle()
+    avisar(activo ? 'Sin cámara: las entradas se graban solo con voz y llevan fotos. Revisa los espacios de fotos.' : 'Con cámara: el gancho, el cierre y la entrada de cada noticia vuelven a ser a cámara.', 'ok')
+  } catch (err) {
+    $('#sin-camara').checked = !activo
+    avisar(err.message, 'error')
+  } finally {
+    interruptor.removeAttribute('aria-busy')
+    $('#sin-camara').disabled = false
+  }
+}
+
 /* ---------- Eventos ---------- */
-$('#proyecto').addEventListener('change', async e => { proyecto = e.target.value; preferencias.proyecto = proyecto; guardarPreferencias(); tramo = null; await cargarDetalle(false) })
+$('#proyecto').addEventListener('click', verProyectos)
+$('#sin-camara').addEventListener('change', e => cambiarSinCamara(e.target.checked))
+$('#form-apodo').addEventListener('submit', guardarApodo)
 $('#grabar').addEventListener('click', () => (grabador ? detener() : grabar()))
 $('#guardar').addEventListener('click', guardarToma)
 $('#descartar').addEventListener('click', () => descartarToma())
