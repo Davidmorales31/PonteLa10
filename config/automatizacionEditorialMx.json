@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "sitio": "mx",
+  "habilitada": false,
+  "habilitadaNota": "México aún no está lanzado. Mientras sea false, las corridas de México no producen: informan y terminan. El responsable la pasa a true cuando quiera empezar a publicar contenido de México.",
+  "zonaHoraria": "America/Bogota",
+  "zonaHorariaEditorial": "America/Mexico_City",
+  "horarios": {
+    "claude": [
+      "09:30",
+      "17:30"
+    ],
+    "codex": [
+      "12:30",
+      "20:30"
+    ]
+  },
+  "horariosNota": "Hora de Bogotá (la de las tareas programadas y de la corrida). Son distintos de los de Colombia (08:00, 11:30, 15:00, 19:30) para no competir por cuota, PC ni identidades. La hora de Ciudad de México es una menos.",
+  "maxCorridasPorDia": 4,
+  "maxOportunidadesPorCategoria": 20,
+  "intervaloPublicacionMinutos": 2,
+  "redactor": "agent",
+  "estadoObjetivo": "scheduled",
+  "skill": ".agents/skills/pont3la10-futbol-mexicano-run/SKILL.md",
+  "prompt": "docs/agents/prompts/editorial-futbol-mexicano.md",
+  "enfoque": "futbol-mexicano",
+  "articulosPorCorrida": {
+    "minimo": 6,
+    "maximo": 12
+  },
+  "fuentes": "config/fuentesFutbolMexicano.json",
+  "bancoEvergreen": "config/bancoEvergreenMx.json",
+  "categorias": {
+    "principal": "futbol-mexicano",
+    "exterior": "futbol-mundial"
+  },
+  "temas": ["liga-mx", "seleccion-mexicana", "mexicanos-en-el-exterior"]
+}
