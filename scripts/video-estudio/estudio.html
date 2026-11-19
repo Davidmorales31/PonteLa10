@@ -456,6 +456,8 @@ function avisar(texto, tipo = 'info') {
 async function api(ruta, opciones = {}) {
   const r = await fetch(ruta, opciones)
   const datos = await r.json().catch(() => ({}))
+  // «No encontrado.» en una ruta que la página conoce = el estudio abierto es una versión vieja.
+  if (r.status === 404 && datos.error === 'No encontrado.') throw new Error('El estudio abierto es una versión anterior: ciérralo (la ventana negra) y ábrelo de nuevo desde el escritorio.')
   if (!r.ok) throw new Error(datos.error || `Error ${r.status}`)
   return datos
 }
@@ -1095,6 +1097,34 @@ async function subirMiniaturas(archivos) {
 }
 
 function verPublicacion() { pintarPublicacion(); $('#dialogo-publicacion').showModal() }
+
+/* ---------- Actualizaciones del estudio ---------- */
+// Si el código del estudio cambió mientras estaba abierto, se reinicia solo (nunca mientras grabas) y la página
+// se recarga con la versión nueva. Sin esto, los botones nuevos responden «No encontrado».
+let avisoDesactualizado = false
+async function revisarVersion() {
+  if (grabador || tomaBlob) return
+  let estado
+  try { estado = await (await fetch('/api/estudio/estado?reiniciar=1', { cache: 'no-store' })).json() } catch { return }
+  if (!estado || !estado.desactualizado) return
+  if (estado.reiniciando) {
+    avisar('El estudio se actualizó: reiniciando…', 'ok')
+    for (let i = 0; i < 40; i++) {
+      await new Promise(r => setTimeout(r, 750))
+      try {
+        const nuevo = await (await fetch('/api/estudio/estado', { cache: 'no-store' })).json()
+        if (nuevo.version !== estado.version) return location.reload()
+      } catch { /* sigue reiniciando */ }
+    }
+    return avisar('El estudio no volvió a abrir. Ciérralo y ábrelo de nuevo desde el escritorio.', 'error')
+  }
+  if (!estado.reiniciable && !avisoDesactualizado) {
+    avisoDesactualizado = true
+    avisar('El estudio tiene una versión nueva: ciérralo y ábrelo de nuevo desde el escritorio.', 'error')
+  }
+}
+setInterval(revisarVersion, 30000)
+setTimeout(revisarVersion, 1500)
 
 /* ---------- Proyectos ---------- */
 const diaDelProyecto = iso => { try { return new Date(`${iso}T12:00:00`).toLocaleDateString('es-CO', { weekday: 'short', day: 'numeric', month: 'short' }) } catch { return iso } }

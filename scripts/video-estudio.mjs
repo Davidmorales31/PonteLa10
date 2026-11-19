@@ -2,7 +2,7 @@
 // «Armar video» y render. Solo escucha en 127.0.0.1 y trabaja sobre videos/diario/<proyecto>/.
 // Uso: npm run video:estudio   (o node scripts/video-estudio.mjs) y abrir http://localhost:4810
 import http from 'node:http'
-import { createReadStream, existsSync } from 'node:fs'
+import { createReadStream, existsSync, readdirSync, statSync } from 'node:fs'
 import { readFile, writeFile, readdir, stat, mkdir, rm, rename, copyFile } from 'node:fs/promises'
 import { join, resolve, extname, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -317,6 +317,18 @@ async function servirRuta(req, res, archivo) {
   createReadStream(archivo).pipe(res)
 }
 
+// Huella del código del estudio: si cambia mientras corre (llegó una actualización), el proceso viejo ya no
+// conoce las rutas nuevas que pide la página. El acceso directo del escritorio lo relanza con el código 75.
+export const CODIGO_REINICIO = 75
+export function huellaCodigo(carpeta = join(RAIZ, 'scripts')) {
+  try {
+    return String(Math.max(0, ...readdirSync(carpeta).filter(n => /^video-.*\.mjs$/.test(n)).map(n => statSync(join(carpeta, n)).mtimeMs)))
+  } catch { return '0' }
+}
+const VERSION_INICIAL = huellaCodigo()
+const reiniciable = process.env.PONT3LA10_ESTUDIO_REINICIABLE === '1'
+const trabajando = () => ocupados.size > 0 || publicando.size > 0 || [...renders.values()].some(r => r.estado === 'renderizando') || [...trabajosReels.values()].some(r => r.estado === 'creando')
+
 export function crearServidor() {
   return http.createServer(async (req, res) => {
     try {
@@ -331,6 +343,14 @@ export function crearServidor() {
       }
       if (partes[0] === 'archivos' && req.method === 'GET' && proyectoValido(partes[1])) return servirArchivo(req, res, partes[1], partes.slice(2).join('/'))
       if (partes[0] === 'musica' && req.method === 'GET' && /^[a-z0-9-]{1,40}\.m4a$/.test(partes[1] || '')) return servirRuta(req, res, rutaPista(partes[1].slice(0, -4)))
+      // La página pregunta (solo cuando no estás grabando) si el estudio quedó desactualizado.
+      if (partes[0] === 'api' && partes[1] === 'estudio' && partes[2] === 'estado' && req.method === 'GET') {
+        const desactualizado = huellaCodigo() !== VERSION_INICIAL
+        const reiniciando = desactualizado && reiniciable && !trabajando() && url.searchParams.get('reiniciar') === '1'
+        responder(res, 200, { version: VERSION_INICIAL, desactualizado, reiniciable, reiniciando })
+        if (reiniciando) setTimeout(() => process.exit(CODIGO_REINICIO), 300)
+        return
+      }
       if (partes[0] !== 'api' || partes[1] !== 'proyectos') return responder(res, 404, { error: 'No encontrado.' })
       if (partes.length === 2 && req.method === 'GET') return responder(res, 200, { proyectos: await listarProyectos() })
 
