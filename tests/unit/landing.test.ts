@@ -56,7 +56,7 @@ describe('configuración de la landing', () => {
   })
 
   it('mantiene la portada de fútbol conectada a datos reales y sus módulos SEO', () => {
-    const portada = readFileSync(new URL('../../pages/index.vue', import.meta.url), 'utf8')
+    const portada = readFileSync(new URL('../../components/publico/PortadaColombia.vue', import.meta.url), 'utf8')
 
     expect(portada).toContain("query: { deporte: 'futbol', timeZone: zonaHorariaColombia }")
     expect(portada).toContain('id="titulo-jornada-home"')

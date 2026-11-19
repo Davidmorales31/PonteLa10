@@ -21,12 +21,13 @@ const props = withDefaults(defineProps<{
   prioridadAlta?: boolean
   etiqueta?: string
 }>(), { nivelTitulo: 'h2', prioridadAlta: false, etiqueta: '' })
+const { sitio } = useSitio()
 const imagenFallida = ref(false)
 const tieneImagen = computed(() => Boolean(props.articulo.imagen?.trim()) && !imagenFallida.value)
 const fechaVisible = computed(() => {
   if (!props.articulo.publicadoEn) return props.articulo.publicadoHace || ''
   const fecha = new Date(props.articulo.publicadoEn)
-  return Number.isNaN(fecha.getTime()) ? props.articulo.publicadoHace || '' : new Intl.DateTimeFormat('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Bogota' }).format(fecha)
+  return Number.isNaN(fecha.getTime()) ? props.articulo.publicadoHace || '' : new Intl.DateTimeFormat(sitio.value.locale, { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: sitio.value.zonaHoraria }).format(fecha)
 })
 </script>
 

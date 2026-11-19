@@ -80,3 +80,25 @@ describe('identidad por sitio', () => {
     expect(valor(mx, 'og:url')).toBe('https://mx.pont3la10.com/')
   })
 })
+
+describe('rutas por sitio', () => {
+  it('México no sirve páginas solo de Colombia y Colombia no sirve las de México', async () => {
+    const { rutaNoDisponibleEnSitio } = await import('../../utils/rutasPorSitio')
+    for (const ruta of ['/liga-colombiana', '/seleccion-colombia', '/colombianos-en-europa', '/futbol-colombiano', '/equipos/millonarios', '/jugadores/luis-diaz', '/competiciones/liga-betplay/2026-II', '/partidos/x', '/liga-colombiana/']) {
+      expect(rutaNoDisponibleEnSitio(ruta, 'mx')).toBe(true)
+      expect(rutaNoDisponibleEnSitio(ruta, 'co')).toBe(false)
+    }
+    for (const ruta of ['/liga-mx', '/futbol-mexicano', '/liga-mx/']) {
+      expect(rutaNoDisponibleEnSitio(ruta, 'co')).toBe(true)
+      expect(rutaNoDisponibleEnSitio(ruta, 'mx')).toBe(false)
+    }
+  })
+
+  it('las páginas comunes siguen disponibles en los dos sitios', async () => {
+    const { rutaNoDisponibleEnSitio } = await import('../../utils/rutasPorSitio')
+    for (const ruta of ['/', '/articulos', '/articulos/algo', '/partidos-hoy', '/resultados', '/resultados/futbol', '/futbol-internacional', '/especiales', '/quienes-somos', '/admin', '/login', '/equiposhacker', '/liga-mx-falsa']) {
+      expect(rutaNoDisponibleEnSitio(ruta, 'mx')).toBe(false)
+    }
+    expect(rutaNoDisponibleEnSitio('/liga-mx-falsa', 'co')).toBe(false)
+  })
+})

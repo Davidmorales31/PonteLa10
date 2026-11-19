@@ -49,11 +49,13 @@ export const pieSitio: FooterLanding = {
 const navegacionMexico: ItemNavegacionLanding[] = [
   { etiqueta: 'Inicio', ruta: '/', exacta: true },
   { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' },
+  { etiqueta: 'Liga MX', ruta: '/liga-mx' },
   { etiqueta: 'Resultados', ruta: '/resultados' },
   { etiqueta: 'Noticias', ruta: '/articulos' }
 ]
 
 const navegacionMasMexico: ItemNavegacionLanding[] = [
+  { etiqueta: 'Fútbol mexicano', ruta: '/futbol-mexicano' },
   { etiqueta: 'Fútbol internacional', ruta: '/futbol-internacional' },
   { etiqueta: 'Especiales', ruta: '/especiales' },
   { etiqueta: 'Tech deportiva', ruta: '/articulos?categoria=tecnologia' },
@@ -62,13 +64,16 @@ const navegacionMasMexico: ItemNavegacionLanding[] = [
   { etiqueta: 'Opinión', ruta: '/articulos?categoria=opinion' }
 ]
 
-const categoriasMexico: CategoriaLanding[] = categoriasSitio.filter(categoria => categoria.variante !== 'colombia')
+const categoriasMexico: CategoriaLanding[] = [
+  { etiqueta: 'Fútbol mexicano', icono: 'balon', ruta: '/futbol-mexicano' },
+  ...categoriasSitio.filter(categoria => categoria.variante !== 'colombia')
+]
 
 const pieMexico: FooterLanding = {
   descripcion: 'Liga MX, Selección Mexicana, deportes y tendencias con la jugada clara.',
   columnas: [
-    { titulo: 'Navegación', enlaces: [{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Noticias', ruta: '/articulos' }, { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' }, { etiqueta: 'Resultados', ruta: '/resultados' }] },
-    { titulo: 'Categorías', enlaces: [{ etiqueta: 'Fútbol internacional', ruta: '/futbol-internacional' }, { etiqueta: 'Especiales', ruta: '/especiales' }] },
+    { titulo: 'Navegación', enlaces: [{ etiqueta: 'Inicio', ruta: '/' }, { etiqueta: 'Noticias', ruta: '/articulos' }, { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' }, { etiqueta: 'Liga MX', ruta: '/liga-mx' }, { etiqueta: 'Resultados', ruta: '/resultados' }] },
+    { titulo: 'Categorías', enlaces: [{ etiqueta: 'Fútbol mexicano', ruta: '/futbol-mexicano' }, { etiqueta: 'Fútbol internacional', ruta: '/futbol-internacional' }, { etiqueta: 'Especiales', ruta: '/especiales' }] },
     // Las páginas legales y editoriales son comunes a los dos sitios.
     pieSitio.columnas[2]!
   ]
