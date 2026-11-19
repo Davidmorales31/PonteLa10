@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const { sitio: sitioActivo } = useSitio()
 const especiales = [
   {
     titulo: 'Simulador Mundial',
@@ -26,7 +27,7 @@ useSeoPont3la10({
     '@type': 'CollectionPage',
     name: 'Especiales de Pont3la10',
     description: 'Especiales editoriales de Pont3la10.',
-    inLanguage: 'es-CO'
+    inLanguage: sitioActivo.value.idioma
   }
 })
 </script>

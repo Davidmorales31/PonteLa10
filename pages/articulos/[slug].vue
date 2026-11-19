@@ -19,6 +19,7 @@ import {
   obtenerPerfilAutorPublico
 } from '~/utils/perfilesAutoresPublicos'
 import type { ContextoAnaliticaPagina, EstadoAnaliticaPublica } from '~/utils/analiticaPublica'
+const { sitio: sitioActivo } = useSitio()
 
 const ruta = useRoute()
 const slugActual = computed(() => String(ruta.params.slug || ''))
@@ -206,7 +207,7 @@ useSeoPont3la10(() => ({
           datePublished: articuloPublicado.value.publicadoEn,
           dateModified: articuloPublicado.value.modificadoEn || articuloPublicado.value.publicadoEn,
           articleSection: articuloPublicado.value.categoria?.nombre,
-          inLanguage: 'es-CO',
+          inLanguage: sitioActivo.value.idioma,
           isAccessibleForFree: true,
           mainEntityOfPage: {
             '@type': 'WebPage',
@@ -266,10 +267,10 @@ useSeoPont3la10(() => ({
 }))
 
 function formatearFecha(fecha: string): string {
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(sitioActivo.value.locale, {
     dateStyle: 'long',
     timeStyle: 'short',
-    timeZone: 'America/Bogota'
+    timeZone: sitioActivo.value.zonaHoraria
   }).format(new Date(fecha)).replace(/[\u00a0\u202f]/g, ' ')
 }
 

@@ -3,9 +3,10 @@ import { Bell, CalendarDays, MapPin, RefreshCw, Star } from '@lucide/vue'
 import type { DetallePartidoResultado, EquipoResultado, RespuestaMarcadorPartido } from '~/types/resultados'
 import { agruparGoleadoresPartido } from '~/utils/goleadoresPartido'
 import { construirUrlAbsoluta, imagenSeoPredeterminada, robotsNoIndex } from '~/utils/seo'
+const { sitio: sitioActivo } = useSitio()
 
 const ruta = useRoute()
-const zonaHoraria = ref('America/Bogota')
+const zonaHoraria = ref(sitioActivo.value.zonaHoraria)
 const pestanaActiva = ref<'estadisticas' | 'alineaciones'>('estadisticas')
 type PestanaDetallePartido = { id: 'estadisticas' | 'alineaciones'; etiqueta: string }
 const actualizandoMarcador = ref(false)
@@ -68,7 +69,7 @@ const textoActualizacion = computed(() => {
   if (actualizandoMarcador.value) return 'Actualizando marcador'
   if (errorActualizacion.value) return 'No fue posible actualizar'
   if (!detalle.value) return ''
-  const hora = new Intl.DateTimeFormat('es-CO', {
+  const hora = new Intl.DateTimeFormat(sitioActivo.value.locale, {
     hour: '2-digit', minute: '2-digit', second: '2-digit', timeZone: zonaHoraria.value
   })
     .format(new Date(detalle.value.actualizadoEn))
@@ -224,7 +225,7 @@ function obtenerNombreDeporte(deporte: DetallePartidoResultado['partido']['depor
           <p>Resultados {{ detalle.partido.estado === 'en-vivo' ? 'en vivo' : 'del partido' }}</p>
           <h1>{{ detalle.partido.equipoLocal.nombre }} vs {{ detalle.partido.equipoVisitante.nombre }}</h1>
           <div class="metadatos-partido">
-            <span><CalendarDays aria-hidden="true" /> {{ new Intl.DateTimeFormat('es-CO', { dateStyle: 'long', timeZone: zonaHoraria }).format(new Date(detalle.partido.fechaIso)) }}</span>
+            <span><CalendarDays aria-hidden="true" /> {{ new Intl.DateTimeFormat(sitioActivo.locale, { dateStyle: 'long', timeZone: zonaHoraria }).format(new Date(detalle.partido.fechaIso)) }}</span>
             <span>{{ detalle.partido.competencia }}</span>
             <span v-if="detalle.partido.estadio || detalle.partido.ciudad">
               <MapPin aria-hidden="true" />

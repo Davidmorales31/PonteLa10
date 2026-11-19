@@ -2,6 +2,7 @@
 import type { ResumenArticuloPublico } from '~/types/contenidoEditorial'
 import type { PerfilAutorPublico } from '~/utils/perfilesAutoresPublicos'
 import { robotsIndexables } from '~/utils/seo'
+const { sitio: sitioActivo } = useSitio()
 
 interface RespuestaPerfilAutor {
   perfil: PerfilAutorPublico
@@ -32,9 +33,9 @@ const configuracion = useRuntimeConfig()
 const urlPerfil = computed(() => `${String(configuracion.public.siteUrl).replace(/\/+$/, '')}/autores/${slug.value}`)
 
 function formatearFecha(fecha: string): string {
-  return new Intl.DateTimeFormat('es-CO', {
+  return new Intl.DateTimeFormat(sitioActivo.value.locale, {
     dateStyle: 'long',
-    timeZone: 'America/Bogota'
+    timeZone: sitioActivo.value.zonaHoraria
   }).format(new Date(`${fecha}T12:00:00-05:00`))
 }
 

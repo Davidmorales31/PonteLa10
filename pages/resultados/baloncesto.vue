@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { robotsNoIndex } from '~/utils/seo'
+const { sitio: sitioActivo } = useSitio()
 
 useSeoPont3la10({
   robots: robotsNoIndex,
@@ -10,7 +11,7 @@ useSeoPont3la10({
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     name: 'Resultados de baloncesto',
-    inLanguage: 'es-CO'
+    inLanguage: sitioActivo.value.idioma
   }
 })
 </script>
