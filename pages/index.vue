@@ -101,7 +101,7 @@ let clicFuenteSeleccionEnMemoria = false
 const urlApiPublica = (ruta: string) => import.meta.dev && ruta === '/api/resultados'
   ? '/partidos-hoy-local'
   : import.meta.server && configuracionApi.public.apiOrigin
-  ? `${String(configuracionApi.public.apiOrigin).replace(/\/$/, '')}${ruta}`
+  ? `${String(configuracionApi.public.apiOrigin).replace(/\/$/, '')}${ruta}?sitio=${idSitio.value}`
   : ruta
 const respuestaResultadosVacia: RespuestaResultados = {
   partidos: [],

@@ -2,6 +2,7 @@ import { createError, getRouterParam } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
+import { sitioDeSolicitud } from '~/server/utils/sitioDeSolicitud'
 import {
   filtrarArticulosDeAutor,
   obtenerPerfilAutorPorSlug
@@ -18,7 +19,7 @@ export default defineEventHandler(async (evento) => {
   const clienteSupabase = obtenerClienteSupabaseAnonimo(evento)
   // El RPC ya limita cada consulta a 50 filas y devuelve únicamente artículos
   // publicados; no se consulta user_profiles ni se exponen IDs del CMS.
-  const publicacionesRecientes = await listarArticulosPublicosEditoriales(clienteSupabase, 50, 0)
+  const publicacionesRecientes = await listarArticulosPublicosEditoriales(clienteSupabase, 50, 0, undefined, sitioDeSolicitud(evento))
   aplicarCachePublica(evento, 'articulo')
 
   return {

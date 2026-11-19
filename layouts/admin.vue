@@ -33,6 +33,7 @@ interface EntradaPanel {
 }
 
 const route = useRoute()
+const { sitioPanel, opciones: opcionesSitio, cambiarSitio, origen: origenSitioPanel } = useSitioPanel()
 const menuAbierto = ref(false)
 const { cerrarSesion } = useAutenticacionEditorial()
 const {
@@ -170,6 +171,12 @@ async function salirPanel() {
           >
         </NuxtLink>
         <span>Panel editorial</span>
+        <label class="selector-sitio-panel">
+          <span>Sitio que administras</span>
+          <select :value="sitioPanel" @change="cambiarSitio(($event.target as HTMLSelectElement).value)">
+            <option v-for="opcion in opcionesSitio" :key="opcion.id" :value="opcion.id">{{ opcion.nombre }}</option>
+          </select>
+        </label>
       </div>
 
       <nav class="navegacion-panel-editorial" aria-label="Navegación editorial">
@@ -185,10 +192,10 @@ async function salirPanel() {
       </nav>
 
       <div class="pie-panel-editorial">
-        <NuxtLink to="/" target="_blank">
+        <a :href="origenSitioPanel" target="_blank" rel="noopener">
           <ExternalLink aria-hidden="true" />
           <span>Ver sitio público</span>
-        </NuxtLink>
+        </a>
         <button type="button" @click="salirPanel">
           <LogOut aria-hidden="true" />
           <span>Cerrar sesión</span>

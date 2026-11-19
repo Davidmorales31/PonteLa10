@@ -39,6 +39,33 @@
   text-transform: uppercase;
 }
 
+.selector-sitio-panel {
+  display: grid;
+  gap: 6px;
+}
+
+.selector-sitio-panel span {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.7rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.selector-sitio-panel select {
+  min-height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font: inherit;
+  font-weight: 700;
+  padding: 0 10px;
+}
+
+.selector-sitio-panel select option {
+  color: #0b1b3a;
+}
+
 .navegacion-panel-editorial {
   display: grid;
   gap: 5px;

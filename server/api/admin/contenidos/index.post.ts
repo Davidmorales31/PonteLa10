@@ -3,6 +3,7 @@ import { exigirPermisoEditorial } from '~/server/utils/autorizacionEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { crearBorradorEditorial } from '~/server/utils/repositorioContenidoEditorial'
 import { validarEntradaEditorial } from '~/server/utils/validacionEditorial'
+import { sitioDelPanel } from '~/server/utils/sitioDelPanel'
 import { esquemaCrearBorrador } from '~/utils/editorial/contenido'
 
 export default defineEventHandler(async (evento): Promise<BorradorCreadoEditorial> => {
@@ -18,6 +19,7 @@ export default defineEventHandler(async (evento): Promise<BorradorCreadoEditoria
   return crearBorradorEditorial(
     clienteSupabase,
     entrada,
-    contexto.usuario.id
+    contexto.usuario.id,
+    sitioDelPanel(evento)
   )
 })
