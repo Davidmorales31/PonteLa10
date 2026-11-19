@@ -2,6 +2,7 @@ import { setResponseHeader, setResponseStatus } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 import { sitioDeSolicitud } from '~/server/utils/sitioDeSolicitud'
+import { origenDelSitio } from '~/utils/sitio'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
 import { construirFeedRssEditorial } from '~/utils/rssEditorial'
 
@@ -13,14 +14,15 @@ export default defineEventHandler(async (evento) => {
   setResponseHeader(evento, 'CDN-Cache-Control', 'no-store')
 
   try {
-    const urlSitio = String(useRuntimeConfig(evento).public.siteUrl)
+    const sitioPeticion = sitioDeSolicitud(evento)
+    const urlSitio = origenDelSitio(sitioPeticion, String(useRuntimeConfig(evento).public.siteUrl))
     const clienteSupabase = obtenerClienteSupabaseAnonimo(evento)
     const articulos = await listarArticulosPublicosEditoriales(
       clienteSupabase,
       limiteArticulosFeed,
       0,
       undefined,
-      sitioDeSolicitud(evento)
+      sitioPeticion
     )
     const feed = construirFeedRssEditorial(articulos, urlSitio)
 
