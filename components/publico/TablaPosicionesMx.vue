@@ -31,7 +31,7 @@ const visibles = computed(() => props.limite > 0 ? props.filas.slice(0, props.li
         <tr v-for="fila in visibles" :key="`${fila.fase}-${fila.equipoClave}`">
           <td class="num">{{ fila.posicion }}</td>
           <th scope="row">
-            <span class="equipo-mx"><b aria-hidden="true">{{ fila.equipo.slice(0, 1) }}</b>{{ fila.equipo }}</span>
+            <NuxtLink class="equipo-mx" :to="`/clubes/${fila.equipoClave}`"><b aria-hidden="true">{{ fila.equipo.slice(0, 1) }}</b>{{ fila.equipo }}</NuxtLink>
           </th>
           <td class="num">{{ fila.jugados }}</td>
           <td v-if="!compacta" class="num">{{ fila.ganados }}</td>
@@ -54,7 +54,8 @@ const visibles = computed(() => props.limite > 0 ? props.filas.slice(0, props.li
 .tabla-mx .num { width: 2.4rem; text-align: right; font-variant-numeric: tabular-nums; }
 .tabla-mx .puntos { color: #ffd800; font-weight: 850; }
 .tabla-mx tbody th { font-weight: 700; }
-.equipo-mx { display: inline-flex; align-items: center; gap: 8px; }
+.equipo-mx { display: inline-flex; align-items: center; gap: 8px; color: inherit; text-decoration: none; }
+.equipo-mx:hover { text-decoration: underline; }
 .equipo-mx b { display: inline-grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: #174ea6; color: #fff; font-size: .72rem; }
 .tabla-mx.compacta { font-size: .82rem; }
 </style>
