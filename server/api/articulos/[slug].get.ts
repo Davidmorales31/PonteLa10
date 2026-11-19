@@ -7,6 +7,7 @@ import {
   obtenerOpcionesLecturaSnapshotsPartidosSeo
 } from '~/server/utils/partidosSeoPublicos'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
+import { sitioDeSolicitud } from '~/server/utils/sitioDeSolicitud'
 import { seleccionarProximoPartidoArticuloSeo } from '~/utils/editorial/navegacionContextualSeo'
 
 export default defineEventHandler(async (
@@ -22,7 +23,7 @@ export default defineEventHandler(async (
   }
 
   const clienteSupabase = obtenerClienteSupabaseEditorial(evento)
-  const articulo = await obtenerArticuloPublicoEditorial(clienteSupabase, slug)
+  const articulo = await obtenerArticuloPublicoEditorial(clienteSupabase, slug, sitioDeSolicitud(evento))
 
   if (!articulo) {
     setResponseHeader(evento, 'X-Robots-Tag', 'noindex, follow')

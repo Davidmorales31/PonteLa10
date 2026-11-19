@@ -1,6 +1,7 @@
 import type { ResumenPanelEditorial } from '~/types/editorial'
 import { exigirPermisoEditorial } from '~/server/utils/autorizacionEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
+import { sitioDelPanel } from '~/server/utils/sitioDelPanel'
 
 interface FilaEstadoArticulo {
   status: string
@@ -13,6 +14,7 @@ export default defineEventHandler(async (evento): Promise<ResumenPanelEditorial>
   const { data, error } = await clienteSupabase
     .from('articles')
     .select('status')
+    .eq('site', sitioDelPanel(evento))
 
   if (error) {
     throw createError({

@@ -4,6 +4,7 @@ import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseE
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
 import { analizarConsultaArticulosPublicos } from '~/server/utils/filtrosArticulosPublicos'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
+import { sitioDeSolicitud } from '~/server/utils/sitioDeSolicitud'
 
 export default defineEventHandler(async (
   evento
@@ -21,7 +22,8 @@ export default defineEventHandler(async (
     clienteSupabase,
     consulta.paginado ? consulta.limite + 1 : consulta.limite,
     consulta.desplazamiento,
-    consulta.categoria || consulta.tema || consulta.buscar ? consulta : undefined
+    consulta.categoria || consulta.tema || consulta.buscar ? consulta : undefined,
+    sitioDeSolicitud(evento)
   )
   aplicarCachePublica(evento, 'articulo')
 

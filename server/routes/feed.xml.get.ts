@@ -1,6 +1,7 @@
 import { setResponseHeader, setResponseStatus } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
+import { sitioDeSolicitud } from '~/server/utils/sitioDeSolicitud'
 import { listarArticulosPublicosEditoriales } from '~/server/utils/repositorioContenidoEditorial'
 import { construirFeedRssEditorial } from '~/utils/rssEditorial'
 
@@ -17,7 +18,9 @@ export default defineEventHandler(async (evento) => {
     const articulos = await listarArticulosPublicosEditoriales(
       clienteSupabase,
       limiteArticulosFeed,
-      0
+      0,
+      undefined,
+      sitioDeSolicitud(evento)
     )
     const feed = construirFeedRssEditorial(articulos, urlSitio)
 

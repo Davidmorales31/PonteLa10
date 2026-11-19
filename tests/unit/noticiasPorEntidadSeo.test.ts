@@ -45,7 +45,8 @@ describe('noticias de hubs por relación editorial', () => {
       requested_entity_type: 'competition',
       requested_entity_slug: 'liga-betplay',
       result_limit: 6,
-      result_offset: 0
+      result_offset: 0,
+      requested_site: 'co'
     })
   })
 

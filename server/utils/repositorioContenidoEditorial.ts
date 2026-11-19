@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import type { IdSitio } from '~/utils/sitio'
 import {
   mapearMedioEditorial,
   type FilaMedioEditorial
@@ -302,7 +303,8 @@ async function validarEnlacesInternosEditoriales(
 
 export async function listarContenidosEditoriales(
   clienteSupabase: SupabaseClient,
-  filtros: FiltrosBandeja
+  filtros: FiltrosBandeja,
+  sitio?: IdSitio
 ): Promise<RespuestaBandejaEditorial> {
   const desde = (filtros.pagina - 1) * filtros.limite
   const hasta = desde + filtros.limite - 1
@@ -340,6 +342,7 @@ export async function listarContenidosEditoriales(
   if (filtros.tipo) consulta = consulta.eq('content_type', filtros.tipo)
   if (filtros.origen) consulta = consulta.eq('source_origin', filtros.origen)
   if (filtros.categoriaId) consulta = consulta.eq('category_id', filtros.categoriaId)
+  if (sitio) consulta = consulta.eq('site', sitio)
 
   if (filtros.orden === 'tituloAsc') {
     consulta = consulta.order('title', { ascending: true })
@@ -1250,9 +1253,10 @@ export async function crearComentarioRevisionEditorial(
 }
 
 export async function obtenerColaRevisionEditorial(
-  clienteSupabase: SupabaseClient
+  clienteSupabase: SupabaseClient,
+  sitio?: IdSitio
 ): Promise<ColaRevisionEditorial> {
-  const { data, error } = await clienteSupabase
+  const consultaCola = clienteSupabase
     .from('articles')
     .select(`
       id,
@@ -1279,6 +1283,7 @@ export async function obtenerColaRevisionEditorial(
     .in('status', ['review', 'approved', 'scheduled'])
     .order('updated_at', { ascending: false })
     .limit(120)
+  const { data, error } = await (sitio ? consultaCola.eq('site', sitio) : consultaCola)
 
   if (error) {
     throw crearErrorRepositorio('No se pudo cargar la bandeja de revisión.')
@@ -1432,11 +1437,12 @@ async function resolverEnlacesInternosPublicos(
 
 export async function obtenerArticuloPublicoEditorial(
   clienteSupabase: SupabaseClient,
-  slug: string
+  slug: string,
+  sitio: IdSitio = 'co'
 ): Promise<ArticuloPublicoEditorial | null> {
   const { data, error } = await clienteSupabase.rpc(
     'get_public_editorial_article',
-    { requested_slug: slug }
+    { requested_slug: slug, requested_site: sitio }
   )
 
   if (error) {
@@ -1501,7 +1507,8 @@ export async function listarArticulosPublicosEditoriales(
     terminosCategoria: string[]
     tema: string | null
     buscar: string | null
-  }
+  },
+  sitio: IdSitio = 'co'
 ): Promise<ResumenArticuloPublico[]> {
   const { data, error } = filtros
     ? await clienteSupabase.rpc('list_public_editorial_articles_filtered', {
@@ -1510,11 +1517,13 @@ export async function listarArticulosPublicosEditoriales(
         filter_category_slug: filtros.categoria,
         filter_category_terms: filtros.terminosCategoria,
         filter_topic_slug: filtros.tema,
-        filter_search: filtros.buscar
+        filter_search: filtros.buscar,
+        requested_site: sitio
       })
     : await clienteSupabase.rpc('list_public_editorial_articles', {
         result_limit: limite,
-        result_offset: desplazamiento
+        result_offset: desplazamiento,
+        requested_site: sitio
       })
 
   if (error) {
@@ -1528,13 +1537,15 @@ export async function listarArticulosPublicosPorEntidad(
   clienteSupabase: SupabaseClient,
   tipo: TipoEntidadSeo,
   slug: string,
-  limite = 6
+  limite = 6,
+  sitio: IdSitio = 'co'
 ): Promise<ResumenArticuloPublico[]> {
   const { data, error } = await clienteSupabase.rpc('list_public_editorial_articles_for_entity', {
     requested_entity_type: tipo,
     requested_entity_slug: slug,
     result_limit: Math.min(Math.max(limite, 1), 50),
-    result_offset: 0
+    result_offset: 0,
+    requested_site: sitio
   })
 
   if (error) throw crearErrorRepositorio('No se pudieron cargar las publicaciones relacionadas.')
@@ -1567,9 +1578,10 @@ async function mapearResumenesPublicos(
 }
 
 export async function obtenerUltimaNoticiaPublicaConPortada(
-  clienteSupabase: SupabaseClient
+  clienteSupabase: SupabaseClient,
+  sitio: IdSitio = 'co'
 ): Promise<ResumenArticuloPublico | null> {
-  const { data, error } = await clienteSupabase.rpc('get_public_editorial_latest_article_with_cover')
+  const { data, error } = await clienteSupabase.rpc('get_public_editorial_latest_article_with_cover', { requested_site: sitio })
 
   if (error) {
     throw crearErrorRepositorio('No se pudo cargar la noticia destacada.')
@@ -1627,7 +1639,8 @@ async function validarCategoria(
 export async function crearBorradorEditorial(
   clienteSupabase: SupabaseClient,
   entrada: EntradaBorrador,
-  autorId: string
+  autorId: string,
+  sitio: IdSitio = 'co'
 ): Promise<BorradorCreadoEditorial> {
   await validarCategoria(clienteSupabase, entrada.categoriaId)
 
@@ -1651,7 +1664,8 @@ export async function crearBorradorEditorial(
         author_id: autorId,
         content_type: entrada.tipo,
         source_origin: 'manual',
-        last_saved_by: autorId
+        last_saved_by: autorId,
+        site: sitio
       })
       .select('id, slug, title, status, created_at')
       .single()
@@ -1679,7 +1693,8 @@ export async function crearBorradorEditorial(
 }
 
 export async function obtenerTaxonomiasEditoriales(
-  clienteSupabase: SupabaseClient
+  clienteSupabase: SupabaseClient,
+  sitio?: IdSitio
 ): Promise<TaxonomiasEditoriales> {
   const [
     respuestaCategorias,
@@ -1691,10 +1706,17 @@ export async function obtenerTaxonomiasEditoriales(
       .select('id, slug, name, description, is_active, display_order')
       .order('display_order')
       .order('name'),
-    clienteSupabase
-      .from('editorial_tags')
-      .select('id, slug, name, description, is_active')
-      .order('name'),
+    // Los temas son por sitio; las categorías y las etiquetas internas son comunes.
+    (sitio
+      ? clienteSupabase
+        .from('editorial_tags')
+        .select('id, slug, name, description, is_active')
+        .eq('site', sitio)
+        .order('name')
+      : clienteSupabase
+        .from('editorial_tags')
+        .select('id, slug, name, description, is_active')
+        .order('name')),
     clienteSupabase
       .from('editorial_labels')
       .select('id, slug, name, color, is_active')
@@ -1733,7 +1755,8 @@ export async function obtenerTaxonomiasEditoriales(
 
 export async function crearTaxonomiaEditorial(
   clienteSupabase: SupabaseClient,
-  entrada: EntradaTaxonomia
+  entrada: EntradaTaxonomia,
+  sitio: IdSitio = 'co'
 ): Promise<{ id: string, slug: string }> {
   const slug = crearSlugEditorial(entrada.nombre)
   const respuesta = entrada.tipo === 'categoria'
@@ -1753,7 +1776,8 @@ export async function crearTaxonomiaEditorial(
           .insert({
             slug,
             name: entrada.nombre,
-            description: entrada.descripcion
+            description: entrada.descripcion,
+            site: sitio
           })
           .select('id, slug')
           .single()

@@ -2,6 +2,7 @@ import { exigirPermisoEditorial } from '~/server/utils/autorizacionEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
 import { crearTaxonomiaEditorial } from '~/server/utils/repositorioContenidoEditorial'
 import { validarEntradaEditorial } from '~/server/utils/validacionEditorial'
+import { sitioDelPanel } from '~/server/utils/sitioDelPanel'
 import { esquemaCrearTaxonomia } from '~/utils/editorial/contenido'
 
 export default defineEventHandler(async (evento) => {
@@ -14,5 +15,5 @@ export default defineEventHandler(async (evento) => {
 
   setResponseStatus(evento, 201)
 
-  return crearTaxonomiaEditorial(clienteSupabase, entrada)
+  return crearTaxonomiaEditorial(clienteSupabase, entrada, sitioDelPanel(evento))
 })

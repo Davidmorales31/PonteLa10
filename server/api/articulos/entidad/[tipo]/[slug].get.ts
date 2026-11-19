@@ -2,6 +2,7 @@ import { getRouterParam } from 'h3'
 import { obtenerClienteSupabaseAnonimo } from '~/server/utils/clienteSupabaseAnonimo'
 import { listarArticulosPublicosPorEntidad } from '~/server/utils/repositorioContenidoEditorial'
 import { aplicarCachePublica } from '~/server/utils/aplicarCachePublica'
+import { sitioDeSolicitud } from '~/server/utils/sitioDeSolicitud'
 import type { TipoEntidadSeo } from '~/types/contenidoEditorial'
 
 const tiposEntidadPublica = new Set<TipoEntidadSeo>([
@@ -21,7 +22,8 @@ export default defineEventHandler(async (evento) => {
     obtenerClienteSupabaseAnonimo(evento),
     tipo as TipoEntidadSeo,
     slug,
-    12
+    12,
+    sitioDeSolicitud(evento)
   )
   aplicarCachePublica(evento, 'articulo')
   return articulos

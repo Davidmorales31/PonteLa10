@@ -4,6 +4,7 @@ import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseE
 import { validarEntradaEditorial } from '~/server/utils/validacionEditorial'
 import type { BandejaPublicacionesSociales } from '~/types/publicacionesSociales'
 import { clienteOAuthSocial } from '~/server/utils/contextoOAuthSocial'
+import { sitioDelPanel } from '~/server/utils/sitioDelPanel'
 import { corteBandejaSocial, leerArticulosPublicadosEnMeta, leerEstadosPublicacionesSociales } from '~/server/utils/estadoPublicacionesSociales'
 
 export default defineEventHandler(async (evento): Promise<BandejaPublicacionesSociales> => {
@@ -18,7 +19,7 @@ export default defineEventHandler(async (evento): Promise<BandejaPublicacionesSo
   // Facebook e Instagram ni las noticias anteriores al corte del enfoque vigente.
   const completadas = await leerArticulosPublicadosEnMeta(privado)
   let consulta = cliente.from('articles').select('id, title, slug, summary, published_at, categories(name), media_files!articles_cover_media_id_fkey(bucket,path,alt)', { count: 'exact' })
-    .eq('status', 'published').gte('published_at', corteBandejaSocial).order('published_at', { ascending: false })
+    .eq('status', 'published').eq('site', sitioDelPanel(evento)).gte('published_at', corteBandejaSocial).order('published_at', { ascending: false })
   if (completadas.length) consulta = consulta.not('id', 'in', `(${completadas.join(',')})`)
   if (filtros.buscar) consulta = consulta.ilike('title', `%${filtros.buscar.replace(/[%_]/g, '\\$&')}%`)
   const { data, count, error } = await consulta.range((filtros.pagina - 1) * 20, filtros.pagina * 20 - 1)

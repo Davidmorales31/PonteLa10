@@ -61,6 +61,9 @@ export const configuracionSitios: Record<IdSitio, ConfiguracionSitio> = {
   }
 }
 
+/** Cookie con el sitio que el panel editorial está administrando (la elige la persona). */
+export const cookieSitioPanel = 'pont3la10_sitio_panel'
+
 export function esIdSitio(valor: unknown): valor is IdSitio {
   return typeof valor === 'string' && (idsSitio as readonly string[]).includes(valor)
 }
