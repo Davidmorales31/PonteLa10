@@ -199,6 +199,34 @@ body.tema-publico-blanco .migas-navegacion .separador-miga {
   align-items: center;
 }
 
+.marca-cabecera-landing:has(.etiqueta-sitio-cabecera) {
+  width: auto;
+  gap: 0.5rem;
+}
+
+.marca-cabecera-landing:has(.etiqueta-sitio-cabecera) picture {
+  width: 170px;
+  flex: none;
+}
+
+@media (max-width: 520px) {
+  .marca-cabecera-landing:has(.etiqueta-sitio-cabecera) picture {
+    width: 120px;
+  }
+}
+
+.etiqueta-sitio-cabecera {
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: #08204a;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 .marca-cabecera-landing img,
 .marca-pie-pagina img {
   width: 100%;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { categoriasSitio } from '~/data/sitioPublico'
+import { categoriasDe } from '~/data/sitioPublico'
 import PublicidadHouseAd from '~/components/publicidad/HouseAd.vue'
 import BotonSeguirEquipo from '~/components/publico/BotonSeguirEquipo.vue'
 import BotonSeguirJugador from '~/components/publico/BotonSeguirJugador.vue'
@@ -79,6 +79,8 @@ interface PaginaNoticiasPortada {
 }
 
 const instantePortada = useState('portada-instante-renderizado', () => new Date().toISOString())
+const { id: idSitio } = useSitio()
+const categoriasDelSitio = computed(() => categoriasDe(idSitio.value))
 const configuracionApi = useRuntimeConfig()
 const urlWinPlay = 'https://winplay.co/plans'
 const urlAnuncioVerEnVivo = computed(() => String(configuracionApi.public.adsterraMatchPromoUrls || '')
@@ -1044,7 +1046,7 @@ useSeoPont3la10({
       <section class="medio-explora" aria-label="Explora categorías">
         <h2>Explora</h2>
         <nav aria-label="Categorías">
-          <NuxtLink v-for="categoria in categoriasSitio" :key="categoria.ruta" :to="categoria.ruta">{{ categoria.etiqueta === 'Tech deportiva' ? 'Tecnología deportiva' : categoria.etiqueta }} <span aria-hidden="true">↗</span></NuxtLink>
+          <NuxtLink v-for="categoria in categoriasDelSitio" :key="categoria.ruta" :to="categoria.ruta">{{ categoria.etiqueta === 'Tech deportiva' ? 'Tecnología deportiva' : categoria.etiqueta }} <span aria-hidden="true">↗</span></NuxtLink>
         </nav>
       </section>
 

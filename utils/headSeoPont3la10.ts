@@ -25,7 +25,18 @@ export interface OpcionesSeoPont3la10 {
   datosEstructurados?: Record<string, unknown> | Array<Record<string, unknown>>
 }
 
-export function construirHeadSeoPont3la10(urlSitio: string, opciones: OpcionesSeoPont3la10) {
+export interface IdentidadSeoSitio {
+  nombre: string
+  ogLocale: string
+}
+
+const identidadColombia: IdentidadSeoSitio = { nombre: 'Pont3la10', ogLocale: 'es_CO' }
+
+export function construirHeadSeoPont3la10(
+  urlSitio: string,
+  opciones: OpcionesSeoPont3la10,
+  identidad: IdentidadSeoSitio = identidadColombia
+) {
   const canonical = construirUrlAbsoluta(urlSitio, opciones.rutaCanonica || '/')
   const imagen = construirUrlAbsoluta(urlSitio, opciones.imagen || imagenSeoPredeterminada)
   const descripcion = normalizarTextoMeta(opciones.descripcion, limiteDescripcionMeta)
@@ -52,8 +63,8 @@ export function construirHeadSeoPont3la10(urlSitio: string, opciones: OpcionesSe
       ? [{ property: 'og:image:height', content: String(opciones.imagenAlto) }]
       : []),
     { property: 'og:image:alt', content: imagenAlt },
-    { property: 'og:locale', content: 'es_CO' },
-    { property: 'og:site_name', content: 'Pont3la10' },
+    { property: 'og:locale', content: identidad.ogLocale },
+    { property: 'og:site_name', content: identidad.nombre },
     { name: 'twitter:card', content: 'summary_large_image' },
     { name: 'twitter:title', content: opciones.titulo },
     { name: 'twitter:description', content: descripcion },

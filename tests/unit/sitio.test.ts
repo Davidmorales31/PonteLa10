@@ -45,3 +45,38 @@ describe('sitios Colombia y México', () => {
     expect(configuracionDelSitio('desconocido').id).toBe('co')
   })
 })
+
+describe('identidad por sitio', () => {
+  it('México no está lanzado: no es indexable y usa su propio origen', async () => {
+    const { origenDelSitio } = await import('../../utils/sitio')
+    expect(configuracionDelSitio('mx').indexable).toBe(false)
+    expect(configuracionDelSitio('co').indexable).toBe(true)
+    expect(origenDelSitio('mx', 'https://www.pont3la10.com')).toBe('https://mx.pont3la10.com')
+    expect(origenDelSitio('mx', 'http://localhost:3001')).toBe('https://mx.pont3la10.com')
+    expect(origenDelSitio('co', 'http://localhost:3001/')).toBe('http://localhost:3001')
+  })
+
+  it('la navegación de México solo enlaza páginas que existen y no menciona Colombia', async () => {
+    const { navegacionDe, navegacionMasDe, categoriasDe, pieDe, navegacionSitio, categoriasSitio, pieSitio } = await import('../../data/sitioPublico')
+    expect(navegacionDe('co')).toBe(navegacionSitio)
+    expect(categoriasDe('co')).toBe(categoriasSitio)
+    expect(pieDe('co')).toBe(pieSitio)
+    const texto = JSON.stringify([navegacionDe('mx'), navegacionMasDe('mx'), categoriasDe('mx'), pieDe('mx')])
+    expect(texto).not.toMatch(/colombi/i)
+    expect(navegacionDe('mx').every(item => item.ruta.startsWith('/'))).toBe(true)
+    expect(pieDe('mx').columnas.at(-1)).toBe(pieSitio.columnas.at(-1))
+  })
+
+  it('el head SEO usa la identidad del sitio y Colombia sigue igual por defecto', async () => {
+    const { construirHeadSeoPont3la10 } = await import('../../utils/headSeoPont3la10')
+    const opciones = { titulo: 'Hola', descripcion: 'Descripción de prueba', rutaCanonica: '/' }
+    const co = construirHeadSeoPont3la10('https://www.pont3la10.com', opciones)
+    const mx = construirHeadSeoPont3la10('https://mx.pont3la10.com', opciones, { nombre: 'Pont3la10 México', ogLocale: 'es_MX' })
+    const valor = (head: typeof co, propiedad: string) => head.meta.find(m => 'property' in m && m.property === propiedad)?.content
+    expect(valor(co, 'og:locale')).toBe('es_CO')
+    expect(valor(co, 'og:site_name')).toBe('Pont3la10')
+    expect(valor(mx, 'og:locale')).toBe('es_MX')
+    expect(valor(mx, 'og:site_name')).toBe('Pont3la10 México')
+    expect(valor(mx, 'og:url')).toBe('https://mx.pont3la10.com/')
+  })
+})

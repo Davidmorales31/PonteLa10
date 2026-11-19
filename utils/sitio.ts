@@ -20,6 +20,15 @@ export interface ConfiguracionSitio {
   locale: string
   /** Valor de hreflang. */
   idioma: string
+  /** Valor de og:locale. */
+  ogLocale: string
+  /** Descripción corta del pie de página. */
+  lema: string
+  /**
+   * Mientras sea `false` el sitio se sirve con noindex, robots que bloquea todo y mapas
+   * vacíos: así no se indexa contenido a medio construir. Se activa al lanzar.
+   */
+  indexable: boolean
 }
 
 export const configuracionSitios: Record<IdSitio, ConfiguracionSitio> = {
@@ -31,7 +40,10 @@ export const configuracionSitios: Record<IdSitio, ConfiguracionSitio> = {
     hosts: ['www.pont3la10.com', 'pont3la10.com'],
     zonaHoraria: 'America/Bogota',
     locale: 'es-CO',
-    idioma: 'es-CO'
+    idioma: 'es-CO',
+    ogLocale: 'es_CO',
+    lema: 'Deportes, tecnología y tendencias con la jugada clara.',
+    indexable: true
   },
   mx: {
     id: 'mx',
@@ -42,7 +54,10 @@ export const configuracionSitios: Record<IdSitio, ConfiguracionSitio> = {
     // México no usa horario de verano desde 2022: UTC−6 todo el año.
     zonaHoraria: 'America/Mexico_City',
     locale: 'es-MX',
-    idioma: 'es-MX'
+    idioma: 'es-MX',
+    ogLocale: 'es_MX',
+    lema: 'Liga MX, Selección Mexicana, deportes y tendencias con la jugada clara.',
+    indexable: false
   }
 }
 
@@ -81,4 +96,12 @@ export function sitioDesdeHost(host: unknown): IdSitio {
 
 export function configuracionDelSitio(id: unknown): ConfiguracionSitio {
   return configuracionSitios[normalizarIdSitio(id)]
+}
+
+/**
+ * Origen público del sitio. Colombia conserva el origen configurado (así los entornos
+ * locales y de vista previa siguen funcionando); México usa el de su subdominio.
+ */
+export function origenDelSitio(id: IdSitio, origenConfigurado: string): string {
+  return id === 'mx' ? configuracionSitios.mx.origen : origenConfigurado.replace(/\/+$/, '')
 }
