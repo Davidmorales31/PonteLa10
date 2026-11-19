@@ -463,7 +463,9 @@ export const esquemaOportunidadCodex = z.union([
 ])
 
 export const esquemaContextoCodex = z.object({
-  runId: z.string().uuid()
+  runId: z.string().uuid(),
+  // Sitio de la corrida; solo cuenta al crearla (una corrida existente conserva el suyo).
+  site: z.enum(['co', 'mx']).optional()
 }).strict()
 
 export const esquemaBorradorCodex = z.object({

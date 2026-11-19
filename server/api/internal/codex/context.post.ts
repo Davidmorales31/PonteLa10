@@ -7,6 +7,7 @@ import {
 import { esquemaContextoCodex } from '~/server/utils/esquemasCodexEditorial'
 import { clasificarErrorContextoCodex } from '~/server/utils/errorContextoCodex'
 import politicaAutomatizacion from '~/config/automatizacionEditorial.json'
+import politicaAutomatizacionMx from '~/config/automatizacionEditorialMx.json'
 
 const limiteContextoBytes = 20_000
 
@@ -27,7 +28,7 @@ export default defineEventHandler(async (evento) => {
   }
 
   const { data, error } = await obtenerClienteCodexPrivado(evento)
-    .rpc('get_codex_editorial_context', { p_run_id: resultado.data.runId })
+    .rpc('get_codex_editorial_context', { p_run_id: resultado.data.runId, p_site: resultado.data.site ?? 'co' })
   if (error || !data || typeof data !== 'object') {
     const problema = clasificarErrorContextoCodex(error)
     throw createError({
@@ -37,5 +38,7 @@ export default defineEventHandler(async (evento) => {
     })
   }
 
-  return { ...data, politicaAutomatizacion }
+  // La política que se devuelve es la del sitio de la corrida (la existente conserva el suyo).
+  const sitioCorrida = (data as { site?: unknown }).site ?? resultado.data.site
+  return { ...data, politicaAutomatizacion: sitioCorrida === 'mx' ? politicaAutomatizacionMx : politicaAutomatizacion }
 })
