@@ -51,7 +51,6 @@ const navegacionMexico: ItemNavegacionLanding[] = [
   { etiqueta: 'Partidos de hoy', ruta: '/partidos-hoy' },
   { etiqueta: 'Liga MX', ruta: '/liga-mx' },
   { etiqueta: 'Selección Mexicana', ruta: '/seleccion-mexicana' },
-  { etiqueta: 'Mexicanos en el exterior', ruta: '/mexicanos-en-el-exterior' },
   { etiqueta: 'Resultados', ruta: '/resultados' },
   { etiqueta: 'Noticias', ruta: '/articulos' }
 ]
@@ -59,6 +58,7 @@ const navegacionMexico: ItemNavegacionLanding[] = [
 const navegacionMasMexico: ItemNavegacionLanding[] = [
   { etiqueta: 'Fútbol mexicano', ruta: '/futbol-mexicano' },
   { etiqueta: 'Clubes', ruta: '/clubes' },
+  { etiqueta: 'Mexicanos en el exterior', ruta: '/mexicanos-en-el-exterior' },
   { etiqueta: 'Fútbol internacional', ruta: '/futbol-internacional' },
   { etiqueta: 'Especiales', ruta: '/especiales' },
   { etiqueta: 'Tech deportiva', ruta: '/articulos?categoria=tecnologia' },

@@ -216,6 +216,7 @@ body.tema-publico-blanco .migas-navegacion .separador-miga {
 }
 
 .etiqueta-sitio-cabecera {
+  flex: none;
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
   background: #08204a;
@@ -3675,4 +3676,22 @@ body.tema-publico-blanco .pagina-especiales .ilustracion-especial {
 
 body.tema-publico-blanco .cabecera-pagina.cabecera-noticias-medio.cabecera-competicion h1 {
   color: #ffffff;
+}
+
+/* Sitio de México: la insignia convive con el menú sin tapar el primer enlace. */
+.etiqueta-sitio-cabecera .etiqueta-corta { display: none; }
+
+@media (min-width: 1181px) {
+  .cabecera-landing-contenido:has(.etiqueta-sitio-cabecera) {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+
+@media (min-width: 1021px) and (max-width: 1180px) {
+  .marca-cabecera-landing:has(.etiqueta-sitio-cabecera) picture {
+    width: 124px;
+  }
+
+  .etiqueta-sitio-cabecera .etiqueta-larga { display: none; }
+  .etiqueta-sitio-cabecera .etiqueta-corta { display: inline; }
 }

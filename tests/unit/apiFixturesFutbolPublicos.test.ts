@@ -28,7 +28,7 @@ describe('API SSR pública de fixtures', () => {
 
   it('no conserva snapshots vencidos en SWR y la página refresca su agenda cada minuto', () => {
     const ruta = readFileSync(new URL('../../server/api/resultados/index.get.ts', import.meta.url), 'utf8')
-    const pagina = readFileSync(new URL('../../pages/partidos-hoy.vue', import.meta.url), 'utf8')
+    const pagina = readFileSync(new URL('../../components/publico/PartidosHoyGeneral.vue', import.meta.url), 'utf8')
     expect(ruta).toContain('swr: false')
     expect(ruta).toContain('staleMaxAge: 0')
     expect(pagina).toContain('intervaloActualizacion = setInterval(')

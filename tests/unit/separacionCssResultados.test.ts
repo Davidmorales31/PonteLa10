@@ -11,7 +11,7 @@ const estilosPublicos = leer('assets/css/landing.css')
 const vistasConResultados = [
   'components/CentroResultadosDeportivos.vue',
   'components/FranjaMarcadores.vue',
-  'pages/partidos-hoy.vue',
+  'components/publico/PartidosHoyGeneral.vue',
   'pages/resultados/[id].vue',
   'pages/resultados/en-vivo.vue'
 ]
