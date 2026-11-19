@@ -1,6 +1,6 @@
 import { exigirPermisoEditorial } from '~/server/utils/autorizacionEditorial'
 import { obtenerClienteSupabaseEditorial } from '~/server/utils/clienteSupabaseEditorial'
-import { construirSaludFrescuraFutbol, type FilaPartidoSaludFrescura, type FilaTablaSaludFrescura } from '~/server/utils/saludFrescuraFutbol'
+import { COMPETENCIAS_MEXICO, construirSaludFrescuraFutbol, type FilaPartidoSaludFrescura, type FilaTablaSaludFrescura } from '~/server/utils/saludFrescuraFutbol'
 
 const limiteCalendario = 1000
 const limiteTablas = 500
@@ -27,6 +27,39 @@ export default defineEventHandler(async (evento) => {
       .limit(limiteTablas)
   ])
 
+  // México: misma lectura sobre las tablas por sitio. Un fallo aquí no tumba el monitor de Colombia.
+  const slugsMexico = Object.keys(COMPETENCIAS_MEXICO)
+  const [calendarioMx, tablasMx] = await Promise.all([
+    cliente.from('league_fixtures')
+      .select('competition_slug,status,scheduled_at,checked_at', { count: 'exact' })
+      .eq('site', 'mx')
+      .in('competition_slug', slugsMexico)
+      .eq('is_public', true)
+      .eq('publication_rights_confirmed', true)
+      .order('checked_at', { ascending: true })
+      .limit(limiteCalendario),
+    cliente.from('league_standings')
+      .select('competition_slug,checked_at', { count: 'exact' })
+      .eq('site', 'mx')
+      .in('competition_slug', slugsMexico)
+      .eq('is_public', true)
+      .eq('publication_rights_confirmed', true)
+      .order('checked_at', { ascending: true })
+      .limit(limiteTablas)
+  ])
+  const mexico = calendarioMx.error || !calendarioMx.data || tablasMx.error || !tablasMx.data
+    ? undefined
+    : construirSaludFrescuraFutbol(
+        calendarioMx.data as unknown as FilaPartidoSaludFrescura[],
+        tablasMx.data as unknown as FilaTablaSaludFrescura[],
+        Date.now(),
+        calendarioMx.count ?? calendarioMx.data.length,
+        tablasMx.count ?? tablasMx.data.length,
+        limiteCalendario,
+        limiteTablas,
+        COMPETENCIAS_MEXICO
+      )
+
   if (respuestaCalendario.error || !respuestaCalendario.data || respuestaTablas.error || !respuestaTablas.data) {
     throw createError({
       statusCode: 503,
@@ -35,7 +68,7 @@ export default defineEventHandler(async (evento) => {
     })
   }
 
-  return construirSaludFrescuraFutbol(
+  const colombia = construirSaludFrescuraFutbol(
     respuestaCalendario.data as unknown as FilaPartidoSaludFrescura[],
     respuestaTablas.data as unknown as FilaTablaSaludFrescura[],
     Date.now(),
@@ -44,4 +77,6 @@ export default defineEventHandler(async (evento) => {
     limiteCalendario,
     limiteTablas
   )
+
+  return mexico ? { ...colombia, mexico } : colombia
 })

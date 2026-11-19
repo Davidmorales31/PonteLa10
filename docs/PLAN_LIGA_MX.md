@@ -18,7 +18,7 @@ Avance por fase (detalle en `docs/agents/handoffs/2026-11-19-sitios-liga-mx-fase
 
 Pendientes técnicos conocidos (no bloquean el lanzamiento, mejoran México):
 - Grafo de entidades SEO con clubes y competiciones de México (hoy los artículos de México no generan enlaces a `/clubes/...`).
-- Frescura y salud de los datos de México en el panel de Operación (hoy solo muestra Colombia).
+- ~~Frescura y salud de los datos de México en el panel de Operación~~ (hecho: bloque «México» en Operación y alerta si hay datos vencidos).
 - «Dónde ver» y fichas de jugadores de México (requieren datos verificados).
 - Separación de 15 minutos entre publicaciones y detección de duplicados de la agenda: hoy comparten fila los dos sitios.
 - Alcance por sitio en las llaves de agentes de redes y prueba de publicación real en redes con un artículo de México.

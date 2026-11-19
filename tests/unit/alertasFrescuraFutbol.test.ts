@@ -30,4 +30,19 @@ describe('alertas de frescura de fútbol', () => {
       coberturaCompleta: true
     }, false)).toEqual([])
   })
+
+  it('México alerta solo con datos vencidos, no mientras no tenga datos', () => {
+    const base = { calendario: [grupoSaludable], tablas: [grupoSaludable], coberturaCompleta: true }
+    expect(generarAlertasFrescuraFutbol({
+      ...base,
+      mexico: { calendario: [{ estado: 'sin_datos' }], tablas: [{ estado: 'sin_datos' }], coberturaCompleta: true }
+    }, false)).toEqual([])
+    expect(generarAlertasFrescuraFutbol({
+      ...base,
+      mexico: { calendario: [{ estado: 'atencion' }], tablas: [grupoSaludable], coberturaCompleta: false }
+    }, false)).toEqual([
+      'Hay datos deportivos de México pendientes de actualización',
+      'La cobertura del monitor de frescura es parcial'
+    ])
+  })
 })

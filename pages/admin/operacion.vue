@@ -51,6 +51,7 @@ interface SaludFrescuraFutbol {
   filasRecibidas: { calendario: number, tablas: number }
   limitesConsulta: { calendario: number, tablas: number }
   coberturaCompleta: boolean
+  mexico?: SaludFrescuraFutbol
 }
 
 definePageMeta({
@@ -249,24 +250,27 @@ function estadoControlFrescura(grupo: GrupoFrescuraFutbol): string {
         <template v-else-if="saludFutbol">
           <p class="nota-operacion-editorial">Consulta {{ formatearFecha(saludFutbol.consultadoEn) }} · umbrales: en vivo 3 min, prepartido 30 min, calendario 36 h, aplazado/suspendido 90 min y tabla 60 min.</p>
           <p v-if="!saludFutbol.coberturaCompleta" class="aviso-panel aviso-panel-atencion" role="status">Consulta parcial: se alcanzó el límite de filas. No se interpreta como cobertura completa.</p>
-          <div class="resumen-frescura-futbol">
-            <div>
-              <h3>Calendario y marcadores</h3>
-              <dl v-for="grupo in saludFutbol.calendario" :key="`fixture-${grupo.competencia}`">
-                <div><dt>{{ grupo.competencia }}</dt><dd><span :class="claseEstado(grupo.estado)">{{ estadoControlFrescura(grupo) }}</span></dd></div>
-                <div><dt>Filas · vencidas · sin verificación</dt><dd>{{ grupo.registros }} · {{ grupo.desactualizados }} · {{ grupo.sinVerificacion }}</dd></div>
-                <div><dt>Última verificación</dt><dd>{{ formatearFecha(grupo.ultimaVerificacion) }}</dd></div>
-              </dl>
+          <template v-for="bloque in [{ titulo: 'Colombia', salud: saludFutbol }, ...(saludFutbol.mexico ? [{ titulo: 'México', salud: saludFutbol.mexico }] : [])]" :key="bloque.titulo">
+            <h3 class="titulo-sitio-frescura">{{ bloque.titulo }}</h3>
+            <div class="resumen-frescura-futbol">
+              <div>
+                <h3>Calendario y marcadores</h3>
+                <dl v-for="grupo in bloque.salud.calendario" :key="`fixture-${bloque.titulo}-${grupo.competencia}`">
+                  <div><dt>{{ grupo.competencia }}</dt><dd><span :class="claseEstado(grupo.estado)">{{ estadoControlFrescura(grupo) }}</span></dd></div>
+                  <div><dt>Filas · vencidas · sin verificación</dt><dd>{{ grupo.registros }} · {{ grupo.desactualizados }} · {{ grupo.sinVerificacion }}</dd></div>
+                  <div><dt>Última verificación</dt><dd>{{ formatearFecha(grupo.ultimaVerificacion) }}</dd></div>
+                </dl>
+              </div>
+              <div>
+                <h3>Tablas de posiciones</h3>
+                <dl v-for="grupo in bloque.salud.tablas" :key="`tabla-${bloque.titulo}-${grupo.competencia}`">
+                  <div><dt>{{ grupo.competencia }}</dt><dd><span :class="claseEstado(grupo.estado)">{{ estadoControlFrescura(grupo) }}</span></dd></div>
+                  <div><dt>Filas · vencidas · sin verificación</dt><dd>{{ grupo.registros }} · {{ grupo.desactualizados }} · {{ grupo.sinVerificacion }}</dd></div>
+                  <div><dt>Última verificación</dt><dd>{{ formatearFecha(grupo.ultimaVerificacion) }}</dd></div>
+                </dl>
+              </div>
             </div>
-            <div>
-              <h3>Tablas de posiciones</h3>
-              <dl v-for="grupo in saludFutbol.tablas" :key="`tabla-${grupo.competencia}`">
-                <div><dt>{{ grupo.competencia }}</dt><dd><span :class="claseEstado(grupo.estado)">{{ estadoControlFrescura(grupo) }}</span></dd></div>
-                <div><dt>Filas · vencidas · sin verificación</dt><dd>{{ grupo.registros }} · {{ grupo.desactualizados }} · {{ grupo.sinVerificacion }}</dd></div>
-                <div><dt>Última verificación</dt><dd>{{ formatearFecha(grupo.ultimaVerificacion) }}</dd></div>
-              </dl>
-            </div>
-          </div>
+          </template>
           <p class="nota-operacion-editorial">Solo se leen registros públicos con derechos confirmados; no se consultan APIs deportivas ni se gastan cuotas. La consulta está protegida por permisos editoriales y RLS.</p>
         </template>
       </section>
@@ -293,6 +297,7 @@ function estadoControlFrescura(grupo: GrupoFrescuraFutbol): string {
 .tarjeta-salud-operativa dd small { font-weight: 400; color: var(--texto-secundario-panel, #64748b); }
 .tarjeta-salud-futbol { grid-column: 1 / -1; }
 .resumen-frescura-futbol { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; }
+.titulo-sitio-frescura { margin: .5rem 0 0; font-size: 1rem; }
 .resumen-frescura-futbol h3 { margin: 0 0 .75rem; font-size: .95rem; }
 .resumen-frescura-futbol dl { display: grid; gap: .45rem; margin: 0 0 1rem; }
 .resumen-frescura-futbol dl > div { display: flex; justify-content: space-between; align-items: baseline; gap: .75rem; border-bottom: 1px solid var(--borde-panel, #e2e8f0); padding-bottom: .35rem; }
