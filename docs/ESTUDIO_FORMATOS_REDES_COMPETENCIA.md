@@ -51,3 +51,16 @@ ni patrocinios de terceros; las fotos siguen siendo reales y acreditadas.
 
 Hoy el compositor (`utils/editorial/publicacionesPropias.ts`) admite fotos en celdas, texto en tres colores con banda o degradado
 y el logo: alcanza para la portada de impacto básica, no para comillas, círculos, VS ni «DESLIZA».
+
+## Flujo local de noticia a imagen (sin agentes) — estado
+
+Decisión del responsable (2026-11-20): todo corre en su PC y no depende de agentes ni de modelos de lenguaje.
+
+1. Detectar notas publicadas sin publicación social (programador local; hoy `--pendientes --auto` de `scripts/redes-publicar-articulo.mjs`).
+2. Elegir formato por reglas (cita, versus, dato, carrusel o portada de impacto) con orden estable por nota. **Pendiente.**
+3. Preparar la foto: `scripts/redes_recortar.py` recorta al protagonista con `rembg` (modelo u2net, ~176 MB, se descarga en
+   la primera ejecución; instalado con `python -m pip install --user "rembg[cpu]"`).
+4. Dibujar: `scripts/redes-imagen-impacto.mjs` (sharp + opentype.js, tipografía Anton con licencia OFL en `public/fonts/`).
+   **Hecho: portada de impacto** (palabra gigante, línea fina, subtítulo, logo). `node scripts/redes-imagen-impacto.mjs <slug>`.
+5. Medir contra rangos por formato (capturas de Cracks y La Gambeta). **Pendiente.**
+6. Subir la imagen y programar con la API de redes. **Pendiente.**
