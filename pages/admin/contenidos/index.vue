@@ -8,9 +8,12 @@ import {
   Search,
   SlidersHorizontal
 } from '@lucide/vue'
+import PanelPestanas from '~/components/admin/ui/PanelPestanas.vue'
+import PanelPopover from '~/components/admin/ui/PanelPopover.vue'
 import ModalCrearBorrador from '~/components/admin/ModalCrearBorrador.vue'
 import ModalEliminarContenido from '~/components/admin/ModalEliminarContenido.vue'
 import TablaContenidosEditoriales from '~/components/admin/TablaContenidosEditoriales.vue'
+import type { ResumenPanelEditorial } from '~/types/editorial'
 import type {
   BorradorCreadoEditorial,
   ArticuloBandejaEditorial,
@@ -85,6 +88,23 @@ const {
   data: taxonomias
 } = await useFetch<TaxonomiasEditoriales>('/api/admin/taxonomias')
 
+// Conteos de las pestañas: no bloquean la bandeja si fallan.
+const { data: resumen } = useFetch<ResumenPanelEditorial>('/api/admin/resumen', { lazy: true, server: false })
+
+const pestanasEstado = computed(() => [
+  { id: 'todos', etiqueta: 'Todos', conteo: resumen.value?.totalContenidos ?? null },
+  { id: 'draft', etiqueta: 'Borradores', conteo: resumen.value?.borradores ?? null },
+  { id: 'review', etiqueta: 'En revisión', conteo: resumen.value?.enRevision ?? null },
+  { id: 'scheduled', etiqueta: 'Programados' },
+  { id: 'published', etiqueta: 'Publicados', conteo: resumen.value?.publicados ?? null }
+])
+const pestanaActiva = computed({
+  get: () => (estado.value === '' ? 'todos' : pestanasEstado.value.some(p => p.id === estado.value) ? estado.value : 'otro'),
+  set: (valor: string) => { estado.value = valor === 'todos' ? '' : valor as EstadoContenidoEditorial }
+})
+const filtrosAvanzados = computed(() => [tipo.value, categoriaId.value, origen.value].filter(Boolean).length
+  + (estado.value && !pestanasEstado.value.some(p => p.id === estado.value) ? 1 : 0))
+
 const contenidos = computed(() => respuesta.value?.contenidos || [])
 const paginacion = computed(() => respuesta.value?.paginacion || {
   pagina: 1,
@@ -123,6 +143,14 @@ function abrirModal() {
   errorCreacion.value = ''
   mensajeExito.value = ''
   modalAbierto.value = true
+}
+
+// Atajo de la paleta (Ctrl K → «Nuevo borrador»).
+if (route.query.nuevo === '1' && tienePermiso('contenido.crear')) {
+  onMounted(() => {
+    abrirModal()
+    navigateTo({ path: route.path, query: {} }, { replace: true })
+  })
 }
 
 async function crearBorrador(entrada: {
@@ -168,12 +196,11 @@ async function contenidoEliminado() {
 </script>
 
 <template>
-  <div class="vista-panel-editorial vista-bandeja-contenidos">
+  <div class="pagina-ajustada">
     <header class="titulo-vista-panel">
       <div>
-        <p class="etiqueta-panel">Mesa de trabajo</p>
         <h1>Contenidos</h1>
-        <p>Organiza borradores, revisiones y publicaciones desde una sola bandeja.</p>
+        <p>Borradores, revisiones y publicaciones en una sola bandeja.</p>
       </div>
       <button
         v-if="tienePermiso('contenido.crear')"
@@ -186,12 +213,12 @@ async function contenidoEliminado() {
       </button>
     </header>
 
-    <p v-if="mensajeExito" class="aviso-exito-editorial" role="status">
-      {{ mensajeExito }}
-    </p>
+    <p v-if="mensajeExito" class="aviso-panel" role="status">{{ mensajeExito }}</p>
 
-    <section class="barra-filtros-editoriales" aria-label="Filtros de contenidos">
-      <form class="buscador-bandeja" role="search" @submit.prevent="aplicarBusqueda">
+    <PanelPestanas v-model="pestanaActiva" :pestanas="pestanasEstado" etiqueta="Estado de los contenidos" />
+
+    <section class="barra-herramientas" aria-label="Buscar y filtrar contenidos">
+      <form class="buscador-panel" role="search" @submit.prevent="aplicarBusqueda">
         <Search aria-hidden="true" />
         <input
           v-model="busqueda"
@@ -203,72 +230,58 @@ async function contenidoEliminado() {
         <button type="submit">Buscar</button>
       </form>
 
-      <div class="filtros-select-bandeja">
-        <SlidersHorizontal aria-hidden="true" />
-        <select v-model="estado" aria-label="Filtrar por estado">
-          <option value="">Todos los estados</option>
-          <option v-for="valor in estadosContenidoEditorial" :key="valor" :value="valor">
-            {{ etiquetasEstadoContenido[valor] }}
-          </option>
-        </select>
-        <select v-model="tipo" aria-label="Filtrar por tipo">
-          <option value="">Todos los tipos</option>
-          <option v-for="valor in tiposContenidoEditorial" :key="valor" :value="valor">
-            {{ etiquetasTipoContenido[valor] }}
-          </option>
-        </select>
-        <select v-model="categoriaId" aria-label="Filtrar por sección">
-          <option value="">Todas las secciones</option>
-          <option
-            v-for="categoria in taxonomias?.categorias || []"
-            :key="categoria.id"
-            :value="categoria.id"
-          >
-            {{ categoria.nombre }}
-          </option>
-        </select>
-        <select v-model="origen" aria-label="Filtrar por origen">
-          <option value="">Todos los orígenes</option>
-          <option v-for="valor in origenesContenidoEditorial" :key="valor" :value="valor">
-            {{ etiquetasOrigenContenido[valor] }}
-          </option>
-        </select>
-        <button
-          v-if="hayFiltros"
-          class="boton-icono-editorial"
-          type="button"
-          title="Limpiar filtros"
-          aria-label="Limpiar filtros"
-          @click="limpiarFiltros"
-        >
-          <RotateCcw aria-hidden="true" />
-        </button>
-      </div>
+      <PanelPopover etiqueta="Filtros" :insignia="filtrosAvanzados">
+        <template #icono><SlidersHorizontal aria-hidden="true" /></template>
+        <div class="popover-panel-formulario">
+          <label>Tipo
+            <select v-model="tipo" class="campo-panel">
+              <option value="">Todos los tipos</option>
+              <option v-for="valor in tiposContenidoEditorial" :key="valor" :value="valor">{{ etiquetasTipoContenido[valor] }}</option>
+            </select>
+          </label>
+          <label>Sección
+            <select v-model="categoriaId" class="campo-panel">
+              <option value="">Todas las secciones</option>
+              <option v-for="categoria in taxonomias?.categorias || []" :key="categoria.id" :value="categoria.id">{{ categoria.nombre }}</option>
+            </select>
+          </label>
+          <label>Origen
+            <select v-model="origen" class="campo-panel">
+              <option value="">Todos los orígenes</option>
+              <option v-for="valor in origenesContenidoEditorial" :key="valor" :value="valor">{{ etiquetasOrigenContenido[valor] }}</option>
+            </select>
+          </label>
+          <label>Otros estados
+            <select v-model="estado" class="campo-panel">
+              <option value="">Cualquiera</option>
+              <option v-for="valor in estadosContenidoEditorial" :key="valor" :value="valor">{{ etiquetasEstadoContenido[valor] }}</option>
+            </select>
+          </label>
+        </div>
+      </PanelPopover>
+
+      <button v-if="hayFiltros" class="boton-panel" type="button" @click="limpiarFiltros">
+        <RotateCcw aria-hidden="true" />
+        Limpiar
+      </button>
     </section>
 
-    <section class="bandeja-contenidos-panel" aria-live="polite">
-      <div v-if="status === 'pending'" class="esqueleto-tabla-contenidos" aria-label="Cargando contenidos">
-        <span v-for="indice in 7" :key="indice" />
+    <section class="zona-desplazable" aria-live="polite" aria-label="Lista de contenidos">
+      <div v-if="status === 'pending'" aria-label="Cargando contenidos">
+        <div v-for="indice in 8" :key="indice" class="esqueleto-fila" />
       </div>
 
-      <div v-else-if="error" class="estado-vacio-panel">
+      <div v-else-if="error" class="estado-vacio-compacto">
         <RotateCcw aria-hidden="true" />
         <h2>No pudimos cargar los contenidos</h2>
         <p>Comprueba la migración editorial o vuelve a intentar la consulta.</p>
-        <button class="boton-editorial-secundario" type="button" @click="() => refresh()">
-          Reintentar
-        </button>
+        <button class="boton-panel" type="button" @click="() => refresh()">Reintentar</button>
       </div>
 
-      <div v-else-if="!contenidos.length" class="estado-vacio-panel">
+      <div v-else-if="!contenidos.length" class="estado-vacio-compacto">
         <Inbox aria-hidden="true" />
         <h2>{{ hayFiltros ? 'No encontramos coincidencias' : 'La bandeja está lista' }}</h2>
-        <p>
-          {{ hayFiltros
-            ? 'Ajusta los filtros para ampliar la búsqueda.'
-            : 'Crea el primer borrador manual de Ponte la 10.'
-          }}
-        </p>
+        <p>{{ hayFiltros ? 'Ajusta los filtros para ampliar la búsqueda.' : 'Crea el primer borrador manual de Ponte la 10.' }}</p>
         <button
           v-if="!hayFiltros && tienePermiso('contenido.crear')"
           class="boton-editorial-principal"
@@ -280,40 +293,25 @@ async function contenidoEliminado() {
         </button>
       </div>
 
-      <template v-else>
-        <TablaContenidosEditoriales
-          :contenidos="contenidos"
-          :puede-eliminar="tienePermiso('contenido.eliminar')"
-          @eliminar="articuloEliminar = $event"
-        />
-        <footer class="paginacion-editorial">
-          <span>
-            {{ paginacion.total }} contenidos
-            <strong>Página {{ paginacion.pagina }} de {{ paginacion.totalPaginas }}</strong>
-          </span>
-          <div>
-            <button
-              type="button"
-              title="Página anterior"
-              aria-label="Página anterior"
-              :disabled="pagina <= 1"
-              @click="pagina -= 1"
-            >
-              <ChevronLeft aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              title="Página siguiente"
-              aria-label="Página siguiente"
-              :disabled="pagina >= paginacion.totalPaginas"
-              @click="pagina += 1"
-            >
-              <ChevronRight aria-hidden="true" />
-            </button>
-          </div>
-        </footer>
-      </template>
+      <TablaContenidosEditoriales
+        v-else
+        :contenidos="contenidos"
+        :puede-eliminar="tienePermiso('contenido.eliminar')"
+        @eliminar="articuloEliminar = $event"
+      />
     </section>
+
+    <footer v-if="contenidos.length" class="pie-lista">
+      <span><strong>{{ paginacion.total }}</strong> contenidos · página {{ paginacion.pagina }} de {{ paginacion.totalPaginas }}</span>
+      <div class="paginas">
+        <button type="button" title="Página anterior" aria-label="Página anterior" :disabled="pagina <= 1" @click="pagina -= 1">
+          <ChevronLeft aria-hidden="true" />
+        </button>
+        <button type="button" title="Página siguiente" aria-label="Página siguiente" :disabled="pagina >= paginacion.totalPaginas" @click="pagina += 1">
+          <ChevronRight aria-hidden="true" />
+        </button>
+      </div>
+    </footer>
 
     <ModalCrearBorrador
       :abierto="modalAbierto"
