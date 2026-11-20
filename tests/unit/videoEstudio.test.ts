@@ -96,3 +96,17 @@ describe('medición de miniaturas en el estudio', () => {
     expect(await medicionDeMiniatura(resolve(carpeta, 'no-existe.jpg'), 1)).toBeNull()
   })
 })
+
+describe('horas de publicación de los Reels', () => {
+  it('propone franjas de Bogotá sin chocar con lo programado ni caer en la madrugada', async () => {
+    const { proponerHoras } = await import('../../scripts/video-horarios.mjs') as { proponerHoras: (o: Record<string, unknown>) => string[] }
+    const ahora = Date.parse('2026-11-20T15:30:00Z') // 10:30 en Bogotá
+    expect(proponerHoras({ ahora, cantidad: 3 })).toEqual(['2026-11-20T17:30:00.000Z', '2026-11-20T21:30:00.000Z', '2026-11-21T00:30:00.000Z'])
+    const conOcupada = proponerHoras({ ahora, cantidad: 2, ocupadas: ['2026-11-20T17:30:00Z'] })
+    expect(conOcupada).toEqual(['2026-11-20T21:30:00.000Z', '2026-11-21T00:30:00.000Z'])
+    for (const h of proponerHoras({ ahora, cantidad: 12 })) {
+      const hora = new Date(Date.parse(h) - 5 * 3_600_000).getUTCHours()
+      expect(hora >= 6 && hora < 23).toBe(true)
+    }
+  })
+})

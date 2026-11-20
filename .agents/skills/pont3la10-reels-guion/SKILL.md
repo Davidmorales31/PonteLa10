@@ -84,3 +84,7 @@ autor}), `marcador` ({competencia, local, golesLocal, visita, golesVisita, estad
 
 Informa: los Reels con su club, formato, duración estimada y puntaje; qué historias del día descartaste y por qué; y que
 Juan debe grabar gancho, desarrollo y cierre de cada uno en el estudio (proyectos «Reel N · Club»).
+
+## Horas de publicación
+
+Si propones o programas horas, usa solo `config/horariosPublicacion.json` (explicado en `docs/HORARIOS_PUBLICACION.md`): la noticia del día sale en la primera franja libre de hoy. Programar sigue requiriendo la aprobación de Juan.

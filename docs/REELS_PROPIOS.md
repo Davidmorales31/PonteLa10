@@ -85,3 +85,5 @@ pack ya dice «Ponte la 10» (`node scripts/generar-logos-marca.mjs`).
 - Un beat de gráfico (dato, lista, cita…) no se parte: si dura más de 5 s, conviene acortar su texto.
 - Sin probar todavía con una toma real grabada para un Reel (sí con una toma del video largo: transcripción, alineación y
   subtítulos funcionan).
+
+Horas de programación: salen de la regla `config/horariosPublicacion.json` (ver `docs/HORARIOS_PUBLICACION.md`); no se improvisan.
