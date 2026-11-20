@@ -35,6 +35,9 @@ código y pruebas prevalecen sobre resúmenes desactualizados.
   aprobar y programar mediante la ruta privada y auditada descrita en
   `docs/AUTOMATIZACION_EDITORIAL_IA.md`; esta excepción no cambia los permisos ni
   el MFA de las acciones humanas.
+- Reels y Shorts con guion propio: el responsable autorizó el 2026-11-20 («al menos los shorts») que el estudio local
+  los renderice y los **programe** solo cuando termina de grabar su voz, nunca los publique al instante y con la regla de
+  `docs/HORARIOS_PUBLICACION.md`. Se enciende y apaga en «Ver Reels»; no aplica al video largo ni a otros contenidos.
 - Supabase y herramientas opcionales no deben romper la ejecución local cuando
   falten variables o programas.
 

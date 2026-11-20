@@ -49,6 +49,7 @@
   .boton-proyecto .p-nombre { max-width: 290px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; font-size: 13px; color: var(--texto); }
   .boton-proyecto .p-sub { font-size: 11px; font-weight: 500; color: var(--texto-3); }
   .proyecto label.interruptor { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--panel-2); color: var(--texto-2); font-size: 12px; font-weight: 600; cursor: pointer; }
+  #dialogo-reels label.interruptor { display: flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 12px; font-weight: 600; color: var(--texto-2); cursor: pointer; }
   .interruptor input { width: 16px; height: 16px; margin: 0; accent-color: var(--acento); cursor: pointer; }
   .proyecto label.interruptor.activo { border-color: var(--acento); color: var(--acento-texto); background: rgba(66, 99, 235, .12); }
   .interruptor[aria-busy="true"] { opacity: .6; cursor: progress; }
@@ -452,6 +453,8 @@
   <h2 id="t-reels">Tus Reels</h2>
   <p class="etiqueta-chica" style="margin-top:0">Vertical 1080×1920 con subtítulos. Aquí están todos los Reels del proyecto principal: los de guion propio y los cortes del video. Marca los que quieras programar y ponle a cada uno su hora. Se publican en <strong>Facebook e Instagram</strong>.</p>
   <div id="aviso-redes" class="aviso-redes" hidden></div>
+  <label class="interruptor" title="Cuando terminas de grabar toda la voz de un Reel, el estudio lo renderiza y lo programa solo en la primera franja libre (nunca lo publica al instante)."><input type="checkbox" id="piloto-activo"><span>Piloto automático: renderizar y programar solo al terminar la voz</span></label>
+  <p class="etiqueta-chica" id="piloto-registro" role="status"></p>
   <div class="programar-todos" id="programar-todos">
     <label class="campo">Primer Reel el<input type="datetime-local" id="todos-inicio"></label>
     <label class="campo">Uno cada
@@ -1218,8 +1221,18 @@ async function programarTodos() {
   pintarReels()
 }
 
+// Piloto automático: lo apagado es lo normal; encendido, el estudio renderiza y programa solo (ver docs/HORARIOS_PUBLICACION.md).
+async function pintarPiloto() {
+  try {
+    const p = await api('/api/autopiloto')
+    $('#piloto-activo').checked = p.activo
+    const ultimo = (p.registro || []).filter(x => x.proyecto !== '-').slice(-1)[0]
+    $('#piloto-registro').textContent = ultimo ? `Último aviso (${new Date(ultimo.en).toLocaleString('es-CO', { hour: 'numeric', minute: '2-digit', day: 'numeric', month: 'short' })}): ${ultimo.proyecto}: ${ultimo.texto}` : ''
+  } catch { /* sin piloto en un estudio viejo */ }
+}
 async function verReels() {
   pintarReels()
+  pintarPiloto()
   $('#dialogo-reels').showModal()
   // Al abrir, se refresca el estado real (¿ya se publicó? ¿falló?) de cada proyecto de la familia, sin bloquear la ventana.
   const duenos = [...new Set((detalle.reels || []).filter(r => r.listo && r.publicacion).map(r => r.proyecto))]
@@ -1595,6 +1608,7 @@ $('#zona-miniaturas').addEventListener('drop', e => { e.preventDefault(); $('#zo
 $('#zona-miniaturas').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#archivo-miniaturas').click() } })
 $('#todos-programar').addEventListener('click', programarTodos)
 $('#reels-repartir').addEventListener('click', repartirHoras)
+$('#piloto-activo').addEventListener('change', async e => { try { await api('/api/autopiloto', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ activo: e.target.checked }) }); avisar(e.target.checked ? 'Piloto automático encendido: al terminar la voz de un Reel, se renderiza y se programa solo.' : 'Piloto automático apagado.', 'ok') } catch (err) { e.target.checked = !e.target.checked; avisar(err.message, 'error') } })
 $('#reels-marcar').addEventListener('click', () => { desmarcadosReels.clear(); pintarReels() })
 $('#reels-desmarcar').addEventListener('click', () => { for (const r of (detalle.reels || []).filter(programable)) desmarcadosReels.add(claveReel(r)); pintarReels() })
 $('#volver-padre').addEventListener('click', () => abrirProyecto(detalle.padre))

@@ -110,3 +110,19 @@ describe('horas de publicación de los Reels', () => {
     }
   })
 })
+
+describe('piloto automático de Reels', () => {
+  const base = { activo: true, tipo: 'reel', tramos: 5, grabados: 5, ultimaTomaMs: 0, ahora: 30 * 60_000, tieneFinal: false, publicacion: null, ocupado: false, intentos: 0 }
+  it('renderiza al completar la voz y luego programa; respeta lo apagado, lo incompleto y lo cancelado', async () => {
+    const { decidirAccion } = await import('../../scripts/video-autopiloto-reels.mjs') as unknown as { decidirAccion: (o: Record<string, unknown>) => string | null }
+    expect(decidirAccion(base)).toBe('render')
+    expect(decidirAccion({ ...base, tieneFinal: true })).toBe('programar')
+    expect(decidirAccion({ ...base, activo: false })).toBeNull()
+    expect(decidirAccion({ ...base, grabados: 4 })).toBeNull()
+    expect(decidirAccion({ ...base, ahora: 5 * 60_000 })).toBeNull() // todavía dentro del margen de corrección
+    expect(decidirAccion({ ...base, ocupado: true })).toBeNull()
+    expect(decidirAccion({ ...base, intentos: 2 })).toBeNull()
+    expect(decidirAccion({ ...base, tieneFinal: true, publicacion: { estado: 'borrador' } })).toBeNull() // cancelado a mano: no se reprograma
+    expect(decidirAccion({ ...base, tipo: 'video' })).toBeNull()
+  })
+})
