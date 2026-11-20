@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { construirComposicionArticulo, planificarPendientes, resaltarFinal } from '../../scripts/redes-publicar-articulo.mjs'
+import { construirComposicionArticulo, creditoDePortada, horasParaPendientes, planificarPendientes, resaltarFinal } from '../../scripts/redes-publicar-articulo.mjs'
 
 const articulo = {
   id: '07d68459-1f3b-4d8e-b712-00385b2b9770',
@@ -91,5 +91,33 @@ describe('publicación social de un artículo', () => {
       expect(plan.reanudar).toEqual([])
       expect(plan.omitidos[0].motivo).toContain('published')
     })
+  })
+})
+
+describe('horas automáticas de las pendientes', () => {
+  const horas = horasParaPendientes as (n: number, programadas?: string[], ahora?: number) => string[]
+  const ahora = Date.parse('2026-11-20T20:00:00Z') // 15:00 en Bogotá
+
+  it('arranca 12 minutos después de ahora y separa cada pieza 15 minutos', () => {
+    expect(horas(3, [], ahora)).toEqual(['2026-11-20T20:12:00.000Z', '2026-11-20T20:27:00.000Z', '2026-11-20T20:42:00.000Z'])
+  })
+
+  it('espera a lo que ya está programado y nunca cae en la madrugada de Bogotá', () => {
+    expect(horas(1, ['2026-11-20T21:00:00Z'], ahora)).toEqual(['2026-11-20T21:15:00.000Z'])
+    const tarde = Date.parse('2026-11-21T03:50:00Z') // 22:50 en Bogotá
+    for (const h of horas(4, [], tarde)) {
+      const horaBogota = new Date(Date.parse(h) - 5 * 3_600_000).getUTCHours()
+      expect(horaBogota >= 6 && horaBogota < 23).toBe(true)
+    }
+  })
+})
+
+describe('crédito de la portada', () => {
+  it('lee el crédito del artículo y devuelve vacío si no hay o si falla', async () => {
+    const respuesta = (datos: unknown, ok = true) => async () => ({ ok, json: async () => datos })
+    expect(await creditoDePortada('uno', respuesta({ portada: { credito: ' Win Sports (foto de archivo) ' } }) as never)).toBe('Win Sports (foto de archivo)')
+    expect(await creditoDePortada('uno', respuesta({ portada: null }) as never)).toBe('')
+    expect(await creditoDePortada('uno', respuesta({}, false) as never)).toBe('')
+    expect(await creditoDePortada('uno', (async () => { throw new Error('red') }) as never)).toBe('')
   })
 })

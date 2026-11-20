@@ -2,15 +2,18 @@
 // foto de portada con el titular encima, usando la API de agentes de redes.
 // Uso:
 //   node scripts/redes-publicar-articulo.mjs <slug|id> --credito "Colprensa (vía El Colombiano)" [--programar <ISO>] [--dry-run]
-//   node scripts/redes-publicar-articulo.mjs --pendientes --creditos <archivo.json> [--borrador|--programar-desde <ISO>] [--horas 24]
+//   node scripts/redes-publicar-articulo.mjs --pendientes [--creditos <archivo.json>] [--borrador|--programar-desde <ISO>|--auto] [--horas 24]
 //     Completa los artículos recientes sin publicación social (o con borrador sin programar).
-//     El archivo mapea slug -> crédito de la foto; sin crédito no se publica.
+//     El crédito de la foto sale de la portada del artículo; el archivo (slug -> crédito) solo lo sobrescribe.
+//     Sin crédito no se publica. `--auto` programa cada pieza en la primera hora libre (ver `horasParaPendientes`).
 // La llave (PONT3LA10_AGENTES_REDES_KEY) la crea una persona en Panel → Contenido
 // para redes → Agentes IA y se guarda en el .env de la raíz. Nunca se imprime.
 // Sin el alcance `programar` la pieza queda como «Pide tu aprobación».
-import { basename, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 import { pathToFileURL, fileURLToPath } from 'node:url'
-import { readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
+import { proponerHoras } from './video-horarios.mjs'
 
 const SITIO = 'https://www.pont3la10.com'
 
@@ -77,6 +80,42 @@ export function planificarPendientes(articulos, publicaciones, ahora = Date.now(
   return plan
 }
 
+
+const SEPARACION_MINUTOS = 15
+const MARGEN_MINUTOS = 12
+
+/**
+ * Horas de publicación para `cantidad` piezas: la primera a más de 12 minutos de ahora (la API pide más de 10) y después
+ * de la última ya programada, una cada 15 minutos, saltando la madrugada de Bogotá (23:00–05:30) según
+ * config/horariosPublicacion.json. `programadas` son las fechas ya programadas (ISO).
+ */
+export function horasParaPendientes(cantidad, programadas = [], ahora = Date.now()) {
+  const ultima = Math.max(0, ...programadas.map(f => Date.parse(f)).filter(Number.isFinite))
+  let hora = Math.max(ahora + MARGEN_MINUTOS * 60_000, ultima ? ultima + SEPARACION_MINUTOS * 60_000 : 0)
+  const salida = []
+  for (let i = 0; i < cantidad; i++) {
+    const horaBogota = new Date(hora - 5 * 3_600_000)
+    const minutos = horaBogota.getUTCHours() * 60 + horaBogota.getUTCMinutes()
+    if (minutos >= 23 * 60 || minutos < 5 * 60 + 30) {
+      // La primera franja de mañana que permite la regla de horarios.
+      const [primera] = proponerHoras({ ahora: hora, cantidad: 1 })
+      hora = Date.parse(primera)
+    }
+    salida.push(new Date(hora).toISOString())
+    hora += SEPARACION_MINUTOS * 60_000
+  }
+  return salida
+}
+
+/** Crédito de la foto de portada de un artículo publicado (API pública); vacío si no lo trae. */
+export async function creditoDePortada(slug, transporte = fetch) {
+  try {
+    const respuesta = await transporte(`${SITIO}/api/articulos/${encodeURIComponent(slug)}`, { signal: AbortSignal.timeout(20_000) })
+    if (!respuesta.ok) return ''
+    return String((await respuesta.json())?.portada?.credito || '').trim().slice(0, 160)
+  } catch { return '' }
+}
+
 function terminar(mensaje, codigo = 1) {
   process.stderr.write(`${mensaje}\n`)
   process.exit(codigo)
@@ -123,6 +162,8 @@ async function procesar(ctx, articulo, { credito, programar, borrador, previsual
   const imagen = await llamar(base, llave, 'GET', `/publicaciones/${id}/previsualizacion?formato=jpg`)
   if (Buffer.isBuffer(imagen)) {
     const salida = resolve(previsualizacion || `previsualizacion-${basename(articulo.slug).slice(0, 40)}.jpg`)
+    // La carpeta puede no existir (en un directorio temporal nuevo falló con ENOENT antes de programar nada).
+    await mkdir(dirname(salida), { recursive: true })
     await writeFile(salida, imagen)
     process.stdout.write(`Previsualización guardada en ${salida}\n`)
   }
@@ -187,8 +228,7 @@ async function main() {
   }
 
   const archivoCreditos = valor('--creditos')
-  if (!archivoCreditos) terminar('--pendientes requiere --creditos <archivo.json> con {"slug": "crédito de la foto"}.', 2)
-  const creditos = JSON.parse(await readFile(resolve(archivoCreditos), 'utf8'))
+  const creditos = archivoCreditos ? JSON.parse(await readFile(resolve(archivoCreditos), 'utf8')) : {}
   const horas = Number(valor('--horas') || 24)
   const existentes = (await llamar(base, llave, 'GET', '/publicaciones?ambito=todas&limite=50'))?.publicaciones || []
   const propias = (await llamar(base, llave, 'GET', '/publicaciones?ambito=mias&limite=50'))?.publicaciones || []
@@ -197,21 +237,27 @@ async function main() {
   for (const o of plan.omitidos) process.stdout.write(`Omitido ${o.slug}: ${o.motivo}\n`)
   if (!trabajo.length) { process.stdout.write('No hay artículos pendientes de publicación social.\n'); return }
 
+  const auto = args.includes('--auto')
   const desde = valor('--programar-desde')
   const borrador = args.includes('--borrador')
-  if (!borrador && !desde) terminar('Indica --borrador (para revisar las imágenes) o --programar-desde <ISO con -05:00>.', 2)
-  const carpeta = resolve(valor('--carpeta') || '.')
+  if (!borrador && !desde && !auto) terminar('Indica --borrador (para revisar las imágenes), --programar-desde <ISO con -05:00> o --auto.', 2)
+  const carpeta = resolve(valor('--carpeta') || resolve(tmpdir(), 'pont3la10-redes'))
+  if (desde && !(Date.parse(desde) > Date.now() + 10 * 60_000)) terminar('--programar-desde debe estar a más de 10 minutos de ahora.', 2)
+  // Con --auto cada pieza va a la primera hora libre, después de lo que ya esté programado.
+  const programadas = auto ? existentes.map(p => p.programadaPara).filter(Boolean) : []
+  const horasAuto = auto ? horasParaPendientes(trabajo.length, programadas) : []
   let hora = desde ? Date.parse(desde) : 0
-  if (desde && !(hora > Date.now() + 10 * 60_000)) terminar('--programar-desde debe estar a más de 10 minutos de ahora.', 2)
+  let indice = 0
   for (const { articulo, idExistente } of trabajo) {
-    const creditoFoto = creditos[articulo.slug]
-    if (!creditoFoto) { process.stdout.write(`Omitido ${articulo.slug}: falta el crédito de la foto en el archivo.\n`); continue }
+    const creditoFoto = creditos[articulo.slug] || await creditoDePortada(articulo.slug)
+    if (!creditoFoto) { process.stdout.write(`Omitido ${articulo.slug}: la portada no trae crédito de la foto.\n`); continue }
     process.stdout.write(`\n== ${articulo.slug}\n`)
     await procesar(ctx, articulo, {
       credito: creditoFoto, borrador, idExistente,
-      programar: desde ? new Date(hora).toISOString() : undefined,
+      programar: auto ? horasAuto[indice] : desde ? new Date(hora).toISOString() : undefined,
       previsualizacion: resolve(carpeta, `previsualizacion-${basename(articulo.slug).slice(0, 40)}.jpg`)
     })
+    indice += 1
     if (desde) hora += 15 * 60_000
   }
 }
