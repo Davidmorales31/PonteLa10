@@ -775,3 +775,28 @@ html.modal-panel-abierto { overflow: hidden; }
 .aviso-panel { display: flex; align-items: center; gap: 8px; margin: 0; border: 1px solid #b9e0c6; border-radius: var(--pn-radio-chico); background: var(--pn-publicado-fondo); padding: 9px 12px; color: var(--pn-publicado); font-size: 0.84rem; font-weight: 650; }
 .aviso-panel--alerta { border-color: #ecd68a; background: var(--pn-programado-fondo); color: var(--pn-programado); }
 .esqueleto-fila { height: 52px; border-bottom: 1px solid #edf1f6; background: linear-gradient(90deg, #f6f8fb, #ffffff, #f6f8fb); background-size: 220% 100%; animation: brillo-panel 1.25s ease-in-out infinite; }
+
+/* ---------- Multimedia: la grilla desplaza por dentro ---------- */
+.pagina-ajustada .biblioteca-medios-editorial { display: flex; min-height: 0; flex: 1 1 auto; flex-direction: column; gap: 12px; }
+.pagina-ajustada .biblioteca-medios-editorial > .grilla-biblioteca-medios,
+.pagina-ajustada .biblioteca-medios-editorial > .esqueleto-biblioteca-medios,
+.pagina-ajustada .biblioteca-medios-editorial > .estado-vacio-medios { min-height: 0; flex: 1 1 auto; overflow: auto; align-content: start; }
+.pagina-ajustada .biblioteca-medios-editorial > form,
+.pagina-ajustada .biblioteca-medios-editorial > footer { flex: 0 0 auto; }
+
+/* ---------- Revisión: columnas con scroll propio ---------- */
+.pagina-ajustada .columnas-cola-revision { min-height: 0; flex: 1 1 auto; align-items: stretch; }
+.pagina-ajustada .columna-cola-revision { display: flex; min-height: 0; flex-direction: column; }
+.pagina-ajustada .columna-cola-revision > header { flex: 0 0 auto; }
+.pagina-ajustada .columna-cola-revision > .lista-cola-revision,
+.pagina-ajustada .columna-cola-revision > .cola-revision-vacia { min-height: 0; flex: 1 1 auto; overflow: auto; }
+.pagina-ajustada > .seccion-oportunidades-editoriales { min-height: 0; flex: 1 1 auto; overflow: auto; }
+.pagina-ajustada .lista-cola-revision { align-content: start; }
+.pagina-ajustada .lista-cola-revision > article { align-self: start; }
+
+/* ---------- Texto dentro de los modales ---------- */
+.modal-panel-cuerpo { font-size: 0.88rem; line-height: 1.5; }
+.modal-panel-cuerpo p { margin: 0 0 10px; }
+.modal-panel-cuerpo a { color: #1e4fb4; font-weight: 650; }
+.modal-panel-cuerpo a svg { width: 14px; height: 14px; vertical-align: -2px; }
+.modal-panel-cuerpo input[type='date'], .modal-panel-cuerpo input[type='datetime-local'], .modal-panel-cuerpo input[type='file'] { min-height: 36px; border: 1px solid #c3cfdf; border-radius: 7px; background: #ffffff; padding: 0 10px; font: inherit; font-size: 0.86rem; }

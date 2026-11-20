@@ -41,15 +41,14 @@ async function recargarAuditoria() {
 </script>
 
 <template>
-  <div class="vista-panel-editorial">
+  <div class="pagina-ajustada">
     <header class="titulo-vista-panel">
       <div>
-        <p class="etiqueta-panel">Trazabilidad</p>
         <h1>Auditoría editorial</h1>
         <p>Últimos cambios de contenido y asignaciones de roles registrados por el sistema.</p>
       </div>
       <button
-        class="accion-panel-secundaria"
+        class="boton-panel"
         type="button"
         :disabled="status === 'pending'"
         @click="recargarAuditoria"
@@ -59,25 +58,25 @@ async function recargarAuditoria() {
       </button>
     </header>
 
-    <section class="tabla-auditoria-panel" aria-live="polite">
-      <div v-if="status === 'pending'" class="lista-esqueleto-auditoria" aria-label="Cargando auditoría">
-        <span v-for="indice in 6" :key="indice" />
+    <section class="zona-desplazable" aria-live="polite" aria-label="Movimientos registrados">
+      <div v-if="status === 'pending'" aria-label="Cargando auditoría">
+        <div v-for="indice in 8" :key="indice" class="esqueleto-fila" />
       </div>
 
-      <div v-else-if="error" class="estado-vacio-panel">
+      <div v-else-if="error" class="estado-vacio-compacto">
         <Activity aria-hidden="true" />
         <h2>No se pudo cargar la auditoría</h2>
         <p>Verifica que la sesión tenga MFA activo e inténtalo de nuevo.</p>
       </div>
 
-      <div v-else-if="!registros?.length" class="estado-vacio-panel">
+      <div v-else-if="!registros?.length" class="estado-vacio-compacto">
         <Activity aria-hidden="true" />
         <h2>Aún no hay movimientos</h2>
         <p>Los cambios sensibles aparecerán aquí automáticamente.</p>
       </div>
 
-      <div v-else class="contenedor-tabla-auditoria">
-        <table>
+      <div v-else>
+        <table class="tabla-densa">
           <thead>
             <tr>
               <th>Fecha</th>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { CheckCircle2, ExternalLink, FileSpreadsheet, LoaderCircle, RefreshCw, Save, Upload } from '@lucide/vue'
+import PanelModal from '~/components/admin/ui/PanelModal.vue'
 import {
   accionesSearchConsole,
   accionesOportunidadSearchConsole,
@@ -102,6 +103,8 @@ const archivo = ref<File | null>(null)
 const filtro = ref('')
 const paginaActual = ref(1)
 const mensajeImportacion = ref('')
+const importarAbierto = ref(false)
+watch(mensajeImportacion, (valor) => { if (valor) importarAbierto.value = false })
 const errorImportacion = ref('')
 const guardandoClave = ref('')
 const mensajeAccion = ref('')
@@ -376,38 +379,32 @@ const columnasAccionAnterior = accionesSearchConsole
   <div class="vista-panel-editorial vista-search-console">
     <header class="titulo-vista-panel">
       <div>
-        <p class="etiqueta-panel">HU-GRO-04 · oportunidades orgánicas</p>
         <h1>Oportunidades orgánicas</h1>
         <p>Prioriza páginas que ya reciben impresiones y registra decisiones editoriales sin crear contenido automáticamente.</p>
       </div>
-      <button class="accion-panel-secundaria" type="button" :disabled="status === 'pending'" @click="refresh()">
-        <LoaderCircle v-if="status === 'pending'" class="icono-girando" aria-hidden="true" />
-        <RefreshCw v-else aria-hidden="true" />
-        <span>Actualizar</span>
-      </button>
+      <div class="barra-herramientas">
+        <button class="boton-panel" type="button" :disabled="status === 'pending'" @click="refresh()">
+          <LoaderCircle v-if="status === 'pending'" class="icono-girando" aria-hidden="true" />
+          <RefreshCw v-else aria-hidden="true" />
+          <span>Actualizar</span>
+        </button>
+        <button class="boton-editorial-principal" type="button" @click="importarAbierto = true">
+          <Upload aria-hidden="true" />
+          <span>Importar informe</span>
+        </button>
+      </div>
     </header>
 
-    <section class="aviso-panel aviso-panel-informativo">
-      <FileSpreadsheet aria-hidden="true" />
-      <div>
-        <strong>Datos de una exportación de Search Console</strong>
-        <span>Este panel no inventa métricas ni se conecta a una propiedad inexistente. Exporta un reporte que incluya consultas y páginas; las métricas se guardan de forma privada.</span>
-        <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer">
-          Abrir Search Console <ExternalLink aria-hidden="true" />
-        </a>
-      </div>
-    </section>
-
-    <section class="bloque-search-console" aria-labelledby="titulo-importar-gsc">
-      <div class="cabecera-bloque-search-console">
-        <div>
-          <p class="etiqueta-panel">Importación privada</p>
-          <h2 id="titulo-importar-gsc">Cargar rendimiento del sitio</h2>
-        </div>
-        <span class="estado-permiso-search-console">
-          {{ puedeRegistrarAcciones ? 'MFA verificado' : 'Solo lectura · MFA requerido para importar' }}
-        </span>
-      </div>
+    <PanelModal
+      :abierto="importarAbierto"
+      titulo="Importar informe de Search Console"
+      descripcion="Sube un CSV exportado de Search Console; las métricas se guardan de forma privada."
+      ancho="lg"
+      @cerrar="importarAbierto = false"
+    >
+      <p class="estado-permiso-search-console">
+        {{ puedeRegistrarAcciones ? 'MFA verificado' : 'Solo lectura · MFA requerido para importar' }}
+      </p>
       <p>El CSV debe incluir, en la misma fila, Consulta/Query y Página/Page, además de clics, impresiones y posición. Los informes de consultas y páginas por separado no se pueden cruzar con seguridad. El rango debe coincidir con las fechas elegidas; los datos recientes pueden tardar en consolidarse en Google.</p>
 
       <form class="formulario-importacion-search-console" @submit.prevent="importarInforme">
@@ -443,7 +440,10 @@ const columnasAccionAnterior = accionesSearchConsole
         <CheckCircle2 aria-hidden="true" /><span>{{ mensajeImportacion }}</span>
       </p>
       <p v-if="errorImportacion" class="aviso-panel aviso-panel-error" role="alert">{{ errorImportacion }}</p>
-    </section>
+      <a href="https://search.google.com/search-console" target="_blank" rel="noopener noreferrer">
+        Abrir Search Console <ExternalLink aria-hidden="true" />
+      </a>
+    </PanelModal>
 
     <section v-if="error" class="aviso-panel aviso-panel-error" role="alert">
       <div>

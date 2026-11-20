@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import {
   ImagePlus,
-  Images,
   ShieldAlert,
   Trash2,
   X
@@ -77,13 +76,12 @@ async function eliminarMedio() {
 </script>
 
 <template>
-  <div class="vista-panel-editorial vista-biblioteca-multimedia">
-    <header class="cabecera-vista-panel cabecera-biblioteca-medios">
+  <div class="pagina-ajustada vista-biblioteca-multimedia">
+    <header class="titulo-vista-panel cabecera-biblioteca-medios">
       <div>
-        <p class="etiqueta-panel">Activos editoriales</p>
         <h1>Biblioteca multimedia</h1>
         <p>
-          Imágenes optimizadas, accesibles y listas para acompañar cada historia.
+          Imágenes optimizadas a WebP, máximo 12 MB cada una, listas para acompañar cada historia.
         </p>
       </div>
       <button
@@ -96,17 +94,6 @@ async function eliminarMedio() {
         Subir imagen
       </button>
     </header>
-
-    <aside class="aviso-seguridad-medios" aria-label="Procesamiento de imágenes">
-      <Images aria-hidden="true" />
-      <div>
-        <strong>Optimización automática</strong>
-        <span>
-          Las imágenes se validan, limpian y convierten a WebP antes de almacenarse.
-        </span>
-      </div>
-      <span>Máximo 12 MB</span>
-    </aside>
 
     <BibliotecaMediosEditorial
       ref="biblioteca"
