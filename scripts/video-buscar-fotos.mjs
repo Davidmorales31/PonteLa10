@@ -6,6 +6,7 @@
 // Uso: node scripts/video-buscar-fotos.mjs <proyecto|carpeta> [--por-noticia 10] [--sin-armar]
 //      node scripts/video-buscar-fotos.mjs <proyecto> --hoja                       hoja de contactos numerada (renders/fotos-auto.jpg) para revisar
 //      node scripts/video-buscar-fotos.mjs <proyecto> --quitar 3,7,12              quita esas fotos automáticas (números de la hoja) y vuelve a armar
+import { publicacionX, publicacionesEnPagina, mediosDePublicacionX, creditoDeRed, cuentaLegible, EMISORAS } from './video-redes-fuentes.mjs'
 import { readFile, writeFile, readdir, mkdir, rm, rename } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -19,6 +20,9 @@ const RAIZ = fileURLToPath(new URL('..', import.meta.url))
 const SITIO = 'https://www.pont3la10.com'
 const AGENTE = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36 Pont3la10-estudio'
 const LIMITE_IMAGEN = 15 * 1024 * 1024
+const LIMITE_VIDEO = 120 * 1024 * 1024
+const VIDEOS_POR_NOTICIA = 2
+const SEGUNDOS_MAXIMOS_CLIP = 15
 const ANCHO_MINIMO = 640
 // Dos fotos cuya huella visual difiere en 6 bits o menos (de 64) son la misma foto en otro tamaño o recorte.
 const DISTANCIA_DUPLICADO = 6
@@ -69,6 +73,17 @@ export function clavesNoticia(club, ...titulos) {
   const completo = normalizar(club).replace(/[^a-z0-9]+/g, ' ').trim()
   if (completo.includes(' ') && !completo.split(' ').every(p => GENERICOS.has(p))) claves.push(completo)
   return [...new Set(claves)]
+}
+
+// Para las publicaciones de redes, más amplio: también el primer nombre del título y los nombres propios que dice
+// la voz del bloque (protagonistas como «Blessd» o «Trujillo»), sin las muletillas con que se abren las frases.
+const MULETILLAS = new Set(['segun', 'para', 'pero', 'miren', 'cuando', 'esto', 'eso', 'ojo', 'como', 'entonces', 'aunque', 'tambien', 'despues', 'ahora', 'hoy', 'este', 'esta', 'cuentenme', 'fijense', 'imaginense', 'vamos', 'todavia', 'mientras', 'ademas', 'asi', 'aqui', 'alla',
+  // Nombres de medios: aparecen en la voz por la atribución, no identifican la noticia.
+  'universal', 'espectador', 'infobae', 'caracol', 'radio', 'vanguardia', 'tiempo', 'semana', 'pulzo', 'publimetro', 'colprensa', 'sports', 'primertiempo', 'nuevo'])
+export function clavesSociales(club, voz, ...titulos) {
+  const propios = [...titulos, voz].flatMap(t => String(t || '').split(/\s+/).filter(p => /^[¡¿"«(]?\p{Lu}/u.test(p))).map(p => normalizar(p).replace(/[^a-z0-9]/g, ''))
+  const extra = propios.filter(p => p.length > 3 && !GENERICOS.has(p) && !AMBIGUAS.has(p) && !MULETILLAS.has(p))
+  return [...new Set([...clavesNoticia(club, ...titulos), ...extra])]
 }
 
 // Llave del archivo: el último tramo de la ruta sin extensión (la misma foto suele servirse en varios tamaños).
@@ -125,11 +140,13 @@ async function traer(url, { tipo = 'texto', timeout = 20_000 } = {}) {
   if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`)
   if (tipo === 'json') return respuesta.json()
   if (tipo === 'texto') return respuesta.text()
-  if (Number(respuesta.headers.get('content-length') || 0) > LIMITE_IMAGEN) throw new Error('imagen demasiado grande')
+  const limite = tipo === 'video' ? LIMITE_VIDEO : LIMITE_IMAGEN
+  if (Number(respuesta.headers.get('content-length') || 0) > limite) throw new Error('archivo demasiado grande')
   const tipoContenido = respuesta.headers.get('content-type') || ''
-  if (tipoContenido && !/^image\//i.test(tipoContenido)) throw new Error('no es una imagen')
+  const esperado = tipo === 'video' ? /^(video\/|application\/octet-stream)/i : /^image\//i
+  if (tipoContenido && !esperado.test(tipoContenido)) throw new Error(tipo === 'video' ? 'no es un video' : 'no es una imagen')
   const datos = Buffer.from(await respuesta.arrayBuffer())
-  if (datos.length > LIMITE_IMAGEN) throw new Error('imagen demasiado grande')
+  if (datos.length > limite) throw new Error('archivo demasiado grande')
   return datos
 }
 
@@ -169,18 +186,40 @@ async function candidatasCommons(consulta, cantidad = 2, { excluir = /femenin|wo
 // Recolecta candidatas para una noticia, en orden de preferencia.
 async function candidatasDeNoticia(bloque, { recientes, registro }) {
   const candidatas = []
+  const videos = []
   const articulo = bloque.articuloSlug ? await traer(`${SITIO}/api/articulos/${encodeURIComponent(bloque.articuloSlug)}`, { tipo: 'json' }).catch(() => null) : null
   const claves = clavesNoticia(bloque.club, articulo?.titulo, articulo?.tituloPortada, bloque.titular)
+  const clavesRed = clavesSociales(bloque.club, bloque.voz, articulo?.titulo, articulo?.tituloPortada, bloque.titular)
   // 1) La nota original (fuente), la página de donde salió la portada y otras notas de la misma noticia que el
   //    agente haya encontrado en otros medios (bloque.fuentesFotos: URLs de páginas, no de imágenes).
-  const extra = (Array.isArray(bloque.fuentesFotos) ? bloque.fuentesFotos : []).filter(u => typeof u === 'string' && urlPublica(u)).slice(0, 8)
-  const paginas = [...new Set([articulo?.fuente?.url, articulo?.portada?.fuenteFotoUrl, ...extra].filter(Boolean))]
+  const extra = (Array.isArray(bloque.fuentesFotos) ? bloque.fuentesFotos : []).filter(u => typeof u === 'string' && urlPublica(u)).slice(0, 10)
+  // Publicaciones de X (de clubes, protagonistas, la liga o periodistas): las que el agente puso en fuentesFotos y
+  // las que las notas de los medios traen incrustadas. De ahí salen fotos y clips de video con su crédito.
+  const publicaciones = new Map(extra.map(publicacionX).filter(Boolean).map(p => [p.id, { ...p, medio: '', elegida: true }]))
+  const paginas = [...new Set([articulo?.fuente?.url, articulo?.portada?.fuenteFotoUrl, ...extra.filter(u => !publicacionX(u))].filter(Boolean))]
   for (const pagina of paginas) {
     try {
-      const { imagenes, sitio } = imagenesDePagina(await traer(pagina), pagina)
+      const html = await traer(pagina)
+      const { imagenes, sitio } = imagenesDePagina(html, pagina)
       const medio = nombreMedio(pagina, sitio)
       for (const imagen of imagenes.filter(i => imagenRelevante(i, claves))) candidatas.push({ url: imagen.url, credito: medio, origen: pagina })
+      // Las incrustadas en la nota fuente del artículo son de la noticia; las de otras notas pasan por el filtro.
+      const deFuente = pagina === articulo?.fuente?.url
+      for (const p of publicacionesEnPagina(html)) if (!publicaciones.has(p.id)) publicaciones.set(p.id, { ...p, medio, elegida: deFuente })
     } catch (error) { registro(`  · no se pudo leer ${new URL(pagina).hostname}: ${error.message}`) }
+  }
+  for (const p of [...publicaciones.values()].slice(0, 10)) {
+    try {
+      const medios = await mediosDePublicacionX(p.url)
+      if (!medios) continue
+      // Las incrustadas en otras notas pueden ser de otra noticia (barras laterales): el texto o la cuenta deben nombrar
+      // algo de esta. Las que el agente eligió (fuentesFotos) y las de la nota fuente entran sin ese filtro.
+      if (!p.elegida && !mencionaAlgo(`${medios.texto} ${cuentaLegible(medios.autor)}`, clavesRed)) continue
+      const credito = creditoDeRed(medios.autor, p.medio)
+      for (const foto of medios.fotos) candidatas.push({ url: foto.url, credito, origen: p.url, red: true })
+      if (EMISORAS.test(cuentaLegible(medios.autor))) continue
+      for (const video of medios.videos) videos.push({ url: video.url, credito, origen: p.url, duracion: video.duracion })
+    } catch (error) { registro(`  · no se pudo leer la publicación ${p.url}: ${error.message}`) }
   }
   // 2) Otras notas del sitio cuyo TÍTULO nombra al club o a los protagonistas (traen foto real y crédito).
   const delClub = clavesNoticia(bloque.club)
@@ -196,7 +235,23 @@ async function candidatasDeNoticia(bloque, { recientes, registro }) {
   const esClub = normalizar(bloque.club).split(/[^a-z0-9]+/).some(p => p.length > 3 && !GENERICOS.has(p))
   const sobreFemenino = /femenin/.test(normalizar(`${articulo?.titulo || ''} ${bloque.club || ''}`))
   try { candidatas.push(...await candidatasCommons(esClub ? bloque.club : 'estadio fútbol Colombia hinchas', 2, { excluir: sobreFemenino ? null : undefined })) } catch (error) { registro(`  · Commons no respondió: ${error.message}`) }
+  candidatas.videos = videos
   return candidatas
+}
+
+// Foto vertical o cuadrada (típica de redes) → 1920×1080 con la foto entera sobre su propio fondo desenfocado.
+const FILTRO_RELLENO = '[0:v]split=2[a][b];[a]scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,boxblur=30:5,eq=brightness=-0.15[fondo];[b]scale=-2:1080[frente];[fondo][frente]overlay=(W-w)/2:0'
+
+/** Clip de una red: sin sonido, máximo 15 s, 1920×1080 (vertical con fondo desenfocado), 30 fps, con su póster. */
+async function prepararClip(origen, base) {
+  const { ancho, alto } = await medidas(origen)
+  if (!(ancho >= 320) || !(alto >= 320)) throw new Error('clip demasiado pequeño')
+  const filtro = ancho / alto < 1.6 ? `${FILTRO_RELLENO},fps=30,format=yuv420p` : 'scale=1920:1080:force_original_aspect_ratio=increase,crop=1920:1080,fps=30,format=yuv420p'
+  await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-i', origen, '-t', String(SEGUNDOS_MAXIMOS_CLIP), '-an', '-filter_complex', filtro, '-c:v', 'libx264', '-preset', 'veryfast', '-crf', '23', '-movflags', '+faststart', `${base}.mp4`], { maxBuffer: 10 * 1024 * 1024 })
+  const { stdout } = await ejecutar('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', `${base}.mp4`])
+  const duracion = Math.round(Number(stdout.trim()) * 100) / 100
+  await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-ss', String(Math.min(1, duracion / 2)), '-i', `${base}.mp4`, '-frames:v', '1', '-q:v', '3', `${base}.jpg`])
+  return duracion
 }
 
 export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = true, registro = texto => process.stdout.write(`${texto}\n`) }) {
@@ -220,11 +275,13 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
     actuales.forEach(f => f.origenImagen && llaves.add(llaveArchivo(f.origenImagen)))
     const espacios = manifiesto.fotos?.find(f => f.clave === bloque.id)
     // Los vacíos del manifiesto ya descuentan las fotos agregadas antes; el tope por noticia cuenta las automáticas.
-    const faltan = Math.max(0, Math.min(espacios ? (espacios.sinFotoPropia ?? espacios.vacios) : porNoticia, porNoticia - actuales.filter(f => f.auto).length))
-    if (!faltan) { resumen.push({ bloque: bloque.id, club: bloque.club, agregadas: 0 }); continue }
-    registro(`${bloque.id} · ${bloque.club || ''}: buscando ${faltan} foto(s)…`)
+    const faltan = Math.max(0, Math.min(espacios ? (espacios.sinFotoPropia ?? espacios.vacios) : porNoticia, porNoticia - actuales.filter(f => f.auto && f.tipo !== 'video').length))
+    const faltanVideos = Math.max(0, VIDEOS_POR_NOTICIA - actuales.filter(f => f.tipo === 'video').length)
+    if (!faltan && !faltanVideos) { resumen.push({ bloque: bloque.id, club: bloque.club, agregadas: 0, videos: 0 }); continue }
+    registro(`${bloque.id} · ${bloque.club || ''}: buscando ${faltan} foto(s) y ${faltanVideos} clip(s)…`)
     const nuevas = []
-    for (const candidata of await candidatasDeNoticia(bloque, { recientes, registro })) {
+    const candidatas = await candidatasDeNoticia(bloque, { recientes, registro })
+    for (const candidata of candidatas) {
       if (nuevas.length >= faltan) break
       const llave = llaveArchivo(candidata.url)
       if (llaves.has(llave)) continue
@@ -236,15 +293,44 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
       await writeFile(`${base}.descarga`, datos)
       try {
         const { ancho, alto } = await medidas(`${base}.descarga`)
-        // Fuera miniaturas, bandas y fotos verticales.
-        if (!(ancho >= ANCHO_MINIMO) || !(alto >= 360) || ancho / alto < 1 || ancho / alto > 2.4) continue
+        // Fuera miniaturas y bandas. Las verticales o cuadradas (las de redes) entran con fondo desenfocado.
+        const proporcion = ancho / alto
+        const vertical = proporcion < 1.25
+        if (vertical ? !(alto >= ANCHO_MINIMO) || proporcion < 0.45 : !(ancho >= ANCHO_MINIMO) || !(alto >= 360) || proporcion > 2.4) continue
         const huella = await huellaVisual(`${base}.descarga`)
         if (huellas.some(h => distancia(h, huella) <= DISTANCIA_DUPLICADO)) continue
         huellas.push(huella)
-        await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-i', `${base}.descarga`, '-vf', 'scale=min(1920\\,iw):-2', '-q:v', '3', `${base}.tmp.jpg`])
+        await ejecutar('ffmpeg', vertical
+          ? ['-loglevel', 'error', '-y', '-i', `${base}.descarga`, '-filter_complex', FILTRO_RELLENO, '-q:v', '3', `${base}.tmp.jpg`]
+          : ['-loglevel', 'error', '-y', '-i', `${base}.descarga`, '-vf', 'scale=min(1920\\,iw):-2', '-q:v', '3', `${base}.tmp.jpg`])
         await rename(`${base}.tmp.jpg`, `${base}.jpg`)
         nuevas.push({ ruta: `assets/fotos/${nombre}.jpg`, credito: candidata.credito.slice(0, 120), auto: true, origen: candidata.origen, origenImagen: candidata.url })
       } catch { /* imagen dañada: se salta */ } finally { await rm(`${base}.descarga`, { force: true }) }
+    }
+    // Clips de video de las publicaciones (máximo 2 por noticia): sin sonido, recortados a 15 s y con póster.
+    const carpetaVideos = join(carpeta, 'assets', 'videos')
+    let clips = 0
+    for (const video of candidatas.videos || []) {
+      if (clips >= faltanVideos) break
+      if (video.duracion && video.duracion < 3) continue
+      const llave = llaveArchivo(video.url)
+      if (llaves.has(llave)) continue
+      llaves.add(llave)
+      await mkdir(carpetaVideos, { recursive: true })
+      const nombre = `auto-${bloque.id}-${Date.now().toString(36)}v${clips}`
+      const base = join(carpetaVideos, nombre)
+      try {
+        await writeFile(`${base}.descarga`, await traer(video.url, { tipo: 'video', timeout: 120_000 }))
+        const duracion = await prepararClip(`${base}.descarga`, base)
+        if (!(duracion >= 3)) throw new Error('clip demasiado corto')
+        const huella = await huellaVisual(`${base}.jpg`)
+        if (huellas.some(h => distancia(h, huella) <= DISTANCIA_DUPLICADO)) throw new Error('clip repetido')
+        huellas.push(huella)
+        nuevas.push({ ruta: `assets/videos/${nombre}.mp4`, tipo: 'video', duracion, poster: `assets/videos/${nombre}.jpg`, credito: video.credito.slice(0, 120), auto: true, origen: video.origen, origenImagen: video.url })
+        clips++
+      } catch {
+        await rm(`${base}.mp4`, { force: true }); await rm(`${base}.jpg`, { force: true })
+      } finally { await rm(`${base}.descarga`, { force: true }) }
     }
     if (nuevas.length) {
       const estudio = await leerEstudio()
@@ -253,8 +339,8 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
       estudio.actualizado = new Date().toISOString()
       await writeFile(rutaEstudio, JSON.stringify(estudio, null, 2))
     }
-    registro(`  → ${nuevas.length} agregada(s)`)
-    resumen.push({ bloque: bloque.id, club: bloque.club, agregadas: nuevas.length })
+    registro(`  → ${nuevas.length - clips} foto(s) y ${clips} clip(s) agregados`)
+    resumen.push({ bloque: bloque.id, club: bloque.club, agregadas: nuevas.length - clips, videos: clips })
   }
   // Desde ahora el proyecto rellena con repetición los espacios que sigan sin foto (nunca queda un hueco en el video).
   const estudio = await leerEstudio()
@@ -265,7 +351,7 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
   const armado = armar ? await generarProyecto({ guion, salida: carpeta }) : null
   const nuevo = armado ? JSON.parse(await readFile(join(carpeta, 'manifiesto.json'), 'utf8')) : null
   const sinFotoPropia = nuevo ? nuevo.fotos.reduce((s, r) => s + (r.sinFotoPropia || 0), 0) : null
-  return { resumen, agregadas: resumen.reduce((s, r) => s + r.agregadas, 0), vacios: sinFotoPropia }
+  return { resumen, agregadas: resumen.reduce((s, r) => s + r.agregadas, 0), videos: resumen.reduce((s, r) => s + (r.videos || 0), 0), vacios: sinFotoPropia }
 }
 
 // Fotos automáticas del proyecto en el orden de la hoja de contactos.
@@ -282,13 +368,13 @@ export async function hojaDeContactos(carpeta) {
   await mkdir(temporal, { recursive: true })
   try {
     for (const [i, { foto }] of lista.entries()) {
-      await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-i', join(carpeta, foto.ruta), '-vf', 'scale=320:180:force_original_aspect_ratio=decrease,pad=320:180:(ow-iw)/2:(oh-ih)/2:black,format=yuvj420p', join(temporal, `${String(i + 1).padStart(3, '0')}.jpg`)])
+      await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-i', join(carpeta, foto.poster || foto.ruta), '-vf', 'scale=320:180:force_original_aspect_ratio=decrease,pad=320:180:(ow-iw)/2:(oh-ih)/2:black,format=yuvj420p', join(temporal, `${String(i + 1).padStart(3, '0')}.jpg`)])
     }
     const columnas = 6
     const filas = Math.ceil(lista.length / columnas)
     const archivo = join(carpeta, 'renders', 'fotos-auto.jpg')
     await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-framerate', '1', '-i', join(temporal, '%03d.jpg'), '-vf', `tile=${columnas}x${filas}:padding=4:color=black`, '-frames:v', '1', archivo])
-    const indice = lista.map(({ clave, foto }, i) => `${i + 1}. ${clave} — ${foto.credito} — ${foto.ruta}`).join('\n')
+    const indice = lista.map(({ clave, foto }, i) => `${i + 1}. ${clave}${foto.tipo === 'video' ? ' [VIDEO]' : ''} — ${foto.credito} — ${foto.ruta}`).join('\n')
     await writeFile(join(carpeta, 'renders', 'fotos-auto.txt'), `Hoja: renders/fotos-auto.jpg (de izquierda a derecha, ${columnas} por fila)\n${indice}\n`)
     return { archivo, total: lista.length, indice }
   } finally { await rm(temporal, { recursive: true, force: true }) }
@@ -303,6 +389,10 @@ export async function quitarAutomaticas(carpeta, numeros, { armar = true } = {})
   for (const { foto } of elegidas) {
     if (foto.origenImagen) estudio.fotosDescartadas = [...new Set([...(estudio.fotosDescartadas || []), foto.origenImagen])].slice(-500)
     if (/^assets\/fotos\/auto-[a-z0-9_-]+\.jpg$/.test(foto.ruta)) await rm(join(carpeta, foto.ruta), { force: true })
+    if (/^assets\/videos\/auto-[a-z0-9_-]+\.mp4$/.test(foto.ruta)) {
+      await rm(join(carpeta, foto.ruta), { force: true })
+      await rm(join(carpeta, foto.ruta.replace(/\.mp4$/, '.jpg')), { force: true })
+    }
   }
   const quitar = new Set(elegidas.map(x => x.foto))
   for (const clave of Object.keys(estudio.fotosExtra || {})) estudio.fotosExtra[clave] = estudio.fotosExtra[clave].filter(foto => !quitar.has(foto))
@@ -331,5 +421,5 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const indice = args.indexOf('--por-noticia')
   const porNoticia = indice >= 0 ? Number(args[indice + 1]) || 10 : 10
   const r = await buscarFotosProyecto({ carpeta, porNoticia, armar: !args.includes('--sin-armar') })
-  process.stdout.write(`Fotos agregadas: ${r.agregadas}${r.vacios === null ? '' : ` · espacios sin foto propia (se rellenan repitiendo): ${r.vacios}`}\n`)
+  process.stdout.write(`Fotos agregadas: ${r.agregadas} · clips de video: ${r.videos}${r.vacios === null ? '' : ` · espacios sin foto propia (se rellenan repitiendo): ${r.vacios}`}\n`)
 }

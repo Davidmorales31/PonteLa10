@@ -17,7 +17,7 @@ const SITIO = 'https://www.pont3la10.com'
 export const DURACIONES = { intro: 4.1, cierre: 6, suscribete: 4.5, rotulo: 5, datoMini: 5, marcadorMini: 5, segundosPorEspacio: 7, minimoSegmento: 2 }
 export const PREFIJOS = {
   intro: 'intro-', galeria: 'gal-', rotulo: 'rotulo-', 'dato-mini': 'dm-', 'marcador-mini': 'mm-', ticker: 'ticker-',
-  suscribete: 'sus-', cara: 'cara-', cierre: 'cierre-', 'transicion-barrido': 'barrido-', 'transicion-flash': 'flash-',
+  suscribete: 'sus-', cara: 'cara-', cierre: 'cierre-', 'transicion-barrido': 'barrido-', 'transicion-flash': 'flash-', clip: 'clip-',
   // Escenas verticales de los Reels con guion propio (scripts/video-generar-reel.mjs).
   'reel-gancho': 'rgan-', 'reel-foto-punch': 'rpun-', 'reel-foto-paneo': 'rpan-', 'reel-foto-tarjeta': 'rtar-', 'reel-foto-dividida': 'rdiv-',
   'reel-dato': 'rdat-', 'reel-cita': 'rcit-', 'reel-lista': 'rlis-', 'reel-marcador': 'rmar-', 'reel-versus': 'rvs-', 'reel-pregunta': 'rpre-',
@@ -83,15 +83,35 @@ function fotosDeBloque(bloque) {
   return fotos
 }
 
-// Reparte la voz de un bloque en galerías de hasta 3 espacios (uno cada ~7 s).
-export function repartirGalerias(duracion, fotos, repetir) {
-  const espacios = Math.max(1, Math.ceil(duracion / DURACIONES.segundosPorEspacio))
+// Regla de Juan (2026-11-20): ninguna imagen (ni clip) aparece más de 3 veces en todo el video.
+export const MAXIMO_USOS_FOTO = 3
+const COMPARTIDAS = MAXIMO_USOS_FOTO - 1
+
+/**
+ * Reparte la voz de un bloque en galerías de hasta 3 espacios (uno cada ~7 s). `usos` cuenta las apariciones de
+ * cada imagen en TODO el video: una imagen que ya salió 3 veces no vuelve; si faltan imágenes, los espacios que
+ * quedan se alargan en vez de repetir (con «repetir») o quedan vacíos para que Juan ponga una (sin «repetir»).
+ */
+export function repartirGalerias(duracion, fotos, repetir, usos = new Map(), maximo = MAXIMO_USOS_FOTO) {
+  const deseados = Math.max(1, Math.ceil(duracion / DURACIONES.segundosPorEspacio))
+  const elegidas = []
+  for (let i = 0; i < deseados && fotos.length; i++) {
+    if (!repetir && i >= fotos.length) break
+    // En orden, empezando por la que toca; nunca la misma dos veces seguidas si hay otra.
+    const turno = [...fotos.slice(i % fotos.length), ...fotos.slice(0, i % fotos.length)]
+      .filter(f => (usos.get(f.url) || 0) < maximo && (repetir || !elegidas.includes(f)))
+    const anterior = elegidas.at(-1)
+    const foto = turno.find(f => f !== anterior) || turno[0]
+    if (!foto) break
+    elegidas.push(foto)
+    usos.set(foto.url, (usos.get(foto.url) || 0) + 1)
+  }
+  const vacio = { url: '', credito: '' }
+  const lista = repetir
+    ? (elegidas.length ? elegidas : [vacio])
+    : [...elegidas, ...Array.from({ length: Math.max(0, deseados - elegidas.length) }, () => vacio)]
+  const espacios = lista.length
   const porEspacio = duracion / espacios
-  const lista = Array.from({ length: espacios }, (_, i) => {
-    if (i < fotos.length) return fotos[i]
-    if (repetir && fotos.length) return fotos[i % fotos.length]
-    return { url: '', credito: '' }
-  })
   const galerias = []
   for (let i = 0; i < lista.length; i += 3) {
     const grupo = lista.slice(i, i + 3)
@@ -118,10 +138,16 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
   const medios = []
   const resumenFotos = []
   const grabaciones = estudio.grabaciones || {}
-  const extra = clave => (estudio.fotosExtra?.[clave] || []).filter(f => f?.ruta).map(f => ({ url: f.ruta, credito: f.credito || '' }))
+  const extra = clave => (estudio.fotosExtra?.[clave] || []).filter(f => f?.ruta).map(f => (f.tipo === 'video'
+    ? { url: f.ruta, credito: f.credito || '', tipo: 'video', duracion: Number(f.duracion) || 0 }
+    : { url: f.ruta, credito: f.credito || '' }))
   const bloques = Array.isArray(guion?.bloques) ? guion.bloques : []
   const fotosPorBloque = bloques.map(bloque => [...fotosDeBloque(bloque), ...extra(bloque.id)])
-  const portada = fotosPorBloque.find(fotos => fotos.length)?.[0]
+  const portada = fotosPorBloque.map(fotos => fotos.find(f => f.tipo !== 'video')).find(Boolean)
+  // Apariciones de cada imagen o clip en todo el video (tope MAXIMO_USOS_FOTO): la portada ya sale en la intro y el cierre.
+  const usos = new Map()
+  if (portada) usos.set(portada.url, 2)
+  const usosClip = new Map()
   let t = 0
   let transiciones = 0
 
@@ -138,28 +164,47 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
   // Sin cámara (decisión de Juan por proyecto): cada toma a cámara pasa a ser voz sobre fotos. Una toma grabada
   // solo con audio también se trata así.
   const sinCamara = Boolean(estudio.sinCamara)
-  const cara = (id, texto, etiqueta, bloque, fotos = [], claveFotos = 'presentacion') => {
+  const cara = (id, texto, etiqueta, bloque, fotos = [], claveFotos = 'presentacion', maximo = MAXIMO_USOS_FOTO) => {
     const grabada = grabaciones[id]
-    if (sinCamara || /\.m4a$/i.test(grabada?.archivo || '')) return voz(id, texto, etiqueta.replace(' · toma a cámara', ' · entrada'), bloque, fotos, claveFotos, true)
+    if (sinCamara || /\.m4a$/i.test(grabada?.archivo || '')) return voz(id, texto, etiqueta.replace(' · toma a cámara', ' · entrada'), bloque, fotos, claveFotos, true, maximo)
     const duracion = grabada?.duracion > 0 ? redondear(grabada.duracion) : segundosDeTexto(texto, ppm)
     if (grabada?.archivo) medios.push({ tipo: 'video', id, archivo: grabada.archivo, inicio: t, duracion })
     else escenas.push({ escena: 'cara', inicio: t, duracion, capa: 1, variables: { duracion: `${String(duracion).replace('.', ',')} segundos`, guion: `«${String(texto || '').trim()}»` }, duracionInterna: duracion })
     segmentos.push({ id, tipo: 'cara', etiqueta, bloque, inicio: t, fin: redondear(t + duracion), texto: String(texto || '').trim(), grabado: Boolean(grabada?.archivo) })
     t = redondear(t + duracion)
   }
-  const voz = (id, texto, etiqueta, bloque, fotos, claveFotos, enLugarDeCara = false) => {
+  const voz = (id, texto, etiqueta, bloque, fotos, claveFotos, enLugarDeCara = false, maximo = MAXIMO_USOS_FOTO) => {
     const grabada = grabaciones[id]
     const duracion = grabada?.duracion > 0 ? redondear(grabada.duracion) : segundosDeTexto(texto, ppm)
     const inicio = t
     if (grabada?.archivo) medios.push({ tipo: 'audio', id, archivo: grabada.archivo, inicio, duracion })
-    const galerias = repartirGalerias(duracion, fotos, repetirFotos)
+    const galerias = repartirGalerias(duracion, fotos, repetirFotos, usos, maximo)
     for (const galeria of galerias) {
-      escenas.push({ escena: 'galeria', inicio: redondear(inicio + galeria.inicio), duracion: galeria.duracion, capa: 1, variables: variablesGaleria(galeria, rutaFoto), duracionInterna: galeria.duracion })
+      // Las fotos van en galerías; cada clip de video ocupa su propio espacio (escena «clip», sin sonido).
+      const seg = galeria.segundosPorFoto
+      for (let j = 0; j < galeria.espacios.length;) {
+        const desde = redondear(inicio + galeria.inicio + j * seg)
+        const espacio = galeria.espacios[j]
+        if (espacio.tipo === 'video') {
+          const vez = usosClip.get(espacio.url) || 0
+          usosClip.set(espacio.url, vez + 1)
+          const recorrido = Math.max(0, (espacio.duracion || 0) - seg)
+          escenas.push({ escena: 'clip', inicio: desde, duracion: redondear(seg), capa: 1, duracionInterna: seg, mediaInicio: recorrido ? redondear((vez * seg) % (recorrido + 0.01)) : 0,
+            variables: { video: rutaFoto(espacio.url), credito: espacio.credito ? `Video: ${espacio.credito}` : '', duracion: redondear(seg) } })
+          j++
+          continue
+        }
+        const grupo = []
+        while (j < galeria.espacios.length && galeria.espacios[j].tipo !== 'video') grupo.push(galeria.espacios[j++])
+        const tramo = { inicio: 0, duracion: redondear(grupo.length * seg), espacios: grupo, segundosPorFoto: seg }
+        escenas.push({ escena: 'galeria', inicio: desde, duracion: tramo.duracion, capa: 1, variables: variablesGaleria(tramo, rutaFoto), duracionInterna: tramo.duracion })
+      }
     }
     const espacios = galerias.reduce((suma, g) => suma + g.espacios.length, 0)
     const vacios = galerias.reduce((suma, g) => suma + g.espacios.filter(e => !e.url).length, 0)
     // Espacios sin una foto propia (con «repetir» se rellenan con otra foto de la noticia).
-    const sinFotoPropia = Math.max(0, espacios - fotos.length)
+    // Fotos que harían falta para cubrir la voz con un plano cada ~7 s sin repetir (lo que busca el buscador).
+    const sinFotoPropia = Math.max(0, Math.ceil(duracion / DURACIONES.segundosPorEspacio) - fotos.length)
     // Una sola tarjeta de fotos por noticia: la entrada sin cámara suma sus espacios a los de la voz.
     const previo = resumenFotos.find(r => r.clave === claveFotos)
     if (previo) {
@@ -182,14 +227,15 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
 
   const fotosApertura = [...fotosPorBloque.slice(0, 3).map(lista => lista[0]).filter(Boolean), ...extra('presentacion')]
   const fotosFinal = [...extra('pregunta'), ...(fotosPorBloque.slice().reverse().find(lista => lista.length) || [])]
-  cara('gancho', guion?.gancho?.texto, 'Gancho', null, fotosApertura, 'presentacion')
+  // Las partes compartidas usan cada foto máximo 2 veces: la tercera aparición queda para su noticia.
+  cara('gancho', guion?.gancho?.texto, 'Gancho', null, fotosApertura, 'presentacion', COMPARTIDAS)
   // Suscríbete al inicio (decisión de Juan): entra justo después del gancho, sobre la presentación.
   const inicioSuscribete = t
   escenas.push({ escena: 'suscribete', inicio: inicioSuscribete, duracion: DURACIONES.suscribete, capa: 5 })
   sonido('clic', inicioSuscribete + 1.35, 0.8)
   sonido('clic', inicioSuscribete + 2.4, 0.8)
   if (guion?.presentacion?.texto) {
-    voz('presentacion', guion.presentacion.texto, 'Presentación', null, fotosApertura, 'presentacion')
+    voz('presentacion', guion.presentacion.texto, 'Presentación', null, fotosApertura, 'presentacion', false, COMPARTIDAS)
   }
 
   bloques.forEach((bloque, i) => {
@@ -214,12 +260,12 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
 
   if (guion?.preguntaFinal) {
     transicion(t)
-    const { inicio } = voz('pregunta', guion.preguntaFinal, 'Pregunta final', null, fotosFinal, 'pregunta')
+    const { inicio } = voz('pregunta', guion.preguntaFinal, 'Pregunta final', null, fotosFinal, 'pregunta', false, COMPARTIDAS)
     escenas.push({ escena: 'rotulo', inicio: redondear(inicio + 0.2), duracion: DURACIONES.rotulo, capa: 5, variables: { etiqueta: 'TU OPINIÓN', titular: guion.preguntaFinal, fuente: 'Déjalo en los comentarios' } })
     sonido('pop', inicio + 0.3, 0.55)
   }
 
-  if (guion?.cierre?.texto) cara('cierre', guion.cierre.texto, 'Cierre', null, fotosFinal, 'pregunta')
+  if (guion?.cierre?.texto) cara('cierre', guion.cierre.texto, 'Cierre', null, fotosFinal, 'pregunta', COMPARTIDAS)
 
   transicion(t)
   escenas.push({ escena: 'cierre', inicio: t, duracion: DURACIONES.cierre, capa: 1, variables: { fondo: portada ? rutaFoto(portada.url) : '', web: 'pont3la10.com' } })
@@ -336,7 +382,14 @@ export async function generarProyecto({ guion, salida, repetirFotos = false, sin
   await writeFile(join(salida, 'index.html'), armarIndex(plan, guion.tituloVideo || `Pont3la10 · ${guion.fecha}`))
   for (const escena of plan.escenas) {
     const html = await readFile(join(PACK, 'compositions', `${escena.escena}.html`), 'utf8')
-    await writeFile(join(salida, 'compositions', `${escena.instancia}.html`), instanciarEscena(html, escena.escena, escena.numero, escena.duracionInterna, escena.variables))
+    let instancia = instanciarEscena(html, escena.escena, escena.numero, escena.duracionInterna, escena.variables)
+    // Un clip usado otra vez arranca más adelante en el video, para que no se vea el mismo tramo.
+    if (escena.escena === 'clip') {
+      instancia = instancia
+        .replace(/(class="clip" data-start="0" data-duration=")[\d.]+(")/g, `$1${redondear(escena.duracionInterna)}$2`)
+        .replace(/( data-media-start=")[\d.]+"/, `$1${escena.mediaInicio || 0}"`)
+    }
+    await writeFile(join(salida, 'compositions', `${escena.instancia}.html`), instancia)
   }
   await writeFile(join(salida, IMAGEN_VACIA), Buffer.from(PNG_VACIO, 'base64'))
   for (const nombre of ['logo-blanco.png', 'isotipo.png']) await copyFile(join(PACK, 'assets', nombre), join(salida, 'assets', nombre))

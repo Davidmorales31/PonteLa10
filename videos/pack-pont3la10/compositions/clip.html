@@ -1,0 +1,31 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #000; font-family: "Montserrat", sans-serif; }
+    .clip-mov { position: absolute; inset: 0; transform-origin: 50% 45%; }
+    #clip-video { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; }
+    .clip-degradado { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,0) 55%, rgba(8,32,74,0.5) 82%, rgba(8,32,74,0.82) 100%); }
+    .clip-credito { position: absolute; right: 96px; bottom: 60px; padding: 8px 16px; background: rgba(8,32,74,0.8); color: #ffffff; font-size: 28px; font-weight: 600; border-left: 5px solid #ffd800; }
+    .clip-marca { position: absolute; right: 96px; top: 60px; width: 200px; height: auto; opacity: 0.92; }
+  </style>
+  <div id="root" data-composition-id="clip" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"video","type":"string","label":"Video (mp4 16:9, sin sonido)","default":""},{"id":"credito","type":"string","label":"Crédito","default":"Video: @cuenta en X"},{"id":"duracion","type":"number","label":"Duración (s)","default":6,"min":1,"max":30,"step":0.1}]'>
+    <div id="clip-mov" class="clip-mov">
+      <video id="clip-video" class="clip" data-start="0" data-duration="6" data-media-start="0" src="assets/vacio.mp4" data-var-src="video" muted playsinline></video>
+    </div>
+    <div id="clip-capa" class="clip" data-start="0" data-duration="6" data-layout-allow-occlusion>
+      <div id="clip-degradado" class="clip-degradado" data-layout-allow-occlusion></div>
+      <div id="clip-credito" class="clip-credito" data-var-text="credito">Video: @cuenta en X</div>
+      <img id="clip-marca" class="clip-marca" src="assets/logo-blanco.png" alt="" />
+    </div>
+  </div>
+  <script>
+    // Clip de video real (de una publicación con crédito), sin sonido, con un acercamiento lento encima.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(1, Number(v.duracion ?? 6));
+    if (!String(v.credito ?? "").trim()) document.querySelector("#clip-credito").style.display = "none";
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#clip-mov", { scale: 1.02 }, { scale: 1.1, duration: D, ease: "none" }, 0);
+    tl.fromTo("#clip-credito", { opacity: 0, x: 24 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, 0.3);
+    window.__timelines["clip"] = tl;
+  </script>
+</template>

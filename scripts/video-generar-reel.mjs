@@ -15,7 +15,7 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { instanciarEscena, descargarFoto, contarPalabras, IMAGEN_VACIA } from './video-generar-proyecto.mjs'
+import { instanciarEscena, descargarFoto, contarPalabras, IMAGEN_VACIA, MAXIMO_USOS_FOTO } from './video-generar-proyecto.mjs'
 import { agruparPalabras } from './video-reels.mjs'
 
 const ejecutar = promisify(execFile)
@@ -155,6 +155,15 @@ export function planificarReel(reel, { ppm = 170, estudio = {}, transcripciones 
   const fotosDeBeat = beat => [...extra(beat.id), foto(beat?.visual?.imagen, beat?.visual?.credito), foto(beat?.visual?.imagen2, beat?.visual?.credito2)].filter(f => f?.ruta)
   const fotoGancho = [...extra('gancho'), foto(reel?.gancho?.imagen, reel?.gancho?.credito)].find(f => f?.ruta) || beats.map(fotosDeBeat).find(l => l.length)?.[0] || null
   const credito = f => (f?.credito ? `Foto: ${f.credito}` : '')
+  // Apariciones de cada foto en el Reel (tope MAXIMO_USOS_FOTO); los fondos desenfocados no cuentan.
+  const usos = new Map()
+  const segundaFoto = (actual, d) => {
+    if (d <= 2.4) return ''
+    const otra = beats.flatMap(fotosDeBeat).find(f => f !== actual && f.ruta !== actual?.ruta && (usos.get(f.ruta) || 0) < MAXIMO_USOS_FOTO)
+    if (!otra) return ''
+    usos.set(otra.ruta, (usos.get(otra.ruta) || 0) + 1)
+    return otra.ruta
+  }
   const sonido = (archivo, momento, volumen = 0.7) => sonidos.push({ archivo, inicio: redondear(Math.max(0, momento)), duracion: DURACION_SONIDO[archivo] ?? 1, volumen })
 
   // Tiempos de cada tramo (la toma real manda; si no hay, se estima a `ppm`).
@@ -180,6 +189,7 @@ export function planificarReel(reel, { ppm = 170, estudio = {}, transcripciones 
   const cierre = tiempos.cierre
 
   // 1. Gancho: el cuadro 0 ya trae el texto (es la miniatura del Reel).
+  if (fotoGancho && !gancho.esVideo) usos.set(fotoGancho.ruta, 1)
   escenas.push({ escena: 'reel-gancho', inicio: 0, duracion: gancho.fin, capa: gancho.esVideo ? 2 : 1, variables: {
     foto: fotoGancho?.ruta || '', credito: credito(fotoGancho), texto: mayus(reel?.gancho?.pantalla), resaltar: mayus(reel?.gancho?.resaltar),
     etiqueta: mayus(reel?.club), soloTexto: gancho.esVideo, foco: reel?.gancho?.foco || '50% 35%', duracion: gancho.fin } })
@@ -200,15 +210,35 @@ export function planificarReel(reel, { ppm = 170, estudio = {}, transcripciones 
     resumenFotos.push({ clave: beat.id || `v${i + 1}`, etiqueta: `Beat ${i + 1} · ${visual.tipo || tipo}`, fotos: fotos.length, espacios: DE_FOTO.includes(tipo) ? Math.max(1, partirBeat(inicio, fin, maximoPorPlano).length) : 1, vacios: fotos.length || !DE_FOTO.includes(tipo) ? 0 : 1 })
     cortes.push({ momento: inicio, rehook: beat?.rehook === true, primero: i === 0 })
     if (DE_FOTO.includes(tipo)) {
-      partirBeat(inicio, fin, maximoPorPlano).forEach((parte, j) => {
-        const f = fotos.length ? fotos[j % fotos.length] : fotoGancho
+      // Regla de Juan: ninguna foto más de 3 veces por video. Si las fotos del beat ya se gastaron, el plano
+      // anterior se alarga en vez de repetir (solo el primer plano puede reusar la menos usada para no quedar en negro).
+      const opciones = fotos.length ? fotos : (fotoGancho ? [fotoGancho] : [])
+      const partes = []
+      for (const parte of partirBeat(inicio, fin, maximoPorPlano)) {
+        const n = partes.length
+        const rotadas = [...opciones.slice(n % Math.max(1, opciones.length)), ...opciones.slice(0, n % Math.max(1, opciones.length))]
+        const libres = rotadas.filter(f => (usos.get(f.ruta) || 0) < MAXIMO_USOS_FOTO)
+        const elegida = libres.find(f => f !== partes.at(-1)?.foto) || libres[0] || null
+        if (!elegida && partes.length) { partes.at(-1).fin = parte.fin; continue }
+        if (elegida) usos.set(elegida.ruta, (usos.get(elegida.ruta) || 0) + 1)
+        // Sin foto libre: el plano usa la foto desenfocada (no cuenta como aparición) con la palabra clave encima.
+        partes.push({ ...parte, foto: elegida, desenfocada: elegida ? null : (opciones[0] || null) })
+      }
+      partes.forEach((parte, j) => {
+        const f = parte.foto
+        if (!f && parte.desenfocada) {
+          const d = redondear(parte.fin - parte.inicio)
+          if (j > 0) cortes.push({ momento: parte.inicio, interno: true })
+          escenas.push({ escena: ESCENA_VISUAL.punch, inicio: parte.inicio, duracion: d, capa: 1, variables: { foto: derivada(parte.desenfocada.ruta, 'fondo'), credito: credito(parte.desenfocada), foco: '50% 50%', clave: mayus(visual.pantalla || reel?.club), duracion: d } })
+          return
+        }
         const modo = j === 0 ? tipo : DE_FOTO[(DE_FOTO.indexOf(tipo) + j + giro) % DE_FOTO.length]
         const d = redondear(parte.fin - parte.inicio)
         if (j > 0) cortes.push({ momento: parte.inicio, interno: true })
         const variables = modo === 'paneo'
           ? { foto: f ? derivada(f.ruta, 'pano') : '', credito: credito(f), direccion: (i + j) % 2 ? 'izquierda' : 'derecha', duracion: d }
           : modo === 'tarjeta'
-            ? { fondo: f ? derivada(f.ruta, 'fondo') : '', foto: f?.ruta || '', credito: credito(f), foto2: fotos.length > 1 && d > 2.4 ? fotos[(j + 1) % fotos.length].ruta : '', duracion: d }
+            ? { fondo: f ? derivada(f.ruta, 'fondo') : '', foto: f?.ruta || '', credito: credito(f), foto2: segundaFoto(f, d), duracion: d }
             : { foto: f?.ruta || '', credito: credito(f), foco: visual.foco || '50% 35%', clave: j === 0 ? mayus(visual.pantalla) : '', duracion: d }
         escenas.push({ escena: ESCENA_VISUAL[modo], inicio: parte.inicio, duracion: d, capa: 1, variables })
       })

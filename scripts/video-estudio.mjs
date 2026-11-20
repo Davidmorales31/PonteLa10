@@ -13,6 +13,7 @@ import { generarProyecto } from './video-generar-proyecto.mjs'
 import { generarReel, crearProyectosReels, descripcionDeReel } from './video-generar-reel.mjs'
 import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionDe } from './video-musica.mjs'
 import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
+import { estadoDeRender, nuevoRender, terminarRender } from './video-estudio-render.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
 import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
@@ -170,6 +171,7 @@ async function listarProyectos() {
       sinCamara: Boolean(estudio.sinCamara),
       tipo: manifiesto.tipo || 'video',
       renderizado: existsSync(final),
+      renderizando: renders.get(nombre)?.estado === 'renderizando',
       reels: reels?.reels?.length || 0,
       actualizado: estudio.actualizado || (await stat(join(carpeta, 'manifiesto.json'))).mtime.toISOString()
     })
@@ -194,7 +196,7 @@ async function detalleProyecto(proyecto) {
   const encargo = join(carpetaMiniaturas, 'ENCARGO-CODEX.md')
   return {
     proyecto, manifiesto, estudio,
-    render: render ? { estado: render.estado, registro: render.registro.slice(-1200) } : null,
+    render: estadoDeRender(render),
     videoFinal: existsSync(final) ? `/archivos/${proyecto}/renders/final.mp4?v=${(await stat(final)).mtimeMs}` : null,
     reelsEstado: trabajoReels ? { estado: trabajoReels.estado, registro: trabajoReels.registro.slice(-600) } : null,
     redes: { disponible: redesDisponibles() },
@@ -356,16 +358,17 @@ export async function vozPresente(carpeta, video) {
   return { ok: niveles.length === 0 || niveles.some(n => n > -35), medidos: niveles.length, niveles }
 }
 
-function renderizar(proyecto) {
+function renderizar(proyecto, estado) {
   const carpeta = carpetaDe(proyecto)
-  const estado = { estado: 'renderizando', registro: '' }
-  renders.set(proyecto, estado)
+  estado.fase = 'renderizando'
   const proceso = spawn('npx', ['hyperframes', 'render', '--output', 'renders/final-voz.mp4'], { cwd: carpeta, shell: true, windowsHide: true })
   const anotar = parte => { estado.registro = (estado.registro + parte.toString()).slice(-20000) }
   proceso.stdout.on('data', anotar)
   proceso.stderr.on('data', anotar)
+  proceso.on('error', error => { anotar(`\nNo se pudo iniciar el render: ${error.message}\n`) })
   proceso.on('close', async codigo => {
-    if (codigo !== 0) { estado.estado = 'error'; ocupados.delete(proyecto); return }
+    if (codigo !== 0) { terminarRender(estado, 'error'); ocupados.delete(proyecto); return }
+    estado.fase = 'musica'
     // Con la voz ya renderizada se mezcla la música elegida (baja sola cuando hablas).
     try {
       const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
@@ -374,7 +377,7 @@ function renderizar(proyecto) {
       const control = await vozPresente(carpeta, voz)
       if (!control.ok) {
         estado.registro += '\nEl video salió SIN tu voz (las tomas no quedaron dentro del render). Pulsa Renderizar otra vez; si se repite, avísale a Claude.\n'
-        estado.estado = 'error'
+        terminarRender(estado, 'error')
         ocupados.delete(proyecto)
         return
       }
@@ -387,8 +390,8 @@ function renderizar(proyecto) {
         const reel = { id: String(guion.id || 'r1'), archivo: 'renders/final.mp4', duracion: manifiesto.duracion || 0, club: guion.club || '', descripcion: descripcionDeReel(guion, await atribucionDe(estudio.musica)), articulo: guion.articuloSlug || '' }
         await writeFile(join(carpeta, 'renders', 'reels', 'reels.json'), JSON.stringify({ creado: new Date().toISOString(), reels: [reel] }, null, 2))
       }
-      estado.estado = 'listo'
-    } catch (error) { estado.registro += `\nNo se pudo mezclar la música: ${error.message}\n`; estado.estado = 'error' }
+      terminarRender(estado, 'listo')
+    } catch (error) { estado.registro += `\nNo se pudo mezclar la música: ${error.message}\n`; terminarRender(estado, 'error') }
     ocupados.delete(proyecto)
   })
 }
@@ -611,8 +614,11 @@ export function crearServidor() {
         if (accion === 'render') {
           // Siempre se vuelve a armar antes de renderizar: si las tomas o las fotos son más nuevas que el último
           // armado, el render saldría con los huecos del teleprompter y sin la voz (pasó el 2026-11-18).
-          try { await armar(proyecto) } catch (error) { ocupados.delete(proyecto); throw error }
-          renderizar(proyecto)
+          // El estado nace antes de armar para que la página ya muestre «Armando…» y no parezca que no pasó nada.
+          const estadoRender = nuevoRender()
+          renders.set(proyecto, estadoRender)
+          try { await armar(proyecto) } catch (error) { renders.delete(proyecto); ocupados.delete(proyecto); throw error }
+          renderizar(proyecto, estadoRender)
           return responder(res, 202, { estado: 'renderizando' })
         }
         if (accion === 'reels') { crearReelsProyecto(proyecto); return responder(res, 202, { estado: 'creando' }) }
