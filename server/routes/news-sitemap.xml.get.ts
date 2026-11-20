@@ -89,7 +89,7 @@ export default defineEventHandler(async (evento) => {
     '  <url>',
     `    <loc>${escaparXml(construirUrlAbsoluta(urlSitio, `/articulos/${articulo.slug}`))}</loc>`,
     '    <news:news>',
-    '      <news:publication><news:name>Pont3la10</news:name><news:language>es</news:language></news:publication>',
+    '      <news:publication><news:name>Ponte la 10</news:name><news:language>es</news:language></news:publication>',
     `      <news:publication_date>${escaparXml(articulo.publicadoEn)}</news:publication_date>`,
     `      <news:title>${escaparXml(articulo.titulo)}</news:title>`,
     '    </news:news>',

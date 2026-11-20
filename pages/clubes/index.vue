@@ -9,7 +9,7 @@ const ahora = useState<number>('clubes-mx-ahora', () => Date.now()).value
 const clubes = computed(() => clubesDeLigaMx(datos.value.tabla, datos.value.partidos, torneoActual(datos.value.partidos, datos.value.tabla, ahora)))
 
 useSeoPont3la10({
-  titulo: 'Clubes de la Liga MX: posiciones, calendario y noticias | Pont3la10 México',
+  titulo: 'Clubes de la Liga MX: posiciones, calendario y noticias | Ponte la 10 México',
   descripcion: 'Los clubes de la Liga MX con su posición en la tabla, próximos partidos y últimas noticias.',
   rutaCanonica: '/clubes',
   seccion: 'LIGA MX'

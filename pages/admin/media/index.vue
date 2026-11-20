@@ -18,7 +18,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Biblioteca multimedia | Pont3la10',
+  title: 'Biblioteca multimedia | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 

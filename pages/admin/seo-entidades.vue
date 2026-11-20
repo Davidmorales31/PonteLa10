@@ -9,7 +9,7 @@ definePageMeta({
   permisoEditorial: 'contenido.verBorradores'
 })
 
-useSeoMeta({ title: 'Grafo de entidades | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Grafo de entidades | Ponte la 10', robots: 'noindex, nofollow' })
 
 const etiquetaTipo: Record<TipoEntidadSeo, string> = {
   article: 'Artículo',

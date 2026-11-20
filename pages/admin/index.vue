@@ -16,7 +16,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Centro editorial | Pont3la10',
+  title: 'Centro editorial | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 
@@ -64,7 +64,7 @@ async function recargarResumen() {
         <h1>Centro editorial</h1>
         <p>
           Hola, {{ contextoEditorial?.usuario.nombre }}. Esta es la base privada desde la que crecerá
-          el flujo de contenidos de Pont3la10.
+          el flujo de contenidos de Ponte la 10.
         </p>
       </div>
       <div class="acciones-cabecera-panel">

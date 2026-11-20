@@ -24,8 +24,8 @@ const equipo = computed(() => ficha.value?.equipo || null)
 const clasificacion = computed(() => equipo.value?.clasificaciones[0] || null)
 const clasificaciones = computed(() => equipo.value?.clasificaciones || [])
 const tituloPagina = computed(() => equipo.value
-  ? `${equipo.value.nombre}: partidos, resultados y posición | Pont3la10`
-  : 'Ficha de equipo | Pont3la10')
+  ? `${equipo.value.nombre}: partidos, resultados y posición | Ponte la 10`
+  : 'Ficha de equipo | Ponte la 10')
 const descripcionPagina = computed(() => {
   const nombre = equipo.value?.nombre || 'el equipo'
   const posicion = clasificacion.value

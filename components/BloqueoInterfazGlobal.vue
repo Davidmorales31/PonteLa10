@@ -26,7 +26,7 @@ onBeforeUnmount(() => {
         <span class="marca-bloqueo-global">
           <picture>
             <source srcset="/brand/pont3la10_logo_real_blanco_transparente-180.webp 180w, /brand/pont3la10_logo_real_blanco_transparente-360.webp 360w, /brand/pont3la10_logo_real_blanco_transparente-598.webp 598w" type="image/webp" sizes="180px">
-            <img src="/brand/pont3la10_logo_real_blanco_transparente.png" alt="Pont3la10" width="598" height="115" decoding="async">
+            <img src="/brand/pont3la10_logo_real_blanco_transparente.png" alt="Ponte la 10" width="598" height="115" decoding="async">
           </picture>
         </span>
         <LoaderCircle aria-hidden="true" />

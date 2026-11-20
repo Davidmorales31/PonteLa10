@@ -121,13 +121,13 @@ useSeoPont3la10(() => {
     ? ` ${partido.marcadorLocal}-${partido.marcadorVisitante}`
     : ''
   const descripcion = partido
-    ? `${nombrePartido}${marcador}: marcador, resumen, estadísticas, eventos y alineaciones disponibles en Pont3la10.`
+    ? `${nombrePartido}${marcador}: marcador, resumen, estadísticas, eventos y alineaciones disponibles en Ponte la 10.`
     : 'Marcador, resumen, estadísticas, eventos y alineaciones disponibles del partido.'
   const rutaCanonica = `/resultados/${String(ruta.params.id)}`
   const urlCanonica = construirUrlAbsoluta(origenSitio.value, rutaCanonica)
 
   return {
-    titulo: `${nombrePartido}${marcador} | Pont3la10`,
+    titulo: `${nombrePartido}${marcador} | Ponte la 10`,
     descripcion,
     rutaCanonica,
     imagen: partido?.equipoLocal.logo || partido?.equipoVisitante.logo || imagenSeoPredeterminada,

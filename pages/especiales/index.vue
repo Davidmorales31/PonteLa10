@@ -12,21 +12,21 @@ const especiales = [
     estado: 'Próximamente'
   },
   {
-    titulo: 'Polla Pont3la10',
+    titulo: 'Polla Ponte la 10',
     descripcion: 'Pronósticos entre la comunidad cuando la experiencia esté disponible.',
     estado: 'Próximamente'
   }
 ]
 
 useSeoPont3la10({
-  titulo: 'Especiales | Pont3la10',
-  descripcion: 'Especiales editoriales de Pont3la10.',
+  titulo: 'Especiales | Ponte la 10',
+  descripcion: 'Especiales editoriales de Ponte la 10.',
   rutaCanonica: '/especiales',
   datosEstructurados: {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
-    name: 'Especiales de Pont3la10',
-    description: 'Especiales editoriales de Pont3la10.',
+    name: 'Especiales de Ponte la 10',
+    description: 'Especiales editoriales de Ponte la 10.',
     inLanguage: sitioActivo.value.idioma
   }
 })

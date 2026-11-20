@@ -46,7 +46,7 @@ export function normalizarTextoMeta(valor: string, limite: number): string {
 
 export function construirTituloMetaConMarca(
   titulo: string,
-  marca = 'Pont3la10'
+  marca = 'Ponte la 10'
 ): string {
   const tituloLimpio = titulo.replace(/\s+/g, ' ').trim()
   const sufijo = ` | ${marca}`

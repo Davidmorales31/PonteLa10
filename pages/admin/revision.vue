@@ -24,7 +24,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Bandeja de revisión | Pont3la10',
+  title: 'Bandeja de revisión | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 

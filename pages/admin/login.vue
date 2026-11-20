@@ -4,7 +4,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Acceso interno | Pont3la10',
+  title: 'Acceso interno | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 

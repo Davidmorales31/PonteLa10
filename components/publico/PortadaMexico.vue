@@ -41,10 +41,10 @@ const tablaLiga = computed(() => filasDeTabla(datosLiga.value.tabla, 'liga-mx', 
 const partidosLiga = computed(() => proximosYRecientes(datosLiga.value.partidos.filter(partido => partido.competencia === 'liga-mx'), ahora, 5))
 
 useSeoPont3la10({
-  titulo: 'Fútbol mexicano: Liga MX, Selección Mexicana y más | Pont3la10 México',
-  descripcion: 'Noticias de Liga MX, Selección Mexicana y mexicanos en el exterior. Tabla de posiciones, calendario y resultados en Pont3la10 México.',
+  titulo: 'Fútbol mexicano: Liga MX, Selección Mexicana y más | Ponte la 10 México',
+  descripcion: 'Noticias de Liga MX, Selección Mexicana y mexicanos en el exterior. Tabla de posiciones, calendario y resultados en Ponte la 10 México.',
   rutaCanonica: '/',
-  imagenAlt: 'Pont3la10 México, la jugada clara'
+  imagenAlt: 'Ponte la 10 México, la jugada clara'
 })
 </script>
 

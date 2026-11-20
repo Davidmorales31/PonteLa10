@@ -10,8 +10,8 @@ if (!usuarioActual.value) {
 }
 
 useSeoPont3la10({
-  titulo: 'Mi cuenta | Pont3la10',
-  descripcion: 'Cuenta de usuario de Pont3la10.',
+  titulo: 'Mi cuenta | Ponte la 10',
+  descripcion: 'Cuenta de usuario de Ponte la 10.',
   rutaCanonica: '/cuenta',
   robots: 'noindex, nofollow'
 })

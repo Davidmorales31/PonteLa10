@@ -9,8 +9,8 @@ const { data: respuesta, error, refresh } = await useFetch<RespuestaResultados>(
 const partidosEnVivo = computed(() => (respuesta.value?.partidos || []).filter(partido => partido.estado === 'en-vivo'))
 
 useSeoPont3la10(() => ({
-  titulo: 'Resultados en vivo de fútbol y marcadores | Pont3la10',
-  descripcion: 'Sigue resultados en vivo, marcadores y minuto de los partidos disponibles en Pont3la10.',
+  titulo: 'Resultados en vivo de fútbol y marcadores | Ponte la 10',
+  descripcion: 'Sigue resultados en vivo, marcadores y minuto de los partidos disponibles en Ponte la 10.',
   rutaCanonica: '/resultados/en-vivo',
   datosEstructurados: {
     '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Resultados en vivo',

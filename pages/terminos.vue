@@ -4,14 +4,14 @@ const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 useSeoPont3la10({
-  titulo: 'Términos y condiciones | Pont3la10',
-  descripcion: 'Consulta las condiciones de acceso, uso de contenidos, enlaces externos y contacto del sitio Pont3la10.',
+  titulo: 'Términos y condiciones | Ponte la 10',
+  descripcion: 'Consulta las condiciones de acceso, uso de contenidos, enlaces externos y contacto del sitio Ponte la 10.',
   rutaCanonica: '/terminos',
   datosEstructurados: {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Términos y condiciones de Pont3la10',
-    description: 'Condiciones de uso del sitio web Pont3la10.',
+    name: 'Términos y condiciones de Ponte la 10',
+    description: 'Condiciones de uso del sitio web Ponte la 10.',
     inLanguage: sitioActivo.value.idioma,
     isPartOf: { '@id': `${origenSitio.value.replace(/\/+$/, '')}/#sitio-web` }
   }
@@ -25,19 +25,19 @@ const fechaActualizacion = '25 de septiembre de 2026'
     <header class="cabecera-legal">
       <span class="insignia-legal"><BookOpenCheck aria-hidden="true" /> Uso del sitio</span>
       <h1>Reglas claras para jugar limpio.</h1>
-      <p class="introduccion-legal">Estos términos explican las condiciones básicas para navegar y utilizar Pont3la10, sus noticias y las funciones disponibles.</p>
+      <p class="introduccion-legal">Estos términos explican las condiciones básicas para navegar y utilizar Ponte la 10, sus noticias y las funciones disponibles.</p>
       <p class="fecha-legal">Última actualización: <time datetime="2026-09-25">{{ fechaActualizacion }}</time></p>
     </header>
 
     <div class="contenido-legal">
       <aside class="resumen-legal">
-        <strong>Al usar Pont3la10</strong>
+        <strong>Al usar Ponte la 10</strong>
         <p>Te comprometes a utilizar el sitio de forma lícita, respetar los derechos de terceros y no interferir con su seguridad o disponibilidad.</p>
       </aside>
 
       <section>
-        <h2>1. Sobre Pont3la10</h2>
-        <p>Pont3la10 es un producto de <a href="https://labs.pont3la10.com" target="_blank" rel="noreferrer noopener">Pont3la10 Labs</a>. Publicamos noticias, análisis y otros contenidos sobre deporte, tecnología y temas relacionados.</p>
+        <h2>1. Sobre Ponte la 10</h2>
+        <p>Ponte la 10 es un producto de <a href="https://labs.pont3la10.com" target="_blank" rel="noreferrer noopener">Pont3la10 Labs</a>. Publicamos noticias, análisis y otros contenidos sobre deporte, tecnología y temas relacionados.</p>
       </section>
 
       <section>
@@ -49,7 +49,7 @@ const fechaActualizacion = '25 de septiembre de 2026'
       <section>
         <h2>3. Noticias, fuentes y enlaces</h2>
         <p>El contenido se ofrece con fines informativos y editoriales. Aunque trabajamos para mantenerlo claro y actualizado, una publicación puede corregirse o cambiar cuando aparezcan nuevos datos. Para decisiones que requieran información oficial, verifica directamente con la entidad o fuente competente.</p>
-        <p>Los enlaces a sitios de terceros se ofrecen como referencia. Pont3la10 no controla su disponibilidad, contenido ni políticas; al visitarlos aplican las condiciones de esos sitios.</p>
+        <p>Los enlaces a sitios de terceros se ofrecen como referencia. Ponte la 10 no controla su disponibilidad, contenido ni políticas; al visitarlos aplican las condiciones de esos sitios.</p>
       </section>
 
       <section>
@@ -65,7 +65,7 @@ const fechaActualizacion = '25 de septiembre de 2026'
 
       <section>
         <h2>6. Contacto</h2>
-        <p>Pont3la10 es un producto de <a href="https://labs.pont3la10.com" target="_blank" rel="noreferrer noopener">Pont3la10 Labs</a>, fundado por Juan David Morales Parra en Neiva, Huila, Colombia. Si encuentras un error, un enlace que no funciona o contenido que deba revisarse, escríbenos a <a href="mailto:juanavimoralesparra31@gmail.com">juanavimoralesparra31@gmail.com</a> e incluye la dirección de la página.</p>
+        <p>Ponte la 10 es un producto de <a href="https://labs.pont3la10.com" target="_blank" rel="noreferrer noopener">Pont3la10 Labs</a>, fundado por Juan David Morales Parra en Neiva, Huila, Colombia. Si encuentras un error, un enlace que no funciona o contenido que deba revisarse, escríbenos a <a href="mailto:juanavimoralesparra31@gmail.com">juanavimoralesparra31@gmail.com</a> e incluye la dirección de la página.</p>
       </section>
 
       <a class="contacto-legal" href="mailto:juanavimoralesparra31@gmail.com"><Mail aria-hidden="true" /> ¿Necesitas reportar algo? <span>Contacta al equipo</span></a>

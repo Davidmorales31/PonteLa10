@@ -4,7 +4,7 @@ const { sitio: sitioActivo } = useSitio()
 
 useSeoPont3la10({
   robots: robotsNoIndex,
-  titulo: 'Resultados de baloncesto y marcadores en vivo | Pont3la10',
+  titulo: 'Resultados de baloncesto y marcadores en vivo | Ponte la 10',
   descripcion: 'Consulta partidos de baloncesto, marcadores por cuartos, resultados recientes y próximos encuentros.',
   rutaCanonica: '/resultados/baloncesto',
   datosEstructurados: {

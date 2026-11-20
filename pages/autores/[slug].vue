@@ -40,15 +40,15 @@ function formatearFecha(fecha: string): string {
 }
 
 useSeoPont3la10(() => ({
-  titulo: `${perfil.value?.nombre || 'Autor'} | Pont3la10`,
-  descripcion: perfil.value?.biografia || 'Perfil editorial de Pont3la10.',
+  titulo: `${perfil.value?.nombre || 'Autor'} | Ponte la 10`,
+  descripcion: perfil.value?.biografia || 'Perfil editorial de Ponte la 10.',
   rutaCanonica: `/autores/${slug.value}`,
   robots: robotsIndexables,
   datosEstructurados: perfil.value
     ? {
         '@context': 'https://schema.org',
         '@type': 'ProfilePage',
-        name: `Perfil de ${perfil.value.nombre} | Pont3la10`,
+        name: `Perfil de ${perfil.value.nombre} | Ponte la 10`,
         dateModified: perfil.value.fechaActualizacion,
         mainEntity: {
           '@type': perfil.value.tipo,

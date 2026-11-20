@@ -11,6 +11,8 @@ export const sitioPredeterminado: IdSitio = 'co'
 export interface ConfiguracionSitio {
   id: IdSitio
   nombre: string
+  /** Otras formas con las que se escribe o se busca el nombre (para que Google las asocie). */
+  nombresAlternos: readonly string[]
   pais: string
   origen: string
   /** Nombres de host (sin puerto) que atienden este sitio. */
@@ -34,7 +36,8 @@ export interface ConfiguracionSitio {
 export const configuracionSitios: Record<IdSitio, ConfiguracionSitio> = {
   co: {
     id: 'co',
-    nombre: 'Pont3la10',
+    nombre: 'Ponte la 10',
+    nombresAlternos: ['Pont3la10', 'Pontela10', 'Ponte la diez', 'Ponte la 10 Colombia'],
     pais: 'Colombia',
     origen: 'https://www.pont3la10.com',
     hosts: ['www.pont3la10.com', 'pont3la10.com'],
@@ -47,7 +50,8 @@ export const configuracionSitios: Record<IdSitio, ConfiguracionSitio> = {
   },
   mx: {
     id: 'mx',
-    nombre: 'Pont3la10 México',
+    nombre: 'Ponte la 10 México',
+    nombresAlternos: ['Pont3la10 México', 'Pontela10 México', 'Ponte la 10 Liga MX'],
     pais: 'México',
     origen: 'https://mx.pont3la10.com',
     hosts: ['mx.pont3la10.com'],

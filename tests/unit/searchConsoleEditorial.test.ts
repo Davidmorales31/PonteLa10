@@ -61,7 +61,7 @@ describe('HU-ED-21 · Search Console editorial', () => {
     expect(() => parsearCsvSearchConsole(
       'Query,Page,Clicks,Impressions,Position\nquery,https://otro.example,1,4,2',
       urlSitio
-    )).toThrow('no pertenece a Pont3la10')
+    )).toThrow('no pertenece a Ponte la 10')
     expect(() => parsearCsvSearchConsole(
       'Query,Page,Clicks,Impressions,Position\nquery,/articulos/a,1,4,2\nQUERY,/articulos/a,1,4,2',
       urlSitio

@@ -15,6 +15,7 @@ const identidadSeo = computed(() => ({
       '@type': rutaActual.path === '/' ? 'NewsMediaOrganization' : 'Organization',
       '@id': `${urlSitio.value}/#organizacion`,
       name: sitio.value.nombre,
+      alternateName: [...sitio.value.nombresAlternos],
       url: urlSitio.value,
       logo: {
         '@type': 'ImageObject',
@@ -25,6 +26,7 @@ const identidadSeo = computed(() => ({
       '@type': 'WebSite',
       '@id': `${urlSitio.value}/#sitio-web`,
       name: sitio.value.nombre,
+      alternateName: [...sitio.value.nombresAlternos],
       url: urlSitio.value,
       inLanguage: sitio.value.idioma,
       publisher: { '@id': `${urlSitio.value}/#organizacion` }

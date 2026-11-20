@@ -99,7 +99,7 @@ export const esquemaAccionSearchConsole = z.object({
     contexto.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['nota'],
-      message: 'La consolidación debe apuntar a una URL interna de Pont3la10.'
+      message: 'La consolidación debe apuntar a una URL interna de Ponte la 10.'
     })
   }
   if (accion === 'consolidar' && nota?.includes('\\')) {
@@ -215,7 +215,7 @@ function normalizarPaginaUrl(valor: string, urlSitio: string): string {
   const hostBase = base.hostname.toLocaleLowerCase('en-US').replace(/^www\./, '')
   const hostPagina = pagina.hostname.toLocaleLowerCase('en-US').replace(/^www\./, '')
   if (!['http:', 'https:'].includes(pagina.protocol) || hostPagina !== hostBase) {
-    throw new Error('El CSV contiene una página que no pertenece a Pont3la10.')
+    throw new Error('El CSV contiene una página que no pertenece a Ponte la 10.')
   }
 
   return `${base.origin}${pagina.pathname}`

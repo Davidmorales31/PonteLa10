@@ -203,7 +203,7 @@ const entidadPersona = computed(() => ({
 }))
 
 useSeoPont3la10(() => ({
-  titulo: `${ficha.nombre}: club, posición y actualidad | Pont3la10`,
+  titulo: `${ficha.nombre}: club, posición y actualidad | Ponte la 10`,
   descripcion: `${ficha.nombre}: trayectoria, momentos clave, videos y actualidad del club. Fuentes enlazadas en su perfil.`,
   rutaCanonica: `/jugadores/${ficha.slug}`,
   seccion: 'Colombianos en Europa',

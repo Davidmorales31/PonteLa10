@@ -141,7 +141,7 @@ function mapearIngesta(
     },
     categoria: mapearCategoria(fila.categories),
     solicitanteId: fila.requested_by,
-    solicitanteNombre: nombres.get(fila.requested_by) || 'Equipo Pont3la10',
+    solicitanteNombre: nombres.get(fila.requested_by) || 'Equipo Ponte la 10',
     articuloId: fila.article_id,
     preparadaParaRevisionEn: fila.prepared_for_review_at,
     codigoPreparacion: fila.preparation_error_code || '',

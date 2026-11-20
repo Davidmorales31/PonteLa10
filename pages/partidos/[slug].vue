@@ -66,7 +66,7 @@ watchEffect(() => {
     match_status: partido.value.estado ? estadoVisible.value : null
   }
 })
-const titulo = computed(() => `${partido.value.local} vs ${partido.value.visitante}: fecha, hora y resultado | Pont3la10`)
+const titulo = computed(() => `${partido.value.local} vs ${partido.value.visitante}: fecha, hora y resultado | Ponte la 10`)
 const descripcion = computed(() => [
   `${partido.value.local} vs ${partido.value.visitante} por ${partido.value.competencia}.`,
   `${fechaVisible.value}, hora de Colombia.`,

@@ -83,7 +83,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Oportunidades orgánicas | Pont3la10',
+  title: 'Oportunidades orgánicas | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 

@@ -155,7 +155,7 @@ function rutaFichaEquipo(slug: string) {
 }
 
 useSeoPont3la10(() => ({
-  titulo: 'Liga Colombiana: Liga BetPlay, Torneo y Copa Colombia | Pont3la10',
+  titulo: 'Liga Colombiana: Liga BetPlay, Torneo y Copa Colombia | Ponte la 10',
   descripcion: 'Sigue la Liga BetPlay y el fútbol colombiano: tabla de posiciones, calendario, resultados y noticias actualizadas de Liga A, Torneo B y Copa Colombia.',
   rutaCanonica: '/liga-colombiana',
   seccion: 'Fútbol colombiano',

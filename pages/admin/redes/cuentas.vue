@@ -5,7 +5,7 @@ import type { EstadoConexionSocialX } from '~/types/conexionSocialX'
 import type { ConexionMeta } from '~/types/publicacionMeta'
 
 definePageMeta({ layout: 'admin', middleware: 'autenticacion-editorial', permisoEditorial: 'contenido.verBorradores' })
-useSeoMeta({ title: 'Cuentas sociales | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Cuentas sociales | Ponte la 10', robots: 'noindex, nofollow' })
 const ruta = useRoute()
 const { data: conexionMeta, refresh: actualizarMeta } = await useFetch<ConexionMeta>('/api/admin/redes/oauth/meta')
 const { data: conexionX, error: errorConexionX, refresh: actualizarX } = await useFetch<EstadoConexionSocialX>('/api/admin/redes/oauth/x')
@@ -13,7 +13,7 @@ const conectandoX = ref(false), problemaX = ref('')
 const resultadosX: Record<string, string> = {
   conectada: 'La cuenta @Pont3la10 quedó conectada. No se publicó contenido.',
   cancelada: 'Cancelaste la autorización de X. La conexión anterior, si existía, se conserva.',
-  cuenta_incorrecta: 'La cuenta autorizada no es @Pont3la10. No se guardó. Cambia a la cuenta de Pont3la10 en X y vuelve a conectar.',
+  cuenta_incorrecta: 'La cuenta autorizada no es @Pont3la10. No se guardó. Cambia a la cuenta de Ponte la 10 en X y vuelve a conectar.',
   autorizacion_invalida: 'La autorización venció, ya se utilizó o pertenece a otra sesión. Inicia la conexión de nuevo.',
   conexion_fallida: 'X no pudo completar la conexión. No se guardaron credenciales nuevas; vuelve a iniciarla.',
   guardado_fallido: 'No se pudo guardar la conexión. Inicia una autorización nueva.'
@@ -44,7 +44,7 @@ async function conectarX() {
 <template>
   <section class="cuentas-sociales">
     <NuxtLink to="/admin/redes" class="volver-cuentas"><ArrowLeft :size="17" />Contenido para redes</NuxtLink>
-    <h1>Cuentas de Pont3la10</h1>
+    <h1>Cuentas de Ponte la 10</h1>
     <p v-if="mensajeX" role="status" class="mensaje-conexion">{{ mensajeX }}</p>
     <p>Publica en Facebook, Instagram y X desde Vista rápida con confirmación por envío. Cada cuenta se verifica en el servidor y conserva sus credenciales privadas.</p>
     <div class="lista-cuentas">

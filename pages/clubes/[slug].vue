@@ -32,7 +32,7 @@ const tarjetas = computed(() => (Array.isArray(noticias.value) ? noticias.value 
 })))
 
 useSeoPont3la10(() => ({
-  titulo: `${nombre.value}: posición, calendario y noticias | Pont3la10 México`,
+  titulo: `${nombre.value}: posición, calendario y noticias | Ponte la 10 México`,
   descripcion: `Posición en la Liga MX, próximos partidos, resultados y noticias de ${nombre.value}.`,
   rutaCanonica: `/clubes/${slug.value}`,
   seccion: 'LIGA MX'

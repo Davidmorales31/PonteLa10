@@ -70,7 +70,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Editor de contenido | Pont3la10',
+  title: 'Editor de contenido | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 

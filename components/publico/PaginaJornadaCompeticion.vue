@@ -20,8 +20,8 @@ if (error.value) {
 }
 
 const tituloPagina = computed(() => ficha.value
-  ? `${ficha.value.jornada.nombre} de ${ficha.value.competencia.nombre} ${ficha.value.temporada}: partidos y resultados | Pont3la10`
-  : 'Jornada de fútbol colombiano | Pont3la10')
+  ? `${ficha.value.jornada.nombre} de ${ficha.value.competencia.nombre} ${ficha.value.temporada}: partidos y resultados | Ponte la 10`
+  : 'Jornada de fútbol colombiano | Ponte la 10')
 const descripcionPagina = computed(() => ficha.value
   ? `Consulta los ${ficha.value.partidos.length} partidos completos de ${ficha.value.jornada.nombre} en ${ficha.value.competencia.nombre} ${ficha.value.temporada}, con horarios de Colombia y resultados confirmados.`
   : 'Calendario y resultados de las jornadas del fútbol colombiano.')

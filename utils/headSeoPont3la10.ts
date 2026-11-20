@@ -30,7 +30,7 @@ export interface IdentidadSeoSitio {
   ogLocale: string
 }
 
-const identidadColombia: IdentidadSeoSitio = { nombre: 'Pont3la10', ogLocale: 'es_CO' }
+const identidadColombia: IdentidadSeoSitio = { nombre: 'Ponte la 10', ogLocale: 'es_CO' }
 
 export function construirHeadSeoPont3la10(
   urlSitio: string,

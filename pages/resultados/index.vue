@@ -10,7 +10,7 @@ const { data: respuestaSeo } = await useFetch<RespuestaResultados>('/api/resulta
 })
 
 useSeoPont3la10(() => ({
-  titulo: 'Resultados deportivos y marcadores en vivo | Pont3la10',
+  titulo: 'Resultados deportivos y marcadores en vivo | Ponte la 10',
   descripcion: 'Consulta resultados de fútbol, baloncesto, tenis y béisbol, marcadores recientes y próximos encuentros.',
   rutaCanonica: '/resultados',
   datosEstructurados: {

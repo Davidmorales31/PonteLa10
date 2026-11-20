@@ -19,7 +19,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Taxonomías | Pont3la10',
+  title: 'Taxonomías | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 

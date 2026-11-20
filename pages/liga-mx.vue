@@ -32,8 +32,8 @@ const actualizado = computed(() => datos.value.actualizadoEn
   : '')
 
 useSeoPont3la10({
-  titulo: 'Liga MX: tabla de posiciones, calendario y resultados | Pont3la10 México',
-  descripcion: 'Tabla de posiciones, calendario, resultados y noticias de la Liga MX y la Liga MX Femenil en Pont3la10 México.',
+  titulo: 'Liga MX: tabla de posiciones, calendario y resultados | Ponte la 10 México',
+  descripcion: 'Tabla de posiciones, calendario, resultados y noticias de la Liga MX y la Liga MX Femenil en Ponte la 10 México.',
   rutaCanonica: '/liga-mx',
   seccion: 'LIGA MX'
 })

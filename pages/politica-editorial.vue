@@ -7,13 +7,13 @@ const correoContacto = 'juanavimoralesparra31@gmail.com'
 const fechaActualizacion = '7 de octubre de 2026'
 
 useSeoPont3la10({
-  titulo: 'Política editorial | Pont3la10',
-  descripcion: 'Cómo seleccionamos y verificamos fuentes, usamos herramientas de IA, tratamos conflictos, publicidad y datos deportivos en Pont3la10.',
+  titulo: 'Política editorial | Ponte la 10',
+  descripcion: 'Cómo seleccionamos y verificamos fuentes, usamos herramientas de IA, tratamos conflictos, publicidad y datos deportivos en Ponte la 10.',
   rutaCanonica: '/politica-editorial',
   datosEstructurados: {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Política editorial de Pont3la10',
+    name: 'Política editorial de Ponte la 10',
     description: 'Principios de fuentes, verificación, automatización, publicidad y datos deportivos.',
     inLanguage: sitioActivo.value.idioma,
     isPartOf: { '@id': `${origenSitio.value.replace(/\/+$/, '')}/#sitio-web` }
@@ -26,7 +26,7 @@ useSeoPont3la10({
     <header class="cabecera-legal">
       <span class="insignia-legal"><BookOpenCheck aria-hidden="true" /> Criterios editoriales</span>
       <h1 id="titulo-legal">Cómo trabajamos la información.</h1>
-      <p class="introduccion-legal">Estos criterios explican cómo preparamos, verificamos y presentamos noticias, análisis y datos deportivos en Pont3la10.</p>
+      <p class="introduccion-legal">Estos criterios explican cómo preparamos, verificamos y presentamos noticias, análisis y datos deportivos en Ponte la 10.</p>
       <p class="fecha-legal">Última actualización: <time datetime="2026-10-07">{{ fechaActualizacion }}</time></p>
     </header>
 

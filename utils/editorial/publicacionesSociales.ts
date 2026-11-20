@@ -102,7 +102,7 @@ export function enlaceSocial(urlCanonica: string, red: RedSocial, articuloId: st
 
 export function componerTextoSocial(propuesta: PropuestaSocial, red: RedSocial, url: string): string {
   const cta = red === 'instagram'
-    ? 'La historia completa está en Pont3la10. Busca el titular en nuestro portal.'
+    ? 'La historia completa está en Ponte la 10. Busca el titular en nuestro portal.'
     : `Lee la historia completa: ${url}`
   return `${propuesta.gancho}\n\n${propuesta.contexto}\n\n${propuesta.razonParaLeer}\n\n${cta}`
 }

@@ -4,14 +4,14 @@ const origenSitio = useOrigenSitio()
 const { sitio: sitioActivo } = useSitio()
 
 useSeoPont3la10({
-  titulo: 'Política de privacidad | Pont3la10',
-  descripcion: 'Conoce qué información trata Pont3la10, para qué la usa y cómo puedes ejercer tus derechos de privacidad.',
+  titulo: 'Política de privacidad | Ponte la 10',
+  descripcion: 'Conoce qué información trata Ponte la 10, para qué la usa y cómo puedes ejercer tus derechos de privacidad.',
   rutaCanonica: '/privacidad',
   datosEstructurados: {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Política de privacidad de Pont3la10',
-    description: 'Información sobre el tratamiento de datos y privacidad en Pont3la10.',
+    name: 'Política de privacidad de Ponte la 10',
+    description: 'Información sobre el tratamiento de datos y privacidad en Ponte la 10.',
     inLanguage: sitioActivo.value.idioma,
     isPartOf: { '@id': `${origenSitio.value.replace(/\/+$/, '')}/#sitio-web` }
   }
@@ -25,7 +25,7 @@ const fechaActualizacion = '2 de octubre de 2026'
     <header class="cabecera-legal">
       <span class="insignia-legal"><ShieldCheck aria-hidden="true" /> Privacidad y datos</span>
       <h1 id="titulo-legal">Tu privacidad importa.</h1>
-      <p class="introduccion-legal">Esta página explica, en lenguaje claro, qué información puede tratar Pont3la10 cuando navegas por el sitio o utilizas sus funciones.</p>
+      <p class="introduccion-legal">Esta página explica, en lenguaje claro, qué información puede tratar Ponte la 10 cuando navegas por el sitio o utilizas sus funciones.</p>
       <p class="fecha-legal">Última actualización: <time datetime="2026-10-02">{{ fechaActualizacion }}</time></p>
     </header>
 
@@ -37,7 +37,7 @@ const fechaActualizacion = '2 de octubre de 2026'
 
       <section>
         <h2>Quién está detrás del sitio</h2>
-        <p>Pont3la10 es un producto de <a href="https://labs.pont3la10.com" target="_blank" rel="noreferrer noopener">Pont3la10 Labs</a>. Su fundador y responsable de contacto es Juan David Morales Parra, con domicilio de contacto en Neiva, Huila, Colombia. Para preguntas o solicitudes relacionadas con privacidad puedes escribir a <a href="mailto:juanavimoralesparra31@gmail.com">juanavimoralesparra31@gmail.com</a>.</p>
+        <p>Ponte la 10 es un producto de <a href="https://labs.pont3la10.com" target="_blank" rel="noreferrer noopener">Pont3la10 Labs</a>. Su fundador y responsable de contacto es Juan David Morales Parra, con domicilio de contacto en Neiva, Huila, Colombia. Para preguntas o solicitudes relacionadas con privacidad puedes escribir a <a href="mailto:juanavimoralesparra31@gmail.com">juanavimoralesparra31@gmail.com</a>.</p>
       </section>
 
       <section>
@@ -53,7 +53,7 @@ const fechaActualizacion = '2 de octubre de 2026'
       <section>
         <h2>Finalidades y proveedores</h2>
         <p>La información se utiliza para entregar las páginas y funciones solicitadas, mantener sesiones autorizadas, proteger el servicio, recordar ajustes locales y gestionar el flujo editorial. El sitio puede usar cookies técnicas o almacenamiento local para mantener una sesión y recordar preferencias; no se presentan como cookies publicitarias.</p>
-        <p>Pont3la10 usa Google Analytics 4 para medir por defecto visitas y uso general de sus páginas públicas. Puedes desactivar esta medición desde “Preferencias de privacidad” en el pie de página; tu decisión se guarda en este navegador. Se registran páginas públicas y eventos generales de lectura, búsqueda y filtros; no enviamos a Analytics el texto buscado, correos electrónicos, identificadores de cuenta ni rutas del panel administrativo. Google puede tratar datos técnicos de medición según sus propias condiciones y políticas.</p>
+        <p>Ponte la 10 usa Google Analytics 4 para medir por defecto visitas y uso general de sus páginas públicas. Puedes desactivar esta medición desde “Preferencias de privacidad” en el pie de página; tu decisión se guarda en este navegador. Se registran páginas públicas y eventos generales de lectura, búsqueda y filtros; no enviamos a Analytics el texto buscado, correos electrónicos, identificadores de cuenta ni rutas del panel administrativo. Google puede tratar datos técnicos de medición según sus propias condiciones y políticas.</p>
         <p>Los anuncios de Adsterra son opcionales y no se cargan hasta que los permitas desde “Preferencias de privacidad”; esa elección se guarda por separado en este navegador y puedes revocarla. Al permitirlos, sus espacios se ejecutan aislados en un marco del navegador y la red publicitaria puede recibir datos técnicos como la dirección IP, el dispositivo y la página que solicita el anuncio, además de usar tecnologías de almacenamiento según sus políticas. El enlace patrocinado solo visita al tercero si lo pulsas. Consulta la <a href="https://adsterra.com/privacy-policy-managed" target="_blank" rel="noreferrer noopener">política de privacidad de Adsterra</a>.</p>
         <p>En el flujo editorial interno, el equipo puede enviar transcripciones y evidencia a DeepSeek para preparar borradores. Esa función no es necesaria para leer el sitio. El equipo debe evitar incluir datos personales de terceros que no sean indispensables; el tratamiento por el proveedor también está sujeto a sus condiciones.</p>
         <p>La infraestructura de autenticación, base de datos y almacenamiento puede ser prestada por proveedores como Supabase. Los proveedores técnicos estrictamente necesarios tratan información por cuenta del servicio según la función que prestan y sus propias condiciones.</p>
