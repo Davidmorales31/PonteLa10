@@ -16,6 +16,7 @@ import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
 import { estadoDeRender, nuevoRender, terminarRender } from './video-estudio-render.mjs'
 import { hijosDe, listaDeReels, nombrePadre, raizDeFamilia } from './video-estudio-familia.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
+import { medirMiniatura, evaluarMiniatura } from './video-medir-miniatura.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
 import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
@@ -235,7 +236,10 @@ async function detalleProyecto(proyecto) {
     titulos: guion.titulos?.length ? guion.titulos : [guion.tituloVideo || guion.titulo].filter(Boolean),
     miniaturaTexto: guion.miniatura || null,
     descripcionYoutube: guion.tipo === 'reel' ? descripcionDeReel(guion, await atribucionDe(estudio.musica)) : descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionDe(estudio.musica) }),
-    miniaturas: await Promise.all(miniaturas.map(async n => ({ nombre: n, url: `/archivos/${proyecto}/renders/miniaturas/${n}?v=${(await stat(join(carpetaMiniaturas, n))).mtimeMs}` }))),
+    miniaturas: await Promise.all(miniaturas.map(async n => {
+      const { mtimeMs } = await stat(join(carpetaMiniaturas, n))
+      return { nombre: n, url: `/archivos/${proyecto}/renders/miniaturas/${n}?v=${mtimeMs}`, medicion: await medicionDeMiniatura(join(carpetaMiniaturas, n), mtimeMs) }
+    })),
     encargo: existsSync(encargo) ? await readFile(encargo, 'utf8') : null,
     padre: familia.raiz !== proyecto ? familia.raiz : null,
     reels: familia.reels
@@ -348,6 +352,20 @@ async function guardarMiniatura(proyecto, cuerpo) {
     await rename(join(carpeta, `${nombre}.tmp.jpg`), join(carpeta, nombre))
   }
   return { nombre }
+}
+
+// Medición de una miniatura contra los rangos de La Gambeta y Cracks (misma que `video-medir-miniatura.mjs`).
+// Se guarda por archivo y fecha de modificación para no volver a leer la imagen en cada consulta; si falla, no estorba.
+const medicionesMiniatura = new Map()
+export async function medicionDeMiniatura(archivo, mtimeMs) {
+  const clave = `${archivo}|${mtimeMs}`
+  if (!medicionesMiniatura.has(clave)) {
+    try {
+      const evaluacion = evaluarMiniatura(await medirMiniatura(await readFile(archivo), { peso: (await stat(archivo)).size }))
+      medicionesMiniatura.set(clave, { ok: evaluacion.ok, pendientes: evaluacion.criterios.filter(c => !c.ok).map(c => ({ criterio: c.criterio, valor: c.valor, ayuda: c.ayuda })) })
+    } catch { medicionesMiniatura.set(clave, null) }
+  }
+  return medicionesMiniatura.get(clave)
 }
 
 async function armar(proyecto) {

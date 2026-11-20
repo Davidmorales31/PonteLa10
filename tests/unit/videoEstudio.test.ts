@@ -80,3 +80,19 @@ describe('estudio local del video diario', () => {
     expect(peticionPermitida({ host: 'localhost:4810', origin: 'https://sitio-malicioso.com', metodo: 'GET' }, 4810)).toBe(false)
   })
 })
+
+describe('medición de miniaturas en el estudio', () => {
+  it('dice si una miniatura cae en lo medido y qué corregir si no', async () => {
+    const { mkdtempSync, writeFileSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const sharp = (await import('sharp')).default
+    const carpeta = mkdtempSync(resolve(tmpdir(), 'mini-'))
+    const lisa = resolve(carpeta, 'miniatura-a.jpg')
+    writeFileSync(lisa, await sharp({ create: { width: 1280, height: 720, channels: 3, background: '#1a2a5a' } }).jpeg().toBuffer())
+    const medicionDeMiniatura = estudio.medicionDeMiniatura as (a: string, m: number) => Promise<{ ok: boolean, pendientes: Array<{ criterio: string, ayuda: string }> } | null>
+    const m = await medicionDeMiniatura(lisa, 1)
+    expect(m?.ok).toBe(false)
+    expect(m?.pendientes.some(p => p.criterio === 'bordes' && /vacía/.test(p.ayuda))).toBe(true)
+    expect(await medicionDeMiniatura(resolve(carpeta, 'no-existe.jpg'), 1)).toBeNull()
+  })
+})

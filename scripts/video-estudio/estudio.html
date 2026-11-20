@@ -242,6 +242,10 @@
   .lista-miniaturas { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; margin-top: 10px; }
   .lista-miniaturas figure { margin: 0; display: grid; gap: 6px; }
   .lista-miniaturas img { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 3px; border: 1px solid var(--borde-suave); }
+  .lista-miniaturas .medicion { margin: 0; font-size: 12px; line-height: 1.35; }
+  .lista-miniaturas .medicion.ok { color: var(--verde); }
+  .lista-miniaturas .medicion.revisar { color: var(--texto-2); }
+  .lista-miniaturas .medicion.revisar strong { color: var(--ambar); }
   .lista-miniaturas .fila { display: flex; flex-wrap: wrap; gap: 6px; }
   .lista-miniaturas .fila .boton { flex: 1; min-height: 32px; padding: 0 8px; font-size: 12px; }
   #descripcion-youtube { width: 100%; padding: 10px; border: 1px solid var(--borde); border-radius: var(--radio); background: var(--fondo); color: var(--texto); font: 12px/1.5 var(--mono); margin: 8px 0; resize: vertical; }
@@ -1284,12 +1288,18 @@ function escucharMusica() {
 }
 
 /* ---------- Títulos, miniaturas y descripción ---------- */
+// Resultado del medidor (rangos de La Gambeta y Cracks): una línea corta y, si hay algo que corregir, qué.
+function medicionMiniatura(m) {
+  if (!m) return ''
+  if (m.ok) return '<p class="medicion ok">Dentro de lo medido en La Gambeta y Cracks.</p>'
+  return `<p class="medicion revisar" title="Rangos de config/miniaturasReferencia.json"><strong>Revisar:</strong> ${m.pendientes.map(c => `${escapar(c.criterio)} ${escapar(String(c.valor))} (${escapar(c.ayuda)})`).join('; ')}</p>`
+}
 function pintarPublicacion() {
   $('#lista-titulos').innerHTML = (detalle.titulos || []).map((t, i) => `<li><div class="fila-titulo"><span>${escapar(t)}</span><span class="largo">${t.length} car.</span><button class="boton icono-solo" data-copiar-titulo="${i}" aria-label="Copiar título ${i + 1}">${icono('copy')}</button>${detalle.youtube?.video ? `<button class="boton" data-yt-titulo="${i}">${icono('video')}<span>Poner en YouTube</span></button>` : ''}</div></li>`).join('') || '<li>El guion de este proyecto no trae títulos A/B.</li>'
   const mini = detalle.miniaturaTexto
   $('#texto-miniatura').textContent = mini?.texto ? `Texto de la miniatura: «${mini.texto}»${mini.resaltar ? ` (resaltar ${mini.resaltar})` : ''}` : 'El guion no trae texto de miniatura: Codex lo propondrá.'
   $('#copiar-encargo').hidden = !detalle.encargo
-  $('#lista-miniaturas').innerHTML = (detalle.miniaturas || []).map(m => `<figure><img src="${escapar(m.url)}" alt="Miniatura ${escapar(m.nombre)}"><div class="fila"><a class="boton" href="${escapar(m.url)}" download="${escapar(m.nombre)}">${icono('download')}<span>Descargar</span></a>${detalle.youtube?.video ? `<button class="boton" data-yt-miniatura="${escapar(m.nombre)}">${icono('upload')}<span>Subir a YouTube</span></button>` : ''}<button class="boton" data-borrar-miniatura="${escapar(m.nombre)}">${icono('trash')}<span>Quitar</span></button></div></figure>`).join('')
+  $('#lista-miniaturas').innerHTML = (detalle.miniaturas || []).map(m => `<figure><img src="${escapar(m.url)}" alt="Miniatura ${escapar(m.nombre)}">${medicionMiniatura(m.medicion)}<div class="fila"><a class="boton" href="${escapar(m.url)}" download="${escapar(m.nombre)}">${icono('download')}<span>Descargar</span></a>${detalle.youtube?.video ? `<button class="boton" data-yt-miniatura="${escapar(m.nombre)}">${icono('upload')}<span>Subir a YouTube</span></button>` : ''}<button class="boton" data-borrar-miniatura="${escapar(m.nombre)}">${icono('trash')}<span>Quitar</span></button></div></figure>`).join('')
   $('#descripcion-youtube').value = detalle.descripcionYoutube || ''
   pintarYoutube()
   document.querySelectorAll('[data-copiar-titulo]').forEach(b => b.addEventListener('click', () => copiar(detalle.titulos[Number(b.dataset.copiarTitulo)], 'Título copiado.')))
