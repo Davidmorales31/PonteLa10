@@ -25,7 +25,7 @@ export function fotosDelEncargo(guion, estudio = {}) {
     const primera = planos.find(p => !vistas.has(p.url))
     if (!primera) continue
     vistas.add(primera.url)
-    fotos.push({ bloque: bloque.id, club: bloque.club || '', ...primera })
+    fotos.push({ bloque: bloque.id, club: bloque.club || '', titular: bloque.titular || '', ...primera })
     if (fotos.length >= 3) break
   }
   return fotos
@@ -34,7 +34,7 @@ export function fotosDelEncargo(guion, estudio = {}) {
 export function textoEncargo({ guion, fotos, conCara, carpeta }) {
   const titulos = (guion.titulos?.length ? guion.titulos : [guion.tituloVideo]).filter(Boolean)
   const miniatura = guion.miniatura || {}
-  const lineaFotos = fotos.map((f, i) => `- insumos/foto-${i + 1}.jpg — ${f.club || f.bloque} — Crédito: ${f.credito || 'sin crédito'}`).join('\n')
+  const lineaFotos = fotos.map((f, i) => `- insumos/foto-${i + 1}.jpg — ${f.club || f.bloque}${f.titular ? ` — Noticia: «${f.titular}»` : ''} — Crédito: ${f.credito || 'sin crédito'}`).join('\n')
   return `# Encargo de miniaturas — video diario de Pont3la10 (${guion.fecha})
 
 Hola, Codex. Necesito **3 miniaturas de YouTube** para la prueba A/B del video de hoy.
@@ -51,14 +51,20 @@ ${titulos.map((t, i) => `${i + 1}. ${t}`).join('\n')}
 - **${miniatura.texto || '(define 2 a 5 palabras que sumen al título, sin repetirlo)'}**${miniatura.resaltar ? ` — resalta en amarillo la palabra **${miniatura.resaltar}**` : ''}.
 - De 2 a 5 palabras, en mayúsculas, letra gruesa condensada, con borde oscuro para que se lea en el celular.
 
+## Cómo diseñarlas
+Sigue el skill \`.agents/skills/pont3la10-miniaturas-codex/SKILL.md\`: sus medidas salen de las 20 últimas miniaturas de La Gambeta y de Cracks (\`docs/METRICAS_MINIATURAS_COMPETENCIA.md\`).
+
 ## Variantes
-- **A — Cara + titular:** ${conCara ? 'usa `insumos/cara.jpg` (fotograma real de Juan): recórtalo, colócalo grande a un lado con expresión clara y el texto al otro lado, sobre la foto principal oscurecida.' : 'no hay toma de cara todavía: usa la foto principal con un acercamiento al protagonista y el texto al lado.'}
-- **B — Foto del protagonista:** \`insumos/foto-1.jpg\` a pantalla completa, degradado oscuro abajo y el texto grande abajo a la izquierda; etiqueta del club arriba.
-- **C — Pantalla dividida:** \`insumos/foto-1.jpg\` y \`insumos/foto-2.jpg\` separadas por una diagonal amarilla, cada mitad con el nombre del club, y el texto centrado abajo.
+- **A — Doble panel con dos titulares:** \`insumos/foto-1.jpg\` y \`insumos/foto-2.jpg\` en dos paneles 50/50 con línea blanca; el titular de cada panel es la noticia de su foto (la de la lista de fotos de abajo), recortada a 3–7 palabras en dos líneas (blanca y amarilla), en el tercio inferior.
+- **B — Collage de protagonistas:** de 2 a 4 caras grandes recortadas y solapadas, 1 a 3 círculos con borde blanco (entrenador, rival, periodista) y, si el video habla de un marcador o una cifra, la cifra en texto grande. Casi sin titular.
+- **C — Protagonista y cara de Juan:** ${conCara ? 'usa `insumos/cara.jpg` (fotograma real de Juan) a la derecha, grande y con expresión clara, y el protagonista de `insumos/foto-1.jpg` a la izquierda, con el texto de miniatura abajo.' : 'no hay toma de cara todavía: repite la receta A con otras dos noticias (fotos 2 y 3).'}
+
+## Antes de entregar
+Ejecuta \`node scripts/video-medir-miniatura.mjs miniatura-a.jpg miniatura-b.jpg miniatura-c.jpg\` en esta carpeta; si dice REVISAR, corrige lo que indica y repite.
 
 ## Identidad
 - Azul marino \`#08204a\`, amarillo \`#ffd800\`, blanco. Logo: \`insumos/logo-blanco.png\`, pequeño, en una esquina.
-- Colores saturados y alto contraste; nada de texto pequeño.
+- Colores saturados, brillo medio y la imagen bien llena (sin fondos lisos grandes); nada de texto pequeño.
 
 ## Fotos (reales, con crédito)
 ${lineaFotos}

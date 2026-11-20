@@ -93,7 +93,7 @@ YouTube permite probar hasta 3 títulos y 3 miniaturas; gana el de más tiempo d
 - Máximo 2 palabras en MAYÚSCULAS para énfasis, como mucho 1 emoji, una sola exclamación. Usa « | » solo si hay 3 o 4 historias de peso.
 - Nunca prometas lo que el video no cuenta: el título debe ser fiel al contenido (la prueba A/B premia la retención, no el clic).
 
-**Miniatura** (`miniatura`): 2 a 5 palabras en mayúsculas que **sumen** al título sin repetirlo (máx. 32 caracteres) y la palabra a resaltar en amarillo. Las miniaturas las diseña Codex desde el estudio («Títulos y miniaturas» → «Preparar encargo para Codex») con las fotos reales del día y la cara de Juan; nunca con imágenes generadas de personas o escenas.
+**Miniatura** (`miniatura`): 2 a 5 palabras en mayúsculas que **sumen** al título sin repetirlo (máx. 32 caracteres) y la palabra a resaltar en amarillo. Las miniaturas las diseña Codex desde el estudio («Títulos y miniaturas» → «Preparar encargo para Codex») con las fotos reales del día y la cara de Juan; nunca con imágenes generadas de personas o escenas. El diseño sigue `pont3la10-miniaturas-codex` (medidas de La Gambeta y Cracks): para que la receta de doble panel funcione, cada bloque lleva un `titular` corto y de 3 a 7 palabras que se pueda leer en la miniatura.
 
 ## Rúbrica (obligatoria)
 

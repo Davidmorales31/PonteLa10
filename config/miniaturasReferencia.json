@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "fuente": "20 miniaturas más recientes de La Gambeta y de Cracks, medidas el 2026-11-20 a 1280×720 (ver docs/METRICAS_MINIATURAS_COMPETENCIA.md)",
+  "lienzo": {
+    "ancho": 1280,
+    "alto": 720,
+    "pesoMaxKb": 2048
+  },
+  "automaticas": {
+    "luminancia": {
+      "descripcion": "brillo medio 0–1",
+      "gambeta": [
+        0.336,
+        0.418,
+        0.477
+      ],
+      "cracks": [
+        0.344,
+        0.434,
+        0.519
+      ],
+      "rango": [
+        0.29,
+        0.54
+      ]
+    },
+    "contraste": {
+      "descripcion": "desviación estándar del brillo",
+      "gambeta": [
+        0.282,
+        0.311,
+        0.332
+      ],
+      "cracks": [
+        0.234,
+        0.263,
+        0.281
+      ],
+      "rango": [
+        0.2,
+        0.34
+      ]
+    },
+    "saturacion": {
+      "descripcion": "saturación media HSV 0–1",
+      "gambeta": [
+        0.424,
+        0.494,
+        0.567
+      ],
+      "cracks": [
+        0.398,
+        0.503,
+        0.59
+      ],
+      "rango": [
+        0.36,
+        0.62
+      ]
+    },
+    "oscuros": {
+      "descripcion": "parte de píxeles casi negros (v < 0,15)",
+      "gambeta": [
+        0.107,
+        0.185,
+        0.289
+      ],
+      "cracks": [
+        0.033,
+        0.071,
+        0.139
+      ],
+      "rango": [
+        0.02,
+        0.31
+      ]
+    },
+    "bordes": {
+      "descripcion": "densidad de bordes (qué tan llena está la imagen)",
+      "gambeta": [
+        0.16,
+        0.204,
+        0.258
+      ],
+      "cracks": [
+        0.157,
+        0.186,
+        0.202
+      ],
+      "rango": [
+        0.12,
+        0.28
+      ]
+    },
+    "blancos": {
+      "descripcion": "parte de píxeles blancos (texto, camisetas)",
+      "gambeta": [
+        0.051,
+        0.091,
+        0.155
+      ],
+      "cracks": [
+        0.02,
+        0.05,
+        0.092
+      ],
+      "rango": [
+        0.01,
+        0.18
+      ]
+    },
+    "amarillos": {
+      "descripcion": "parte de amarillo saturado (acento de texto)",
+      "gambeta": [
+        0.019,
+        0.035,
+        0.065
+      ],
+      "cracks": [
+        0.002,
+        0.01,
+        0.104
+      ],
+      "rango": [
+        0.001,
+        0.18
+      ]
+    }
+  },
+  "nota": "Cada terna es [percentil 10, mediana, percentil 90] de las 20 miniaturas del canal. El rango va del mínimo al máximo de las 40 juntas, redondeado hacia afuera: una miniatura dentro del rango se parece a las que hoy funcionan en esos canales."
+}
