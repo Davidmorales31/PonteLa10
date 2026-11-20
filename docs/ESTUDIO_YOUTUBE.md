@@ -1,8 +1,9 @@
 # Estudio de video ↔ YouTube
 
 El estudio local (`npm run video:estudio`, http://localhost:4810) sube el video final a tu canal de YouTube y pone **la
-miniatura y el título** que elijas. Código: `scripts/video-youtube.mjs`. Nunca publica el video: lo sube como **privado** o
-**no listado** y la publicación la haces tú en YouTube Studio. Cada acción pide tu confirmación en pantalla.
+miniatura y el título** que elijas. Código: `scripts/video-youtube.mjs`. A mano nunca publica el video: lo sube como **privado** o
+**no listado** y la publicación la haces tú en YouTube Studio; cada acción pide tu confirmación. Solo el **piloto automático**
+(autorizado el 2026-11-20, ver `docs/HORARIOS_PUBLICACION.md`) sube y programa la publicación (`publishAt`) sin confirmación.
 
 ## Qué hace y qué no
 - Sí: conectar tu canal (OAuth en tu navegador), **subir `renders/final.mp4`** (subida reanudable, con progreso; privado

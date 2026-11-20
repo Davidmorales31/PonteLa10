@@ -15,6 +15,7 @@ const yt = youtube as unknown as {
   accesoVigente: (o: Record<string, unknown>) => Promise<string>
   completarConexion: (o: Record<string, unknown>) => Promise<{ id: string, titulo: string }>
   ponerTitulo: (o: Record<string, unknown>) => Promise<{ titulo: string, anterior: string }>
+  programarPublicacion: (o: Record<string, unknown>) => Promise<{ publishAt: string }>
   ponerMiniatura: (o: Record<string, unknown>) => Promise<{ ok: boolean }>
   estadoConexion: (dir: string) => Promise<{ configurado: boolean, conectado: boolean }>
   tituloValido: (t: unknown) => boolean
@@ -98,6 +99,20 @@ describe('conexión local con YouTube', () => {
     expect(JSON.parse(put.cuerpo!)).toEqual({ id: 'dQw4w9WgXcQ', snippet: { title: 'Título nuevo de prueba', description: 'Desc', tags: ['a'], categoryId: '17' } })
     await expect(yt.ponerTitulo({ idVideo: 'dQw4w9WgXcQ', titulo: 'Otro título válido', acceso: 't', canalId: 'otro-canal', transporte })).rejects.toThrow(/no es de tu canal/)
     await expect(yt.ponerTitulo({ idVideo: 'dQw4w9WgXcQ', titulo: '<b>x</b>', acceso: 't', transporte })).rejects.toThrow(/entre 5 y 100/)
+  })
+
+  it('programa la publicación de un video privado sin perder el resto del estado', async () => {
+    const enviados: Array<{ metodo?: string, cuerpo?: string }> = []
+    const transporte = async (_url: string, o: { method?: string, body?: string }) => {
+      enviados.push({ metodo: o.method, cuerpo: o.body })
+      if (o.method === 'PUT') return respuesta({})
+      return respuesta({ items: [{ id: 'dQw4w9WgXcQ', status: { privacyStatus: 'private', license: 'youtube', embeddable: true, selfDeclaredMadeForKids: false }, snippet: { channelId: 'canal-1' } }] })
+    }
+    const fecha = new Date(Date.now() + 3_600_000).toISOString()
+    expect((await yt.programarPublicacion({ idVideo: 'dQw4w9WgXcQ', fecha, acceso: 't', canalId: 'canal-1', transporte })).publishAt).toBe(fecha)
+    expect(JSON.parse(enviados.find(e => e.metodo === 'PUT')!.cuerpo!)).toEqual({ id: 'dQw4w9WgXcQ', status: { privacyStatus: 'private', publishAt: fecha, selfDeclaredMadeForKids: false, license: 'youtube', embeddable: true } })
+    await expect(yt.programarPublicacion({ idVideo: 'dQw4w9WgXcQ', fecha: new Date(Date.now() + 60_000).toISOString(), acceso: 't', transporte })).rejects.toThrow(/5 minutos/)
+    await expect(yt.programarPublicacion({ idVideo: 'dQw4w9WgXcQ', fecha, acceso: 't', canalId: 'otro', transporte })).rejects.toThrow(/no es de tu canal/)
   })
 
   it('valida la miniatura y traduce los errores de YouTube a mensajes claros', async () => {

@@ -123,6 +123,20 @@ describe('piloto automático de Reels', () => {
     expect(decidirAccion({ ...base, ocupado: true })).toBeNull()
     expect(decidirAccion({ ...base, intentos: 2 })).toBeNull()
     expect(decidirAccion({ ...base, tieneFinal: true, publicacion: { estado: 'borrador' } })).toBeNull() // cancelado a mano: no se reprograma
-    expect(decidirAccion({ ...base, tipo: 'video' })).toBeNull()
+    expect(decidirAccion({ ...base, tipo: 'short' })).toBeNull()
+    // Video largo: se sube solo si el piloto lo renderizó y no tiene video de YouTube vinculado.
+    expect(decidirAccion({ ...base, tipo: 'video' })).toBe('render')
+    expect(decidirAccion({ ...base, tipo: 'video', tieneFinal: true, renderizadoPorPiloto: true })).toBe('subir')
+    expect(decidirAccion({ ...base, tipo: 'video', tieneFinal: true })).toBeNull() // render hecho a mano o video viejo
+    expect(decidirAccion({ ...base, tipo: 'video', tieneFinal: true, renderizadoPorPiloto: true, youtubeId: 'abc' })).toBeNull()
+  })
+})
+
+describe('franjas del video largo', () => {
+  it('usa sus propias franjas y no tiene tope por día', async () => {
+    const { proponerHoras } = await import('../../scripts/video-horarios.mjs') as unknown as { proponerHoras: (o: Record<string, unknown>) => string[] }
+    const ahora = Date.parse('2026-11-20T15:30:00Z')
+    expect(proponerHoras({ ahora, cantidad: 2, tipo: 'video' })).toEqual(['2026-11-20T17:30:00.000Z', '2026-11-20T23:30:00.000Z'])
+    expect(proponerHoras({ ahora, cantidad: 10 })).toHaveLength(10)
   })
 })

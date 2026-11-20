@@ -9,10 +9,13 @@
     { "hora": "16:30", "motivo": "Shorts: Buffer y SocialPilot ven 16–19 h como la mejor franja, sobre todo viernes." },
     { "hora": "19:30", "motivo": "Ventana de noche de Colombia (19:00–21:00)." }
   ],
+  "franjasVideoLargo": [
+    { "hora": "12:30", "motivo": "Mediodía de Colombia." },
+    { "hora": "18:30", "motivo": "Tarde-noche, cuando más gente ve videos largos en casa." }
+  ],
   "reglas": {
     "minutosMinimos": 15,
     "separacionMinimaHoras": 2,
-    "maximoPorDia": 4,
     "prohibidoDesde": "23:00",
     "prohibidoHasta": "05:30",
     "noticiaDelDia": "Un Reel de una noticia de hoy sale en la primera franja libre del mismo día; solo pasa a mañana si ya no queda ninguna.",

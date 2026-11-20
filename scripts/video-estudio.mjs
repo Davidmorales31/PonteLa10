@@ -20,7 +20,7 @@ import { proponerHoras } from './video-horarios.mjs'
 import { anotarRegistro, decidirAccion, guardarAjustes, leerAjustes } from './video-autopiloto-reels.mjs'
 import { medirMiniatura, evaluarMiniatura } from './video-medir-miniatura.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
-import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
+import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, programarPublicacion, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
 
 const ejecutar = promisify(execFile)
@@ -379,25 +379,59 @@ async function fechasProgramadas() {
   for (const nombre of nombres) for (const p of Object.values(await leerEstadoPublicaciones(carpetaDe(nombre)))) if (p?.estado === 'programada' && p.fecha) fechas.push(p.fecha)
   return fechas
 }
+const subiendoAutopiloto = new Set()
+// Video largo: lo sube privado con el primer título, le pone la primera miniatura que haya y programa su publicación (`publishAt`).
+function subirYProgramarVideo(nombre, guion) {
+  subiendoAutopiloto.add(nombre)
+  void (async () => {
+    try {
+      const carpeta = carpetaDe(nombre)
+      const acceso = await accesoVigente()
+      const canalId = (await leerToken())?.canal?.id
+      const titulo = guion.titulos?.[0] || guion.tituloVideo || guion.titulo
+      const video = await subirVideo({ ruta: join(carpeta, 'renders', 'final.mp4'), titulo, descripcion: (await detalleProyecto(nombre)).descripcionYoutube || '', privacidad: 'private', acceso })
+      if (!video.id) throw new Error('YouTube no devolvió el ID del video.')
+      await guardarEstudio(nombre, estudio => { estudio.youtube = { idVideo: video.id, titulo: video.titulo, privacidad: 'private' } })
+      await anotarRegistro(DIARIO, nombre, 'Video largo subido como privado.')
+      const carpetaMiniaturas = join(carpeta, 'renders', 'miniaturas')
+      const miniatura = existsSync(carpetaMiniaturas) ? (await readdir(carpetaMiniaturas)).filter(n => /^miniatura-[a-z]\.jpg$/.test(n)).sort()[0] : null
+      if (miniatura) {
+        try { await ponerMiniatura({ idVideo: video.id, imagen: await readFile(join(carpetaMiniaturas, miniatura)), acceso, canalId }); await anotarRegistro(DIARIO, nombre, `Miniatura puesta: ${miniatura}.`) } catch (error) { await anotarRegistro(DIARIO, nombre, `Sin miniatura personalizada: ${error.message}`) }
+      } else await anotarRegistro(DIARIO, nombre, 'No hay miniaturas en el proyecto: YouTube elegirá un fotograma.')
+      const [hora] = proponerHoras({ tipo: 'video', cantidad: 1, ocupadas: await fechasProgramadas() })
+      if (!hora) throw new Error('No hay franja libre en los próximos 14 días.')
+      const programada = await programarPublicacion({ idVideo: video.id, fecha: hora, acceso, canalId })
+      await guardarEstudio(nombre, estudio => { estudio.youtube = { ...estudio.youtube, publicaEn: programada.publishAt } })
+      await anotarRegistro(DIARIO, nombre, `Video largo programado en YouTube para ${programada.publishAt}.`)
+    } catch (error) {
+      await anotarRegistro(DIARIO, nombre, `Video largo: ${error.message} (queda privado; revísalo en YouTube Studio).`)
+    } finally { subiendoAutopiloto.delete(nombre) }
+  })()
+}
+
 export async function pasoAutopiloto() {
   const ajustes = await leerAjustes(DIARIO)
   if (!ajustes.activo || !existsSync(DIARIO)) return
   const ahora = Date.now()
-  const nombres = (await readdir(DIARIO)).filter(n => proyectoValido(n) && nombrePadre(n) && Date.parse(n.slice(0, 10)) >= ahora - 3 * 86_400_000)
+  const nombres = (await readdir(DIARIO)).filter(n => proyectoValido(n) && Date.parse(n.slice(0, 10)) >= ahora - 3 * 86_400_000)
   for (const nombre of nombres) {
     const carpeta = carpetaDe(nombre)
     const guion = await leerJson(join(carpeta, 'guion.json'))
     const manifiesto = await leerJson(join(carpeta, 'manifiesto.json'))
-    if (guion?.tipo !== 'reel' || !manifiesto || !existsSync(join(carpeta, 'estudio.json'))) continue
+    if (!guion || !manifiesto || !existsSync(join(carpeta, 'estudio.json'))) continue
+    const tipo = guion.tipo === 'reel' ? 'reel' : (nombrePadre(nombre) ? null : 'video')
+    if (!tipo) continue
     const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
     const lista = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
     const reel = lista?.reels?.[0]
-    const tieneFinal = Boolean(reel && existsSync(join(carpeta, reel.archivo)))
+    const tieneFinal = tipo === 'reel' ? Boolean(reel && existsSync(join(carpeta, reel.archivo))) : existsSync(join(carpeta, 'renders', 'final.mp4'))
     const accion = decidirAccion({
-      activo: true, tipo: 'reel', tramos: manifiesto.segmentos?.length || 0, grabados: (manifiesto.segmentos || []).filter(s => estudio.grabaciones?.[s.id]).length,
+      activo: true, tipo, tramos: manifiesto.segmentos?.length || 0, grabados: (manifiesto.segmentos || []).filter(sg => estudio.grabaciones?.[sg.id]).length,
       ultimaTomaMs: (await stat(join(carpeta, 'estudio.json'))).mtimeMs, ahora, tieneFinal,
-      publicacion: tieneFinal ? (await leerEstadoPublicaciones(carpeta))[reel.id] || null : null,
-      ocupado: ocupados.size > 0 || publicando.has(`${nombre}:${reel?.id}`), intentos: intentosAutopiloto.get(nombre) || 0
+      publicacion: tipo === 'reel' && tieneFinal ? (await leerEstadoPublicaciones(carpeta))[reel.id] || null : null,
+      ocupado: ocupados.size > 0 || subiendoAutopiloto.has(nombre) || trabajosYoutube.get(nombre)?.estado === 'subiendo' || (tipo === 'reel' && publicando.has(`${nombre}:${reel?.id}`)),
+      intentos: intentosAutopiloto.get(tipo === 'video' && tieneFinal ? `${nombre}:subir` : nombre) || 0,
+      youtubeId: estudio.youtube?.idVideo || null, renderizadoPorPiloto: Boolean(estudio.autopiloto?.renderizadoEn)
     })
     if (accion === 'render') {
       intentosAutopiloto.set(nombre, (intentosAutopiloto.get(nombre) || 0) + 1)
@@ -405,8 +439,14 @@ export async function pasoAutopiloto() {
       const estadoRender = nuevoRender()
       renders.set(nombre, estadoRender)
       try { await armar(nombre) } catch (error) { renders.delete(nombre); ocupados.delete(nombre); await anotarRegistro(DIARIO, nombre, `No se pudo armar: ${error.message}`); continue }
+      if (tipo === 'video') await guardarEstudio(nombre, e => { e.autopiloto = { renderizadoEn: new Date().toISOString() } })
       renderizar(nombre, estadoRender)
       await anotarRegistro(DIARIO, nombre, 'Voz completa: renderizando.')
+      return
+    }
+    if (accion === 'subir') {
+      intentosAutopiloto.set(`${nombre}:subir`, (intentosAutopiloto.get(`${nombre}:subir`) || 0) + 1)
+      subirYProgramarVideo(nombre, guion)
       return
     }
     if (accion === 'programar') {

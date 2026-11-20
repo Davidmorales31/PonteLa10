@@ -453,7 +453,7 @@
   <h2 id="t-reels">Tus Reels</h2>
   <p class="etiqueta-chica" style="margin-top:0">Vertical 1080×1920 con subtítulos. Aquí están todos los Reels del proyecto principal: los de guion propio y los cortes del video. Marca los que quieras programar y ponle a cada uno su hora. Se publican en <strong>Facebook e Instagram</strong>.</p>
   <div id="aviso-redes" class="aviso-redes" hidden></div>
-  <label class="interruptor" title="Cuando terminas de grabar toda la voz de un Reel, el estudio lo renderiza y lo programa solo en la primera franja libre (nunca lo publica al instante)."><input type="checkbox" id="piloto-activo"><span>Piloto automático: renderizar y programar solo al terminar la voz</span></label>
+  <label class="interruptor" title="Cuando terminas de grabar toda la voz de un Reel o del video largo, el estudio lo renderiza y lo programa solo en la primera franja libre (nunca lo publica al instante; el video largo se sube a YouTube y queda programado)."><input type="checkbox" id="piloto-activo"><span>Piloto automático: renderizar, subir y programar solo al terminar la voz (Reels y video largo)</span></label>
   <p class="etiqueta-chica" id="piloto-registro" role="status"></p>
   <div class="programar-todos" id="programar-todos">
     <label class="campo">Primer Reel el<input type="datetime-local" id="todos-inicio"></label>
@@ -1608,7 +1608,7 @@ $('#zona-miniaturas').addEventListener('drop', e => { e.preventDefault(); $('#zo
 $('#zona-miniaturas').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#archivo-miniaturas').click() } })
 $('#todos-programar').addEventListener('click', programarTodos)
 $('#reels-repartir').addEventListener('click', repartirHoras)
-$('#piloto-activo').addEventListener('change', async e => { try { await api('/api/autopiloto', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ activo: e.target.checked }) }); avisar(e.target.checked ? 'Piloto automático encendido: al terminar la voz de un Reel, se renderiza y se programa solo.' : 'Piloto automático apagado.', 'ok') } catch (err) { e.target.checked = !e.target.checked; avisar(err.message, 'error') } })
+$('#piloto-activo').addEventListener('change', async e => { try { await api('/api/autopiloto', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ activo: e.target.checked }) }); avisar(e.target.checked ? 'Piloto automático encendido: al terminar la voz de un Reel o del video largo, se renderiza y se programa solo.' : 'Piloto automático apagado.', 'ok') } catch (err) { e.target.checked = !e.target.checked; avisar(err.message, 'error') } })
 $('#reels-marcar').addEventListener('click', () => { desmarcadosReels.clear(); pintarReels() })
 $('#reels-desmarcar').addEventListener('click', () => { for (const r of (detalle.reels || []).filter(programable)) desmarcadosReels.add(claveReel(r)); pintarReels() })
 $('#volver-padre').addEventListener('click', () => abrirProyecto(detalle.padre))
