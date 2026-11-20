@@ -134,3 +134,18 @@ Migración: `20261117100000_api_agentes_redes.sql` (aplicar **antes** del códig
 Webhooks de estado (hoy se consulta), rotación de llaves con solape, cuota diaria
 de creación por llave, vídeo por URL (hoy solo subida firmada), publicación
 inmediata delegada (deliberadamente fuera de alcance).
+
+## Publicación social de artículos pendientes (2026-11-20)
+
+`node scripts/redes-publicar-articulo.mjs --pendientes [--borrador | --programar-desde <ISO> | --auto]` completa los
+artículos publicados en las últimas 24 h que no tienen publicación social. Cambios del 2026-11-20:
+
+- El crédito de la foto sale de la portada del artículo (API pública); `--creditos` solo lo sobrescribe.
+- La carpeta de previsualización se crea sola (antes fallaba con `ENOENT` y la corrida no programaba nada).
+- `--auto` programa cada pieza en la primera hora libre: más de 12 minutos desde ahora, después de lo ya programado, una cada
+  15 minutos y fuera de la madrugada de Bogotá (23:00–05:30).
+
+Causa del hueco del 2026-11-20: las corridas editoriales programan las notas para publicarse minutos después de cerrar, así que
+sus redes quedaban «para la siguiente activación»; si esa corrida fallaba antes de llegar al paso de redes (422/500 en la API
+editorial), las notas del día se quedaban sin imagen en Facebook e Instagram durante horas. El paso de pendientes debe correr
+con su propio disparador, no solo al final de una corrida.
