@@ -64,3 +64,20 @@ Decisión del responsable (2026-11-20): todo corre en su PC y no depende de agen
    **Hecho: portada de impacto** (palabra gigante, línea fina, subtítulo, logo). `node scripts/redes-imagen-impacto.mjs <slug>`.
 5. Medir contra rangos por formato (capturas de Cracks y La Gambeta). **Pendiente.**
 6. Subir la imagen y programar con la API de redes. **Pendiente.**
+
+## Formatos construidos (2026-11-20, solo diseño; nada se programa con ellos todavía)
+
+`scripts/redes-formatos.mjs` (`node scripts/redes-formatos.mjs <slug> [--contra <otro-slug>] [--formato id|todos]`), todos 1080×1350:
+
+| id | Qué es | Entrada |
+| --- | --- | --- |
+| `impacto` | Recorte + palabra gigante + subtítulo | portada de la nota |
+| `impacto-desenfocado` | Igual, con la foto real de fondo desenfocada | portada de la nota |
+| `cita` | Comillas grandes + frase + fuente | cita entre comillas del cuerpo (40–170 caracteres) |
+| `versus` | Dos fotos, «VS» y nombres | dos fotos y dos nombres |
+| `ficha` | Cifra gigante amarilla + concepto | primera cifra del titular o el resumen |
+| `circulo` | Impacto desenfocado + círculo con borde blanco | portada y una segunda foto |
+| `banda` | Foto completa, titular en Anton y banda amarilla | titular y resumen |
+| `carrusel` | 3 diapositivas: portada con «DESLIZA», «Lo que debes saber», cierre con pregunta | nota completa |
+
+Pendiente: elegir formato por reglas, medir cada formato con rangos de las capturas, subir y programar.
