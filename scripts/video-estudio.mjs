@@ -14,7 +14,7 @@ import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionDe 
 import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
-import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, urlAutorizacion } from './video-youtube.mjs'
+import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
 
 const ejecutar = promisify(execFile)
@@ -63,6 +63,7 @@ function clienteRedes() {
 
 const renders = new Map()
 const conexionesYoutube = new Map()
+const trabajosYoutube = new Map()
 const REDIRECT_YOUTUBE = `http://127.0.0.1:${PUERTO}/oauth/youtube/callback`
 const publicando = new Set()
 const trabajosReels = new Map()
@@ -97,6 +98,25 @@ async function terminarConexionYoutube(res, url) {
   } catch (error) {
     return paginaConexion(res, error.estado || 500, 'No se pudo conectar', error.estado ? error.message : 'Ocurrió un error al conectar. Intenta de nuevo.')
   }
+}
+
+// Sube el video final en segundo plano (privado o no listado) y vincula el proyecto al video creado.
+function subirVideoProyecto({ proyecto, titulo, descripcion, privacidad, acceso }) {
+  const trabajo = { estado: 'subiendo', subido: 0, total: 0, error: null }
+  trabajosYoutube.set(proyecto, trabajo)
+  void (async () => {
+    try {
+      const video = await subirVideo({ ruta: join(carpetaDe(proyecto), 'renders', 'final.mp4'), titulo, descripcion, privacidad, acceso, alProgresar: (subido, total) => { trabajo.subido = subido; trabajo.total = total } })
+      if (!video.id) throw Object.assign(new Error('YouTube no devolvió el ID del video; revísalo en YouTube Studio.'), { estado: 502 })
+      await guardarEstudio(proyecto, estudio => { estudio.youtube = { idVideo: video.id, titulo: video.titulo, privacidad: video.privacidad } })
+      trabajo.estado = 'listo'
+    } catch (error) {
+      trabajo.estado = 'error'
+      trabajo.error = error.estado ? error.message : 'No se pudo subir el video. Intenta de nuevo.'
+      if (!error.estado) process.stderr.write(`[estudio] subida a YouTube: ${error?.stack || error}
+`)
+    }
+  })()
 }
 
 function responder(res, estado, cuerpo) {
@@ -174,7 +194,11 @@ async function detalleProyecto(proyecto) {
     videoFinal: existsSync(final) ? `/archivos/${proyecto}/renders/final.mp4?v=${(await stat(final)).mtimeMs}` : null,
     reelsEstado: trabajoReels ? { estado: trabajoReels.estado, registro: trabajoReels.registro.slice(-600) } : null,
     redes: { disponible: redesDisponibles() },
-    youtube: { ...(await estadoConexion()), video: estudio.youtube || null },
+    youtube: {
+      ...(await estadoConexion()), video: estudio.youtube || null,
+      subida: trabajosYoutube.get(proyecto) ? { estado: trabajosYoutube.get(proyecto).estado, subido: trabajosYoutube.get(proyecto).subido, total: trabajosYoutube.get(proyecto).total, error: trabajosYoutube.get(proyecto).error } : null,
+      puedeSubir: existsSync(final)
+    },
     musica: { elegida: estudio.musica || null, pistas: biblioteca.pistas.map(p => ({ id: p.id, titulo: p.titulo, autor: p.autor, licencia: p.licencia, estilo: p.estilo, descargada: existsSync(rutaPista(p.id)) })) },
     titulos: guion.titulos?.length ? guion.titulos : [guion.tituloVideo].filter(Boolean),
     miniaturaTexto: guion.miniatura || null,
@@ -394,7 +418,7 @@ export function huellaCodigo(carpeta = join(RAIZ, 'scripts')) {
 }
 const VERSION_INICIAL = huellaCodigo()
 const reiniciable = process.env.PONT3LA10_ESTUDIO_REINICIABLE === '1'
-const trabajando = () => ocupados.size > 0 || publicando.size > 0 || [...renders.values()].some(r => r.estado === 'renderizando') || [...trabajosReels.values()].some(r => r.estado === 'creando')
+const trabajando = () => ocupados.size > 0 || publicando.size > 0 || [...renders.values()].some(r => r.estado === 'renderizando') || [...trabajosReels.values()].some(r => r.estado === 'creando') || [...trabajosYoutube.values()].some(t => t.estado === 'subiendo')
 
 export function crearServidor() {
   return http.createServer(async (req, res) => {
@@ -487,6 +511,17 @@ export function crearServidor() {
         if (!partes[4] && req.method === 'POST') return responder(res, 200, await guardarMiniatura(proyecto, await leerCuerpo(req, LIMITE_FOTO)))
         if (req.method === 'DELETE' && /^miniatura-[a-z0-9-]{1,30}\.jpg$/.test(partes[4] || '')) { await rm(join(carpetaMiniaturas, partes[4]), { force: true }); return responder(res, 200, { ok: true }) }
         return responder(res, 404, { error: 'No encontrado.' })
+      }
+      if (accion === 'youtube' && partes[4] === 'subir' && req.method === 'POST') {
+        let datos = {}
+        try { datos = JSON.parse((await leerCuerpo(req, 4096)).toString('utf8') || '{}') } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
+        if (trabajosYoutube.get(proyecto)?.estado === 'subiendo') return responder(res, 409, { error: 'Ya se está subiendo el video: espera a que termine.' })
+        if (((await leerJson(join(carpetaDe(proyecto), 'estudio.json'))) || {}).youtube?.idVideo) return responder(res, 409, { error: 'Este proyecto ya tiene un video de YouTube vinculado. Desvincúlalo (campo vacío + Vincular) si quieres subir otro.' })
+        if (!existsSync(join(carpetaDe(proyecto), 'renders', 'final.mp4'))) return responder(res, 409, { error: 'Primero renderiza el video final.' })
+        if (!tituloValido(datos.titulo)) return responder(res, 422, { error: 'El título debe tener entre 5 y 100 caracteres y no puede llevar < ni >.' })
+        const acceso = await accesoVigente()
+        subirVideoProyecto({ proyecto, titulo: datos.titulo, descripcion: (await detalleProyecto(proyecto)).descripcionYoutube || '', privacidad: datos.privacidad === 'unlisted' ? 'unlisted' : 'private', acceso })
+        return responder(res, 202, { estado: 'subiendo' })
       }
       if (accion === 'youtube' && req.method === 'POST' && ['video', 'miniatura', 'titulo'].includes(partes[4])) {
         let datos = {}

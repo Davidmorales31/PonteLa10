@@ -367,6 +367,14 @@
       <button class="boton primario" id="yt-conectar"><svg class="icono"><use href="#i-video"/></svg><span>Conectar con YouTube</span></button>
       <button class="boton" id="yt-desconectar" hidden><svg class="icono"><use href="#i-x"/></svg><span>Desconectar</span></button>
     </div>
+    <div id="yt-subida" hidden>
+      <label class="campo">Subir el video final a tu canal como
+        <select id="yt-privacidad"><option value="private">Privado (recomendado)</option><option value="unlisted">No listado</option></select>
+      </label>
+      <div class="fila-acciones"><button class="boton primario" id="yt-subir"><svg class="icono"><use href="#i-upload"/></svg><span>Subir video a YouTube</span></button></div>
+      <p class="etiqueta-chica" id="yt-progreso" role="status"></p>
+      <p class="etiqueta-chica">Se sube con el primer título de la lista y la descripción de abajo; luego puedes cambiar título y miniatura aquí. Nunca se publica solo: eso lo haces tú en YouTube Studio.</p>
+    </div>
     <div id="yt-vinculo" hidden>
       <label class="campo">Enlace del video ya subido a tu canal (puede estar privado o no listado)
         <input id="yt-enlace" type="text" inputmode="url" autocomplete="off" placeholder="https://www.youtube.com/watch?v=…">
@@ -374,7 +382,7 @@
       <div class="fila-acciones"><button class="boton" id="yt-vincular"><svg class="icono"><use href="#i-check"/></svg><span>Vincular video</span></button></div>
       <p class="etiqueta-chica" id="yt-video"></p>
     </div>
-    <p class="etiqueta-chica">El estudio solo cambia la miniatura y el título del video que vincules. No sube el video, no lo publica ni cambia su privacidad. Cada cambio pide tu confirmación.</p>
+    <p class="etiqueta-chica">El estudio sube el video final como privado o no listado y pone el título y la miniatura que elijas. Nunca lo publica. Cada acción pide tu confirmación.</p>
   </section>
   <section class="seccion-pub">
     <h3>Títulos para la prueba A/B</h3>
@@ -1100,6 +1108,13 @@ function pintarYoutube() {
   $('#yt-conectar').hidden = !yt.configurado || yt.conectado
   $('#yt-desconectar').hidden = !yt.conectado
   $('#yt-vinculo').hidden = !yt.conectado
+  $('#yt-subida').hidden = !(yt.conectado && !yt.video && (yt.puedeSubir || yt.subida))
+  const subida = yt.subida
+  $('#yt-subir').disabled = subida?.estado === 'subiendo'
+  $('#yt-progreso').textContent = subida?.estado === 'subiendo'
+    ? `Subiendo… ${subida.total ? Math.round(subida.subido * 100 / subida.total) : 0}% (${Math.round(subida.subido / 1048576)} de ${Math.round(subida.total / 1048576)} MB). No cierres el estudio.`
+    : subida?.estado === 'error' ? `La subida falló: ${subida.error}` : ''
+  if (subida?.estado === 'subiendo') vigilarSubidaYoutube()
   const v = yt.video
   $('#yt-video').textContent = v ? `Vinculado: «${v.titulo}» (${v.privacidad || 'sin dato'}).${v.miniatura ? ` Última miniatura subida: ${v.miniatura.nombre}.` : ''}` : 'Aún no hay un video vinculado a este proyecto.'
   document.querySelectorAll('[data-yt-titulo]').forEach(b => b.addEventListener('click', async () => {
@@ -1129,6 +1144,38 @@ async function conectarYoutube() {
       const estado = await api('/api/youtube')
       if (estado.conectado) { detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion(); avisar('YouTube conectado.', 'ok'); return }
     }
+  } catch (err) { avisar(err.message, 'error') }
+}
+
+let vigilandoSubida = false
+async function vigilarSubidaYoutube() {
+  if (vigilandoSubida) return
+  vigilandoSubida = true
+  try {
+    for (;;) {
+      await new Promise(r => setTimeout(r, 3000))
+      detalle = await api(`/api/proyectos/${proyecto}`)
+      if ($('#dialogo-publicacion').open) pintarYoutube()
+      if (detalle.youtube?.subida?.estado !== 'subiendo') break
+    }
+    if (detalle.youtube?.video) avisar('Video subido a YouTube como ' + (detalle.youtube.video.privacidad === 'private' ? 'privado' : 'no listado') + '. Ya puedes poner el título y la miniatura.', 'ok')
+    else if (detalle.youtube?.subida?.error) avisar(detalle.youtube.subida.error, 'error')
+    if ($('#dialogo-publicacion').open) pintarPublicacion()
+  } catch (err) { avisar(err.message, 'error') } finally { vigilandoSubida = false }
+}
+
+async function subirVideoYoutube() {
+  const titulo = (detalle.titulos || [])[0]
+  if (!titulo) { avisar('El guion no trae títulos: no hay con qué subir el video.', 'error'); return }
+  const privacidad = $('#yt-privacidad').value
+  if (!confirm(`¿Subir el video final a tu canal de YouTube como ${privacidad === 'private' ? 'PRIVADO' : 'NO LISTADO'}?
+
+Título: ${titulo}
+
+No se publica: eso lo haces tú en YouTube Studio.`)) return
+  try {
+    await api(`/api/proyectos/${proyecto}/youtube/subir`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ titulo, privacidad }) })
+    detalle = await api(`/api/proyectos/${proyecto}`); pintarYoutube()
   } catch (err) { avisar(err.message, 'error') }
 }
 
@@ -1318,6 +1365,7 @@ $('#ver-publicacion').addEventListener('click', verPublicacion)
 $('#preparar-encargo').addEventListener('click', prepararEncargo)
 $('#yt-conectar').addEventListener('click', conectarYoutube)
 $('#yt-vincular').addEventListener('click', vincularVideoYoutube)
+$('#yt-subir').addEventListener('click', subirVideoYoutube)
 $('#yt-desconectar').addEventListener('click', desconectarYoutube)
 $('#copiar-encargo').addEventListener('click', () => copiar(detalle.encargo, 'Encargo copiado. Pégalo en Codex.'))
 $('#abrir-carpeta').addEventListener('click', () => api(`/api/proyectos/${proyecto}/miniaturas/abrir`, { method: 'POST' }).catch(err => avisar(err.message, 'error')))
