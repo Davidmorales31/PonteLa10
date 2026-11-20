@@ -1,14 +1,14 @@
 // Conexión LOCAL del estudio de video con YouTube (YouTube Data API v3).
 //
-// Qué hace: con tu autorización (OAuth con PKCE, en tu navegador) pone la miniatura elegida y el título elegido
-// en un video que YA subiste a tu canal. No sube el video, no lo publica y no cambia su privacidad.
+// Qué hace: con tu autorización (OAuth con PKCE, en tu navegador) sube el video final como PRIVADO o NO LISTADO,
+// y pone la miniatura y el título elegidos en un video de tu canal. Nunca lo publica: eso lo haces tú en YouTube Studio.
 //
 // Dónde vive lo privado: fuera del repositorio, en %USERPROFILE%\.pont3la10\youtube (o PONT3LA10_YOUTUBE_DIR):
 //   cliente.json  → credenciales «Aplicación de escritorio» descargadas de Google Cloud (las pones tú)
 //   token.json    → lo crea este módulo al conectar; nunca viaja a la página ni se muestra
 import { createHash, randomBytes } from 'node:crypto'
 import { existsSync } from 'node:fs'
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, open, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
@@ -198,4 +198,83 @@ export async function ponerTitulo({ idVideo, titulo, acceso, canalId, transporte
   for (const campo of CAMPOS_EDITABLES) if (actual.snippet?.[campo] !== undefined) snippet[campo] = actual.snippet[campo]
   await llamar(`${API}/videos?part=snippet`, { metodo: 'PUT', acceso, tipo: 'application/json', cuerpo: JSON.stringify({ id: idVideo, snippet }), transporte })
   return { titulo: snippet.title, anterior: actual.titulo }
+}
+
+const TROZO = 16 * 1024 * 1024 // múltiplo de 256 KiB, como exige la subida reanudable
+export const PRIVACIDADES_SUBIDA = ['private', 'unlisted']
+
+/** Sube un video (subida reanudable por trozos). Nunca lo deja público: solo «private» o «unlisted». */
+export async function subirVideo({ ruta, titulo, descripcion = '', privacidad = 'private', categoria = '17', acceso, transporte = globalThis.fetch, alProgresar = () => {}, trozo = TROZO, reintentos = 4, espera = ms => new Promise(r => setTimeout(r, ms)) }) {
+  if (!tituloValido(titulo)) throw error(422, 'El título debe tener entre 5 y 100 caracteres y no puede llevar < ni >.')
+  if (!PRIVACIDADES_SUBIDA.includes(privacidad)) throw error(422, 'El video se sube como privado o no listado; publicarlo lo haces tú en YouTube Studio.')
+  if (String(descripcion).length > 5000 || /[<>]/.test(String(descripcion))) throw error(422, 'La descripción es demasiado larga o tiene caracteres no permitidos.')
+  const total = (await stat(ruta)).size
+  if (!total) throw error(422, 'El archivo de video está vacío.')
+
+  const inicio = await transporte(`${API_SUBIDA}/videos?uploadType=resumable&part=snippet,status`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${acceso}`, 'content-type': 'application/json; charset=UTF-8', 'x-upload-content-length': String(total), 'x-upload-content-type': 'video/mp4' },
+    body: JSON.stringify({
+      snippet: { title: titulo.trim(), description: String(descripcion), categoryId: categoria, defaultLanguage: 'es', defaultAudioLanguage: 'es' },
+      status: { privacyStatus: privacidad, selfDeclaredMadeForKids: false }
+    })
+  })
+  if (!inicio.ok) throw error(inicio.status === 401 ? 401 : 502, mensajeDeApi(inicio.status, await inicio.json().catch(() => ({}))))
+  const destino = inicio.headers.get('location')
+  if (!destino) throw error(502, 'YouTube no entregó la dirección de subida.')
+
+  const archivo = await open(ruta, 'r')
+  try {
+    let desplazamiento = 0
+    let fallos = 0
+    while (true) {
+      const largo = Math.min(trozo, total - desplazamiento)
+      const buffer = Buffer.alloc(largo)
+      await archivo.read(buffer, 0, largo, desplazamiento)
+      let respuesta
+      try {
+        respuesta = await transporte(destino, { method: 'PUT', headers: { 'content-type': 'video/mp4', 'content-range': `bytes ${desplazamiento}-${desplazamiento + largo - 1}/${total}` }, body: buffer })
+      } catch {
+        respuesta = null
+      }
+      if (respuesta && (respuesta.status === 200 || respuesta.status === 201)) {
+        const video = await respuesta.json().catch(() => ({}))
+        alProgresar(total, total)
+        return { id: video.id, titulo: String(video.snippet?.title || titulo), privacidad: String(video.status?.privacyStatus || privacidad) }
+      }
+      if (respuesta && respuesta.status === 308) {
+        const rango = /bytes=0-(\d+)/.exec(respuesta.headers.get('range') || '')
+        desplazamiento = rango ? Number(rango[1]) + 1 : 0
+        fallos = 0
+        alProgresar(desplazamiento, total)
+        continue
+      }
+      if (respuesta && respuesta.status < 500 && respuesta.status !== 408 && respuesta.status !== 429) {
+        throw error(respuesta.status === 401 ? 401 : 502, mensajeDeApi(respuesta.status, await respuesta.json().catch(() => ({}))))
+      }
+      // Error de red o del servidor: se pregunta cuánto recibió YouTube y se reanuda desde ahí.
+      if (++fallos > reintentos) throw error(502, 'Se cortó la subida a YouTube y no se pudo reanudar. Intenta de nuevo.')
+      await espera(1000 * fallos)
+      try {
+        const estado = await transporte(destino, { method: 'PUT', headers: { 'content-range': `bytes */${total}` } })
+        if (estado.status === 200 || estado.status === 201) {
+          const video = await estado.json().catch(() => ({}))
+          alProgresar(total, total)
+          return { id: video.id, titulo: String(video.snippet?.title || titulo), privacidad: String(video.status?.privacyStatus || privacidad) }
+        }
+        const rango = /bytes=0-(\d+)/.exec(estado.headers?.get?.('range') || '')
+        desplazamiento = rango ? Number(rango[1]) + 1 : 0
+      } catch { /* se reintenta el mismo trozo */ }
+    }
+  } finally {
+    await archivo.close()
+  }
+}
+
+/** Borra un video del canal conectado (solo para limpiar pruebas propias). */
+export async function eliminarVideo({ idVideo, acceso, canalId, transporte = globalThis.fetch }) {
+  await leerVideo({ idVideo, acceso, canalId, transporte })
+  const respuesta = await transporte(`${API}/videos?id=${encodeURIComponent(idVideo)}`, { method: 'DELETE', headers: { authorization: `Bearer ${acceso}` } })
+  if (!respuesta.ok && respuesta.status !== 204) throw error(502, mensajeDeApi(respuesta.status, await respuesta.json().catch(() => ({}))))
+  return { ok: true }
 }

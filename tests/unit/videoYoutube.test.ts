@@ -18,9 +18,11 @@ const yt = youtube as unknown as {
   ponerMiniatura: (o: Record<string, unknown>) => Promise<{ ok: boolean }>
   estadoConexion: (dir: string) => Promise<{ configurado: boolean, conectado: boolean }>
   tituloValido: (t: unknown) => boolean
+  subirVideo: (o: Record<string, unknown>) => Promise<{ id: string, titulo: string, privacidad: string }>
+  eliminarVideo: (o: Record<string, unknown>) => Promise<{ ok: boolean }>
 }
 
-const respuesta = (datos: unknown, estado = 200) => ({ ok: estado < 400, status: estado, json: async () => datos })
+const respuesta = (datos: unknown, estado = 200, cabeceras: Record<string, string> = {}) => ({ ok: estado < 400, status: estado, json: async () => datos, headers: { get: (n: string) => cabeceras[n.toLowerCase()] ?? null } })
 const carpeta = () => mkdtempSync(join(tmpdir(), 'yt-'))
 const cliente = { installed: { client_id: 'id-prueba', client_secret: 'secreto-prueba' } }
 
@@ -110,5 +112,43 @@ describe('conexión local con YouTube', () => {
     await expect(yt.ponerMiniatura({ idVideo: 'x', imagen, acceso: 't', transporte: cuota })).rejects.toThrow(/cuota diaria/)
     expect(yt.tituloValido('Pasto se queda con 3 jugadores')).toBe(true)
     expect(yt.tituloValido('a'.repeat(101))).toBe(false)
+  })
+
+  it('sube el video por trozos, reanuda tras un corte y nunca lo deja público', async () => {
+    const dir = carpeta()
+    const archivo = join(dir, 'final.mp4')
+    writeFileSync(archivo, Buffer.alloc(2500, 7))
+    const llamadas: Array<{ url: string, metodo?: string, rango?: string, cuerpo?: unknown }> = []
+    let fallar = true
+    const transporte = async (url: string, o: { method?: string, headers?: Record<string, string>, body?: unknown }) => {
+      llamadas.push({ url, metodo: o.method, rango: o.headers?.['content-range'], cuerpo: o.body })
+      if (url.includes('uploadType=resumable')) return respuesta({}, 200, { location: 'https://upload.test/sesion' })
+      const rango = o.headers?.['content-range'] || ''
+      if (rango === 'bytes */2500') return respuesta({}, 308, { range: 'bytes=0-999' })
+      if (rango.startsWith('bytes 1000-1999') && fallar) { fallar = false; throw new Error('red caída') }
+      if (rango.startsWith('bytes 0-999')) return respuesta({}, 308, { range: 'bytes=0-999' })
+      if (rango.startsWith('bytes 1000-1999')) return respuesta({}, 308, { range: 'bytes=0-1999' })
+      return respuesta({ id: 'dQw4w9WgXcQ', snippet: { title: 'Mi video de prueba' }, status: { privacyStatus: 'private' } })
+    }
+    const progreso: number[] = []
+    const r = await yt.subirVideo({ ruta: archivo, titulo: 'Mi video de prueba', descripcion: 'Hola', acceso: 't', transporte, trozo: 1000, espera: async () => {}, alProgresar: (s: number) => progreso.push(s) })
+    expect(r).toEqual({ id: 'dQw4w9WgXcQ', titulo: 'Mi video de prueba', privacidad: 'private' })
+    expect(JSON.parse(llamadas[0].cuerpo as string).status).toEqual({ privacyStatus: 'private', selfDeclaredMadeForKids: false })
+    expect(llamadas.some(l => l.rango === 'bytes */2500')).toBe(true)
+    expect(progreso.at(-1)).toBe(2500)
+    await expect(yt.subirVideo({ ruta: archivo, titulo: 'Mi video de prueba', privacidad: 'public', acceso: 't', transporte })).rejects.toThrow(/privado o no listado/)
+    await expect(yt.subirVideo({ ruta: archivo, titulo: 'x', acceso: 't', transporte })).rejects.toThrow(/entre 5 y 100/)
+  })
+
+  it('solo borra videos del canal conectado', async () => {
+    const llamadas: string[] = []
+    const transporte = async (url: string, o: { method?: string }) => {
+      llamadas.push(`${o.method || 'GET'} ${url}`)
+      if (o.method === 'DELETE') return respuesta({}, 204)
+      return respuesta({ items: [{ id: 'dQw4w9WgXcQ', status: {}, snippet: { channelId: 'canal-1', title: 't' } }] })
+    }
+    expect(await yt.eliminarVideo({ idVideo: 'dQw4w9WgXcQ', acceso: 't', canalId: 'canal-1', transporte })).toEqual({ ok: true })
+    await expect(yt.eliminarVideo({ idVideo: 'dQw4w9WgXcQ', acceso: 't', canalId: 'otro', transporte })).rejects.toThrow(/no es de tu canal/)
+    expect(llamadas.filter(l => l.startsWith('DELETE'))).toHaveLength(1)
   })
 })
