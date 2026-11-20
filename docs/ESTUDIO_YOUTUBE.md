@@ -21,7 +21,7 @@ Nada de esto se pega en el chat ni se guarda en el repositorio.
    vence la conexión a la semana. Al autorizar verás «Google no ha verificado esta app»: es tu propia app; elige
    *Configuración avanzada → Ir a … (no seguro)*.
 5. **Credenciales → Crear credenciales → ID de cliente de OAuth → Aplicación de escritorio**. Descarga el JSON.
-6. Guárdalo como `%LOCALAPPDATA%\Pont3la10\youtube\cliente.json`
+6. Guárdalo como `%USERPROFILE%\.pont3la10\youtube\cliente.json` (no uses AppData: si el estudio se abre desde la app de Claude, Windows redirige esa carpeta y no vería el archivo)
    (o define `PONT3LA10_YOUTUBE_DIR` con otra carpeta; el estudio muestra la ruta si falta).
 7. En el estudio: **Títulos y miniaturas → Conectar con YouTube**, autoriza en la pestaña de Google y vuelve.
    El token queda en `token.json` de esa misma carpeta y nunca llega a la página.

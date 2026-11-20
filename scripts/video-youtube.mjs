@@ -3,7 +3,7 @@
 // Qué hace: con tu autorización (OAuth con PKCE, en tu navegador) pone la miniatura elegida y el título elegido
 // en un video que YA subiste a tu canal. No sube el video, no lo publica y no cambia su privacidad.
 //
-// Dónde vive lo privado: fuera del repositorio, en %LOCALAPPDATA%\Pont3la10\youtube (o PONT3LA10_YOUTUBE_DIR):
+// Dónde vive lo privado: fuera del repositorio, en %USERPROFILE%\.pont3la10\youtube (o PONT3LA10_YOUTUBE_DIR):
 //   cliente.json  → credenciales «Aplicación de escritorio» descargadas de Google Cloud (las pones tú)
 //   token.json    → lo crea este módulo al conectar; nunca viaja a la página ni se muestra
 import { createHash, randomBytes } from 'node:crypto'
@@ -22,8 +22,10 @@ export const LIMITE_MINIATURA = 2 * 1024 * 1024
 
 const error = (estado, mensaje) => Object.assign(new Error(mensaje), { estado })
 
+// Carpeta del usuario (no AppData): si el estudio se abre desde la app de Claude, Windows redirige AppData\Local a otra
+// carpeta del paquete y el estudio no vería el archivo que pusiste a mano.
 export function dirYoutube(entorno = process.env) {
-  return entorno.PONT3LA10_YOUTUBE_DIR || join(entorno.LOCALAPPDATA || join(homedir(), 'AppData', 'Local'), 'Pont3la10', 'youtube')
+  return entorno.PONT3LA10_YOUTUBE_DIR || join(homedir(), '.pont3la10', 'youtube')
 }
 
 /** ID del video (11 caracteres) a partir de un enlace de YouTube o del ID suelto; null si no es válido. */
