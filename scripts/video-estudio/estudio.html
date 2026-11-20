@@ -360,6 +360,22 @@
 
 <dialog id="dialogo-publicacion" aria-labelledby="t-publicacion">
   <h2 id="t-publicacion">Títulos, miniaturas y descripción</h2>
+  <section class="seccion-pub" id="seccion-youtube">
+    <h3>Tu video en YouTube</h3>
+    <p class="etiqueta-chica" id="yt-estado"></p>
+    <div class="fila-acciones">
+      <button class="boton primario" id="yt-conectar"><svg class="icono"><use href="#i-video"/></svg><span>Conectar con YouTube</span></button>
+      <button class="boton" id="yt-desconectar" hidden><svg class="icono"><use href="#i-x"/></svg><span>Desconectar</span></button>
+    </div>
+    <div id="yt-vinculo" hidden>
+      <label class="campo">Enlace del video ya subido a tu canal (puede estar privado o no listado)
+        <input id="yt-enlace" type="text" inputmode="url" autocomplete="off" placeholder="https://www.youtube.com/watch?v=…">
+      </label>
+      <div class="fila-acciones"><button class="boton" id="yt-vincular"><svg class="icono"><use href="#i-check"/></svg><span>Vincular video</span></button></div>
+      <p class="etiqueta-chica" id="yt-video"></p>
+    </div>
+    <p class="etiqueta-chica">El estudio solo cambia la miniatura y el título del video que vincules. No sube el video, no lo publica ni cambia su privacidad. Cada cambio pide tu confirmación.</p>
+  </section>
   <section class="seccion-pub">
     <h3>Títulos para la prueba A/B</h3>
     <p class="etiqueta-chica">En YouTube Studio → <em>Probar y comparar</em> sube los 3. Gana el de más tiempo de visualización.</p>
@@ -1061,17 +1077,71 @@ function escucharMusica() {
 
 /* ---------- Títulos, miniaturas y descripción ---------- */
 function pintarPublicacion() {
-  $('#lista-titulos').innerHTML = (detalle.titulos || []).map((t, i) => `<li><div class="fila-titulo"><span>${escapar(t)}</span><span class="largo">${t.length} car.</span><button class="boton icono-solo" data-copiar-titulo="${i}" aria-label="Copiar título ${i + 1}">${icono('copy')}</button></div></li>`).join('') || '<li>El guion de este proyecto no trae títulos A/B.</li>'
+  $('#lista-titulos').innerHTML = (detalle.titulos || []).map((t, i) => `<li><div class="fila-titulo"><span>${escapar(t)}</span><span class="largo">${t.length} car.</span><button class="boton icono-solo" data-copiar-titulo="${i}" aria-label="Copiar título ${i + 1}">${icono('copy')}</button>${detalle.youtube?.video ? `<button class="boton" data-yt-titulo="${i}">${icono('video')}<span>Poner en YouTube</span></button>` : ''}</div></li>`).join('') || '<li>El guion de este proyecto no trae títulos A/B.</li>'
   const mini = detalle.miniaturaTexto
   $('#texto-miniatura').textContent = mini?.texto ? `Texto de la miniatura: «${mini.texto}»${mini.resaltar ? ` (resaltar ${mini.resaltar})` : ''}` : 'El guion no trae texto de miniatura: Codex lo propondrá.'
   $('#copiar-encargo').hidden = !detalle.encargo
-  $('#lista-miniaturas').innerHTML = (detalle.miniaturas || []).map(m => `<figure><img src="${escapar(m.url)}" alt="Miniatura ${escapar(m.nombre)}"><div class="fila"><a class="boton" href="${escapar(m.url)}" download="${escapar(m.nombre)}">${icono('download')}<span>Descargar</span></a><button class="boton" data-borrar-miniatura="${escapar(m.nombre)}">${icono('trash')}<span>Quitar</span></button></div></figure>`).join('')
+  $('#lista-miniaturas').innerHTML = (detalle.miniaturas || []).map(m => `<figure><img src="${escapar(m.url)}" alt="Miniatura ${escapar(m.nombre)}"><div class="fila"><a class="boton" href="${escapar(m.url)}" download="${escapar(m.nombre)}">${icono('download')}<span>Descargar</span></a>${detalle.youtube?.video ? `<button class="boton" data-yt-miniatura="${escapar(m.nombre)}">${icono('upload')}<span>Subir a YouTube</span></button>` : ''}<button class="boton" data-borrar-miniatura="${escapar(m.nombre)}">${icono('trash')}<span>Quitar</span></button></div></figure>`).join('')
   $('#descripcion-youtube').value = detalle.descripcionYoutube || ''
+  pintarYoutube()
   document.querySelectorAll('[data-copiar-titulo]').forEach(b => b.addEventListener('click', () => copiar(detalle.titulos[Number(b.dataset.copiarTitulo)], 'Título copiado.')))
   document.querySelectorAll('[data-borrar-miniatura]').forEach(b => b.addEventListener('click', async () => {
     await api(`/api/proyectos/${proyecto}/miniaturas/${b.dataset.borrarMiniatura}`, { method: 'DELETE' })
     detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion()
   }))
+}
+
+/* ---------- Conexión con YouTube (miniatura y título de un video ya subido) ---------- */
+function pintarYoutube() {
+  const yt = detalle.youtube || {}
+  $('#yt-estado').textContent = !yt.configurado
+    ? 'Falta un paso de una sola vez: poner las credenciales de Google Cloud. Guía: docs/ESTUDIO_YOUTUBE.md. Carpeta: ' + (yt.dir || '')
+    : yt.conectado ? `Conectado${yt.canal?.titulo ? ` al canal «${yt.canal.titulo}»` : ''}.` : 'Todavía no conectaste tu canal.'
+  $('#yt-conectar').hidden = !yt.configurado || yt.conectado
+  $('#yt-desconectar').hidden = !yt.conectado
+  $('#yt-vinculo').hidden = !yt.conectado
+  const v = yt.video
+  $('#yt-video').textContent = v ? `Vinculado: «${v.titulo}» (${v.privacidad || 'sin dato'}).${v.miniatura ? ` Última miniatura subida: ${v.miniatura.nombre}.` : ''}` : 'Aún no hay un video vinculado a este proyecto.'
+  document.querySelectorAll('[data-yt-titulo]').forEach(b => b.addEventListener('click', async () => {
+    const titulo = detalle.titulos[Number(b.dataset.ytTitulo)]
+    if (!confirm(`¿Poner este título en tu video de YouTube?\n\n${titulo}\n\nAhora dice: ${v?.titulo || ''}`)) return
+    try {
+      await ocupado(b, 'Poniendo…', () => api(`/api/proyectos/${proyecto}/youtube/titulo`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ titulo }) }))
+      detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion(); avisar('Título actualizado en YouTube.', 'ok')
+    } catch (err) { avisar(err.message, 'error') }
+  }))
+  document.querySelectorAll('[data-yt-miniatura]').forEach(b => b.addEventListener('click', async () => {
+    if (!confirm(`¿Subir ${b.dataset.ytMiniatura} como miniatura de tu video de YouTube?`)) return
+    try {
+      await ocupado(b, 'Subiendo…', () => api(`/api/proyectos/${proyecto}/youtube/miniatura`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ nombre: b.dataset.ytMiniatura }) }))
+      detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion(); avisar('Miniatura subida a YouTube.', 'ok')
+    } catch (err) { avisar(err.message, 'error') }
+  }))
+}
+
+async function conectarYoutube() {
+  try {
+    const { url } = await ocupado($('#yt-conectar'), 'Abriendo Google…', () => api('/api/youtube/conectar', { method: 'POST' }))
+    window.open(url, '_blank', 'noopener')
+    avisar('Autoriza el acceso en la pestaña de Google; aquí se actualizará solo.', 'info')
+    for (let i = 0; i < 60; i++) {
+      await new Promise(r => setTimeout(r, 3000))
+      const estado = await api('/api/youtube')
+      if (estado.conectado) { detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion(); avisar('YouTube conectado.', 'ok'); return }
+    }
+  } catch (err) { avisar(err.message, 'error') }
+}
+
+async function vincularVideoYoutube() {
+  try {
+    await ocupado($('#yt-vincular'), 'Buscando…', () => api(`/api/proyectos/${proyecto}/youtube/video`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ video: $('#yt-enlace').value }) }))
+    detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion(); avisar('Video vinculado.', 'ok')
+  } catch (err) { avisar(err.message, 'error') }
+}
+
+async function desconectarYoutube() {
+  if (!confirm('¿Desconectar YouTube? Tendrás que autorizar de nuevo para volver a usarlo.')) return
+  try { await api('/api/youtube/desconectar', { method: 'POST' }); detalle = await api(`/api/proyectos/${proyecto}`); pintarPublicacion() } catch (err) { avisar(err.message, 'error') }
 }
 
 async function copiar(texto, mensaje) {
@@ -1246,6 +1316,9 @@ $('#musica').addEventListener('change', elegirMusica)
 $('#escuchar-musica').addEventListener('click', escucharMusica)
 $('#ver-publicacion').addEventListener('click', verPublicacion)
 $('#preparar-encargo').addEventListener('click', prepararEncargo)
+$('#yt-conectar').addEventListener('click', conectarYoutube)
+$('#yt-vincular').addEventListener('click', vincularVideoYoutube)
+$('#yt-desconectar').addEventListener('click', desconectarYoutube)
 $('#copiar-encargo').addEventListener('click', () => copiar(detalle.encargo, 'Encargo copiado. Pégalo en Codex.'))
 $('#abrir-carpeta').addEventListener('click', () => api(`/api/proyectos/${proyecto}/miniaturas/abrir`, { method: 'POST' }).catch(err => avisar(err.message, 'error')))
 $('#copiar-descripcion').addEventListener('click', () => copiar($('#descripcion-youtube').value, 'Descripción copiada.'))
