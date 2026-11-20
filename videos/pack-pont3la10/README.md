@@ -105,3 +105,16 @@ En el estudio, **Crear Reels** (se habilita al terminar el render) o por comando
 - Una misma escena no se puede montar dos veces sin duplicar ids: por eso el generador crea una copia por instancia.
 - El ticker desplaza los titulares más rápido de lo que alcanza a leerse en 5 s; en el video real debe durar más o llevar menos texto.
 - `check` avisa que el primer cuadro es la intro (opaca): es intencional, la miniatura se sube aparte.
+
+## Escenas verticales para Reels y Shorts (`reel-*`, 1080×1920)
+
+Las usa `scripts/video-generar-reel.mjs` (Reels con guion propio). Catálogo, reglas de zona segura y para qué sirve cada
+una: `docs/REELS_PROPIOS.md`. Resumen: `reel-gancho`, `reel-foto-punch`, `reel-foto-paneo`, `reel-foto-tarjeta`,
+`reel-foto-dividida`, `reel-dato`, `reel-cita`, `reel-lista`, `reel-marcador`, `reel-versus`, `reel-pregunta`,
+`reel-etiqueta`, `reel-fuente`, `reel-alerta`, `reel-progreso`, `reel-subtitulos`, `reel-cta`, y las transiciones
+`reel-golpe`, `reel-barrido` y `reel-glitch`. Todo texto queda entre x 100–900 y y 290–1.250 (zona segura de Instagram y
+Shorts); los subtítulos van en la banda 1.120–1.230. Cada id empieza por el prefijo de su escena (ver `PREFIJOS` en
+`scripts/video-generar-proyecto.mjs`) para poder montarla varias veces.
+
+Sonidos agregados (generados con ffmpeg, sin terceros): `golpe.mp3` (impacto grave), `subida.mp3` (subida antes de un
+dato), `tic.mp3` (corte corto) y `swoosh.mp3` (barrido de aire).

@@ -1,0 +1,38 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #08204a; font-family: "Montserrat", sans-serif; }
+    .rcit-fondo { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+    .rcit-tinte { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,.85), rgba(8,32,74,.65) 50%, rgba(8,32,74,.92)); }
+    .rcit-comillas { position: absolute; left: 90px; top: 430px; font-family: "League Gothic", "Oswald", sans-serif; font-size: 260px; line-height: .8; color: #ffd800; }
+    .rcit-texto { position: absolute; left: 100px; right: 180px; top: 570px; color: #fff; font-size: 54px; font-weight: 800; line-height: 1.16; }
+    .rcit-texto .rcit-p { display: inline-block; margin-right: .26em; opacity: 0; }
+    .rcit-autor { position: absolute; left: 100px; top: 990px; padding: 10px 22px; background: #ffd800; color: #08204a; font-weight: 900; font-size: 38px; text-transform: uppercase; }
+  </style>
+  <div id="root" data-composition-id="reel-cita" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"fondo","type":"string","label":"Fondo desenfocado","default":""},{"id":"cita","type":"string","label":"Cita textual (máx. 22 palabras)","default":"Vamos a respetar los derechos de los abonados"},{"id":"autor","type":"string","label":"Quién lo dijo","default":"COMUNICADO DE SANTA FE"},{"id":"duracion","type":"number","label":"Duración (s)","default":4,"min":0.6,"max":12,"step":0.1}]'>
+    <div id="rcit-escena" class="clip" data-start="0" data-duration="4">
+      <img id="rcit-fondo" class="rcit-fondo" src="assets/vacio.png" data-var-src="fondo" alt="" />
+      <div id="rcit-tinte" class="rcit-tinte" data-layout-allow-occlusion></div>
+      <div id="rcit-comillas" class="rcit-comillas">“</div>
+      <div id="rcit-texto" class="rcit-texto">Vamos a respetar los derechos de los abonados</div>
+      <div id="rcit-autor" class="rcit-autor" data-var-text="autor">COMUNICADO DE SANTA FE</div>
+    </div>
+  </div>
+  <script>
+    // Cita textual que aparece palabra por palabra, con su autor: solo frases dichas de verdad y con fuente.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(0.6, Number(v.duracion ?? 4));
+    const caja = document.querySelector("#rcit-texto");
+    const palabras = String(v.cita ?? caja.textContent).trim().split(/\s+/).filter(Boolean);
+    caja.textContent = "";
+    palabras.forEach((p, i) => { const s = document.createElement("span"); s.className = "rcit-p"; s.id = "rcit-p" + (i + 1); s.textContent = p; caja.appendChild(s); });
+    if (!String(v.autor ?? "").trim()) document.querySelector("#rcit-autor").style.display = "none";
+    const ventana = Math.min(D * 0.6, Math.max(0.6, palabras.length * 0.12));
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rcit-fondo", { scale: 1.12 }, { scale: 1.2, duration: D, ease: "none" }, 0);
+    tl.fromTo("#rcit-comillas", { scale: 2, opacity: 0, rotation: -12 }, { scale: 1, opacity: 1, rotation: 0, duration: 0.35, ease: "back.out(2)" }, 0);
+    tl.to([...caja.querySelectorAll(".rcit-p")], { opacity: 1, duration: 0.12, stagger: ventana / Math.max(1, palabras.length) }, 0.2);
+    tl.fromTo("#rcit-autor", { x: -50, opacity: 0 }, { x: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, 0.25 + ventana);
+    window.__timelines["reel-cita"] = tl;
+  </script>
+</template>

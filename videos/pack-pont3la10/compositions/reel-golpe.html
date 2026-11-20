@@ -1,0 +1,22 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    .rgol-rayos { position: absolute; left: -460px; top: -40px; width: 2000px; height: 2000px; background: repeating-conic-gradient(from 0deg at 50% 50%, rgba(255,255,255,.9) 0deg 2deg, rgba(255,255,255,0) 2deg 12deg); border-radius: 50%; opacity: 0; }
+    .rgol-flash { position: absolute; inset: 0; background: #ffffff; opacity: 0; }
+  </style>
+  <div id="root" data-composition-id="reel-golpe" data-width="1080" data-height="1920" data-composition-variables='[]'>
+    <div id="rgol-escena" class="clip" data-start="0" data-duration="0.4">
+      <div id="rgol-rayos" class="rgol-rayos" data-layout-allow-overflow data-layout-allow-occlusion></div>
+      <div id="rgol-flash" class="rgol-flash" data-layout-allow-occlusion></div>
+    </div>
+  </div>
+  <script>
+    // Transición de golpe: destello blanco y rayos que estallan en el corte (a los 0,15 s).
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rgol-flash", { opacity: 0 }, { opacity: 0.85, duration: 0.12, ease: "power2.in" }, 0.03);
+    tl.to("#rgol-flash", { opacity: 0, duration: 0.22, ease: "power2.out" }, 0.15);
+    tl.fromTo("#rgol-rayos", { scale: 0.3, opacity: 0, rotation: 0 }, { scale: 1.4, opacity: 0.8, rotation: 25, duration: 0.15, ease: "power2.in" }, 0.02);
+    tl.to("#rgol-rayos", { scale: 2, opacity: 0, duration: 0.2, ease: "power2.out" }, 0.17);
+    window.__timelines["reel-golpe"] = tl;
+  </script>
+</template>

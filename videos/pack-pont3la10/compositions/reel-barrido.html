@@ -1,0 +1,21 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    .rbar-panel { position: absolute; left: -200px; width: 1480px; height: 2400px; background: #08204a; transform: rotate(-12deg); }
+    .rbar-franja { position: absolute; left: -200px; width: 1480px; height: 90px; background: #ffd800; transform: rotate(-12deg); }
+  </style>
+  <div id="root" data-composition-id="reel-barrido" data-width="1080" data-height="1920" data-composition-variables='[]'>
+    <div id="rbar-escena" class="clip" data-start="0" data-duration="0.6">
+      <div id="rbar-franja" class="rbar-franja" data-layout-allow-overflow></div>
+      <div id="rbar-panel" class="rbar-panel" data-layout-allow-overflow data-layout-allow-occlusion></div>
+    </div>
+  </div>
+  <script>
+    // Barrido vertical azul con franja amarilla: tapa de abajo hacia arriba y destapa; el corte va a los 0,3 s.
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rbar-panel", { y: 2300 }, { y: -240, duration: 0.3, ease: "power3.in" }, 0);
+    tl.to("#rbar-panel", { y: -2700, duration: 0.3, ease: "power3.out" }, 0.3);
+    tl.fromTo("#rbar-franja", { y: 2200 }, { y: -400, duration: 0.6, ease: "power2.inOut" }, 0);
+    window.__timelines["reel-barrido"] = tl;
+  </script>
+</template>

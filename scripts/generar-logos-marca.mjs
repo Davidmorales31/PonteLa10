@@ -100,4 +100,12 @@ const iconoBlanco = await recorte('login_blanco', { left: 60, top: 0, width: 122
   await guardar('06_horizontal_sobre_blanco', await lienzo({ ...tam, fondo: '#FFFFFF', piezas: [{ input: icono, left: 30, top: 44 }, { input: texto, left: 30 + anchoIcono + 40, top: 110 }] }), tam)
 }
 
+// 5. Logo blanco del pack de video (intro, cierre y Reels): 1474 × 325 sobre transparente
+{
+  const pack = 'videos/pack-pont3la10/assets/logo-blanco.png'
+  const icono = await sharp(await readFile(pack)).extract({ left: 0, top: 0, width: 421, height: 325 }).png().toBuffer()
+  const texto = await textoMarca({ ancho: 940, alto: 169, colores: blancos })
+  await writeFile(pack, await lienzo({ ancho: 1474, alto: 325, piezas: [{ input: icono, left: 0, top: 0 }, { input: texto, left: 510, top: 97 }] }))
+}
+
 console.log('Logos generados.')

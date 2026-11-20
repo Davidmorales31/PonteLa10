@@ -17,7 +17,12 @@ const SITIO = 'https://www.pont3la10.com'
 export const DURACIONES = { intro: 4.1, cierre: 6, suscribete: 4.5, rotulo: 5, datoMini: 5, marcadorMini: 5, segundosPorEspacio: 7, minimoSegmento: 2 }
 export const PREFIJOS = {
   intro: 'intro-', galeria: 'gal-', rotulo: 'rotulo-', 'dato-mini': 'dm-', 'marcador-mini': 'mm-', ticker: 'ticker-',
-  suscribete: 'sus-', cara: 'cara-', cierre: 'cierre-', 'transicion-barrido': 'barrido-', 'transicion-flash': 'flash-'
+  suscribete: 'sus-', cara: 'cara-', cierre: 'cierre-', 'transicion-barrido': 'barrido-', 'transicion-flash': 'flash-',
+  // Escenas verticales de los Reels con guion propio (scripts/video-generar-reel.mjs).
+  'reel-gancho': 'rgan-', 'reel-foto-punch': 'rpun-', 'reel-foto-paneo': 'rpan-', 'reel-foto-tarjeta': 'rtar-', 'reel-foto-dividida': 'rdiv-',
+  'reel-dato': 'rdat-', 'reel-cita': 'rcit-', 'reel-lista': 'rlis-', 'reel-marcador': 'rmar-', 'reel-versus': 'rvs-', 'reel-pregunta': 'rpre-',
+  'reel-etiqueta': 'reti-', 'reel-fuente': 'rfue-', 'reel-alerta': 'ralr-', 'reel-progreso': 'rpro-', 'reel-cta': 'rcta-',
+  'reel-golpe': 'rgol-', 'reel-barrido': 'rbar-', 'reel-glitch': 'rgli-', 'reel-subtitulos': 'rsub-'
 }
 // Momento (s) del corte dentro de cada transición y del primer elemento que aterriza en cada superpuesto.
 const CORTE = { 'transicion-barrido': 0.5, 'transicion-flash': 0.3 }
@@ -274,7 +279,7 @@ export function textoTeleprompter(plan) {
   return plan.segmentos.map(s => `[${formato(s.inicio)}–${formato(s.fin)}] ${s.tipo === 'cara' ? 'CARA' : 'VOZ'} · ${s.etiqueta}\n${s.texto}\n`).join('\n')
 }
 
-async function descargarFoto(url, destino) {
+export async function descargarFoto(url, destino) {
   const respuesta = await fetch(url, { signal: AbortSignal.timeout(30_000) })
   if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`)
   const temporal = `${destino}.descarga`

@@ -1,0 +1,38 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #08204a; font-family: "Montserrat", sans-serif; }
+    .rcta-fondo { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+    .rcta-tinte { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,.88), rgba(8,32,74,.72) 50%, rgba(8,32,74,.95)); }
+    .rcta-logo { position: absolute; left: 290px; top: 330px; width: 420px; height: auto; }
+    .rcta-boton { position: absolute; left: 110px; right: 190px; top: 560px; padding: 28px 20px; background: #ffd800; color: #08204a; text-align: center; font-weight: 900; font-size: 46px; border-radius: 999px; text-transform: uppercase; box-shadow: 0 20px 60px rgba(255,216,0,.35); }
+    .rcta-web { position: absolute; left: 100px; right: 180px; top: 720px; text-align: center; color: #fff; font-size: 38px; font-weight: 800; }
+    .rcta-bucle { position: absolute; left: 430px; top: 860px; width: 140px; height: 140px; border-radius: 50%; border: 10px solid rgba(255,255,255,.9); border-right-color: transparent; }
+    .rcta-flecha { position: absolute; left: 536px; top: 860px; width: 0; height: 0; border-left: 26px solid transparent; border-right: 26px solid transparent; border-top: 34px solid rgba(255,255,255,.9); }
+  </style>
+  <div id="root" data-composition-id="reel-cta" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"fondo","type":"string","label":"Fondo desenfocado","default":""},{"id":"cta","type":"string","label":"Llamado a la acción","default":"SIGUE A PONTE LA 10"},{"id":"web","type":"string","label":"Línea de abajo","default":"La nota completa en pont3la10.com"},{"id":"duracion","type":"number","label":"Duración (s)","default":3,"min":0.6,"max":10,"step":0.1}]'>
+    <div id="rcta-escena" class="clip" data-start="0" data-duration="3">
+      <img id="rcta-fondo" class="rcta-fondo" src="assets/vacio.png" data-var-src="fondo" alt="" />
+      <div id="rcta-tinte" class="rcta-tinte" data-layout-allow-occlusion></div>
+      <img id="rcta-logo" class="rcta-logo" src="assets/logo-blanco.png" alt="" />
+      <div id="rcta-boton" class="rcta-boton" data-var-text="cta">SIGUE A PONTE LA 10</div>
+      <div id="rcta-web" class="rcta-web" data-var-text="web">La nota completa en pont3la10.com</div>
+      <div id="rcta-bucle" class="rcta-bucle" data-layout-allow-overlap></div>
+      <div id="rcta-flecha" class="rcta-flecha" data-layout-allow-overlap></div>
+    </div>
+  </div>
+  <script>
+    // Cierre: un solo llamado a la acción y la flecha de bucle que invita a verlo otra vez.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(0.6, Number(v.duracion ?? 3));
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rcta-fondo", { scale: 1.12 }, { scale: 1.2, duration: D, ease: "none" }, 0);
+    tl.fromTo("#rcta-logo", { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "expo.out" }, 0);
+    tl.fromTo("#rcta-boton", { scale: 0.7, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2)" }, 0.15);
+    tl.to("#rcta-boton", { scale: 1.06, duration: 0.25, yoyo: true, repeat: 3, ease: "sine.inOut" }, 0.6);
+    tl.fromTo("#rcta-web", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.4);
+    tl.fromTo(["#rcta-bucle", "#rcta-flecha"], { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.5);
+    tl.fromTo("#rcta-bucle", { rotation: 0 }, { rotation: 360, duration: Math.max(0.5, D - 0.5), ease: "none" }, 0.5);
+    window.__timelines["reel-cta"] = tl;
+  </script>
+</template>

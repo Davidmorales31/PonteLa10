@@ -1,0 +1,36 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #08204a; font-family: "Montserrat", sans-serif; }
+    .rlis-fondo { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+    .rlis-tinte { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,.88), rgba(8,32,74,.7) 50%, rgba(8,32,74,.94)); }
+    .rlis-titulo { position: absolute; left: 100px; right: 180px; top: 460px; font-family: "League Gothic", "Oswald", sans-serif; font-size: 88px; line-height: .95; color: #fff; text-transform: uppercase; }
+    .rlis-item { position: absolute; left: 100px; right: 180px; display: flex; align-items: center; gap: 24px; padding: 16px 22px; background: rgba(255,255,255,.08); border-left: 10px solid #ffd800; border-radius: 10px; }
+    #rlis-item-1 { top: 580px; } #rlis-item-2 { top: 730px; } #rlis-item-3 { top: 880px; }
+    .rlis-num { flex: none; display: grid; place-items: center; width: 84px; height: 84px; background: #ffd800; color: #08204a; font-family: "League Gothic", "Oswald", sans-serif; font-size: 80px; border-radius: 8px; }
+    .rlis-texto { color: #fff; font-size: 42px; font-weight: 800; line-height: 1.12; }
+  </style>
+  <div id="root" data-composition-id="reel-lista" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"fondo","type":"string","label":"Fondo desenfocado","default":""},{"id":"titulo","type":"string","label":"Título","default":"LO QUE CAMBIA"},{"id":"item1","type":"string","label":"Punto 1","default":"Se fueron 22 jugadores"},{"id":"item2","type":"string","label":"Punto 2","default":"Quedan solo 3"},{"id":"item3","type":"string","label":"Punto 3","default":"Terminó con la sub-20"},{"id":"duracion","type":"number","label":"Duración (s)","default":4.5,"min":0.6,"max":12,"step":0.1}]'>
+    <div id="rlis-escena" class="clip" data-start="0" data-duration="4.5">
+      <img id="rlis-fondo" class="rlis-fondo" src="assets/vacio.png" data-var-src="fondo" alt="" />
+      <div id="rlis-tinte" class="rlis-tinte" data-layout-allow-occlusion></div>
+      <div id="rlis-titulo" class="rlis-titulo" data-var-text="titulo">LO QUE CAMBIA</div>
+      <div id="rlis-item-1" class="rlis-item"><div class="rlis-num">1</div><div id="rlis-texto-1" class="rlis-texto" data-var-text="item1">Se fueron 22 jugadores</div></div>
+      <div id="rlis-item-2" class="rlis-item"><div class="rlis-num">2</div><div id="rlis-texto-2" class="rlis-texto" data-var-text="item2">Quedan solo 3</div></div>
+      <div id="rlis-item-3" class="rlis-item"><div class="rlis-num">3</div><div id="rlis-texto-3" class="rlis-texto" data-var-text="item3">Terminó con la sub-20</div></div>
+    </div>
+  </div>
+  <script>
+    // Lista de hasta 3 puntos que entran uno por uno (top 3, claves de la noticia, cómo queda).
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(0.6, Number(v.duracion ?? 4.5));
+    const items = [1, 2, 3].filter(n => String(v["item" + n] ?? "").trim());
+    for (const n of [1, 2, 3]) if (!items.includes(n)) document.querySelector("#rlis-item-" + n).style.display = "none";
+    const paso = Math.min(0.9, (D - 0.6) / Math.max(1, items.length));
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rlis-fondo", { scale: 1.12 }, { scale: 1.2, duration: D, ease: "none" }, 0);
+    tl.fromTo("#rlis-titulo", { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, 0);
+    items.forEach((n, i) => tl.fromTo("#rlis-item-" + n, { x: 140, opacity: 0 }, { x: 0, opacity: 1, duration: 0.32, ease: "back.out(1.6)" }, 0.3 + i * paso));
+    window.__timelines["reel-lista"] = tl;
+  </script>
+</template>

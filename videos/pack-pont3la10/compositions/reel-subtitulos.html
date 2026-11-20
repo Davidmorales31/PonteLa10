@@ -1,0 +1,38 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: visible; font-family: "Montserrat", sans-serif; }
+    .rsub-grupo { position: absolute; left: 100px; right: 180px; top: 1120px; text-align: center; opacity: 0; visibility: hidden; overflow: visible; }
+    .rsub-palabra { display: inline-block; margin: 0 .24em; color: #ffffff; font-weight: 900; text-transform: uppercase; line-height: 1.05; text-shadow: 0 0 0 #08204a, 4px 4px 0 #08204a, -4px 4px 0 #08204a, 4px -4px 0 #08204a, -4px -4px 0 #08204a, 0 8px 24px rgba(0,0,0,.55); }
+  </style>
+  <div id="root" data-composition-id="reel-subtitulos" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"duracion","type":"number","label":"Duración (s)","default":10,"min":1,"max":180,"step":0.1}]'>
+    <div id="rsub-escena" class="clip" data-start="0" data-duration="10">
+      <!--GRUPOS-->
+      <div id="rsub-g1" class="rsub-grupo" data-inicio="0.2" data-fin="1.2"><span id="rsub-g1-w1" class="rsub-palabra" data-inicio="0.2" data-fin="0.6">PASTO</span><span id="rsub-g1-w2" class="rsub-palabra" data-inicio="0.6" data-fin="1.2">SE QUEDÓ</span></div>
+      <!--/GRUPOS-->
+    </div>
+  </div>
+  <script>
+    // Subtítulos tipo Reels: grupos de 2–3 palabras en mayúsculas, la palabra que se dice en amarillo con un pop.
+    // Los grupos (con sus tiempos de palabra) los escribe el generador entre los marcadores GRUPOS.
+    const tl = gsap.timeline({ paused: true });
+    const ajustar = (window.__hyperframes && window.__hyperframes.fitTextFontSize) || null;
+    document.querySelector("#rsub-escena").querySelectorAll(".rsub-grupo").forEach(grupo => {
+      const inicio = Number(grupo.dataset.inicio), fin = Number(grupo.dataset.fin);
+      const texto = grupo.textContent.trim();
+      const tam = ajustar ? ajustar(texto, { fontFamily: "Montserrat", fontWeight: 900, maxWidth: 740 }).fontSize : 84;
+      grupo.style.fontSize = Math.min(88, Math.max(50, tam)) + "px";
+      tl.set(grupo, { opacity: 1, visibility: "visible" }, inicio);
+      tl.fromTo(grupo, { scale: 0.86 }, { scale: 1, duration: 0.12, ease: "back.out(3)" }, inicio);
+      grupo.querySelectorAll(".rsub-palabra").forEach(p => {
+        const a = Number(p.dataset.inicio), b = Number(p.dataset.fin);
+        tl.set(p, { color: "#ffd800" }, a);
+        tl.fromTo(p, { scale: 1 }, { scale: 1.12, duration: 0.08, yoyo: true, repeat: 1, ease: "power2.out" }, a);
+        tl.set(p, { color: "#ffffff" }, Math.max(a + 0.05, b));
+      });
+      tl.to(grupo, { opacity: 0, duration: 0.08, ease: "power2.in" }, Math.max(inicio + 0.05, fin - 0.08));
+      tl.set(grupo, { opacity: 0, visibility: "hidden" }, fin);
+    });
+    window.__timelines["reel-subtitulos"] = tl;
+  </script>
+</template>
