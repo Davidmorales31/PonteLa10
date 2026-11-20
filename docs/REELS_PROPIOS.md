@@ -43,6 +43,11 @@ son de marketing y no se toman como dato). Otras skills revisadas: `viral-reel-g
 5. **Renderizar**: sale `renders/final.mp4` vertical. El Reel queda en «Ver Reels» para Facebook e Instagram, y se puede
    subir como Short desde «Títulos y miniaturas → Subir video a YouTube» (lleva `#Shorts`).
 
+   **Jerarquía:** el video del día es el proyecto principal y cada Reel (`<fecha>-reel-N`) es su subproyecto. «Ver Reels»
+   abre lo mismo desde el principal o desde cualquier Reel: todos los Reels de la familia (los de guion propio, aunque
+   falten por grabar, y los cortes del video). Cada uno tiene su casilla y su hora; «Repartir horas» pone una distinta
+   a cada marcado y «Programar los marcados» usa la hora de cada tarjeta.
+
 ## 3. Escenas reutilizables (pack `videos/pack-pont3la10/compositions/reel-*`)
 
 Todas 1080×1920, con variables editables en el desktop de HyperFrames y dentro de la zona segura de Instagram y Shorts.

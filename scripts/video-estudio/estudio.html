@@ -206,6 +206,13 @@
   dialog::backdrop { background: rgba(0, 0, 0, .65); }
   dialog h2 { position: sticky; top: 0; z-index: 1; margin: 0 -18px 12px; padding: 10px 18px; background: var(--barra-dock); border-bottom: 1px solid var(--borde-suave); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--texto-2); }
   dialog#dialogo-reels { max-width: 980px; width: calc(100vw - 40px); max-height: 90vh; overflow: auto; }
+  .tarjeta-proyecto.hijo { margin-left: 26px; border-left: 3px solid var(--borde); }
+  .tarjeta-proyecto.hijo h3::before { content: '↳ '; color: var(--texto-3); }
+  .reel.pendiente { align-content: start; border-style: dashed; }
+  .reel .selector { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--texto-2); }
+  .reel .selector input { width: 16px; height: 16px; accent-color: var(--acento); }
+  .reel .origen { font-size: 11px; color: var(--texto-3); overflow-wrap: anywhere; }
+  .barra-seleccion { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 12px; color: var(--texto-2); }
   .lista-reels { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
   .reel { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--borde-suave); border-radius: var(--radio); background: var(--panel-2); }
   .reel video { width: 100%; aspect-ratio: 9/16; max-height: 420px; object-fit: contain; border-radius: 3px; background: #000; }
@@ -375,6 +382,7 @@
   <button class="boton" id="ver-publicacion"><svg class="icono"><use href="#i-image"/></svg><span>Títulos y miniaturas</span></button>
   <button class="boton" id="crear-reels" disabled title="Primero renderiza el video final"><svg class="icono"><use href="#i-phone"/></svg><span>Crear Reels</span></button>
   <button class="boton primario" id="reels-propios" hidden title="Crea un proyecto por cada Reel del guion de Reels: cada uno con su propio guion, voz, imágenes y subtítulos"><svg class="icono"><use href="#i-phone"/></svg><span>Reels con guion propio</span></button>
+  <button class="boton" id="volver-padre" hidden title="Vuelve al video principal de este Reel"><svg class="icono"><use href="#i-film"/></svg><span>Proyecto principal</span></button>
   <button class="boton" id="ver-reels" hidden><svg class="icono"><use href="#i-play"/></svg><span>Ver Reels</span></button>
   <span class="rueda" id="rueda-render" aria-hidden="true"></span>
   <div class="progreso-render" id="progreso-render" aria-hidden="true"><div></div></div>
@@ -438,14 +446,20 @@
 
 <dialog id="dialogo-reels" aria-labelledby="t-reels">
   <h2 id="t-reels">Tus Reels</h2>
-  <p class="etiqueta-chica" style="margin-top:0">Vertical 1080×1920 con subtítulos. Se publican en <strong>Facebook e Instagram</strong> con el mismo programador de las fotos.</p>
+  <p class="etiqueta-chica" style="margin-top:0">Vertical 1080×1920 con subtítulos. Aquí están todos los Reels del proyecto principal: los de guion propio y los cortes del video. Marca los que quieras programar y ponle a cada uno su hora. Se publican en <strong>Facebook e Instagram</strong>.</p>
   <div id="aviso-redes" class="aviso-redes" hidden></div>
   <div class="programar-todos" id="programar-todos">
     <label class="campo">Primer Reel el<input type="datetime-local" id="todos-inicio"></label>
     <label class="campo">Uno cada
       <select id="todos-cada"><option value="2">2 horas</option><option value="3" selected>3 horas</option><option value="4">4 horas</option><option value="6">6 horas</option><option value="24">1 día</option></select>
     </label>
-    <button class="boton primario" id="todos-programar">Programar todos</button>
+    <button class="boton" id="reels-repartir" title="Pone una hora distinta a cada Reel marcado, una tras otra">Repartir horas</button>
+    <button class="boton primario" id="todos-programar">Programar los marcados</button>
+  </div>
+  <div class="barra-seleccion" id="barra-seleccion">
+    <button class="boton" id="reels-marcar">Marcar todos</button>
+    <button class="boton" id="reels-desmarcar">Desmarcar todos</button>
+    <span id="seleccion-conteo" role="status"></span>
   </div>
   <div id="lista-reels" class="lista-reels"></div>
   <form method="dialog" style="margin-top:16px;text-align:right"><button class="boton primario">Cerrar</button></form>
@@ -560,12 +574,15 @@ function pintarPasos() {
   $('#paso-1').className = `paso ${listo1 ? 'hecho' : 'actual'}`
   $('#paso-2').className = `paso ${listo2 ? 'hecho' : listo1 ? 'actual' : ''}`
   $('#paso-3').className = `paso ${detalle.videoFinal ? 'hecho' : listo1 && listo2 ? 'actual' : ''}`
-  const cantidadReels = detalle.reels?.length || 0
+  const cantidadReels = (detalle.reels || []).filter(r => r.listo).length
   $('#paso-4').className = `paso ${cantidadReels ? 'hecho' : detalle.videoFinal ? 'actual' : ''}`
   $('#paso-4-dato').textContent = String(cantidadReels)
   $('#crear-reels').disabled = !detalle.videoFinal
   $('#crear-reels').title = detalle.videoFinal ? 'Saca 4 o 5 Reels verticales del video final' : 'Primero renderiza el video final'
-  $('#ver-reels').hidden = !cantidadReels
+  const totalReels = detalle.reels?.length || 0
+  $('#ver-reels').hidden = !totalReels
+  $('#ver-reels').querySelector('span').textContent = totalReels ? `Ver Reels (${cantidadReels}/${totalReels})` : 'Ver Reels'
+  $('#volver-padre').hidden = !detalle.padre
   // Un Reel con guion propio no se divide: se publica tal cual. El video del día ofrece crear sus Reels propios.
   $('#crear-reels').hidden = detalle.tipo === 'reel'
   $('#reels-propios').hidden = detalle.tipo === 'reel' || !detalle.guionReels
@@ -1066,46 +1083,90 @@ function sugerida(i, cadaHoras = 3) {
   return aLocalInput(new Date(d.getTime() + i * cadaHoras * 3_600_000))
 }
 
+const BLOQUEADOS = ['programada', 'publicada', 'publicando']
+const claveReel = r => `${r.proyecto}|${r.id}`
+const desmarcadosReels = new Set() // Reels que el usuario quitó de «programar los marcados»
+const horasReels = new Map() // clave → «YYYY-MM-DDTHH:mm»: cada Reel conserva su propia hora aunque se vuelva a pintar
+const programable = r => r.listo && !BLOQUEADOS.includes(r.publicacion?.estado)
+const reelsMarcados = () => (detalle.reels || []).filter(r => programable(r) && !desmarcadosReels.has(claveReel(r)))
+const cadaHoras = () => Number($('#todos-cada').value) || 3
+
+function contarSeleccion() {
+  const n = reelsMarcados().length
+  const total = (detalle.reels || []).filter(programable).length
+  $('#seleccion-conteo').textContent = `${n} de ${total} marcados`
+  $('#todos-programar').textContent = n ? `Programar ${n === 1 ? 'el marcado' : `los ${n} marcados`}` : 'Programar los marcados'
+  $('#todos-programar').disabled = !n
+}
+
 function pintarReels() {
   const sinLlave = detalle.redes && !detalle.redes.disponible
+  const todos = detalle.reels || []
+  const prog = todos.filter(programable)
   $('#aviso-redes').hidden = !sinLlave
   if (sinLlave) $('#aviso-redes').textContent = 'Falta la llave de redes en el archivo .env (PONT3LA10_AGENTES_REDES_KEY). Mientras tanto puedes copiar la descripción y descargar cada Reel.'
-  $('#programar-todos').hidden = sinLlave || !(detalle.reels || []).length
-  if (!$('#todos-inicio').value) $('#todos-inicio').value = sugerida(0)
-  $('#lista-reels').innerHTML = (detalle.reels || []).map((r, i) => {
+  $('#programar-todos').hidden = sinLlave || !prog.length
+  $('#barra-seleccion').hidden = sinLlave || !prog.length
+  // Cada Reel por programar arranca con una hora distinta (7:30, 10:30…), nunca todos a la misma y sin chocar con
+  // los que ya están programados: se empieza una tanda después del último programado.
+  const ultima = Math.max(0, ...todos.filter(r => r.publicacion?.estado === 'programada' && r.publicacion.fecha).map(r => Date.parse(r.publicacion.fecha)))
+  const arranque = ultima ? Math.max(Date.parse(sugerida(0)), ultima + cadaHoras() * 3_600_000) : Date.parse(sugerida(0))
+  if (!$('#todos-inicio').value) $('#todos-inicio').value = aLocalInput(new Date(arranque))
+  prog.forEach((r, i) => { if (!horasReels.has(claveReel(r))) horasReels.set(claveReel(r), aLocalInput(new Date(arranque + i * cadaHoras() * 3_600_000))) })
+  const raiz = proyectos.find(x => x.nombre === (detalle.padre || proyecto))
+  $('#t-reels').textContent = `Reels · ${raiz ? nombreVisible(raiz) : (detalle.padre || proyecto)}`
+  $('#lista-reels').innerHTML = todos.map((r, i) => {
+    if (!r.listo) {
+      const estado = r.grabados < r.tramos ? `Falta grabar (${r.grabados}/${r.tramos})` : 'Falta renderizar'
+      return `<div class="reel pendiente">
+    <div class="estado-publicacion"><strong>${i + 1}. ${escapar(r.club || r.proyecto)}</strong><span class="insignia pendiente">${escapar(estado)}</span></div>
+    <div class="origen">Reel con guion propio · ${escapar(r.titulo || r.proyecto)}</div>
+    <button class="boton primario" data-abrir-reel="${escapar(r.proyecto)}"><span>Abrir y terminar este Reel</span></button>
+  </div>`
+    }
+    const clave = claveReel(r)
     const p = r.publicacion
     const [clase, texto] = p ? (ESTADOS_REEL[p.estado] || ['pendiente', p.estado]) : ['pendiente', 'Sin publicar']
     const detalleFecha = p?.estado === 'programada' && p.fecha ? ` · ${escapar(fechaCorta(p.fecha))}` : ''
-    const bloqueada = ['programada', 'publicada', 'publicando'].includes(p?.estado)
-    return `<div class="reel" data-reel="${escapar(r.id)}">
+    const bloqueada = BLOQUEADOS.includes(p?.estado)
+    const valorFecha = p?.fecha && p.estado === 'programada' ? aLocalInput(new Date(p.fecha)) : (horasReels.get(clave) || '')
+    return `<div class="reel" data-reel="${escapar(clave)}">
     <div class="estado-publicacion"><strong>${i + 1}. ${escapar(r.club || r.id)} · ${Math.round(r.duracion)} s</strong><span class="insignia ${clase}">${escapar(texto)}${detalleFecha}</span></div>
+    <div class="origen">${r.origen === 'guion' ? `Reel con guion propio · ${escapar(r.titulo || r.proyecto)}` : 'Corte del video principal'}</div>
     <video controls preload="metadata" src="${escapar(r.url)}"></video>
     <textarea readonly aria-label="Descripción del Reel ${i + 1}">${escapar(r.descripcion)}</textarea>
     <div class="fila">
-      <button class="boton" data-copiar="${i}">${icono('copy')}<span>Copiar texto</span></button>
+      <button class="boton" data-copiar="${escapar(clave)}">${icono('copy')}<span>Copiar texto</span></button>
       <a class="boton" href="${escapar(r.url)}" download="${escapar(`pont3la10-reel-${i + 1}.mp4`)}">${icono('download')}<span>Descargar</span></a>
+      ${r.origen === 'guion' ? `<button class="boton" data-abrir-reel="${escapar(r.proyecto)}"><span>Abrir proyecto</span></button>` : ''}
     </div>
-    ${sinLlave || p?.estado === 'publicada' ? '' : `<label class="campo">Publicar el<input type="datetime-local" data-fecha value="${escapar(p?.fecha && p.estado === 'programada' ? aLocalInput(new Date(p.fecha)) : sugerida(i))}" ${bloqueada ? 'disabled' : ''}></label>
+    ${sinLlave || p?.estado === 'publicada' ? '' : `${bloqueada ? '' : `<label class="selector"><input type="checkbox" data-marcar="${escapar(clave)}" ${desmarcadosReels.has(clave) ? '' : 'checked'}> Incluir en «Programar los marcados»</label>`}
+    <label class="campo">Publicar el<input type="datetime-local" data-fecha="${escapar(clave)}" value="${escapar(valorFecha)}" ${bloqueada ? 'disabled' : ''}></label>
     <div class="fila">
-      ${p?.estado === 'programada' ? `<button class="boton" data-cancelar="${escapar(r.id)}">${icono('x')}<span>Cancelar programación</span></button>` : `<button class="boton primario" data-programar="${escapar(r.id)}" ${bloqueada ? 'disabled' : ''}><span>Programar</span></button>
-      <button class="boton" data-borrador="${escapar(r.id)}" ${bloqueada ? 'disabled' : ''} title="Lo deja listo en el panel de redes, sin fecha"><span>Solo borrador</span></button>`}
+      ${p?.estado === 'programada' ? `<button class="boton" data-cancelar="${escapar(clave)}">${icono('x')}<span>Cancelar programación</span></button>` : `<button class="boton primario" data-programar="${escapar(clave)}" ${bloqueada ? 'disabled' : ''}><span>Programar solo este</span></button>
+      <button class="boton" data-borrador="${escapar(clave)}" ${bloqueada ? 'disabled' : ''} title="Lo deja listo en el panel de redes, sin fecha"><span>Solo borrador</span></button>`}
     </div>
     <div class="error-reel" role="alert"></div>`}
   </div>`
   }).join('')
-  $('#lista-reels').querySelectorAll('[data-copiar]').forEach(b => b.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(detalle.reels[Number(b.dataset.copiar)].descripcion); avisar('Descripción copiada.', 'ok') } catch { avisar('No se pudo copiar. Selecciona el texto y cópialo.', 'error') }
+  const lista = $('#lista-reels')
+  lista.querySelectorAll('[data-copiar]').forEach(b => b.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(todos.find(r => r.listo && claveReel(r) === b.dataset.copiar).descripcion); avisar('Descripción copiada.', 'ok') } catch { avisar('No se pudo copiar. Selecciona el texto y cópialo.', 'error') }
   }))
-  $('#lista-reels').querySelectorAll('[data-programar]').forEach(b => b.addEventListener('click', () => accionReel(b, 'programar')))
-  $('#lista-reels').querySelectorAll('[data-borrador]').forEach(b => b.addEventListener('click', () => accionReel(b, 'borrador')))
-  $('#lista-reels').querySelectorAll('[data-cancelar]').forEach(b => b.addEventListener('click', () => accionReel(b, 'cancelar')))
+  lista.querySelectorAll('[data-programar]').forEach(b => b.addEventListener('click', () => accionReel(b, 'programar')))
+  lista.querySelectorAll('[data-borrador]').forEach(b => b.addEventListener('click', () => accionReel(b, 'borrador')))
+  lista.querySelectorAll('[data-cancelar]').forEach(b => b.addEventListener('click', () => accionReel(b, 'cancelar')))
+  lista.querySelectorAll('[data-abrir-reel]').forEach(b => b.addEventListener('click', () => { $('#dialogo-reels').close(); abrirProyecto(b.dataset.abrirReel) }))
+  lista.querySelectorAll('[data-marcar]').forEach(c => c.addEventListener('change', () => { if (c.checked) desmarcadosReels.delete(c.dataset.marcar); else desmarcadosReels.add(c.dataset.marcar); contarSeleccion() }))
+  lista.querySelectorAll('[data-fecha]').forEach(c => c.addEventListener('change', () => { horasReels.set(c.dataset.fecha, c.value) }))
+  contarSeleccion()
 }
 
 async function accionReel(boton, modo) {
-  const id = boton.dataset.programar || boton.dataset.borrador || boton.dataset.cancelar
+  const clave = boton.dataset.programar || boton.dataset.borrador || boton.dataset.cancelar
   const tarjeta = boton.closest('.reel')
   const error = tarjeta.querySelector('.error-reel')
-  const reel = detalle.reels.find(r => r.id === id)
+  const reel = detalle.reels.find(r => r.listo && claveReel(r) === clave)
   error.textContent = ''
   const entrada = tarjeta.querySelector('[data-fecha]')
   const fecha = entrada?.value ? new Date(entrada.value).toISOString() : ''
@@ -1114,31 +1175,40 @@ async function accionReel(boton, modo) {
     if (!confirm(`Se publicará en Facebook e Instagram:\n\n• ${reel.club || reel.id} — ${fechaCorta(fecha)}\n\nQuedará publicado a esa hora. ¿Confirmas?`)) return
   }
   try {
-    await ocupado(boton, modo === 'cancelar' ? 'Cancelando…' : 'Subiendo y programando…', () => api(`/api/proyectos/${proyecto}/reels/${id}/${modo === 'cancelar' ? 'cancelar' : 'publicar'}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: modo === 'cancelar' ? '{}' : JSON.stringify({ modo, fecha }) }))
+    await ocupado(boton, modo === 'cancelar' ? 'Cancelando…' : 'Subiendo y programando…', () => api(`/api/proyectos/${reel.proyecto}/reels/${reel.id}/${modo === 'cancelar' ? 'cancelar' : 'publicar'}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: modo === 'cancelar' ? '{}' : JSON.stringify({ modo, fecha }) }))
     avisar(modo === 'programar' ? `Reel programado para ${fechaCorta(fecha)}.` : modo === 'borrador' ? 'Reel guardado como borrador en redes.' : 'Programación cancelada.', 'ok')
     detalle = await api(`/api/proyectos/${proyecto}`)
     pintarReels()
   } catch (err) { error.textContent = err.message }
 }
 
-async function programarTodos() {
-  const lista = (detalle.reels || []).filter(r => !['programada', 'publicada', 'publicando'].includes(r.publicacion?.estado))
-  if (!lista.length) { avisar('Todos los Reels ya están programados o publicados.', 'error'); return }
+// Pone una hora distinta a cada Reel marcado: la primera en «Primer Reel el» y las demás cada tantas horas.
+function repartirHoras() {
   const inicio = new Date($('#todos-inicio').value)
   if (Number.isNaN(inicio.getTime())) { avisar('Elige la fecha y la hora del primer Reel.', 'error'); return }
-  const cada = Number($('#todos-cada').value)
-  const horas = lista.map((_, i) => new Date(inicio.getTime() + i * cada * 3_600_000))
-  if (!confirm(`Se publicarán en Facebook e Instagram:\n\n${lista.map((r, i) => `• ${r.club || r.id} — ${fechaCorta(horas[i])}`).join('\n')}\n\nQuedarán publicados a esas horas. ¿Confirmas?`)) return
+  reelsMarcados().forEach((r, i) => horasReels.set(claveReel(r), aLocalInput(new Date(inicio.getTime() + i * cadaHoras() * 3_600_000))))
+  pintarReels()
+  avisar('Horas repartidas. Puedes cambiar la de cada Reel antes de programar.', 'ok')
+}
+
+async function programarTodos() {
+  const lista = reelsMarcados()
+  if (!lista.length) { avisar('Marca al menos un Reel para programarlo.', 'error'); return }
+  const horas = lista.map(r => new Date(horasReels.get(claveReel(r)) || ''))
+  const sinHora = lista.filter((_, i) => Number.isNaN(horas[i].getTime()))
+  if (sinHora.length) { avisar(`Falta la fecha y la hora de: ${sinHora.map(r => r.club || r.id).join(', ')}.`, 'error'); return }
+  const repetidas = new Set(horas.map(h => h.getTime())).size < horas.length
+  if (!confirm(`Se publicarán en Facebook e Instagram:\n\n${lista.map((r, i) => `• ${r.club || r.id} — ${fechaCorta(horas[i])}`).join('\n')}\n${repetidas ? '\n⚠ Hay Reels con la MISMA hora.\n' : ''}\nQuedarán publicados a esas horas. ¿Confirmas?`)) return
   const boton = $('#todos-programar')
-  try {
-    await ocupado(boton, 'Programando…', async () => {
-      for (const [i, r] of lista.entries()) {
-        await api(`/api/proyectos/${proyecto}/reels/${r.id}/publicar`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ modo: 'programar', fecha: horas[i].toISOString() }) })
-        $('#todos-programar span').textContent = `Programando ${i + 1} de ${lista.length}…`
-      }
-    })
-    avisar(`${lista.length} Reels programados.`, 'ok')
-  } catch (err) { avisar(err.message, 'error') }
+  const fallos = []
+  await ocupado(boton, 'Programando…', async () => {
+    for (const [i, r] of lista.entries()) {
+      boton.textContent = `Programando ${i + 1} de ${lista.length}…`
+      try { await api(`/api/proyectos/${r.proyecto}/reels/${r.id}/publicar`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ modo: 'programar', fecha: horas[i].toISOString() }) }) } catch (err) { fallos.push(`${r.club || r.id}: ${err.message}`) }
+    }
+  })
+  if (fallos.length) avisar(`${lista.length - fallos.length} programados; fallaron ${fallos.length}: ${fallos.join(' · ')}`, 'error')
+  else avisar(`${lista.length} Reels programados.`, 'ok')
   detalle = await api(`/api/proyectos/${proyecto}`)
   pintarReels()
 }
@@ -1146,9 +1216,14 @@ async function programarTodos() {
 async function verReels() {
   pintarReels()
   $('#dialogo-reels').showModal()
-  // Al abrir, se refresca el estado real (¿ya se publicó? ¿falló?) sin bloquear la ventana.
-  if (detalle.redes?.disponible && (detalle.reels || []).some(r => r.publicacion)) {
-    try { await api(`/api/proyectos/${proyecto}/reels/estado`); detalle = await api(`/api/proyectos/${proyecto}`); if ($('#dialogo-reels').open) pintarReels() } catch { /* se conserva lo mostrado */ }
+  // Al abrir, se refresca el estado real (¿ya se publicó? ¿falló?) de cada proyecto de la familia, sin bloquear la ventana.
+  const duenos = [...new Set((detalle.reels || []).filter(r => r.listo && r.publicacion).map(r => r.proyecto))]
+  if (detalle.redes?.disponible && duenos.length) {
+    try {
+      for (const dueno of duenos) await api(`/api/proyectos/${dueno}/reels/estado`)
+      detalle = await api(`/api/proyectos/${proyecto}`)
+      if ($('#dialogo-reels').open) pintarReels()
+    } catch { /* se conserva lo mostrado */ }
   }
 }
 
@@ -1394,18 +1469,22 @@ function pintarCabeceraProyecto() {
 
 function pintarProyectos() {
   $('#apodo').value = detalle.estudio.nombre || ''
-  $('#lista-proyectos').innerHTML = proyectos.map(p => {
+  const principales = proyectos.filter(x => !x.padre)
+  const ordenados = principales.flatMap(x => [x, ...proyectos.filter(h => h.padre === x.nombre)])
+  $('#lista-proyectos').innerHTML = ordenados.map(p => {
     const actual = p.nombre === proyecto
+    const subproyectos = proyectos.filter(h => h.padre === p.nombre).length
     const insignias = [
       `<span class="insignia ${p.grabados === p.tramos ? 'ok' : 'neutra'}">${p.grabados}/${p.tramos} grabados</span>`,
       `<span class="insignia ${p.vacios ? 'pendiente' : 'ok'}">${p.vacios ? `${p.vacios} fotos por llenar` : 'Fotos completas'}</span>`,
       p.tipo === 'reel' ? '<span class="insignia ok">Reel 9:16</span>' : '',
+      subproyectos ? `<span class="insignia neutra">${subproyectos} Reels con guion</span>` : '',
       p.sinCamara ? '<span class="insignia neutra">Sin cámara</span>' : '',
       p.renderizando ? '<span class="insignia pendiente">Renderizando…</span>' : '',
       p.renderizado ? '<span class="insignia ok">Video listo</span>' : '',
-      p.reels ? `<span class="insignia ok">${p.reels} Reels</span>` : ''
+      p.reels && p.tipo !== 'reel' ? `<span class="insignia ok">${p.reels} cortes del video</span>` : ''
     ].join('')
-    return `<li class="tarjeta-proyecto" aria-current="${actual}">
+    return `<li class="tarjeta-proyecto${p.padre ? ' hijo' : ''}" aria-current="${actual}">
       <div><h3>${escapar(nombreVisible(p))}</h3><div class="sub">${escapar(p.fecha ? diaDelProyecto(p.fecha) : '')} · carpeta ${escapar(p.nombre)}${p.apodo && p.titulo ? ` · ${escapar(p.titulo)}` : ''}${p.actualizado ? ` · ${haceCuanto(p.actualizado)}` : ''}</div></div>
       ${actual ? '<span class="insignia pendiente">Abierto</span>' : `<button class="boton primario" data-abrir="${escapar(p.nombre)}">Abrir</button>`}
       <div class="meta">${insignias}</div>
@@ -1504,6 +1583,10 @@ $('#zona-miniaturas').addEventListener('dragleave', () => $('#zona-miniaturas').
 $('#zona-miniaturas').addEventListener('drop', e => { e.preventDefault(); $('#zona-miniaturas').classList.remove('sobre'); subirMiniaturas(e.dataTransfer.files) })
 $('#zona-miniaturas').addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('#archivo-miniaturas').click() } })
 $('#todos-programar').addEventListener('click', programarTodos)
+$('#reels-repartir').addEventListener('click', repartirHoras)
+$('#reels-marcar').addEventListener('click', () => { desmarcadosReels.clear(); pintarReels() })
+$('#reels-desmarcar').addEventListener('click', () => { for (const r of (detalle.reels || []).filter(programable)) desmarcadosReels.add(claveReel(r)); pintarReels() })
+$('#volver-padre').addEventListener('click', () => abrirProyecto(detalle.padre))
 $('#todos-cada').addEventListener('change', () => { $('#todos-inicio').value = $('#todos-inicio').value || sugerida(0) })
 $('#ayuda').addEventListener('click', () => $('#dialogo-atajos').showModal())
 $('#enfoque').addEventListener('click', () => {
