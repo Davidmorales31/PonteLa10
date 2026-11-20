@@ -43,7 +43,7 @@ async function conectarX() {
 
 <template>
   <section class="cuentas-sociales">
-    <NuxtLink to="/admin/redes" class="volver-cuentas"><ArrowLeft :size="17" />Contenido para redes</NuxtLink>
+    <NuxtLink to="/admin/redes" class="volver-cuentas"><ArrowLeft :size="17" />Redes sociales</NuxtLink>
     <h1>Cuentas de Ponte la 10</h1>
     <p v-if="mensajeX" role="status" class="mensaje-conexion">{{ mensajeX }}</p>
     <p>Publica en Facebook, Instagram y X desde Vista rápida con confirmación por envío. Cada cuenta se verifica en el servidor y conserva sus credenciales privadas.</p>
@@ -68,17 +68,20 @@ async function conectarX() {
         <p v-else>La API de YouTube no ofrece un endpoint de creación de publicaciones de Comunidad con imágenes. La imagen exportada se puede subir desde YouTube Studio; no es un video ni un Short.</p>
       </article>
     </div>
-    <section class="requisitos-cuentas">
-      <h2>Preparar las conexiones oficiales</h2>
+    <details class="requisitos-cuentas">
+      <summary>Preparar las conexiones oficiales</summary>
       <p>El responsable debe completar el registro y el consentimiento en cada proveedor. Las claves se configurarán exclusivamente en el servidor; no se pegan en el chat ni se guardan en el navegador del panel.</p>
       <a href="https://developers.facebook.com/apps/" target="_blank" rel="noopener noreferrer">Aplicaciones de Meta <ExternalLink :size="15" /></a>
       <a href="https://console.x.com/" target="_blank" rel="noopener noreferrer">Consola de desarrolladores de X <ExternalLink :size="15" /></a>
       <p>Los envíos guardan un recibo independiente por red. Si un proveedor no confirma el resultado, el reenvío se bloquea para evitar duplicados. Instagram publica en el feed; el formato Historia debe cambiarse en el editor.</p>
-    </section>
+    </details>
   </section>
 </template>
 
 <style scoped>
-.lista-cuentas button{background:var(--navy);color:white;padding:12px 18px;border:0;border-radius:6px;cursor:pointer;font:inherit;font-weight:700}.lista-cuentas button:disabled{opacity:.5;cursor:default}.mensaje-conexion{padding:16px;background:var(--soft-blue);border-radius:8px}button:focus-visible{outline:3px solid #2376cf;outline-offset:3px}
-.cuentas-sociales{max-width:1100px;margin:auto;color:var(--navy)}.volver-cuentas{display:inline-flex;align-items:center;gap:8px;font-size:13px}h1{font-size:28px;margin-top:24px}.cuentas-sociales>p,.requisitos-cuentas p{color:var(--muted);line-height:1.7}.lista-cuentas{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin:26px 0}.lista-cuentas article{border:1px solid var(--line);padding:22px;border-radius:10px;background:white}.lista-cuentas h2{margin-top:0}.lista-cuentas a,.requisitos-cuentas a{display:flex;align-items:center;gap:8px;overflow-wrap:anywhere}.lista-cuentas strong{display:block;font-size:12px;color:#775100;margin-top:18px}.lista-cuentas p{font-size:14px;color:var(--muted);line-height:1.7}.requisitos-cuentas{padding:24px;background:var(--soft-blue);border-radius:10px}.requisitos-cuentas a{font-size:14px;margin:18px 0;font-weight:700}a:focus-visible{outline:3px solid #2376cf;outline-offset:3px}@media(max-width:650px){.lista-cuentas{grid-template-columns:minmax(0,1fr)}}
+.lista-cuentas button{display:inline-flex;min-height:36px;align-items:center;background:var(--navy);color:white;padding:0 14px;border:0;border-radius:7px;cursor:pointer;font:inherit;font-size:.84rem;font-weight:750}.lista-cuentas button:disabled{opacity:.5;cursor:default}.mensaje-conexion{margin:0;padding:10px 14px;background:var(--soft-blue);border-radius:8px;font-size:.86rem}
+.cuentas-sociales{display:grid;gap:12px;color:var(--navy)}.volver-cuentas{display:inline-flex;align-items:center;gap:6px;justify-self:start;font-size:.8rem;font-weight:700;text-decoration:none}h1{margin:0;font-size:1.35rem}.cuentas-sociales>p{margin:0;color:var(--muted);font-size:.84rem;line-height:1.5}
+.lista-cuentas{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px}.lista-cuentas article{display:flex;flex-direction:column;align-items:flex-start;gap:8px;border:1px solid var(--line);padding:16px;border-radius:10px;background:white}.lista-cuentas h2{margin:0;font-size:1rem}.lista-cuentas a{display:flex;align-items:center;gap:6px;overflow-wrap:anywhere;font-size:.8rem}.lista-cuentas strong{display:block;font-size:.74rem;color:#775100}.lista-cuentas p{margin:0;font-size:.8rem;color:var(--muted);line-height:1.5}.lista-cuentas article>button{margin-top:auto}
+.requisitos-cuentas{padding:12px 16px;background:var(--soft-blue);border-radius:10px;font-size:.84rem}.requisitos-cuentas summary{cursor:pointer;font-weight:800}.requisitos-cuentas p{color:var(--muted);line-height:1.6}.requisitos-cuentas a{display:inline-flex;align-items:center;gap:6px;margin:6px 16px 6px 0;font-weight:700}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:3px solid #2376cf;outline-offset:3px}@media(max-width:650px){.lista-cuentas{grid-template-columns:minmax(0,1fr)}}
 </style>

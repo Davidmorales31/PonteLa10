@@ -1,10 +1,5 @@
 <script setup lang="ts">
-import {
-  CalendarClock,
-  FileText,
-  Trash2,
-  UserRound
-} from '@lucide/vue'
+import { ExternalLink, PencilLine, Trash2 } from '@lucide/vue'
 import type { ArticuloBandejaEditorial } from '~/types/contenidoEditorial'
 import {
   etiquetasEstadoContenido,
@@ -21,79 +16,61 @@ const emit = defineEmits<{
   eliminar: [contenido: ArticuloBandejaEditorial]
 }>()
 
+const formato = new Intl.DateTimeFormat('es-CO', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
+
 function formatearFecha(fecha: string): string {
-  return new Intl.DateTimeFormat('es-CO', {
-    dateStyle: 'medium',
-    timeStyle: 'short'
-  })
-    .format(new Date(fecha))
-    .replace(/[\u00a0\u202f]/g, ' ')
+  return formato.format(new Date(fecha)).replace(/[\u00a0\u202f]/g, ' ')
 }
 </script>
 
 <template>
-  <div class="contenedor-tabla-contenidos">
-    <table class="tabla-contenidos-editoriales">
-      <thead>
-        <tr>
-          <th>Contenido</th>
-          <th>Estado</th>
-          <th>Sección</th>
-          <th>Autor</th>
-          <th>Actualizado</th>
-          <th><span class="sr-only">Acciones</span></th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="contenido in contenidos" :key="contenido.id">
-          <td data-label="Contenido">
-            <div class="identidad-contenido-bandeja">
-              <span class="icono-tipo-contenido">
-                <FileText aria-hidden="true" />
-              </span>
-              <div>
-                <NuxtLink
-                  class="enlace-titulo-contenido"
-                  :to="`/admin/contenidos/${contenido.id}`"
-                >
-                  <strong>{{ contenido.titulo }}</strong>
-                </NuxtLink>
-                <span>
-                  {{ etiquetasTipoContenido[contenido.tipo] }}
-                  <i aria-hidden="true" />
-                  {{ etiquetasOrigenContenido[contenido.origen] }}
-                </span>
-              </div>
-            </div>
-          </td>
-          <td data-label="Estado">
-            <span
-              class="estado-contenido"
-              :data-estado="contenido.estado"
+  <table class="tabla-densa tabla-apilable tabla-contenidos">
+    <thead>
+      <tr>
+        <th scope="col">Contenido</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Sección</th>
+        <th scope="col">Autor</th>
+        <th scope="col">Actualizado</th>
+        <th scope="col"><span class="sr-only">Acciones</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="contenido in contenidos" :key="contenido.id">
+        <td class="celda-titulo">
+          <div class="fila-titulo-contenido">
+            <NuxtLink :to="`/admin/contenidos/${contenido.id}`">{{ contenido.titulo }}</NuxtLink>
+            <small>{{ etiquetasTipoContenido[contenido.tipo] }} · {{ etiquetasOrigenContenido[contenido.origen] }}</small>
+          </div>
+        </td>
+        <td>
+          <span class="chip-estado" :data-estado="contenido.estado">{{ etiquetasEstadoContenido[contenido.estado] }}</span>
+        </td>
+        <td class="celda-secundaria">{{ contenido.categoria?.nombre || 'Sin definir' }}</td>
+        <td class="celda-secundaria">{{ contenido.autorNombre }}</td>
+        <td class="celda-secundaria">{{ formatearFecha(contenido.actualizadoEn) }}</td>
+        <td>
+          <div class="acciones-fila">
+            <NuxtLink
+              :to="`/admin/contenidos/${contenido.id}`"
+              title="Abrir en el editor"
+              :aria-label="`Abrir ${contenido.titulo}`"
             >
-              {{ etiquetasEstadoContenido[contenido.estado] }}
-            </span>
-          </td>
-          <td data-label="Seccion">
-            <span class="dato-secundario-contenido">
-              {{ contenido.categoria?.nombre || 'Sin definir' }}
-            </span>
-          </td>
-          <td data-label="Autor">
-            <span class="dato-con-icono">
-              <UserRound aria-hidden="true" />
-              {{ contenido.autorNombre }}
-            </span>
-          </td>
-          <td data-label="Actualizado">
-            <span class="dato-con-icono">
-              <CalendarClock aria-hidden="true" />
-              {{ formatearFecha(contenido.actualizadoEn) }}
-            </span>
-          </td>
-          <td data-label="Acciones" class="acciones-fila-contenido">
+              <PencilLine aria-hidden="true" />
+            </NuxtLink>
+            <a
+              v-if="contenido.estado === 'published'"
+              :href="`/articulos/${contenido.slug}`"
+              target="_blank"
+              rel="noopener"
+              title="Ver en el sitio"
+              :aria-label="`Ver ${contenido.titulo} en el sitio`"
+            >
+              <ExternalLink aria-hidden="true" />
+            </a>
             <button
               v-if="puedeEliminar"
+              class="peligro"
               type="button"
               title="Eliminar contenido"
               :aria-label="`Eliminar ${contenido.titulo}`"
@@ -101,9 +78,9 @@ function formatearFecha(fecha: string): string {
             >
               <Trash2 aria-hidden="true" />
             </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 </template>

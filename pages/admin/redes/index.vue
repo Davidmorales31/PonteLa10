@@ -1,28 +1,68 @@
 <script setup lang="ts">
-import { ArrowRight, Search, ImagePlus, Eye, Plus } from '@lucide/vue'
-import VistaRapidaPublicacionSocial from '~/components/admin/VistaRapidaPublicacionSocial.vue'
+import { ArrowRight, CalendarClock, ChevronLeft, ChevronRight, Eye, ImagePlus, Plug, Plus, Search } from '@lucide/vue'
+import ColaProgramadaSocial from '~/components/admin/ColaProgramadaSocial.vue'
+import PanelPestanas from '~/components/admin/ui/PanelPestanas.vue'
+import PanelPopover from '~/components/admin/ui/PanelPopover.vue'
 import ProgramacionMasivaSocial from '~/components/admin/ProgramacionMasivaSocial.vue'
+import VistaRapidaPublicacionSocial from '~/components/admin/VistaRapidaPublicacionSocial.vue'
 import type { EstadoPublicacionesSociales } from '~/types/publicacionesSociales'
+
 definePageMeta({ layout: 'admin', middleware: 'autenticacion-editorial', permisoEditorial: 'contenido.verBorradores' })
 useSeoMeta({ title: 'Publicaciones para redes | Ponte la 10', robots: 'noindex, nofollow' })
-const buscar = ref(''), termino = ref(''), pagina = ref(1)
+
+const buscar = ref('')
+const termino = ref('')
+const pagina = ref(1)
 const estado = ref('')
-const { tienePermiso } = useContextoEditorial()
+const pestana = ref('noticias')
+const programando = ref(false)
+const articuloVistaRapida = ref<string | null>(null)
 const seleccion = ref<{ id: string, titulo: string }[]>([])
+const { tienePermiso } = useContextoEditorial()
+
+const { data: propias } = await useFetch('/api/admin/redes/propias')
+const { data, status, error, refresh } = await useFetch('/api/admin/redes', { query: { buscar: termino, pagina } })
+
+const etiquetasPropias: Record<string, { etiqueta: string, tono: string }> = {
+  draft: { etiqueta: 'Borrador', tono: 'borrador' },
+  scheduled: { etiqueta: 'Programada', tono: 'programado' },
+  publishing: { etiqueta: 'Publicando…', tono: 'revision' },
+  published: { etiqueta: 'Publicada', tono: 'publicado' },
+  failed: { etiqueta: 'Con error', tono: 'peligro' }
+}
+const etiquetas: Record<string, { etiqueta: string, tono: string }> = {
+  pending: { etiqueta: 'Por preparar', tono: 'borrador' },
+  draft: { etiqueta: 'Borrador', tono: 'revision' },
+  ready: { etiqueta: 'Listo para compartir', tono: 'programado' },
+  partial: { etiqueta: 'Publicada en una red', tono: 'programado' },
+  published: { etiqueta: 'Publicada', tono: 'publicado' }
+}
+
+const articulos = computed(() => data.value?.articulos.filter(actual => !estado.value || actual.estado === estado.value) || [])
+const pestanas = computed(() => [
+  { id: 'noticias', etiqueta: 'Noticias', conteo: data.value?.total ?? null },
+  { id: 'propias', etiqueta: 'Publicaciones propias', conteo: propias.value?.publicaciones.length ?? null },
+  { id: 'programadas', etiqueta: 'Programadas', oculta: !tienePermiso('contenido.editarTodos') }
+])
+const solicitaAprobacion = computed(() => (propias.value?.publicaciones || []).filter(p => p.solicitudAprobacion && ['draft', 'failed'].includes(p.estado)).length)
+
+function puedeProgramar(publicaciones?: EstadoPublicacionesSociales) {
+  return (['facebook', 'instagram'] as const).some(destino => !['published', 'in_progress', 'uncertain'].includes(publicaciones?.[destino]?.estado || ''))
+}
+
 function seleccionar(id: string, titulo: string) {
   const articulo = data.value?.articulos.find(item => item.id === id)
   if (!articulo || !puedeProgramar(articulo.publicaciones)) return
   if (seleccion.value.some(item => item.id === id)) seleccion.value = seleccion.value.filter(item => item.id !== id)
   else if (seleccion.value.length < 50) seleccion.value.push({ id, titulo })
 }
+
 function seleccionarPendientes() {
   for (const articulo of articulos.value.filter(item => item.estado === 'pending' && puedeProgramar(item.publicaciones))) {
     if (!seleccion.value.some(item => item.id === articulo.id) && seleccion.value.length < 50) seleccion.value.push({ id: articulo.id, titulo: articulo.titulo })
   }
 }
-function puedeProgramar(publicaciones?: EstadoPublicacionesSociales) {
-  return (['facebook', 'instagram'] as const).some(destino => !['published', 'in_progress', 'uncertain'].includes(publicaciones?.[destino]?.estado || ''))
-}
+
 async function cerrarVistaRapida() {
   articuloVistaRapida.value = null
   await refresh()
@@ -31,42 +71,203 @@ async function cerrarVistaRapida() {
     return !actual || puedeProgramar(actual.publicaciones)
   })
 }
-const articuloVistaRapida = ref<string | null>(null)
-const { data: propias } = await useFetch('/api/admin/redes/propias')
-const etiquetasPropias: Record<string, string> = { draft: 'Borrador', scheduled: 'Programada', publishing: 'Publicando…', published: 'Publicada', failed: 'Con error' }
-const { data, status, error, refresh } = await useFetch('/api/admin/redes', { query: { buscar: termino, pagina } })
-const etiquetas: Record<string, string> = { pending: 'Por preparar', draft: 'Borrador', ready: 'Listo para compartir', published: 'Publicada en Facebook e Instagram', partial: 'Publicada en alguna red' }
-const articulos = computed(() => data.value?.articulos.filter(actual => !estado.value || actual.estado === estado.value) || [])
-function aplicarBusqueda() { pagina.value = 1; termino.value = buscar.value }
+
+function aplicarBusqueda() {
+  pagina.value = 1
+  termino.value = buscar.value
+}
+
+const fechaCorta = (fecha: string | null) => fecha ? new Date(fecha).toLocaleDateString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short' }) : ''
+const fechaHora = (fecha: string) => new Date(fecha).toLocaleString('es-CO', { timeZone: 'America/Bogota', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })
 </script>
+
 <template>
-  <section class="bandeja-redes">
-    <header><div><h1>Publicaciones para redes</h1><p>Una noticia, una historia que merece compartirse.</p></div><div class="acciones-cabecera"><NuxtLink v-if="tienePermiso('contenido.editarTodos')" to="/admin/redes/propias/nuevo" external class="boton-nuevo"><Plus :size="17" />Nuevo</NuxtLink><NuxtLink v-if="tienePermiso('configuracion.gestionar')" to="/admin/redes/agentes">Agentes IA</NuxtLink><NuxtLink to="/admin/redes/comunidades">YouTube y WhatsApp</NuxtLink><NuxtLink to="/admin/redes/cuentas">Conectar cuentas</NuxtLink></div></header>
-    <section v-if="propias?.publicaciones.length" class="propias-redes" aria-label="Publicaciones propias"><h2>Publicaciones propias</h2><ul><li v-for="propia in propias.publicaciones" :key="propia.id"><NuxtLink :to="`/admin/redes/propias/${propia.id}`"><strong>{{ propia.titulo }}<em v-if="propia.agenteId" class="chip-agente">Agente IA</em><em v-if="propia.solicitudAprobacion && ['draft', 'failed'].includes(propia.estado)" class="chip-aprobar">Pide tu aprobación</em></strong><span>{{ etiquetasPropias[propia.estado] }}<template v-if="propia.programadaPara"> · {{ new Date(propia.programadaPara).toLocaleString('es-CO', { timeZone: 'America/Bogota' }) }}</template></span></NuxtLink></li></ul></section>
-    <p v-if="data && !data.almacenamientoDisponible" class="aviso-redes">El editor está disponible. Para guardar borradores en el CMS falta instalar la migración social.</p>
-    <form class="filtros-redes" @submit.prevent="aplicarBusqueda">
-      <label><span>Buscar noticia</span><div><input v-model="buscar" type="search" placeholder="Equipo, protagonista o titular"><button type="submit" aria-label="Buscar"><Search :size="19" /></button></div></label>
-      <label><span>Estado en esta página</span><select v-model="estado"><option value="">Todos</option><option v-for="(nombre, id) in etiquetas" :key="id" :value="id">{{ nombre }}</option></select></label>
-    </form>
-    <div v-if="tienePermiso('contenido.editarTodos')" class="seleccion-masiva"><button type="button" @click="seleccionarPendientes">Seleccionar pendientes de esta página</button><button type="button" :disabled="!seleccion.length" @click="seleccion = []">Limpiar selección</button><span>{{ seleccion.length }} seleccionadas</span></div>
-    <p v-if="status === 'pending'" role="status">Cargando noticias…</p>
-    <div v-else-if="error" role="alert"><p>No pudimos cargar las noticias.</p><button @click="refresh()">Reintentar</button></div>
-    <p v-else-if="!articulos.length">No hay noticias para estos filtros.</p>
-    <div v-else class="lista-redes">
-      <article v-for="articulo in articulos" :key="articulo.id">
-        <img v-if="articulo.portada" :src="articulo.portada" alt="" loading="lazy"><div v-else class="sin-foto"><ImagePlus /></div>
-        <div class="datos-noticia"><small>{{ articulo.categoria }} · {{ articulo.publicadoEn ? new Date(articulo.publicadoEn).toLocaleDateString('es-CO', { timeZone: 'America/Bogota' }) : '' }}</small><h2>{{ articulo.titulo }}</h2><p>{{ articulo.resumen }}</p><a :href="`/articulos/${articulo.slug}`" target="_blank" rel="noopener">Ver noticia ↗</a></div>
-        <div class="accion-noticia"><label v-if="tienePermiso('contenido.editarTodos')" class="seleccionar-noticia"><input type="checkbox" :checked="seleccion.some(item => item.id === articulo.id)" :disabled="!puedeProgramar(articulo.publicaciones)" :aria-label="`Programar: ${articulo.titulo}`" @change="seleccionar(articulo.id, articulo.titulo)">Programar</label><span :class="`estado-${articulo.estado}`">{{ etiquetas[articulo.estado] }}</span><button type="button" class="boton-vista-rapida" :aria-label="`Vista rápida: ${articulo.titulo}`" aria-haspopup="dialog" @click="articuloVistaRapida = articulo.id"><Eye :size="17" />Vista rápida</button><NuxtLink :to="`/admin/redes/${articulo.id}`">Editar publicación <ArrowRight :size="17" /></NuxtLink></div>
-      </article>
-    </div>
-    <footer v-if="data"><button :disabled="pagina === 1" @click="pagina--">Anterior</button><span>Página {{ pagina }} · {{ data.total }} noticias</span><button :disabled="pagina * 20 >= data.total" @click="pagina++">Siguiente</button></footer>
-    <ProgramacionMasivaSocial v-if="tienePermiso('contenido.editarTodos')" :seleccion="seleccion" @limpiar="seleccion = []" />
+  <div class="pagina-ajustada pagina-redes">
+    <header class="titulo-vista-panel">
+      <div>
+        <h1>Redes sociales</h1>
+        <p>Una noticia, una historia que merece compartirse.</p>
+      </div>
+      <div class="barra-herramientas">
+        <PanelPopover etiqueta="Conexiones" alinear="fin">
+          <template #icono><Plug aria-hidden="true" /></template>
+          <nav class="menu-conexiones" aria-label="Conexiones de redes">
+            <NuxtLink to="/admin/redes/cuentas">Cuentas de Facebook e Instagram</NuxtLink>
+            <NuxtLink to="/admin/redes/comunidades">YouTube y WhatsApp</NuxtLink>
+            <NuxtLink v-if="tienePermiso('configuracion.gestionar')" to="/admin/redes/agentes">Agentes de IA</NuxtLink>
+          </nav>
+        </PanelPopover>
+        <NuxtLink v-if="tienePermiso('contenido.editarTodos')" to="/admin/redes/propias/nuevo" external class="boton-editorial-principal">
+          <Plus aria-hidden="true" /> Nueva publicación
+        </NuxtLink>
+      </div>
+    </header>
+
+    <p v-if="data && !data.almacenamientoDisponible" class="aviso-panel aviso-panel--alerta">
+      El editor está disponible. Para guardar borradores en el CMS falta instalar la migración social.
+    </p>
+
+    <PanelPestanas v-model="pestana" :pestanas="pestanas" etiqueta="Secciones de redes" />
+    <p v-if="solicitaAprobacion && pestana !== 'propias'" class="aviso-panel aviso-panel--alerta">
+      {{ solicitaAprobacion }} {{ solicitaAprobacion === 1 ? 'publicación pide' : 'publicaciones piden' }} tu aprobación.
+      <button class="boton-panel" type="button" @click="pestana = 'propias'">Revisar</button>
+    </p>
+
+    <!-- Noticias -->
+    <template v-if="pestana === 'noticias'">
+      <section class="barra-herramientas" aria-label="Buscar y filtrar noticias">
+        <form class="buscador-panel" role="search" @submit.prevent="aplicarBusqueda">
+          <Search aria-hidden="true" />
+          <input v-model="buscar" type="search" placeholder="Equipo, protagonista o titular" aria-label="Buscar noticia">
+          <button type="submit">Buscar</button>
+        </form>
+        <select v-model="estado" class="campo-panel" aria-label="Estado en esta página">
+          <option value="">Todos los estados</option>
+          <option v-for="(item, id) in etiquetas" :key="id" :value="id">{{ item.etiqueta }}</option>
+        </select>
+        <button v-if="tienePermiso('contenido.editarTodos')" class="boton-panel" type="button" @click="seleccionarPendientes">
+          Marcar pendientes
+        </button>
+      </section>
+
+      <div v-if="seleccion.length" class="barra-seleccion" role="status">
+        <span>{{ seleccion.length }} {{ seleccion.length === 1 ? 'seleccionada' : 'seleccionadas' }}</span>
+        <button class="boton-editorial-principal" type="button" @click="programando = true">
+          <CalendarClock aria-hidden="true" /> Programar
+        </button>
+        <button class="boton-panel" type="button" @click="seleccion = []">Limpiar</button>
+      </div>
+
+      <section class="zona-desplazable" aria-live="polite" aria-label="Noticias para compartir">
+        <div v-if="status === 'pending'" aria-label="Cargando noticias">
+          <div v-for="indice in 8" :key="indice" class="esqueleto-fila" />
+        </div>
+        <div v-else-if="error" class="estado-vacio-compacto" role="alert">
+          <h2>No pudimos cargar las noticias</h2>
+          <button class="boton-panel" type="button" @click="() => refresh()">Reintentar</button>
+        </div>
+        <div v-else-if="!articulos.length" class="estado-vacio-compacto">
+          <h2>No hay noticias para estos filtros</h2>
+        </div>
+        <table v-else class="tabla-densa tabla-apilable tabla-redes">
+          <thead>
+            <tr>
+              <th v-if="tienePermiso('contenido.editarTodos')" scope="col" class="col-marca"><span class="sr-only">Seleccionar</span></th>
+              <th scope="col">Noticia</th>
+              <th scope="col">Estado</th>
+              <th scope="col"><span class="sr-only">Acciones</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="articulo in articulos" :key="articulo.id" :class="{ marcada: seleccion.some(item => item.id === articulo.id) }">
+              <td v-if="tienePermiso('contenido.editarTodos')" class="col-marca">
+                <input
+                  type="checkbox"
+                  :checked="seleccion.some(item => item.id === articulo.id)"
+                  :disabled="!puedeProgramar(articulo.publicaciones)"
+                  :aria-label="`Programar: ${articulo.titulo}`"
+                  @change="seleccionar(articulo.id, articulo.titulo)"
+                >
+              </td>
+              <td>
+                <div class="noticia-redes">
+                  <img v-if="articulo.portada" :src="articulo.portada" alt="" loading="lazy">
+                  <span v-else class="sin-foto" aria-hidden="true"><ImagePlus /></span>
+                  <div>
+                    <a :href="`/articulos/${articulo.slug}`" target="_blank" rel="noopener" class="titulo-noticia">{{ articulo.titulo }}</a>
+                    <small>{{ articulo.categoria }} · {{ fechaCorta(articulo.publicadoEn) }}</small>
+                  </div>
+                </div>
+              </td>
+              <td><span class="chip-estado" :data-tono="(etiquetas[articulo.estado] || { tono: 'borrador' }).tono">{{ (etiquetas[articulo.estado] || { etiqueta: articulo.estado }).etiqueta }}</span></td>
+              <td>
+                <div class="acciones-redes">
+                  <button class="boton-panel" type="button" :aria-label="`Vista rápida: ${articulo.titulo}`" aria-haspopup="dialog" @click="articuloVistaRapida = articulo.id">
+                    <Eye aria-hidden="true" /> Vista rápida
+                  </button>
+                  <NuxtLink class="boton-panel boton-panel--marca" :to="`/admin/redes/${articulo.id}`">
+                    Editar <ArrowRight aria-hidden="true" />
+                  </NuxtLink>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <footer v-if="data" class="pie-lista">
+        <span><strong>{{ data.total }}</strong> noticias · página {{ pagina }}</span>
+        <div class="paginas">
+          <button type="button" aria-label="Página anterior" :disabled="pagina === 1" @click="pagina--"><ChevronLeft aria-hidden="true" /></button>
+          <button type="button" aria-label="Página siguiente" :disabled="pagina * 20 >= data.total" @click="pagina++"><ChevronRight aria-hidden="true" /></button>
+        </div>
+      </footer>
+    </template>
+
+    <!-- Publicaciones propias -->
+    <section v-else-if="pestana === 'propias'" class="zona-desplazable" aria-label="Publicaciones propias">
+      <div v-if="!propias?.publicaciones.length" class="estado-vacio-compacto">
+        <h2>Aún no hay publicaciones propias</h2>
+        <p>Crea una con «Nueva publicación»: carruseles, Reels y piezas que no salen de una noticia.</p>
+      </div>
+      <ul v-else class="lista-propias">
+        <li v-for="propia in propias.publicaciones" :key="propia.id">
+          <NuxtLink :to="`/admin/redes/propias/${propia.id}`">
+            <div>
+              <strong>{{ propia.titulo }}</strong>
+              <small>
+                <em v-if="propia.agenteId" class="etiqueta-agente">Agente IA</em>
+                <em v-if="propia.solicitudAprobacion && ['draft', 'failed'].includes(propia.estado)" class="etiqueta-aprobar">Pide tu aprobación</em>
+                <template v-if="propia.programadaPara">Programada · {{ fechaHora(propia.programadaPara) }}</template>
+              </small>
+            </div>
+            <span class="chip-estado" :data-tono="(etiquetasPropias[propia.estado] || { tono: 'borrador' }).tono">{{ (etiquetasPropias[propia.estado] || { etiqueta: propia.estado }).etiqueta }}</span>
+          </NuxtLink>
+        </li>
+      </ul>
+    </section>
+
+    <!-- Cola programada -->
+    <section v-else class="zona-desplazable" aria-label="Publicaciones programadas">
+      <ColaProgramadaSocial />
+    </section>
+
+    <ProgramacionMasivaSocial
+      v-if="tienePermiso('contenido.editarTodos')"
+      :abierto="programando"
+      :seleccion="seleccion"
+      @cerrar="programando = false"
+      @limpiar="seleccion = []"
+    />
     <VistaRapidaPublicacionSocial v-if="articuloVistaRapida" :key="articuloVistaRapida" :articulo-id="articuloVistaRapida" @cerrar="cerrarVistaRapida" />
-  </section>
+  </div>
 </template>
+
 <style scoped>
-.acciones-cabecera{display:flex;gap:12px;align-items:center}.boton-nuevo{text-decoration:none;display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:10px 16px;border:0;border-radius:6px;background:var(--navy);color:white;font:inherit;font-weight:700}.propias-redes{margin:0 0 24px;padding:16px;border:1px solid var(--line);border-radius:8px;background:white}.propias-redes h2{margin:0 0 10px;font-size:16px}.propias-redes ul{list-style:none;margin:0;padding:0;display:grid;gap:8px}.propias-redes a{display:flex;justify-content:space-between;gap:12px;padding:10px;border:1px solid var(--line);border-radius:6px;color:var(--navy);text-decoration:none}.chip-agente,.chip-aprobar{margin-left:8px;padding:2px 8px;border-radius:999px;background:var(--soft-blue);font-size:11px;font-style:normal;font-weight:700}.chip-aprobar{background:var(--soft-yellow)}.propias-redes span{font-size:12px;color:var(--muted)}
-.seleccion-masiva{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0;font-size:13px}.seleccion-masiva button{padding:12px;border:1px solid var(--line);border-radius:6px;background:white;color:var(--navy)}.seleccionar-noticia{display:flex;gap:8px;align-items:center;min-height:44px}.seleccionar-noticia input{width:18px;height:18px}.accion-noticia{flex-wrap:wrap}
-.boton-vista-rapida{display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;border:1px solid var(--line);border-radius:6px;color:var(--navy);background:white;font:inherit;font-weight:700}.boton-vista-rapida:focus-visible{outline:3px solid #2376cf;outline-offset:3px}
-.bandeja-redes{max-width:1300px;margin:auto;color:var(--navy)}header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:28px}h1{font-size:30px;margin:0 0 8px}header p{color:var(--muted);margin:0}header>span{font-size:13px;border-left:3px solid var(--yellow);padding:8px 14px}.filtros-redes{display:flex;gap:20px;margin-bottom:24px}.filtros-redes label:first-child{flex:1}.filtros-redes label>span{display:block;font-size:12px;margin-bottom:7px}.filtros-redes label>div{display:flex}.filtros-redes input,.filtros-redes select{min-height:44px;border:1px solid var(--line);background:white;border-radius:6px;padding:10px;color:var(--navy)}.filtros-redes input{flex:1;min-width:0}.filtros-redes button{background:var(--navy);color:white;border:0;padding:10px 18px;border-radius:6px}.lista-redes{border-top:1px solid var(--line)}article{display:grid;grid-template-columns:160px 1fr 180px;gap:24px;padding:24px 0;border-bottom:1px solid var(--line);align-items:center}article>img,.sin-foto{width:160px;height:118px;object-fit:cover;border-radius:7px}.sin-foto{display:grid;place-items:center;background:var(--soft-blue)}small{color:var(--muted);font-size:12px}h2{font-size:18px;line-height:1.4;margin:7px 0}.datos-noticia p{font-size:13px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin:0 0 10px}.datos-noticia a{font-size:12px}.accion-noticia{display:grid;gap:20px;font-size:12px}.accion-noticia>span{justify-self:start;padding:5px 9px;background:var(--soft-blue);border-radius:4px}.accion-noticia .estado-ready{background:#e7f3dc}.accion-noticia a{display:flex;align-items:center;gap:8px;font-weight:700}footer{display:flex;align-items:center;justify-content:space-between;margin-top:24px;font-size:13px}button{cursor:pointer}button:disabled{opacity:.5;cursor:default}footer button{border:1px solid var(--line);background:white;padding:10px;border-radius:5px}.aviso-redes{padding:14px;background:var(--soft-yellow)}@media(max-width:800px){article{grid-template-columns:90px 1fr;gap:14px}article>img,.sin-foto{width:90px;height:90px}.accion-noticia{grid-column:2;display:flex;align-items:center;justify-content:space-between}.filtros-redes{flex-direction:column}header{align-items:start;flex-direction:column}h1{font-size:24px}}
+.menu-conexiones { display: grid; gap: 2px; min-width: 250px; }
+.menu-conexiones a { display: flex; min-height: 38px; align-items: center; border-radius: 7px; padding: 0 10px; color: #0e1b33; font-size: 0.86rem; font-weight: 650; text-decoration: none; }
+.menu-conexiones a:hover { background: #f3f6fa; }
+.col-marca { width: 44px; padding-right: 0 !important; }
+.col-marca input { width: 17px; height: 17px; cursor: pointer; }
+.tabla-redes tr.marcada { background: #eef4ff; }
+.noticia-redes { display: flex; min-width: 0; align-items: center; gap: 12px; }
+.noticia-redes img, .sin-foto { width: 64px; height: 44px; flex: 0 0 auto; border-radius: 6px; object-fit: cover; }
+.sin-foto { display: grid; place-items: center; background: #eaf2ff; color: #1e4fb4; }
+.sin-foto svg { width: 18px; height: 18px; }
+.noticia-redes > div { display: grid; min-width: 0; gap: 2px; }
+.titulo-noticia { display: -webkit-box; overflow: hidden; color: #071b3f; font-weight: 750; line-height: 1.3; text-decoration: none; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.titulo-noticia:hover { text-decoration: underline; }
+.noticia-redes small { color: #4d5b73; font-size: 0.74rem; font-weight: 600; }
+.acciones-redes { display: flex; justify-content: flex-end; gap: 6px; }
+.lista-propias { margin: 0; padding: 0; list-style: none; }
+.lista-propias li + li { border-top: 1px solid #edf1f6; }
+.lista-propias a { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px 16px; color: #071b3f; text-decoration: none; }
+.lista-propias a:hover { background: #f8fbff; }
+.lista-propias div { display: grid; gap: 3px; }
+.lista-propias small { color: #4d5b73; font-size: 0.76rem; }
+.etiqueta-agente, .etiqueta-aprobar { margin-right: 6px; border-radius: 999px; background: #e4edff; padding: 1px 8px; color: #1e4fb4; font-size: 0.7rem; font-style: normal; font-weight: 800; }
+.etiqueta-aprobar { background: #fff1c6; color: #8a5a00; }
+@media (max-width: 700px) {
+  .acciones-redes .boton-panel:first-child { display: none; }
+}
 </style>
