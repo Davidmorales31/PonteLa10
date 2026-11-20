@@ -13,7 +13,7 @@ La llave la crea una persona en Panel → Contenido para redes → Agentes IA. N
 1. Empieza con `capacidades`: confirma tu alcance y los límites.
 2. **No publicas.** Prepara el borrador y llama a `solicitarAprobacion` con nota (fuentes, por qué) y hora sugerida. Solo con alcance `programar` puedes programar directamente.
 3. Antes de pedir aprobación: `previsualizar` (mira la imagen) y `validar` sin motivos pendientes.
-4. Veracidad y derechos: nada inventado; acredita la fuente de cada imagen en la descripción.
+4. Veracidad: no inventes datos ni citas. El crédito de la imagen es opcional (decisión del responsable, 2026-11-20) y las imágenes pueden ser fotos reales, editadas o generadas.
 5. Usa `claveIdempotencia` al crear; lee la `revision` antes de actualizar y relee ante un 409.
 6. Archivos: `importarImagenDesdeUrl` (públicas), `iniciarSubida` → PUT → `confirmarSubida` (locales/vídeo) o `buscarBiblioteca` (CMS).
 7. Texto sobre imagen: `fondo: "degradado"`, `**palabra**` para amarillo, posiciones en % del lienzo.

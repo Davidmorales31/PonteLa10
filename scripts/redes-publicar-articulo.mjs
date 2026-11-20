@@ -1,11 +1,11 @@
 // Prepara la publicación social (Facebook + Instagram) de un artículo ya programado:
 // foto de portada con el titular encima, usando la API de agentes de redes.
 // Uso:
-//   node scripts/redes-publicar-articulo.mjs <slug|id> --credito "Colprensa (vía El Colombiano)" [--programar <ISO>] [--dry-run]
+//   node scripts/redes-publicar-articulo.mjs <slug|id> [--credito "Colprensa (vía El Colombiano)"] [--programar <ISO>] [--dry-run]
 //   node scripts/redes-publicar-articulo.mjs --pendientes [--creditos <archivo.json>] [--borrador|--programar-desde <ISO>|--auto] [--horas 24]
 //     Completa los artículos recientes sin publicación social (o con borrador sin programar).
 //     El crédito de la foto sale de la portada del artículo; el archivo (slug -> crédito) solo lo sobrescribe.
-//     Sin crédito no se publica. `--auto` programa cada pieza en la primera hora libre (ver `horasParaPendientes`).
+//     El crédito es opcional (decisión del responsable, 2026-11-20): si la portada lo trae se añade al texto; si no, se publica igual. `--auto` programa cada pieza en la primera hora libre (ver `horasParaPendientes`).
 // La llave (PONT3LA10_AGENTES_REDES_KEY) la crea una persona en Panel → Contenido
 // para redes → Agentes IA y se guarda en el .env de la raíz. Nunca se imprime.
 // Sin el alcance `programar` la pieza queda como «Pide tu aprobación».
@@ -180,7 +180,7 @@ async function procesar(ctx, articulo, { credito, programar, borrador, previsual
   } else {
     await llamar(base, llave, 'POST', `/publicaciones/${id}/solicitar-aprobacion`, {
       id, revision,
-      nota: `Titular de portada y foto acreditada (${credito}) del artículo ${articulo.slug}.`,
+      nota: `Titular de portada${credito ? ` y foto (${credito})` : ''} del artículo ${articulo.slug}.`,
       horaSugerida: new Date(Date.now() + 15 * 60_000).toISOString()
     })
     process.stdout.write(`Publicación ${id} pendiente de aprobación humana.\n`)
@@ -196,7 +196,7 @@ async function main() {
   const pendientes = args.includes('--pendientes')
   const credito = valor('--credito')
   const programar = valor('--programar')
-  if (!pendientes && (!objetivo || !credito)) terminar('Uso: node scripts/redes-publicar-articulo.mjs <slug|id> --credito "Fotógrafo (vía medio)" [--programar <ISO>] [--dry-run]\n   o: node scripts/redes-publicar-articulo.mjs --pendientes --creditos <archivo.json> [--borrador | --programar-desde <ISO>] [--horas 24]', 2)
+  if (!pendientes && !objetivo) terminar('Uso: node scripts/redes-publicar-articulo.mjs <slug|id> [--credito "Fotógrafo (vía medio)"] [--programar <ISO>] [--dry-run]\n   o: node scripts/redes-publicar-articulo.mjs --pendientes --creditos <archivo.json> [--borrador | --programar-desde <ISO>] [--horas 24]', 2)
 
   try { process.loadEnvFile(fileURLToPath(new URL('../.env', import.meta.url))) } catch (error) {
     if (error?.code !== 'ENOENT') terminar('No se pudo cargar la configuración privada local.')
@@ -250,7 +250,6 @@ async function main() {
   let indice = 0
   for (const { articulo, idExistente } of trabajo) {
     const creditoFoto = creditos[articulo.slug] || await creditoDePortada(articulo.slug)
-    if (!creditoFoto) { process.stdout.write(`Omitido ${articulo.slug}: la portada no trae crédito de la foto.\n`); continue }
     process.stdout.write(`\n== ${articulo.slug}\n`)
     await procesar(ctx, articulo, {
       credito: creditoFoto, borrador, idExistente,
