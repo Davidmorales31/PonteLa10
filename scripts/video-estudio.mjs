@@ -14,6 +14,7 @@ import { generarReel, crearProyectosReels, descripcionDeReel } from './video-gen
 import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionDe } from './video-musica.mjs'
 import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
 import { estadoDeRender, nuevoRender, terminarRender } from './video-estudio-render.mjs'
+import { hijosDe, listaDeReels, nombrePadre, raizDeFamilia } from './video-estudio-familia.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
 import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
@@ -170,6 +171,7 @@ async function listarProyectos() {
       vacios: (manifiesto.fotos || []).reduce((suma, f) => suma + (f.vacios || 0), 0),
       sinCamara: Boolean(estudio.sinCamara),
       tipo: manifiesto.tipo || 'video',
+      padre: nombrePadre(nombre) && existsSync(join(DIARIO, nombrePadre(nombre), 'manifiesto.json')) ? nombrePadre(nombre) : '',
       renderizado: existsSync(final),
       renderizando: renders.get(nombre)?.estado === 'renderizando',
       reels: reels?.reels?.length || 0,
@@ -177,6 +179,29 @@ async function listarProyectos() {
     })
   }
   return salida
+}
+
+// Reels de toda la familia: los cortes del video principal y un Reel por cada subproyecto con guion propio.
+async function reelsDeFamilia(proyecto) {
+  const nombres = (await readdir(DIARIO)).filter(n => proyectoValido(n) && existsSync(join(DIARIO, n, 'manifiesto.json')))
+  const raiz = raizDeFamilia(proyecto, nombres)
+  const fila = async (dueno, reel, creado, publicaciones) => ({ ...reel, proyecto: dueno, url: `/archivos/${dueno}/${reel.archivo}?v=${Date.parse(creado)}`, publicacion: publicaciones[reel.id] || null })
+  const propios = await leerJson(join(carpetaDe(raiz), 'renders', 'reels', 'reels.json'))
+  const publicacionesRaiz = await leerEstadoPublicaciones(carpetaDe(raiz))
+  const cortes = propios ? await Promise.all(propios.reels.map(r => fila(raiz, r, propios.creado, publicacionesRaiz))) : []
+  const hijos = []
+  for (const nombre of hijosDe(raiz, nombres)) {
+    const carpeta = carpetaDe(nombre)
+    const manifiesto = (await leerJson(join(carpeta, 'manifiesto.json'))) || {}
+    const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
+    const guion = (await leerJson(join(carpeta, 'guion.json'))) || {}
+    const lista = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
+    const base = { proyecto: nombre, nombreProyecto: estudio.nombre || nombre, club: guion.club || '', titulo: manifiesto.tituloVideo || '', tramos: manifiesto.segmentos?.length || 0, grabados: (manifiesto.segmentos || []).filter(s => estudio.grabaciones?.[s.id]).length }
+    const reel = lista?.reels?.[0]
+    if (reel && existsSync(join(carpeta, reel.archivo))) hijos.push({ ...base, listo: true, ...(await fila(nombre, reel, lista.creado, await leerEstadoPublicaciones(carpeta))) })
+    else hijos.push({ ...base, listo: false, id: null, duracion: manifiesto.duracion || 0 })
+  }
+  return { raiz, reels: listaDeReels({ cortes, hijos }) }
 }
 
 async function detalleProyecto(proyecto) {
@@ -187,8 +212,7 @@ async function detalleProyecto(proyecto) {
   const render = renders.get(proyecto)
   const trabajoReels = trabajosReels.get(proyecto)
   const final = join(carpeta, 'renders', 'final.mp4')
-  const reels = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
-  const publicaciones = await leerEstadoPublicaciones(carpeta)
+  const familia = await reelsDeFamilia(proyecto)
   const guion = (await leerJson(join(carpeta, 'guion.json'))) || {}
   const biblioteca = await leerBiblioteca()
   const carpetaMiniaturas = join(carpeta, 'renders', 'miniaturas')
@@ -213,7 +237,8 @@ async function detalleProyecto(proyecto) {
     descripcionYoutube: guion.tipo === 'reel' ? descripcionDeReel(guion, await atribucionDe(estudio.musica)) : descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionDe(estudio.musica) }),
     miniaturas: await Promise.all(miniaturas.map(async n => ({ nombre: n, url: `/archivos/${proyecto}/renders/miniaturas/${n}?v=${(await stat(join(carpetaMiniaturas, n))).mtimeMs}` }))),
     encargo: existsSync(encargo) ? await readFile(encargo, 'utf8') : null,
-    reels: reels ? reels.reels.map(r => ({ ...r, url: `/archivos/${proyecto}/${r.archivo}?v=${Date.parse(reels.creado)}`, publicacion: publicaciones[r.id] || null })) : []
+    padre: familia.raiz !== proyecto ? familia.raiz : null,
+    reels: familia.reels
   }
 }
 
