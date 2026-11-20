@@ -14,13 +14,13 @@ Avance por fase (detalle en `docs/agents/handoffs/2026-11-19-sitios-liga-mx-fase
 | 7 Redes por sitio (dominio de la pieza) | Hecha (#187); sin prueba de publicación real |
 | 8A Mapas y feed listos | Hecha (#188) |
 | 8B Idioma/zona por sitio, Partidos de hoy, filtros de Noticias y Quiénes somos de México | Hecha (#189–#192) |
-| Lanzamiento (DNS, Search Console, GA4, `indexable`) | Pendiente del responsable (ver handoff 8A) |
+| Lanzamiento (DNS, Search Console, GA4, `indexable`) | Pendiente del responsable: guía paso a paso en `docs/LANZAMIENTO_MEXICO.md` |
 
 Pendientes técnicos conocidos (no bloquean el lanzamiento, mejoran México):
 - Grafo de entidades SEO de México: los artículos de México enlazan los clubes de la Liga MX que nombran (`/clubes/...`, relación «mentions», sin tocar el grafo de Colombia); falta el grafo completo con competiciones y partidos.
 - ~~Frescura y salud de los datos de México en el panel de Operación~~ (hecho: bloque «México» en Operación y alerta si hay datos vencidos).
 - «Dónde ver» y fichas de jugadores de México (requieren datos verificados).
-- Separación de 15 minutos entre publicaciones y detección de duplicados de la agenda: hoy comparten fila los dos sitios.
+- Separación entre publicaciones: la política vigente es de 2 minutos y es global (los dos sitios comparten la fila de espacios). Funciona sin conflicto; una fila por sitio es opcional. Detección de duplicados de la agenda: sigue compartida.
 - Alcance por sitio en las llaves de agentes de redes y prueba de publicación real en redes con un artículo de México.
 - Textos legales: privacidad y términos citan la ley colombiana; el responsable decide si añade la mexicana.
 - Automatización de Codex para México (12:30 y 20:30) por quien administre las automatizaciones de Codex.
