@@ -8,11 +8,13 @@ import { join, resolve, extname, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
+import { randomBytes } from 'node:crypto'
 import { generarProyecto } from './video-generar-proyecto.mjs'
 import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionDe } from './video-musica.mjs'
 import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
+import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, urlAutorizacion } from './video-youtube.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
 
 const ejecutar = promisify(execFile)
@@ -60,9 +62,42 @@ function clienteRedes() {
 }
 
 const renders = new Map()
+const conexionesYoutube = new Map()
+const REDIRECT_YOUTUBE = `http://127.0.0.1:${PUERTO}/oauth/youtube/callback`
 const publicando = new Set()
 const trabajosReels = new Map()
 const ocupados = new Set()
+
+async function iniciarConexionYoutube() {
+  const cliente = await leerCliente()
+  if (!cliente) throw Object.assign(new Error(`Falta cliente.json de Google Cloud en ${dirYoutube()} (ver docs/ESTUDIO_YOUTUBE.md).`), { estado: 409 })
+  const estado = randomBytes(16).toString('hex')
+  const { verificador, desafio } = crearDesafio()
+  for (const [clave, pendiente] of conexionesYoutube) if (pendiente.expira < Date.now()) conexionesYoutube.delete(clave)
+  conexionesYoutube.set(estado, { verificador, expira: Date.now() + 10 * 60_000 })
+  return { url: urlAutorizacion({ clientId: cliente.clientId, redirect: REDIRECT_YOUTUBE, estado, desafio }) }
+}
+
+const escaparHtml = texto => String(texto).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
+function paginaConexion(res, estado, titulo, mensaje) {
+  res.writeHead(estado, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'" })
+  res.end(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escaparHtml(titulo)}</title><body style="font:16px system-ui;max-width:32rem;margin:15vh auto;padding:0 1rem;color:#08204a"><h1>${escaparHtml(titulo)}</h1><p>${escaparHtml(mensaje)}</p><p><a href="/">Volver al estudio</a></p></body>`)
+}
+
+// Google vuelve aquí con ?code y ?state; el estado es de un solo uso y vence a los 10 minutos.
+async function terminarConexionYoutube(res, url) {
+  const estado = url.searchParams.get('state') || ''
+  const pendiente = conexionesYoutube.get(estado)
+  conexionesYoutube.delete(estado)
+  if (url.searchParams.get('error')) return paginaConexion(res, 400, 'No se conectó YouTube', 'Cancelaste la autorización o Google la rechazó. Puedes intentarlo de nuevo desde el estudio.')
+  if (!pendiente || pendiente.expira < Date.now() || !url.searchParams.get('code')) return paginaConexion(res, 400, 'Enlace no válido', 'Esta conexión venció o no se inició desde el estudio. Vuelve y pulsa «Conectar con YouTube».')
+  try {
+    const canal = await completarConexion({ codigo: url.searchParams.get('code'), verificador: pendiente.verificador, redirect: REDIRECT_YOUTUBE })
+    return paginaConexion(res, 200, 'YouTube conectado', `Canal: ${canal.titulo}. Ya puedes cerrar esta pestaña y volver al estudio.`)
+  } catch (error) {
+    return paginaConexion(res, error.estado || 500, 'No se pudo conectar', error.estado ? error.message : 'Ocurrió un error al conectar. Intenta de nuevo.')
+  }
+}
 
 function responder(res, estado, cuerpo) {
   res.writeHead(estado, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' })
@@ -139,6 +174,7 @@ async function detalleProyecto(proyecto) {
     videoFinal: existsSync(final) ? `/archivos/${proyecto}/renders/final.mp4?v=${(await stat(final)).mtimeMs}` : null,
     reelsEstado: trabajoReels ? { estado: trabajoReels.estado, registro: trabajoReels.registro.slice(-600) } : null,
     redes: { disponible: redesDisponibles() },
+    youtube: { ...(await estadoConexion()), video: estudio.youtube || null },
     musica: { elegida: estudio.musica || null, pistas: biblioteca.pistas.map(p => ({ id: p.id, titulo: p.titulo, autor: p.autor, licencia: p.licencia, estilo: p.estilo, descargada: existsSync(rutaPista(p.id)) })) },
     titulos: guion.titulos?.length ? guion.titulos : [guion.tituloVideo].filter(Boolean),
     miniaturaTexto: guion.miniatura || null,
@@ -382,6 +418,13 @@ export function crearServidor() {
         if (reiniciando) setTimeout(() => process.exit(CODIGO_REINICIO), 300)
         return
       }
+      if (req.method === 'GET' && url.pathname === '/oauth/youtube/callback') return terminarConexionYoutube(res, url)
+      if (partes[0] === 'api' && partes[1] === 'youtube') {
+        if (partes.length === 2 && req.method === 'GET') return responder(res, 200, await estadoConexion())
+        if (partes[2] === 'conectar' && req.method === 'POST') return responder(res, 200, await iniciarConexionYoutube())
+        if (partes[2] === 'desconectar' && req.method === 'POST') { await desconectar(); return responder(res, 200, await estadoConexion()) }
+        return responder(res, 404, { error: 'No encontrado.' })
+      }
       if (partes[0] !== 'api' || partes[1] !== 'proyectos') return responder(res, 404, { error: 'No encontrado.' })
       if (partes.length === 2 && req.method === 'GET') return responder(res, 200, { proyectos: await listarProyectos() })
 
@@ -445,6 +488,42 @@ export function crearServidor() {
         if (req.method === 'DELETE' && /^miniatura-[a-z0-9-]{1,30}\.jpg$/.test(partes[4] || '')) { await rm(join(carpetaMiniaturas, partes[4]), { force: true }); return responder(res, 200, { ok: true }) }
         return responder(res, 404, { error: 'No encontrado.' })
       }
+      if (accion === 'youtube' && req.method === 'POST' && ['video', 'miniatura', 'titulo'].includes(partes[4])) {
+        let datos = {}
+        try { datos = JSON.parse((await leerCuerpo(req, 4096)).toString('utf8') || '{}') } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
+        const clave = `youtube:${proyecto}`
+        if (publicando.has(clave)) return responder(res, 409, { error: 'Ya hay una acción de YouTube en curso: espera a que termine.' })
+        publicando.add(clave)
+        try {
+          if (partes[4] === 'video' && datos.video === '') {
+            await guardarEstudio(proyecto, estudio => { delete estudio.youtube })
+            return responder(res, 200, { video: null })
+          }
+          const acceso = await accesoVigente()
+          const canalId = (await leerToken())?.canal?.id
+          if (partes[4] === 'video') {
+            const idVideo = idVideoDe(datos.video)
+            if (!idVideo) return responder(res, 422, { error: 'Pega el enlace del video de YouTube (o su ID de 11 caracteres).' })
+            const video = await leerVideo({ idVideo, acceso, canalId })
+            const guardado = { idVideo, titulo: video.titulo, privacidad: video.privacidad }
+            await guardarEstudio(proyecto, estudio => { estudio.youtube = guardado })
+            return responder(res, 200, { video: guardado })
+          }
+          const vinculado = ((await leerJson(join(carpetaDe(proyecto), 'estudio.json'))) || {}).youtube
+          if (!vinculado?.idVideo) return responder(res, 409, { error: 'Primero vincula el video de YouTube de este proyecto.' })
+          if (partes[4] === 'miniatura') {
+            if (!/^miniatura-[a-z0-9-]{1,30}\.jpg$/.test(String(datos.nombre || ''))) return responder(res, 422, { error: 'Miniatura no válida.' })
+            const archivo = join(carpetaDe(proyecto), 'renders', 'miniaturas', datos.nombre)
+            if (!existsSync(archivo)) return responder(res, 404, { error: 'Esa miniatura no existe en el proyecto.' })
+            await ponerMiniatura({ idVideo: vinculado.idVideo, imagen: await readFile(archivo), acceso })
+            await guardarEstudio(proyecto, estudio => { estudio.youtube = { ...estudio.youtube, miniatura: { nombre: datos.nombre, en: new Date().toISOString() } } })
+            return responder(res, 200, { miniatura: datos.nombre })
+          }
+          const resultado = await ponerTitulo({ idVideo: vinculado.idVideo, titulo: datos.titulo, acceso, canalId })
+          await guardarEstudio(proyecto, estudio => { estudio.youtube = { ...estudio.youtube, titulo: resultado.titulo } })
+          return responder(res, 200, resultado)
+        } finally { publicando.delete(clave) }
+      }
       if (accion === 'reels' && partes[4]) {
         const carpeta = carpetaDe(proyecto)
         if (partes[4] === 'estado' && req.method === 'GET') return responder(res, 200, { publicaciones: redesDisponibles() ? await refrescarEstados({ carpeta, cliente: clienteRedes() }) : await leerEstadoPublicaciones(carpeta) })
@@ -482,6 +561,8 @@ export function crearServidor() {
       }
       return responder(res, 404, { error: 'No encontrado.' })
     } catch (error) {
+      // El mensaje técnico va a la consola del estudio (nunca a la página) para poder diagnosticar el «error interno».
+      if (!error.estado) process.stderr.write(`[estudio] ${req.method} ${String(req.url).split('?')[0]}: ${error?.stack || error}\n`)
       return responder(res, error.estado || 500, { error: error.estado ? error.message : 'Error interno del estudio.' })
     }
   })
