@@ -1,6 +1,7 @@
-// Piloto automático de Reels y Shorts con guion propio (autorizado por el responsable el 2026-11-20: «al menos los shorts»).
+// Piloto automático de Reels, Shorts y video largo (autorizado por el responsable el 2026-11-20: Reels/Shorts y videos largos).
 // Cuando todas las tomas de voz de un Reel están grabadas y pasó un margen, el estudio lo arma, lo renderiza y lo PROGRAMA
-// (nunca lo publica al instante) en la primera franja libre de config/horariosPublicacion.json. Se apaga desde «Ver Reels».
+// (nunca lo publica al instante) en la primera franja libre de config/horariosPublicacion.json. El video largo se sube a YouTube
+// y se programa con `publishAt`. Se apaga desde «Ver Reels».
 import { readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -11,17 +12,19 @@ export const MAXIMO_INTENTOS_RENDER = 2
 const ARCHIVO = 'autopiloto-reels.json'
 
 /**
- * Qué toca hacer con un Reel: 'render', 'programar' o null.
+ * Qué toca hacer con un proyecto: 'render', 'programar' (Reel) o 'subir' (video largo), o null.
  * Un Reel que ya tiene un estado de publicación (programado, publicado o cancelado a mano) no se vuelve a tocar:
- * lo que Juan cancela se queda cancelado.
+ * lo que Juan cancela se queda cancelado. Un video largo solo se sube si el piloto fue quien lo renderizó
+ * (`renderizadoPorPiloto`) y aún no tiene un video de YouTube vinculado: nunca toca videos viejos ni subidos a mano.
  */
-export function decidirAccion({ activo, tipo, tramos, grabados, ultimaTomaMs, ahora = Date.now(), tieneFinal, publicacion, ocupado, intentos = 0 }) {
-  if (!activo || tipo !== 'reel' || ocupado) return null
+export function decidirAccion({ activo, tipo, tramos, grabados, ultimaTomaMs, ahora = Date.now(), tieneFinal, publicacion, ocupado, intentos = 0, youtubeId = null, renderizadoPorPiloto = false }) {
+  if (!activo || !['reel', 'video'].includes(tipo) || ocupado) return null
   if (!tieneFinal) {
     if (!(tramos > 0) || grabados < tramos) return null
     if (ahora - ultimaTomaMs < ESPERA_MINUTOS * 60_000) return null
     return intentos < MAXIMO_INTENTOS_RENDER ? 'render' : null
   }
+  if (tipo === 'video') return !youtubeId && renderizadoPorPiloto && intentos < MAXIMO_INTENTOS_RENDER ? 'subir' : null
   return publicacion ? null : 'programar'
 }
 

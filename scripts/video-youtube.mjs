@@ -200,6 +200,23 @@ export async function ponerTitulo({ idVideo, titulo, acceso, canalId, transporte
   return { titulo: snippet.title, anterior: actual.titulo }
 }
 
+/**
+ * Programa que un video privado se haga público a una hora (YouTube `status.publishAt`). Solo para el piloto automático,
+ * que el responsable autorizó el 2026-11-20. Reenvía el resto del estado tal cual porque YouTube borra lo que no se envía.
+ */
+export async function programarPublicacion({ idVideo, fecha, acceso, canalId, transporte }) {
+  const instante = Date.parse(fecha)
+  if (!Number.isFinite(instante) || instante < Date.now() + 5 * 60_000) throw error(422, 'La hora de publicación debe ser al menos 5 minutos hacia adelante.')
+  const datos = await llamar(`${API}/videos?part=status,snippet&id=${encodeURIComponent(idVideo)}`, { acceso, transporte })
+  const video = datos.items?.[0]
+  if (!video) throw error(404, 'YouTube no encontró ese video en este canal.')
+  if (canalId && video.snippet?.channelId !== canalId) throw error(403, 'Ese video no es de tu canal conectado.')
+  const status = { privacyStatus: 'private', publishAt: new Date(instante).toISOString(), selfDeclaredMadeForKids: video.status?.selfDeclaredMadeForKids === true }
+  for (const campo of ['license', 'embeddable', 'publicStatsViewable']) if (video.status?.[campo] !== undefined) status[campo] = video.status[campo]
+  await llamar(`${API}/videos?part=status`, { metodo: 'PUT', acceso, tipo: 'application/json', cuerpo: JSON.stringify({ id: idVideo, status }), transporte })
+  return { publishAt: status.publishAt }
+}
+
 const TROZO = 16 * 1024 * 1024 // múltiplo de 256 KiB, como exige la subida reanudable
 export const PRIVACIDADES_SUBIDA = ['private', 'unlisted']
 
