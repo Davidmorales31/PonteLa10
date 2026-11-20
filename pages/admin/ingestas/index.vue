@@ -2,12 +2,10 @@
 import {
   ChevronLeft,
   ChevronRight,
-  FileInput,
   Inbox,
   Plus,
   RotateCcw,
   Search,
-  SlidersHorizontal
 } from '@lucide/vue'
 import FormularioNuevaIngesta from '~/components/admin/FormularioNuevaIngesta.vue'
 import ModalEliminarIngesta from '~/components/admin/ModalEliminarIngesta.vue'
@@ -300,15 +298,14 @@ async function reintentarBorrador(ingesta: IngestaEditorial) {
 </script>
 
 <template>
-  <div class="vista-panel-editorial vista-ingestas-editoriales">
+  <div class="pagina-ajustada vista-ingestas-editoriales">
     <header class="titulo-vista-panel">
       <div>
-        <p class="etiqueta-panel">Entrada de historias</p>
         <h1>Ingestas editoriales</h1>
         <p>Centraliza enlaces para extraer metadatos, transcripción y traducción antes de redactar.</p>
       </div>
       <button
-        v-if="tienePermiso('ingestas.registrar') && !formularioAbierto"
+        v-if="tienePermiso('ingestas.registrar')"
         class="boton-editorial-principal"
         type="button"
         @click="formularioAbierto = true"
@@ -330,16 +327,8 @@ async function reintentarBorrador(ingesta: IngestaEditorial) {
     <p v-if="mensajeExito" class="aviso-exito-editorial" role="status">
       {{ mensajeExito }}
     </p>
-    <section class="resumen-cola-ingestas" aria-label="Estado de la cola">
-      <div>
-        <FileInput aria-hidden="true" />
-        <span><strong>{{ paginacion.total }}</strong> solicitudes registradas</span>
-      </div>
-      <p>La evidencia lista puede convertirse en un borrador trazable; toda publicación conserva aprobación humana.</p>
-    </section>
-
-    <section class="barra-filtros-editoriales" aria-label="Filtros de ingestas">
-      <form class="buscador-bandeja" role="search" @submit.prevent="aplicarBusqueda">
+    <section class="barra-herramientas" aria-label="Filtros de ingestas">
+      <form class="buscador-panel" role="search" @submit.prevent="aplicarBusqueda">
         <Search aria-hidden="true" />
         <input
           v-model="busqueda"
@@ -350,40 +339,25 @@ async function reintentarBorrador(ingesta: IngestaEditorial) {
         >
         <button type="submit">Buscar</button>
       </form>
-
-      <div class="filtros-select-bandeja filtros-ingestas">
-        <SlidersHorizontal aria-hidden="true" />
-        <select v-model="estado" aria-label="Filtrar por estado">
-          <option value="">Todos los estados</option>
-          <option v-for="valor in estadosIngestaEditorial" :key="valor" :value="valor">
-            {{ etiquetasEstadoIngesta[valor] }}
-          </option>
-        </select>
-        <select v-model="plataforma" aria-label="Filtrar por plataforma">
-          <option value="">Todas las plataformas</option>
-          <option v-for="valor in plataformasIngestaEditorial" :key="valor" :value="valor">
-            {{ etiquetasPlataformaIngesta[valor] }}
-          </option>
-        </select>
-        <button
-          v-if="hayFiltros"
-          class="boton-icono-editorial"
-          type="button"
-          title="Limpiar filtros"
-          aria-label="Limpiar filtros"
-          @click="limpiarFiltros"
-        >
-          <RotateCcw aria-hidden="true" />
-        </button>
-      </div>
+      <select v-model="estado" class="campo-panel" aria-label="Filtrar por estado">
+        <option value="">Todos los estados</option>
+        <option v-for="valor in estadosIngestaEditorial" :key="valor" :value="valor">{{ etiquetasEstadoIngesta[valor] }}</option>
+      </select>
+      <select v-model="plataforma" class="campo-panel" aria-label="Filtrar por plataforma">
+        <option value="">Todas las plataformas</option>
+        <option v-for="valor in plataformasIngestaEditorial" :key="valor" :value="valor">{{ etiquetasPlataformaIngesta[valor] }}</option>
+      </select>
+      <button v-if="hayFiltros" class="boton-panel" type="button" @click="limpiarFiltros">
+        <RotateCcw aria-hidden="true" /> Limpiar
+      </button>
     </section>
 
-    <section class="bandeja-ingestas-panel" aria-live="polite">
-      <div v-if="status === 'pending'" class="esqueleto-tabla-contenidos" aria-label="Cargando ingestas">
-        <span v-for="indice in 7" :key="indice" />
+    <section class="zona-desplazable" aria-live="polite" aria-label="Cola de ingestas">
+      <div v-if="status === 'pending'" aria-label="Cargando ingestas">
+        <div v-for="indice in 8" :key="indice" class="esqueleto-fila" />
       </div>
 
-      <div v-else-if="error" class="estado-vacio-panel">
+      <div v-else-if="error" class="estado-vacio-compacto">
         <RotateCcw aria-hidden="true" />
         <h2>No pudimos cargar las ingestas</h2>
         <p>Comprueba que la migración de la cola esté aplicada y vuelve a intentarlo.</p>
@@ -392,7 +366,7 @@ async function reintentarBorrador(ingesta: IngestaEditorial) {
         </button>
       </div>
 
-      <div v-else-if="!ingestas.length" class="estado-vacio-panel">
+      <div v-else-if="!ingestas.length" class="estado-vacio-compacto">
         <Inbox aria-hidden="true" />
         <h2>{{ hayFiltros ? 'No encontramos coincidencias' : 'La cola está lista' }}</h2>
         <p>

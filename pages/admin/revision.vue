@@ -10,6 +10,7 @@ import {
   Trash2
 } from '@lucide/vue'
 import ModalEliminarContenido from '~/components/admin/ModalEliminarContenido.vue'
+import PanelPestanas from '~/components/admin/ui/PanelPestanas.vue'
 import type {
   ColaRevisionEditorial,
   ElementoColaRevisionEditorial
@@ -49,6 +50,8 @@ const limiteOportunidadesVisibles = ref(10)
 const oportunidadesVisibles = computed(() =>
   (oportunidades.value?.oportunidades || []).slice(0, limiteOportunidadesVisibles.value)
 )
+
+const pestana = ref('cola')
 
 const secciones = computed(() => [
   {
@@ -154,16 +157,15 @@ async function recargarTodo() {
 </script>
 
 <template>
-  <div class="vista-panel-editorial vista-bandeja-revision">
-    <header class="cabecera-vista-panel">
+  <div class="pagina-ajustada vista-bandeja-revision">
+    <header class="titulo-vista-panel">
       <div>
-        <p class="etiqueta-panel">Operación editorial · HU-ED-26</p>
         <h1>Bandeja de revisión</h1>
         <p>Revisa artículos y evalúa si conviene actualizar antes de crear otra URL.</p>
       </div>
-      <button class="boton-editorial-secundario" type="button" @click="recargarTodo">
+      <button class="boton-panel" type="button" @click="recargarTodo">
         <RefreshCw aria-hidden="true" />
-        <span>Actualizar bandeja</span>
+        <span>Actualizar</span>
       </button>
     </header>
 
@@ -171,6 +173,16 @@ async function recargarTodo() {
       {{ mensajeEstado }}
     </p>
 
+    <PanelPestanas
+      v-model="pestana"
+      etiqueta="Secciones de revisión"
+      :pestanas="[
+        { id: 'cola', etiqueta: 'Cola de revisión', conteo: secciones.reduce((total, seccion) => total + seccion.elementos.length, 0) },
+        { id: 'oportunidades', etiqueta: 'Oportunidades' }
+      ]"
+    />
+
+    <template v-if="pestana === 'cola'">
     <div v-if="status === 'pending'" class="esqueleto-cola-revision" aria-label="Cargando revisión">
       <span v-for="indice in 9" :key="indice" />
     </div>
@@ -241,10 +253,11 @@ async function recargarTodo() {
       </section>
     </div>
 
-    <section class="seccion-oportunidades-editoriales" aria-labelledby="titulo-oportunidades-editoriales">
+    </template>
+
+    <section v-else class="seccion-oportunidades-editoriales" aria-labelledby="titulo-oportunidades-editoriales">
       <header class="cabecera-oportunidades-editoriales">
         <div>
-          <p class="etiqueta-panel">HU-ED-26 · Actualizar antes de crear</p>
           <h2 id="titulo-oportunidades-editoriales">Evaluación de oportunidades</h2>
           <p>Compara cada tema con artículos y entidades existentes antes de abrir una URL nueva.</p>
         </div>
