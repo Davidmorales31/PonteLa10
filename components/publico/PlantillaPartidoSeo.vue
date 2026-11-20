@@ -246,7 +246,7 @@ onMounted(() => {
             decoding="async"
           >
           <div v-if="modo !== 'como-quedo'" class="capa-datos-reproductor" aria-hidden="true">
-            <div class="marca-cartel-partido"><span>Pont3la10</span><span class="competencia-cartel-partido">{{ nombreCompetencia }}</span></div>
+            <div class="marca-cartel-partido"><span>Ponte la 10</span><span class="competencia-cartel-partido">{{ nombreCompetencia }}</span></div>
             <span class="estado-cartel-partido" :class="{ 'estado-en-vivo': estadoPartido === 'EN VIVO' }">{{ etiquetaPartido }}</span>
             <div class="equipos-cartel-partido">
               <div class="equipo-cartel-partido">
@@ -365,7 +365,7 @@ onMounted(() => {
             </div>
             <div><dt>Estadio</dt><dd>{{ partido.estadio || 'No publicado' }}<template v-if="partido.ciudad"> · {{ partido.ciudad }}</template></dd></div>
           </dl>
-          <p>Verificamos las opciones de transmisión para el país indicado y enlazamos su fuente. Pont3la10 no transmite el partido.</p>
+          <p>Verificamos las opciones de transmisión para el país indicado y enlazamos su fuente. Ponte la 10 no transmite el partido.</p>
         </section>
         <section class="panel-noticias-lateral ficha-fuente-oficial">
           <h2>Consulta la información oficial</h2>

@@ -118,8 +118,8 @@ const partidosMarcador = computed(() => [
   ...(ficha.value?.resultadosRecientes || [])
 ].slice(0, 12))
 const tituloPagina = computed(() => ficha.value
-  ? `${ficha.value.competencia.nombre} ${ficha.value.temporada}: calendario, tabla y resultados | Pont3la10`
-  : 'Competición colombiana | Pont3la10')
+  ? `${ficha.value.competencia.nombre} ${ficha.value.temporada}: calendario, tabla y resultados | Ponte la 10`
+  : 'Competición colombiana | Ponte la 10')
 const descripcionPagina = computed(() => ficha.value
   ? `Consulta el calendario, resultados, equipos${ficha.value.tablaDisponible ? ' y tabla de posiciones' : ''} de ${ficha.value.competencia.nombre} en la temporada ${ficha.value.temporada}.`
   : 'Calendario y actualidad de las competiciones del fútbol colombiano.')

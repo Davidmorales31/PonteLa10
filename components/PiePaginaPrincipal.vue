@@ -11,14 +11,14 @@ const pieSitio = computed(() => pieDe(idSitio.value))
 <template>
   <footer id="pie-pagina" class="pie-pagina-landing">
     <div class="pie-pagina-contenido">
-      <section class="marca-pie-pagina" aria-label="Pont3la10">
+      <section class="marca-pie-pagina" aria-label="Ponte la 10">
         <picture>
           <source srcset="/brand/pont3la10_logo_login_blanco-180.webp 180w, /brand/pont3la10_logo_login_blanco-360.webp 360w, /brand/pont3la10_logo_login_blanco-598.webp 598w" type="image/webp" sizes="170px">
-          <img src="/brand/pont3la10_logo_login_blanco.png" alt="Pont3la10" width="598" height="115" loading="lazy" decoding="async">
+          <img src="/brand/pont3la10_logo_login_blanco.png" alt="Ponte la 10" width="598" height="115" loading="lazy" decoding="async">
         </picture>
         <p>{{ pieSitio.descripcion }}</p>
         <small>
-          © {{ anioActual }} Pont3la10. Todos los derechos reservados.
+          © {{ anioActual }} Ponte la 10. Todos los derechos reservados.
           Producto propiedad de
           <a href="https://labs.pont3la10.com" target="_blank" rel="noopener noreferrer">labs.pont3la10.com</a>.
         </small>
@@ -38,7 +38,7 @@ const pieSitio = computed(() => pieDe(idSitio.value))
 
       <section class="patrocinio-pie-pagina" aria-label="Publicidad y alianzas">
         <p>ANÚNCIATE CON NOSOTROS</p>
-        <strong>¿Quieres anunciarte en Pont3la10?</strong>
+        <strong>¿Quieres anunciarte en Ponte la 10?</strong>
         <a href="mailto:contact@pont3la10.com">contact@pont3la10.com</a>
       </section>
 

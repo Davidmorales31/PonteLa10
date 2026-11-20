@@ -12,7 +12,7 @@ definePageMeta({
   permisoEditorial: 'contenido.revisar'
 })
 
-useSeoMeta({ title: 'Revisión de contenido | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Revisión de contenido | Ponte la 10', robots: 'noindex, nofollow' })
 
 type EstadoFiltro = 'todos' | 'pendientes' | 'revisados'
 type DecisionSeleccionable = DecisionPodaContenido | ''

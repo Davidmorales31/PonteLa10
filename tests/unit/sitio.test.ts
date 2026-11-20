@@ -71,12 +71,12 @@ describe('identidad por sitio', () => {
     const { construirHeadSeoPont3la10 } = await import('../../utils/headSeoPont3la10')
     const opciones = { titulo: 'Hola', descripcion: 'Descripción de prueba', rutaCanonica: '/' }
     const co = construirHeadSeoPont3la10('https://www.pont3la10.com', opciones)
-    const mx = construirHeadSeoPont3la10('https://mx.pont3la10.com', opciones, { nombre: 'Pont3la10 México', ogLocale: 'es_MX' })
+    const mx = construirHeadSeoPont3la10('https://mx.pont3la10.com', opciones, { nombre: 'Ponte la 10 México', ogLocale: 'es_MX' })
     const valor = (head: typeof co, propiedad: string) => head.meta.find(m => 'property' in m && m.property === propiedad)?.content
     expect(valor(co, 'og:locale')).toBe('es_CO')
-    expect(valor(co, 'og:site_name')).toBe('Pont3la10')
+    expect(valor(co, 'og:site_name')).toBe('Ponte la 10')
     expect(valor(mx, 'og:locale')).toBe('es_MX')
-    expect(valor(mx, 'og:site_name')).toBe('Pont3la10 México')
+    expect(valor(mx, 'og:site_name')).toBe('Ponte la 10 México')
     expect(valor(mx, 'og:url')).toBe('https://mx.pont3la10.com/')
   })
 })
@@ -100,5 +100,13 @@ describe('rutas por sitio', () => {
       expect(rutaNoDisponibleEnSitio(ruta, 'mx')).toBe(false)
     }
     expect(rutaNoDisponibleEnSitio('/liga-mx-falsa', 'co')).toBe(false)
+  })
+
+  it('el nombre visible es «Ponte la 10» y conserva las variantes con las que se busca', async () => {
+    const { configuracionSitios } = await import('../../utils/sitio')
+    expect(configuracionSitios.co.nombre).toBe('Ponte la 10')
+    expect(configuracionSitios.mx.nombre).toBe('Ponte la 10 México')
+    expect(configuracionSitios.co.nombresAlternos).toEqual(expect.arrayContaining(['Pont3la10', 'Pontela10']))
+    expect(configuracionSitios.mx.nombresAlternos).toContain('Pont3la10 México')
   })
 })

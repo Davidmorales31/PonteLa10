@@ -162,10 +162,10 @@ async function salirPanel() {
       :class="{ abierto: menuAbierto }"
     >
       <div class="marca-panel-editorial">
-        <NuxtLink to="/admin" aria-label="Pont3la10, centro editorial">
+        <NuxtLink to="/admin" aria-label="Ponte la 10, centro editorial">
           <img
             src="/brand/pont3la10_logo_login_blanco.png"
-            alt="Pont3la10"
+            alt="Ponte la 10"
             width="598"
             height="115"
           >
@@ -231,7 +231,7 @@ async function salirPanel() {
         <div class="sesion-panel-editorial">
           <span class="avatar-panel">{{ contextoEditorial?.usuario.nombre.charAt(0) || 'P' }}</span>
           <span>
-            <strong>{{ contextoEditorial?.usuario.nombre || 'Pont3la10' }}</strong>
+            <strong>{{ contextoEditorial?.usuario.nombre || 'Ponte la 10' }}</strong>
             <small>{{ rolPrincipal }}</small>
           </span>
           <LockKeyhole

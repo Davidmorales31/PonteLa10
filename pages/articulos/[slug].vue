@@ -166,10 +166,10 @@ const imagenSeo = computed(() => articuloPublicado.value?.portada?.url
 )
 const imagenAltSeo = computed(() => articuloPublicado.value?.portada?.textoAlternativo
   || articuloPublicado.value?.titulo
-  || 'Pont3la10'
+  || 'Ponte la 10'
 )
 const autorEstructurado = computed(() => {
-  const nombre = articuloPublicado.value?.autorNombre || 'Equipo Pont3la10'
+  const nombre = articuloPublicado.value?.autorNombre || 'Equipo Ponte la 10'
   return crearAutorEstructurado(nombre, origenSitio.value)
 })
 
@@ -232,7 +232,7 @@ useSeoPont3la10(() => ({
           publisher: {
             '@type': 'Organization',
             '@id': `${origenSitio.value.replace(/\/+$/, '')}/#organizacion`,
-            name: 'Pont3la10',
+            name: 'Ponte la 10',
             logo: {
               '@type': 'ImageObject',
               url: `${origenSitio.value.replace(/\/+$/, '')}/brand/pont3la10_logo_06_horizontal_sobre_blanco.png`
@@ -360,7 +360,7 @@ const fechaActualizacion = computed(() => {
             <span class="rotulo-reproductor-youtube">{{ rotuloAccesoYoutube }}</span>
             <IconoRedSocial red="youtube" />
           </span>
-          <span class="aviso-reproductor-youtube">{{ puedeAbrirAnuncioYoutube ? 'Primer clic: publicidad · vuelve y pulsa para YouTube' : 'Abrir canal de Pont3la10 en YouTube' }}</span>
+          <span class="aviso-reproductor-youtube">{{ puedeAbrirAnuncioYoutube ? 'Primer clic: publicidad · vuelve y pulsa para YouTube' : 'Abrir canal de Ponte la 10 en YouTube' }}</span>
         </button>
       </div>
       <figcaption

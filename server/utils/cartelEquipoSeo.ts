@@ -34,7 +34,7 @@ export async function crearCartelEquipoSvg(
     <ellipse cx="${centroX}" cy="${centroY}" rx="${ancho * .48}" ry="${alto * .6}" fill="url(#luz)"/>
     <path d="M0 ${alto * .8} Q${ancho * .5} ${alto * .68} ${ancho} ${alto * .8} V${alto} H0Z" fill="#06172a" opacity=".82"/>
     <rect x="${ancho * .045}" y="${alto * .055}" width="${ancho * .91}" height="${alto * .89}" rx="32" fill="#05182f" fill-opacity=".48" stroke="url(#borde)" stroke-opacity=".72" stroke-width="3"/>
-    <text x="${ancho * .09}" y="${alto * .14}" class="marca">Pont3la10</text>
+    <text x="${ancho * .09}" y="${alto * .14}" class="marca">Ponte la 10</text>
     <text x="${ancho * .91}" y="${alto * .14}" text-anchor="end" class="competencia">${competencia}</text>
     <circle cx="${centroX}" cy="${centroY}" r="${radio + 9}" fill="#f4f7fb" stroke="#ffd33f" stroke-width="8"/>
     <circle cx="${centroX}" cy="${centroY}" r="${radio - 7}" fill="#12446b" stroke="#56dcff" stroke-width="5"/>

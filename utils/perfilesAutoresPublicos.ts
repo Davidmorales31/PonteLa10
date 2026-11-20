@@ -15,9 +15,9 @@ export interface PerfilAutorPublico {
 const perfilesAutoresPublicos: PerfilAutorPublico[] = [
   {
     slug: 'equipo-pont3la10',
-    nombre: 'Equipo Pont3la10',
+    nombre: 'Equipo Ponte la 10',
     tipo: 'Organization',
-    biografia: 'Equipo editorial de Pont3la10. Organiza noticias y datos deportivos con atención especial al fútbol colombiano, la Selección Colombia y sus protagonistas. Las herramientas automatizadas pueden apoyar la preparación, pero una persona autorizada revisa y aprueba el contenido antes de publicarlo.',
+    biografia: 'Equipo editorial de Ponte la 10. Organiza noticias y datos deportivos con atención especial al fútbol colombiano, la Selección Colombia y sus protagonistas. Las herramientas automatizadas pueden apoyar la preparación, pero una persona autorizada revisa y aprueba el contenido antes de publicarlo.',
     especialidades: [
       'Fútbol colombiano',
       'Liga BetPlay',

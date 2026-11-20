@@ -7,13 +7,13 @@ const correoContacto = 'juanavimoralesparra31@gmail.com'
 const fechaActualizacion = '7 de octubre de 2026'
 
 useSeoPont3la10({
-  titulo: 'Correcciones y actualizaciones | Pont3la10',
-  descripcion: 'Cómo reportar un error en Pont3la10, qué revisamos y cómo hacemos visibles las correcciones sustanciales.',
+  titulo: 'Correcciones y actualizaciones | Ponte la 10',
+  descripcion: 'Cómo reportar un error en Ponte la 10, qué revisamos y cómo hacemos visibles las correcciones sustanciales.',
   rutaCanonica: '/correcciones',
   datosEstructurados: {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'Correcciones y actualizaciones | Pont3la10',
+    name: 'Correcciones y actualizaciones | Ponte la 10',
     description: 'Canal y proceso para reportar errores y solicitar la revisión de una publicación.',
     inLanguage: sitioActivo.value.idioma,
     isPartOf: { '@id': `${origenSitio.value.replace(/\/+$/, '')}/#sitio-web` }

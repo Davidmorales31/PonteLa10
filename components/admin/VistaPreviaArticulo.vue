@@ -35,7 +35,7 @@ function elementosLista(texto: string): string[] {
   <article class="vista-previa-articulo">
     <header class="cabecera-previa-articulo">
       <p>
-        <span>{{ nombreCategoria || 'Pont3la10' }}</span>
+        <span>{{ nombreCategoria || 'Ponte la 10' }}</span>
         <span>{{ etiquetasTipoContenido[datos.tipo] }}</span>
       </p>
       <h1>{{ datos.titulo || 'Título de la historia' }}</h1>
@@ -43,7 +43,7 @@ function elementosLista(texto: string): string[] {
         {{ datos.resumen || 'El resumen aparecerá aquí cuando lo escribas.' }}
       </p>
       <div class="metadatos-previa">
-        <span>Equipo Pont3la10</span>
+        <span>Equipo Ponte la 10</span>
         <span><Clock3 aria-hidden="true" /> {{ minutosLectura }} min de lectura</span>
       </div>
     </header>

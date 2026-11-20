@@ -2,7 +2,7 @@
 import { ArrowLeft, KeyRound, Copy, Check, ShieldAlert, Trash2, Plus } from '@lucide/vue'
 
 definePageMeta({ layout: 'admin', middleware: 'autenticacion-editorial', permisoEditorial: 'configuracion.gestionar' })
-useSeoMeta({ title: 'Agentes de IA | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Agentes de IA | Ponte la 10', robots: 'noindex, nofollow' })
 
 interface LlaveVista { id: string, nombre: string, prefijo: string, alcances: string[], maxProgramacionesDia: number, limitePorMinuto: number, venceEn: string | null, revocadaEn: string | null, ultimoUsoEn: string | null, creadaEn: string }
 const { data, refresh } = await useFetch<{ llaves: LlaveVista[] }>('/api/admin/redes/agentes')

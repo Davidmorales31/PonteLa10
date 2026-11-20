@@ -14,7 +14,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Seguridad editorial | Pont3la10',
+  title: 'Seguridad editorial | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 
@@ -133,7 +133,7 @@ async function retirarFactor() {
           <span>1</span>
           <div>
             <strong>Abre tu aplicación</strong>
-            <p>Usa el código actual del factor Pont3la10 Panel.</p>
+            <p>Usa el código actual del factor Ponte la 10 Panel.</p>
           </div>
         </div>
         <form class="formulario-codigo-mfa" @submit.prevent="confirmarCodigo">

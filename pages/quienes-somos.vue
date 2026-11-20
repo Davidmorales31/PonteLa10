@@ -8,14 +8,14 @@ const fechaActualizacion = '7 de octubre de 2026'
 const esMexico = computed(() => sitioActivo.value.id === 'mx')
 
 useSeoPont3la10({
-  titulo: 'Quiénes somos | Pont3la10',
-  descripcion: 'Conoce el enfoque deportivo de Pont3la10, quién responde por el proyecto y cómo revisamos el contenido antes de publicarlo.',
+  titulo: 'Quiénes somos | Ponte la 10',
+  descripcion: 'Conoce el enfoque deportivo de Ponte la 10, quién responde por el proyecto y cómo revisamos el contenido antes de publicarlo.',
   rutaCanonica: '/quienes-somos',
   datosEstructurados: {
     '@context': 'https://schema.org',
     '@type': 'AboutPage',
-    name: 'Quiénes somos | Pont3la10',
-    description: 'Información sobre el proyecto editorial Pont3la10 y su modelo de revisión.',
+    name: 'Quiénes somos | Ponte la 10',
+    description: 'Información sobre el proyecto editorial Ponte la 10 y su modelo de revisión.',
     inLanguage: sitioActivo.value.idioma,
     isPartOf: { '@id': `${origenSitio.value.replace(/\/+$/, '')}/#sitio-web` }
   }
@@ -25,10 +25,10 @@ useSeoPont3la10({
 <template>
   <main class="pagina-legal pagina-legal-quienes-somos" aria-labelledby="titulo-legal">
     <header class="cabecera-legal">
-      <span class="insignia-legal"><ShieldCheck aria-hidden="true" /> Sobre Pont3la10</span>
+      <span class="insignia-legal"><ShieldCheck aria-hidden="true" /> Sobre Ponte la 10</span>
       <h1 id="titulo-legal">Fútbol y deporte, con contexto.</h1>
       <p class="introduccion-legal">
-        Pont3la10 es un producto digital de Pont3la10 Labs para seguir la actualidad deportiva, con especial atención al {{ esMexico ? 'fútbol mexicano' : 'fútbol colombiano' }} y a sus protagonistas.
+        Ponte la 10 es un producto digital de Pont3la10 Labs para seguir la actualidad deportiva, con especial atención al {{ esMexico ? 'fútbol mexicano' : 'fútbol colombiano' }} y a sus protagonistas.
       </p>
       <p class="fecha-legal">Última actualización: <time datetime="2026-10-07">{{ fechaActualizacion }}</time></p>
     </header>
@@ -48,7 +48,7 @@ useSeoPont3la10({
 
       <section>
         <h2>Responsabilidad y contacto</h2>
-        <p>La responsabilidad editorial corresponde al equipo de Pont3la10. El fundador y contacto público del proyecto es Juan David Morales Parra, en Neiva, Huila, Colombia. Puedes escribir a <a :href="`mailto:${correoContacto}`">{{ correoContacto }}</a> para consultas, correcciones o comentarios.</p>
+        <p>La responsabilidad editorial corresponde al equipo de Ponte la 10. El fundador y contacto público del proyecto es Juan David Morales Parra, en Neiva, Huila, Colombia. Puedes escribir a <a :href="`mailto:${correoContacto}`">{{ correoContacto }}</a> para consultas, correcciones o comentarios.</p>
       </section>
 
       <section>

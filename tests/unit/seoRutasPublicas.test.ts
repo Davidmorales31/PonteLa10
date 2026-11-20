@@ -34,8 +34,8 @@ describe('contrato SEO de páginas públicas', () => {
     const identidad = readFileSync(new URL('../../app.vue', import.meta.url), 'utf8')
     const metadata = portada.slice(portada.indexOf('useSeoPont3la10('), portada.indexOf('</script>'))
 
-    expect(metadata).toContain('Fútbol colombiano: noticias, partidos y resultados | Pont3la10')
-    expect(metadata).toContain('Noticias de fútbol colombiano, Selección Colombia y Liga BetPlay. Consulta partidos de hoy, resultados, tabla de posiciones y fútbol internacional en Pont3la10.')
+    expect(metadata).toContain('Fútbol colombiano: noticias, partidos y resultados | Ponte la 10')
+    expect(metadata).toContain('Noticias de fútbol colombiano, Selección Colombia y Liga BetPlay. Consulta partidos de hoy, resultados, tabla de posiciones y fútbol internacional en Ponte la 10.')
     expect(metadata).not.toContain('portadaPrincipal')
     expect(metadata).toContain("rutaCanonica: '/'")
     expect(portada.match(/<h1\b/g)).toHaveLength(1)

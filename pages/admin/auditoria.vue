@@ -9,7 +9,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Auditoría editorial | Pont3la10',
+  title: 'Auditoría editorial | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 

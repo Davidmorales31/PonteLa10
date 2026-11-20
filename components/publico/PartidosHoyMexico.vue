@@ -36,7 +36,7 @@ const finalizados = computed(() => hoy.value.filter(estaFinalizado))
 const siguientes = computed(() => proximosYRecientes(datos.value.partidos as PartidoLigaMx[], Date.parse(instante.value), 6).proximos)
 
 useSeoPont3la10({
-  titulo: 'Partidos de hoy de la Liga MX: horarios y resultados | Pont3la10 México',
+  titulo: 'Partidos de hoy de la Liga MX: horarios y resultados | Ponte la 10 México',
   descripcion: 'Consulta los partidos de hoy de la Liga MX y la Liga MX Femenil: horarios de Ciudad de México, marcadores y resultados.',
   rutaCanonica: '/partidos-hoy'
 })

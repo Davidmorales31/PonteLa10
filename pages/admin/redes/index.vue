@@ -4,7 +4,7 @@ import VistaRapidaPublicacionSocial from '~/components/admin/VistaRapidaPublicac
 import ProgramacionMasivaSocial from '~/components/admin/ProgramacionMasivaSocial.vue'
 import type { EstadoPublicacionesSociales } from '~/types/publicacionesSociales'
 definePageMeta({ layout: 'admin', middleware: 'autenticacion-editorial', permisoEditorial: 'contenido.verBorradores' })
-useSeoMeta({ title: 'Publicaciones para redes | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Publicaciones para redes | Ponte la 10', robots: 'noindex, nofollow' })
 const buscar = ref(''), termino = ref(''), pagina = ref(1)
 const estado = ref('')
 const { tienePermiso } = useContextoEditorial()

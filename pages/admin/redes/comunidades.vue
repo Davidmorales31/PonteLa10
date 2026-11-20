@@ -3,7 +3,7 @@ import { ArrowLeft, Copy, Check, Download } from '@lucide/vue'
 import { construirPaqueteComunidad, type CanalComunidad } from '~/utils/editorial/paqueteComunidad'
 
 definePageMeta({ layout: 'admin', middleware: 'autenticacion-editorial', permisoEditorial: 'contenido.verBorradores' })
-useSeoMeta({ title: 'Paquete para YouTube y WhatsApp | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Paquete para YouTube y WhatsApp | Ponte la 10', robots: 'noindex, nofollow' })
 
 interface ArticuloFeed { id: string, slug: string, titulo: string, tituloPortada?: string | null, resumen?: string | null, publicadoEn: string, imagen?: string | null }
 const { data, status, error, refresh } = await useFetch<ArticuloFeed[] | { articulos: ArticuloFeed[] }>('/api/articulos', { query: { categoria: 'futbol-colombiano', limite: 30 } })

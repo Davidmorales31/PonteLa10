@@ -572,10 +572,10 @@ const horasPublicacion = computed(() => new Map(
 ))
 
 useSeoPont3la10({
-  titulo: 'Fútbol colombiano: noticias, partidos y resultados | Pont3la10',
-  descripcion: 'Noticias de fútbol colombiano, Selección Colombia y Liga BetPlay. Consulta partidos de hoy, resultados, tabla de posiciones y fútbol internacional en Pont3la10.',
+  titulo: 'Fútbol colombiano: noticias, partidos y resultados | Ponte la 10',
+  descripcion: 'Noticias de fútbol colombiano, Selección Colombia y Liga BetPlay. Consulta partidos de hoy, resultados, tabla de posiciones y fútbol internacional en Ponte la 10.',
   rutaCanonica: '/',
-  imagenAlt: 'Pont3la10, la jugada clara',
+  imagenAlt: 'Ponte la 10, la jugada clara',
   datosEstructurados: {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
@@ -814,14 +814,14 @@ useSeoPont3la10({
           <div class="home-seleccion-lateral">
             <section class="home-seleccion-noticias" aria-labelledby="titulo-noticias-seleccion-home">
               <div class="home-seleccion-subcabecera">
-                <div><span>Redacción Pont3la10</span><h3 id="titulo-noticias-seleccion-home">Noticias de Colombia</h3></div>
+                <div><span>Redacción Ponte la 10</span><h3 id="titulo-noticias-seleccion-home">Noticias de Colombia</h3></div>
                 <NuxtLink to="/seleccion-colombia">Ver todas <span aria-hidden="true">→</span></NuxtLink>
               </div>
               <div v-if="noticiasSeleccionPortada.length" class="home-noticias-modulo home-noticias-seleccion">
                 <TarjetaNoticiaSecundaria v-for="articulo in noticiasSeleccionPortada" :key="articulo.slug" :articulo="articulo" mostrar-resumen />
               </div>
               <div v-else class="home-seleccion-sin-noticias">
-                <p>Aún no hay noticias recientes de Pont3la10 para esta selección.</p>
+                <p>Aún no hay noticias recientes de Ponte la 10 para esta selección.</p>
                 <a href="https://fcf.com.co/category/selecciones/noticias-seleccion-mayores/" target="_blank" rel="noopener noreferrer">Ver las últimas publicaciones de la FCF <span aria-hidden="true">↗</span></a>
               </div>
             </section>
@@ -1079,12 +1079,12 @@ useSeoPont3la10({
       </section>
 
       <section class="medio-patrocinios" aria-label="Anúnciate con nosotros">
-        <div><h2>¿Quieres anunciarte en Pont3la10?</h2><p>Conecta con nuestra comunidad de deporte y tecnología.</p></div>
+        <div><h2>¿Quieres anunciarte en Ponte la 10?</h2><p>Conecta con nuestra comunidad de deporte y tecnología.</p></div>
         <a href="mailto:contact@pont3la10.com">contact@pont3la10.com <span aria-hidden="true">→</span></a>
       </section>
       <section class="medio-institucional medio-seccion" aria-labelledby="titulo-sobre-home">
         <h2 id="titulo-sobre-home">Fútbol colombiano, con la jugada clara</h2>
-        <p>Pont3la10 cubre la actualidad del fútbol colombiano, la Selección Colombia y los principales torneos internacionales. Aquí encuentras noticias de la Liga BetPlay, tabla de posiciones, resultados, próximos partidos y horarios en Colombia. Sigue también la actualidad de futbolistas colombianos en Europa y consulta sus perfiles. Nuestra portada reúne las historias publicadas por el equipo editorial y los datos deportivos disponibles, con fechas y fuentes para entender cada información. Explora las noticias, el calendario y los análisis para seguir el juego dentro y fuera de la cancha.</p>
+        <p>Ponte la 10 cubre la actualidad del fútbol colombiano, la Selección Colombia y los principales torneos internacionales. Aquí encuentras noticias de la Liga BetPlay, tabla de posiciones, resultados, próximos partidos y horarios en Colombia. Sigue también la actualidad de futbolistas colombianos en Europa y consulta sus perfiles. Nuestra portada reúne las historias publicadas por el equipo editorial y los datos deportivos disponibles, con fechas y fuentes para entender cada información. Explora las noticias, el calendario y los análisis para seguir el juego dentro y fuera de la cancha.</p>
       </section>
     </div>
   </div>

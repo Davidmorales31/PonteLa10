@@ -36,7 +36,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Contenidos | Pont3la10',
+  title: 'Contenidos | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 
@@ -266,7 +266,7 @@ async function contenidoEliminado() {
         <p>
           {{ hayFiltros
             ? 'Ajusta los filtros para ampliar la búsqueda.'
-            : 'Crea el primer borrador manual de Pont3la10.'
+            : 'Crea el primer borrador manual de Ponte la 10.'
           }}
         </p>
         <button

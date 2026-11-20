@@ -68,7 +68,7 @@ export async function crearCartelSvg(
     <ellipse cx="${ancho / 2}" cy="${centroY}" rx="${ancho * .53}" ry="${alto * .5}" fill="url(#luz)"/>
     <path d="M0 ${alto * .8} Q${ancho * .5} ${alto * .67} ${ancho} ${alto * .8} V${alto} H0Z" fill="#06172a" opacity=".82"/>
     <rect x="${ancho * .05}" y="${alto * .045}" width="${ancho * .9}" height="${alto * .91}" rx="32" fill="#05182f" fill-opacity=".48" stroke="url(#borde)" stroke-opacity=".7" stroke-width="3"/>
-    <text x="${ancho * .09}" y="${alto * .13}" class="marca" font-size="${vertical ? 42 : 50}">Pont3la10</text>
+    <text x="${ancho * .09}" y="${alto * .13}" class="marca" font-size="${vertical ? 42 : 50}">Ponte la 10</text>
     <text x="${ancho * .91}" y="${alto * .13}" text-anchor="end" class="competencia" font-size="${vertical ? 24 : 28}">${competencia}${jornada}</text>
     <rect x="${ancho / 2 - anchoEstado / 2}" y="${alto * .18}" width="${anchoEstado}" height="${altoEstado}" rx="27" fill="${esEnVivo ? '#b91c34' : '#123e61'}"/>
     ${esEnVivo ? `<circle cx="${ancho / 2 - anchoEstado / 2 + 38}" cy="${alto * .18 + 27}" r="8" fill="#fff"/>` : ''}

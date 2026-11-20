@@ -60,7 +60,7 @@ definePageMeta({
   permisoEditorial: 'configuracion.ver'
 })
 
-useSeoMeta({ title: 'Operación editorial | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Operación editorial | Ponte la 10', robots: 'noindex, nofollow' })
 
 const { mostrarAlerta } = useAlertasEditoriales()
 const {

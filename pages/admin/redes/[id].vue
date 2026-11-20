@@ -9,7 +9,7 @@ import { formatosSociales, redesSociales, crearDiapositivaSocial, esquemaDocumen
   enlaceSocial, componerTextoSocial, avisosCompatibilidadSocial, rutaImagenCtaSocial } from '~/utils/editorial/publicacionesSociales'
 
 definePageMeta({ layout: 'admin', middleware: 'autenticacion-editorial', permisoEditorial: 'contenido.verBorradores' })
-useSeoMeta({ title: 'Generador de publicaciones | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Generador de publicaciones | Ponte la 10', robots: 'noindex, nofollow' })
 const route = useRoute()
 const { contextoEditorial, tienePermiso } = useContextoEditorial()
 // Tipo explícito: la ruta fija /api/admin/redes/propias comparte el patrón dinámico.
@@ -105,13 +105,13 @@ function cambiarTipo(tipo: 'unica' | 'carrusel') {
   if (!documento.value || tipo === documento.value.tipo) return
   if (tipo === 'unica' && documento.value.diapositivas.length > 1 && !window.confirm('Conservarás únicamente la diapositiva seleccionada. ¿Cambiar a imagen única?')) return
   if (tipo === 'unica') documento.value.diapositivas = [documento.value.diapositivas[indice.value]!]
-  else documento.value.diapositivas.push(crearDiapositivaSocial('La historia completa está en **Pont3la10**', null, 'cta'))
+  else documento.value.diapositivas.push(crearDiapositivaSocial('La historia completa está en **Ponte la 10**', null, 'cta'))
   documento.value.tipo = tipo; indice.value = 0
 }
 function agregar(tipo: 'noticia' | 'cta') {
   if (!documento.value || documento.value.diapositivas.length >= 8) return
   documento.value.tipo = 'carrusel'
-  const nueva = crearDiapositivaSocial(tipo === 'cta' ? 'La historia completa está en **Pont3la10**' : 'Escribe un dato de la noticia', tipo === 'cta' ? null : medio.value?.id || data.value?.articulo.portadaId || null, tipo)
+  const nueva = crearDiapositivaSocial(tipo === 'cta' ? 'La historia completa está en **Ponte la 10**' : 'Escribe un dato de la noticia', tipo === 'cta' ? null : medio.value?.id || data.value?.articulo.portadaId || null, tipo)
   const posicion = tipo === 'noticia' && documento.value.diapositivas.at(-1)?.tipo === 'cta' ? documento.value.diapositivas.length - 1 : documento.value.diapositivas.length
   documento.value.diapositivas.splice(posicion, 0, nueva); indice.value = posicion
 }
@@ -203,7 +203,7 @@ async function exportar(todas = false) {
             </template>
             <label v-else><span>Diseño de cierre</span><select v-model="diapositiva.varianteCta"><option value="promocional">Imagen promocional (predeterminada)</option><option value="minimalista">Buscador minimalista</option><option value="deportivo">Buscador deportivo</option><option value="editorial">Premium editorial</option></select></label>
           </fieldset>
-          <p v-if="diapositiva.tipo === 'cta' && diapositiva.varianteCta === 'promocional'" class="nota-generador">Cierre promocional generado con IA para Pont3la10. Su texto forma parte de la imagen. Elige otro diseño de cierre para editarlo.</p>
+          <p v-if="diapositiva.tipo === 'cta' && diapositiva.varianteCta === 'promocional'" class="nota-generador">Cierre promocional generado con IA para Ponte la 10. Su texto forma parte de la imagen. Elige otro diseño de cierre para editarlo.</p>
           <fieldset v-else :disabled="!puedeEditar"><legend>Texto de la pieza</legend><label><span>Titular</span><textarea v-model="diapositiva.titular" maxlength="220" rows="4" /></label><p class="nota-generador">Usa **palabras** para destacar en amarillo. Máximo cuatro líneas; el tamaño se ajusta sin cortar el texto.</p></fieldset>
           <div class="acciones-guardar"><button class="boton-oscuro" :disabled="guardando || !puedeEditar || !data.almacenamientoDisponible" @click="guardar()"><Save :size="17" /> {{ guardando ? 'Guardando…' : 'Guardar borrador' }}</button><button class="boton-amarillo" :disabled="guardando || !puedeEditar || !data.almacenamientoDisponible" @click="guardar('ready')"><Check :size="17" /> Marcar como lista</button></div>
         </aside>

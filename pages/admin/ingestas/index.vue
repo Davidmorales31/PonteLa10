@@ -36,7 +36,7 @@ definePageMeta({
 })
 
 useSeoMeta({
-  title: 'Ingestas editoriales | Pont3la10',
+  title: 'Ingestas editoriales | Ponte la 10',
   robots: 'noindex, nofollow'
 })
 

@@ -92,7 +92,7 @@ const indexable = computed(() => evaluarIndexabilidad({
 }))
 
 useSeoPont3la10(() => ({
-  titulo: 'Colombianos en Europa: jugadores y noticias | Pont3la10',
+  titulo: 'Colombianos en Europa: jugadores y noticias | Ponte la 10',
   descripcion: 'Perfiles verificados y noticias de futbolistas colombianos en Europa: club actual, posición, calendario oficial y actualidad.',
   rutaCanonica: '/colombianos-en-europa',
   seccion: 'Colombianos en Europa',

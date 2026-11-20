@@ -42,15 +42,15 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'es-CO' },
-      title: 'Pont3la10 - Deporte, tecnologia y tendencias',
+      title: 'Ponte la 10 - Deporte, tecnologia y tendencias',
       meta: [
         {
           name: 'description',
           content:
-            'Pont3la10 reune noticias, analisis, especiales y herramientas interactivas para vivir el deporte desde otra cancha.'
+            'Ponte la 10 reune noticias, analisis, especiales y herramientas interactivas para vivir el deporte desde otra cancha.'
         },
         { name: 'theme-color', content: '#08204A' },
-        { property: 'og:site_name', content: 'Pont3la10' },
+        { property: 'og:site_name', content: 'Ponte la 10' },
         { property: 'og:type', content: 'website' }
       ],
       script: [
@@ -66,7 +66,7 @@ export default defineNuxtConfig({
         {
           rel: 'alternate',
           type: 'application/rss+xml',
-          title: 'Pont3la10: últimas publicaciones',
+          title: 'Ponte la 10: últimas publicaciones',
           href: '/feed.xml'
         },
         { rel: 'preconnect', href: 'https://r2.thesportsdb.com', crossorigin: 'anonymous' },

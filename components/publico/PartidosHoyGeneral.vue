@@ -94,7 +94,7 @@ onMounted(() => {
 })
 
 useSeoPont3la10(() => ({
-  titulo: 'Partidos de hoy: horarios, resultados y fútbol en vivo | Pont3la10',
+  titulo: 'Partidos de hoy: horarios, resultados y fútbol en vivo | Ponte la 10',
   descripcion: 'Consulta los partidos de fútbol de hoy: horarios locales, marcadores en vivo, encuentros colombianos y competiciones europeas.',
   rutaCanonica: '/partidos-hoy',
   datosEstructurados: {

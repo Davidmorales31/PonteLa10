@@ -249,10 +249,10 @@ function registrarImagenFallida(imagen?: string) {
 
 useSeoPont3la10(() => {
   const titulo = rutaActual.query.categoria && !esBusquedaInterna.value
-    ? `${tituloListado.value} | Pont3la10`
-    : 'Noticias y análisis deportivo | Pont3la10'
+    ? `${tituloListado.value} | Ponte la 10`
+    : 'Noticias y análisis deportivo | Ponte la 10'
   const descripcion = rutaActual.query.categoria && !esBusquedaInterna.value
-    ? `Noticias, análisis y actualidad de ${obtenerEtiquetaCategoria(String(rutaActual.query.categoria))} en Pont3la10.`
+    ? `Noticias, análisis y actualidad de ${obtenerEtiquetaCategoria(String(rutaActual.query.categoria))} en Ponte la 10.`
     : 'Noticias y análisis de fútbol, tecnología deportiva, gaming y tendencias con contexto claro y criterio editorial.'
 
   return {
@@ -375,7 +375,7 @@ useSeoPont3la10(() => {
 
           <section class="boletin-noticias-medio">
             <div>
-              <p>Boletín Pont3la10</p>
+              <p>Boletín Ponte la 10</p>
               <h2>Recibe las noticias más importantes en tu correo</h2>
               <span>Análisis, resultados, fichajes y mucho más. Sin spam.</span>
             </div>

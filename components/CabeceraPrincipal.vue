@@ -83,10 +83,10 @@ async function buscarContenido() {
 <template>
   <header class="cabecera-landing" @keydown.esc="menuAbierto = false">
     <div class="cabecera-landing-contenido">
-      <NuxtLink class="marca-cabecera-landing" to="/" aria-label="Pont3la10, ir al inicio">
+      <NuxtLink class="marca-cabecera-landing" to="/" aria-label="Ponte la 10, ir al inicio">
         <picture>
           <source :srcset="srcsetLogoCabecera" type="image/webp" sizes="170px">
-          <img :src="logoCabecera" alt="Pont3la10" width="598" height="115" fetchpriority="high" decoding="async">
+          <img :src="logoCabecera" alt="Ponte la 10" width="598" height="115" fetchpriority="high" decoding="async">
         </picture>
         <span v-if="esMexico" class="etiqueta-sitio-cabecera"><span class="etiqueta-larga">México</span><span class="etiqueta-corta" aria-hidden="true">MX</span></span>
       </NuxtLink>
@@ -167,7 +167,7 @@ async function buscarContenido() {
     <nav v-if="menuAbierto" id="menu-principal-movil" class="navegacion-landing-movil" aria-label="Menú móvil">
       <div class="encabezado-menu-movil">
         <div>
-          <span>Explora Pont3la10</span>
+          <span>Explora Ponte la 10</span>
           <p>Deportes, tecnología y actualidad</p>
         </div>
         <span class="insignia-menu-movil">MENÚ</span>

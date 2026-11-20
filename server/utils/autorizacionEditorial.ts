@@ -120,7 +120,7 @@ export async function obtenerContextoEditorialServidor(
       id: usuario.id,
       correo: usuario.email || '',
       nombre: (respuestaPerfil.data as FilaPerfil | null)?.display_name
-        || String(usuario.user_metadata?.nombreCompleto || usuario.email || 'Equipo Pont3la10')
+        || String(usuario.user_metadata?.nombreCompleto || usuario.email || 'Equipo Ponte la 10')
     },
     roles,
     permisos,

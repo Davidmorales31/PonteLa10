@@ -42,13 +42,13 @@ describe('utilidades SEO', () => {
       'Una noticia deportiva con un título deliberadamente largo para validar el recorte seguro'
     )
 
-    expect(titulo).toContain('Pont3la10')
+    expect(titulo).toContain('Ponte la 10')
     expect(titulo.length).toBeLessThanOrEqual(70)
     expect(normalizarTextoMeta('Texto\n con   espacios', 50)).toBe('Texto con espacios')
   })
 
   it('no duplica la marca en el título social', () => {
-    expect(construirTituloMetaConMarca('Especial Pont3la10')).toBe('Especial Pont3la10')
+    expect(construirTituloMetaConMarca('Especial Ponte la 10')).toBe('Especial Ponte la 10')
   })
 
   it('infiere el tipo de imagen aunque la URL tenga parámetros', () => {
@@ -134,7 +134,7 @@ describe('utilidades SEO', () => {
 
   it('mantiene el noindex y evita anunciar una canonical enlazada en páginas de búsqueda', () => {
     const head = construirHeadSeoPont3la10('https://www.pont3la10.com', {
-      titulo: 'Resultados de búsqueda | Pont3la10',
+      titulo: 'Resultados de búsqueda | Ponte la 10',
       descripcion: 'Resultados internos de búsqueda.',
       rutaCanonica: '/articulos?buscar=seleccion',
       robots: 'noindex, follow'

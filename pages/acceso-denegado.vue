@@ -2,7 +2,7 @@
 import { ArrowLeft, Home, ShieldX } from '@lucide/vue'
 
 useSeoPont3la10({
-  titulo: 'Acceso restringido | Pont3la10',
+  titulo: 'Acceso restringido | Ponte la 10',
   descripcion: 'Esta sección requiere permisos editoriales.',
   robots: 'noindex, nofollow'
 })
@@ -14,7 +14,7 @@ useSeoPont3la10({
     <p class="etiqueta-seccion">Acceso restringido</p>
     <h1>Esta zona pertenece al equipo editorial.</h1>
     <p>
-      Tu cuenta puede seguir navegando por Pont3la10. El panel solo está disponible para
+      Tu cuenta puede seguir navegando por Ponte la 10. El panel solo está disponible para
       integrantes con un rol activo.
     </p>
     <div>

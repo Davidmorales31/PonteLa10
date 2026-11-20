@@ -36,7 +36,7 @@ export function construirFeedRssEditorial(
     `      <link>${escaparXml(articulo.url)}</link>`,
     `      <guid isPermaLink="true">${escaparXml(articulo.url)}</guid>`,
     `      <pubDate>${escaparXml(articulo.fechaPublicacion.toUTCString())}</pubDate>`,
-    `      <dc:creator>${escaparXml(articulo.autorNombre?.trim() || 'Equipo Pont3la10')}</dc:creator>`,
+    `      <dc:creator>${escaparXml(articulo.autorNombre?.trim() || 'Equipo Ponte la 10')}</dc:creator>`,
     `      <description>${escaparXml(articulo.resumen?.trim() || '')}</description>`,
     '    </item>'
   ].join('\n')).join('\n')
@@ -48,9 +48,9 @@ export function construirFeedRssEditorial(
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">',
     '  <channel>',
-    '    <title>Pont3la10: últimas publicaciones</title>',
+    '    <title>Ponte la 10: últimas publicaciones</title>',
     `    <link>${escaparXml(enlaceInicio)}</link>`,
-    '    <description>Noticias, análisis y publicaciones deportivas de Pont3la10.</description>',
+    '    <description>Noticias, análisis y publicaciones deportivas de Ponte la 10.</description>',
     '    <language>es-CO</language>',
     `    <atom:link href="${escaparXml(enlaceFeed)}" rel="self" type="application/rss+xml" />`,
     `    <lastBuildDate>${escaparXml(generadoEn.toUTCString())}</lastBuildDate>`,

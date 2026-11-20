@@ -63,7 +63,7 @@ const urlHub = computed(() => construirUrlAbsoluta(
 ))
 
 useSeoPont3la10(() => ({
-  titulo: `${props.configuracion.tituloSeo || props.configuracion.titulo} | Pont3la10`,
+  titulo: `${props.configuracion.tituloSeo || props.configuracion.titulo} | Ponte la 10`,
   descripcion: props.configuracion.descripcion,
   rutaCanonica: props.configuracion.rutaCanonica,
   seccion: props.configuracion.etiquetaSeccion,

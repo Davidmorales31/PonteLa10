@@ -54,7 +54,7 @@ const tituloFormulario = computed(() => {
   if (accionMfaPendiente.value) return 'Confirma que eres tú'
 
   const titulos: Record<ModoLoginEditorial, string> = {
-    ingreso: 'Entrar a Pont3la10',
+    ingreso: 'Entrar a Ponte la 10',
     registro: 'Crear tu cuenta',
     recuperacion: 'Recuperar contraseña',
     actualizarContrasena: 'Nueva contraseña'

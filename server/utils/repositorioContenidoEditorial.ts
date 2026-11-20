@@ -386,7 +386,7 @@ export async function listarContenidosEditoriales(
     categoria: obtenerCategoriaRelacion(fila.categories),
     autorId: fila.author_id,
     autorNombre: fila.author_id
-      ? nombresAutores.get(fila.author_id) || 'Equipo Pont3la10'
+      ? nombresAutores.get(fila.author_id) || 'Equipo Ponte la 10'
       : 'Sin autor',
     actualizadoEn: fila.updated_at,
     creadoEn: fila.created_at,
@@ -418,7 +418,7 @@ async function obtenerNombreAutor(
     .eq('id', autorId)
     .maybeSingle()
 
-  return (data as FilaPerfil | null)?.display_name || 'Equipo Pont3la10'
+  return (data as FilaPerfil | null)?.display_name || 'Equipo Ponte la 10'
 }
 
 function mapearAutoguardado(
@@ -1019,7 +1019,7 @@ export async function listarComentariosRevisionEditorial(
     tipo: fila.comment_type,
     mensaje: fila.body,
     autorId: fila.author_id,
-    autorNombre: nombresAutores.get(fila.author_id) || 'Equipo Pont3la10',
+    autorNombre: nombresAutores.get(fila.author_id) || 'Equipo Ponte la 10',
     creadoEn: fila.created_at
   }))
 }
@@ -1317,7 +1317,7 @@ export async function obtenerColaRevisionEditorial(
     categoria: obtenerCategoriaRelacion(fila.categories),
     autorId: fila.author_id,
     autorNombre: fila.author_id
-      ? nombresAutores.get(fila.author_id) || 'Equipo Pont3la10'
+      ? nombresAutores.get(fila.author_id) || 'Equipo Ponte la 10'
       : 'Sin autor',
     actualizadoEn: fila.updated_at,
     creadoEn: fila.created_at,

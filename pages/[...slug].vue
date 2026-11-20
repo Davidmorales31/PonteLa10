@@ -12,8 +12,8 @@ import {
 definePageMeta({ layout: false })
 
 useSeoPont3la10({
-  titulo: 'Página no encontrada | Pont3la10',
-  descripcion: 'La página que buscas no está disponible. Vuelve al inicio o explora las últimas noticias de Pont3la10.',
+  titulo: 'Página no encontrada | Ponte la 10',
+  descripcion: 'La página que buscas no está disponible. Vuelve al inicio o explora las últimas noticias de Ponte la 10.',
   robots: 'noindex, follow'
 })
 
@@ -109,7 +109,7 @@ const enlacesAyuda = [
             <span>Noticias</span>
             <div class="recomendacion-error-contenido">
               <div>
-                <small>Pont3la10</small>
+                <small>Ponte la 10</small>
                 <h2>Explora las publicaciones disponibles</h2>
                 <NuxtLink class="enlace-recomendacion-error" to="/articulos">
                   Ver noticias <ArrowRight aria-hidden="true" />

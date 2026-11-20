@@ -11,7 +11,7 @@ import { avisosPublicacionPropia, cambiarPlantillaPropia, coloresTextoPropio, cr
   esDocumentoVideoPropio, formatosPropios, maximoDiapositivasPropias, plantillasPropias } from '~/utils/editorial/publicacionesPropias'
 
 definePageMeta({ layout: false, middleware: 'autenticacion-editorial', permisoEditorial: 'contenido.verBorradores' })
-useSeoMeta({ title: 'Editor de redes | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Editor de redes | Ponte la 10', robots: 'noindex, nofollow' })
 useHead({ link: [{ rel: 'manifest', href: '/manifest-redes.webmanifest' }, { rel: 'apple-touch-icon', href: '/brand/app-redes-180.png' }],
   meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover' }, { name: 'apple-mobile-web-app-capable', content: 'yes' },
     { name: 'mobile-web-app-capable', content: 'yes' }, { name: 'apple-mobile-web-app-title', content: 'Redes' }, { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },

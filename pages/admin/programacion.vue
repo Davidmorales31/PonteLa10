@@ -31,7 +31,7 @@ definePageMeta({
   permisoEditorial: 'partidos.programacion.gestionar'
 })
 
-useSeoMeta({ title: 'Programación de transmisiones | Pont3la10', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Programación de transmisiones | Ponte la 10', robots: 'noindex, nofollow' })
 
 const datosFormularioIniciales = () => ({
   matchSlug: '',

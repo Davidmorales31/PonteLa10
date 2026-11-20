@@ -3,7 +3,7 @@ import { robotsNoIndex } from '~/utils/seo'
 
 useSeoPont3la10({
   robots: robotsNoIndex,
-  titulo: 'Resultados de tenis y partidos de hoy | Pont3la10',
+  titulo: 'Resultados de tenis y partidos de hoy | Ponte la 10',
   descripcion: 'Consulta partidos de tenis, resultados recientes y próximos encuentros disponibles.',
   rutaCanonica: '/resultados/tenis'
 })
