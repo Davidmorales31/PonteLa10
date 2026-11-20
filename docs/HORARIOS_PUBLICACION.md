@@ -29,3 +29,18 @@ Los estudios se contradicen (Later dice madrugada, Metricool dice domingo), son 
 
 Cuando haya unos 30 Reels publicados, comparar vistas y retención por franja (YouTube Studio y el panel de redes) y editar
 las franjas del JSON. Hasta entonces, la regla manda.
+
+## Piloto automático (solo Reels y Shorts)
+
+Autorizado por el responsable el 2026-11-20 («al menos los shorts»; queda anotado en `AGENTS.md`). Código en
+`scripts/video-autopiloto-reels.mjs`; se enciende en «Ver Reels» y su estado vive en `videos/diario/autopiloto-reels.json`.
+
+- Cada minuto, el estudio local mira los Reels con guion propio de los últimos 3 días.
+- Cuando **todas las tomas de voz** están grabadas y pasaron 10 minutos desde la última (margen para corregir una toma o
+  una foto), lo arma y lo renderiza (con la música elegida y el control de que la voz quedó dentro del video).
+- Al terminar, lo **programa** en la primera franja libre de esta regla. Nunca lo publica al instante: queda al menos 15 minutos
+  y se puede cancelar desde «Ver Reels» o desde el panel de redes.
+- Un Reel que ya tiene estado de publicación (programado, publicado o cancelado a mano) no se vuelve a tocar.
+- Si el render falla se reintenta una vez; si falta la llave de redes, no programa y lo anota. Los avisos quedan en el registro
+  del archivo y el último se ve en el diálogo.
+- Requiere el estudio abierto (la ventana negra) y el PC encendido. No aplica al video largo.

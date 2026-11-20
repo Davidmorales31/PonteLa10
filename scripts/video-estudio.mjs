@@ -17,6 +17,7 @@ import { estadoDeRender, nuevoRender, terminarRender } from './video-estudio-ren
 import { hijosDe, listaDeReels, nombrePadre, raizDeFamilia } from './video-estudio-familia.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
 import { proponerHoras } from './video-horarios.mjs'
+import { anotarRegistro, decidirAccion, guardarAjustes, leerAjustes } from './video-autopiloto-reels.mjs'
 import { medirMiniatura, evaluarMiniatura } from './video-medir-miniatura.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
 import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
@@ -370,6 +371,58 @@ export async function medicionDeMiniatura(archivo, mtimeMs) {
   return medicionesMiniatura.get(clave)
 }
 
+// Piloto automático de Reels (ver scripts/video-autopiloto-reels.mjs): arma, renderiza y programa solo, sin publicar al instante.
+const intentosAutopiloto = new Map()
+async function fechasProgramadas() {
+  const nombres = existsSync(DIARIO) ? (await readdir(DIARIO)).filter(proyectoValido) : []
+  const fechas = []
+  for (const nombre of nombres) for (const p of Object.values(await leerEstadoPublicaciones(carpetaDe(nombre)))) if (p?.estado === 'programada' && p.fecha) fechas.push(p.fecha)
+  return fechas
+}
+export async function pasoAutopiloto() {
+  const ajustes = await leerAjustes(DIARIO)
+  if (!ajustes.activo || !existsSync(DIARIO)) return
+  const ahora = Date.now()
+  const nombres = (await readdir(DIARIO)).filter(n => proyectoValido(n) && nombrePadre(n) && Date.parse(n.slice(0, 10)) >= ahora - 3 * 86_400_000)
+  for (const nombre of nombres) {
+    const carpeta = carpetaDe(nombre)
+    const guion = await leerJson(join(carpeta, 'guion.json'))
+    const manifiesto = await leerJson(join(carpeta, 'manifiesto.json'))
+    if (guion?.tipo !== 'reel' || !manifiesto || !existsSync(join(carpeta, 'estudio.json'))) continue
+    const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
+    const lista = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
+    const reel = lista?.reels?.[0]
+    const tieneFinal = Boolean(reel && existsSync(join(carpeta, reel.archivo)))
+    const accion = decidirAccion({
+      activo: true, tipo: 'reel', tramos: manifiesto.segmentos?.length || 0, grabados: (manifiesto.segmentos || []).filter(s => estudio.grabaciones?.[s.id]).length,
+      ultimaTomaMs: (await stat(join(carpeta, 'estudio.json'))).mtimeMs, ahora, tieneFinal,
+      publicacion: tieneFinal ? (await leerEstadoPublicaciones(carpeta))[reel.id] || null : null,
+      ocupado: ocupados.size > 0 || publicando.has(`${nombre}:${reel?.id}`), intentos: intentosAutopiloto.get(nombre) || 0
+    })
+    if (accion === 'render') {
+      intentosAutopiloto.set(nombre, (intentosAutopiloto.get(nombre) || 0) + 1)
+      ocupados.add(nombre)
+      const estadoRender = nuevoRender()
+      renders.set(nombre, estadoRender)
+      try { await armar(nombre) } catch (error) { renders.delete(nombre); ocupados.delete(nombre); await anotarRegistro(DIARIO, nombre, `No se pudo armar: ${error.message}`); continue }
+      renderizar(nombre, estadoRender)
+      await anotarRegistro(DIARIO, nombre, 'Voz completa: renderizando.')
+      return
+    }
+    if (accion === 'programar') {
+      if (!redesDisponibles()) { await anotarRegistro(DIARIO, nombre, 'Listo, pero falta la llave de redes: no se programó.'); intentosAutopiloto.set(nombre, 99); continue }
+      const [hora] = proponerHoras({ ahora, cantidad: 1, ocupadas: await fechasProgramadas() })
+      if (!hora) { await anotarRegistro(DIARIO, nombre, 'No hay franja libre en los próximos 14 días.'); continue }
+      publicando.add(`${nombre}:${reel.id}`)
+      try {
+        const r = await publicarReel({ proyecto: nombre, carpeta, reel, creado: lista.creado, modo: 'programar', fecha: hora, cliente: clienteRedes() })
+        await anotarRegistro(DIARIO, nombre, `Programado para ${r.fecha}.`)
+      } catch (error) { await anotarRegistro(DIARIO, nombre, `No se pudo programar: ${error.message}`) } finally { publicando.delete(`${nombre}:${reel.id}`) }
+      return
+    }
+  }
+}
+
 async function armar(proyecto) {
   const carpeta = carpetaDe(proyecto)
   const guion = await leerJson(join(carpeta, 'guion.json'))
@@ -495,6 +548,17 @@ export function crearServidor() {
       if (req.method === 'GET' && url.pathname === '/') {
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'" })
         return res.end(await readFile(PAGINA))
+      }
+      if (url.pathname === '/api/autopiloto') {
+        if (req.method === 'GET') return responder(res, 200, { ...(await leerAjustes(DIARIO)), redes: redesDisponibles() })
+        if (req.method === 'POST') {
+          let datos = {}
+          try { datos = JSON.parse((await leerCuerpo(req, 1024)).toString('utf8') || '{}') } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
+          const ajustes = await leerAjustes(DIARIO)
+          await guardarAjustes(DIARIO, { ...ajustes, activo: datos.activo === true })
+          await anotarRegistro(DIARIO, '-', datos.activo === true ? 'Piloto automático encendido.' : 'Piloto automático apagado.')
+          return responder(res, 200, { ...(await leerAjustes(DIARIO)), redes: redesDisponibles() })
+        }
       }
       if (partes[0] === 'archivos' && req.method === 'GET' && proyectoValido(partes[1])) return servirArchivo(req, res, partes[1], partes.slice(2).join('/'))
       if (partes[0] === 'musica' && req.method === 'GET' && /^[a-z0-9-]{1,40}\.m4a$/.test(partes[1] || '')) return servirRuta(req, res, rutaPista(partes[1].slice(0, -4)))
@@ -681,5 +745,7 @@ export function crearServidor() {
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   crearServidor().listen(PUERTO, HOST, () => {
     process.stdout.write(`Estudio de video listo en http://localhost:${PUERTO}\nProyectos: ${DIARIO}\n`)
+    // Cada minuto mira si algún Reel ya tiene toda la voz grabada (solo actúa si el piloto está encendido).
+    setInterval(() => { pasoAutopiloto().catch(error => process.stderr.write(`[autopiloto] ${error?.message || error}\n`)) }, 60_000).unref()
   })
 }
