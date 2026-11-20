@@ -11,11 +11,11 @@ import opentype from 'opentype.js'
 import sharp from 'sharp'
 
 const ejecutar = promisify(execFile)
-const RAIZ = fileURLToPath(new URL('..', import.meta.url))
+export const RAIZ = fileURLToPath(new URL('..', import.meta.url))
 const SITIO = 'https://www.pont3la10.com'
 export const LIENZO = { ancho: 1080, alto: 1350 }
-const AZUL = '#08204a'
-const AMARILLO = '#ffd800'
+export const AZUL = '#08204a'
+export const AMARILLO = '#ffd800'
 
 // Palabras fuertes que suelen resumir una noticia de fútbol. Se prefiere la primera que aparezca en el titular.
 // Más arriba = más fuerte: gana la palabra del titular que esté primero en esta lista, no la primera que aparezca en la frase.
@@ -36,7 +36,7 @@ export function palabraDeImpacto(titular) {
   return (util[0] || palabras[0] || '').toUpperCase()
 }
 
-function envolver(fuente, texto, medida, maximo) {
+export function envolver(fuente, texto, medida, maximo) {
   const lineas = [[]]
   for (const palabra of texto.split(/\s+/).filter(Boolean)) {
     const prueba = [...lineas.at(-1), palabra].join(' ')
@@ -64,7 +64,7 @@ export function capaTexto({ palabra, subtitulo, anton, montserrat }) {
 }
 
 /** Compone la portada de impacto. `recorte` es un PNG con transparencia; devuelve un JPG. */
-export async function componerImpacto({ recorte, palabra, subtitulo, logo }) {
+export async function componerImpacto({ recorte, palabra, subtitulo, logo, fondo: fondoPropio }) {
   const { ancho, alto } = LIENZO
   const anton = opentype.loadSync(join(RAIZ, 'public/fonts/Anton-Regular.ttf'))
   const montserrat = opentype.loadSync(join(RAIZ, 'public/fonts/Montserrat-Bold.ttf'))
@@ -73,7 +73,7 @@ export async function componerImpacto({ recorte, palabra, subtitulo, logo }) {
       <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d3a82"/><stop offset=".55" stop-color="${AZUL}"/><stop offset="1" stop-color="#041229"/></linearGradient>
       <radialGradient id="r" cx=".5" cy=".42" r=".55"><stop offset="0" stop-color="#3b82e6" stop-opacity=".55"/><stop offset="1" stop-color="#3b82e6" stop-opacity="0"/></radialGradient>
     </defs>
-    <rect width="${ancho}" height="${alto}" fill="url(#g)"/><rect width="${ancho}" height="${alto}" fill="url(#r)"/>
+    <rect width="${ancho}" height="${alto}" fill="url(#g)" fill-opacity="${fondoPropio ? .22 : 1}"/><rect width="${ancho}" height="${alto}" fill="url(#r)" fill-opacity="${fondoPropio ? .35 : 1}"/>
     <polygon points="0,${alto * .62} ${ancho},${alto * .5} ${ancho},${alto * .58} 0,${alto * .7}" fill="${AMARILLO}" fill-opacity=".9"/>
   </svg>`)
   const sujeto = await sharp(recorte).trim().resize({ height: 1020, width: 1000, fit: 'inside' }).toBuffer({ resolveWithObject: true })
@@ -85,10 +85,10 @@ export async function componerImpacto({ recorte, palabra, subtitulo, logo }) {
     { input: Buffer.from(capaTexto({ palabra, subtitulo, anton, montserrat })), left: 0, top: 0 }
   ]
   if (marca) capas.push({ input: marca, left: Math.round((ancho - 230) / 2), top: 44 })
-  return sharp(fondo).composite(capas).jpeg({ quality: 90 }).toBuffer()
+  return sharp(fondoPropio ? await sharp(fondoPropio).composite([{ input: fondo }]).toBuffer() : fondo).composite(capas).jpeg({ quality: 90 }).toBuffer()
 }
 
-async function recortar(urlImagen, carpeta, nombre) {
+export async function recortar(urlImagen, carpeta, nombre) {
   const respuesta = await fetch(urlImagen, { signal: AbortSignal.timeout(30_000) })
   if (!respuesta.ok) throw new Error(`No se pudo descargar la portada (HTTP ${respuesta.status}).`)
   const original = join(carpeta, `${nombre}-original.jpg`)
