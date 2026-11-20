@@ -165,6 +165,7 @@
   .insignia.ok { background: rgba(48, 209, 88, .1); color: var(--verde); border: 1px solid rgba(48, 209, 88, .4); }
   .miniaturas { display: flex; flex-wrap: wrap; gap: 5px; margin: 8px 0; }
   .miniaturas figure { position: relative; margin: 0; }
+  .miniaturas figure.video::before { content: 'VIDEO'; position: absolute; left: 3px; top: 3px; z-index: 1; padding: 0 4px; border-radius: 3px; background: var(--rojo-oscuro); color: #fff; font: 700 10px/1.4 var(--mono); }
   .miniaturas figure.auto::after { content: 'auto'; position: absolute; left: 3px; bottom: 3px; padding: 0 4px; border-radius: 3px; background: rgba(0, 0, 0, .8); color: var(--acento-texto); font: 700 10px/1.4 var(--mono); }
   .miniaturas img { display: block; width: 86px; height: 48px; object-fit: cover; border-radius: 3px; border: 1px solid var(--borde-suave); }
   .miniaturas button { position: absolute; top: 3px; right: 3px; display: grid; place-items: center; width: 22px; height: 22px; border: 0; border-radius: 3px; background: rgba(0, 0, 0, .8); color: #fff; cursor: pointer; }
@@ -179,12 +180,17 @@
   .bloque-fotos .boton { width: 100%; margin-top: 4px; }
 
   /* Barra de controles inferior */
-  body > footer { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--panel); border-top: 1px solid var(--borde); }
-  #estado-armado { flex: 1; min-width: 0; font-size: 12px; color: var(--texto-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .progreso-render { display: none; width: 180px; height: 4px; border-radius: 2px; background: var(--borde-suave); overflow: hidden; }
+  body > footer { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding: 6px 10px; background: var(--panel); border-top: 1px solid var(--borde); }
+  #estado-armado { flex: 1 1 260px; min-width: 0; font-size: 12px; color: var(--texto-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .progreso-render { display: none; width: 220px; height: 8px; border-radius: 4px; background: var(--borde-suave); overflow: hidden; flex: none; }
   .progreso-render.activo { display: block; }
   .progreso-render > div { height: 100%; width: 0; background: var(--acento); transition: width var(--t-media); }
   .progreso-render.indeterminado > div { width: 35%; animation: deslizar 1.2s ease-in-out infinite; }
+  .rueda { display: none; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--borde-suave); border-top-color: var(--acento); animation: girar .9s linear infinite; flex: none; }
+  .rueda.activa { display: inline-block; }
+  .boton.renderizando { border-color: var(--acento); color: var(--acento); }
+  #estado-armado.renderizando { color: var(--texto); font-weight: 600; white-space: normal; }
+  @keyframes girar { to { transform: rotate(360deg); } }
   @keyframes deslizar { 0% { transform: translateX(-100%); } 100% { transform: translateX(290%); } }
 
   /* Avisos */
@@ -370,6 +376,7 @@
   <button class="boton" id="crear-reels" disabled title="Primero renderiza el video final"><svg class="icono"><use href="#i-phone"/></svg><span>Crear Reels</span></button>
   <button class="boton primario" id="reels-propios" hidden title="Crea un proyecto por cada Reel del guion de Reels: cada uno con su propio guion, voz, imágenes y subtítulos"><svg class="icono"><use href="#i-phone"/></svg><span>Reels con guion propio</span></button>
   <button class="boton" id="ver-reels" hidden><svg class="icono"><use href="#i-play"/></svg><span>Ver Reels</span></button>
+  <span class="rueda" id="rueda-render" aria-hidden="true"></span>
   <div class="progreso-render" id="progreso-render" aria-hidden="true"><div></div></div>
   <div id="estado-armado" role="status" aria-live="polite">Graba los tramos, sube fotos y luego arma el video.</div>
   <a class="boton" id="ver-final" href="#" target="_blank" rel="noopener" hidden><svg class="icono"><use href="#i-play"/></svg><span>Ver video final</span></a>
@@ -533,6 +540,7 @@ async function cargarDetalle(mantener = true) {
   pintarFotos()
   $('#ver-final').hidden = !detalle.videoFinal
   if (detalle.videoFinal) $('#ver-final').href = detalle.videoFinal
+  retomarRender()
   const actual = mantener && tramo && detalle.manifiesto.segmentos.find(s => s.id === tramo.id)
   await elegirTramo(actual ? actual.id : (siguientePendiente()?.id || detalle.manifiesto.segmentos[0]?.id))
 }
@@ -600,7 +608,7 @@ function pintarFotos() {
     return `<div class="bloque-fotos">
       <div class="cabeza"><h3>${escapar(nombre)}</h3><span class="insignia ${f.vacios ? 'pendiente' : f.sinFotoPropia ? 'neutra' : 'ok'}">${f.vacios ? `${f.vacios} vacíos` : f.sinFotoPropia ? `${f.sinFotoPropia} repiten foto` : `${icono('check')} completa`}</span></div>
       <div class="etiqueta-chica">${f.fotos} foto(s) para ${f.espacios} espacios</div>
-      ${subidas.length ? `<div class="miniaturas">${subidas.map((s, i) => `<figure${s.auto ? ' class="auto"' : ''}><img src="/archivos/${escapar(proyecto)}/${escapar(s.ruta)}" alt="Foto ${s.auto ? 'automática' : 'subida'}: ${escapar(s.credito)}" title="${escapar(s.credito)}${s.auto ? ' · búsqueda automática' : ''}"><button data-clave="${escapar(f.clave)}" data-i="${i}" aria-label="Quitar foto de ${escapar(s.credito)}">${icono('x')}</button></figure>`).join('')}</div>` : ''}
+      ${subidas.length ? `<div class="miniaturas">${subidas.map((s, i) => `<figure class="${s.auto ? 'auto' : ''}${s.tipo === 'video' ? ' video' : ''}"><img src="/archivos/${escapar(proyecto)}/${escapar(s.poster || s.ruta)}" alt="${s.tipo === 'video' ? 'Clip de video' : 'Foto'} ${s.auto ? 'automático' : 'subido'}: ${escapar(s.credito)}" title="${escapar(s.credito)}${s.tipo === 'video' ? ` · clip de ${Math.round(s.duracion || 0)} s sin sonido` : ''}${s.auto ? ' · búsqueda automática' : ''}"><button data-clave="${escapar(f.clave)}" data-i="${i}" aria-label="Quitar foto de ${escapar(s.credito)}">${icono('x')}</button></figure>`).join('')}</div>` : ''}
       <form class="subir" data-clave="${escapar(f.clave)}" novalidate>
         <label class="zona-subida" tabindex="0">${icono('image')}<span>Arrastra una foto o haz clic para elegirla</span><input type="file" class="oculto" accept="image/jpeg,image/png,image/webp"></label>
         <label class="campo">Crédito de la foto<input type="text" maxlength="120" placeholder="Colprensa (vía El Tiempo)"><span class="error" aria-live="polite"></span></label>
@@ -882,7 +890,7 @@ function bloquearNavegacion(si) {
   const indice = detalle.manifiesto.segmentos.indexOf(tramo)
   $('#anterior').disabled = si || indice <= 0
   $('#siguiente').disabled = si || indice >= detalle.manifiesto.segmentos.length - 1
-  for (const id of ['#proyecto', '#sin-camara', '#armar', '#render', '#leer', '#crear-reels']) $(id).disabled = si || (id === '#crear-reels' && !detalle.videoFinal)
+  for (const id of ['#proyecto', '#sin-camara', '#armar', '#render', '#leer', '#crear-reels']) $(id).disabled = si || (id === '#crear-reels' && !detalle.videoFinal) || (renderActivo && (id === '#armar' || id === '#render'))
   document.querySelectorAll('.tramo').forEach(b => { b.disabled = si })
 }
 
@@ -933,27 +941,112 @@ async function armar() {
   } catch (err) { $('#estado-armado').textContent = err.message; avisar(err.message, 'error') }
 }
 
-async function render() {
-  try {
-    await api(`/api/proyectos/${proyecto}/render`, { method: 'POST' })
-    $('#render').disabled = true
-    const barra = $('#progreso-render')
-    barra.classList.add('activo', 'indeterminado')
-    $('#estado-armado').textContent = 'Renderizando… puede tardar varios minutos; puedes seguir trabajando.'
-    const sondeo = setInterval(async () => {
-      const d = await api(`/api/proyectos/${proyecto}`)
-      const registro = d.render?.registro || ''
-      const pct = [...registro.matchAll(/(\d{1,3})\s?%/g)].map(m => Number(m[1])).filter(n => n <= 100).pop()
-      if (pct !== undefined) { barra.classList.remove('indeterminado'); barra.firstElementChild.style.width = `${pct}%`; $('#estado-armado').textContent = `Renderizando… ${pct} %` }
-      if (d.render?.estado !== 'renderizando') {
-        clearInterval(sondeo)
-        $('#render').disabled = false
-        barra.classList.remove('activo', 'indeterminado')
-        if (d.render?.estado === 'listo') { $('#estado-armado').textContent = 'Video renderizado: renders/final.mp4'; avisar('¡Video listo!', 'ok'); $('#ver-final').hidden = false; $('#ver-final').href = d.videoFinal; detalle = d; pintarPasos() }
-        else { $('#estado-armado').textContent = 'El render falló. Revisa el proyecto en la app de HyperFrames.'; avisar('El render falló.', 'error') }
+// Seguimiento del render: el servidor lleva la cuenta (fase, porcentaje, segundos), así el aviso sobrevive a
+// recargar la página o cambiar de proyecto; aquí solo se pinta, cada segundo, y se pregunta cada 2 s.
+let renderActivo = false
+let renderVigilado = null // { proyecto, reloj, inicio, ultimo }
+const tituloPagina = document.title
+
+const FASES_RENDER = { armando: 'Armando el video con tus tomas y fotos', renderizando: 'Renderizando el video', musica: 'Mezclando la música' }
+
+function pintarRender(r, segundos) {
+  const fase = FASES_RENDER[r.fase] ? r.fase : 'renderizando'
+  const pct = fase === 'renderizando' && r.porcentaje !== null && r.porcentaje !== undefined ? r.porcentaje : null
+  const tiempo = mmss(segundos)
+  const barra = $('#progreso-render')
+  barra.classList.add('activo')
+  barra.classList.toggle('indeterminado', pct === null)
+  barra.firstElementChild.style.width = pct === null ? '' : `${pct}%`
+  $('#rueda-render').classList.add('activa')
+  const estado = $('#estado-armado')
+  estado.classList.add('renderizando')
+  estado.textContent = `${FASES_RENDER[fase]}${pct === null ? '' : ` · ${pct} %`} · ${tiempo}${fase === 'renderizando' ? ' · puede tardar varios minutos; no cierres el estudio' : ''}`
+  const boton = $('#render')
+  boton.classList.add('renderizando')
+  boton.setAttribute('aria-busy', 'true')
+  boton.disabled = true
+  $('#armar').disabled = true
+  const etiqueta = boton.querySelector('span')
+  if (etiqueta) etiqueta.textContent = fase === 'armando' ? 'Armando…' : fase === 'musica' ? 'Mezclando…' : `Renderizando${pct === null ? '…' : ` ${pct} %`}`
+  document.title = `${pct === null ? '⏳' : `${pct} %`} Renderizando · ${tituloPagina}`
+}
+
+function limpiarRender() {
+  renderActivo = false
+  if (renderVigilado) clearInterval(renderVigilado.reloj)
+  renderVigilado = null
+  const barra = $('#progreso-render')
+  barra.classList.remove('activo', 'indeterminado')
+  barra.firstElementChild.style.width = ''
+  $('#rueda-render').classList.remove('activa')
+  $('#estado-armado').classList.remove('renderizando')
+  const boton = $('#render')
+  boton.classList.remove('renderizando')
+  boton.removeAttribute('aria-busy')
+  boton.disabled = false
+  const etiqueta = boton.querySelector('span')
+  if (etiqueta) etiqueta.textContent = 'Renderizar'
+  $('#armar').disabled = false
+  document.title = tituloPagina
+}
+
+function vigilarRender(inicial = { estado: 'renderizando', fase: 'armando', porcentaje: null, segundos: 0 }) {
+  if (renderVigilado?.proyecto === proyecto) return
+  if (renderVigilado) clearInterval(renderVigilado.reloj)
+  renderActivo = true
+  const vigilado = { proyecto, inicio: Date.now() - inicial.segundos * 1000, ultimo: inicial, tic: 0, reloj: null, consultando: false }
+  renderVigilado = vigilado
+  pintarRender(inicial, inicial.segundos)
+  vigilado.reloj = setInterval(async () => {
+    if (renderVigilado !== vigilado) return clearInterval(vigilado.reloj)
+    if (vigilado.proyecto !== proyecto) return limpiarRender() // abrió otro proyecto: el de allá se retoma al volver
+    pintarRender(vigilado.ultimo, Math.round((Date.now() - vigilado.inicio) / 1000))
+    if (++vigilado.tic % 2 || vigilado.consultando) return
+    vigilado.consultando = true
+    try {
+      const d = await api(`/api/proyectos/${vigilado.proyecto}`)
+      if (renderVigilado !== vigilado) return
+      if (d.render && d.render.estado !== 'renderizando') {
+        limpiarRender()
+        detalle = d
+        pintarPasos()
+        if (d.render.estado === 'listo') {
+          $('#estado-armado').textContent = `Video renderizado en ${mmss(d.render.segundos)}: renders/final.mp4`
+          avisar('¡Video listo!', 'ok')
+          $('#ver-final').hidden = false
+          $('#ver-final').href = d.videoFinal
+        } else {
+          const motivo = (d.render.registro || '').split('\n').map(l => l.trim()).filter(Boolean).pop() || ''
+          $('#estado-armado').textContent = `El render falló. ${motivo}`.trim()
+          avisar('El render falló. Pulsa Renderizar otra vez; si se repite, avísale a Claude.', 'error')
+        }
+        return
       }
-    }, 3000)
-  } catch (err) { avisar(err.message, 'error') }
+      if (d.render) { vigilado.ultimo = d.render; vigilado.inicio = Date.now() - d.render.segundos * 1000 }
+    } catch { $('#estado-armado').textContent = 'Sin conexión con el estudio… sigue intentando (el render continúa en tu equipo).' } finally { vigilado.consultando = false }
+  }, 1000)
+}
+
+// Al abrir el estudio o un proyecto: si ya hay un render en curso, se muestra; si no, se deja todo en reposo.
+function retomarRender() {
+  if (detalle.render?.estado === 'renderizando') vigilarRender(detalle.render)
+  else if (renderActivo && renderVigilado?.proyecto !== proyecto) limpiarRender()
+}
+
+async function render() {
+  if (renderActivo) return avisar('Ya se está renderizando este proyecto. Mira la barra de abajo: te avisa cuando termine.', 'info')
+  try {
+    vigilarRender() // feedback inmediato: «Armando…» mientras el servidor vuelve a armar el video
+    await api(`/api/proyectos/${proyecto}/render`, { method: 'POST' })
+  } catch (err) {
+    limpiarRender()
+    // «Ocupado» puede significar que ya renderiza (otra pestaña o un clic anterior): se retoma en vez de dejarlo en error.
+    try {
+      const d = await api(`/api/proyectos/${proyecto}`)
+      if (d.render?.estado === 'renderizando') { detalle = d; return vigilarRender(d.render) }
+    } catch { /* se muestra el error original */ }
+    avisar(err.message, 'error')
+  }
 }
 
 /* ---------- Reels ---------- */
@@ -1308,6 +1401,7 @@ function pintarProyectos() {
       `<span class="insignia ${p.vacios ? 'pendiente' : 'ok'}">${p.vacios ? `${p.vacios} fotos por llenar` : 'Fotos completas'}</span>`,
       p.tipo === 'reel' ? '<span class="insignia ok">Reel 9:16</span>' : '',
       p.sinCamara ? '<span class="insignia neutra">Sin cámara</span>' : '',
+      p.renderizando ? '<span class="insignia pendiente">Renderizando…</span>' : '',
       p.renderizado ? '<span class="insignia ok">Video listo</span>' : '',
       p.reels ? `<span class="insignia ok">${p.reels} Reels</span>` : ''
     ].join('')
