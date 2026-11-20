@@ -1116,7 +1116,8 @@ function pintarReels() {
   const ultima = Math.max(0, ...todos.filter(r => r.publicacion?.estado === 'programada' && r.publicacion.fecha).map(r => Date.parse(r.publicacion.fecha)))
   const arranque = ultima ? Math.max(Date.parse(sugerida(0)), ultima + cadaHoras() * 3_600_000) : Date.parse(sugerida(0))
   if (!$('#todos-inicio').value) $('#todos-inicio').value = aLocalInput(new Date(arranque))
-  prog.forEach((r, i) => { if (!horasReels.has(claveReel(r))) horasReels.set(claveReel(r), aLocalInput(new Date(arranque + i * cadaHoras() * 3_600_000))) })
+  // Las horas salen de config/horariosPublicacion.json (franjas de Bogotá); si el servidor no las manda, cada tantas horas.
+  prog.forEach((r, i) => { if (!horasReels.has(claveReel(r))) horasReels.set(claveReel(r), detalle.horasSugeridas?.[i] ? aLocalInput(new Date(detalle.horasSugeridas[i])) : aLocalInput(new Date(arranque + i * cadaHoras() * 3_600_000))) })
   const raiz = proyectos.find(x => x.nombre === (detalle.padre || proyecto))
   $('#t-reels').textContent = `Reels · ${raiz ? nombreVisible(raiz) : (detalle.padre || proyecto)}`
   $('#lista-reels').innerHTML = todos.map((r, i) => {

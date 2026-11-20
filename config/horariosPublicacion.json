@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "zona": "America/Bogota",
+  "desfaseUtcHoras": -5,
+  "descripcion": "Regla de horarios de publicación de Reels y Shorts. La lee scripts/video-horarios.mjs y el estudio para proponer horas; el responsable siempre puede cambiarlas.",
+  "franjas": [
+    { "hora": "07:30", "motivo": "Antes del trabajo y la U; Buffer y SocialPilot ven buen alcance entre 8 y 12 h." },
+    { "hora": "12:30", "motivo": "Ventana de mediodía de Colombia (12:00–13:30) y de Sprout/Buffer entre semana." },
+    { "hora": "16:30", "motivo": "Shorts: Buffer y SocialPilot ven 16–19 h como la mejor franja, sobre todo viernes." },
+    { "hora": "19:30", "motivo": "Ventana de noche de Colombia (19:00–21:00)." }
+  ],
+  "reglas": {
+    "minutosMinimos": 15,
+    "separacionMinimaHoras": 2,
+    "maximoPorDia": 4,
+    "prohibidoDesde": "23:00",
+    "prohibidoHasta": "05:30",
+    "noticiaDelDia": "Un Reel de una noticia de hoy sale en la primera franja libre del mismo día; solo pasa a mañana si ya no queda ninguna.",
+    "findeSemana": "Mismas franjas: en fútbol el fin de semana hay partidos y mucho público; se compara con datos propios."
+  },
+  "evidencia": "Solo hay una fuente con horas para Colombia (SchedPilot); el resto son estudios globales de Buffer, Sprout, SocialPilot y Metricool que se contradicen en parte. Es una hipótesis inicial, no una verdad.",
+  "revision": "Cuando haya 30 Reels publicados, comparar vistas y retención por franja (YouTube Studio y panel de redes) y ajustar las franjas con esos datos."
+}

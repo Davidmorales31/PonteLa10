@@ -16,6 +16,7 @@ import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
 import { estadoDeRender, nuevoRender, terminarRender } from './video-estudio-render.mjs'
 import { hijosDe, listaDeReels, nombrePadre, raizDeFamilia } from './video-estudio-familia.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
+import { proponerHoras } from './video-horarios.mjs'
 import { medirMiniatura, evaluarMiniatura } from './video-medir-miniatura.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
 import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
@@ -242,7 +243,8 @@ async function detalleProyecto(proyecto) {
     })),
     encargo: existsSync(encargo) ? await readFile(encargo, 'utf8') : null,
     padre: familia.raiz !== proyecto ? familia.raiz : null,
-    reels: familia.reels
+    reels: familia.reels,
+    horasSugeridas: proponerHoras({ cantidad: 8, ocupadas: familia.reels.map(r => r.publicacion?.estado === 'programada' ? r.publicacion.fecha : null).filter(Boolean) })
   }
 }
 
