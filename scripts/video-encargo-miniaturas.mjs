@@ -11,6 +11,11 @@ import { promisify } from 'node:util'
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
 
+/** Solo las tomas con video tienen un fotograma de la cara; en modo «Sin cámara» el gancho es solo audio (.m4a). */
+export function esTomaConVideo(archivo) {
+  return /\.(mp4|mov|webm|mkv)$/i.test(String(archivo || ''))
+}
+
 // Elige las fotos del encargo: la principal (primer bloque) y la de la segunda noticia, con su crédito.
 export function fotosDelEncargo(guion, estudio = {}) {
   const fotos = []
@@ -89,9 +94,13 @@ export async function crearEncargo(carpeta) {
   // Fotograma de la cara: mitad de la toma del gancho, si ya está grabada.
   const gancho = estudio.grabaciones?.gancho?.archivo
   let conCara = false
-  if (gancho && existsSync(join(carpeta, gancho))) {
+  if (gancho && esTomaConVideo(gancho) && existsSync(join(carpeta, gancho))) {
     const duracion = Number(estudio.grabaciones.gancho.duracion) || 2
-    await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-ss', String(Math.max(0.5, duracion / 2)), '-i', join(carpeta, gancho), '-frames:v', '1', '-q:v', '2', join(insumos, 'cara.jpg')])
+    try {
+      await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-ss', String(Math.max(0.5, duracion / 2)), '-i', join(carpeta, gancho), '-frames:v', '1', '-q:v', '2', join(insumos, 'cara.jpg')])
+    } catch {
+      // Sin fotograma el encargo sigue: Codex trabaja con las fotos reales, sin la cara.
+    }
     conCara = existsSync(join(insumos, 'cara.jpg'))
   }
   const texto = textoEncargo({ guion, fotos, conCara, carpeta: destino })
