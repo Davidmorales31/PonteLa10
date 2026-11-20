@@ -1,0 +1,21 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    .rpro-pista { position: absolute; left: 48px; right: 48px; top: 176px; height: 8px; border-radius: 4px; background: rgba(255,255,255,.25); overflow: hidden; }
+    .rpro-barra { position: absolute; inset: 0; background: #ffd800; transform-origin: 0 50%; }
+  </style>
+  <div id="root" data-composition-id="reel-progreso" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"duracion","type":"number","label":"Duración del Reel (s)","default":40,"min":1,"max":180,"step":0.1}]'>
+    <div id="rpro-escena" class="clip" data-start="0" data-duration="40">
+      <div id="rpro-pista" class="rpro-pista"><div id="rpro-barra" class="rpro-barra"></div></div>
+    </div>
+  </div>
+  <script>
+    // Barra de progreso: muestra cuánto falta y empuja a quedarse hasta el final.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(1, Number(v.duracion ?? 40));
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rpro-barra", { scaleX: 0 }, { scaleX: 1, duration: D, ease: "none" }, 0);
+    window.__timelines["reel-progreso"] = tl;
+  </script>
+</template>

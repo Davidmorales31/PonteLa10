@@ -1,0 +1,24 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; font-family: "Montserrat", sans-serif; }
+    .ralr-sello { position: absolute; right: 200px; top: 840px; padding: 14px 30px; border: 8px solid #ffd800; color: #ffd800; background: rgba(8,32,74,.85); font-family: "League Gothic", "Oswald", sans-serif; font-size: 110px; line-height: 1; letter-spacing: .04em; text-transform: uppercase; transform: rotate(-8deg); }
+    .ralr-sello.rumor { border-color: #ff5a6a; color: #ff5a6a; }
+  </style>
+  <div id="root" data-composition-id="reel-alerta" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"texto","type":"string","label":"Sello (OFICIAL, ÚLTIMA HORA, RUMOR…)","default":"OFICIAL"},{"id":"duracion","type":"number","label":"Duración (s)","default":1.8,"min":0.6,"max":6,"step":0.1}]'>
+    <div id="ralr-escena" class="clip" data-start="0" data-duration="1.8">
+      <div id="ralr-sello" class="ralr-sello" data-var-text="texto">OFICIAL</div>
+    </div>
+  </div>
+  <script>
+    // Sello que cae de golpe: OFICIAL / ÚLTIMA HORA; RUMOR va en rojo (un rumor nunca lleva «OFICIAL»).
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(0.6, Number(v.duracion ?? 1.8));
+    if (/rumor/i.test(String(v.texto ?? ""))) document.querySelector("#ralr-sello").classList.add("rumor");
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#ralr-sello", { scale: 2.6, opacity: 0, rotation: -18 }, { scale: 1, opacity: 1, rotation: -8, duration: 0.22, ease: "power4.in" }, 0);
+    tl.to("#ralr-sello", { keyframes: [{ x: -10, y: 4, duration: 0.04 }, { x: 8, y: -4, duration: 0.04 }, { x: 0, y: 0, duration: 0.05 }] }, 0.22);
+    tl.to("#ralr-sello", { opacity: 0, scale: 0.9, duration: 0.2 }, Math.max(0.5, D - 0.22));
+    window.__timelines["reel-alerta"] = tl;
+  </script>
+</template>

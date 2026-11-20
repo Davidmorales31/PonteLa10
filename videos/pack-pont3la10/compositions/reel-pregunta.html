@@ -1,0 +1,31 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #08204a; font-family: "Montserrat", sans-serif; }
+    .rpre-fondo { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+    .rpre-tinte { position: absolute; inset: 0; background: rgba(8,32,74,.78); }
+    .rpre-chip { position: absolute; left: 100px; top: 460px; padding: 12px 26px; background: #ffd800; color: #08204a; font-weight: 900; font-size: 42px; border-radius: 8px; text-transform: uppercase; }
+    .rpre-burbuja { position: absolute; left: 100px; right: 180px; top: 560px; padding: 36px 36px; background: #ffffff; color: #08204a; border-radius: 34px 34px 34px 6px; font-size: 52px; font-weight: 900; line-height: 1.12; box-shadow: 0 30px 80px rgba(0,0,0,.45); }
+    .rpre-pista { position: absolute; left: 100px; top: 1000px; color: #c9d4ea; font-size: 36px; font-weight: 700; }
+  </style>
+  <div id="root" data-composition-id="reel-pregunta" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"fondo","type":"string","label":"Fondo desenfocado","default":""},{"id":"pregunta","type":"string","label":"Pregunta","default":"¿Blessd salva al Pereira o es puro marketing?"},{"id":"pista","type":"string","label":"Texto de abajo","default":"Te leo en los comentarios"},{"id":"duracion","type":"number","label":"Duración (s)","default":3,"min":0.6,"max":12,"step":0.1}]'>
+    <div id="rpre-escena" class="clip" data-start="0" data-duration="3">
+      <img id="rpre-fondo" class="rpre-fondo" src="assets/vacio.png" data-var-src="fondo" alt="" />
+      <div id="rpre-tinte" class="rpre-tinte" data-layout-allow-occlusion></div>
+      <div id="rpre-chip" class="rpre-chip">¿Y tú qué opinas?</div>
+      <div id="rpre-burbuja" class="rpre-burbuja" data-var-text="pregunta">¿Blessd salva al Pereira o es puro marketing?</div>
+      <div id="rpre-pista" class="rpre-pista" data-var-text="pista">Te leo en los comentarios</div>
+    </div>
+  </div>
+  <script>
+    // Pregunta para comentar (polémica sana): burbuja de chat que salta con la pregunta.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(0.6, Number(v.duracion ?? 3));
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rpre-fondo", { scale: 1.1 }, { scale: 1.18, duration: D, ease: "none" }, 0);
+    tl.fromTo("#rpre-chip", { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, 0);
+    tl.fromTo("#rpre-burbuja", { scale: 0.6, opacity: 0, transformOrigin: "0% 100%" }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2)" }, 0.15);
+    tl.fromTo("#rpre-pista", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.6);
+    window.__timelines["reel-pregunta"] = tl;
+  </script>
+</template>

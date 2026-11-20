@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "descripcion": "Reels y Shorts con guion propio de Ponte la 10. Reglas sacadas de docs/REELS_PROPIOS.md (investigación de noviembre de 2026).",
+  "formato": {
+    "ancho": 1080,
+    "alto": 1920,
+    "palabrasPorMinuto": 170,
+    "duracionMinimaSegundos": 22,
+    "duracionObjetivoSegundos": 40,
+    "duracionMaximaSegundos": 58,
+    "reelsPorDia": { "minimo": 3, "maximo": 5 }
+  },
+  "zonaSegura": {
+    "arriba": 168,
+    "textoHasta": 1330,
+    "nota": "Nada en los 168 px de arriba; todo texto y producto entre 168 y 1330 px; abajo solo textura (pie, usuario y botones de la app)."
+  },
+  "gancho": {
+    "maximoPalabrasVoz": 14,
+    "pantallaMinimoPalabras": 3,
+    "pantallaMaximoPalabras": 7,
+    "prohibidoEmpezarCon": ["hola", "buenas", "bienvenid", "qué tal", "saludos", "en este video", "hoy les traigo", "hoy vamos", "sabías que"],
+    "nota": "Se resuelve antes del segundo 3: nombre propio o cifra concreta, y la promesa coincide con lo que el Reel entrega."
+  },
+  "beats": {
+    "minimo": 4,
+    "maximo": 9,
+    "palabrasMaximas": 28,
+    "segundosMaximosPorPlano": 4,
+    "conectores": ["pero", "por eso", "entonces", "y ojo", "aunque", "sin embargo", "o sea", "es decir", "así que", "mientras"],
+    "tiposVisuales": ["punch", "paneo", "tarjeta", "dividida", "dato", "cita", "lista", "marcador", "versus", "pregunta"]
+  },
+  "rehook": {
+    "desdeSegundos": 30,
+    "nota": "Si el Reel pasa de 30 s, un beat debe traer «rehook»: true con un giro («pero ojo», «aquí viene lo bueno»)."
+  },
+  "cierre": {
+    "maximoPalabras": 22,
+    "debeTraerUna": ["sígue", "síguenos", "comenta", "comenten", "guarda", "compárte", "comparte", "nota completa", "pont3la10", "ponte la 10"]
+  },
+  "titulo": { "caracteresMinimos": 25, "caracteresMaximos": 70 },
+  "aprobacion": {
+    "puntajeMinimo": 85,
+    "criteriosObligatorios": ["duracion", "gancho-sin-saludo", "gancho-concreto", "pantalla-gancho", "fuente", "creditos", "rumor", "un-cta"]
+  }
+}

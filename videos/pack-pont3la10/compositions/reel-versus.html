@@ -1,0 +1,36 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #08204a; font-family: "Montserrat", sans-serif; }
+    .rvs-fondo { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+    .rvs-tinte { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,.85), rgba(8,32,74,.7) 50%, rgba(8,32,74,.9)); }
+    .rvs-equipo { position: absolute; left: 100px; right: 180px; text-align: center; font-family: "League Gothic", "Oswald", sans-serif; font-size: 110px; line-height: .9; color: #fff; text-transform: uppercase; }
+    #rvs-equipo-1 { top: 460px; } #rvs-equipo-2 { top: 870px; }
+    .rvs-insignia { position: absolute; left: 395px; top: 690px; width: 210px; height: 150px; display: grid; place-items: center; background: #ffd800; color: #08204a; font-family: "League Gothic", "Oswald", sans-serif; font-size: 130px; transform: skewX(-10deg); }
+    .rvs-detalle { position: absolute; left: 100px; right: 180px; top: 1070px; text-align: center; color: #c9d4ea; font-size: 34px; font-weight: 800; text-transform: uppercase; }
+  </style>
+  <div id="root" data-composition-id="reel-versus" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"fondo","type":"string","label":"Fondo desenfocado","default":""},{"id":"equipo1","type":"string","label":"Equipo 1","default":"ENVIGADO"},{"id":"equipo2","type":"string","label":"Equipo 2","default":"INDEPENDIENTE DEL VALLE"},{"id":"detalle","type":"string","label":"Detalle (fecha, hora, estadio)","default":"JUEVES · 5:30 P. M."},{"id":"duracion","type":"number","label":"Duración (s)","default":3.5,"min":0.6,"max":12,"step":0.1}]'>
+    <div id="rvs-escena" class="clip" data-start="0" data-duration="3.5">
+      <img id="rvs-fondo" class="rvs-fondo" src="assets/vacio.png" data-var-src="fondo" alt="" />
+      <div id="rvs-tinte" class="rvs-tinte" data-layout-allow-occlusion></div>
+      <div id="rvs-equipo-1" class="rvs-equipo" data-var-text="equipo1">ENVIGADO</div>
+      <div id="rvs-insignia" class="rvs-insignia" data-layout-allow-overlap>VS</div>
+      <div id="rvs-equipo-2" class="rvs-equipo" data-var-text="equipo2">INDEPENDIENTE DEL VALLE</div>
+      <div id="rvs-detalle" class="rvs-detalle" data-var-text="detalle">JUEVES · 5:30 P. M.</div>
+    </div>
+  </div>
+  <script>
+    // Previa de partido: dos nombres que chocan con un VS en el centro.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(0.6, Number(v.duracion ?? 3.5));
+    if (!String(v.detalle ?? "").trim()) document.querySelector("#rvs-detalle").style.display = "none";
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rvs-fondo", { scale: 1.12 }, { scale: 1.2, duration: D, ease: "none" }, 0);
+    tl.fromTo("#rvs-equipo-1", { y: -300, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power4.out" }, 0);
+    tl.fromTo("#rvs-equipo-2", { y: 300, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power4.out" }, 0);
+    tl.fromTo("#rvs-insignia", { scale: 3, opacity: 0, rotation: -20 }, { scale: 1, opacity: 1, rotation: 0, duration: 0.3, ease: "back.out(2.5)" }, 0.28);
+    tl.to("#rvs-insignia", { keyframes: [{ x: -8, duration: 0.04 }, { x: 8, duration: 0.04 }, { x: 0, duration: 0.04 }] }, 0.58);
+    tl.fromTo("#rvs-detalle", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.6);
+    window.__timelines["reel-versus"] = tl;
+  </script>
+</template>

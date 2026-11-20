@@ -1,0 +1,51 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #08204a; font-family: "Montserrat", sans-serif; }
+    .rdat-fondo { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
+    .rdat-tinte { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,.82), rgba(8,32,74,.6) 45%, rgba(8,32,74,.92)); }
+    .rdat-caja { position: absolute; left: 100px; right: 180px; top: 470px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+    .rdat-etiqueta { padding: 10px 24px; background: #ffd800; color: #08204a; font-weight: 900; font-size: 40px; letter-spacing: .08em; border-radius: 6px; text-transform: uppercase; }
+    .rdat-cifra { font-family: "League Gothic", "Oswald", sans-serif; font-size: 230px; line-height: .95; color: #ffffff; text-shadow: 0 10px 0 #ffd800; }
+    .rdat-descripcion { max-width: 800px; color: #ffffff; font-size: 48px; font-weight: 800; line-height: 1.15; }
+    .rdat-anillo { position: absolute; left: 290px; top: 480px; width: 420px; height: 420px; border-radius: 50%; border: 10px solid #ffd800; opacity: 0; }
+    .rdat-fuente { margin-top: 18px; color: #c9d4ea; font-size: 30px; font-weight: 600; }
+  </style>
+  <div id="root" data-composition-id="reel-dato" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"fondo","type":"string","label":"Fondo desenfocado","default":""},{"id":"etiqueta","type":"string","label":"Etiqueta","default":"PLANTEL"},{"id":"valor","type":"number","label":"Cifra","default":22},{"id":"prefijo","type":"string","label":"Antes de la cifra","default":""},{"id":"sufijo","type":"string","label":"Después de la cifra","default":" SALIDAS"},{"id":"descripcion","type":"string","label":"Descripción","default":"De 25 inscritos, solo quedan 3"},{"id":"fuente","type":"string","label":"Fuente","default":""},{"id":"duracion","type":"number","label":"Duración (s)","default":3.5,"min":0.6,"max":12,"step":0.1}]'>
+    <div id="rdat-escena" class="clip" data-start="0" data-duration="3.5">
+      <img id="rdat-fondo" class="rdat-fondo" src="assets/vacio.png" data-var-src="fondo" alt="" />
+      <div id="rdat-tinte" class="rdat-tinte" data-layout-allow-occlusion></div>
+      <div id="rdat-anillo" class="rdat-anillo" data-layout-allow-overlap></div>
+      <div id="rdat-caja" class="rdat-caja">
+        <div id="rdat-etiqueta" class="rdat-etiqueta" data-var-text="etiqueta">PLANTEL</div>
+        <div id="rdat-cifra" class="rdat-cifra">22</div>
+        <div id="rdat-descripcion" class="rdat-descripcion" data-var-text="descripcion">De 25 inscritos, solo quedan 3</div>
+        <div id="rdat-fuente" class="rdat-fuente" data-var-text="fuente"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+    // Cifra grande que cuenta hasta su valor, con anillo que estalla: el dato duro del Reel (siempre de la fuente).
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(0.6, Number(v.duracion ?? 3.5));
+    const valor = Number(v.valor ?? 22);
+    const decimales = String(v.valor ?? "").includes(".") ? 1 : 0;
+    const prefijo = String(v.prefijo ?? ""), sufijo = String(v.sufijo ?? "");
+    const cifra = document.querySelector("#rdat-cifra");
+    // Los años (1900–2100) no llevan punto de miles.
+    const agrupar = !(Number.isInteger(valor) && valor >= 1900 && valor <= 2100);
+    const pintar = n => { cifra.textContent = prefijo + n.toLocaleString("es-CO", { minimumFractionDigits: decimales, maximumFractionDigits: decimales, useGrouping: agrupar }) + sufijo; };
+    pintar(0);
+    if (!String(v.fuente ?? "").trim()) document.querySelector("#rdat-fuente").style.display = "none";
+    const contador = { n: 0 };
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rdat-fondo", { scale: 1.12 }, { scale: 1.2, duration: D, ease: "none" }, 0);
+    tl.fromTo("#rdat-etiqueta", { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "expo.out" }, 0.05);
+    tl.fromTo("#rdat-cifra", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.35, ease: "back.out(2.2)" }, 0.12);
+    tl.fromTo(contador, { n: 0 }, { n: valor, duration: Math.min(1.1, D * 0.45), ease: "power3.out", onUpdate: () => pintar(decimales ? contador.n : Math.round(contador.n)) }, 0.15);
+    tl.fromTo("#rdat-anillo", { scale: 0.3, opacity: 0.9 }, { scale: 1.5, opacity: 0, duration: 0.6, ease: "power2.out" }, 0.2 + Math.min(1.1, D * 0.45));
+    tl.fromTo("#rdat-descripcion", { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.35, ease: "expo.out" }, 0.5);
+    tl.fromTo("#rdat-fuente", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.7);
+    window.__timelines["reel-dato"] = tl;
+  </script>
+</template>

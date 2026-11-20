@@ -368,6 +368,7 @@
   <button class="boton" id="render"><svg class="icono"><use href="#i-film"/></svg><span>Renderizar</span></button>
   <button class="boton" id="ver-publicacion"><svg class="icono"><use href="#i-image"/></svg><span>Títulos y miniaturas</span></button>
   <button class="boton" id="crear-reels" disabled title="Primero renderiza el video final"><svg class="icono"><use href="#i-phone"/></svg><span>Crear Reels</span></button>
+  <button class="boton primario" id="reels-propios" hidden title="Crea un proyecto por cada Reel del guion de Reels: cada uno con su propio guion, voz, imágenes y subtítulos"><svg class="icono"><use href="#i-phone"/></svg><span>Reels con guion propio</span></button>
   <button class="boton" id="ver-reels" hidden><svg class="icono"><use href="#i-play"/></svg><span>Ver Reels</span></button>
   <div class="progreso-render" id="progreso-render" aria-hidden="true"><div></div></div>
   <div id="estado-armado" role="status" aria-live="polite">Graba los tramos, sube fotos y luego arma el video.</div>
@@ -557,6 +558,10 @@ function pintarPasos() {
   $('#crear-reels').disabled = !detalle.videoFinal
   $('#crear-reels').title = detalle.videoFinal ? 'Saca 4 o 5 Reels verticales del video final' : 'Primero renderiza el video final'
   $('#ver-reels').hidden = !cantidadReels
+  // Un Reel con guion propio no se divide: se publica tal cual. El video del día ofrece crear sus Reels propios.
+  $('#crear-reels').hidden = detalle.tipo === 'reel'
+  $('#reels-propios').hidden = detalle.tipo === 'reel' || !detalle.guionReels
+  $('#reels-propios').querySelector('span').textContent = `Reels con guion propio (${detalle.guionReels || 0})`
   const pct = Math.round(grabados / Math.max(1, segs.length) * 100)
   $('#progreso').style.width = `${pct}%`
   document.querySelector('.barra-progreso').setAttribute('aria-valuenow', String(pct))
@@ -1054,6 +1059,15 @@ async function verReels() {
   }
 }
 
+async function crearReelsPropios() {
+  try {
+    const r = await ocupado($('#reels-propios'), 'Creando proyectos…', () => api(`/api/proyectos/${proyecto}/reels-propios`, { method: 'POST' }))
+    ;({ proyectos } = await api('/api/proyectos'))
+    avisar(`${r.reels.length} Reels listos para grabar. Ábrelos en la lista de proyectos: cada uno tiene gancho, desarrollo y cierre.`, 'ok')
+    verProyectos()
+  } catch (err) { avisar(err.message, 'error') }
+}
+
 async function crearReels() {
   try {
     await api(`/api/proyectos/${proyecto}/reels`, { method: 'POST' })
@@ -1292,6 +1306,7 @@ function pintarProyectos() {
     const insignias = [
       `<span class="insignia ${p.grabados === p.tramos ? 'ok' : 'neutra'}">${p.grabados}/${p.tramos} grabados</span>`,
       `<span class="insignia ${p.vacios ? 'pendiente' : 'ok'}">${p.vacios ? `${p.vacios} fotos por llenar` : 'Fotos completas'}</span>`,
+      p.tipo === 'reel' ? '<span class="insignia ok">Reel 9:16</span>' : '',
       p.sinCamara ? '<span class="insignia neutra">Sin cámara</span>' : '',
       p.renderizado ? '<span class="insignia ok">Video listo</span>' : '',
       p.reels ? `<span class="insignia ok">${p.reels} Reels</span>` : ''
@@ -1376,6 +1391,7 @@ $('#siguiente').addEventListener('click', () => moverTramo(1))
 $('#armar').addEventListener('click', armar)
 $('#render').addEventListener('click', render)
 $('#crear-reels').addEventListener('click', crearReels)
+$('#reels-propios').addEventListener('click', crearReelsPropios)
 $('#ver-reels').addEventListener('click', verReels)
 $('#musica').addEventListener('change', elegirMusica)
 $('#escuchar-musica').addEventListener('click', escucharMusica)

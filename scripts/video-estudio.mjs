@@ -10,6 +10,7 @@ import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { randomBytes } from 'node:crypto'
 import { generarProyecto } from './video-generar-proyecto.mjs'
+import { generarReel, crearProyectosReels, descripcionDeReel } from './video-generar-reel.mjs'
 import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionDe } from './video-musica.mjs'
 import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
@@ -146,7 +147,9 @@ async function duracionDe(archivo) {
 async function listarProyectos() {
   if (!existsSync(DIARIO)) return []
   const salida = []
-  for (const nombre of (await readdir(DIARIO)).sort().reverse()) {
+  // Primero el día más reciente; dentro de un día, el video y después sus Reels (reel-1, reel-2…).
+  const orden = (a, b) => b.slice(0, 10).localeCompare(a.slice(0, 10)) || a.localeCompare(b, 'es', { numeric: true })
+  for (const nombre of (await readdir(DIARIO)).sort(orden)) {
     if (!proyectoValido(nombre)) continue
     const carpeta = join(DIARIO, nombre)
     const manifiesto = await leerJson(join(carpeta, 'manifiesto.json'))
@@ -165,6 +168,7 @@ async function listarProyectos() {
       grabados: manifiesto.segmentos.filter(s => grabaciones[s.id]).length,
       vacios: (manifiesto.fotos || []).reduce((suma, f) => suma + (f.vacios || 0), 0),
       sinCamara: Boolean(estudio.sinCamara),
+      tipo: manifiesto.tipo || 'video',
       renderizado: existsSync(final),
       reels: reels?.reels?.length || 0,
       actualizado: estudio.actualizado || (await stat(join(carpeta, 'manifiesto.json'))).mtime.toISOString()
@@ -200,9 +204,11 @@ async function detalleProyecto(proyecto) {
       puedeSubir: existsSync(final)
     },
     musica: { elegida: estudio.musica || null, pistas: biblioteca.pistas.map(p => ({ id: p.id, titulo: p.titulo, autor: p.autor, licencia: p.licencia, estilo: p.estilo, descargada: existsSync(rutaPista(p.id)) })) },
-    titulos: guion.titulos?.length ? guion.titulos : [guion.tituloVideo].filter(Boolean),
+    tipo: guion.tipo === 'reel' ? 'reel' : 'video',
+    guionReels: existsSync(join(carpeta, 'guion-reels.json')) ? ((await leerJson(join(carpeta, 'guion-reels.json')))?.reels?.length || 0) : 0,
+    titulos: guion.titulos?.length ? guion.titulos : [guion.tituloVideo || guion.titulo].filter(Boolean),
     miniaturaTexto: guion.miniatura || null,
-    descripcionYoutube: descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionDe(estudio.musica) }),
+    descripcionYoutube: guion.tipo === 'reel' ? descripcionDeReel(guion, await atribucionDe(estudio.musica)) : descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionDe(estudio.musica) }),
     miniaturas: await Promise.all(miniaturas.map(async n => ({ nombre: n, url: `/archivos/${proyecto}/renders/miniaturas/${n}?v=${(await stat(join(carpetaMiniaturas, n))).mtimeMs}` }))),
     encargo: existsSync(encargo) ? await readFile(encargo, 'utf8') : null,
     reels: reels ? reels.reels.map(r => ({ ...r, url: `/archivos/${proyecto}/${r.archivo}?v=${Date.parse(reels.creado)}`, publicacion: publicaciones[r.id] || null })) : []
@@ -321,6 +327,8 @@ async function armar(proyecto) {
   const carpeta = carpetaDe(proyecto)
   const guion = await leerJson(join(carpeta, 'guion.json'))
   if (!guion) throw Object.assign(new Error('El proyecto no tiene guion.json: vuelve a generarlo con el script.'), { estado: 409 })
+  // Un Reel con guion propio tiene su propio generador (vertical, subtítulos y cortes sincronizados con la voz).
+  if (guion.tipo === 'reel') return generarReel({ guion, salida: carpeta })
   return generarProyecto({ guion, salida: carpeta })
 }
 
@@ -371,6 +379,14 @@ function renderizar(proyecto) {
         return
       }
       if (estudio.musica) { estado.registro += '\nMezclando la música…\n'; await mezclarMusica({ video: voz, id: estudio.musica, salida: final }) } else await copyFile(voz, final)
+      // Un Reel con guion propio queda listo para publicarse desde «Ver Reels» (Facebook e Instagram).
+      const guion = (await leerJson(join(carpeta, 'guion.json'))) || {}
+      if (guion.tipo === 'reel') {
+        await mkdir(join(carpeta, 'renders', 'reels'), { recursive: true })
+        const manifiesto = (await leerJson(join(carpeta, 'manifiesto.json'))) || {}
+        const reel = { id: String(guion.id || 'r1'), archivo: 'renders/final.mp4', duracion: manifiesto.duracion || 0, club: guion.club || '', descripcion: descripcionDeReel(guion, await atribucionDe(estudio.musica)), articulo: guion.articuloSlug || '' }
+        await writeFile(join(carpeta, 'renders', 'reels', 'reels.json'), JSON.stringify({ creado: new Date().toISOString(), reels: [reel] }, null, 2))
+      }
       estado.estado = 'listo'
     } catch (error) { estado.registro += `\nNo se pudo mezclar la música: ${error.message}\n`; estado.estado = 'error' }
     ocupados.delete(proyecto)
@@ -474,6 +490,14 @@ export function crearServidor() {
         if (id) await descargarPista(id)
         await guardarEstudio(proyecto, estudio => { estudio.musica = id || null })
         return responder(res, 200, { musica: id || null })
+      }
+      if (accion === 'reels-propios' && req.method === 'POST') {
+        if (ocupados.has(proyecto)) return responder(res, 409, { error: 'El proyecto está ocupado: espera a que termine.' })
+        ocupados.add(proyecto)
+        try { return responder(res, 200, { reels: await crearProyectosReels({ proyecto }) }) } finally { ocupados.delete(proyecto) }
+      }
+      if (accion === 'buscar-fotos' && req.method === 'POST' && ((await leerJson(join(carpetaDe(proyecto), 'guion.json'))) || {}).tipo === 'reel') {
+        return responder(res, 409, { error: 'En los Reels las fotos vienen del guion. Si quieres otra, súbela en el beat que corresponda.' })
       }
       if (accion === 'buscar-fotos' && req.method === 'POST') {
         if (ocupados.has(proyecto)) return responder(res, 409, { error: 'El proyecto está ocupado: espera a que termine.' })

@@ -1,0 +1,27 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; }
+    .rgli-barra { position: absolute; left: -40px; width: 1160px; opacity: 0; mix-blend-mode: screen; }
+    #rgli-b1 { top: 300px; height: 120px; background: #ff004c; }
+    #rgli-b2 { top: 760px; height: 60px; background: #00e5ff; }
+    #rgli-b3 { top: 1180px; height: 160px; background: #ffd800; }
+    #rgli-b4 { top: 540px; height: 30px; background: #ffffff; }
+  </style>
+  <div id="root" data-composition-id="reel-glitch" data-width="1080" data-height="1920" data-composition-variables='[]'>
+    <div id="rgli-escena" class="clip" data-start="0" data-duration="0.35">
+      <div id="rgli-b1" class="rgli-barra" data-layout-allow-overflow></div>
+      <div id="rgli-b2" class="rgli-barra" data-layout-allow-overflow></div>
+      <div id="rgli-b3" class="rgli-barra" data-layout-allow-overflow></div>
+      <div id="rgli-b4" class="rgli-barra" data-layout-allow-overflow></div>
+    </div>
+  </div>
+  <script>
+    // Falla digital corta (franjas de color que saltan): marca un giro o un rehook.
+    const tl = gsap.timeline({ paused: true });
+    const saltos = [[-60, 0.9], [80, 0.6], [-30, 0.8], [40, 0]];
+    ["#rgli-b1", "#rgli-b2", "#rgli-b3", "#rgli-b4"].forEach((id, i) => {
+      saltos.forEach(([x, o], j) => tl.set(id, { x: x * (i % 2 ? -1 : 1), opacity: o }, 0.02 + j * 0.07 + i * 0.01));
+    });
+    window.__timelines["reel-glitch"] = tl;
+  </script>
+</template>
