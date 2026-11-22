@@ -1500,10 +1500,15 @@ function pintarCabeceraProyecto() {
   $('#interruptor-camara').classList.toggle('activo', p.sinCamara)
 }
 
+const reelsAbiertos = new Set()
+
 function pintarProyectos() {
   $('#apodo').value = detalle.estudio.nombre || ''
   const principales = proyectos.filter(x => !x.padre)
-  const ordenados = principales.flatMap(x => [x, ...proyectos.filter(h => h.padre === x.nombre)])
+  // Los Reels de cada video van plegados (lista desplegable); se abre solo la familia del proyecto actual.
+  const actualPadre = proyectos.find(x => x.nombre === proyecto)?.padre || proyecto
+  reelsAbiertos.add(actualPadre)
+  const ordenados = principales.flatMap(x => [x, ...(reelsAbiertos.has(x.nombre) ? proyectos.filter(h => h.padre === x.nombre) : [])])
   $('#lista-proyectos').innerHTML = ordenados.map(p => {
     const actual = p.nombre === proyecto
     const subproyectos = proyectos.filter(h => h.padre === p.nombre).length
@@ -1511,7 +1516,7 @@ function pintarProyectos() {
       `<span class="insignia ${p.grabados === p.tramos ? 'ok' : 'neutra'}">${p.grabados}/${p.tramos} grabados</span>`,
       `<span class="insignia ${p.vacios ? 'pendiente' : 'ok'}">${p.vacios ? `${p.vacios} fotos por llenar` : 'Fotos completas'}</span>`,
       p.tipo === 'reel' ? '<span class="insignia ok">Reel 9:16</span>' : '',
-      subproyectos ? `<span class="insignia neutra">${subproyectos} Reels con guion</span>` : '',
+      subproyectos ? `<button class="boton" data-reels="${escapar(p.nombre)}" aria-expanded="${reelsAbiertos.has(p.nombre)}">${reelsAbiertos.has(p.nombre) ? '▾' : '▸'} ${subproyectos} Reels con guion</button>` : '',
       p.sinCamara ? '<span class="insignia neutra">Sin cámara</span>' : '',
       p.renderizando ? '<span class="insignia pendiente">Renderizando…</span>' : '',
       p.renderizado ? '<span class="insignia ok">Video listo</span>' : '',
@@ -1524,6 +1529,11 @@ function pintarProyectos() {
     </li>`
   }).join('')
   $('#lista-proyectos').querySelectorAll('[data-abrir]').forEach(b => b.addEventListener('click', () => abrirProyecto(b.dataset.abrir)))
+  $('#lista-proyectos').querySelectorAll('[data-reels]').forEach(b => b.addEventListener('click', () => {
+    const nombre = b.dataset.reels
+    if (reelsAbiertos.has(nombre)) reelsAbiertos.delete(nombre); else reelsAbiertos.add(nombre)
+    pintarProyectos()
+  }))
 }
 
 async function verProyectos() {
