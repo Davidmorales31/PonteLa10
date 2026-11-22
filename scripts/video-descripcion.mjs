@@ -1,5 +1,7 @@
 // Descripción de YouTube del video diario: resumen, capítulos con tiempos reales, enlaces a las notas,
 // créditos de las fotos y atribución de la música.
+import { edicionDe } from './video-edicion.mjs'
+
 const SITIO = 'https://www.pont3la10.com'
 
 export const marcaTiempo = segundos => {
@@ -57,6 +59,7 @@ export function descripcionYoutube({ guion, manifiesto, estudio = {}, titulares 
   const creditos = creditosFotos(guion, estudio)
   if (creditos.length) partes.push(`Fotos: ${creditos.join(' · ')}`)
   if (atribucionMusica) partes.push(atribucionMusica)
-  partes.push('Suscríbete y activa la campana para el resumen diario del fútbol colombiano.\n#FutbolColombiano #LigaBetPlay #Pont3la10')
+  const edicion = edicionDe(guion)
+  partes.push(`${edicion.cierreDescripcion}\n${edicion.hashtags.join(' ')}`)
   return partes.join('\n\n').slice(0, 5000)
 }

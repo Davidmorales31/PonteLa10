@@ -51,10 +51,12 @@ redes y seguridad) con las diferencias de este archivo.** Si algo choca, manda e
     fuente oficial el mismo día; los traspasos cambian y un dato viejo es un error.
 11. **Marca**: nunca uses el nombre comercial de patrocinadores de la liga en
     títulos ni en el texto propio; es «Liga MX».
-12. **Redes sociales: NO las uses todavía.** La publicación en Facebook, Instagram y X
-    del sitio de México aún no está habilitada (fase de redes pendiente). Omite el paso
-    7 del flujo de Colombia y no ejecutes `redes-publicar-articulo.mjs` para artículos
-    de México.
+12. **Redes sociales: solo imágenes (decisión del responsable, 2026-11-22).** Las piezas de
+    México van a Facebook e Instagram en las mismas páginas, solo como publicaciones de imagen
+    con los formatos visuales: `redes-publicar-articulo.mjs --pendientes --categoria
+    futbol-mexicano` (borradores → revisión de la hoja → `--auto` con `--excluir`). Mientras
+    `mx.pont3la10.com` no esté en línea, el script omite el enlace a la nota. Nada de videos ni
+    Reels de México.
 
 ## 1. Mismas reglas que Colombia
 

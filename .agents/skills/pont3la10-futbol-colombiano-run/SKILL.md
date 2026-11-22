@@ -68,8 +68,10 @@ consumas más corridas.
 - **Categoría `futbol-colombiano`** (Fútbol colombiano): Liga BetPlay, Torneo
   BetPlay, Copa Colombia, clubes colombianos y Selección Colombia (todas las
   categorías).
-- **Categoría `futbol-mundial`** (Fútbol mundial): solo noticias de futbolistas
-  colombianos en el exterior.
+- **Categoría `futbol-mundial`** (Fútbol mundial): en esta corrida, solo noticias de
+  futbolistas colombianos en el exterior. El resto del fútbol internacional lo cubre su
+  propia corrida (`pont3la10-futbol-internacional-run`, desde 2026-11-21), que comparte
+  el tope de seis corridas por día: deja libres dos identidades para ella.
 - **No produzcas** en Tecnología deportiva, Gaming deportivo, Tendencias,
   Especiales ni Opinión. En la agenda regístralas con `omittedReason`:
   «Fuera del enfoque vigente: solo fútbol colombiano desde 2026-11-15.»

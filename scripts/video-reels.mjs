@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { atribucionDe } from './video-musica.mjs'
+import { EDICIONES, edicionDe } from './video-edicion.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
@@ -104,13 +105,13 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
   return encabezado + lineas.join('\n') + '\n'
 }
 
-export function descripcionReel({ titular, resumen, slug, credito, musica }) {
+export function descripcionReel({ titular, resumen, slug, credito, musica, edicion = EDICIONES.colombia }) {
   const partes = [String(titular || '').trim()]
   if (resumen) partes.push(String(resumen).trim())
   partes.push(`Nota completa: ${SITIO}/articulos/${slug}`)
   if (credito) partes.push(`Foto: ${credito}`)
   if (musica) partes.push(musica)
-  partes.push('#FutbolColombiano #LigaBetPlay #Pont3la10')
+  partes.push(edicion.hashtags.join(' '))
   return partes.filter(Boolean).join('\n\n').slice(0, 2200)
 }
 
@@ -159,7 +160,7 @@ export async function crearReels({ carpeta, bloques = [], max = LIMITES.maximoRe
     // ffmpeg corre dentro de la carpeta de trabajo para que el filtro ass use una ruta simple (sin «C:\»).
     await ejecutar('ffmpeg', ['-loglevel', 'error', '-y', '-ss', String(cara.inicio), '-t', String(duracion), '-i', final, '-i', logo, '-filter_complex', filtro, '-map', '[v]', '-map', '0:a', '-c:v', 'libx264', '-preset', 'medium', '-crf', '20', '-pix_fmt', 'yuv420p', '-r', '30', '-c:a', 'aac', '-b:a', '160k', '-movflags', '+faststart', join('..', archivo)], { cwd: trabajo, maxBuffer: 10 * 1024 * 1024 })
     const articulo = bloque.articuloSlug ? await datosArticulo(bloque.articuloSlug) : {}
-    resultado.push({ id: bloque.id, archivo: `renders/reels/${archivo}`, duracion: redondear(duracion), club: bloque.club || '', descripcion: descripcionReel({ ...articulo, slug: bloque.articuloSlug, musica }), articulo: bloque.articuloSlug || '' })
+    resultado.push({ id: bloque.id, archivo: `renders/reels/${archivo}`, duracion: redondear(duracion), club: bloque.club || '', descripcion: descripcionReel({ ...articulo, slug: bloque.articuloSlug, musica, edicion: edicionDe(guion) }), articulo: bloque.articuloSlug || '' })
   }
   await writeFile(join(salida, 'reels.json'), JSON.stringify({ creado: new Date().toISOString(), reels: resultado }, null, 2))
   await rm(trabajo, { recursive: true, force: true })
