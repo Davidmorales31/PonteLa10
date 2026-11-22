@@ -3,10 +3,10 @@
     #root { position: absolute; inset: 0; overflow: hidden; background: #000; font-family: "Montserrat", sans-serif; }
     .rpun-mov { position: absolute; inset: 0; transform-origin: 50% 40%; }
     .rpun-img { position: absolute; inset: 0; width: 1080px; height: 1920px; object-fit: cover; }
-    .rpun-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,.55) 0%, rgba(8,32,74,0) 22%, rgba(8,32,74,0) 50%, rgba(8,32,74,.6) 78%, rgba(8,32,74,.85) 100%); }
+    .rpun-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 16%, rgba(0,0,0,0) 58%, rgba(0,0,0,.55) 100%); }
     .rpun-flash { position: absolute; inset: 0; background: #fff; opacity: 0; }
-    .rpun-credito { position: absolute; right: 180px; top: 1036px; padding: 6px 14px; background: rgba(8,32,74,.82); color: #fff; font-size: 28px; font-weight: 600; border-left: 4px solid #ffd800; }
-    .rpun-clave { position: absolute; left: 100px; right: 180px; top: 700px; text-align: center; font-family: "League Gothic", "Oswald", sans-serif; font-size: 170px; line-height: .9; color: #ffd800; text-transform: uppercase; text-shadow: 0 6px 0 #08204a, 0 0 50px rgba(0,0,0,.6); }
+    .rpun-credito { position: absolute; right: 180px; top: 1262px; color: rgba(255,255,255,.9); font-size: 22px; font-weight: 600; letter-spacing: .01em; text-shadow: 0 1px 2px rgba(0,0,0,.95), 0 0 12px rgba(0,0,0,.6); }
+    .rpun-clave { position: absolute; left: 100px; right: 180px; top: 470px; text-align: center; font-family: "League Gothic", "Oswald", sans-serif; font-size: 104px; line-height: .92; color: #ffd800; text-transform: uppercase; text-shadow: 0 3px 0 rgba(0,0,0,.85), 0 0 30px rgba(0,0,0,.55); }
   </style>
   <div id="root" data-composition-id="reel-foto-punch" data-width="1080" data-height="1920"
     data-composition-variables='[{"id":"foto","type":"string","label":"Foto","default":""},{"id":"credito","type":"string","label":"Crédito","default":""},{"id":"foco","type":"string","label":"Foco (x% y%)","default":"50% 35%"},{"id":"clave","type":"string","label":"Palabra clave en pantalla (opcional)","default":""},{"id":"duracion","type":"number","label":"Duración (s)","default":3.5,"min":0.6,"max":12,"step":0.1}]'>
@@ -29,14 +29,14 @@
     if (!String(v.clave ?? "").trim()) document.querySelector("#rpun-clave").style.display = "none";
     const tl = gsap.timeline({ paused: true });
     tl.fromTo("#rpun-mov", { scale: 1.0 }, { scale: 1.14, duration: 0.2, ease: "power4.out" }, 0);
-    tl.fromTo("#rpun-flash", { opacity: 0.3 }, { opacity: 0, duration: 0.18 }, 0);
+    tl.fromTo("#rpun-flash", { opacity: 0.12 }, { opacity: 0, duration: 0.18 }, 0);
     const mitad = D > 2.6 ? D / 2 : D;
     tl.to("#rpun-mov", { scale: 1.2, duration: Math.max(0.2, mitad - 0.2), ease: "none" }, 0.2);
     if (D > 2.6) {
       tl.to("#rpun-mov", { scale: 1.32, x: 24, duration: 0.18, ease: "power4.out" }, mitad);
       tl.to("#rpun-mov", { scale: 1.38, x: 36, duration: Math.max(0.2, D - mitad - 0.18), ease: "none" }, mitad + 0.18);
     }
-    tl.fromTo("#rpun-clave", { scale: 1.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.25, ease: "back.out(2.4)" }, 0.15);
+    tl.fromTo("#rpun-clave", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.22, ease: "power3.out" }, 0.12);
     tl.to("#rpun-clave", { opacity: 0, duration: 0.2 }, Math.max(0.4, D - 0.25));
     tl.fromTo("#rpun-credito", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.2);
     window.__timelines["reel-foto-punch"] = tl;

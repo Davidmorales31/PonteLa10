@@ -1,6 +1,6 @@
 ---
 name: pont3la10-reels-guion
-description: Escribe los guiones de Reels y Shorts propios de Ponte la 10 (3 a 5 por día, 25–55 s, 9:16) a partir de las noticias del video diario: gancho de 3 capas, beats encadenados con un visual cada uno (foto con zoom, dato, lista, cita, marcador…), re-gancho, un solo llamado a la acción y bucle. Lo valida con la rúbrica ejecutable y crea los proyectos del estudio.
+description: Escribe los guiones de Reels y Shorts propios de Ponte la 10 (3 a 5 por día, 25–55 s, 9:16) a partir de las noticias del video diario: gancho de 3 capas, beats encadenados sobre fotos o clips a pantalla completa (sin gráficos a pantalla completa), re-gancho, un solo llamado a la acción y bucle. Lo valida con la rúbrica ejecutable y crea los proyectos del estudio.
 ---
 
 # Guiones de Reels y Shorts propios
@@ -20,7 +20,7 @@ desarrollo y cierre) en el estudio; el resto lo arma código. No publiques nada.
 2. Elige las que funcionan solas en 30 s: una cifra fuerte, un nombre famoso, un giro, una polémica sana, una previa.
    Una historia por Reel, clubes distintos, la más fuerte primero.
 3. Formatos (varíalos en el día): `bomba` (el hecho en el gancho), `dato` (la cifra manda), `polemica` (pregunta al
-   final), `top` (lista de 3), `previa` (versus y hora), `emocion` (el partidazo).
+   final), `top` (3 cosas contadas en la voz), `previa` (versus y hora), `emocion` (el partidazo). Todos van sobre fotos o clips.
 
 ## Molde de cada Reel (25–55 s a 170 palabras por minuto ≈ 70–150 palabras)
 
@@ -38,18 +38,26 @@ Los rumores van como rumor («según X, sin confirmación oficial») y con `"rum
 
 ## El visual de cada beat (`visual.tipo`)
 
-`punch` (foto con golpe de zoom; `pantalla` = palabra clave opcional, `foco` = "x% y%" si la cara no está arriba al centro),
-`paneo` (recorre una foto horizontal), `tarjeta` (foto entera; `imagen2` cae encima), `dividida` (dos fotos con `nombre1` y
-`nombre2`), `dato` ({etiqueta, valor, prefijo, sufijo, descripcion}), `lista` ({titulo, items[≤3]}), `cita` ({texto textual,
-autor}), `marcador` ({competencia, local, golesLocal, visita, golesVisita, estado}), `versus` ({equipo1, equipo2, detalle}),
-`pregunta` (texto).
+**Reels limpios (decisión de Juan, 2026-11-22).** Medido en los Shorts virales de Cracks, La Gambeta, Camilo MD y
+Cracks MX: ~0–5 % del tiempo con gráficos a pantalla completa, 40–55 cambios de plano por minuto, subtítulos pequeños
+abajo y la primera palabra en el segundo 0. Los nuestros tenían ~55 % de pantallas gráficas y 16–24 cambios por minuto.
+Por eso **todo el Reel es foto o clip a pantalla completa**; no hay tarjetas, pantallas divididas, escenas de dato, lista,
+cita, versus o pregunta, ni barridos o destellos que tapen la imagen.
 
-- Al menos 3 tipos distintos por Reel y nunca dos gráficos iguales seguidos. Alterna fotos y gráficos.
-- Las fotos de foto (`punch`, `paneo`, `tarjeta`) duran ≤ 4 s: el generador parte un beat largo en varios planos y
-  rota las fotos que le des (`imagen`, `imagen2` y las que Juan suba), así que da 2 fotos a los beats largos.
+- `punch` (foto con zoom; `pantalla` = palabra clave opcional, pequeña y arriba; `foco` = "x% y%" si la cara no está
+  arriba al centro) y `paneo` (recorre una foto horizontal) son los únicos visuales reales.
+- `dato`, `marcador` y `versus` se aceptan, pero solo se ven como palabra clave pequeña sobre la foto («22 SALIDAS»,
+  «AMÉRICA 2-1 NACIONAL»). Dales igual `imagen` y `credito`. `tarjeta`, `dividida`, `cita`, `lista` y `pregunta` se
+  muestran como foto: no los uses.
+- **Video primero**: si el buscador del video largo trajo clips (`fotosExtra` con `"tipo": "video"`), el generador los
+  pone antes que las fotos. Clips de partidos o de canales con derechos, nunca.
+- Cada plano dura ≤ 2,2 s y ninguna foto sale más de 3 veces: da **al menos 5 imágenes distintas** por Reel (ideal 6–8;
+  la rúbrica lo exige). Pon `imagen` e `imagen2` en los beats largos.
 - **Solo fotos reales con crédito exacto**: las del artículo (URL de `media_files`) o las que ya encontró el buscador del
   video largo, citadas como `"origen:assets/fotos/<archivo>.jpg"` con el crédito que tiene en `estudio.json`
-  (`fotosExtra`). Nunca IA, ilustraciones, logos ni montajes. Cifras, citas y marcadores solo si están en la fuente.
+  (`fotosExtra`). Nunca IA, ilustraciones, logos ni montajes. Cifras y marcadores solo si están en la fuente.
+- Lo demás lo pone el código: subtítulos pequeños a ~70 % de la altura, créditos sin caja, cierre sobre la última foto y
+  música automática.
 
 ## Formato
 
@@ -62,7 +70,7 @@ autor}), `marcador` ({competencia, local, golesLocal, visita, golesVisita, estad
       "alerta": "opcional: OFICIAL o ÚLTIMA HORA (nunca en un rumor)",
       "gancho": { "texto": "…", "pantalla": "SOLO LE QUEDAN 3", "resaltar": "3", "imagen": "https://…", "credito": "Colprensa (vía Infobae)" },
       "beats": [
-        { "id": "v1", "texto": "Según Infobae, …", "visual": { "tipo": "dato", "dato": { "etiqueta": "PLANTEL", "valor": 22, "sufijo": "SALIDAS", "descripcion": "De 25 inscritos, solo quedan 3" } } },
+        { "id": "v1", "texto": "Según Infobae, …", "visual": { "tipo": "dato", "dato": { "etiqueta": "PLANTEL", "valor": 22, "sufijo": "SALIDAS" }, "imagen": "https://…", "credito": "Infobae" } },
         { "id": "v2", "texto": "Pero ojo …", "rehook": false, "visual": { "tipo": "punch", "imagen": "origen:assets/fotos/auto-b1-x.jpg", "credito": "Vanguardia", "pantalla": "SIN SUELDO" } }
       ],
       "cierre": { "texto": "Sigue a Ponte la 10 …", "cta": "Sigue a Ponte la 10", "bucle": true },

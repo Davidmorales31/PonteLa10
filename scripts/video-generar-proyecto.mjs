@@ -15,7 +15,7 @@ const RAIZ = fileURLToPath(new URL('..', import.meta.url))
 const PACK = join(RAIZ, 'videos', 'pack-pont3la10')
 const SITIO = 'https://www.pont3la10.com'
 
-export const DURACIONES = { intro: 4.1, cierre: 6, suscribete: 4.5, rotulo: 5, datoMini: 5, marcadorMini: 5, segundosPorEspacio: 7, minimoSegmento: 2 }
+export const DURACIONES = { intro: 4.1, cierre: 6, suscribete: 4.5, rotulo: 5, datoMini: 5, marcadorMini: 5, segundosPorEspacio: 5, minimoSegmento: 2 }
 export const PREFIJOS = {
   intro: 'intro-', galeria: 'gal-', rotulo: 'rotulo-', 'dato-mini': 'dm-', 'marcador-mini': 'mm-', ticker: 'ticker-',
   suscribete: 'sus-', cara: 'cara-', cierre: 'cierre-', 'transicion-barrido': 'barrido-', 'transicion-flash': 'flash-', clip: 'clip-',
@@ -23,7 +23,7 @@ export const PREFIJOS = {
   'reel-gancho': 'rgan-', 'reel-foto-punch': 'rpun-', 'reel-foto-paneo': 'rpan-', 'reel-foto-tarjeta': 'rtar-', 'reel-foto-dividida': 'rdiv-',
   'reel-dato': 'rdat-', 'reel-cita': 'rcit-', 'reel-lista': 'rlis-', 'reel-marcador': 'rmar-', 'reel-versus': 'rvs-', 'reel-pregunta': 'rpre-',
   'reel-etiqueta': 'reti-', 'reel-fuente': 'rfue-', 'reel-alerta': 'ralr-', 'reel-progreso': 'rpro-', 'reel-cta': 'rcta-',
-  'reel-golpe': 'rgol-', 'reel-barrido': 'rbar-', 'reel-glitch': 'rgli-', 'reel-subtitulos': 'rsub-'
+  'reel-golpe': 'rgol-', 'reel-barrido': 'rbar-', 'reel-glitch': 'rgli-', 'reel-subtitulos': 'rsub-', 'reel-clip': 'rcli-'
 }
 // Momento (s) del corte dentro de cada transición y del primer elemento que aterriza en cada superpuesto.
 const CORTE = { 'transicion-barrido': 0.5, 'transicion-flash': 0.3 }
@@ -89,7 +89,7 @@ export const MAXIMO_USOS_FOTO = 3
 const COMPARTIDAS = MAXIMO_USOS_FOTO - 1
 
 /**
- * Reparte la voz de un bloque en galerías de hasta 3 espacios (uno cada ~7 s). `usos` cuenta las apariciones de
+ * Reparte la voz de un bloque en galerías de hasta 3 espacios (uno cada ~5 s; antes 7, se veían fotos fijas demasiado tiempo). `usos` cuenta las apariciones de
  * cada imagen en TODO el video: una imagen que ya salió 3 veces no vuelve; si faltan imágenes, los espacios que
  * quedan se alargan en vez de repetir (con «repetir») o quedan vacíos para que Juan ponga una (sin «repetir»).
  */
@@ -204,7 +204,7 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
     const espacios = galerias.reduce((suma, g) => suma + g.espacios.length, 0)
     const vacios = galerias.reduce((suma, g) => suma + g.espacios.filter(e => !e.url).length, 0)
     // Espacios sin una foto propia (con «repetir» se rellenan con otra foto de la noticia).
-    // Fotos que harían falta para cubrir la voz con un plano cada ~7 s sin repetir (lo que busca el buscador).
+    // Fotos que harían falta para cubrir la voz con un plano cada ~5 s sin repetir (lo que busca el buscador).
     const sinFotoPropia = Math.max(0, Math.ceil(duracion / DURACIONES.segundosPorEspacio) - fotos.length)
     // Una sola tarjeta de fotos por noticia: la entrada sin cámara suma sus espacios a los de la voz.
     const previo = resumenFotos.find(r => r.clave === claveFotos)
@@ -220,11 +220,16 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
     return { inicio, duracion }
   }
 
-  // Intro con la foto principal del día.
-  escenas.push({ escena: 'intro', inicio: 0, duracion: DURACIONES.intro, capa: 1, variables: { fondo: portada ? rutaFoto(portada.url) : '', kicker: edicionDe(guion).kicker, fecha: fechaLarga(guion?.fecha) } })
-  sonidos.push({ archivo: 'impacto', inicio: 0, duracion: 1.5, volumen: 0.8, mediaStart: 1.07 })
-  t = DURACIONES.intro
-  transicion(t)
+  // Estructura directa (2026-11-22, medida contra los largos virales de Cracks y La Gambeta: la primera noticia
+  // arranca en el segundo 0): sin intro animada, el video abre con el gancho, que ya es el hecho más fuerte.
+  const directa = guion?.estructura === 'directa'
+  if (!directa) {
+    // Intro con la foto principal del día (guiones con la estructura anterior).
+    escenas.push({ escena: 'intro', inicio: 0, duracion: DURACIONES.intro, capa: 1, variables: { fondo: portada ? rutaFoto(portada.url) : '', kicker: edicionDe(guion).kicker, fecha: fechaLarga(guion?.fecha) } })
+    sonidos.push({ archivo: 'impacto', inicio: 0, duracion: 1.5, volumen: 0.8, mediaStart: 1.07 })
+    t = DURACIONES.intro
+    transicion(t)
+  } else sonidos.push({ archivo: 'impacto', inicio: 0, duracion: 1.5, volumen: 0.5, mediaStart: 1.07 })
 
   const fotosApertura = [...fotosPorBloque.slice(0, 3).map(lista => lista[0]).filter(Boolean), ...extra('presentacion')]
   const fotosFinal = [...extra('pregunta'), ...(fotosPorBloque.slice().reverse().find(lista => lista.length) || [])]
@@ -241,7 +246,8 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
 
   bloques.forEach((bloque, i) => {
     transicion(t)
-    cara(`${bloque.id}-cara`, bloque.caraBreve, `Noticia ${i + 1} · toma a cámara`, bloque.id, fotosPorBloque[i], bloque.id)
+    // Sin «intro» por noticia: la toma breve a cámara solo existe si el guion la trae (estructura anterior).
+    if (String(bloque.caraBreve || '').trim()) cara(`${bloque.id}-cara`, bloque.caraBreve, `Noticia ${i + 1} · toma a cámara`, bloque.id, fotosPorBloque[i], bloque.id)
     const { inicio, duracion } = voz(`${bloque.id}-voz`, bloque.voz, `Noticia ${i + 1} · voz`, bloque.id, fotosPorBloque[i], bloque.id)
     const titular = bloque.titular || titulares[bloque.articuloSlug] || ''
     if (titular) {

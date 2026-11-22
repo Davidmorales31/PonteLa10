@@ -1,5 +1,27 @@
 # Estado actual de Pont3la10
 
+## Pulido de video largo, Reels y música con métricas de la competencia (2026-11-22, sin commit)
+
+- Medición (55 videos de Cracks, La Gambeta, Jugada Deportiva, RICCK, Camilo MD y Cracks MX; storyboards públicos y 10
+  transcripciones, sin descargar videos): los largos virales arrancan la noticia en el s 0, duran 20–110 s por noticia
+  y hacen ~8 preguntas en 10 min; los Shorts virales tienen ~0–5 % de gráficos a pantalla completa y 40–55 cambios/min.
+  Los nuestros: primera noticia en s 27–30, noticias de 44–50 s con toma a cámara antes, Reels con ~55 % de gráficos y
+  16–24 cambios/min, música 32 dB bajo la voz.
+- Música (`scripts/video-musica.mjs`, `video-estudio.mjs`, `estudio.html`): automática; el largo lleva una canción
+  distinta por noticia (`tramosDeManifiesto`, `elegirPistas`, `planMusica`) con fundido cruzado, cama nivelada a
+  −24 LUFS y ducking suave (≈16 dB bajo la voz, medido). `estudio.musicaPlan` guarda las pistas para las atribuciones;
+  `sinMusica` la apaga. Solo hay 8 pistas: con más de 8 noticias se repiten (nunca seguidas).
+- Reels (`video-generar-reel.mjs`, pack `reel-*`, `config/reelsDiario.json`, `video-rubrica-reels.mjs`, skill): solo
+  foto o clip a pantalla completa (`reel-clip` nuevo, clips primero), dato/marcador/versus como palabra clave pequeña,
+  sin tarjetas, divididas, gráficos ni barridos/destellos; planos de ≤ 2,2 s; subtítulos a 1330 px y más pequeños;
+  créditos sin caja; cierre sobre la foto; sello pequeño arriba. Rúbrica: `imagenes-suficientes` (≥ 5 distintas).
+- Largo (`video-generar-proyecto.mjs`, `video-rubrica-guion.mjs`, `config/videoDiario.json`, skill del guion,
+  `video-descripcion.mjs`, `video-reels.mjs`): `"estructura": "directa"` quita la intro animada y la toma a cámara
+  por noticia; fotos cada ~5 s. Rúbrica nueva: `noticia_directa` (obligatorio), `ritmo_variado`, `preguntas_publico`,
+  `entradas_variadas`. Los guiones viejos con `caraBreve` se siguen armando igual.
+- Validado: lint, typecheck y suite completa (170 archivos, 1027 pruebas). Ejemplos en `videos/ejemplos-pulido/`.
+  **Reiniciar el estudio** para cargar el código nuevo. Continuidad: docs/agents/handoffs/2026-11-22-pulido-video-reels-musica.md.
+
 ## API para agentes de IA del módulo de redes (2026-11-17, rama feat/api-agentes-redes)
 
 - REST `/api/agentes/redes/v1`, OpenAPI pública, guía y servidor MCP `/api/agentes/redes/mcp`

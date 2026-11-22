@@ -376,7 +376,7 @@
 
 <footer>
   <button class="boton primario" id="armar"><svg class="icono"><use href="#i-wand"/></svg><span>Armar video</span></button>
-  <label class="control-musica" title="Música de fondo: baja sola cuando hablas">
+  <label class="control-musica" title="Música de fondo automática: se oye bajo tu voz y sube en las pausas">
     <svg class="icono" aria-hidden="true"><use href="#i-music"/></svg>
     <span class="oculto">Música de fondo</span>
     <select id="musica" aria-label="Música de fondo"></select>
@@ -1277,7 +1277,16 @@ async function crearReels() {
 /* ---------- Música ---------- */
 function pintarMusica() {
   const m = detalle.musica || { pistas: [] }
-  $('#musica').innerHTML = '<option value="">Sin música</option>' + m.pistas.map(p => `<option value="${escapar(p.id)}">${escapar(p.titulo)} · ${escapar(p.estilo)}</option>`).join('')
+  // El video largo lleva una canción distinta por noticia, elegida sola al renderizar: no hay nada que escoger.
+  if (detalle.tipo !== 'reel') {
+    $('#musica').innerHTML = '<option value="">Automática · una canción por noticia</option>'
+    $('#musica').value = ''
+    $('#musica').disabled = true
+    $('#escuchar-musica').disabled = true
+    return
+  }
+  $('#musica').disabled = false
+  $('#musica').innerHTML = '<option value="">Automática</option>' + m.pistas.map(p => `<option value="${escapar(p.id)}">${escapar(p.titulo)} · ${escapar(p.estilo)}</option>`).join('')
   $('#musica').value = m.elegida || ''
   $('#escuchar-musica').disabled = !m.elegida
 }
@@ -1289,8 +1298,8 @@ async function elegirMusica() {
     await api(`/api/proyectos/${proyecto}/musica`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ id }) })
     detalle = await api(`/api/proyectos/${proyecto}`)
     pintarMusica()
-    avisar(id ? 'Música elegida. Se mezcla al renderizar y baja sola cuando hablas.' : 'Video sin música.', 'ok')
-  } catch (err) { avisar(err.message, 'error') } finally { $('#musica').disabled = false }
+    avisar(id ? 'Música elegida. Se mezcla al renderizar y baja sola cuando hablas.' : 'Música automática: se elige sola al renderizar.', 'ok')
+  } catch (err) { avisar(err.message, 'error') } finally { $('#musica').disabled = detalle.tipo !== 'reel' }
 }
 
 function escucharMusica() {

@@ -84,25 +84,38 @@ describe('generador de Reels con guion propio', () => {
     expect(alinearConGuion('algo totalmente distinto aquí', dichas, 1.6)).toBe(dichas)
   })
 
-  it('arma gancho en el cuadro 0, transiciones, capas, subtítulos y cierre', () => {
+  it('arma gancho en el cuadro 0, solo fotos o clips a pantalla completa, capas, subtítulos y cierre', () => {
     const plan = planificarReel({ ...reelBueno(), rumor: true }, { ppm: 170 })
     const gancho = plan.escenas.find(e => e.escena === 'reel-gancho')!
     expect(gancho.inicio).toBe(0)
     expect(gancho.variables).toMatchObject({ texto: 'SOLO LE QUEDAN 3', resaltar: '3', etiqueta: 'DEPORTIVO PASTO', foto: foto(1) })
     const nombres = plan.escenas.map(e => e.escena)
-    for (const escena of ['reel-dato', 'reel-lista', 'reel-foto-punch', 'reel-foto-tarjeta', 'reel-foto-paneo', 'reel-cta', 'reel-progreso', 'reel-etiqueta', 'reel-fuente', 'reel-subtitulos']) expect(nombres).toContain(escena)
+    for (const escena of ['reel-foto-punch', 'reel-foto-paneo', 'reel-cta', 'reel-progreso', 'reel-etiqueta', 'reel-fuente', 'reel-subtitulos']) expect(nombres).toContain(escena)
+    // Nada de gráficos a pantalla completa ni transiciones que tapen la imagen.
+    for (const prohibida of reels.ESCENAS_PROHIBIDAS as string[]) expect(nombres).not.toContain(prohibida)
     expect(plan.escenas.find(e => e.escena === 'reel-alerta')?.variables?.texto).toBe('RUMOR')
-    expect(nombres.filter(n => ['reel-golpe', 'reel-barrido', 'reel-glitch'].includes(n)).length).toBeGreaterThanOrEqual(6)
-    expect(nombres).toContain('reel-glitch')
+    // El dato del guion queda como palabra clave pequeña sobre una foto, no como pantalla aparte.
+    expect(plan.escenas.some(e => e.variables?.clave === '22 SALIDAS')).toBe(true)
+    // El cierre muestra una foto nítida, no un fondo azul.
+    expect(String(plan.escenas.find(e => e.escena === 'reel-cta')?.variables?.fondo)).toMatch(/foto-\d\.jpg$/)
     const visuales = plan.escenas.filter(e => e.escena.startsWith('reel-foto-'))
     expect(Math.max(...visuales.map(e => e.duracion))).toBeLessThanOrEqual(4.01)
-    expect(plan.sonidos.some(s => s.archivo === 'subida')).toBe(true)
     expect(plan.segmentos.map(s => s.id)).toEqual(['gancho', 'cuerpo-voz', 'cierre'])
     expect(plan.resumenFotos.filter(r => r.vacios)).toEqual([])
     const sub = plan.escenas.find(e => e.escena === 'reel-subtitulos')!
     expect(sub.subtitulos!.length).toBeGreaterThan(10)
     sub.subtitulos!.forEach((g, i, todos) => { if (todos[i + 1]) expect(g.fin).toBeLessThanOrEqual(todos[i + 1].inicio) })
     expect(Math.max(...sub.subtitulos!.map(g => g.palabras.length))).toBeLessThanOrEqual(3)
+  })
+
+  it('prioriza los clips de video del estudio sobre las fotos del beat', () => {
+    const estudio = { fotosExtra: { v3: [{ ruta: 'assets/fotos/a.jpg', credito: 'X' }, { ruta: 'assets/fotos/clip.mp4', credito: '@club', tipo: 'video', duracion: 12 }] } }
+    const plan = planificarReel(reelBueno(), { ppm: 170, estudio })
+    const clips = plan.escenas.filter(e => e.escena === 'reel-clip')
+    expect(clips[0].variables).toMatchObject({ video: 'assets/fotos/clip.mp4', credito: 'Video: @club' })
+    // En su propio beat el clip va primero, antes que la foto.
+    expect(clips.some(e => e.variables?.clave === 'SIN SUELDO')).toBe(true)
+    expect(clips.length).toBeLessThanOrEqual(3)
   })
 
   it('escribe el index vertical con los subtítulos en su pista y sin efectos encimados en una misma pista', () => {

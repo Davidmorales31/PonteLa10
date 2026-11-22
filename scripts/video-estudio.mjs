@@ -11,7 +11,7 @@ import { promisify } from 'node:util'
 import { randomBytes } from 'node:crypto'
 import { generarProyecto } from './video-generar-proyecto.mjs'
 import { generarReel, crearProyectosReels, descripcionDeReel } from './video-generar-reel.mjs'
-import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionDe } from './video-musica.mjs'
+import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionesDe, planMusica } from './video-musica.mjs'
 import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
 import { estadoDeRender, nuevoRender, terminarRender } from './video-estudio-render.mjs'
 import { hijosDe, listaDeReels, nombrePadre, raizDeFamilia } from './video-estudio-familia.mjs'
@@ -237,7 +237,7 @@ async function detalleProyecto(proyecto) {
     guionReels: existsSync(join(carpeta, 'guion-reels.json')) ? ((await leerJson(join(carpeta, 'guion-reels.json')))?.reels?.length || 0) : 0,
     titulos: guion.titulos?.length ? guion.titulos : [guion.tituloVideo || guion.titulo].filter(Boolean),
     miniaturaTexto: guion.miniatura || null,
-    descripcionYoutube: guion.tipo === 'reel' ? descripcionDeReel(guion, await atribucionDe(estudio.musica)) : descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionDe(estudio.musica) }),
+    descripcionYoutube: guion.tipo === 'reel' ? descripcionDeReel(guion, await atribucionesDe(pistasUsadas(estudio))) : descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionesDe(pistasUsadas(estudio)) }),
     miniaturas: await Promise.all(miniaturas.map(async n => {
       const { mtimeMs } = await stat(join(carpetaMiniaturas, n))
       return { nombre: n, url: `/archivos/${proyecto}/renders/miniaturas/${n}?v=${mtimeMs}`, medicion: await medicionDeMiniatura(join(carpetaMiniaturas, n), mtimeMs) }
@@ -496,6 +496,9 @@ export async function vozPresente(carpeta, video) {
   return { ok: niveles.length === 0 || niveles.some(n => n > -35), medidos: niveles.length, niveles }
 }
 
+// Pistas que sonaron en el último render (o la elegida a mano, en proyectos anteriores al reparto automático).
+const pistasUsadas = estudio => estudio.musicaPlan?.length ? estudio.musicaPlan : [estudio.musica].filter(Boolean)
+
 function renderizar(proyecto, estado) {
   const carpeta = carpetaDe(proyecto)
   estado.fase = 'renderizando'
@@ -507,7 +510,8 @@ function renderizar(proyecto, estado) {
   proceso.on('close', async codigo => {
     if (codigo !== 0) { terminarRender(estado, 'error'); ocupados.delete(proyecto); return }
     estado.fase = 'musica'
-    // Con la voz ya renderizada se mezcla la música elegida (baja sola cuando hablas).
+    // Con la voz ya renderizada se mezcla la música sola: una canción distinta por noticia en el video largo y una en
+    // cada Reel, siempre audible bajo la voz. Nadie tiene que elegirla; `sinMusica` en estudio.json la apaga.
     try {
       const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
       const voz = join(carpeta, 'renders', 'final-voz.mp4')
@@ -519,13 +523,20 @@ function renderizar(proyecto, estado) {
         ocupados.delete(proyecto)
         return
       }
-      if (estudio.musica) { estado.registro += '\nMezclando la música…\n'; await mezclarMusica({ video: voz, id: estudio.musica, salida: final }) } else await copyFile(voz, final)
-      // Un Reel con guion propio queda listo para publicarse desde «Ver Reels» (Facebook e Instagram).
       const guion = (await leerJson(join(carpeta, 'guion.json'))) || {}
+      const manifiestoMusica = (await leerJson(join(carpeta, 'manifiesto.json'))) || {}
+      const plan = estudio.sinMusica ? null : await planMusica({ guion, manifiesto: manifiestoMusica, duracion: await duracionDe(voz), semilla: proyecto, fija: estudio.musica })
+      if (plan) {
+        estado.registro += `\nMezclando la música (${plan.ids.length === 1 ? '1 canción' : `${plan.ids.length} canciones, una por noticia`})…\n`
+        await mezclarMusica({ video: voz, ids: plan.ids, tramos: plan.tramos, salida: final })
+      } else await copyFile(voz, final)
+      estudio.musicaPlan = plan?.ids || []
+      await guardarEstudio(proyecto, actual => { actual.musicaPlan = estudio.musicaPlan })
+      // Un Reel con guion propio queda listo para publicarse desde «Ver Reels» (Facebook e Instagram).
       if (guion.tipo === 'reel') {
         await mkdir(join(carpeta, 'renders', 'reels'), { recursive: true })
         const manifiesto = (await leerJson(join(carpeta, 'manifiesto.json'))) || {}
-        const reel = { id: String(guion.id || 'r1'), archivo: 'renders/final.mp4', duracion: manifiesto.duracion || 0, club: guion.club || '', descripcion: descripcionDeReel(guion, await atribucionDe(estudio.musica)), articulo: guion.articuloSlug || '' }
+        const reel = { id: String(guion.id || 'r1'), archivo: 'renders/final.mp4', duracion: manifiesto.duracion || 0, club: guion.club || '', descripcion: descripcionDeReel(guion, await atribucionesDe(pistasUsadas(estudio))), articulo: guion.articuloSlug || '' }
         await writeFile(join(carpeta, 'renders', 'reels', 'reels.json'), JSON.stringify({ creado: new Date().toISOString(), reels: [reel] }, null, 2))
       }
       terminarRender(estado, 'listo')

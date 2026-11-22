@@ -66,12 +66,15 @@ export function evaluarReel(reel, config, atribucion) {
   const largos = beats.filter(b => contarPalabras(b?.texto) > cfgBeats.palabrasMaximas).map(b => b.id)
   agregar('beats-cortos', `Cada beat de máximo ${cfgBeats.palabrasMaximas} palabras (una idea por beat)`, 5, !largos.length, largos.length ? `largos: ${largos.join(', ')}` : 'ok')
 
+  // Reels limpios (2026-11-22): todo es foto o clip a pantalla completa, así que lo que cuenta es tener imágenes
+  // distintas suficientes para cambiar de plano cada ~2 s sin pasar de 3 apariciones por imagen.
   const tipos = beats.map(b => b?.visual?.tipo || 'punch')
   const desconocidos = tipos.filter(t => !cfgBeats.tiposVisuales.includes(t))
-  const repetidos = tipos.filter((t, i) => i > 0 && t === tipos[i - 1] && !['punch', 'paneo', 'tarjeta'].includes(t))
-  agregar('variedad-visual', 'Al menos 3 tipos de visual distintos, sin repetir gráficos seguidos', 6,
-    new Set(tipos).size >= 3 && !desconocidos.length && !repetidos.length,
-    `${[...new Set(tipos)].join(', ')}${desconocidos.length ? `; desconocidos: ${desconocidos.join(', ')}` : ''}${repetidos.length ? '; gráficos repetidos seguidos' : ''}`)
+  const distintas = new Set(imagenesDe(reel).map(i => i.url))
+  const minimo = cfgBeats.imagenesMinimas ?? 5
+  agregar('imagenes-suficientes', `Al menos ${minimo} fotos o clips distintos en el Reel`, 6,
+    distintas.size >= minimo && !desconocidos.length,
+    `${distintas.size} imágenes distintas${desconocidos.length ? `; tipos desconocidos: ${desconocidos.join(', ')}` : ''}`)
 
   const encadenados = beats.slice(1).filter(b => contieneAlguno(String(b?.texto || '').split(/\s+/).slice(0, 6).join(' '), cfgBeats.conectores)).length
   agregar('encadenado', 'Los beats se encadenan con «pero / por eso / entonces», no con «y luego» (≥ 40 %)', 5,
