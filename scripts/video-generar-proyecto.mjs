@@ -9,6 +9,7 @@ import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
+import { edicionDe, nombreProyecto } from './video-edicion.mjs'
 
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
 const PACK = join(RAIZ, 'videos', 'pack-pont3la10')
@@ -220,7 +221,7 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
   }
 
   // Intro con la foto principal del día.
-  escenas.push({ escena: 'intro', inicio: 0, duracion: DURACIONES.intro, capa: 1, variables: { fondo: portada ? rutaFoto(portada.url) : '', kicker: 'NOTICIAS DEL FÚTBOL COLOMBIANO', fecha: fechaLarga(guion?.fecha) } })
+  escenas.push({ escena: 'intro', inicio: 0, duracion: DURACIONES.intro, capa: 1, variables: { fondo: portada ? rutaFoto(portada.url) : '', kicker: edicionDe(guion).kicker, fecha: fechaLarga(guion?.fecha) } })
   sonidos.push({ archivo: 'impacto', inicio: 0, duracion: 1.5, volumen: 0.8, mediaStart: 1.07 })
   t = DURACIONES.intro
   transicion(t)
@@ -413,7 +414,7 @@ async function main() {
     process.exit(2)
   }
   const guion = JSON.parse(await readFile(resolve(archivo), 'utf8'))
-  const salida = resolve(valor('--salida') || join(RAIZ, 'videos', 'diario', String(guion.fecha || 'sin-fecha')))
+  const salida = resolve(valor('--salida') || join(RAIZ, 'videos', 'diario', nombreProyecto(guion)))
   const r = await generarProyecto({ guion, salida, repetirFotos: args.includes('--repetir-fotos'), sinRed: args.includes('--sin-red') })
   process.stdout.write(`Proyecto en ${r.salida}
 Duración: ${r.duracion} s · ${r.escenas} escenas · ${r.tomas} tomas a cámara · ${r.grabados}/${r.tramos} tramos grabados · ${r.vacios} espacios de foto por llenar

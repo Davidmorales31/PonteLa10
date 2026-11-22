@@ -2,6 +2,7 @@
 // de Juan tomado del gancho, el logo y las especificaciones, en videos/diario/<proyecto>/renders/miniaturas/.
 // Codex diseña las 3 variantes; Juan las sube al estudio.
 import { readFile, writeFile, mkdir, copyFile } from 'node:fs/promises'
+import { edicionDe } from './video-edicion.mjs'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -35,7 +36,8 @@ export function textoEncargo({ guion, fotos, conCara, carpeta }) {
   const titulos = (guion.titulos?.length ? guion.titulos : [guion.tituloVideo]).filter(Boolean)
   const miniatura = guion.miniatura || {}
   const lineaFotos = fotos.map((f, i) => `- insumos/foto-${i + 1}.jpg — ${f.club || f.bloque}${f.titular ? ` — Noticia: «${f.titular}»` : ''} — Crédito: ${f.credito || 'sin crédito'}`).join('\n')
-  return `# Encargo de miniaturas — video diario de Pont3la10 (${guion.fecha})
+  const edicion = edicionDe(guion)
+  return `# Encargo de miniaturas — video diario de Pont3la10${edicion.id === 'colombia' ? '' : ` · ${edicion.nombre}`} (${guion.fecha})
 
 Hola, Codex. Necesito **3 miniaturas de YouTube** para la prueba A/B del video de hoy.
 

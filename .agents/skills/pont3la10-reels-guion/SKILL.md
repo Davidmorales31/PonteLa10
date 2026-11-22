@@ -80,6 +80,10 @@ autor}), `marcador` ({competencia, local, golesLocal, visita, golesVisita, estad
    verticales del pack (`reel-*`) y los efectos.
 3. Opcional: `npx hyperframes check` dentro de un Reel (los avisos de TikTok se ignoran: no es plataforma del plan).
 
+**Edición internacional:** el archivo va en `videos/diario/<fecha>-internacional/guion-reels.json` con
+`"edicion": "internacional"` en la raíz; las fotos «origen:» salen de ese proyecto; se crean con
+`node scripts/video-generar-reel.mjs <fecha>-internacional` y quedan como `<fecha>-internacional-reel-<n>`.
+
 ## Entrega
 
 Informa: los Reels con su club, formato, duración estimada y puntaje; qué historias del día descartaste y por qué; y que

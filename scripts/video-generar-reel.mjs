@@ -17,6 +17,7 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { instanciarEscena, descargarFoto, contarPalabras, IMAGEN_VACIA, MAXIMO_USOS_FOTO } from './video-generar-proyecto.mjs'
 import { agruparPalabras } from './video-reels.mjs'
+import { edicionDe } from './video-edicion.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
@@ -378,7 +379,7 @@ export function descripcionDeReel(guion, atribucionMusica = '') {
   const creditos = [...new Set([guion?.gancho?.credito, ...(guion?.beats || []).flatMap(b => [b?.visual?.credito, b?.visual?.credito2])].filter(Boolean))]
   if (creditos.length) partes.push(`Fotos: ${creditos.join(' · ')}`)
   if (atribucionMusica) partes.push(atribucionMusica)
-  const etiquetas = [...new Set(['#Shorts', ...(guion?.hashtags || []), '#FutbolColombiano', '#PonteLa10'])]
+  const etiquetas = [...new Set(['#Shorts', ...(guion?.hashtags || []), edicionDe(guion).hashtagReel, '#PonteLa10'])]
   partes.push(etiquetas.join(' '))
   return partes.filter(Boolean).join('\n\n').slice(0, 2200)
 }
@@ -485,7 +486,7 @@ export async function crearProyectosReels({ proyecto, sinRed = false }) {
     await mkdir(salida, { recursive: true })
     const rutaEstudio = join(salida, 'estudio.json')
     if (!existsSync(rutaEstudio)) await writeFile(rutaEstudio, JSON.stringify({ sinCamara: true, nombre: `Reel ${n + 1} · ${reel.club || reel.titulo || ''}`.slice(0, 60), origen: proyecto, creado: new Date().toISOString() }, null, 2))
-    const r = await generarReel({ guion: { ...reel, tipo: 'reel', fecha: guionReels.fecha, origen: proyecto }, salida, sinRed, transcribir: false })
+    const r = await generarReel({ guion: { ...reel, tipo: 'reel', fecha: guionReels.fecha, origen: proyecto, ...(guionReels.edicion ? { edicion: guionReels.edicion } : {}) }, salida, sinRed, transcribir: false })
     creados.push({ proyecto: salida.split(/[\\/]/).pop(), ...r })
   }
   return creados

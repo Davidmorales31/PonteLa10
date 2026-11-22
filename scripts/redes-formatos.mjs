@@ -1,5 +1,7 @@
 // Formatos visuales de las publicaciones de imagen (estudio de Cracks y La Gambeta, docs/ESTUDIO_FORMATOS_REDES_COMPETENCIA.md).
 // Todos en 1080×1350, locales (sharp + opentype.js + rembg), sin agentes. Cada formato recibe fotos ya descargadas (Buffers).
+// Decisión del responsable (2026-11-22): ningún formato usa el fondo azul y amarillo de la marca ni fondo desenfocado: la foto
+// se ve COMPLETA y nítida (mejorarFoto) sobre un fondo neutro casi negro (fotoSobreNegro), con la dirección del sitio al pie.
 //   node scripts/redes-formatos.mjs <slug> [--contra <otro-slug>] [--formato id|todos] [--salida <carpeta>]
 import { mkdir, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -7,7 +9,7 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import opentype from 'opentype.js'
 import sharp from 'sharp'
-import { AMARILLO, AZUL, LIENZO, RAIZ, componerImpacto, envolver, palabraDeImpacto, recortar } from './redes-imagen-impacto.mjs'
+import { AMARILLO, JPG, LIENZO, RAIZ, SOMBRA, componerImpacto, envolver, fotoSobreNegro, palabraDeImpacto, recortar } from './redes-imagen-impacto.mjs'
 
 const { ancho: W, alto: H } = LIENZO
 const BLANCO = '#ffffff'
@@ -29,7 +31,15 @@ export function trazo(fuente, texto, { x, y, medida, color = BLANCO, ancla = 'ce
 const svg = (contenido, defs = '') => Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}"><defs>${defs}</defs>${contenido}</svg>`)
 const cubrir = (buffer, w = W, h = H, posicion = 'attention') => sharp(buffer).resize(w, h, { fit: 'cover', position: posicion })
 const degradadoAbajo = (desde = .45, opacidad = .92) => svg(`<rect width="${W}" height="${H}" fill="url(#g)"/>`,
-  `<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="${desde}" stop-color="#041229" stop-opacity="0"/><stop offset=".85" stop-color="#041229" stop-opacity="${opacidad}"/><stop offset="1" stop-color="#041229"/></linearGradient>`)
+  `<linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="${desde}" stop-color="${SOMBRA}" stop-opacity="0"/><stop offset=".85" stop-color="${SOMBRA}" stop-opacity="${opacidad}"/><stop offset="1" stop-color="${SOMBRA}"/></linearGradient>`)
+
+/** Dirección del sitio, pequeña y centrada al pie (decisión del responsable, 2026-11-22: va en todos los formatos). */
+export const SITIO_TEXTO = 'WWW.PONT3LA10.COM'
+export async function conSitio(buffer) {
+  const { mont } = cargarFuentes()
+  const marca = svg(trazo(mont, SITIO_TEXTO, { x: W / 2, y: H - 12, medida: 22, opacidad: .85 }))
+  return sharp(buffer).composite([{ input: marca, left: 0, top: 0 }]).jpeg(JPG).toBuffer()
+}
 
 async function logoArriba(logo, capas, izquierda = Math.round((W - 230) / 2), arriba = 44) {
   if (!logo) return
@@ -38,9 +48,7 @@ async function logoArriba(logo, capas, izquierda = Math.round((W - 230) / 2), ar
 
 /** Formato 2: igual que la portada de impacto, pero con la foto real de fondo desenfocada y oscurecida. */
 export async function componerImpactoDesenfocado({ original, recorte, palabra, subtitulo, logo }) {
-  const fondo = await cubrir(original).blur(22).modulate({ brightness: .62, saturation: 1.25 }).toBuffer()
-  const base = await componerImpacto({ recorte, palabra, subtitulo, logo, fondo })
-  return base
+  return componerImpacto({ recorte, palabra, subtitulo, logo, original })
 }
 
 /** Formato 3: cita. Foto de fondo, comillas grandes, frase y autor. */
@@ -54,7 +62,7 @@ export async function componerCita({ original, cita, autor, logo }) {
   if (autor) t.push(trazo(mont, autor.toUpperCase(), { x: W / 2, y: 1190, medida: 30, color: AMARILLO }))
   const capas = [{ input: await degradadoAbajo(.3, .95), left: 0, top: 0 }, { input: svg(t.join('')), left: 0, top: 0 }]
   await logoArriba(logo, capas)
-  return cubrir(original).composite(capas).jpeg({ quality: 90 }).toBuffer()
+  return sharp(await fotoSobreNegro(original, { alto: 520, arriba: 150 })).composite(capas).jpeg(JPG).toBuffer()
 }
 
 /** Formato 4: versus. Dos fotos, «VS» al centro y los nombres abajo. */
@@ -63,18 +71,18 @@ export async function componerVersus({ fotoA, fotoB, nombreA, nombreB, titulo, l
   const mitad = Math.round(W / 2) - 3
   const [a, b] = await Promise.all([cubrir(fotoA, mitad, H).toBuffer(), cubrir(fotoB, mitad, H).toBuffer()])
   const t = [
-    `<rect x="${mitad}" y="0" width="6" height="${H}" fill="${BLANCO}"/>`,
-    `<circle cx="${W / 2}" cy="560" r="100" fill="${AMARILLO}" stroke="${AZUL}" stroke-width="8"/>`,
-    trazo(anton, 'VS', { x: W / 2, y: 602, medida: 130, color: AZUL }),
+    `<rect x="${mitad}" y="0" width="6" height="1190" fill="${BLANCO}"/>`,
+    `<circle cx="${W / 2}" cy="560" r="100" fill="${AMARILLO}" stroke="${SOMBRA}" stroke-width="8"/>`,
+    trazo(anton, 'VS', { x: W / 2, y: 602, medida: 130, color: SOMBRA }),
     trazo(anton, nombreA.toUpperCase(), { x: mitad / 2, y: 1130, medida: 84 }),
     trazo(anton, nombreB.toUpperCase(), { x: mitad + 6 + mitad / 2, y: 1130, medida: 84 })
   ]
   if (titulo) {
-    t.push(`<rect x="0" y="1190" width="${W}" height="110" fill="${AMARILLO}"/>`, trazo(anton, titulo.toUpperCase(), { x: W / 2, y: 1272, medida: 84, color: AZUL }))
+    t.push(`<rect x="0" y="1190" width="${W}" height="110" fill="${SOMBRA}" fill-opacity=".8"/>`, trazo(anton, titulo.toUpperCase(), { x: W / 2, y: 1272, medida: 84, color: AMARILLO }))
   }
   const capas = [{ input: a, left: 0, top: 0 }, { input: b, left: mitad + 6, top: 0 }, { input: await degradadoAbajo(.55, .9), left: 0, top: 0 }, { input: svg(t.join('')), left: 0, top: 0 }]
   await logoArriba(logo, capas)
-  return sharp({ create: { width: W, height: H, channels: 3, background: AZUL } }).composite(capas).jpeg({ quality: 90 }).toBuffer()
+  return sharp({ create: { width: W, height: H, channels: 3, background: SOMBRA } }).composite(capas).jpeg(JPG).toBuffer()
 }
 
 /** Formato 5: ficha con cifra grande (el «Tchouameni 2032» de Cracks). */
@@ -90,7 +98,7 @@ export async function componerFicha({ original, nombre, concepto, cifra, logo })
   t.push(trazo(anton, cifra, { x: W - 60, y: 1190, medida, ancla: 'derecha', color: AMARILLO }))
   const capas = [{ input: await degradadoAbajo(.5, .95), left: 0, top: 0 }, { input: svg(t.join('')), left: 0, top: 0 }]
   await logoArriba(logo, capas)
-  return cubrir(original).composite(capas).jpeg({ quality: 90 }).toBuffer()
+  return sharp(await fotoSobreNegro(original, { alto: 820, arriba: 150 })).composite(capas).jpeg(JPG).toBuffer()
 }
 
 /** Formato 6: contexto con círculo. La portada de impacto más una segunda foto en un círculo con borde blanco. */
@@ -99,52 +107,54 @@ export async function componerContextoCirculo({ original, recorte, circulo, pala
   const foto = await cubrir(circulo, d, d).composite([{ input: Buffer.from(`<svg width="${d}" height="${d}"><circle cx="${d / 2}" cy="${d / 2}" r="${d / 2}"/></svg>`), blend: 'dest-in' }]).png().toBuffer()
   const anillo = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${d + 20}" height="${d + 20}"><circle cx="${(d + 20) / 2}" cy="${(d + 20) / 2}" r="${d / 2 + 4}" fill="none" stroke="#fff" stroke-width="12"/></svg>`)
   const base = await componerImpactoDesenfocado({ original, recorte, palabra, subtitulo, logo })
-  return sharp(base).composite([{ input: foto, left: 60, top: 150 }, { input: anillo, left: 50, top: 140 }]).jpeg({ quality: 90 }).toBuffer()
+  return sharp(base).composite([{ input: foto, left: 60, top: 150 }, { input: anillo, left: 50, top: 140 }]).jpeg(JPG).toBuffer()
 }
 
-/** Formato 7: foto a toda la imagen, titular en Anton arriba a la izquierda y banda amarilla con el subtítulo (estilo La Gambeta). */
+/** Formato 7: foto sobre fondo borroso, titular en Anton abajo a la izquierda y banda oscura con el subtítulo (estilo La Gambeta). */
 export async function componerBanda({ original, titular, subtitulo, logo }) {
   const { anton, mont } = cargarFuentes()
   const lineas = envolver(anton, titular.toUpperCase(), 104, W * .88).slice(0, 4)
   const t = lineas.map((l, i) => trazo(anton, l, { x: 60, y: 1135 - (lineas.length - 1 - i) * 112, medida: 104, ancla: 'izquierda', color: i === lineas.length - 1 ? AMARILLO : BLANCO }))
-  t.push(`<rect x="0" y="1170" width="${W}" height="140" fill="${AMARILLO}"/>`)
-  envolver(mont, corto(subtitulo, 86).toUpperCase(), 30, W * .9).slice(0, 2).forEach((l, i) => t.push(trazo(mont, l, { x: W / 2, y: 1228 + i * 42, medida: 30, color: AZUL })))
+  t.push(`<rect x="0" y="1170" width="${W}" height="140" fill="${SOMBRA}" fill-opacity=".85"/>`)
+  envolver(mont, corto(subtitulo, 86).toUpperCase(), 30, W * .9).slice(0, 2).forEach((l, i) => t.push(trazo(mont, l, { x: W / 2, y: 1228 + i * 42, medida: 30 })))
   const capas = [{ input: await degradadoAbajo(.3, .92), left: 0, top: 0 }, { input: svg(t.join('')), left: 0, top: 0 }]
   await logoArriba(logo, capas, W - 290)
-  return cubrir(original).composite(capas).jpeg({ quality: 90 }).toBuffer()
+  return sharp(await fotoSobreNegro(original, { alto: 600, arriba: 150 })).composite(capas).jpeg(JPG).toBuffer()
 }
 
 /** Recorta en el límite de una palabra y añade «…» si hizo falta. */
 export function corto(texto, maximo) {
   const limpio = String(texto || '').replace(/\s+/g, ' ').trim()
   if (limpio.length <= maximo) return limpio
-  return `${limpio.slice(0, maximo).replace(/\s+\S*$/, '')}…`
+  return `${limpio.slice(0, maximo).replace(/\s+\S*$/, '').replace(/[\s,;:.\-–]+$/, '')}…`
 }
 
 /** Formato 8: carrusel de tres diapositivas: portada con «DESLIZA», puntos clave y cierre con pregunta. */
 export async function componerCarrusel({ original, recorte, palabra, subtitulo, puntos, pregunta, logo }) {
   const { anton, mont } = cargarFuentes()
   const portada = await componerImpactoDesenfocado({ original, recorte, palabra, subtitulo, logo })
-  const marca = svg(`${trazo(mont, 'DESLIZA  ›››', { x: W / 2, y: 1318, medida: 34, color: AMARILLO })}`)
-  const s1 = await sharp(portada).composite([{ input: marca, left: 0, top: 0 }]).jpeg({ quality: 90 }).toBuffer()
+  const marca = svg(`${trazo(mont, 'DESLIZA  ›››', { x: W / 2, y: 1312, medida: 32, color: AMARILLO })}`)
+  const s1 = await sharp(portada).composite([{ input: marca, left: 0, top: 0 }]).jpeg(JPG).toBuffer()
   const filas = []
   puntos.slice(0, 3).forEach((p, i) => {
     const y = 330 + i * 290
     filas.push(trazo(anton, String(i + 1), { x: 130, y: y + 100, medida: 200, color: AMARILLO }))
-    envolver(mont, p, 40, W * .62).slice(0, 4).forEach((l, j) => filas.push(trazo(mont, l, { x: 250, y: y + 40 + j * 54, medida: 40, ancla: 'izquierda' })))
+    envolver(mont, p, 40, W * .62).slice(0, 3).forEach((l, j) => filas.push(trazo(mont, l, { x: 250, y: y + 40 + j * 54, medida: 40, ancla: 'izquierda' })))
     if (i < 2) filas.push(`<rect x="70" y="${y + 215}" width="940" height="3" fill="${BLANCO}" fill-opacity=".25"/>`)
   })
   filas.unshift(trazo(anton, 'LO QUE DEBES SABER', { x: W / 2, y: 230, medida: 100 }))
+  // Las diapositivas de texto van sobre el fondo neutro (sin foto, sin azul ni amarillo).
+  const fondoTexto = await fotoSobreNegro(null)
   const capas2 = [{ input: svg(filas.join('')), left: 0, top: 0 }]
   await logoArriba(logo, capas2)
-  const s2 = await sharp({ create: { width: W, height: H, channels: 3, background: AZUL } }).composite(capas2).jpeg({ quality: 90 }).toBuffer()
+  const s2 = await sharp(fondoTexto).composite(capas2).jpeg(JPG).toBuffer()
   const q = envolver(anton, pregunta.toUpperCase(), 100, W * .84).slice(0, 5)
   const cierre = q.map((l, i) => trazo(anton, l, { x: W / 2, y: 520 + i * 125, medida: 100 }))
   cierre.push(trazo(mont, 'COMENTA TU OPINIÓN', { x: W / 2, y: 520 + q.length * 125 + 50, medida: 38, color: AMARILLO }))
-  cierre.push(trazo(mont, 'NOTA COMPLETA EN PONT3LA10.COM', { x: W / 2, y: 1240, medida: 30, color: BLANCO, opacidad: .85 }))
+  cierre.push(trazo(mont, 'NOTA COMPLETA EN LA WEB', { x: W / 2, y: 1240, medida: 30, color: BLANCO, opacidad: .85 }))
   const capas3 = [{ input: svg(cierre.join('')), left: 0, top: 0 }]
   await logoArriba(logo, capas3)
-  const s3 = await sharp({ create: { width: W, height: H, channels: 3, background: AZUL } }).composite(capas3).jpeg({ quality: 90 }).toBuffer()
+  const s3 = await sharp(fondoTexto).composite(capas3).jpeg(JPG).toBuffer()
   return [s1, s2, s3]
 }
 
@@ -165,6 +175,8 @@ export function cifraDeNota(texto) {
   const nexos = String.raw`(?!(?:el|la|los|las|un|una|de|del|al|y|o|en|con|por|para|que|se|su|sus|a|ante|tras|sobre|entre|como)\b)`
   const palabra = String.raw`[A-Za-zÁÉÍÓÚáéíóúñ]+`
   const m = String(texto || '').match(new RegExp(String.raw`(\$?\d[\d.,]*\s?(?:%|millones|mil)?)\s+${nexos}(${palabra}(?:\s+${nexos}${palabra})?)`))
+  // Un año (1936, 2027) no es una cifra de ficha: no dice cuánto, solo cuándo.
+  if (m && /^(19|20)\d{2}$/.test(m[1].trim())) return null
   return m ? { cifra: m[1].trim(), concepto: m[2].trim() } : null
 }
 
@@ -173,7 +185,7 @@ export function puntosDeNota(articulo) {
   const textos = []
   const recorrer = nodo => { if (!nodo) return; if (typeof nodo.text === 'string') textos.push(nodo.text); (nodo.content || []).forEach(recorrer) }
   recorrer(articulo?.documento)
-  const oraciones = [articulo?.resumen || '', ...textos].join(' ').split(/(?<=[.!?])\s+/).map(o => o.trim()).filter(o => o.length >= 30 && o.length <= 130)
+  const oraciones = [articulo?.resumen || '', ...textos].join(' ').split(/(?<=[.!?])\s+/).map(o => o.trim()).filter(o => o.length >= 30 && o.length <= 105)
   return [...new Set(oraciones)].slice(0, 3)
 }
 
@@ -195,10 +207,10 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const recorte = await recortar(art.portada.url, carpeta, slug.slice(0, 30))
   const logo = join(RAIZ, 'public/brand/pont3la10_logo_login_blanco.png')
   const palabra = palabraDeImpacto(titular)
-  const guardar = async (nombre, buf) => { const r = join(carpeta, `${slug.slice(0, 30)}-${nombre}.jpg`); await writeFile(r, buf); process.stdout.write(`${r}\n`) }
+  const guardar = async (nombre, buf) => { const r = join(carpeta, `${slug.slice(0, 30)}-${nombre}.jpg`); await writeFile(r, await conSitio(buf)); process.stdout.write(`${r}\n`) }
   for (const f of elegidos) {
     try {
-      if (f === 'impacto') await guardar(f, await componerImpacto({ recorte, palabra, subtitulo: titular, logo }))
+      if (f === 'impacto') await guardar(f, await componerImpacto({ recorte, original, palabra, subtitulo: titular, logo }))
       if (f === 'impacto-desenfocado') await guardar(f, await componerImpactoDesenfocado({ original, recorte, palabra, subtitulo: titular, logo }))
       if (f === 'cita') { const c = citaDeNota(art); if (c) await guardar(f, await componerCita({ original, cita: c, autor: art.fuente?.nombre || '', logo })); else process.stdout.write('cita: la nota no trae una cita entre comillas\n') }
       if (f === 'versus') { const otro = valor('--contra'); if (otro) { const b = await leer(otro); await guardar(f, await componerVersus({ fotoA: original, fotoB: await descargar(b.portada.url), nombreA: palabra, nombreB: palabraDeImpacto(b.tituloPortada || b.titulo), titulo: 'Duelo', logo })) } else process.stdout.write('versus: usa --contra <otro-slug>\n') }

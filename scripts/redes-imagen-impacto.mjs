@@ -63,29 +63,54 @@ export function capaTexto({ palabra, subtitulo, anton, montserrat }) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${LIENZO.ancho}" height="${LIENZO.alto}">${trazos.join('')}</svg>`
 }
 
-/** Compone la portada de impacto. `recorte` es un PNG con transparencia; devuelve un JPG. */
-export async function componerImpacto({ recorte, palabra, subtitulo, logo, fondo: fondoPropio }) {
+/** Color de las sombras y del fondo neutro: casi negro (sin tono de marca). */
+export const SOMBRA = '#05070a'
+/** Salida JPG de todas las piezas: calidad alta y color sin submuestreo, para que el texto y los bordes se vean limpios. */
+export const JPG = { quality: 95, chromaSubsampling: '4:4:4' }
+
+/**
+ * Mejora de nitidez («HD») de la foto antes de ponerla en la pieza (decisión del responsable, 2026-11-22). No inventa
+ * detalle: reescala con Lanczos3 al tamaño exacto en que se verá (así casi nunca se amplía) y aplica un enfoque suave
+ * que recupera el borde que se pierde con la compresión de las fuentes. Devuelve un PNG sin pérdida.
+ */
+export async function mejorarFoto(original, anchoDestino) {
+  const meta = await sharp(original).metadata()
+  const ancho = (meta.orientation || 1) >= 5 ? meta.height : meta.width
+  const ampliando = anchoDestino > (ancho || anchoDestino) * 1.05
+  return sharp(original).rotate().resize({ width: anchoDestino, kernel: 'lanczos3' })
+    .sharpen(ampliando ? { sigma: 1.3, m1: 1, m2: 2.5 } : { sigma: 0.8, m1: 0.6, m2: 1.4 })
+    .png().toBuffer({ resolveWithObject: true })
+}
+
+/**
+ * Lienzo neutro con la foto COMPLETA (sin recortar, sin desenfocar), centrada dentro de la franja [arriba, arriba + alto].
+ * Sin foto, solo el fondo neutro. Devuelve un PNG (la pieza final se guarda en JPG una sola vez).
+ */
+export async function fotoSobreNegro(original, { arriba = 130, alto = 800, margen = 0, fondo = SOMBRA } = {}) {
+  const { ancho, alto: altoLienzo } = LIENZO
+  const lienzo = sharp({ create: { width: ancho, height: altoLienzo, channels: 3, background: fondo } })
+  if (!original) return lienzo.png().toBuffer()
+  const meta = await sharp(original).metadata()
+  const [w, h] = (meta.orientation || 1) >= 5 ? [meta.height, meta.width] : [meta.width, meta.height]
+  const escala = Math.min((ancho - margen * 2) / w, alto / h)
+  const foto = await mejorarFoto(original, Math.max(1, Math.round(w * escala)))
+  return lienzo.composite([{ input: foto.data, left: Math.round((ancho - foto.info.width) / 2), top: Math.round(arriba + (alto - foto.info.height) / 2) }]).png().toBuffer()
+}
+
+/** Portada de impacto: la foto completa y nítida, la palabra gigante del titular debajo, línea fina, subtítulo y logo. Devuelve un JPG. */
+export async function componerImpacto({ recorte, palabra, subtitulo, logo, original = null, fondo: fondoPropio }) {
   const { ancho, alto } = LIENZO
   const anton = opentype.loadSync(join(RAIZ, 'public/fonts/Anton-Regular.ttf'))
   const montserrat = opentype.loadSync(join(RAIZ, 'public/fonts/Montserrat-Bold.ttf'))
-  const fondo = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}">
-    <defs>
-      <linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0d3a82"/><stop offset=".55" stop-color="${AZUL}"/><stop offset="1" stop-color="#041229"/></linearGradient>
-      <radialGradient id="r" cx=".5" cy=".42" r=".55"><stop offset="0" stop-color="#3b82e6" stop-opacity=".55"/><stop offset="1" stop-color="#3b82e6" stop-opacity="0"/></radialGradient>
-    </defs>
-    <rect width="${ancho}" height="${alto}" fill="url(#g)" fill-opacity="${fondoPropio ? .22 : 1}"/><rect width="${ancho}" height="${alto}" fill="url(#r)" fill-opacity="${fondoPropio ? .35 : 1}"/>
-    <polygon points="0,${alto * .62} ${ancho},${alto * .5} ${ancho},${alto * .58} 0,${alto * .7}" fill="${AMARILLO}" fill-opacity=".9"/>
-  </svg>`)
-  const sujeto = await sharp(recorte).trim().resize({ height: 1020, width: 1000, fit: 'inside' }).toBuffer({ resolveWithObject: true })
-  const sombra = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="#041229" stop-opacity="0"/><stop offset=".85" stop-color="#041229" stop-opacity=".92"/><stop offset="1" stop-color="#041229"/></linearGradient></defs><rect width="${ancho}" height="${alto}" fill="url(#s)"/></svg>`)
+  const fondo = fondoPropio || await fotoSobreNegro(original ?? recorte, { arriba: 130, alto: 800 })
+  const sombra = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}"><defs><linearGradient id="s" x1="0" y1="0" x2="0" y2="1"><stop offset=".62" stop-color="${SOMBRA}" stop-opacity="0"/><stop offset=".85" stop-color="${SOMBRA}" stop-opacity=".85"/><stop offset="1" stop-color="${SOMBRA}"/></linearGradient></defs><rect width="${ancho}" height="${alto}" fill="url(#s)"/></svg>`)
   const marca = logo ? await sharp(logo).resize({ width: 230 }).toBuffer() : null
   const capas = [
-    { input: sujeto.data, left: Math.round((ancho - sujeto.info.width) / 2), top: Math.round(1030 - sujeto.info.height) },
     { input: sombra, left: 0, top: 0 },
     { input: Buffer.from(capaTexto({ palabra, subtitulo, anton, montserrat })), left: 0, top: 0 }
   ]
   if (marca) capas.push({ input: marca, left: Math.round((ancho - 230) / 2), top: 44 })
-  return sharp(fondoPropio ? await sharp(fondoPropio).composite([{ input: fondo }]).toBuffer() : fondo).composite(capas).jpeg({ quality: 90 }).toBuffer()
+  return sharp(fondo).composite(capas).jpeg(JPG).toBuffer()
 }
 
 export async function recortar(urlImagen, carpeta, nombre) {
@@ -104,8 +129,9 @@ export async function imagenImpactoDeArticulo(slug, carpeta) {
   const url = articulo.portada?.url
   if (!titular || !url) throw new Error('La nota no tiene titular o portada.')
   await mkdir(carpeta, { recursive: true })
-  const recorte = await recortar(url, carpeta, slug.slice(0, 40))
-  const jpg = await componerImpacto({ recorte, palabra: palabraDeImpacto(titular), subtitulo: titular, logo: join(RAIZ, 'public/brand/pont3la10_logo_login_blanco.png') })
+  await recortar(url, carpeta, slug.slice(0, 40))
+  const original = await readFile(join(carpeta, `${slug.slice(0, 40)}-original.jpg`))
+  const jpg = await componerImpacto({ original, palabra: palabraDeImpacto(titular), subtitulo: titular, logo: join(RAIZ, 'public/brand/pont3la10_logo_login_blanco.png') })
   const ruta = join(carpeta, `${slug.slice(0, 40)}-impacto.jpg`)
   await writeFile(ruta, jpg)
   return { ruta, palabra: palabraDeImpacto(titular), titular }

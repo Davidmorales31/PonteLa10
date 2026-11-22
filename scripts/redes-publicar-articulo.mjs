@@ -3,7 +3,10 @@
 // Uso:
 //   node scripts/redes-publicar-articulo.mjs <slug|id> [--credito "Colprensa (vía El Colombiano)"] [--programar <ISO>] [--dry-run]
 //   node scripts/redes-publicar-articulo.mjs --pendientes [--creditos <archivo.json>] [--borrador|--programar-desde <ISO>|--auto] [--horas 24]
+//   Cualquiera de los dos modos acepta --categoria futbol-mundial (fútbol internacional); por defecto, futbol-colombiano.
+//   --excluir slug1,slug2 deja fuera de --pendientes las piezas cuya imagen no pasó la revisión.
 //     Completa los artículos recientes sin publicación social (o con borrador sin programar).
+//     Cada nota recibe un formato visual local distinto (selector en redes-selector-formato.mjs); `--formato-clasico` vuelve a foto + titular.
 //     El crédito de la foto sale de la portada del artículo; el archivo (slug -> crédito) solo lo sobrescribe.
 //     El crédito es opcional (decisión del responsable, 2026-11-20): si la portada lo trae se añade al texto; si no, se publica igual. `--auto` programa cada pieza en la primera hora libre (ver `horasParaPendientes`).
 // La llave (PONT3LA10_AGENTES_REDES_KEY) la crea una persona en Panel → Contenido
@@ -24,29 +27,89 @@ export function resaltarFinal(titular) {
   return `${palabras.join(' ')} **${cola}**`
 }
 
-export function construirComposicionArticulo(articulo, medioId, credito) {
+/**
+ * Composición de la publicación. Sin `medioIdsLocales` es el formato clásico (foto + titular + logo compuestos por el
+ * servidor). Con ellos, cada imagen ya viene dibujada en local con uno de los formatos de `redes-formatos.mjs` (una
+ * diapositiva por imagen; varias = carrusel) y no se le añade texto ni logo encima.
+ * @param {any} articulo
+ * @param {string | null} medioId
+ * @param {string} [credito]
+ * @param {string[] | null} [medioIdsLocales]
+ */
+export function construirComposicionArticulo(articulo, medioId, credito, medioIdsLocales = null) {
   const titular = String(articulo.tituloPortada || articulo.titulo || '').trim()
   if (!titular) throw new Error('El artículo no tiene titular.')
-  if (!medioId) throw new Error('Falta el identificador de la imagen.')
+  const locales = Array.isArray(medioIdsLocales) && medioIdsLocales.length ? medioIdsLocales : null
+  if (!locales && !medioId) throw new Error('Falta el identificador de la imagen.')
   const url = `${SITIO}/articulos/${articulo.slug}`
   const resumen = String(articulo.resumen || '').trim()
   const fuente = credito ? `\n\nFoto: ${credito}` : ''
+  // Notas de un sitio aún sin dominio público (México): solo la imagen y el texto, sin enlace roto.
+  const enlaceFacebook = articulo.sinEnlace ? '' : `\n\nLee la nota completa: ${url}`
+  const enlaceInstagram = articulo.sinEnlace ? '' : '\n\nNota completa en pont3la10.com'
   return {
     tipo: 'imagenes',
     titulo: String(articulo.titulo).slice(0, 120),
     formato: 'vertical',
     destinos: ['facebook', 'instagram'],
     descripcion: {
-      facebook: `${articulo.titulo}\n\n${resumen}\n\nLee la nota completa: ${url}${fuente}`.slice(0, 5000),
-      instagram: `${articulo.titulo}\n\n${resumen}\n\nNota completa en pont3la10.com${fuente}`.slice(0, 2200)
+      facebook: `${articulo.titulo}\n\n${resumen}${enlaceFacebook}${fuente}`.slice(0, 5000),
+      instagram: `${articulo.titulo}\n\n${resumen}${enlaceInstagram}${fuente}`.slice(0, 2200)
     },
     claveIdempotencia: `articulo-${articulo.id}`,
-    diapositivas: [{
-      plantilla: 'una',
-      imagenes: [{ medioId }],
-      logos: [{ x: 50, y: 10, ancho: 34 }],
-      textos: [{ texto: resaltarFinal(titular).slice(0, 220), y: 82, tamano: 64, color: 'blanco', fondo: 'degradado' }]
-    }]
+    diapositivas: locales
+      ? locales.map(id => ({ plantilla: 'una', imagenes: [{ medioId: id }], logos: [], textos: [] }))
+      : [{
+          plantilla: 'una',
+          imagenes: [{ medioId }],
+          logos: [{ x: 50, y: 10, ancho: 34 }],
+          textos: [{ texto: resaltarFinal(titular).slice(0, 220), y: 82, tamano: 64, color: 'blanco', fondo: 'degradado' }]
+        }]
+  }
+}
+
+const ARCHIVO_HISTORIAL = resolve(dirname(fileURLToPath(import.meta.url)), '../.codex/private/redes-formatos-historial.json')
+
+async function leerHistorial() {
+  try { const datos = JSON.parse(await readFile(ARCHIVO_HISTORIAL, 'utf8')); return Array.isArray(datos) ? datos.slice(-60) : [] } catch { return [] }
+}
+
+async function anotarHistorial(historial, entrada) {
+  historial.push(entrada)
+  try { await mkdir(dirname(ARCHIVO_HISTORIAL), { recursive: true }); await writeFile(ARCHIVO_HISTORIAL, JSON.stringify(historial.slice(-60), null, 1)) } catch { /* el historial es una ayuda de variedad; no bloquea */ }
+}
+
+/** Sube un JPG generado en local con el flujo firmado de la API (iniciar → PUT → confirmar) y devuelve su medioId. */
+async function subirImagenLocal(ctx, buffer, nombre) {
+  const inicio = await llamar(ctx.base, ctx.llave, 'POST', '/medios/subidas', { nombre, tipoMime: 'image/jpeg', tamano: buffer.length })
+  const id = inicio?.id
+  const subida = inicio?.subida
+  if (!id || !subida?.url) throw new Error('La API no devolvió la URL de subida.')
+  const put = await fetch(subida.url, { method: 'PUT', headers: subida.encabezados || { 'content-type': 'image/jpeg', 'x-upsert': 'false' }, body: buffer, signal: AbortSignal.timeout(60_000) })
+  if (!put.ok) throw new Error(`La subida de la imagen falló (HTTP ${put.status}).`)
+  const confirmada = await llamar(ctx.base, ctx.llave, 'POST', `/medios/subidas/${id}/confirmar`, { id })
+  return confirmada?.id || confirmada?.medio?.id || id
+}
+
+/**
+ * Elige el formato visual de la nota, lo dibuja en local y lo sube. Devuelve { formato, medioIds } o null si no hay formato
+ * local posible (entonces se usa el clásico). Nunca lanza: cualquier fallo cae al clásico para no dejar notas sin imagen.
+ */
+async function prepararImagenesLocales(ctx, articulo, historial) {
+  try {
+    const { elegirFormato } = await import('./redes-selector-formato.mjs')
+    const { generarImagenes, leerArticuloCompleto } = await import('./redes-imagen-articulo.mjs')
+    const completo = await leerArticuloCompleto(articulo.slug, fetch, articulo.sitio)
+    const formato = ctx.formatoForzado || elegirFormato({ ...articulo, ...completo }, { historial })
+    const buffers = await generarImagenes(formato, { ...articulo, ...completo })
+    const medioIds = []
+    for (const [i, buffer] of buffers.entries()) medioIds.push(await subirImagenLocal(ctx, buffer, `${basename(articulo.slug).slice(0, 40)}-${formato}-${i + 1}.jpg`))
+    process.stdout.write(`Formato visual: ${formato} (${buffers.length} imagen${buffers.length > 1 ? 'es' : ''})\n`)
+    await anotarHistorial(historial, { slug: articulo.slug, formato, fecha: new Date(Date.now() - 5 * 3_600_000).toISOString().slice(0, 10) })
+    return { formato, medioIds }
+  } catch (error) {
+    process.stdout.write(`Formato visual local no disponible (${String(error?.message || error).slice(0, 160)}); se usa el clásico.\n`)
+    return null
   }
 }
 
@@ -108,9 +171,9 @@ export function horasParaPendientes(cantidad, programadas = [], ahora = Date.now
 }
 
 /** Crédito de la foto de portada de un artículo publicado (API pública); vacío si no lo trae. */
-export async function creditoDePortada(slug, transporte = fetch) {
+export async function creditoDePortada(slug, transporte = fetch, sitio = 'co') {
   try {
-    const respuesta = await transporte(`${SITIO}/api/articulos/${encodeURIComponent(slug)}`, { signal: AbortSignal.timeout(20_000) })
+    const respuesta = await transporte(`${SITIO}/api/articulos/${encodeURIComponent(slug)}${sitio && sitio !== 'co' ? `?sitio=${sitio}` : ''}`, { signal: AbortSignal.timeout(20_000) })
     if (!respuesta.ok) return ''
     return String((await respuesta.json())?.portada?.credito || '').trim().slice(0, 160)
   } catch { return '' }
@@ -138,20 +201,34 @@ async function llamar(base, llave, metodo, ruta, cuerpo) {
   return datos
 }
 
-async function leerFeed() {
-  const feed = await (await fetch(`${SITIO}/api/articulos?categoria=futbol-colombiano&limite=50`)).json()
-  return Array.isArray(feed) ? feed : (feed.articulos || feed.items || [])
+// `categoria` elige el feed: fútbol colombiano por defecto; la corrida internacional usa futbol-mundial y la de México,
+// futbol-mexicano (sitio mx; decisión del responsable 2026-11-22: solo imágenes, en las mismas páginas). Mientras el
+// dominio de México no esté en línea, sus publicaciones van sin enlace a la nota.
+export const SITIO_POR_CATEGORIA = { 'futbol-colombiano': 'co', 'futbol-mundial': 'co', 'futbol-mexicano': 'mx' }
+export const CATEGORIAS_REDES = Object.keys(SITIO_POR_CATEGORIA)
+
+async function leerFeed(categoria = 'futbol-colombiano') {
+  const sitio = SITIO_POR_CATEGORIA[categoria] || 'co'
+  const feed = await (await fetch(`${SITIO}/api/articulos?categoria=${categoria}&limite=50${sitio === 'co' ? '' : `&sitio=${sitio}`}`)).json()
+  const lista = Array.isArray(feed) ? feed : (feed.articulos || feed.items || [])
+  return sitio === 'co' ? lista : lista.map(a => ({ ...a, sitio, sinEnlace: true }))
 }
 
 // Lleva una publicación (nueva o borrador existente) hasta borrador, programada o pendiente de aprobación.
-async function procesar(ctx, articulo, { credito, programar, borrador, previsualizacion, idExistente }) {
+async function procesar(ctx, articulo, { credito, programar, borrador, previsualizacion, idExistente, historial = null }) {
   const { base, llave } = ctx
   let id = idExistente
   if (!id) {
-    const medio = await llamar(base, llave, 'POST', '/medios/desde-url', { url: articulo.imagen })
-    const medioId = medio?.id || medio?.medio?.id
-    if (!medioId) terminar('La API no devolvió el identificador de la imagen importada.')
-    const creada = await llamar(base, llave, 'POST', '/publicaciones', construirComposicionArticulo(articulo, medioId, credito))
+    const locales = historial ? await prepararImagenesLocales(ctx, articulo, historial) : null
+    let medioId = null
+    if (!locales) {
+      const medio = await llamar(base, llave, 'POST', '/medios/desde-url', { url: articulo.imagen })
+      medioId = medio?.id || medio?.medio?.id
+      if (!medioId) terminar('La API no devolvió el identificador de la imagen importada.')
+    }
+    const composicion = construirComposicionArticulo(articulo, medioId, credito, locales?.medioIds)
+    if (ctx.sufijoClave) composicion.claveIdempotencia = `${composicion.claveIdempotencia}-${ctx.sufijoClave}`
+    const creada = await llamar(base, llave, 'POST', '/publicaciones', composicion)
     id = creada?.id || creada?.publicacion?.id
     if (!id) terminar('La API no devolvió el identificador de la publicación.')
   }
@@ -190,10 +267,11 @@ async function procesar(ctx, articulo, { credito, programar, borrador, previsual
 async function main() {
   const args = process.argv.slice(2)
   const valor = nombre => { const i = args.indexOf(nombre); return i >= 0 ? args[i + 1] : undefined }
-  const conValor = new Set(['--credito', '--programar', '--previsualizacion', '--creditos', '--programar-desde', '--horas', '--carpeta'])
+  const conValor = new Set(['--credito', '--programar', '--previsualizacion', '--creditos', '--programar-desde', '--horas', '--carpeta', '--formato', '--clave-prueba', '--categoria', '--excluir'])
   const objetivo = args.find((a, i) => !a.startsWith('--') && !conValor.has(args[i - 1]))
   const dryRun = args.includes('--dry-run')
   const pendientes = args.includes('--pendientes')
+  const formatoClasico = args.includes('--formato-clasico')
   const credito = valor('--credito')
   const programar = valor('--programar')
   if (!pendientes && !objetivo) terminar('Uso: node scripts/redes-publicar-articulo.mjs <slug|id> [--credito "Fotógrafo (vía medio)"] [--programar <ISO>] [--dry-run]\n   o: node scripts/redes-publicar-articulo.mjs --pendientes --creditos <archivo.json> [--borrador | --programar-desde <ISO>] [--horas 24]', 2)
@@ -202,10 +280,12 @@ async function main() {
     if (error?.code !== 'ENOENT') terminar('No se pudo cargar la configuración privada local.')
   }
 
-  const lista = await leerFeed()
+  const categoria = valor('--categoria') || 'futbol-colombiano'
+  if (!CATEGORIAS_REDES.includes(categoria)) terminar(`--categoria debe ser una de: ${CATEGORIAS_REDES.join(', ')}.`, 2)
+  const lista = await leerFeed(categoria)
   if (!pendientes) {
     const articulo = lista.find(a => a.id === objetivo || a.slug === objetivo)
-    if (!articulo) terminar('El artículo no está entre los 50 más recientes publicados de Fútbol colombiano.')
+    if (!articulo) terminar(`El artículo no está entre los 50 más recientes publicados de la categoría ${categoria}.`)
     if (!articulo.imagen) terminar('El artículo no tiene imagen de portada.')
     if (dryRun) {
       process.stdout.write(JSON.stringify(construirComposicionArticulo(articulo, '00000000-0000-4000-8000-000000000000', credito), null, 1) + '\n')
@@ -219,11 +299,12 @@ async function main() {
   const destino = new URL(base)
   if (destino.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(destino.hostname)) terminar('La API de redes debe usar HTTPS.')
   if (!['pont3la10.com', 'www.pont3la10.com', 'localhost', '127.0.0.1'].includes(destino.hostname)) terminar('Destino de la API de redes no permitido.')
-  const ctx = { base, llave }
+  // Opciones de prueba: forzar un formato y separar la clave de idempotencia para no chocar con la publicación real.
+  const ctx = { base, llave, formatoForzado: valor('--formato'), sufijoClave: valor('--clave-prueba') }
 
   if (!pendientes) {
     const articulo = lista.find(a => a.id === objetivo || a.slug === objetivo)
-    await procesar(ctx, articulo, { credito, programar, borrador: args.includes('--borrador'), previsualizacion: valor('--previsualizacion') })
+    await procesar(ctx, articulo, { credito, programar, borrador: args.includes('--borrador'), previsualizacion: valor('--previsualizacion'), historial: formatoClasico ? null : await leerHistorial() })
     return
   }
 
@@ -233,7 +314,10 @@ async function main() {
   const existentes = (await llamar(base, llave, 'GET', '/publicaciones?ambito=todas&limite=50'))?.publicaciones || []
   const propias = (await llamar(base, llave, 'GET', '/publicaciones?ambito=mias&limite=50'))?.publicaciones || []
   const plan = planificarPendientes(lista, existentes, Date.now(), horas, propias)
+  // --excluir slug1,slug2: deja fuera piezas cuya imagen no pasó la revisión (quedan como borrador para una persona).
+  const excluidos = new Set(String(valor('--excluir') || '').split(',').map(s => s.trim()).filter(Boolean))
   const trabajo = [...plan.reanudar.map(r => ({ articulo: r.articulo, idExistente: r.id })), ...plan.crear.map(articulo => ({ articulo }))]
+    .filter(({ articulo }) => !excluidos.has(articulo.slug))
   for (const o of plan.omitidos) process.stdout.write(`Omitido ${o.slug}: ${o.motivo}\n`)
   if (!trabajo.length) { process.stdout.write('No hay artículos pendientes de publicación social.\n'); return }
 
@@ -241,6 +325,7 @@ async function main() {
   const desde = valor('--programar-desde')
   const borrador = args.includes('--borrador')
   if (!borrador && !desde && !auto) terminar('Indica --borrador (para revisar las imágenes), --programar-desde <ISO con -05:00> o --auto.', 2)
+  const historial = formatoClasico ? null : await leerHistorial()
   const carpeta = resolve(valor('--carpeta') || resolve(tmpdir(), 'pont3la10-redes'))
   if (desde && !(Date.parse(desde) > Date.now() + 10 * 60_000)) terminar('--programar-desde debe estar a más de 10 minutos de ahora.', 2)
   // Con --auto cada pieza va a la primera hora libre, después de lo que ya esté programado.
@@ -249,10 +334,10 @@ async function main() {
   let hora = desde ? Date.parse(desde) : 0
   let indice = 0
   for (const { articulo, idExistente } of trabajo) {
-    const creditoFoto = creditos[articulo.slug] || await creditoDePortada(articulo.slug)
+    const creditoFoto = creditos[articulo.slug] || await creditoDePortada(articulo.slug, fetch, articulo.sitio)
     process.stdout.write(`\n== ${articulo.slug}\n`)
     await procesar(ctx, articulo, {
-      credito: creditoFoto, borrador, idExistente,
+      credito: creditoFoto, borrador, idExistente, historial,
       programar: auto ? horasAuto[indice] : desde ? new Date(hora).toISOString() : undefined,
       previsualizacion: resolve(carpeta, `previsualizacion-${basename(articulo.slug).slice(0, 40)}.jpg`)
     })

@@ -23,6 +23,14 @@ try {
   await db.exec(await readFile('supabase/migrations/20261116150000_publicaciones_sociales_propias.sql', 'utf8'))
   await db.exec(await readFile('supabase/migrations/20261117100000_api_agentes_redes.sql', 'utf8'))
   await db.exec(await readFile('supabase/migrations/20261117120000_agentes_redes_borrado.sql', 'utf8'))
+  // Antes de la migración de cuota, una llave operativa con el tope anterior (50) y otra de prueba.
+  await db.exec("insert into auth.users values('00000000-0000-4000-8000-000000000001'); insert into public.social_agent_keys(name,key_prefix,key_hash,owner_id,scopes,max_schedules_per_day) values('Sin limites','p3l_abcdefgh','" + hash('operativa') + "','00000000-0000-4000-8000-000000000001',array['leer','programar'],50), ('Otra llave','p3l_abcdefgh','" + hash('otra-llave') + "','00000000-0000-4000-8000-000000000001',array['leer','programar'],50);")
+  await esperarError(() => db.query("update public.social_agent_keys set max_schedules_per_day = 120 where name = 'Otra llave'"), e => e.code === '23514')
+  await db.exec(await readFile('supabase/migrations/20261122120000_cuota_programaciones_agentes_redes_200.sql', 'utf8'))
+  assert.equal((await filas("select max_schedules_per_day m from public.social_agent_keys where name = 'Sin limites'"))[0].m, 200); comprobaciones++
+  assert.equal((await filas("select max_schedules_per_day m from public.social_agent_keys where name = 'Otra llave'"))[0].m, 50); comprobaciones++ // solo la operativa sube
+  await db.query("update public.social_agent_keys set max_schedules_per_day = 150 where name = 'Otra llave'"); comprobaciones++
+  await esperarError(() => db.query("update public.social_agent_keys set max_schedules_per_day = 201 where name = 'Otra llave'"), e => e.code === '23514')
   // El servidor llama como service_role, no como superusuario: así se detectan permisos que falten.
   await db.exec(`grant usage on schema public, auth to service_role; grant select, insert on public.editorial_audit_log to service_role; grant select on auth.users to service_role;`)
   const dueno = randomUUID()

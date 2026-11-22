@@ -68,7 +68,7 @@ const ejemploMcp = computed(() => JSON.stringify({ mcpServers: { 'pont3la10-rede
           <label v-for="opcion in opciones" :key="opcion.id" class="alcance" :class="{ riesgo: opcion.riesgo }"><input v-model="alcances" type="checkbox" :value="opcion.id"><span><strong>{{ opcion.titulo }}</strong><small>{{ opcion.texto }}</small></span></label>
         </fieldset>
         <div class="numeros">
-          <label v-if="alcances.includes('programar')">Programaciones por día<input v-model.number="cuota" type="number" min="1" max="50"></label>
+          <label v-if="alcances.includes('programar')">Programaciones por día<input v-model.number="cuota" type="number" min="1" max="200"></label>
           <label>Llamadas por minuto<input v-model.number="limite" type="number" min="5" max="600"></label>
           <label>Vence en (días)<input v-model.number="venceEnDias" type="number" min="1" max="365" placeholder="Sin vencimiento"></label>
         </div>

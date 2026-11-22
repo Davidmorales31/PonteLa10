@@ -1,0 +1,420 @@
+{
+  "version": 1,
+  "descripcion": "Fuentes, cobertura y señales de tendencia de la corrida de fútbol internacional (categoría futbol-mundial). La usa .agents/skills/pont3la10-futbol-internacional-run y scripts/tendencias-futbol-internacional.mjs.",
+  "categoria": "futbol-mundial",
+  "competiciones": [
+    {
+      "nombre": "Champions League",
+      "consulta": "Champions League",
+      "terminos": [
+        "champions",
+        "uefa champions",
+        "liga de campeones"
+      ]
+    },
+    {
+      "nombre": "Premier League",
+      "consulta": "Premier League",
+      "terminos": [
+        "premier league"
+      ]
+    },
+    {
+      "nombre": "LaLiga",
+      "consulta": "LaLiga",
+      "terminos": [
+        "laliga",
+        "la liga",
+        "liga española"
+      ]
+    },
+    {
+      "nombre": "Serie A",
+      "consulta": "Serie A Italia",
+      "terminos": [
+        "serie a"
+      ]
+    },
+    {
+      "nombre": "Bundesliga",
+      "consulta": "Bundesliga",
+      "terminos": [
+        "bundesliga"
+      ]
+    },
+    {
+      "nombre": "Ligue 1",
+      "consulta": "Ligue 1",
+      "terminos": [
+        "ligue 1"
+      ]
+    },
+    {
+      "nombre": "Europa League",
+      "consulta": "Europa League",
+      "terminos": [
+        "europa league",
+        "conference league"
+      ]
+    },
+    {
+      "nombre": "Copa Libertadores",
+      "consulta": "Copa Libertadores",
+      "terminos": [
+        "libertadores",
+        "sudamericana"
+      ]
+    },
+    {
+      "nombre": "MLS",
+      "consulta": "MLS Inter Miami",
+      "terminos": [
+        "mls",
+        "major league soccer"
+      ]
+    },
+    {
+      "nombre": "Liga Profesional Argentina",
+      "consulta": "Liga Profesional Argentina",
+      "terminos": [
+        "liga profesional"
+      ]
+    },
+    {
+      "nombre": "Brasileirão",
+      "consulta": "Brasileirao",
+      "terminos": [
+        "brasileirao",
+        "brasileirão"
+      ]
+    },
+    {
+      "nombre": "Saudi Pro League",
+      "consulta": "Saudi Pro League Cristiano",
+      "terminos": [
+        "al nassr",
+        "al hilal",
+        "saudi pro league"
+      ]
+    },
+    {
+      "nombre": "Selecciones",
+      "consulta": "selección fútbol amistoso eliminatoria",
+      "terminos": [
+        "eliminatorias",
+        "nations league",
+        "mundial 2026"
+      ]
+    }
+  ],
+  "clubesDeMayorInteres": [
+    {
+      "nombre": "Real Madrid",
+      "sitio": "https://www.realmadrid.com",
+      "terminos": [
+        "real madrid"
+      ]
+    },
+    {
+      "nombre": "FC Barcelona",
+      "sitio": "https://www.fcbarcelona.es",
+      "terminos": [
+        "barcelona",
+        "barça",
+        "barca"
+      ]
+    },
+    {
+      "nombre": "Atlético de Madrid",
+      "sitio": "https://www.atleticodemadrid.com",
+      "terminos": [
+        "atlético de madrid",
+        "atletico de madrid",
+        "atleti"
+      ]
+    },
+    {
+      "nombre": "Manchester City",
+      "sitio": "https://www.mancity.com",
+      "terminos": [
+        "manchester city",
+        "man city"
+      ]
+    },
+    {
+      "nombre": "Liverpool",
+      "sitio": "https://www.liverpoolfc.com",
+      "terminos": [
+        "liverpool"
+      ]
+    },
+    {
+      "nombre": "Arsenal",
+      "sitio": "https://www.arsenal.com",
+      "terminos": [
+        "arsenal"
+      ]
+    },
+    {
+      "nombre": "Chelsea",
+      "sitio": "https://www.chelseafc.com",
+      "terminos": [
+        "chelsea"
+      ]
+    },
+    {
+      "nombre": "Manchester United",
+      "sitio": "https://www.manutd.com",
+      "terminos": [
+        "manchester united",
+        "man united"
+      ]
+    },
+    {
+      "nombre": "Tottenham",
+      "sitio": "https://www.tottenhamhotspur.com",
+      "terminos": [
+        "tottenham"
+      ]
+    },
+    {
+      "nombre": "Bayern Múnich",
+      "sitio": "https://fcbayern.com",
+      "terminos": [
+        "bayern"
+      ]
+    },
+    {
+      "nombre": "Borussia Dortmund",
+      "sitio": "https://www.bvb.de",
+      "terminos": [
+        "dortmund",
+        "bvb"
+      ]
+    },
+    {
+      "nombre": "PSG",
+      "sitio": "https://www.psg.fr",
+      "terminos": [
+        "psg",
+        "paris saint-germain"
+      ]
+    },
+    {
+      "nombre": "Juventus",
+      "sitio": "https://www.juventus.com",
+      "terminos": [
+        "juventus"
+      ]
+    },
+    {
+      "nombre": "Inter de Milán",
+      "sitio": "https://www.inter.it",
+      "terminos": [
+        "inter de milán"
+      ]
+    },
+    {
+      "nombre": "AC Milan",
+      "sitio": "https://www.acmilan.com",
+      "terminos": [
+        "ac milan"
+      ]
+    },
+    {
+      "nombre": "Napoli",
+      "sitio": "https://sscnapoli.it",
+      "terminos": [
+        "napoli",
+        "nápoles"
+      ]
+    },
+    {
+      "nombre": "Inter Miami",
+      "sitio": "https://www.intermiamicf.com",
+      "terminos": [
+        "inter miami"
+      ]
+    },
+    {
+      "nombre": "Boca Juniors",
+      "sitio": "https://www.bocajuniors.com.ar",
+      "terminos": [
+        "boca juniors"
+      ]
+    },
+    {
+      "nombre": "River Plate",
+      "sitio": "https://www.cariverplate.com.ar",
+      "terminos": [
+        "river plate"
+      ]
+    },
+    {
+      "nombre": "Flamengo",
+      "sitio": "https://www.flamengo.com.br",
+      "terminos": [
+        "flamengo"
+      ]
+    }
+  ],
+  "figuras": [
+    "Lionel Messi",
+    "Cristiano Ronaldo",
+    "Kylian Mbappé",
+    "Erling Haaland",
+    "Vinícius Júnior",
+    "Lamine Yamal",
+    "Jude Bellingham",
+    "Mohamed Salah",
+    "Harry Kane",
+    "Luis Díaz",
+    "James Rodríguez",
+    "Jhon Arias",
+    "Richard Ríos",
+    "Raphinha",
+    "Pedri",
+    "Ousmane Dembélé",
+    "Florian Wirtz",
+    "Julián Álvarez",
+    "Lautaro Martínez",
+    "Neymar"
+  ],
+  "medios": [
+    {
+      "nombre": "ESPN",
+      "url": "https://espndeportes.espn.com/futbol/",
+      "idioma": "es"
+    },
+    {
+      "nombre": "Diario AS",
+      "url": "https://as.com/futbol/",
+      "idioma": "es"
+    },
+    {
+      "nombre": "Marca",
+      "url": "https://www.marca.com/futbol.html",
+      "idioma": "es"
+    },
+    {
+      "nombre": "Mundo Deportivo",
+      "url": "https://www.mundodeportivo.com/futbol",
+      "idioma": "es"
+    },
+    {
+      "nombre": "Sport",
+      "url": "https://www.sport.es/es/futbol/",
+      "idioma": "es"
+    },
+    {
+      "nombre": "Infobae Deportes",
+      "url": "https://www.infobae.com/deportes/",
+      "idioma": "es"
+    },
+    {
+      "nombre": "Olé",
+      "url": "https://www.ole.com.ar/futbol-internacional",
+      "idioma": "es"
+    },
+    {
+      "nombre": "TyC Sports",
+      "url": "https://www.tycsports.com/futbol-internacional.html",
+      "idioma": "es"
+    },
+    {
+      "nombre": "BBC Sport",
+      "url": "https://www.bbc.com/sport/football",
+      "idioma": "en"
+    },
+    {
+      "nombre": "Sky Sports",
+      "url": "https://www.skysports.com/football",
+      "idioma": "en"
+    },
+    {
+      "nombre": "The Guardian",
+      "url": "https://www.theguardian.com/football",
+      "idioma": "en"
+    },
+    {
+      "nombre": "Gazzetta dello Sport",
+      "url": "https://www.gazzetta.it/Calcio/",
+      "idioma": "it"
+    },
+    {
+      "nombre": "Kicker",
+      "url": "https://www.kicker.de/",
+      "idioma": "de"
+    },
+    {
+      "nombre": "L'Équipe",
+      "url": "https://www.lequipe.fr/Football/",
+      "idioma": "fr"
+    },
+    {
+      "nombre": "ge (Globo Esporte)",
+      "url": "https://ge.globo.com/futebol/",
+      "idioma": "pt"
+    }
+  ],
+  "rss": [
+    {
+      "nombre": "BBC Sport Football",
+      "url": "https://feeds.bbci.co.uk/sport/football/rss.xml"
+    },
+    {
+      "nombre": "The Guardian Football",
+      "url": "https://www.theguardian.com/football/rss"
+    },
+    {
+      "nombre": "Sky Sports Football",
+      "url": "https://www.skysports.com/rss/12040"
+    }
+  ],
+  "tendencias": {
+    "paises": [
+      "CO",
+      "MX",
+      "ES",
+      "AR",
+      "US"
+    ],
+    "idiomaNoticias": {
+      "hl": "es-419",
+      "gl": "CO",
+      "ceid": "CO:es-419"
+    },
+    "ventanaNoticias": "1d",
+    "nota": "Las señales sirven para elegir historias; no son métricas publicables. Solo se escribe «lo más buscado» si se cita la medición con fecha y ámbito."
+  },
+  "excluir": {
+    "nota": "Fuera de esta corrida: fútbol colombiano (corrida de Colombia), Liga MX (sitio de México) y transmisiones o canales con derechos como fuente de fotos.",
+    "terminos": [
+      "liga betplay",
+      "dimayor",
+      "liga mx",
+      "pumas",
+      "monterrey",
+      "chivas",
+      "américa de cali",
+      "millonarios",
+      "atlético nacional",
+      "santa fe",
+      "junior"
+    ],
+    "otrosDeportes": [
+      "nba",
+      "nfl",
+      "mlb",
+      "nhl",
+      "baloncesto",
+      "básquet",
+      "basketball",
+      "tenis",
+      "fórmula 1",
+      "f1",
+      "pelicans",
+      "lakers"
+    ]
+  }
+}

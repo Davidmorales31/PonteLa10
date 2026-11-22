@@ -14,6 +14,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { generarProyecto } from './video-generar-proyecto.mjs'
+import { edicionDe } from './video-edicion.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
@@ -259,7 +260,7 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
   const rutaEstudio = join(carpeta, 'estudio.json')
   const leerEstudio = async () => (existsSync(rutaEstudio) ? JSON.parse(await readFile(rutaEstudio, 'utf8')) : {})
   const manifiesto = existsSync(join(carpeta, 'manifiesto.json')) ? JSON.parse(await readFile(join(carpeta, 'manifiesto.json'), 'utf8')) : { fotos: [] }
-  const recientes = await traer(`${SITIO}/api/articulos?categoria=futbol-colombiano&limite=50`, { tipo: 'json' }).then(l => (Array.isArray(l) ? l : [])).catch(() => [])
+  const recientes = await traer(`${SITIO}/api/articulos?categoria=${edicionDe(guion).categoria}&limite=50`, { tipo: 'json' }).then(l => (Array.isArray(l) ? l : [])).catch(() => [])
   const carpetaFotos = join(carpeta, 'assets', 'fotos')
   await mkdir(carpetaFotos, { recursive: true })
   // Huellas de todo lo que ya está en el proyecto (portadas y fotos agregadas), para no repetir.
