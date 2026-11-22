@@ -60,8 +60,8 @@ describe('regla: ninguna imagen más de 3 veces por video', () => {
     // Como en el generador real, la versión desenfocada es otro archivo (foto-N-fondo.jpg).
     const plan = planificarReel(r, { ppm: 170, derivada: (ruta: string, tipo: string) => (tipo === 'fondo' ? `${ruta}#fondo` : ruta) })
     expect(plan.escenas.some(e => e.variables?.foto === 'https://x/a.jpg#fondo')).toBe(true)
-    const nitidas = plan.escenas.filter(e => ['reel-gancho', 'reel-foto-punch', 'reel-foto-tarjeta'].includes(e.escena))
-      .flatMap(e => [e.variables?.foto, e.variables?.foto2]).filter(f => f === 'https://x/a.jpg')
+    const nitidas = plan.escenas.filter(e => ['reel-gancho', 'reel-foto-punch', 'reel-foto-paneo', 'reel-cta'].includes(e.escena))
+      .flatMap(e => [e.variables?.foto, e.variables?.fondo]).filter(f => f === 'https://x/a.jpg')
     expect(nitidas.length).toBeLessThanOrEqual(3)
   })
 })

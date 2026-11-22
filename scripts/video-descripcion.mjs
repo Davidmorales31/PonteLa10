@@ -22,7 +22,8 @@ export function capitulos({ guion, manifiesto, titulares = {} }) {
   const segmentos = manifiesto?.segmentos || []
   const lista = [{ inicio: 0, texto: 'Lo más importante del día' }]
   for (const bloque of guion?.bloques || []) {
-    const cara = segmentos.find(s => s.id === `${bloque.id}-cara`)
+    // La noticia empieza en su entrada a cámara (guiones viejos) o directo en su voz (estructura directa).
+    const cara = segmentos.find(s => s.id === `${bloque.id}-cara`) || segmentos.find(s => s.id === `${bloque.id}-voz`)
     if (!cara) continue
     const titular = bloque.titular || titulares[bloque.articuloSlug] || bloque.caraBreve
     lista.push({ inicio: cara.inicio, texto: `${bloque.club ? `${bloque.club}: ` : ''}${recortar(titular, 60)}` })

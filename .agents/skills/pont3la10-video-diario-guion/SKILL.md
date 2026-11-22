@@ -1,6 +1,6 @@
 ---
 name: pont3la10-video-diario-guion
-description: Escribe el guion del video diario de Pont3la10 (mínimo 8 min, 16:9, voz cercana) a partir de los artículos publicados hoy: gancho, bloques por noticia con fuente, tomas breves con cara, planos con foto acreditada, pregunta final y cierre. Lo valida con la rúbrica ejecutable antes de entregarlo.
+description: Escribe el guion del video diario de Pont3la10 (mínimo 8 min, 16:9, voz cercana) a partir de los artículos publicados hoy: gancho que ya es noticia, bloques directos de largo variado con fuente, preguntas al público, planos con foto acreditada, pregunta final y cierre. Lo valida con la rúbrica ejecutable antes de entregarlo.
 ---
 
 # Guion del video diario
@@ -20,11 +20,19 @@ Un archivo `guion.json` para el día (fecha de Bogotá) que pase `node scripts/v
 
 ## Estructura (8–10 minutos: 450–600 s a 155 palabras por minuto, unas 1.250 palabras)
 
+**Estructura directa (decisión de Juan, 2026-11-22).** Medido en los largos virales de Cracks y La Gambeta: la
+primera noticia arranca en el segundo 0, ninguna noticia tiene «intro» antes de contarla, cada una dura entre 20 y
+110 s y hay una pregunta al público cada ~1,5 min. Nuestros videos arrancaban la primera noticia en el segundo 27–30
+(intro + presentación) y todas duraban 44–50 s con una toma a cámara antes. Por eso:
+
 | Pieza | Reglas |
 |---|---|
-| `gancho` (cara) | La noticia más fuerte del día en ≤ 28 palabras, con cifra, cita o fuente. **Nunca** empieza con saludo («hola», «bienvenidos»…). |
-| `presentacion` | Saludo corto y cercano, invitación a suscribirse (en pantalla entra la animación de suscríbete justo aquí) y los 3 temas fuertes que vienen. |
-| `bloques` (8–12) | Cada uno cuenta una noticia en 80–160 palabras de voz, con este molde: dato duro → fuente nombrada («según Win Sports», «informó el club») → contexto en una o dos frases → qué implica. Un `caraBreve` (≤ 30 palabras) que Juan dice a cámara al abrir el bloque. |
+| `estructura` | Siempre `"directa"`. Sin ella el generador vuelve a la intro animada y la rúbrica no aprueba. |
+| `gancho` | Es la primera noticia ya contándose: el hecho más fuerte en ≤ 28 palabras, con cifra, cita o fuente. **Nunca** empieza con saludo («hola», «bienvenidos»…) ni anuncia lo que viene. Arranca en el segundo 0. |
+| `presentacion` | Opcional y de **≤ 15 palabras** (un saludo de una frase después del gancho). Sin lista de temas. |
+| `bloques` (8–12) | La noticia completa de una vez, **sin `caraBreve`** ni frase de entrada tipo «vamos con la siguiente noticia». Mezcla tres largos: **rápida** (45–85 palabras, ~20–30 s), **normal** (86–219) y **fuerte** (220–320, ~90–120 s, solo para la historia del día o la más polémica). Al menos una rápida y una fuerte, y nunca más de 2 seguidas del mismo largo. |
+| Conectores | Cada noticia arranca distinto («Por cierto…», «Ojo con esto…», «Y en Medellín…», «Cambiemos de liga…»): la rúbrica rechaza dos noticias con las mismas dos primeras palabras. |
+| Preguntas | Al menos una noticia de cada 3 termina con una pregunta al público («¿ustedes qué harían?»), dicha dentro de la `voz`. |
 | `preguntaFinal` | Una pregunta que invite a comentar sobre la historia más discutible del día. |
 | `cierre` (cara) | ≤ 45 palabras: recordatorio de suscripción y campana, y despedida personal. |
 
@@ -38,8 +46,8 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
   "tituloVideo": "(el primero de titulos)",
   "titulos": ["…", "…", "…"],
   "miniatura": { "texto": "2 a 5 palabras", "resaltar": "una de esas palabras" },
+  "estructura": "directa",
   "gancho": { "texto": "…", "fuente": "…" },
-  "presentacion": { "texto": "…" },
   "bloques": [
     {
       "id": "b1",
@@ -47,8 +55,7 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
       "club": "…",
       "fuente": "Win Sports",
       "rumor": false,
-      "caraBreve": "…",
-      "voz": "…",
+      "voz": "… (la noticia completa, sin entrada aparte)",
       "planos": [{ "imagen": "https://…", "credito": "Colprensa (vía X)", "movimiento": "zoom-in" }],
       "titular": "opcional: rótulo del bloque (si falta, se usa el titular de portada del artículo)",
       "marcador": { "local": "CHI", "visita": "COL", "golesLocal": "0", "golesVisita": "0", "estado": "FINAL" },
@@ -64,7 +71,7 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
 
 **Regla visual (decisión de Juan):** nunca gráficos a pantalla completa. Los planos son **solo fotos reales**; las cifras van en `dato` (tarjeta pequeña sobre la foto) y los resultados en `marcador` (marcador de esquina), ambos opcionales y solo con datos que estén en la fuente. **Las imágenes las consigue el agente, no Juan (decisión de Juan, 2026-11-18, criterio de licencia bajo):** por cada noticia busca de 4 a 6 fotos reales más de la misma noticia o de sus protagonistas en cualquier medio (sitios de noticias, cuentas oficiales de clubes, Wikimedia Commons) y añádelas como planos con su crédito («Fotógrafo (vía medio)» o el nombre del medio), o pon las URLs de las notas de otros medios sobre la noticia en `fuentesFotos` del bloque (páginas, no imágenes: el buscador saca su foto principal con el crédito del medio). Después revisa la hoja de contactos (`--hoja`) y quita con `--quitar` gráficos, logos, montajes y fotos de otro club. Después del generador, `scripts/video-buscar-fotos.mjs` completa lo que falte y, si aun así faltan, el video repite las fotos de la noticia: nunca queda un hueco. Siempre fotos reales: nunca imágenes generadas por IA, ilustraciones, gráficos, tablas ni montajes.
 
-**Regla de repetición (decisión de Juan, 2026-11-20):** ninguna foto ni clip aparece más de 3 veces en todo el video (intro, presentación, bloques y cierre). El generador lo hace cumplir: si a una noticia le faltan fotos, alarga sus planos en vez de repetir. Por eso cada noticia necesita de 3 a 6 fotos distintas: búscalas.
+**Regla de repetición (decisión de Juan, 2026-11-20):** ninguna foto ni clip aparece más de 3 veces en todo el video (gancho, bloques, pregunta y cierre). El generador lo hace cumplir: si a una noticia le faltan fotos, alarga sus planos en vez de repetir. Por eso cada noticia necesita de 3 a 6 fotos distintas: búscalas.
 
 **Fotos y clips de redes (decisión de Juan, 2026-11-20):** en `fuentesFotos` puedes poner, además de notas de otros medios, URLs de publicaciones de X (`https://x.com/<cuenta>/status/<id>`) de los clubes, los protagonistas, la Dimayor, la Federación o periodistas, siempre que sean de esa misma noticia. El buscador también lee las publicaciones que las notas traen incrustadas. De ahí salen fotos (las verticales entran con fondo desenfocado) y clips de video sin sonido (máximo 2 por noticia, recortados a 15 s) con crédito «@cuenta en X (vía Medio)». Nunca clips de partidos ni de canales con derechos de transmisión (Win Sports, ESPN, DSports, Caracol, RCN…): YouTube los reclama con Content ID. Prefiere clips de entrenamientos, llegadas, firmas, ruedas de prensa y celebraciones publicadas por el propio club o protagonista. Revisa en la hoja de contactos los marcados `[VIDEO]` y quita los que no sirvan.
 
@@ -76,7 +83,7 @@ Juan le habla a su gente como un amigo que sabe de fútbol, no como un noticiero
 - Opiniones sí, pero marcadas como opinión («yo creo que…», «para mí…») y separadas del dato con su fuente. Nunca opiniones sobre salud, vida privada o acusaciones.
 - Expresiones colombianas con naturalidad y sin exagerar; nada de groserías ni burlas a hinchadas o personas.
 - Reacciones breves que suenen reales («¡qué partidazo!», «esto se puso bueno») solo cuando el hecho lo justifica.
-- Transiciones conversadas entre bloques («y hablando de cuadrangulares…», «cambiemos de ciudad…»).
+- Transiciones conversadas entre bloques («y hablando de cuadrangulares…», «cambiemos de ciudad…»), siempre dentro de la `voz` de la noticia y distintas en cada una.
 - Frases cortas, una idea por frase; Juan lo lee en voz alta a 150–165 palabras por minuto.
 - Números y siglas legibles en voz alta («tres a dos», «Dimayor»). Marcadores y fechas solo si están en la fuente.
 - Los rumores se cuentan como rumor («según X, sin confirmación oficial»). Si dos fuentes se contradicen, no afirmes el dato.
@@ -97,7 +104,7 @@ YouTube permite probar hasta 3 títulos y 3 miniaturas; gana el de más tiempo d
 
 ## Rúbrica (obligatoria)
 
-Ejecuta `node scripts/video-rubrica-guion.mjs guion.json` y corrige hasta **APROBADO** (puntaje ≥ 85 y sin fallos en los criterios obligatorios): duración total (450–600 s), gancho sin saludo, fuente atribuida en cada bloque, crédito en cada foto y rumores atribuidos. Informa el puntaje y los criterios que fallaron si no llegas a aprobar; no maquilles el JSON para que pase.
+Ejecuta `node scripts/video-rubrica-guion.mjs guion.json` y corrige hasta **APROBADO** (puntaje ≥ 85 y sin fallos en los criterios obligatorios): duración total (450–600 s), gancho sin saludo, fuente atribuida en cada bloque, crédito en cada foto, rumores atribuidos y noticia directa (sin `caraBreve`, presentación ≤ 15 palabras y `"estructura": "directa"`). También puntúan el ritmo variado, las preguntas al público y los arranques distintos. Informa el puntaje y los criterios que fallaron si no llegas a aprobar; no maquilles el JSON para que pase.
 
 ## Armar el proyecto de video
 
@@ -107,7 +114,7 @@ Con el guion aprobado, ejecuta:
 node scripts/video-generar-proyecto.mjs guion.json
 ```
 
-Crea `videos/diario/<fecha>/` (no se versiona) con el proyecto de HyperFrames armado con el pack `videos/pack-pont3la10`: intro, huecos de toma a cámara con la frase de cada uno, galerías de fotos (un espacio cada ~7 s; los que no tienen foto quedan marcados), rótulo con el titular de portada, marcador y cifra pequeños, transiciones y efectos de sonido. También deja `teleprompter.txt` (con tiempos, CARA/VOZ) y `manifiesto.json`. Valida con `npx hyperframes check` desde esa carpeta. No renderices ni publiques: Juan abre el estudio local (`npm run video:estudio`, http://localhost:4810), graba su voz y su cara tramo por tramo, sube fotos con crédito a los espacios vacíos, pulsa «Armar video» y aprueba el render.
+Crea `videos/diario/<fecha>/` (no se versiona) con el proyecto de HyperFrames armado con el pack `videos/pack-pont3la10`: sin intro animada (el gancho empieza en el segundo 0), galerías de fotos (un espacio cada ~5 s; los que no tienen foto quedan marcados), rótulo con el titular de portada, marcador y cifra pequeños, transiciones y efectos de sonido. También deja `teleprompter.txt` (con tiempos, CARA/VOZ) y `manifiesto.json`. Valida con `npx hyperframes check` desde esa carpeta. No renderices ni publiques: Juan abre el estudio local (`npm run video:estudio`, http://localhost:4810), graba su voz tramo por tramo (la música se pone sola al renderizar: una canción distinta por noticia), sube fotos con crédito a los espacios vacíos, pulsa «Armar video» y aprueba el render.
 
 ## Entrega
 

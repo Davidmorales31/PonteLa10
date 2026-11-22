@@ -3,14 +3,16 @@
     #root { position: absolute; inset: 0; overflow: hidden; background: #000; font-family: "Montserrat", sans-serif; }
     .rpan-tira { position: absolute; left: 0; top: 0; width: 3414px; height: 1920px; }
     .rpan-img { position: absolute; inset: 0; width: 3414px; height: 1920px; object-fit: cover; }
-    .rpan-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(8,32,74,.5) 0%, rgba(8,32,74,0) 20%, rgba(8,32,74,0) 55%, rgba(8,32,74,.85) 100%); }
-    .rpan-credito { position: absolute; right: 180px; top: 1036px; padding: 6px 14px; background: rgba(8,32,74,.82); color: #fff; font-size: 28px; font-weight: 600; border-left: 4px solid #ffd800; }
+    .rpan-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 16%, rgba(0,0,0,0) 58%, rgba(0,0,0,.55) 100%); }
+    .rpan-credito { position: absolute; right: 180px; top: 1262px; color: rgba(255,255,255,.9); font-size: 22px; font-weight: 600; letter-spacing: .01em; text-shadow: 0 1px 2px rgba(0,0,0,.95), 0 0 12px rgba(0,0,0,.6); }
+    .rpan-clave { position: absolute; left: 100px; right: 180px; top: 470px; text-align: center; font-family: "League Gothic", "Oswald", sans-serif; font-size: 104px; line-height: .92; color: #ffd800; text-transform: uppercase; text-shadow: 0 3px 0 rgba(0,0,0,.85), 0 0 30px rgba(0,0,0,.55); }
   </style>
   <div id="root" data-composition-id="reel-foto-paneo" data-width="1080" data-height="1920"
-    data-composition-variables='[{"id":"foto","type":"string","label":"Foto panorámica (16:9, 3414×1920)","default":""},{"id":"credito","type":"string","label":"Crédito","default":""},{"id":"direccion","type":"string","label":"Dirección (izquierda o derecha)","default":"derecha"},{"id":"duracion","type":"number","label":"Duración (s)","default":4,"min":0.6,"max":12,"step":0.1}]'>
+    data-composition-variables='[{"id":"foto","type":"string","label":"Foto panorámica (16:9, 3414×1920)","default":""},{"id":"credito","type":"string","label":"Crédito","default":""},{"id":"clave","type":"string","label":"Palabra clave en pantalla (opcional)","default":""},{"id":"direccion","type":"string","label":"Dirección (izquierda o derecha)","default":"derecha"},{"id":"duracion","type":"number","label":"Duración (s)","default":4,"min":0.6,"max":12,"step":0.1}]'>
     <div id="rpan-escena" class="clip" data-start="0" data-duration="4">
       <div id="rpan-tira" class="rpan-tira"><img id="rpan-img" class="rpan-img" src="assets/vacio.png" data-var-src="foto" alt="" /></div>
       <div id="rpan-velo" class="rpan-velo" data-layout-allow-occlusion></div>
+      <div id="rpan-clave" class="rpan-clave" data-var-text="clave"></div>
       <div id="rpan-credito" class="rpan-credito" data-var-text="credito"></div>
     </div>
   </div>
@@ -21,9 +23,12 @@
     const recorrido = 3414 - 1080;
     const haciaDerecha = String(v.direccion ?? "derecha") !== "izquierda";
     if (!String(v.credito ?? "").trim()) document.querySelector("#rpan-credito").style.display = "none";
+    if (!String(v.clave ?? "").trim()) document.querySelector("#rpan-clave").style.display = "none";
     const tl = gsap.timeline({ paused: true });
     tl.fromTo("#rpan-tira", { x: haciaDerecha ? -recorrido * 0.12 : -recorrido * 0.88, scale: 1.08 }, { x: haciaDerecha ? -recorrido * 0.88 : -recorrido * 0.12, scale: 1.0, duration: D, ease: "power1.inOut" }, 0);
     tl.fromTo("#rpan-credito", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.2);
+    tl.fromTo("#rpan-clave", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.22, ease: "power3.out" }, 0.12);
+    tl.to("#rpan-clave", { opacity: 0, duration: 0.2 }, Math.max(0.4, D - 0.25));
     window.__timelines["reel-foto-paneo"] = tl;
   </script>
 </template>

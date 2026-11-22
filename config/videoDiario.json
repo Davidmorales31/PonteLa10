@@ -21,10 +21,21 @@
   "bloques": {
     "minimo": 8,
     "maximo": 12,
-    "palabrasMinimas": 80,
-    "palabrasMaximas": 160,
+    "palabrasMinimas": 45,
+    "palabrasMaximas": 320,
     "caraBreveMaximoPalabras": 30,
-    "segundosPorPlano": 8
+    "segundosPorPlano": 8,
+    "descripcionRitmo": "Medido el 2026-11-22 en los largos virales de Cracks y La Gambeta: noticias de 20 a 110 s encadenadas sin intro, una pregunta al público cada ~1,5 min. Nuestros videos tenían todas las noticias de 44–50 s con una toma a cámara antes de cada una.",
+    "tamanos": {
+      "rapida": [45, 85],
+      "fuerte": [220, 320]
+    },
+    "maximoSeguidosMismoTamano": 2,
+    "bloquesPorPregunta": 3
+  },
+  "estructura": {
+    "requerida": "directa",
+    "presentacionMaximoPalabras": 15
   },
   "cierre": {
     "maximoPalabras": 45,
@@ -73,7 +84,8 @@
       "bloques_con_fuente",
       "fotos_con_credito",
       "rumor_atribuido",
-      "duracion_total"
+      "duracion_total",
+      "noticia_directa"
     ]
   },
   "tono": {

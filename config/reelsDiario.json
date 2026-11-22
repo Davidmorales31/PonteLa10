@@ -26,8 +26,10 @@
     "minimo": 4,
     "maximo": 9,
     "palabrasMaximas": 28,
-    "segundosMaximosPorPlano": 4,
+    "segundosMaximosPorPlano": 2.2,
     "conectores": ["pero", "por eso", "entonces", "y ojo", "aunque", "sin embargo", "o sea", "es decir", "así que", "mientras"],
+    "imagenesMinimas": 5,
+    "descripcionVisual": "Desde 2026-11-22 todo beat es foto o clip a pantalla completa (Shorts virales medidos: ~0–5 % del tiempo con gráficos a pantalla completa, 40–55 cambios de plano por minuto). Los tipos dato, marcador y versus se aceptan pero se muestran como palabra clave pequeña sobre la foto; tarjeta, dividida, cita, lista y pregunta se muestran como foto.",
     "tiposVisuales": ["punch", "paneo", "tarjeta", "dividida", "dato", "cita", "lista", "marcador", "versus", "pregunta"]
   },
   "rehook": {

@@ -27,12 +27,27 @@ const SITIO = 'https://www.pont3la10.com'
 const PNG_VACIO = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
 
 const redondear = valor => Math.round(valor * 100) / 100
-export const ESCENA_VISUAL = {
-  punch: 'reel-foto-punch', paneo: 'reel-foto-paneo', tarjeta: 'reel-foto-tarjeta', dividida: 'reel-foto-dividida',
-  dato: 'reel-dato', cita: 'reel-cita', lista: 'reel-lista', marcador: 'reel-marcador', versus: 'reel-versus', pregunta: 'reel-pregunta'
+// Reels limpios (2026-11-22, medido contra los Shorts virales de Cracks, La Gambeta, Camilo MD y Cracks MX: ~0–5 % del
+// tiempo con gráficos a pantalla completa y 40–55 cambios de plano por minuto). Todo el Reel es foto o clip a pantalla
+// completa; un dato, marcador o versus del guion se vuelve una palabra clave pequeña sobre la imagen. Ya no hay
+// tarjetas, pantallas divididas, escenas de dato/lista/cita ni barridos o destellos que tapen la imagen.
+export const ESCENA_VISUAL = { punch: 'reel-foto-punch', paneo: 'reel-foto-paneo', clip: 'reel-clip' }
+const DE_FOTO = ['punch', 'paneo']
+export const ESCENAS_PROHIBIDAS = ['reel-foto-tarjeta', 'reel-foto-dividida', 'reel-dato', 'reel-cita', 'reel-lista', 'reel-marcador', 'reel-versus', 'reel-pregunta', 'reel-golpe', 'reel-barrido', 'reel-glitch']
+
+/** Palabra clave en pantalla para un beat: la del guion o, si el beat traía un gráfico, su resumen en una línea. */
+export function claveDeVisual(visual = {}) {
+  if (String(visual.pantalla || '').trim()) return mayus(visual.pantalla)
+  if (visual.tipo === 'dato' && visual.dato && visual.dato.valor !== undefined && visual.dato.valor !== '') {
+    return mayus(`${visual.dato.prefijo || ''}${visual.dato.valor}${visual.dato.sufijo ? ` ${String(visual.dato.sufijo).trim()}` : ''}`)
+  }
+  if (visual.tipo === 'marcador' && visual.marcador?.local && visual.marcador?.visita) {
+    const m = visual.marcador
+    return mayus(`${m.local} ${m.golesLocal ?? ''}-${m.golesVisita ?? ''} ${m.visita}`.replace(/ -(?= )/, ' VS'))
+  }
+  if (visual.tipo === 'versus' && visual.versus?.equipo1 && visual.versus?.equipo2) return mayus(`${visual.versus.equipo1} VS ${visual.versus.equipo2}`)
+  return ''
 }
-const DE_FOTO = ['punch', 'tarjeta', 'paneo']
-const TRANSICION = { 'reel-golpe': { corte: 0.15, duracion: 0.4, sonido: 'swoosh' }, 'reel-barrido': { corte: 0.3, duracion: 0.6, sonido: 'whoosh-a' }, 'reel-glitch': { corte: 0.12, duracion: 0.35, sonido: 'tic' } }
 const DURACION_SONIDO = { 'whoosh-a': 0.575, 'whoosh-b': 0.701, pop: 0.72, clic: 0.366, impacto: 1.5, golpe: 0.7, subida: 1.2, tic: 0.05, swoosh: 0.35 }
 export const INICIO_VOZ = 0.1
 const COLA = 0.5
@@ -151,20 +166,20 @@ export function planificarReel(reel, { ppm = 170, estudio = {}, transcripciones 
   const sinCamara = estudio.sinCamara !== false
   const beats = Array.isArray(reel?.beats) ? reel.beats : []
   const tramos = tramosDeReel(reel)
-  const extra = clave => (estudio.fotosExtra?.[clave] || []).filter(f => f?.ruta).map(f => ({ ruta: f.ruta, credito: f.credito || '' }))
+  // Clips de video primero: un Reel prioriza video real sobre fotos.
+  const extra = clave => (estudio.fotosExtra?.[clave] || []).filter(f => f?.ruta)
+    .map(f => (f.tipo === 'video' ? { ruta: f.ruta, credito: f.credito || '', tipo: 'video', duracion: Number(f.duracion) || 0 } : { ruta: f.ruta, credito: f.credito || '' }))
+    .sort((a, b) => (b.tipo === 'video') - (a.tipo === 'video'))
   const foto = (url, credito) => (url ? { ruta: rutaFoto(url), credito: credito || '' } : null)
   const fotosDeBeat = beat => [...extra(beat.id), foto(beat?.visual?.imagen, beat?.visual?.credito), foto(beat?.visual?.imagen2, beat?.visual?.credito2)].filter(f => f?.ruta)
-  const fotoGancho = [...extra('gancho'), foto(reel?.gancho?.imagen, reel?.gancho?.credito)].find(f => f?.ruta) || beats.map(fotosDeBeat).find(l => l.length)?.[0] || null
-  const credito = f => (f?.credito ? `Foto: ${f.credito}` : '')
-  // Apariciones de cada foto en el Reel (tope MAXIMO_USOS_FOTO); los fondos desenfocados no cuentan.
+  const fotoGancho = [...extra('gancho'), foto(reel?.gancho?.imagen, reel?.gancho?.credito)].find(f => f?.ruta && f.tipo !== 'video') || beats.flatMap(fotosDeBeat).find(f => f.tipo !== 'video') || null
+  const credito = f => (f?.credito ? `${f.tipo === 'video' ? 'Video' : 'Foto'}: ${f.credito}` : '')
+  // Todas las imágenes del Reel, sin repetir: un beat sin foto propia toma la menos usada de las demás.
+  const todas = []
+  for (const f of [fotoGancho, ...extra('gancho'), ...beats.flatMap(fotosDeBeat)]) if (f?.ruta && !todas.some(o => o.ruta === f.ruta)) todas.push(f)
+  // Apariciones de cada foto o clip en el Reel (tope MAXIMO_USOS_FOTO); los fondos desenfocados no cuentan.
   const usos = new Map()
-  const segundaFoto = (actual, d) => {
-    if (d <= 2.4) return ''
-    const otra = beats.flatMap(fotosDeBeat).find(f => f !== actual && f.ruta !== actual?.ruta && (usos.get(f.ruta) || 0) < MAXIMO_USOS_FOTO)
-    if (!otra) return ''
-    usos.set(otra.ruta, (usos.get(otra.ruta) || 0) + 1)
-    return otra.ruta
-  }
+  const menosUsadas = () => [...todas].sort((a, b) => (usos.get(a.ruta) || 0) - (usos.get(b.ruta) || 0))
   const sonido = (archivo, momento, volumen = 0.7) => sonidos.push({ archivo, inicio: redondear(Math.max(0, momento)), duracion: DURACION_SONIDO[archivo] ?? 1, volumen })
 
   // Tiempos de cada tramo (la toma real manda; si no hay, se estima a `ppm`).
@@ -196,84 +211,60 @@ export function planificarReel(reel, { ppm = 170, estudio = {}, transcripciones 
     etiqueta: mayus(reel?.club), soloTexto: gancho.esVideo, foco: reel?.gancho?.foco || '50% 35%', duracion: gancho.fin } })
   sonido('golpe', 0, 0.8)
 
-  // 2. Beats del desarrollo, cortados donde empieza cada uno en la voz.
+  // 2. Beats del desarrollo, cortados donde empieza cada uno en la voz. Cada beat es foto o clip a pantalla completa.
   const limites = tiemposDeBeats(beats, cuerpo.palabras, cuerpo.inicio, cuerpo.fin - cuerpo.inicio)
-  const cortes = []
   const resumenFotos = [{ clave: 'gancho', etiqueta: 'Gancho', fotos: fotoGancho ? 1 : 0, espacios: 1, vacios: fotoGancho ? 0 : 1 }]
-  let giro = 0
   beats.forEach((beat, i) => {
     const { inicio, fin } = limites[i]
     const visual = beat?.visual || {}
-    const tipo = ESCENA_VISUAL[visual.tipo] ? visual.tipo : DE_FOTO[i % DE_FOTO.length]
+    const tipo = visual.tipo === 'paneo' ? 'paneo' : DE_FOTO[i % DE_FOTO.length]
     const fotos = fotosDeBeat(beat)
-    const base = fotos[0] || fotoGancho
-    const fondo = base ? derivada(base.ruta, 'fondo') : ''
-    resumenFotos.push({ clave: beat.id || `v${i + 1}`, etiqueta: `Beat ${i + 1} · ${visual.tipo || tipo}`, fotos: fotos.length, espacios: DE_FOTO.includes(tipo) ? Math.max(1, partirBeat(inicio, fin, maximoPorPlano).length) : 1, vacios: fotos.length || !DE_FOTO.includes(tipo) ? 0 : 1 })
-    cortes.push({ momento: inicio, rehook: beat?.rehook === true, primero: i === 0 })
-    if (DE_FOTO.includes(tipo)) {
-      // Regla de Juan: ninguna foto más de 3 veces por video. Si las fotos del beat ya se gastaron, el plano
-      // anterior se alarga en vez de repetir (solo el primer plano puede reusar la menos usada para no quedar en negro).
-      const opciones = fotos.length ? fotos : (fotoGancho ? [fotoGancho] : [])
-      const partes = []
-      for (const parte of partirBeat(inicio, fin, maximoPorPlano)) {
-        const n = partes.length
-        const rotadas = [...opciones.slice(n % Math.max(1, opciones.length)), ...opciones.slice(0, n % Math.max(1, opciones.length))]
-        const libres = rotadas.filter(f => (usos.get(f.ruta) || 0) < MAXIMO_USOS_FOTO)
-        const elegida = libres.find(f => f !== partes.at(-1)?.foto) || libres[0] || null
-        if (!elegida && partes.length) { partes.at(-1).fin = parte.fin; continue }
-        if (elegida) usos.set(elegida.ruta, (usos.get(elegida.ruta) || 0) + 1)
-        // Sin foto libre: el plano usa la foto desenfocada (no cuenta como aparición) con la palabra clave encima.
-        partes.push({ ...parte, foto: elegida, desenfocada: elegida ? null : (opciones[0] || null) })
+    const piezas = partirBeat(inicio, fin, maximoPorPlano)
+    resumenFotos.push({ clave: beat.id || `v${i + 1}`, etiqueta: `Beat ${i + 1}`, fotos: fotos.length, espacios: Math.max(1, piezas.length), vacios: fotos.length || todas.length ? 0 : 1 })
+    // Cambio de beat: un golpe de sonido suave, sin capa gráfica encima de la imagen.
+    sonido(beat?.rehook === true ? 'tic' : 'swoosh', inicio - 0.08, 0.35)
+    // Regla de Juan: ninguna foto ni clip más de 3 veces por video. Si las imágenes ya se gastaron, el plano
+    // anterior se alarga en vez de repetir (el primero puede usar la versión desenfocada para no quedar en negro).
+    const opciones = fotos.length ? fotos : menosUsadas()
+    const partes = []
+    for (const parte of piezas) {
+      const n = partes.length
+      const rotadas = [...opciones.slice(n % Math.max(1, opciones.length)), ...opciones.slice(0, n % Math.max(1, opciones.length))]
+      const libres = rotadas.filter(f => (usos.get(f.ruta) || 0) < MAXIMO_USOS_FOTO)
+      const elegida = libres.find(f => f.ruta !== partes.at(-1)?.foto?.ruta) || libres[0] || null
+      if (!elegida && partes.length) { partes.at(-1).fin = parte.fin; continue }
+      if (elegida) usos.set(elegida.ruta, (usos.get(elegida.ruta) || 0) + 1)
+      partes.push({ ...parte, foto: elegida, desenfocada: elegida ? null : (opciones.find(f => f.tipo !== 'video') || null) })
+    }
+    const clave = claveDeVisual(visual)
+    partes.forEach((parte, j) => {
+      const f = parte.foto
+      const d = redondear(parte.fin - parte.inicio)
+      if (!f && parte.desenfocada) {
+        escenas.push({ escena: ESCENA_VISUAL.punch, inicio: parte.inicio, duracion: d, capa: 1, variables: { foto: derivada(parte.desenfocada.ruta, 'fondo'), credito: credito(parte.desenfocada), foco: '50% 50%', clave: j === 0 ? clave : '', duracion: d } })
+        return
       }
-      partes.forEach((parte, j) => {
-        const f = parte.foto
-        if (!f && parte.desenfocada) {
-          const d = redondear(parte.fin - parte.inicio)
-          if (j > 0) cortes.push({ momento: parte.inicio, interno: true })
-          escenas.push({ escena: ESCENA_VISUAL.punch, inicio: parte.inicio, duracion: d, capa: 1, variables: { foto: derivada(parte.desenfocada.ruta, 'fondo'), credito: credito(parte.desenfocada), foco: '50% 50%', clave: mayus(visual.pantalla || reel?.club), duracion: d } })
-          return
-        }
-        const modo = j === 0 ? tipo : DE_FOTO[(DE_FOTO.indexOf(tipo) + j + giro) % DE_FOTO.length]
-        const d = redondear(parte.fin - parte.inicio)
-        if (j > 0) cortes.push({ momento: parte.inicio, interno: true })
-        const variables = modo === 'paneo'
-          ? { foto: f ? derivada(f.ruta, 'pano') : '', credito: credito(f), direccion: (i + j) % 2 ? 'izquierda' : 'derecha', duracion: d }
-          : modo === 'tarjeta'
-            ? { fondo: f ? derivada(f.ruta, 'fondo') : '', foto: f?.ruta || '', credito: credito(f), foto2: segundaFoto(f, d), duracion: d }
-            : { foto: f?.ruta || '', credito: credito(f), foco: visual.foco || '50% 35%', clave: j === 0 ? mayus(visual.pantalla) : '', duracion: d }
-        escenas.push({ escena: ESCENA_VISUAL[modo], inicio: parte.inicio, duracion: d, capa: 1, variables })
-      })
-      giro++
-      return
-    }
-    const d = redondear(fin - inicio)
-    const variablesPorTipo = {
-      dividida: { foto1: fotos[0]?.ruta || fotoGancho?.ruta || '', foto2: fotos[1]?.ruta || fotos[0]?.ruta || '', nombre1: mayus(visual.nombre1), nombre2: mayus(visual.nombre2), credito: fotos.map(f => f.credito).filter(Boolean).join(' · ') ? `Fotos: ${fotos.map(f => f.credito).filter(Boolean).join(' · ')}` : '' },
-      dato: { fondo, etiqueta: mayus(visual.dato?.etiqueta), valor: Number(visual.dato?.valor) || 0, prefijo: visual.dato?.prefijo || '', sufijo: visual.dato?.sufijo ? ` ${String(visual.dato.sufijo).trim()}` : '', descripcion: visual.dato?.descripcion || '', fuente: reel?.fuente ? `Según ${reel.fuente}` : '' },
-      cita: { fondo, cita: visual.cita?.texto || '', autor: mayus(visual.cita?.autor) },
-      lista: { fondo, titulo: mayus(visual.lista?.titulo), item1: visual.lista?.items?.[0] || '', item2: visual.lista?.items?.[1] || '', item3: visual.lista?.items?.[2] || '' },
-      marcador: { fondo, competencia: mayus(visual.marcador?.competencia), local: mayus(visual.marcador?.local), golesLocal: String(visual.marcador?.golesLocal ?? ''), visita: mayus(visual.marcador?.visita), golesVisita: String(visual.marcador?.golesVisita ?? ''), estado: mayus(visual.marcador?.estado) },
-      versus: { fondo, equipo1: mayus(visual.versus?.equipo1), equipo2: mayus(visual.versus?.equipo2), detalle: mayus(visual.versus?.detalle) },
-      pregunta: { fondo, pregunta: visual.pregunta || '', pista: 'Te leo en los comentarios' }
-    }
-    escenas.push({ escena: ESCENA_VISUAL[tipo], inicio, duracion: d, capa: 1, variables: { ...variablesPorTipo[tipo], duracion: d } })
-    if (tipo === 'dato') sonido('subida', inicio - 1.05, 0.45)
+      if (f?.tipo === 'video') {
+        const vez = (usos.get(f.ruta) || 1) - 1
+        const recorrido = Math.max(0, (f.duracion || 0) - d)
+        escenas.push({ escena: ESCENA_VISUAL.clip, inicio: parte.inicio, duracion: d, capa: 1, mediaInicio: recorrido ? redondear((vez * d) % (recorrido + 0.01)) : 0, variables: { video: f.ruta, credito: credito(f), clave: j === 0 ? clave : '', duracion: d } })
+        return
+      }
+      const modo = j === 0 ? tipo : DE_FOTO[(DE_FOTO.indexOf(tipo) + j) % DE_FOTO.length]
+      const variables = modo === 'paneo'
+        ? { foto: f ? derivada(f.ruta, 'pano') : '', credito: credito(f), direccion: (i + j) % 2 ? 'izquierda' : 'derecha', clave: j === 0 ? clave : '', duracion: d }
+        : { foto: f?.ruta || '', credito: credito(f), foco: visual.foco || '50% 35%', clave: j === 0 ? clave : '', duracion: d }
+      escenas.push({ escena: ESCENA_VISUAL[modo], inicio: parte.inicio, duracion: d, capa: 1, variables })
+    })
   })
 
-  // 3. Cierre: un solo llamado a la acción, con la flecha de bucle.
-  const fotoCierre = beats.map(fotosDeBeat).reverse().find(l => l.length)?.[0] || fotoGancho
-  cortes.push({ momento: cierre.inicio })
+  // 3. Cierre: la última imagen sigue en pantalla con un llamado a la acción pequeño encima (sin pantalla azul).
+  const fotoCierre = menosUsadas().find(f => f.tipo !== 'video' && (usos.get(f.ruta) || 0) < MAXIMO_USOS_FOTO)
+  if (fotoCierre) usos.set(fotoCierre.ruta, (usos.get(fotoCierre.ruta) || 0) + 1)
+  const respaldoCierre = fotoCierre ? null : (fotoGancho || todas.find(f => f.tipo !== 'video'))
+  sonido('swoosh', cierre.inicio - 0.08, 0.35)
   escenas.push({ escena: 'reel-cta', inicio: cierre.inicio, duracion: redondear(duracionTotal - cierre.inicio), capa: 1, variables: {
-    fondo: fotoCierre ? derivada(fotoCierre.ruta, 'fondo') : '', cta: mayus(reel?.cierre?.cta || 'Sigue a Ponte la 10'), web: reel?.cierre?.web || 'La nota completa en pont3la10.com', duracion: redondear(duracionTotal - cierre.inicio) } })
-
-  // 4. Transiciones en cada corte: golpe y barrido alternados; falla digital en el re-gancho.
-  let alterna = 0
-  for (const corte of cortes) {
-    const nombre = corte.rehook ? 'reel-glitch' : corte.interno ? 'reel-golpe' : (alterna++ % 2 === 0 ? 'reel-golpe' : 'reel-barrido')
-    const tr = TRANSICION[nombre]
-    escenas.push({ escena: nombre, inicio: redondear(Math.max(0, corte.momento - tr.corte)), duracion: tr.duracion, capa: 9 })
-    sonido(tr.sonido, corte.momento - 0.08, corte.interno ? 0.35 : 0.6)
-  }
+    fondo: fotoCierre ? fotoCierre.ruta : (respaldoCierre ? derivada(respaldoCierre.ruta, 'fondo') : ''), credito: credito(fotoCierre || respaldoCierre), cta: mayus(reel?.cierre?.cta || 'Sigue a Ponte la 10'), web: reel?.cierre?.web || 'La nota completa en pont3la10.com', duracion: redondear(duracionTotal - cierre.inicio) } })
 
   // 5. Capas: progreso, club, fuente y sello (OFICIAL / RUMOR).
   escenas.push({ escena: 'reel-progreso', inicio: 0, duracion: duracionTotal, capa: 7, variables: { duracion: duracionTotal } })
@@ -460,6 +451,11 @@ export async function generarReel({ guion, salida, sinRed = false, transcribir =
     const plantilla = await readFile(join(PACK, 'compositions', `${escena.escena}.html`), 'utf8')
     let html = instanciarEscena(plantilla, escena.escena, escena.numero, escena.duracion, escena.variables)
     if (escena.escena === 'reel-subtitulos') html = htmlSubtitulos(html, escena.subtitulos, escena.numero)
+    // Un clip usado otra vez arranca más adelante, para que no se vea el mismo tramo.
+    if (escena.escena === 'reel-clip') {
+      html = html.replace(/(class="clip" data-start="0" data-duration=")[\d.]+(")/g, `$1${escena.duracion}$2`)
+        .replace(/( data-media-start=")[\d.]+"/, `$1${escena.mediaInicio || 0}"`)
+    }
     await writeFile(join(salida, 'compositions', `${escena.instancia}.html`), html)
   }
   await writeFile(join(salida, IMAGEN_VACIA), Buffer.from(PNG_VACIO, 'base64'))
