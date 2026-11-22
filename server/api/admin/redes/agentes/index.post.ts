@@ -5,7 +5,7 @@ import { alcancesAgente, generarLlaveAgente } from '~/server/utils/agentesRedes/
 const esquema = z.object({
   nombre: z.string().trim().min(3).max(80),
   alcances: z.array(z.enum(alcancesAgente)).min(1).max(4).default(['leer', 'borradores', 'medios']),
-  maxProgramacionesDia: z.number().int().min(0).max(50).default(5),
+  maxProgramacionesDia: z.number().int().min(0).max(200).default(5),
   limitePorMinuto: z.number().int().min(5).max(600).default(60),
   venceEnDias: z.number().int().min(1).max(365).optional()
 }).strict()
