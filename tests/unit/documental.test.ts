@@ -9,9 +9,12 @@ const evaluar = rubrica.evaluarDocumental as (g: unknown, c: unknown, o?: unknow
 
 const relleno = (n: number, semilla: string) => Array.from({ length: n }, (_, i) => `${semilla}${i % 7}`).join(' ')
 const foto = { tipo: 'foto', imagen: 'https://upload.wikimedia.org/x.jpg', credito: 'Wikimedia Commons' }
+const video = { tipo: 'video', video: 'https://upload.wikimedia.org/v.webm', credito: 'Autor (Wikimedia Commons)', licencia: 'CC BY 3.0' }
+let n = 0
+const fotoUnica = () => ({ ...foto, imagen: `https://upload.wikimedia.org/x${n++}.jpg` })
 
 function guionValido() {
-  const cap = (id: string, palabras: number, extra = '') => ({ id, titulo: `Capítulo ${id}`, voz: `${relleno(palabras, 'dato')} ${extra}`.trim(), fuentes: ['f1'], visuales: [foto] })
+  const cap = (id: string, palabras: number, extra = '') => ({ id, titulo: `Capítulo ${id}`, voz: `${relleno(palabras, 'dato')} ${extra}`.trim(), fuentes: ['f1'], visuales: [fotoUnica(), video] })
   const conPregunta = '¿Ustedes qué creen de esta disciplina?'
   return {
     tipo: 'documental', tema: 'cristiano-ronaldo', protagonista: 'Cristiano Ronaldo',
@@ -19,7 +22,7 @@ function guionValido() {
     titulos: ['Lo llamaron ARROGANTE | Cristiano Ronaldo | Documental', 'La DISCIPLINA que nadie entendió | Cristiano Ronaldo'],
     miniatura: { texto: 'ARROGANTE' },
     actos: [
-      { id: 'pregunta', titulo: 'La pregunta', capitulos: [{ id: 'c00', titulo: 'La pregunta', voz: 'Lo odian o lo aman. ¿Arrogancia o disciplina que nadie soportaría?', fuentes: [], visuales: [foto] }] },
+      { id: 'pregunta', titulo: 'La pregunta', capitulos: [{ id: 'c00', titulo: 'La pregunta', voz: 'Lo odian o lo aman. ¿Arrogancia o disciplina que nadie soportaría?', fuentes: [], visuales: [fotoUnica(), video] }] },
       { id: 'origen', titulo: 'Origen', capitulos: [cap('c01', 300, conPregunta), cap('c02', 300)] },
       { id: 'ascenso', titulo: 'Ascenso', capitulos: [cap('c03', 320, conPregunta), cap('c04', 320), cap('c05', 300)] },
       { id: 'crisis', titulo: 'Crisis', capitulos: [cap('c06', 320, conPregunta), cap('c07', 320), cap('c08', 300)] },
@@ -60,6 +63,16 @@ describe('rúbrica del documental', () => {
     expect(todo).toMatch(/Los actos deben ser, en orden/)
     expect(todo).toMatch(/Cita sin atribución/)
     expect(todo).toMatch(/Foto sin URL https o sin crédito/)
+  })
+
+  it('exige mitad video o animación y no repetir la misma foto más de 3 veces', () => {
+    const g = guionValido()
+    const misma = { tipo: 'foto', imagen: 'https://upload.wikimedia.org/igual.jpg', credito: 'X' }
+    for (const acto of g.actos) for (const c of acto.capitulos) c.visuales = [misma, { ...misma }]
+    const todo = evaluar(g, config, { banco }).errores.join(' | ')
+    expect(todo).toMatch(/no tiene video ni animación/)
+    expect(todo).toMatch(/Las fotos son 100 %/)
+    expect(todo).toMatch(/La misma foto se usa 24 veces/)
   })
 
   it('una cita atribuida sí pasa', () => {

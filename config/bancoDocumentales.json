@@ -565,6 +565,25 @@
       "efemeride": "04-18",
       "sensible": false,
       "publicado": null
+    },
+    {
+      "id": "vozinha",
+      "tipo": "futbolista",
+      "nombre": "Vozinha (Josimar Évora Dias)",
+      "alias": [
+        "vozinha",
+        "josimar evora",
+        "josimar jose evora dias"
+      ],
+      "etiquetas": [
+        "portero",
+        "mundial"
+      ],
+      "angulo": "¿Cómo un portero de 40 años que casi nadie conocía frenó a España en su primer Mundial?",
+      "interesFondo": null,
+      "efemeride": "06-15",
+      "sensible": false,
+      "publicado": null
     }
   ]
 }

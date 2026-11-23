@@ -78,7 +78,10 @@ export function evaluarDocumental(guion, config, { banco = null } = {}) {
   const fuentes = Array.isArray(guion?.fuentes) ? guion.fuentes : []
   const idsFuentes = new Set(fuentes.map(f => f.id))
   const idsCapitulos = new Set()
-  let conFoto = 0
+  const MOVIMIENTO = ['video', 'stock', 'clip-oficial', 'linea-tiempo', 'mapa', 'ficha', 'titular', 'cita', 'contador']
+  const usosFoto = new Map()
+  let totalVisuales = 0
+  let totalFotos = 0
   for (const c of capitulos) {
     const n = contarPalabras(c.voz)
     if (!c.id || idsCapitulos.has(c.id)) errores.push(`Capítulo sin id o repetido (${c.id || 'sin id'}).`)
@@ -93,19 +96,30 @@ export function evaluarDocumental(guion, config, { banco = null } = {}) {
     const visuales = Array.isArray(c.visuales) ? c.visuales : []
     if (!visuales.length) errores.push(`El capítulo ${c.id} no tiene visuales.`)
     for (const v of visuales) {
+      totalVisuales += 1
       if (v.tipo === 'foto') {
+        totalFotos += 1
+        usosFoto.set(v.imagen, (usosFoto.get(v.imagen) || 0) + 1)
         if (!esHttps(v.imagen) || !String(v.credito || '').trim()) errores.push(`Foto sin URL https o sin crédito en el capítulo ${c.id}.`)
-      } else if (!['linea-tiempo', 'mapa', 'ficha', 'titular', 'cita', 'clip-oficial'].includes(v.tipo)) {
+      } else if (!MOVIMIENTO.includes(v.tipo)) {
         errores.push(`Visual desconocido «${v.tipo}» en el capítulo ${c.id}.`)
       }
-      if (v.tipo === 'clip-oficial' && !String(v.credito || '').trim()) errores.push(`Clip sin crédito de la cuenta oficial en el capítulo ${c.id}.`)
+      // Video con licencia (Wikimedia Commons, dominio público) o clip oficial: URL, crédito y licencia.
+      if ((v.tipo === 'video' || v.tipo === 'clip-oficial') && (!esHttps(v.video) || !String(v.credito || '').trim() || !String(v.licencia || '').trim())) {
+        errores.push(`Video sin URL https, crédito o licencia en el capítulo ${c.id}.`)
+      }
+      // Video de archivo genérico que se busca al armar (Pexels u otra biblioteca libre): solo la búsqueda.
+      if (v.tipo === 'stock' && !String(v.busqueda || '').trim()) errores.push(`Video de recurso sin "busqueda" en el capítulo ${c.id}.`)
     }
-    if (visuales.some(v => v.tipo === 'foto')) conFoto += 1
+    if (visuales.filter(v => MOVIMIENTO.includes(v.tipo)).length < config.visuales.movimientoPorCapitulo) {
+      errores.push(`El capítulo ${c.id} no tiene video ni animación: la mitad del documental se ve en movimiento.`)
+    }
     for (const frase of citasSinAtribucion(c.voz, config.verbosDeAtribucion)) errores.push(`Cita sin atribución en ${c.id}: «${frase.slice(0, 70)}…». Di quién lo dijo y dónde.`)
   }
-  if (capitulos.length && conFoto / capitulos.length < config.proporcionCapitulosConFoto) {
-    errores.push(`Solo ${conFoto} de ${capitulos.length} capítulos tienen foto real: al menos la mitad.`)
+  if (totalVisuales && totalFotos / totalVisuales > config.visuales.maximaProporcionFotos) {
+    errores.push(`Las fotos son ${Math.round(totalFotos / totalVisuales * 100)} % de los visuales: máximo ${Math.round(config.visuales.maximaProporcionFotos * 100)} %, el resto video o animación.`)
   }
+  for (const [url, usos] of usosFoto) if (usos > config.visuales.maximoUsosMismaFoto) errores.push(`La misma foto se usa ${usos} veces (máximo ${config.visuales.maximoUsosMismaFoto}): ${url.slice(0, 80)}`)
 
   // Fuentes.
   const urls = fuentes.map(f => f.url)
