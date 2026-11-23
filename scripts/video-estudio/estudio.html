@@ -261,13 +261,88 @@
 
   @media (max-width: 1180px) { body { height: auto; } main { grid-template-columns: 250px minmax(0, 1fr); } #col-fotos { grid-column: 1 / -1; } .pasos { display: none; } .escenario { min-height: 60vh; } }
   @media (max-width: 760px) { main { grid-template-columns: 1fr; } .escenario.con-camara { grid-template-columns: 1fr; } #prompter { font-size: 32px; } body > header { grid-template-columns: 1fr; } }
-  /* Teléfono: botones táctiles grandes, sin atajos de teclado y respetando la muesca del iPhone. */
-  @media (max-width: 760px), (pointer: coarse) {
-    body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); -webkit-text-size-adjust: 100%; }
-    button, select, input, .zona-subida { min-height: 44px; font-size: 16px; }
-    kbd { display: none; }
-    #grabar { min-height: 64px; font-size: 20px; width: 100%; }
-    #prompter { font-size: 28px; line-height: 1.35; }
+  /* ===== iPhone (≤760 px): una sección a la vez con barra de pestañas abajo, como una app. =====
+     Guías: objetivos táctiles de 44 pt, 8 px entre botones, letra base de 16 px (Safari no hace zoom),
+     zonas seguras de la muesca y de la barra de inicio, sin desplazamiento horizontal. */
+  .pestanas-movil, .solo-movil { display: none; }
+  @media (max-width: 760px) {
+    html, body { height: auto; }
+    body { display: block; min-height: 100dvh; font-size: 16px; padding: 0 env(safe-area-inset-right) 0 env(safe-area-inset-left); padding-bottom: calc(68px + env(safe-area-inset-bottom)); -webkit-text-size-adjust: 100%; overflow-x: hidden; }
+    body > header { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 8px; padding: calc(6px + env(safe-area-inset-top)) 12px 8px; }
+    body > header .marca span, body > header .marca strong, #ayuda, kbd, .pasos, #enfoque { display: none !important; }
+    body > header .proyecto { margin-left: auto; display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .boton-proyecto { flex: 1; min-width: 0; max-width: none; }
+    body > header .proyecto { flex: 1; display: grid !important; grid-template-columns: minmax(0, 1fr) auto; }
+    body > header .proyecto > #proyecto { order: -1; }
+    #interruptor-camara { padding: 0 10px; min-height: 44px; display: flex; align-items: center; gap: 6px; border: 1px solid var(--borde); border-radius: 8px; }
+    #interruptor-camara { white-space: nowrap; font-size: 13px; flex: none; }
+    .boton-proyecto { align-items: stretch !important; justify-content: center; }
+    .boton-proyecto .p-nombre { text-align: left; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .boton-proyecto .p-sub { display: none; }
+    .barra-progreso { position: sticky; top: calc(52px + env(safe-area-inset-top)); z-index: 19; }
+    main { display: block; padding: 8px; }
+    .panel { border-radius: 10px; }
+    /* Una sección visible según la pestaña activa. */
+    body:not([data-vista="tramos"]) #col-tramos, body:not([data-vista="grabar"]) #col-centro,
+    body:not([data-vista="fotos"]) #col-fotos, body:not([data-vista="publicar"]) > footer { display: none !important; }
+    #col-tramos .desplazable, #col-fotos .desplazable { max-height: none; overflow: visible; }
+    .tramo { min-height: 56px; padding: 10px 12px; }
+    /* Grabar: el texto ocupa la pantalla y los controles quedan al alcance del pulgar. */
+    /* La vista Grabar cabe en una pantalla: el texto se estira y los botones quedan sobre la barra de pestañas. */
+    #col-centro { display: flex; flex-direction: column; height: calc(100dvh - 140px - env(safe-area-inset-top) - env(safe-area-inset-bottom)); min-height: 440px; }
+    .barra-herramientas { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; padding: 8px; }
+    .barra-herramientas > #anterior { grid-column: 1; grid-row: 1; }
+    .barra-herramientas > div:not(.medidor) { grid-column: 2; grid-row: 1; text-align: center; align-self: center; }
+    .barra-herramientas > #siguiente { grid-column: 3; grid-row: 1; }
+    .barra-herramientas > .rec, .barra-herramientas > .separador { display: none; }
+    body.grabando .barra-herramientas > .rec { display: inline-flex; grid-column: 1 / -1; justify-content: center; }
+    .barra-herramientas > .medidor { grid-column: 2; grid-row: 2; display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .barra-herramientas > .medidor .pista { flex: 1; }
+    .barra-herramientas > #leer { grid-column: 1; grid-row: 2; justify-content: center; }
+    .barra-herramientas > .ajustes { grid-column: 3; grid-row: 2; }
+    .barra-herramientas > .ajustes > summary { height: 100%; }
+    #tramo-titulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .escenario, .escenario.con-camara { grid-template-columns: 1fr; flex: 1; min-height: 160px; }
+    .lado-camara { display: none !important; }
+    #prompter { font-size: 28px !important; line-height: 1.4; }
+    .toma { grid-template-columns: 1fr; gap: 8px; padding: 10px; }
+    .toma .info:empty, .toma .texto-estado:empty { display: none; }
+    .toma .acciones { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; }
+    #grabar { grid-column: 1 / -1; min-height: 64px; font-size: 20px; justify-content: center; }
+    #guardar { grid-column: 1 / 3; justify-content: center; }
+    .menu-ajustes { position: fixed; left: 8px; right: 8px; top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); max-height: 70dvh; overflow: auto; z-index: 40; }
+    /* Publicar: las acciones del pie en una lista vertical. */
+    body[data-vista="publicar"] > footer { display: grid; grid-template-columns: minmax(0, 1fr) 56px; align-items: stretch; gap: 10px; padding: 12px; position: static; border: 0; background: transparent; }
+    body[data-vista="publicar"] > footer > * { grid-column: 1 / -1; }
+    body[data-vista="publicar"] > footer > .control-musica { grid-column: 1; }
+    body[data-vista="publicar"] > footer > #escuchar-musica { grid-column: 2; }
+    body[data-vista="publicar"] > footer .boton { justify-content: center; width: 100%; }
+    body[data-vista="publicar"] > footer .control-musica { display: flex; gap: 8px; align-items: center; }
+    body[data-vista="publicar"] > footer .control-musica select { flex: 1; min-width: 0; width: 100%; }
+    #estado-armado { text-align: center; color: var(--texto-2); }
+    /* Fotos: miniaturas en cuadrícula de 3 y la X de quitar con objetivo táctil de 36 px. */
+    .miniaturas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .miniaturas img { width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 6px; }
+    .miniaturas button { width: 36px; height: 36px; top: 2px; right: 2px; border-radius: 8px; min-height: 0; }
+    .solo-escritorio { display: none; }
+    /* Diálogos a pantalla completa. */
+    dialog[open] { width: 100vw !important; max-width: 100vw !important; height: 100dvh !important; max-height: 100dvh !important; margin: 0 !important; inset: 0; border: 0; border-radius: 0; padding: calc(12px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); overflow: auto; }
+    #avisos { left: 8px; right: 8px; bottom: calc(76px + env(safe-area-inset-bottom)); }
+    /* Barra de pestañas. */
+    .solo-movil { display: inline; }
+    .pestanas-movil { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); background: rgba(23, 24, 27, .96); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); border-top: 1px solid var(--borde); }
+    .pestanas-movil button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 52px; border: 0; border-radius: 10px; background: transparent; color: var(--texto-3); font-size: 12px; font-weight: 600; -webkit-tap-highlight-color: transparent; transition: color var(--t-rapida), background var(--t-rapida); }
+    .pestanas-movil button .icono { width: 24px; height: 24px; }
+    .pestanas-movil button[aria-current="page"] { color: var(--texto); background: var(--panel-3); }
+    .pestanas-movil button:active { transform: scale(.96); }
+    .pestanas-movil .insignia { min-width: 18px; padding: 0 5px; border-radius: 9px; background: var(--acento); color: var(--sobre-acento); font-size: 11px; line-height: 18px; }
+    body.grabando .pestanas-movil button:not([aria-current="page"]) { opacity: .35; pointer-events: none; }
+  }
+  @media (pointer: coarse) {
+    .boton, button, select, input:not([type="checkbox"]):not([type="range"]), summary.boton, .zona-subida { min-height: 44px; }
+    .icono-solo { min-width: 44px; }
+    input, select, textarea { font-size: 16px; }
+    input[type="range"] { min-height: 32px; }
   }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -407,6 +482,13 @@
   <div id="estado-armado" role="status" aria-live="polite">Graba los tramos, sube fotos y luego arma el video.</div>
   <a class="boton" id="ver-final" href="#" target="_blank" rel="noopener" hidden><svg class="icono"><use href="#i-play"/></svg><span>Ver video final</span></a>
 </footer>
+
+<nav class="pestanas-movil" aria-label="Secciones del estudio">
+  <button type="button" data-vista="tramos"><svg class="icono" aria-hidden="true"><use href="#i-folder"/></svg><span>Tramos</span></button>
+  <button type="button" data-vista="grabar"><svg class="icono" aria-hidden="true"><use href="#i-mic"/></svg><span>Grabar</span></button>
+  <button type="button" data-vista="fotos"><svg class="icono" aria-hidden="true"><use href="#i-image"/></svg><span>Fotos</span></button>
+  <button type="button" data-vista="publicar"><svg class="icono" aria-hidden="true"><use href="#i-film"/></svg><span>Publicar</span></button>
+</nav>
 
 <div id="avisos"></div>
 
@@ -635,7 +717,7 @@ function pintarTramos() {
       <span class="estado-tramo ${g ? 'ok' : ''}">${g ? `${icono('check')}<span>${g.duracion.toFixed(0)} s</span><span class="oculto">grabado</span>` : `<span>~${(s.fin - s.inicio).toFixed(0)} s</span><span class="oculto">pendiente</span>`}</span>
     </button>`
   }).join('')
-  $('#tramos').querySelectorAll('.tramo').forEach(b => b.addEventListener('click', () => elegirTramo(b.dataset.id)))
+  $('#tramos').querySelectorAll('.tramo').forEach(b => b.addEventListener('click', () => { elegirTramo(b.dataset.id); if (esMovil()) irAVista('grabar') }))
 }
 
 function pintarFotos() {
@@ -647,7 +729,7 @@ function pintarFotos() {
       <div class="etiqueta-chica">${f.fotos} foto(s) para ${f.espacios} espacios</div>
       ${subidas.length ? `<div class="miniaturas">${subidas.map((s, i) => `<figure class="${s.auto ? 'auto' : ''}${s.tipo === 'video' ? ' video' : ''}"><img src="/archivos/${escapar(proyecto)}/${escapar(s.poster || s.ruta)}" alt="${s.tipo === 'video' ? 'Clip de video' : 'Foto'} ${s.auto ? 'automático' : 'subido'}: ${escapar(s.credito)}" title="${escapar(s.credito)}${s.tipo === 'video' ? ` · clip de ${Math.round(s.duracion || 0)} s sin sonido` : ''}${s.auto ? ' · búsqueda automática' : ''}"><button data-clave="${escapar(f.clave)}" data-i="${i}" aria-label="Quitar foto de ${escapar(s.credito)}">${icono('x')}</button></figure>`).join('')}</div>` : ''}
       <form class="subir" data-clave="${escapar(f.clave)}" novalidate>
-        <label class="zona-subida" tabindex="0">${icono('image')}<span>Arrastra una foto o haz clic para elegirla</span><input type="file" class="oculto" accept="image/jpeg,image/png,image/webp"></label>
+        <label class="zona-subida" tabindex="0">${icono('image')}<span class="solo-escritorio">Arrastra una foto o haz clic para elegirla</span><span class="solo-movil">Toca para elegir una foto o tomarla</span><input type="file" class="oculto" accept="image/jpeg,image/png,image/webp"></label>
         <label class="campo">Crédito de la foto<input type="text" maxlength="120" placeholder="Colprensa (vía El Tiempo)"><span class="error" aria-live="polite"></span></label>
         <button class="boton">${icono('upload')}<span>Subir foto</span></button>
       </form>
@@ -1694,6 +1776,25 @@ if (preferencias.ppm) { $('#ppm').value = preferencias.ppm; $('#ppm-valor').text
 if (preferencias.letra) { $('#letra').value = preferencias.letra; $('#prompter').style.fontSize = `${preferencias.letra}px` }
 if (preferencias.espejo) { $('#espejo').checked = true; $('#prompter').classList.add('espejo') }
 cargarProyectos().catch(err => avisar(err.message, 'error'))
+
+/* ---------- iPhone: pestañas (una sección a la vez) ---------- */
+const VISTAS = ['tramos', 'grabar', 'fotos', 'publicar']
+const consultaMovil = window.matchMedia('(max-width: 760px)')
+function esMovil() { return consultaMovil.matches }
+function irAVista(vista, { historial = true } = {}) {
+  if (!VISTAS.includes(vista) || grabador) return
+  document.body.dataset.vista = vista
+  document.querySelectorAll('.pestanas-movil button').forEach(b => {
+    if (b.dataset.vista === vista) b.setAttribute('aria-current', 'page')
+    else b.removeAttribute('aria-current')
+  })
+  // El botón «atrás» del iPhone vuelve a la pestaña anterior.
+  if (historial && location.hash !== `#${vista}`) history.pushState({ vista }, '', `#${vista}`)
+  window.scrollTo({ top: 0, behavior: 'auto' })
+}
+document.querySelectorAll('.pestanas-movil button').forEach(b => b.addEventListener('click', () => irAVista(b.dataset.vista)))
+window.addEventListener('popstate', () => irAVista(location.hash.slice(1) || 'grabar', { historial: false }))
+irAVista(VISTAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'grabar', { historial: false })
 </script>
 </body>
 </html>
