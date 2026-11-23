@@ -23,6 +23,7 @@ import { descripcionYoutube } from './video-descripcion.mjs'
 import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, programarPublicacion, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
 import { credencialesFacebook, subirYProgramarVideoFacebook } from './video-facebook-directo.mjs'
+import { PAGINA_INGRESO, auditar, clasificarPeticion, cookieSalida, cookieSesion, crearLimitador, crearSesion, esReenviada, hostsRemotos, leerConfiguracion, leerCookie, sesionValida, usuariosTailscale, verificarClave } from './video-estudio-acceso.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
@@ -632,13 +633,75 @@ const VERSION_INICIAL = huellaCodigo()
 const reiniciable = process.env.PONT3LA10_ESTUDIO_REINICIABLE === '1'
 const trabajando = () => ocupados.size > 0 || publicando.size > 0 || [...renders.values()].some(r => r.estado === 'renderizando') || [...trabajosReels.values()].some(r => r.estado === 'creando') || [...trabajosYoutube.values()].some(t => t.estado === 'subiendo')
 
+const limitadorIngreso = crearLimitador()
+let configuracionAcceso = { valor: null, leida: 0 }
+async function configAcceso() {
+  if (Date.now() - configuracionAcceso.leida > 5_000) configuracionAcceso = { valor: await leerConfiguracion(), leida: Date.now() }
+  return configuracionAcceso.valor
+}
+
+/**
+ * Atiende lo propio del acceso remoto. Devuelve true si ya respondió (ingreso, salida, sin sesión o ruta vetada);
+ * false si la petición tiene sesión válida y sigue al resto del estudio.
+ */
+async function atenderAccesoRemoto(req, res, url) {
+  const quien = String(req.headers['tailscale-user-login'] || '').slice(0, 120)
+  const config = await configAcceso()
+  if (req.method === 'GET' && url.pathname === '/ingresar') {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'" })
+    res.end(PAGINA_INGRESO)
+    return true
+  }
+  if (req.method === 'POST' && url.pathname === '/api/acceso/ingresar') {
+    if (!config?.hash || !config?.secreto) { responder(res, 503, { error: 'Falta configurar la clave en el PC: npm run video:estudio:clave' }); return true }
+    if (limitadorIngreso.bloqueado()) { await auditar({ evento: 'ingreso-bloqueado', quien }); responder(res, 429, { error: 'Demasiados intentos. Espera 15 minutos.' }); return true }
+    let clave
+    try { clave = String(JSON.parse((await leerCuerpo(req, 1024)).toString('utf8') || '{}').clave || '') } catch { responder(res, 400, { error: 'Solicitud no válida.' }); return true }
+    if (!verificarClave(clave, config.hash)) {
+      limitadorIngreso.fallo()
+      await auditar({ evento: 'ingreso-fallido', quien })
+      responder(res, 401, { error: 'Clave incorrecta.' })
+      return true
+    }
+    limitadorIngreso.exito()
+    await auditar({ evento: 'ingreso', quien })
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'set-cookie': cookieSesion(crearSesion(config.secreto)) })
+    res.end(JSON.stringify({ ok: true }))
+    return true
+  }
+  if (req.method === 'POST' && url.pathname === '/api/acceso/salir') {
+    await auditar({ evento: 'salida', quien })
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'set-cookie': cookieSalida() })
+    res.end(JSON.stringify({ ok: true }))
+    return true
+  }
+  if (!config?.secreto || !sesionValida(leerCookie(req.headers.cookie), config.secreto)) {
+    if (req.method === 'GET' && url.pathname === '/') { res.writeHead(302, { location: '/ingresar', 'cache-control': 'no-store' }); res.end(); return true }
+    responder(res, 401, { error: 'Inicia sesión en el estudio.' })
+    return true
+  }
+  // La conexión con YouTube solo se hace frente al PC (el retorno de Google apunta a 127.0.0.1).
+  if (url.pathname.startsWith('/oauth/')) { responder(res, 403, { error: 'Conecta YouTube desde el PC.' }); return true }
+  if (req.method !== 'GET' && req.method !== 'HEAD') await auditar({ evento: 'accion', metodo: req.method, ruta: url.pathname.slice(0, 200), quien })
+  return false
+}
+
 export function crearServidor() {
   return http.createServer(async (req, res) => {
     try {
-      if (!peticionPermitida({ host: req.headers.host, origin: req.headers.origin, metodo: req.method })) return responder(res, 403, { error: 'Solo se permite el estudio local.' })
-      const url = new URL(req.url, `http://${req.headers.host}`)
+      const config = await configAcceso()
+      const acceso = clasificarPeticion({
+        host: req.headers.host, origin: req.headers.origin, metodo: req.method,
+        reenviada: esReenviada(req.headers), hostReenviado: req.headers['x-forwarded-host'], usuarioTs: req.headers['tailscale-user-login']
+      }, { puerto: PUERTO, remotos: hostsRemotos(process.env, config), usuarios: usuariosTailscale() })
+      if (!acceso.permitido) return responder(res, 403, { error: 'Solo se permite el estudio local.' })
+      const url = new URL(req.url, 'http://estudio.local')
       const partes = url.pathname.split('/').filter(Boolean).map(decodeURIComponent)
       res.setHeader('x-content-type-options', 'nosniff')
+      res.setHeader('x-frame-options', 'DENY')
+      res.setHeader('referrer-policy', 'no-referrer')
+      // Acceso remoto (iPhone por Tailscale): clave propia, sesión firmada y auditoría. En el PC no cambia nada.
+      if (acceso.remota && await atenderAccesoRemoto(req, res, url)) return
 
       if (req.method === 'GET' && url.pathname === '/') {
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'" })
