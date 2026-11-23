@@ -916,15 +916,6 @@ async function mantenerPantalla(activo) {
   } catch { bloqueoPantalla = null }
 }
 
-// En el iPhone la pantalla no se apaga mientras grabas (si se bloquea, Safari corta el micrófono).
-let bloqueoPantalla = null
-async function mantenerPantalla(activo) {
-  try {
-    if (activo && 'wakeLock' in navigator && !bloqueoPantalla) { bloqueoPantalla = await navigator.wakeLock.request('screen'); bloqueoPantalla.addEventListener('release', () => { bloqueoPantalla = null }) }
-    else if (!activo && bloqueoPantalla) { await bloqueoPantalla.release(); bloqueoPantalla = null }
-  } catch { bloqueoPantalla = null }
-}
-
 function detener() { if (grabador && grabador.state !== 'inactive') { grabador.stop(); detenerLectura() } }
 
 function alTerminarGrabacion() {
