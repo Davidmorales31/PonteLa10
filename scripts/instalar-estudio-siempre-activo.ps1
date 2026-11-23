@@ -1,4 +1,4 @@
-# Instala lo necesario para que el estudio esté disponible desde el iPhone (fase 2). Córrelo UNA vez en PowerShell:
+﻿# Instala lo necesario para que el estudio esté disponible desde el iPhone (fase 2). Córrelo UNA vez en PowerShell:
 #   powershell -ExecutionPolicy Bypass -File scripts\instalar-estudio-siempre-activo.ps1
 # 1) Tarea programada «Pont3la10 Estudio»: arranca el estudio oculto al iniciar sesión y lo reinicia si se cae.
 # 2) Energía: el PC no se suspende ni hiberna mientras esté conectado a la corriente (la pantalla sí se apaga).
@@ -17,7 +17,8 @@ Write-Host 'Suspensión e hibernación desactivadas con corriente.'
 
 if (Get-Command tailscale -ErrorAction SilentlyContinue) {
   tailscale serve --bg 4810
-  Write-Host 'Estudio publicado en tu red de Tailscale (ver la dirección arriba).'
+  if ($LASTEXITCODE -eq 0) { Write-Host 'Estudio publicado en tu red de Tailscale (ver la dirección arriba).' }
+  else { Write-Host 'Tailscale no está conectado: abre Tailscale, inicia sesión (o corre: tailscale up) y vuelve a correr este script.' }
 } else {
   Write-Host 'Tailscale no está instalado: instálalo y vuelve a correr este script.'
 }

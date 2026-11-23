@@ -1,4 +1,4 @@
-# Mantiene el estudio de video encendido (fase 2 del plan del iPhone, docs/PLAN_ESTUDIO_IPHONE.md).
+﻿# Mantiene el estudio de video encendido (fase 2 del plan del iPhone, docs/PLAN_ESTUDIO_IPHONE.md).
 # Lo arranca, y si se cae o pide reinicio (código 75, cuando hay código nuevo) lo vuelve a levantar.
 # Lo lanza la tarea programada «Pont3la10 Estudio» al iniciar sesión (ver instalar-estudio-siempre-activo.ps1).
 $ErrorActionPreference = 'Continue'
