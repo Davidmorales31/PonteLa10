@@ -459,7 +459,8 @@ export async function pasoAutopiloto() {
     const guion = await leerJson(join(carpeta, 'guion.json'))
     const manifiesto = await leerJson(join(carpeta, 'manifiesto.json'))
     if (!guion || !manifiesto || !existsSync(join(carpeta, 'estudio.json'))) continue
-    const tipo = guion.tipo === 'reel' ? 'reel' : (nombrePadre(nombre) ? null : 'video')
+    // El documental de los viernes todavía no lo arma el piloto: se graba aquí y se renderiza con su generador.
+    const tipo = guion.tipo === 'documental' ? null : guion.tipo === 'reel' ? 'reel' : (nombrePadre(nombre) ? null : 'video')
     if (!tipo) continue
     const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
     const lista = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
@@ -517,6 +518,7 @@ async function armar(proyecto) {
   if (!guion) throw Object.assign(new Error('El proyecto no tiene guion.json: vuelve a generarlo con el script.'), { estado: 409 })
   // Un Reel con guion propio tiene su propio generador (vertical, subtítulos y cortes sincronizados con la voz).
   if (guion.tipo === 'reel') return generarReel({ guion, salida: carpeta })
+  if (guion.tipo === 'documental') throw Object.assign(new Error('El documental se graba aquí, pero todavía no se arma desde el estudio: el generador de documentales está en construcción.'), { estado: 409 })
   return generarProyecto({ guion, salida: carpeta })
 }
 
