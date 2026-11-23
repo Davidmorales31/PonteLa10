@@ -57,6 +57,14 @@ pruebas en `tests/unit/videoEstudioAcceso.test.ts`.
 5. **Crear la clave del estudio:** en el PC, `npm run video:estudio:clave -- --host <nombre-del-pc>.<tu-red>.ts.net`.
 6. **Probar:** reinicia el estudio, abre esa dirección en Safari del iPhone y entra con la clave.
 
+## Fase 2 lista para instalar (2026-11-23): PC disponible
+
+- `scripts/estudio-siempre-activo.ps1`: arranca el estudio y lo vuelve a levantar si se cae o si pide reinicio por código nuevo
+  (código 75), con espera creciente; registro en `~/.pont3la10/estudio/servicio.log`.
+- `scripts/instalar-estudio-siempre-activo.ps1` (lo corre el responsable una vez, porque cambia ajustes del sistema): crea la tarea
+  programada «Pont3la10 Estudio» al iniciar sesión, desactiva suspensión e hibernación con corriente y corre `tailscale serve --bg 4810`.
+  Comando: `powershell -ExecutionPolicy Bypass -File scripts\instalar-estudio-siempre-activo.ps1`.
+
 ## Riesgos y preguntas abiertas
 
 - ¿El PC puede quedar siempre encendido y con internet estable? Si no, hay que agregar Wake-on-LAN o un servicio que despierte el PC.
