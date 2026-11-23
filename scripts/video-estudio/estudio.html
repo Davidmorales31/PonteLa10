@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Estudio · Ponte la 10</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/icono-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0e0f11">
 <style>
   /* Estilo tipo OBS / sala de control: docks grafito con barra de título, densidad alta, un solo acento y REC en rojo. */
   :root {
@@ -256,6 +261,14 @@
 
   @media (max-width: 1180px) { body { height: auto; } main { grid-template-columns: 250px minmax(0, 1fr); } #col-fotos { grid-column: 1 / -1; } .pasos { display: none; } .escenario { min-height: 60vh; } }
   @media (max-width: 760px) { main { grid-template-columns: 1fr; } .escenario.con-camara { grid-template-columns: 1fr; } #prompter { font-size: 32px; } body > header { grid-template-columns: 1fr; } }
+  /* Teléfono: botones táctiles grandes, sin atajos de teclado y respetando la muesca del iPhone. */
+  @media (max-width: 760px), (pointer: coarse) {
+    body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); -webkit-text-size-adjust: 100%; }
+    button, select, input, .zona-subida { min-height: 44px; font-size: 16px; }
+    kbd { display: none; }
+    #grabar { min-height: 64px; font-size: 20px; width: 100%; }
+    #prompter { font-size: 28px; line-height: 1.35; }
+  }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -873,13 +886,15 @@ async function grabar() {
   cuenta.style.display = 'grid'
   for (const n of [3, 2, 1]) { cuenta.textContent = n; await new Promise(r => setTimeout(r, 750)) }
   cuenta.style.display = 'none'
-  const tipos = seGrabaConCamara(tramo) ? ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'] : ['audio/webm;codecs=opus', 'audio/webm']
+  // Safari en iPhone graba MP4/AAC (no siempre WebM): el servidor convierte cualquiera con ffmpeg.
+  const tipos = seGrabaConCamara(tramo) ? ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm', 'video/mp4'] : ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac']
   const mimeType = tipos.find(t => MediaRecorder.isTypeSupported(t)) || ''
   trozos = []
   grabador = new MediaRecorder(flujo, mimeType ? { mimeType } : undefined)
   grabador.ondataavailable = e => { if (e.data.size) trozos.push(e.data) }
   grabador.onstop = alTerminarGrabacion
   grabador.start(1000)
+  mantenerPantalla(true)
   document.body.classList.add('grabando')
   inicioGrabacion = performance.now()
   $('#cronometro').textContent = '0:00'
@@ -892,9 +907,28 @@ async function grabar() {
   leer()
 }
 
+// En el iPhone la pantalla no se apaga mientras grabas (si se bloquea, Safari corta el micrófono).
+let bloqueoPantalla = null
+async function mantenerPantalla(activo) {
+  try {
+    if (activo && 'wakeLock' in navigator && !bloqueoPantalla) { bloqueoPantalla = await navigator.wakeLock.request('screen'); bloqueoPantalla.addEventListener('release', () => { bloqueoPantalla = null }) }
+    else if (!activo && bloqueoPantalla) { await bloqueoPantalla.release(); bloqueoPantalla = null }
+  } catch { bloqueoPantalla = null }
+}
+
+// En el iPhone la pantalla no se apaga mientras grabas (si se bloquea, Safari corta el micrófono).
+let bloqueoPantalla = null
+async function mantenerPantalla(activo) {
+  try {
+    if (activo && 'wakeLock' in navigator && !bloqueoPantalla) { bloqueoPantalla = await navigator.wakeLock.request('screen'); bloqueoPantalla.addEventListener('release', () => { bloqueoPantalla = null }) }
+    else if (!activo && bloqueoPantalla) { await bloqueoPantalla.release(); bloqueoPantalla = null }
+  } catch { bloqueoPantalla = null }
+}
+
 function detener() { if (grabador && grabador.state !== 'inactive') { grabador.stop(); detenerLectura() } }
 
 function alTerminarGrabacion() {
+  mantenerPantalla(false)
   tomaBlob = new Blob(trozos, { type: grabador.mimeType || 'video/webm' })
   grabador = null
   clearInterval(relojGrabacion)

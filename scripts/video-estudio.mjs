@@ -644,6 +644,16 @@ async function configAcceso() {
  * Atiende lo propio del acceso remoto. Devuelve true si ya respondió (ingreso, salida, sin sesión o ruta vetada);
  * false si la petición tiene sesión válida y sigue al resto del estudio.
  */
+// PWA: manifiesto e íconos para instalar el estudio en la pantalla de inicio del iPhone (no llevan datos privados).
+const MANIFIESTO = JSON.stringify({ name: 'Estudio · Ponte la 10', short_name: 'Estudio', start_url: '/', scope: '/', display: 'standalone', background_color: '#0e0f11', theme_color: '#0e0f11', icons: [{ src: '/icono-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icono-512.png', sizes: '512x512', type: 'image/png' }] })
+const ICONOS = { '/icono-192.png': 'app-redes-192.png', '/icono-512.png': 'app-redes-512.png' }
+async function atenderRecursosApp(req, res, url) {
+  if (req.method !== 'GET') return false
+  if (url.pathname === '/manifest.webmanifest') { res.writeHead(200, { 'content-type': 'application/manifest+json', 'cache-control': 'max-age=86400' }); res.end(MANIFIESTO); return true }
+  if (ICONOS[url.pathname]) { res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'max-age=86400' }); res.end(await readFile(join(RAIZ, 'public', 'brand', ICONOS[url.pathname]))); return true }
+  return false
+}
+
 async function atenderAccesoRemoto(req, res, url) {
   const quien = String(req.headers['tailscale-user-login'] || '').slice(0, 120)
   const config = await configAcceso()
@@ -701,6 +711,7 @@ export function crearServidor() {
       res.setHeader('x-frame-options', 'DENY')
       res.setHeader('referrer-policy', 'no-referrer')
       // Acceso remoto (iPhone por Tailscale): clave propia, sesión firmada y auditoría. En el PC no cambia nada.
+      if (await atenderRecursosApp(req, res, url)) return
       if (acceso.remota && await atenderAccesoRemoto(req, res, url)) return
 
       if (req.method === 'GET' && url.pathname === '/') {

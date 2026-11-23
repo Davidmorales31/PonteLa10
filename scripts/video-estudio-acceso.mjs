@@ -8,7 +8,8 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 export const COOKIE_SESION = 'estudio_sesion'
-export const DURACION_SESION_MS = 30 * 24 * 3_600_000
+// Un año: el estudio lo usa solo el responsable y el iPhone guarda la clave en el llavero (decisión 2026-11-23).
+export const DURACION_SESION_MS = 365 * 24 * 3_600_000
 export const CLAVE_MINIMA = 8
 export const INTENTOS_MAXIMOS = 5
 export const BLOQUEO_MS = 15 * 60_000
@@ -151,6 +152,7 @@ export const PAGINA_INGRESO = `<!doctype html>
   p { margin: 0; color: #f08a8a; min-height: 1.4em; }
 </style></head>
 <body><form id="f"><h1>Estudio de video</h1>
+<input id="usuario" type="text" autocomplete="username" value="estudio" hidden>
 <input id="clave" type="password" autocomplete="current-password" placeholder="Clave del estudio" required minlength="${CLAVE_MINIMA}">
 <button type="submit">Entrar</button><p id="msg" role="alert"></p></form>
 <script>
