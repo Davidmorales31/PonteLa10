@@ -27,3 +27,6 @@ supabase/.temp/
 videos/diario/
 # Música descargada de la biblioteca (config/musicaLibre.json)
 videos/musica/
+
+# Fotos diarias de tendencias del selector del documental (se regeneran)
+videos/documentales/tendencias/

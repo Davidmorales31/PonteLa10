@@ -1,0 +1,570 @@
+{
+  "version": 1,
+  "descripcion": "Banco de temas del documental de los viernes (docs/PLAN_DOCUMENTAL_SEMANAL.md). Lo lee scripts/documental-elegir.mjs. El ángulo es una pregunta candidata, no un dato: todo dato del guion sale de fuentes leídas. interesFondo (0-100) viene de las vistas medidas de documentales existentes (2026-11-23); null = sin medir.",
+  "reglas": {
+    "pesos": {
+      "tendencia": 0.5,
+      "interes": 0.3,
+      "hueco": 0.2
+    },
+    "diasSinRepetir": 365,
+    "bonoEfemerideDias": 10,
+    "bonoEfemeride": 15
+  },
+  "temas": [
+    {
+      "id": "cristiano-ronaldo",
+      "tipo": "futbolista",
+      "nombre": "Cristiano Ronaldo",
+      "alias": [
+        "cristiano",
+        "cr7",
+        "cristiano ronaldo"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Arrogancia o una disciplina que nadie más soportaría?",
+      "interesFondo": 100,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "lionel-messi",
+      "tipo": "futbolista",
+      "nombre": "Lionel Messi",
+      "alias": [
+        "messi",
+        "lionel messi",
+        "leo messi"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Cómo un niño al que le dijeron que no iba a crecer terminó siendo el más grande?",
+      "interesFondo": 95,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "diego-maradona",
+      "tipo": "futbolista",
+      "nombre": "Diego Maradona",
+      "alias": [
+        "maradona",
+        "diego maradona"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Por qué lo amaron tanto a pesar de todo?",
+      "interesFondo": 90,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "neymar",
+      "tipo": "futbolista",
+      "nombre": "Neymar",
+      "alias": [
+        "neymar",
+        "neymar jr"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Qué le faltó para ser el mejor del mundo?",
+      "interesFondo": 80,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "ronaldinho",
+      "tipo": "futbolista",
+      "nombre": "Ronaldinho",
+      "alias": [
+        "ronaldinho"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Por qué el jugador más feliz del mundo se apagó tan pronto?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "zinedine-zidane",
+      "tipo": "futbolista",
+      "nombre": "Zinedine Zidane",
+      "alias": [
+        "zidane",
+        "zinedine zidane"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Cómo el jugador más elegante terminó su carrera con un cabezazo?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "kylian-mbappe",
+      "tipo": "futbolista",
+      "nombre": "Kylian Mbappé",
+      "alias": [
+        "mbappe",
+        "mbappé",
+        "kylian mbappe"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Qué tuvo que dejar atrás para llegar al Real Madrid?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "erling-haaland",
+      "tipo": "futbolista",
+      "nombre": "Erling Haaland",
+      "alias": [
+        "haaland",
+        "erling haaland"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Es una máquina de goles o un proyecto que empezó de niño?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "pele",
+      "tipo": "futbolista",
+      "nombre": "Pelé",
+      "alias": [
+        "pele",
+        "pelé"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Cómo un niño de Brasil se volvió el primer rey del fútbol?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "ronaldo-nazario",
+      "tipo": "futbolista",
+      "nombre": "Ronaldo Nazário",
+      "alias": [
+        "ronaldo nazario",
+        "el fenomeno",
+        "ronaldo fenomeno"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Qué habría pasado sin las lesiones del Fenómeno?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "lamine-yamal",
+      "tipo": "futbolista",
+      "nombre": "Lamine Yamal",
+      "alias": [
+        "lamine yamal",
+        "yamal"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Cómo llegó tan lejos tan joven?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "rene-higuita",
+      "tipo": "futbolista",
+      "nombre": "René Higuita",
+      "alias": [
+        "higuita",
+        "rene higuita",
+        "escorpion"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "portero"
+      ],
+      "angulo": "¿Locura o genio? El portero que cambió la forma de atajar",
+      "interesFondo": null,
+      "efemeride": "09-06",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "carlos-valderrama",
+      "tipo": "futbolista",
+      "nombre": "Carlos Valderrama",
+      "alias": [
+        "valderrama",
+        "el pibe",
+        "pibe valderrama"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Cómo el Pibe se volvió el símbolo de una generación?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "radamel-falcao",
+      "tipo": "futbolista",
+      "nombre": "Radamel Falcao",
+      "alias": [
+        "falcao",
+        "radamel falcao"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Qué pasó con el Tigre después de la lesión antes del Mundial 2014?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "james-rodriguez",
+      "tipo": "futbolista",
+      "nombre": "James Rodríguez",
+      "alias": [
+        "james",
+        "james rodriguez"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Del Mundial 2014 a dónde? La montaña rusa de James",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "luis-diaz",
+      "tipo": "futbolista",
+      "nombre": "Luis Díaz",
+      "alias": [
+        "luis diaz",
+        "lucho diaz"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Cómo un niño de Barrancas llegó a la élite de Europa?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "faustino-asprilla",
+      "tipo": "futbolista",
+      "nombre": "Faustino Asprilla",
+      "alias": [
+        "asprilla",
+        "tino asprilla"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Por qué el Tino era tan impredecible dentro y fuera de la cancha?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "andres-escobar",
+      "tipo": "futbolista",
+      "nombre": "Andrés Escobar",
+      "alias": [
+        "andres escobar"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "Un caballero del fútbol y el día que Colombia no olvida",
+      "interesFondo": null,
+      "efemeride": "07-02",
+      "sensible": true,
+      "publicado": null
+    },
+    {
+      "id": "oliver-kahn",
+      "tipo": "futbolista",
+      "nombre": "Oliver Kahn",
+      "alias": [
+        "kahn",
+        "oliver kahn"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Qué hacía tan temido al portero más intenso de su época?",
+      "interesFondo": 85,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "lev-yashin",
+      "tipo": "futbolista",
+      "nombre": "Lev Yashin",
+      "alias": [
+        "yashin",
+        "lev yashin"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Por qué el único portero con Balón de Oro sigue siendo el modelo?",
+      "interesFondo": 75,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "gianluigi-buffon",
+      "tipo": "futbolista",
+      "nombre": "Gianluigi Buffon",
+      "alias": [
+        "buffon",
+        "gianluigi buffon"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Cómo se juega casi 30 años al máximo nivel?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "iker-casillas",
+      "tipo": "futbolista",
+      "nombre": "Iker Casillas",
+      "alias": [
+        "casillas",
+        "iker casillas"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Cómo el santo de España vivió su caída en Madrid?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "jose-luis-chilavert",
+      "tipo": "futbolista",
+      "nombre": "José Luis Chilavert",
+      "alias": [
+        "chilavert"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Un portero goleador? La historia de Chilavert",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "emiliano-martinez",
+      "tipo": "futbolista",
+      "nombre": "Emiliano «Dibu» Martínez",
+      "alias": [
+        "dibu",
+        "dibu martinez",
+        "emiliano martinez"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Cómo un suplente eterno terminó atajando en una final del Mundial?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "la-mano-de-dios",
+      "tipo": "suceso",
+      "nombre": "La Mano de Dios (México 1986)",
+      "alias": [
+        "mano de dios",
+        "gol de la mano"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Trampa, genialidad o revancha? El gol más famoso de la historia",
+      "interesFondo": null,
+      "efemeride": "06-22",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "maracanazo",
+      "tipo": "suceso",
+      "nombre": "El Maracanazo (Brasil 1950)",
+      "alias": [
+        "maracanazo"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Cómo Uruguay silenció al Maracaná?",
+      "interesFondo": null,
+      "efemeride": "07-16",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "cabezazo-zidane",
+      "tipo": "suceso",
+      "nombre": "El cabezazo de Zidane (Berlín 2006)",
+      "alias": [
+        "cabezazo de zidane",
+        "zidane materazzi"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Qué pasó de verdad entre Zidane y Materazzi?",
+      "interesFondo": null,
+      "efemeride": "07-09",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "brasil-alemania-7-1",
+      "tipo": "suceso",
+      "nombre": "El 7-1 de Alemania a Brasil (2014)",
+      "alias": [
+        "7-1",
+        "mineirazo"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Cómo se derrumbó Brasil en su propio Mundial?",
+      "interesFondo": null,
+      "efemeride": "07-08",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "colombia-5-0-argentina",
+      "tipo": "suceso",
+      "nombre": "El 5-0 de Colombia a Argentina (1993)",
+      "alias": [
+        "5-0",
+        "cinco a cero"
+      ],
+      "etiquetas": [
+        "suceso",
+        "colombiano"
+      ],
+      "angulo": "La noche que Colombia goleó en Buenos Aires",
+      "interesFondo": null,
+      "efemeride": "09-05",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "estambul-2005",
+      "tipo": "suceso",
+      "nombre": "La final de Estambul (2005)",
+      "alias": [
+        "estambul 2005",
+        "milagro de estambul"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Cómo se remonta un 3-0 en una final de Champions?",
+      "interesFondo": null,
+      "efemeride": "05-25",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "calciopoli",
+      "tipo": "suceso",
+      "nombre": "El Calciopoli (2006)",
+      "alias": [
+        "calciopoli"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Cómo un escándalo mandó a la Juventus a la Serie B?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "superliga",
+      "tipo": "suceso",
+      "nombre": "La Superliga europea (2021)",
+      "alias": [
+        "superliga"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Por qué la Superliga duró apenas unos días?",
+      "interesFondo": null,
+      "efemeride": "04-18",
+      "sensible": false,
+      "publicado": null
+    }
+  ]
+}

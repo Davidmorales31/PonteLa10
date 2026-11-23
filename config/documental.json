@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "descripcion": "Parámetros del documental de los viernes (docs/PLAN_DOCUMENTAL_SEMANAL.md). Los usa scripts/documental-rubrica.mjs.",
+  "palabrasPorMinuto": 160,
+  "palabras": { "minimo": 3300, "maximo": 4800 },
+  "actos": ["pregunta", "origen", "ascenso", "crisis", "resolucion", "legado"],
+  "pregunta": { "maximoPalabras": 130 },
+  "capitulos": { "minimo": 10, "maximo": 16, "minimoPalabras": 100, "maximoPalabras": 520 },
+  "fuentes": { "minimo": 5, "mediosDistintos": 3 },
+  "actosConPreguntaAlPublico": 4,
+  "cierre": { "maximoPalabras": 80 },
+  "titulos": { "minimo": 2, "maximo": 3, "maximoCaracteres": 100 },
+  "proporcionCapitulosConFoto": 0.5,
+  "aperturasProhibidas": ["hola", "bienvenidos", "bienvenidas", "en este video", "hoy les", "hoy vamos", "qué tal"],
+  "verbosDeAtribucion": ["dijo", "declaró", "contó", "según", "afirmó", "escribió", "explicó", "recordó", "aseguró", "confesó", "admitió", "reconoció", "relató", "señaló", "publicó"]
+}
