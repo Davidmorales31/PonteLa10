@@ -303,7 +303,13 @@
     .barra-herramientas > .ajustes > summary { height: 100%; }
     #tramo-titulo { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .escenario, .escenario.con-camara { grid-template-columns: 1fr; flex: 1; min-height: 160px; }
-    .lado-camara { display: none !important; }
+    /* Vista previa de la cámara frontal como ventanita sobre el texto (solo en tomas a cámara). */
+    .escenario { position: relative; }
+    .escenario:not(.con-camara) .lado-camara { display: none !important; }
+    .escenario.con-camara .lado-camara { display: block !important; position: absolute; top: 8px; right: 8px; width: 34%; max-width: 150px; z-index: 5; }
+    .escenario.con-camara #camara { aspect-ratio: 3 / 4; border-radius: 12px; border: 2px solid var(--borde); box-shadow: var(--sombra); }
+    .escenario.con-camara .lado-camara .tarjeta { display: none; }
+    .escenario.con-camara #prompter { padding-right: 38%; }
     #prompter { font-size: 28px !important; line-height: 1.4; }
     .toma { grid-template-columns: 1fr; gap: 8px; padding: 10px; }
     .toma .info:empty, .toma .texto-estado:empty { display: none; }
@@ -857,7 +863,7 @@ async function abrirPista(tipo, conVideo) {
     // Micrófono de solapa: sin cancelación de eco ni ganancia automática (sube y baja el volumen sola);
     // el servidor normaliza la voz después.
     ? { audio: { deviceId: id ? { exact: id } : undefined, echoCancellation: false, autoGainControl: false, noiseSuppression: true }, video: false }
-    : { audio: false, video: conVideo ? { deviceId: id ? { exact: id } : undefined, width: { ideal: 1920 }, height: { ideal: 1080 } } : false }
+    : { audio: false, video: conVideo ? { deviceId: id ? { exact: id } : undefined, facingMode: id ? undefined : 'user', width: { ideal: 1920 }, height: { ideal: 1080 } } : false }
   try {
     return await navigator.mediaDevices.getUserMedia(restricciones)
   } catch (err) {
@@ -1795,6 +1801,22 @@ function irAVista(vista, { historial = true } = {}) {
 document.querySelectorAll('.pestanas-movil button').forEach(b => b.addEventListener('click', () => irAVista(b.dataset.vista)))
 window.addEventListener('popstate', () => irAVista(location.hash.slice(1) || 'grabar', { historial: false }))
 irAVista(VISTAS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'grabar', { historial: false })
+
+/* ---------- Tomas que llegan desde otro dispositivo (iPhone ↔ PC) ---------- */
+// Cada 5 s, si la página está a la vista y no estás grabando ni revisando una toma, mira si el proyecto cambió
+// (una toma o foto guardada desde el otro aparato) y se actualiza sola.
+const firmaProyecto = d => JSON.stringify([d?.estudio?.grabaciones || {}, d?.estudio?.fotosExtra || {}, d?.videoFinal || ''])
+setInterval(async () => {
+  if (document.hidden || grabador || tomaBlob || !proyecto || !detalle || document.querySelector('dialog[open]')) return
+  try {
+    const nuevo = await api(`/api/proyectos/${proyecto}`)
+    if (firmaProyecto(nuevo) === firmaProyecto(detalle)) return
+    const antes = Object.keys(detalle.estudio?.grabaciones || {}).length
+    await cargarDetalle(true)
+    const despues = Object.keys(detalle.estudio?.grabaciones || {}).length
+    avisar(despues > antes ? 'Llegó una toma nueva desde el otro dispositivo.' : 'El proyecto se actualizó desde el otro dispositivo.', 'ok')
+  } catch { /* sin conexión: se reintenta en el siguiente ciclo */ }
+}, 5000)
 </script>
 </body>
 </html>
