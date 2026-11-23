@@ -19,6 +19,9 @@
     "prohibidoDesde": "23:00",
     "prohibidoHasta": "05:30",
     "noticiaDelDia": "Un Reel de una noticia de hoy sale en la primera franja libre del mismo día; solo pasa a mañana si ya no queda ninguna.",
+    "relleno": { "primera": "06:30", "ultima": "22:30", "separacionMinutos": 25, "motivo": "Si las franjas no alcanzan para todos los Reels de un video, se llena el mismo día (cada media hora) antes de pasar al siguiente; sin tope por día." },
+    "reelsDelVideo": "El video diario sale de noche; todos sus Reels salen el día siguiente (el mismo día), aunque sean muchos.",
+    "noticiasRedes": "Las publicaciones de redes de noticias salen el mismo día: primera hora libre a más de 12 min, una cada 15 min, nunca entre 23:00 y 5:30; solo pasan a la mañana siguiente si ya no queda día.",
     "findeSemana": "Mismas franjas: en fútbol el fin de semana hay partidos y mucho público; se compara con datos propios."
   },
   "evidencia": "Solo hay una fuente con horas para Colombia (SchedPilot); el resto son estudios globales de Buffer, Sprout, SocialPilot y Metricool que se contradicen en parte. Es una hipótesis inicial, no una verdad.",

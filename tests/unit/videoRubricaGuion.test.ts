@@ -10,8 +10,8 @@ const config = JSON.parse(readFileSync(new URL('../../config/videoDiario.json', 
 const relleno = (cantidad: number) => Array.from({ length: cantidad }, (_, i) => `dato${i}`).join(' ')
 
 interface Plano { imagen: string, credito: string, movimiento: string }
-interface Bloque { id: string, articuloSlug: string, fuente: string, rumor: boolean, caraBreve: string, voz: string, planos: Plano[] }
-interface Guion { fecha: string, tituloVideo: string, titulos: string[], miniatura: { texto: string, resaltar?: string }, gancho: { texto: string, fuente: string }, presentacion: { texto: string }, bloques: Bloque[], preguntaFinal: string, cierre: { texto: string } }
+interface Bloque { id: string, articuloSlug: string, fuente: string, rumor: boolean, caraBreve?: string, voz: string, planos: Plano[] }
+interface Guion { fecha: string, estructura?: string, tituloVideo: string, titulos: string[], miniatura: { texto: string, resaltar?: string }, gancho: { texto: string, fuente: string }, presentacion?: { texto: string }, bloques: Bloque[], preguntaFinal: string, cierre: { texto: string } }
 
 function bloque(id: string, extra: Partial<Bloque> = {}): Bloque {
   return {
@@ -19,9 +19,8 @@ function bloque(id: string, extra: Partial<Bloque> = {}): Bloque {
     articuloSlug: `articulo-${id}`,
     fuente: 'Win Sports',
     rumor: false,
-    caraBreve: 'Esto pasó hoy en el fútbol colombiano.',
     voz: `Según Win Sports, les cuento que ${relleno(120)}`,
-    planos: Array.from({ length: 8 }, (_, i) => ({ imagen: `https://x/${id}-${i}.jpg`, credito: 'Colprensa (vía Win Sports)', movimiento: 'zoom-in' })),
+    planos: Array.from({ length: 14 }, (_, i) => ({ imagen: `https://x/${id}-${i}.jpg`, credito: 'Colprensa (vía Win Sports)', movimiento: 'zoom-in' })),
     ...extra
   }
 }
@@ -31,14 +30,17 @@ function guionBase(): Guion {
     fecha: '2026-11-18',
     tituloVideo: 'América y Once Caldas van a la final de la Copa BetPlay: lo que dejó la noche',
     titulos: [
-      '¡América y Once Caldas jugarán la final de la Copa BetPlay!',
-      'Vigouroux le atajó el penal a Colombia y así cerró el año',
+      '¡ESTO NADIE LO ESPERABA! América y Once Caldas van a la final',
+      '¡NO CREERÁS LO QUE PASÓ con Vigouroux y el penal a Colombia!',
       'Cuadrangulares de la Liga: Medellín y Santa Fe abren el viernes'
     ],
     miniatura: { texto: 'FINAL DEFINIDA', resaltar: 'FINAL' },
     gancho: { texto: 'América y Once Caldas jugarán la final de la Copa BetPlay, según Dimayor.', fuente: 'Dimayor' },
-    presentacion: { texto: 'Hoy en Pont3la10: la final de Copa, los cuadrangulares y el debut de Cali.' },
-    bloques: ['b1', 'b2', 'b3', 'b4', 'b5', 'b6', 'b7', 'b8', 'b9'].map(id => bloque(id)),
+    estructura: 'directa',
+    // Largos medidos en la competencia: noticias rápidas, normales y fuertes mezcladas, con preguntas al público.
+    bloques: [255, 55, 145, 145, 55, 255, 145, 55, 145].map((palabras, i) => bloque(`b${i + 1}`, {
+      voz: `${['Según Win Sports,', 'Ojo, según Win Sports,', 'Miren, según Win Sports,', 'Les cuento que según Win Sports', 'Y ahora, según Win Sports,', 'Por cierto, según Win Sports,', 'Atención, según Win Sports,', 'Mientras tanto, según Win Sports,', 'Por otro lado, según Win Sports,'][i]} para mí ${relleno(palabras)}${i % 3 === 2 ? ' ¿Ustedes qué opinan?' : ''}`
+    })),
     preguntaFinal: '¿Quién crees que levanta la Copa?',
     cierre: { texto: 'Suscríbete, activa la campana y nos vemos en el siguiente video.' }
   }
@@ -119,11 +121,36 @@ describe('rúbrica del guion del video diario', () => {
 
   it('exige narración cercana en la mayoría de los bloques', () => {
     const guion = guionBase()
-    guion.bloques = guion.bloques.map(b => ({ ...b, voz: b.voz.replace('les cuento que ', 'se informó que ') }))
+    guion.bloques = guion.bloques.map(b => ({ ...b, voz: `Según Win Sports, se informó que ${relleno(140)}` }))
     const resultado = evaluar(guion, config)
     expect(resultado.criterios.find(c => c.id === 'tono_cercano')?.ok).toBe(false)
     guion.bloques[0].voz = 'Para mí ' + guion.bloques[0].voz
     expect(evaluar(guion, config).criterios.find(c => c.id === 'tono_cercano')?.detalle).toContain('1 de 9')
+  })
+
+  it('exige noticias directas: sin intro a cámara, sin presentación larga y con la estructura marcada', () => {
+    const guion = guionBase()
+    guion.bloques[3].caraBreve = 'Vamos con la siguiente noticia.'
+    guion.presentacion = { texto: 'Hoy en Pont3la10 les traigo la final de Copa, los cuadrangulares, el debut de Cali y mucho más.' }
+    const resultado = evaluar(guion, config)
+    const criterio = resultado.criterios.find(c => c.id === 'noticia_directa')
+    expect(criterio?.ok).toBe(false)
+    expect(criterio?.detalle).toContain('b4')
+    expect(resultado.obligatoriosFallidos).toContain('noticia_directa')
+    const sinMarca = guionBase()
+    delete sinMarca.estructura
+    expect(evaluar(sinMarca, config).criterios.find(c => c.id === 'noticia_directa')?.detalle).toContain('estructura')
+  })
+
+  it('exige ritmo variado, preguntas al público y arranques distintos', () => {
+    const iguales = guionBase()
+    iguales.bloques = iguales.bloques.map((b, i) => ({ ...b, voz: `Según Win Sports, les cuento que ${relleno(140)}${i % 3 === 0 ? '?' : ''}` }))
+    const resultado = evaluar(iguales, config)
+    expect(resultado.criterios.find(c => c.id === 'ritmo_variado')?.ok).toBe(false)
+    expect(resultado.criterios.find(c => c.id === 'entradas_variadas')?.ok).toBe(false)
+    const sinPreguntas = guionBase()
+    sinPreguntas.bloques = sinPreguntas.bloques.map(b => ({ ...b, voz: b.voz.replace(' ¿Ustedes qué opinan?', '') }))
+    expect(evaluar(sinPreguntas, config).criterios.find(c => c.id === 'preguntas_publico')?.ok).toBe(false)
   })
 
   it('revisa los títulos A/B: cantidad, largo, distintos, nombre propio y sin exceso de mayúsculas', () => {
@@ -134,15 +161,17 @@ describe('rúbrica del guion del video diario', () => {
     expect(revisarTitulos(repetidos, reglas).join(' ')).toContain('repetidos')
     const sinNombre = ['¡la final ya tiene a sus dos equipos y se juega muy pronto!', 'Vigouroux le atajó el penal a Colombia y así cerró el año', 'Cuadrangulares de la Liga: Medellín y Santa Fe abren el viernes']
     expect(revisarTitulos(sinNombre, reglas).join(' ')).toContain('título 1: sin nombre propio')
-    const gritado = ['¡BOMBA TOTAL! AMÉRICA SE METE EN LA FINAL DE LA COPA BETPLAY', 'Vigouroux le atajó el penal a Colombia y así cerró el año', 'Cuadrangulares de la Liga: Medellín y Santa Fe abren el viernes']
+    const gritado = ['¡ESTO NADIE LO ESPERABA! AMÉRICA SE METE EN LA FINAL DE LA COPA BETPLAY', ...guionBase().titulos.slice(1)]
     expect(revisarTitulos(gritado, reglas).join(' ')).toContain('mayúsculas')
+    const sinGancho = ['América y Once Caldas jugarán la final de la Copa BetPlay', 'Vigouroux le atajó el penal a Colombia y así cerró el año', guionBase().titulos[2]]
+    expect(revisarTitulos(sinGancho, reglas).join(' ')).toContain('gancho de curiosidad')
   })
 
   it('revisa el texto de la miniatura: 2–5 palabras, que no repita el título y con palabra a resaltar', () => {
     const titulos = guionBase().titulos
     expect(revisarMiniatura({ texto: 'FINAL DEFINIDA', resaltar: 'FINAL' }, titulos, config.miniatura)).toEqual([])
     expect(revisarMiniatura({ texto: 'FINAL' }, titulos, config.miniatura).join(' ')).toContain('1 palabras')
-    expect(revisarMiniatura({ texto: 'jugarán la final' }, titulos, config.miniatura).join(' ')).toContain('repite el título')
+    expect(revisarMiniatura({ texto: 'van a la final' }, titulos, config.miniatura).join(' ')).toContain('repite el título')
     expect(revisarMiniatura({ texto: 'FINAL DEFINIDA', resaltar: 'COPA' }, titulos, config.miniatura).join(' ')).toContain('resaltar')
   })
 

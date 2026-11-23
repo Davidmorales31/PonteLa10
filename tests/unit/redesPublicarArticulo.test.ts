@@ -98,16 +98,23 @@ describe('horas automáticas de las pendientes', () => {
   const horas = horasParaPendientes as (n: number, programadas?: string[], ahora?: number) => string[]
   const ahora = Date.parse('2026-11-20T20:00:00Z') // 15:00 en Bogotá
 
-  it('arranca 12 minutos después de ahora y separa cada pieza 15 minutos', () => {
-    expect(horas(3, [], ahora)).toEqual(['2026-11-20T20:12:00.000Z', '2026-11-20T20:27:00.000Z', '2026-11-20T20:42:00.000Z'])
+  it('arranca a más de 12 minutos de ahora en una hora redonda y separa cada pieza 15 minutos', () => {
+    expect(horas(3, [], ahora)).toEqual(['2026-11-20T20:15:00.000Z', '2026-11-20T20:30:00.000Z', '2026-11-20T20:45:00.000Z'])
   })
 
-  it('espera a lo que ya está programado y nunca cae en la madrugada de Bogotá', () => {
-    expect(horas(1, ['2026-11-20T21:00:00Z'], ahora)).toEqual(['2026-11-20T21:15:00.000Z'])
+  it('sale el mismo día aunque la cola de Reels llegue a días futuros (no se encola detrás de la última)', () => {
+    const cola = ['2026-11-21T12:30:00Z', '2026-11-22T17:30:00Z', '2026-11-24T12:30:00Z']
+    const salida = horas(3, cola, ahora)
+    expect(salida).toEqual(['2026-11-20T20:15:00.000Z', '2026-11-20T20:30:00.000Z', '2026-11-20T20:45:00.000Z'])
+    expect(salida.every(h => h.startsWith('2026-11-20'))).toBe(true)
+  })
+
+  it('respeta 15 minutos con lo ya programado y nunca cae en la madrugada de Bogotá', () => {
+    expect(horas(1, ['2026-11-20T20:15:00Z'], ahora)).toEqual(['2026-11-20T20:30:00.000Z'])
     const tarde = Date.parse('2026-11-21T03:50:00Z') // 22:50 en Bogotá
     for (const h of horas(4, [], tarde)) {
       const horaBogota = new Date(Date.parse(h) - 5 * 3_600_000).getUTCHours()
-      expect(horaBogota >= 6 && horaBogota < 23).toBe(true)
+      expect(horaBogota >= 5 && horaBogota < 23).toBe(true)
     }
   })
 })

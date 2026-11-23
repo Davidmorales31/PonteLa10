@@ -22,7 +22,8 @@ const SITIO = 'https://www.pont3la10.com'
 const AGENTE = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36 Pont3la10-estudio'
 const LIMITE_IMAGEN = 15 * 1024 * 1024
 const LIMITE_VIDEO = 120 * 1024 * 1024
-const VIDEOS_POR_NOTICIA = 2
+// Más clips y menos imágenes fijas (2026-11-22): hasta 4 clips por noticia.
+const VIDEOS_POR_NOTICIA = 4
 const SEGUNDOS_MAXIMOS_CLIP = 15
 const ANCHO_MINIMO = 640
 // Dos fotos cuya huella visual difiere en 6 bits o menos (de 64) son la misma foto en otro tamaño o recorte.
@@ -308,7 +309,7 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
         nuevas.push({ ruta: `assets/fotos/${nombre}.jpg`, credito: candidata.credito.slice(0, 120), auto: true, origen: candidata.origen, origenImagen: candidata.url })
       } catch { /* imagen dañada: se salta */ } finally { await rm(`${base}.descarga`, { force: true }) }
     }
-    // Clips de video de las publicaciones (máximo 2 por noticia): sin sonido, recortados a 15 s y con póster.
+    // Clips de video de las publicaciones (máximo 4 por noticia): sin sonido, recortados a 15 s y con póster.
     const carpetaVideos = join(carpeta, 'assets', 'videos')
     let clips = 0
     for (const video of candidatas.videos || []) {

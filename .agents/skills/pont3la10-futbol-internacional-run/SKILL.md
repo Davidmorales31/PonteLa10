@@ -101,8 +101,7 @@ quedaron piezas publicadas:
 2. Revisa cada imagen: foto del protagonista, logo y titular legibles, y que la palabra grande del formato no
    engañe (por ejemplo, «VICTORIA» en un empate). Anota los slugs que no pasan.
 3. Programa el resto: el mismo comando con `--auto` en lugar de `--borrador` y `--excluir <slug1,slug2>` con los que
-   no pasaron (quedan como borrador para que una persona los revise; repórtalos). `--auto` reparte una pieza cada
-   15 minutos después de lo ya programado y salta la madrugada. Las **previas** deben salir antes del partido: si el
+   no pasaron (quedan como borrador para que una persona los revise; repórtalos). `--auto` programa el MISMO día (2026-11-22): primera hora libre, 15 minutos entre piezas, sin encolarse detrás de los Reels, y salta la madrugada. Las **previas** deben salir antes del partido: si el
    orden automático las deja tarde, exclúyelas y repórtalas.
 4. Si la API responde 429 `limite_excedido`, detente, no insistas y reporta los slugs pendientes.
 

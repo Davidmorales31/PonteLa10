@@ -148,24 +148,28 @@ const SEPARACION_MINUTOS = 15
 const MARGEN_MINUTOS = 12
 
 /**
- * Horas de publicación para `cantidad` piezas: la primera a más de 12 minutos de ahora (la API pide más de 10) y después
- * de la última ya programada, una cada 15 minutos, saltando la madrugada de Bogotá (23:00–05:30) según
- * config/horariosPublicacion.json. `programadas` son las fechas ya programadas (ISO).
+ * Horas de publicación para `cantidad` piezas de noticias. Decisión del responsable (2026-11-22): la noticia sale el MISMO día.
+ * Cada pieza va a la primera hora libre: a más de 12 minutos de ahora (la API pide más de 10), a 15 minutos o más de cualquier
+ * publicación ya programada (Reels incluidos) y fuera de la madrugada de Bogotá (23:00–05:30). Ya no se encola detrás de la última
+ * programada: eso empujaba las noticias hasta dos días después cuando los Reels ocupaban la cola. Solo pasa a la mañana siguiente
+ * si ya no queda hueco hoy. `programadas` son las fechas ya programadas (ISO).
  */
 export function horasParaPendientes(cantidad, programadas = [], ahora = Date.now()) {
-  const ultima = Math.max(0, ...programadas.map(f => Date.parse(f)).filter(Number.isFinite))
-  let hora = Math.max(ahora + MARGEN_MINUTOS * 60_000, ultima ? ultima + SEPARACION_MINUTOS * 60_000 : 0)
+  const ocupadas = programadas.map(f => Date.parse(f)).filter(Number.isFinite)
+  const paso = SEPARACION_MINUTOS * 60_000
+  const libre = t => ocupadas.every(o => Math.abs(o - t) >= paso)
+  const enMadrugada = t => { const b = new Date(t - 5 * 3_600_000); const m = b.getUTCHours() * 60 + b.getUTCMinutes(); return m >= 23 * 60 || m < 5 * 60 + 30 }
+  // Cuadrícula de minutos redondos para que las horas se lean bien.
+  let hora = Math.ceil((ahora + MARGEN_MINUTOS * 60_000) / paso) * paso
   const salida = []
-  for (let i = 0; i < cantidad; i++) {
-    const horaBogota = new Date(hora - 5 * 3_600_000)
-    const minutos = horaBogota.getUTCHours() * 60 + horaBogota.getUTCMinutes()
-    if (minutos >= 23 * 60 || minutos < 5 * 60 + 30) {
-      // La primera franja de mañana que permite la regla de horarios.
-      const [primera] = proponerHoras({ ahora: hora, cantidad: 1 })
-      hora = Date.parse(primera)
+  while (salida.length < cantidad) {
+    if (enMadrugada(hora)) {
+      // Primera franja de la mañana que permite la regla de horarios (después de la madrugada).
+      hora = Date.parse(proponerHoras({ ahora: hora, cantidad: 1, ocupadas })[0])
+      continue
     }
-    salida.push(new Date(hora).toISOString())
-    hora += SEPARACION_MINUTOS * 60_000
+    if (libre(hora)) { salida.push(new Date(hora).toISOString()); ocupadas.push(hora) }
+    hora += paso
   }
   return salida
 }

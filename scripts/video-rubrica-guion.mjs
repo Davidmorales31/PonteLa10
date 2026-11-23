@@ -37,6 +37,12 @@ export function revisarTitulos(titulos, reglas) {
     if (palabrasEnMayusculas(t) > reglas.maximoPalabrasEnMayusculas) problemas.push(`título ${i + 1}: demasiadas palabras en mayúsculas`)
     if ((t.match(EMOJI) || []).length > reglas.maximoEmojis) problemas.push(`título ${i + 1}: más de ${reglas.maximoEmojis} emoji`)
   })
+  // Estilo clickbait de curiosidad (skill titulos-fpc-clickbait): al menos N títulos abren con un gancho de misterio o sorpresa.
+  if (Array.isArray(reglas.ganchos) && reglas.minimoTitulosConGancho) {
+    const patrones = reglas.ganchos.map(g => new RegExp(g, 'i'))
+    const conGancho = lista.filter(t => patrones.some(p => p.test(t))).length
+    if (conGancho < reglas.minimoTitulosConGancho) problemas.push(`solo ${conGancho} título(s) con gancho de curiosidad (mínimo ${reglas.minimoTitulosConGancho}); ver skill pont3la10-titulos-clickbait`)
+  }
   return problemas
 }
 
@@ -100,9 +106,38 @@ export function evaluarGuion(guion, config) {
   agregar('rumor_atribuido', 'Los rumores se cuentan como rumor', 10, !rumoresSueltos.length,
     rumoresSueltos.length ? `rumor sin marca de duda: ${rumoresSueltos.join(', ')}` : 'ok')
 
-  const sinCara = bloques.filter(bloque => !bloque.caraBreve || contarPalabras(bloque.caraBreve) > cfgBloques.caraBreveMaximoPalabras).map(bloque => bloque.id)
-  agregar('cara_por_noticia', 'Toma breve con tu cara en cada noticia', 5, bloques.length > 0 && !sinCara.length,
-    sinCara.length ? `falta o es larga (máx. ${cfgBloques.caraBreveMaximoPalabras} palabras): ${sinCara.join(', ')}` : 'ok')
+  // Estructura directa (2026-11-22): la noticia se cuenta de una vez, sin «intro» a cámara ni presentación larga.
+  const estructura = config.estructura || {}
+  const conIntro = bloques.filter(bloque => String(bloque.caraBreve || '').trim()).map(bloque => bloque.id)
+  const palabrasPresentacion = contarPalabras(guion?.presentacion?.texto)
+  const presentacionLarga = palabrasPresentacion > (estructura.presentacionMaximoPalabras ?? 15)
+  const marcada = !estructura.requerida || guion?.estructura === estructura.requerida
+  agregar('noticia_directa', 'Cada noticia va directa, sin intro a cámara ni presentación larga', 10, bloques.length > 0 && !conIntro.length && !presentacionLarga && marcada,
+    [conIntro.length ? `con caraBreve: ${conIntro.join(', ')}` : '', presentacionLarga ? `presentación de ${palabrasPresentacion} palabras` : '', marcada ? '' : `falta "estructura": "${estructura.requerida}"`].filter(Boolean).join('; ') || 'ok')
+
+  if (cfgBloques.tamanos) {
+    const tamanoDe = palabras => (palabras <= cfgBloques.tamanos.rapida[1] ? 'rapida' : palabras >= cfgBloques.tamanos.fuerte[0] ? 'fuerte' : 'normal')
+    const tamanos = bloques.map(bloque => tamanoDe(contarPalabras(bloque.voz)))
+    let racha = 0
+    let rachaMaxima = 0
+    tamanos.forEach((tamano, i) => { racha = i && tamano === tamanos[i - 1] ? racha + 1 : 1; rachaMaxima = Math.max(rachaMaxima, racha) })
+    const limite = cfgBloques.maximoSeguidosMismoTamano ?? 2
+    const ok = tamanos.includes('rapida') && tamanos.includes('fuerte') && rachaMaxima <= limite
+    agregar('ritmo_variado', 'Noticias de largo variado (rápidas, normales y fuertes)', 10, bloques.length > 0 && ok,
+      `${tamanos.filter(t => t === 'rapida').length} rápidas, ${tamanos.filter(t => t === 'normal').length} normales, ${tamanos.filter(t => t === 'fuerte').length} fuertes; máximo ${rachaMaxima} seguidas del mismo largo (tope ${limite})`)
+  }
+
+  if (cfgBloques.bloquesPorPregunta) {
+    const conPregunta = bloques.filter(bloque => /\?/.test(bloque.voz || '')).length
+    const minimo = Math.floor(bloques.length / cfgBloques.bloquesPorPregunta)
+    agregar('preguntas_publico', 'Preguntas al público a lo largo del video', 5, conPregunta >= minimo,
+      `${conPregunta} noticias con pregunta (mínimo ${minimo}, una cada ${cfgBloques.bloquesPorPregunta})`)
+  }
+
+  const entradas = bloques.map(bloque => texto(bloque.voz).replace(/[^\p{L}\s]/gu, '').split(/\s+/).filter(Boolean).slice(0, 2).join(' '))
+  const repetidas = [...new Set(entradas.filter((entrada, i) => entrada && entradas.indexOf(entrada) !== i))]
+  agregar('entradas_variadas', 'Ninguna noticia arranca igual que otra', 5, !repetidas.length,
+    repetidas.length ? `se repite el arranque: ${repetidas.join(', ')}` : 'ok')
 
   const pocosPlanos = bloques.filter(bloque => {
     const segundos = segundosPara(palabrasDeBloque(bloque), formato.palabrasPorMinuto)

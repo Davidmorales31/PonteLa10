@@ -31,8 +31,11 @@ Elegibilidad:
 - `impacto`, `impacto-desenfocado`, `banda`: siempre.
 
 Pesos base: círculo 30, impacto 25, desenfocado 15, banda 15, carrusel 15. Si hay cita, `cita` pasa a peso 40 y se escala el
-resto; igual con `ficha` (30) y `versus` (25). Reglas de variedad: no repetir el formato de las dos últimas publicaciones, máximo
-2 del mismo formato por día y al menos 1 carrusel por día si hay notas elegibles.
+resto; igual con `ficha` (30) y `versus` (25). Reglas de variedad: no repetir el formato de las dos últimas publicaciones y
+subir el peso del carrusel si hoy aún no hubo. Sin tope por formato ni por día (decisión del responsable, 2026-11-22).
+Desde esa fecha ningún formato lleva fondo desenfocado ni azul/amarillo: la foto se ve completa y nítida (con enfoque suave,
+`mejorarFoto`) sobre un fondo neutro casi negro, y todas las piezas llevan `WWW.PONT3LA10.COM` al pie; `impacto-desenfocado` dejó de
+elegirse porque ahora sería idéntico a `impacto`.
 
 ## 3. Fase de fotos (sin crear noticias aparte)
 
@@ -53,3 +56,7 @@ API que ya existe, pero el flujo no las necesita.
 3. Fase de fotos (biblioteca, fuentes, Commons).
 4. Mejorar la palabra gigante (lista más fina, revisión de casos malos).
 5. Conectar con el programador local: detectar → elegir → generar → subir → programar (hoy `--pendientes --auto`).
+
+## Estado (2026-11-20)
+
+Hechos: 2 (selector, `redes-selector-formato.mjs`) y 5 (conexión al publicador, subida por `/medios/subidas`). Pendientes: 1 (medidas por formato y compuerta; hoy solo se valida tamaño 1080×1350), 3 (fase de fotos: sin ella no hay `circulo` ni `versus`) y 4 (palabra gigante).

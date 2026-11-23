@@ -65,10 +65,10 @@ Todas 1080×1920, con variables editables en el desktop de HyperFrames y dentro 
 | `reel-marcador` | Marcador vertical con goles que golpean. |
 | `reel-versus` | Previa: dos nombres que chocan con un VS. |
 | `reel-pregunta` | Burbuja de pregunta para comentar. |
-| `reel-etiqueta` | Etiqueta fija del club arriba. |
+| `reel-etiqueta` | (Retirada del generador el 2026-11-22: el Reel ya no lleva etiqueta fija del club.) |
 | `reel-fuente` | Sello «Según …» cuando la voz nombra el medio. |
 | `reel-alerta` | Sello OFICIAL / ÚLTIMA HORA; RUMOR en rojo (un rumor nunca lleva OFICIAL). |
-| `reel-progreso` | Barra de progreso arriba. |
+| `reel-progreso` | (Retirada del generador el 2026-11-22: el Reel ya no lleva barra de progreso.) |
 | `reel-subtitulos` | Subtítulos de 2–3 palabras, la palabra dicha en amarillo con un pop. |
 | `reel-cta` | Cierre: logo, un llamado a la acción, la web y la flecha de bucle. |
 | `reel-golpe`, `reel-barrido`, `reel-glitch` | Transiciones: destello con rayos, barrido azul y amarillo, falla digital (re-gancho). |

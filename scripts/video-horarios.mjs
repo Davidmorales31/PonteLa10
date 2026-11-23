@@ -33,8 +33,22 @@ export function proponerHoras({ ahora = Date.now(), cantidad = 1, ocupadas = [],
       tomadas.push(instante)
       resultado.push(new Date(instante).toISOString())
     }
+    // Decisión del responsable (2026-11-22): todos los Reels de un video salen el MISMO día, sin importar cuántos sean.
+    // Si las franjas del día ya no alcanzan, se llena el resto de ese día (cada media hora, con separación corta) antes de
+    // pasar al siguiente. Solo aplica a Reels y Shorts; el video largo conserva sus dos franjas.
+    if (tipo !== 'video' && reglas.relleno) {
+      const { primera, ultima, separacionMinutos } = reglas.relleno
+      for (let minutos = minutosDe(primera); minutos <= minutosDe(ultima) && resultado.length < cantidad; minutos += 30) {
+        if (minutos >= desde || minutos < hasta) continue
+        const instante = d * 24 * HORA + minutos * 60_000 - desfase * HORA
+        if (instante < ahora + reglas.minutosMinimos * 60_000) continue
+        if (tomadas.some(t => Math.abs(t - instante) < separacionMinutos * 60_000)) continue
+        tomadas.push(instante)
+        resultado.push(new Date(instante).toISOString())
+      }
+    }
   }
-  return resultado
+  return resultado.sort((a, b) => Date.parse(a) - Date.parse(b))
 }
 
 export const horariosPublicacion = REGLA

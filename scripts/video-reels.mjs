@@ -8,7 +8,7 @@ import { join, resolve, isAbsolute } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { atribucionDe } from './video-musica.mjs'
+import { atribucionesDe } from './video-musica.mjs'
 import { EDICIONES, edicionDe } from './video-edicion.mjs'
 
 const ejecutar = promisify(execFile)
@@ -23,8 +23,9 @@ export function elegirBloques(manifiesto, guion, { max = LIMITES.maximoReels, fo
   const segmentos = manifiesto?.segmentos || []
   const candidatos = []
   for (const [orden, bloque] of (guion?.bloques || []).entries()) {
-    const cara = segmentos.find(s => s.id === `${bloque.id}-cara`)
     const voz = segmentos.find(s => s.id === `${bloque.id}-voz`)
+    // Con la estructura directa (2026-11-22) la noticia ya no tiene entrada a cámara: empieza en su voz.
+    const cara = segmentos.find(s => s.id === `${bloque.id}-cara`) || voz
     if (!cara || !voz) continue
     const duracion = redondear(voz.fin - cara.inicio)
     if (forzar.length) { if (forzar.includes(bloque.id)) candidatos.push({ bloque, orden, cara, voz, duracion, puntaje: 0 }); continue }
@@ -139,7 +140,7 @@ export async function crearReels({ carpeta, bloques = [], max = LIMITES.maximoRe
   await mkdir(trabajo, { recursive: true })
   const logo = join(carpeta, 'assets', 'logo-blanco.png')
   const estudio = existsSync(join(carpeta, 'estudio.json')) ? JSON.parse(await readFile(join(carpeta, 'estudio.json'), 'utf8')) : {}
-  const musica = await atribucionDe(estudio.musica)
+  const musica = await atribucionesDe(estudio.musicaPlan?.length ? estudio.musicaPlan : [estudio.musica].filter(Boolean))
   const resultado = []
   for (const [n, { bloque, cara, duracion }] of elegidos.entries()) {
     avisar(`Reel ${n + 1} de ${elegidos.length}: ${bloque.club || bloque.id}`)

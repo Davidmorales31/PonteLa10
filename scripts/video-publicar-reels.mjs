@@ -1,7 +1,7 @@
 // Publicación y programación de los Reels en Facebook e Instagram, con la misma API de agentes de redes
 // que usan las fotos (PONT3LA10_AGENTES_REDES_KEY en el .env de la raíz; nunca se imprime ni sale del servidor).
 // Flujo por Reel: subir el MP4 → crear la publicación de tipo «video» → validar → borrador, programar o pedir aprobación.
-import { readFile, writeFile, stat } from 'node:fs/promises'
+import { mkdir, readFile, writeFile, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, basename } from 'node:path'
 
@@ -16,6 +16,7 @@ export async function leerEstadoPublicaciones(carpeta) {
   try { return JSON.parse(await readFile(archivoEstado(carpeta), 'utf8')) } catch { return {} }
 }
 async function guardarEstadoPublicaciones(carpeta, estado) {
+  await mkdir(join(carpeta, 'renders', 'reels'), { recursive: true })
   await writeFile(archivoEstado(carpeta), JSON.stringify(estado, null, 2))
 }
 
@@ -84,7 +85,7 @@ async function subirVideo(cliente, archivo, fetchFn) {
 }
 
 // Sube el Reel, crea la publicación y la deja como borrador, programada o pendiente de aprobación.
-export async function publicarReel({ proyecto, carpeta, reel, creado, modo, fecha, cliente, fetchFn = fetch, ahora = Date.now() }) {
+export async function publicarReel({ proyecto, carpeta, reel, creado, modo, fecha, cliente, destinos = ['facebook', 'instagram'], fetchFn = fetch, ahora = Date.now() }) {
   if (!MODOS.includes(modo)) throw Object.assign(new Error('Modo de publicación no válido.'), { estado: 422 })
   if (modo !== 'borrador') {
     const error = validarFecha(fecha, ahora)
@@ -103,7 +104,7 @@ export async function publicarReel({ proyecto, carpeta, reel, creado, modo, fech
   if (!publicacionId) {
     const medioId = await subirVideo(cliente, archivo, fetchFn)
     const textos = textosReel(reel.descripcion)
-    const creada = await cliente.llamar('POST', '/publicaciones', { tipo: 'video', titulo: tituloInterno(reel), destinos: ['facebook', 'instagram'], descripcion: textos, videoMedioId: medioId, claveIdempotencia: clave })
+    const creada = await cliente.llamar('POST', '/publicaciones', { tipo: 'video', titulo: tituloInterno(reel), destinos, descripcion: textos, videoMedioId: medioId, claveIdempotencia: clave })
     publicacionId = creada?.id || creada?.publicacion?.id
     if (!publicacionId) throw Object.assign(new Error('La API de redes no devolvió el identificador de la publicación.'), { estado: 502 })
     estado[reel.id] = { publicacionId, clave, estado: 'borrador', fecha: null, actualizado: new Date().toISOString(), tamano: (await stat(archivo)).size }

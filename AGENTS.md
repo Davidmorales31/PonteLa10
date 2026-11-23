@@ -38,7 +38,9 @@ código y pruebas prevalecen sobre resúmenes desactualizados.
 - Reels, Shorts y video largo: el responsable autorizó el 2026-11-20 (Reels/Shorts «al menos los shorts»; después también
   los videos largos, «sin máximos, lo que salga») que el estudio local los renderice y los **programe** solo cuando
   termina de grabar su voz, sin publicarlos al instante y con la regla de `docs/HORARIOS_PUBLICACION.md`. El video largo se
-  sube a YouTube como privado y se programa con `publishAt`. Se enciende y apaga en «Ver Reels»; no aplica a otros contenidos.
+  sube a YouTube como privado y se programa con `publishAt`. El 2026-11-20 pidió además, desde el estudio, el Short del Reel en YouTube
+  y el video largo en Facebook, programados a la misma hora (Instagram solo recibe Reels). El 2026-11-21 asumió la responsabilidad de que el
+  estudio suba el largo directo a Facebook con el token de página del `.env` de la raíz (sin Supabase). Se enciende y apaga en «Ver Reels»; no aplica a otros contenidos.
 - Supabase y herramientas opcionales no deben romper la ejecución local cuando
   falten variables o programas.
 

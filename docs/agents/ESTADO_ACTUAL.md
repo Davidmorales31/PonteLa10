@@ -1,5 +1,104 @@
 # Estado actual de Pont3la10
 
+## Miniaturas internacional 2026-11-22
+
+- Entregadas tres JPG 1280×720 en videos/diario/2026-11-22-internacional/renders/miniaturas/, mediante image_gen con insumos locales. A Barça/Racing; B collage REMONTADA EN 15 MINUTOS (15 amarillo); C Racing/Dortmund. Todas pasan medidor oficial y lectura móvil. Originales intactos, sin publicación ni cambios de aplicación. Prompts guardados; fotomontaje generativo sin garantía de identidad exacta de píxeles.
+
+
+## Miniaturas internacional 2026-11-21 (entregadas 2026-11-22)
+
+- Tres JPG con image_gen en videos/diario/2026-11-21-internacional/renders/miniaturas/: A Boca/Messi, B collage con 18 AÑOS DESPUÉS, C Messi/Mbappé. 1280×720; 308/326/297 KB. Las tres pasan el medidor oficial y revisión móvil 168×94. Sin publicación ni cambios de app; matriz de aplicación no aplica. Insumos originales intactos. Fotomontajes generativos basados en fotos.
+
+
+## Pulido de video largo, Reels y música con métricas de la competencia (2026-11-22, sin commit)
+
+- Medición (55 videos de Cracks, La Gambeta, Jugada Deportiva, RICCK, Camilo MD y Cracks MX; storyboards públicos y 10
+  transcripciones, sin descargar videos): los largos virales arrancan la noticia en el s 0, duran 20–110 s por noticia
+  y hacen ~8 preguntas en 10 min; los Shorts virales tienen ~0–5 % de gráficos a pantalla completa y 40–55 cambios/min.
+  Los nuestros: primera noticia en s 27–30, noticias de 44–50 s con toma a cámara antes, Reels con ~55 % de gráficos y
+  16–24 cambios/min, música 32 dB bajo la voz.
+- Música (`scripts/video-musica.mjs`, `video-estudio.mjs`, `estudio.html`): automática; el largo lleva una canción
+  distinta por noticia (`tramosDeManifiesto`, `elegirPistas`, `planMusica`) con fundido cruzado, cama nivelada a
+  −24 LUFS y ducking suave (≈16 dB bajo la voz, medido). `estudio.musicaPlan` guarda las pistas para las atribuciones;
+  `sinMusica` la apaga. Solo hay 8 pistas: con más de 8 noticias se repiten (nunca seguidas).
+- Reels (`video-generar-reel.mjs`, pack `reel-*`, `config/reelsDiario.json`, `video-rubrica-reels.mjs`, skill): solo
+  foto o clip a pantalla completa (`reel-clip` nuevo, clips primero), dato/marcador/versus como palabra clave pequeña,
+  sin tarjetas, divididas, gráficos ni barridos/destellos; planos de ≤ 2,2 s; subtítulos a 1330 px y más pequeños;
+  créditos sin caja; cierre sobre la foto; sello pequeño arriba. Rúbrica: `imagenes-suficientes` (≥ 5 distintas).
+- Largo (`video-generar-proyecto.mjs`, `video-rubrica-guion.mjs`, `config/videoDiario.json`, skill del guion,
+  `video-descripcion.mjs`, `video-reels.mjs`): `"estructura": "directa"` quita la intro animada y la toma a cámara
+  por noticia; fotos cada ~5 s. Rúbrica nueva: `noticia_directa` (obligatorio), `ritmo_variado`, `preguntas_publico`,
+  `entradas_variadas`. Los guiones viejos con `caraBreve` se siguen armando igual.
+- Validado: lint, typecheck y suite completa (170 archivos, 1027 pruebas). Ejemplos en `videos/ejemplos-pulido/`.
+  **Reiniciar el estudio** para cargar el código nuevo. Continuidad: docs/agents/handoffs/2026-11-22-pulido-video-reels-musica.md.
+
+## Fútbol internacional: corrida con fase de tendencias y video edición internacional (2026-11-21, sin commit)
+
+- Pedido del responsable: replicar el flujo de Colombia para el fútbol internacional. Nuevo skill
+  `.agents/skills/pont3la10-futbol-internacional-run` (categoría `futbol-mundial`), `config/fuentesFutbolInternacional.json`
+  y fase de tendencias `scripts/tendencias-futbol-internacional.mjs` (Google Trends CO/MX/ES/AR/US, radar de Google
+  Noticias y notas con URL real del RSS de Bing Noticias; excluye Liga MX, Liga BetPlay y otros deportes).
+- Video: `scripts/video-edicion.mjs`. Un guion con `"edicion": "internacional"` genera `videos/diario/<fecha>-internacional`
+  (intro, hashtags, categoría del buscador de fotos, descripción y Reels `<fecha>-internacional-reel-N`); sin el campo,
+  Colombia queda igual. Skills de video diario y Reels documentan la edición.
+- Ejecución real: 20 artículos aprobados y programados por IA en dos corridas (`0f2a25fa…` 12 y `fe0b394c…` 8),
+  publicados entre 20:41 y 21:19 de Bogotá. La agenda exige formato v2 (el v1 da 422). La corrida comparte el tope de
+  seis corridas diarias del sitio `co` con Colombia. No se publicó nada en redes.
+- Validado: lint, suite completa (170 archivos, 1016 pruebas) y typecheck; pruebas nuevas `videoEdicion` y
+  `tendenciasFutbolInternacional`. Automatizado a pedido del responsable: tareas `pont3la10-corrida-futbol-internacional`
+  (10:00 y 16:00) y `pont3la10-video-internacional` (19:00, proyecto `<fecha>-internacional` + Reels). Primer video
+  internacional (2026-11-21) armado: guion 100/100 (513 s), 4 Reels 100/100. Redes (decisión del responsable, 2026-11-22):
+  las piezas internacionales van a Facebook e Instagram; `redes-publicar-articulo.mjs` acepta `--categoria futbol-mundial`
+  y `--excluir`. Las 20 de ayer quedaron programadas el 2026-11-22 de 09:22 a 14:07 Bogotá (Sevilla-Betis rehecha en
+  formato clásico porque el impacto decía «VICTORIA» en un empate). Continuidad: docs/agents/handoffs/2026-11-21-futbol-internacional.md.
+
+## Miniaturas del video diario (2026-11-21)
+
+- Entregadas miniatura-a.jpg, miniatura-b.jpg y miniatura-c.jpg en videos/diario/2026-11-21/renders/miniaturas/: JPEG 1280×720, 301/302/274 KB. Creadas con image_gen a partir de fotos locales, siguiendo preferencia expresa previa. A victoria/Grupo L; B collage 2-1 y GANÓ A JAPÓN; C Grupo L/debut sin Abascal. Sin publicación.
+- Las tres pasan todos los criterios del medidor oficial ejecutado desde la carpeta de entrega con ruta absoluta al script; formato/peso y lectura 168×94 comprobados. Marcas retiradas mediante el generador; B corregida por exceso de saturación. Prompts en PROMPTS-GENERADOR.md y continuidad en docs/agents/handoffs/2026-11-21-miniaturas-generador.md.
+- Sin cambios de aplicación: lint/tests/typecheck/build no aplican. Pendiente valoración estética del responsable. Fotomontajes generativos, no afirmar conservación exacta de píxeles documentales.
+
+
+## Estudio: Short de YouTube y video largo en Facebook automáticos (2026-11-20, sin commit)
+
+- El piloto (`video-autopiloto-reels.mjs` + `video-estudio.mjs`) ahora: (1) tras programar un Reel en FB/IG sube el mismo MP4 a YouTube privado y lo programa a la misma hora (`estudio.youtubeShort`); (2) tras programar el largo en YouTube recomprime una copia ≤190 MB (`prepararVideoParaRedes`) y la programa en Facebook a la misma hora (`estudio.facebookLargo`); (3) las horas del largo cuentan como ocupadas para Reels/Shorts. Instagram no recibe el largo (solo Reels).
+- Probado de verdad: Reel como borrador FB+IG (subida, validación) y borrado; YouTube subir privado + `publishAt` + borrar. Largo→Facebook: ahora **directo a la página** con `scripts/video-facebook-directo.mjs` (Supabase limita a 50 MB), programado a la hora de YouTube; probado con un Reel real (subir, programar, borrar); prueba del largo de 556 MB: ver registro. **El estudio en marcha corre el código viejo: reiniciarlo para activar esto.** Los Reels de hoy (2026-11-20-reel-1..4) siguen sin render ni programación: faltan sus tomas de voz.
+
+## Miniaturas del video diario rehechas con generador (2026-11-20)
+
+- El responsable rechazó las composiciones manuales y solicitó explícitamente image_gen con referencias La Gambeta, Cracks y Camilo MD. Se reemplazaron los tres JPG en videos/diario/2026-11-20/renders/miniaturas/ usando fotos locales como entradas del generador.
+- A/C doble panel y B collage; JPG 1280×720 de 322/281/306 KB. Las tres pasan todos los criterios del medidor oficial; revisión visual y móvil completada. Solo exportación de tamaño/formato fuera del generador. No hubo publicación.
+- componer.py corresponde al diseño manual rechazado: no reproduce la entrega vigente. Prompts resumidos en PROMPTS-GENERADOR.md; continuidad en docs/agents/handoffs/2026-11-20-miniaturas-generador.md. Matriz de aplicación no aplica a artefactos gráficos. Pendiente valoración estética del responsable.
+
+
+## Redes: formatos visuales conectados al publicador (2026-11-20, sin commit)
+
+- Antes los 8 formatos de `scripts/redes-formatos.mjs` solo se usaban a mano; el publicador seguía con foto + titular. Ahora `redes-publicar-articulo.mjs` (`--pendientes`) elige formato por nota con `scripts/redes-selector-formato.mjs` (elegibilidad + azar ponderado reproducible; no repite los 2 últimos, máx. 2 por día, carrusel x3 si hoy no hubo), lo dibuja con `scripts/redes-imagen-articulo.mjs`, lo sube por `/medios/subidas` y crea la composición con una diapositiva por imagen. Historial local en `.codex/private/redes-formatos-historial.json` (ignorado).
+- Si el formato falla o no se puede generar, cae al clásico; `--formato-clasico` lo fuerza. `circulo` y `versus` siguen fuera hasta la fase de fotos (paso 3 del plan). Correcciones: la ficha ya no toma años como cifra; el carrusel limita puntos a 105 caracteres y 3 líneas.
+- Validado: pruebas de redes (27), ESLint y typecheck pasan; generación real local con 6 notas de hoy da impacto, desenfocado, ficha→banda y carrusel. Envío a la API probado con 5 borradores reales (carrusel de 3 diapositivas, impacto, desenfocado, banda, ficha): subida firmada, validación del servidor y previsualización correctas; los borradores se borraron. `cita` no se probó contra la API (ninguna nota de hoy trae cita). Opciones de prueba: `--formato <id>` y `--clave-prueba <texto>`. Nada se programó ni publicó.
+
+## Cámara del estudio: reparación de Windows en curso (2026-11-20)
+
+- Estado a las22:32 Colombia: cámara sin reparar. Tres intentos de instalación (dos Windows Update y uno local); dos reinicios autorizados, último arranque22:15:33. Media.MediaFeaturePack~~~~0.0.1.0 sigue NotPresent, cuatro DLL multimedia ausentes. Cámara USB2.0 HD UVC WebCam detectada OK, permisos Allow y cámara virtual EShare presente.
+- Instalación local terminó21:56 con 0x800f0912; CBS identifica tres manifiestos de Microsoft-Windows-Runtime-Windows-Media-Editing.Resources 10.0.26100.1 (en-US/es-ES/es-MX) que no encuentra en sus fuentes. CheckHealth y ScanHealth posteriores terminaron Healthy22:26; no hay reinicio pendiente. No afirmar daño general de Windows ni repetir instalación/reinicio sin corregir y validar la fuente.
+- Ocho CAB oficiales conservados en `.codex/private/camara-20261120/fuente-oficial`. Los tres manifiestos existen dentro de esos CAB; son DCM comprimidos. Extracción local de recursos solo diagnóstica, no fuente validada y sin copiar al sistema. Renombrar caché falló por acceso denegado; no se borraron archivos ni cambiaron ACL/protecciones.
+- Medio Languages and Optional Features oficial Microsoft 24H2/25H2 inventariado por rangos HTTP, sin descargar sus6,25GB. Extraídos93 archivos de metadata y añadidos los8 CAB a `repositorio-iso-oficial/LanguagesAndOptionalFeatures`. `validar-repositorio.ps1` prepara DISM /Export-Source (solo repositorio, no instala): ejecución manual22:37 devolvió740 por falta de elevación, sin validar la fuente. Script ajustado para solicitar RunAs desde la ventana del usuario, comprobar token y evitar bucles; sintaxis comprobada sin ejecutarlo. Pendiente ejecución manual y aceptación UAC. Revisar `validacion-repositorio.json` antes de cualquier instalación.
+- Sin cambios de código del estudio, controladores ni publicación. Vídeo real sigue pendiente; alternativa de Edge con DirectShow fue rechazada por revisión automática y no se reintentó. Continuidad: docs/agents/handoffs/2026-11-20-camara-windows-n.md.
+
+## Miniaturas del video diario (2026-11-19)
+
+- Entregadas miniatura-a.jpg, miniatura-b.jpg y miniatura-c.jpg en videos/diario/2026-11-19/renders/miniaturas/: JPEG 1280x720, 219046 / 343498 / 361617 bytes.
+- Texto SE QUEDÓ SIN EQUIPO, SIN amarillo; foto real de Pasto, variante dividida con Pereira, logo Pont3la10. Composición local reproducible en componer.py, sin generación ni publicación.
+- Validación de formato/dimensiones/peso e inspección visual a tamaño completo y reducido completadas. Matriz de app (lint/tests/typecheck/build) no aplica a esta entrega gráfica; no se modificó código de aplicación. Cambios ajenos preservados.
+
+
+## Miniaturas del video diario (2026-11-18)
+
+- Entregadas tres variantes JPG 1280x720 en videos/diario/2026-11-18/renders/miniaturas/miniatura-{a,b,c}.jpg, todas menores de 2 MB; composición reproducible en componer.py.
+- Texto: POR TODA LA GLORIA. Solo insumos locales reales, sin generación. Se avisó que las fotos 1 y 2 muestran Colombia-Chile y el usuario indicó continuar bajo su responsabilidad.
+- Verificados formato, dimensiones, peso e inspección visual conjunta; git diff --check pasa. Matriz de aplicación no aplica a estos archivos gráficos. No se publicó contenido.
+
+
 ## API para agentes de IA del módulo de redes (2026-11-17, rama feat/api-agentes-redes)
 
 - REST `/api/agentes/redes/v1`, OpenAPI pública, guía y servidor MCP `/api/agentes/redes/mcp`

@@ -1,0 +1,33 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #000; font-family: "Montserrat", sans-serif; }
+    .rcli-mov { position: absolute; inset: 0; transform-origin: 50% 45%; }
+    #rcli-video { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; }
+    .rcli-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.35) 0%, rgba(0,0,0,0) 16%, rgba(0,0,0,0) 58%, rgba(0,0,0,.55) 100%); }
+    .rcli-clave { position: absolute; left: 100px; right: 180px; top: 470px; text-align: center; font-family: "League Gothic", "Oswald", sans-serif; font-size: 104px; line-height: .92; color: #ffd800; text-transform: uppercase; text-shadow: 0 3px 0 rgba(0,0,0,.85), 0 0 30px rgba(0,0,0,.55); }
+    .rcli-credito { position: absolute; right: 180px; top: 1262px; color: rgba(255,255,255,.9); font-size: 22px; font-weight: 600; letter-spacing: .01em; text-shadow: 0 1px 2px rgba(0,0,0,.95), 0 0 12px rgba(0,0,0,.6); }
+  </style>
+  <div id="root" data-composition-id="reel-clip" data-width="1080" data-height="1920"
+    data-composition-variables='[{"id":"video","type":"string","label":"Clip de video (sin sonido)","default":""},{"id":"credito","type":"string","label":"Crédito","default":""},{"id":"clave","type":"string","label":"Palabra clave en pantalla (opcional)","default":""},{"id":"duracion","type":"number","label":"Duración (s)","default":3,"min":0.6,"max":12,"step":0.1}]'>
+    <div id="rcli-mov" class="rcli-mov">
+      <video id="rcli-video" class="clip" data-start="0" data-duration="3" data-media-start="0" src="assets/vacio.png" data-var-src="video" muted playsinline></video>
+    </div>
+    <div id="rcli-capa" class="clip" data-start="0" data-duration="3" data-layout-allow-occlusion>
+      <div id="rcli-velo" class="rcli-velo" data-layout-allow-occlusion></div>
+      <div id="rcli-clave" class="rcli-clave" data-var-text="clave"></div>
+      <div id="rcli-credito" class="rcli-credito" data-var-text="credito"></div>
+    </div>
+  </div>
+  <script>
+    // Clip de video real a pantalla completa en vertical, sin sonido, con un acercamiento lento: los Reels priorizan video.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(0.6, Number(v.duracion ?? 3));
+    if (!String(v.credito ?? "").trim()) document.querySelector("#rcli-credito").style.display = "none";
+    if (!String(v.clave ?? "").trim()) document.querySelector("#rcli-clave").style.display = "none";
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#rcli-mov", { scale: 1.02 }, { scale: 1.08, duration: D, ease: "none" }, 0);
+    tl.fromTo("#rcli-clave", { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.22, ease: "power3.out" }, 0.12);
+    tl.to("#rcli-clave", { opacity: 0, duration: 0.2 }, Math.max(0.4, D - 0.25));
+    window.__timelines["reel-clip"] = tl;
+  </script>
+</template>
