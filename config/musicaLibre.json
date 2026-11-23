@@ -52,18 +52,6 @@
       "atribucion": "Música: «Just For Fun» de Daniel Bautista (CC BY 3.0) https://www.jamendo.com/track/1892649"
     },
     {
-      "id": "upbeat-corporate",
-      "openverseId": "3b4580e1-1454-4b4c-a03a-e03bf4af0849",
-      "titulo": "Upbeat Corporate",
-      "autor": "Soundrider/Dope",
-      "licencia": "CC BY 3.0",
-      "licenciaUrl": "https://creativecommons.org/licenses/by/3.0/",
-      "pagina": "https://www.jamendo.com/track/1670486",
-      "archivo": "https://prod-1.storage.jamendo.com/?trackid=1670486&format=mp32",
-      "estilo": "Noticiero, ligera",
-      "atribucion": "Música: «Upbeat Corporate» de Soundrider/Dope (CC BY 3.0) https://www.jamendo.com/track/1670486"
-    },
-    {
       "id": "empty-the-rubbish",
       "openverseId": "07327605-06d3-4474-b93c-d41772964c99",
       "titulo": "Empty the rubbish",
@@ -98,6 +86,14 @@
       "archivo": "https://cdn.freesound.org/previews/724/724498_9825531-hq.mp3",
       "estilo": "Batería rock (sin melodía)",
       "atribucion": "Música: «Energetic Rock, 135 BPM» de carloseton (CC0)"
+    }
+  ],
+  "retiradas": [
+    {
+      "id": "upbeat-corporate",
+      "titulo": "Upbeat Corporate",
+      "motivo": "Reclamo de Content ID en YouTube (video de Mbappé, 2026-11-22): limitó la monetización.",
+      "fecha": "2026-11-23"
     }
   ]
 }

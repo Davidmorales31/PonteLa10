@@ -106,7 +106,9 @@ describe('música', () => {
     const largo = await planMusica({ guion: {}, manifiesto, duracion: 100, semilla: 's', fija: 'z', disponibles: ['a', 'b'] })
     expect(largo?.ids).toHaveLength(2)
     expect(largo?.ids).not.toContain('z')
-    expect((await planMusica({ guion: { tipo: 'reel' }, manifiesto, duracion: 40, semilla: 's', fija: 'z', disponibles: ['a'] }))?.ids).toEqual(['z'])
+    expect((await planMusica({ guion: { tipo: 'reel' }, manifiesto, duracion: 40, semilla: 's', fija: 'z', disponibles: ['a', 'z'] }))?.ids).toEqual(['z'])
+    // Una pista retirada de la biblioteca (reclamo de Content ID) no suena aunque se haya elegido a mano.
+    expect((await planMusica({ guion: { tipo: 'reel' }, manifiesto, duracion: 40, semilla: 's', fija: 'z', disponibles: ['a'] }))?.ids).toEqual(['a'])
     expect(await planMusica({ guion: {}, manifiesto, duracion: 100, semilla: 's', disponibles: [] })).toBeNull()
   })
 })

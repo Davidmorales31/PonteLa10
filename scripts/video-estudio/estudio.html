@@ -264,6 +264,22 @@
   /* ===== iPhone (≤760 px): una sección a la vez con barra de pestañas abajo, como una app. =====
      Guías: objetivos táctiles de 44 pt, 8 px entre botones, letra base de 16 px (Safari no hace zoom),
      zonas seguras de la muesca y de la barra de inicio, sin desplazamiento horizontal. */
+  #dialogo-resultados { width: min(720px, 96vw); max-width: 720px; }
+  .resumen-resultados { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 8px 0 12px; }
+  .resumen-resultados div { padding: 10px; border-radius: var(--radio); background: var(--panel-2); }
+  .resumen-resultados b { display: block; font-size: 22px; font-variant-numeric: tabular-nums; }
+  .resumen-resultados span { color: var(--texto-3); font-size: 12px; }
+  .filtros-resultados { display: flex; gap: 8px; margin-bottom: 10px; }
+  .filtros-resultados [aria-pressed="true"] { background: var(--acento); color: var(--sobre-acento); border-color: var(--acento); }
+  .resultado { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 10px 0; border-top: 1px solid var(--borde-suave); }
+  .resultado .r-titulo { font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .resultado .r-sub { color: var(--texto-3); font-size: 12px; }
+  .resultado .r-vistas { grid-row: 1 / 3; grid-column: 2; align-self: center; text-align: right; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .resultado .r-vistas small { display: block; color: var(--texto-3); font-weight: 500; font-size: 11px; }
+  .resultado .r-barra { grid-column: 1 / -1; height: 4px; border-radius: 2px; background: var(--panel-3); overflow: hidden; }
+  .resultado .r-barra i { display: block; height: 100%; background: var(--acento); }
+  .etiqueta-tipo { display: inline-block; padding: 0 6px; margin-right: 6px; border-radius: 4px; background: var(--panel-3); color: var(--texto-2); font-size: 11px; font-weight: 700; }
+  #seguido[aria-pressed="true"] { background: var(--acento); color: var(--sobre-acento); border-color: var(--acento); }
   .pestanas-movil, .solo-movil { display: none; }
   @media (max-width: 760px) {
     html, body { height: auto; }
@@ -313,9 +329,12 @@
     #prompter { font-size: 28px !important; line-height: 1.4; }
     .toma { grid-template-columns: 1fr; gap: 8px; padding: 10px; }
     .toma .info:empty, .toma .texto-estado:empty { display: none; }
-    .toma .acciones { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; }
+    .toma .acciones { display: grid; grid-template-columns: minmax(0, 1fr) 44px 44px; gap: 8px; }
+    #seguido { grid-column: 1 / -1; grid-row: 3; justify-content: center; }
+    #descartar { grid-column: 2; grid-row: 2; }
+    #borrar-guardada { grid-column: 3; grid-row: 2; }
     #grabar { grid-column: 1 / -1; min-height: 64px; font-size: 20px; justify-content: center; }
-    #guardar { grid-column: 1 / 3; justify-content: center; }
+    #guardar { grid-column: 1; grid-row: 2; justify-content: center; }
     .menu-ajustes { position: fixed; left: 8px; right: 8px; top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); max-height: 70dvh; overflow: auto; z-index: 40; }
     /* Publicar: las acciones del pie en una lista vertical. */
     body[data-vista="publicar"] > footer { display: grid; grid-template-columns: minmax(0, 1fr) 56px; align-items: stretch; gap: 10px; padding: 12px; position: static; border: 0; background: transparent; }
@@ -332,7 +351,7 @@
     .miniaturas button { width: 36px; height: 36px; top: 2px; right: 2px; border-radius: 8px; min-height: 0; }
     .solo-escritorio { display: none; }
     /* Diálogos a pantalla completa. */
-    dialog[open] { width: 100vw !important; max-width: 100vw !important; height: 100dvh !important; max-height: 100dvh !important; margin: 0 !important; inset: 0; border: 0; border-radius: 0; padding: calc(12px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); overflow: auto; }
+    dialog[open] { width: 100vw !important; max-width: 100vw !important; height: 100dvh !important; max-height: 100dvh !important; margin: 0 !important; inset: 0; overflow-x: hidden; border: 0; border-radius: 0; padding: calc(12px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom)); overflow: auto; }
     #avisos { left: 8px; right: 8px; bottom: calc(76px + env(safe-area-inset-bottom)); }
     /* Barra de pestañas. */
     .solo-movil { display: inline; }
@@ -452,6 +471,7 @@
       <div class="acciones">
         <button class="boton grabar" id="grabar"><svg class="icono"><use href="#i-circle"/></svg><span id="grabar-texto">Grabar</span> <kbd>Espacio</kbd></button>
         <button class="boton primario" id="guardar" disabled><svg class="icono"><use href="#i-save"/></svg><span>Guardar toma</span> <kbd>Enter</kbd></button>
+        <button class="boton" id="seguido" aria-pressed="false" title="Graba todos los tramos seguidos: al tocar Detener guarda la toma y arranca el siguiente tramo solo"><svg class="icono"><use href="#i-repeat"/></svg><span id="seguido-texto">Todo seguido</span></button>
         <button class="boton icono-solo" id="descartar" disabled aria-label="Descartar toma" title="Descartar toma"><svg class="icono"><use href="#i-x"/></svg></button>
         <button class="boton icono-solo" id="borrar-guardada" disabled aria-label="Borrar toma guardada" title="Borrar toma guardada"><svg class="icono"><use href="#i-trash"/></svg></button>
       </div>
@@ -485,6 +505,8 @@
   <button class="boton" id="ver-reels" hidden><svg class="icono"><use href="#i-play"/></svg><span>Ver Reels</span></button>
   <span class="rueda" id="rueda-render" aria-hidden="true"></span>
   <div class="progreso-render" id="progreso-render" aria-hidden="true"><div></div></div>
+  <button class="boton" id="ver-resultados" type="button"><svg class="icono"><use href="#i-play"/></svg><span>Resultados</span></button>
+  <button class="boton" id="activar-avisos" type="button"><svg class="icono"><use href="#i-alert"/></svg><span id="avisos-texto">Activar avisos en este dispositivo</span></button>
   <div id="estado-armado" role="status" aria-live="polite">Graba los tramos, sube fotos y luego arma el video.</div>
   <a class="boton" id="ver-final" href="#" target="_blank" rel="noopener" hidden><svg class="icono"><use href="#i-play"/></svg><span>Ver video final</span></a>
 </footer>
@@ -582,6 +604,19 @@
   <p class="etiqueta-chica">Cada proyecto es una carpeta en <code>videos/diario/</code> con sus propias tomas, fotos, música, render y Reels. Lo que grabas en uno no toca a los demás.</p>
   <ul class="lista-proyectos" id="lista-proyectos"></ul>
   <form method="dialog" style="margin-top:16px;text-align:right"><button class="boton">Cerrar</button></form>
+</dialog>
+
+<dialog id="dialogo-resultados" aria-labelledby="t-resultados">
+  <h2 id="t-resultados">Resultados en YouTube</h2>
+  <div class="resumen-resultados" id="resumen-resultados"></div>
+  <div class="filtros-resultados" role="group" aria-label="Filtrar">
+    <button type="button" class="boton" data-filtro="todos" aria-pressed="true">Todos</button>
+    <button type="button" class="boton" data-filtro="largo" aria-pressed="false">Videos</button>
+    <button type="button" class="boton" data-filtro="short" aria-pressed="false">Shorts</button>
+  </div>
+  <div id="lista-resultados" aria-live="polite"></div>
+  <p class="etiqueta-chica">Vistas, me gusta y comentarios públicos de los videos que subió el estudio. La retención y el tiempo de visualización necesitan el permiso de YouTube Analytics (se puede agregar después).</p>
+  <form method="dialog" style="margin-top:12px;text-align:right"><button class="boton primario">Cerrar</button></form>
 </dialog>
 
 <dialog id="dialogo-atajos" aria-labelledby="t-atajos">
@@ -1021,6 +1056,7 @@ function alTerminarGrabacion() {
   $('#descartar').disabled = false
   $('#toma-estado').textContent = `Toma de ${$('#cronometro').textContent}. Revísala y guárdala, o repite.`
   $('#guardar').focus()
+  if (modoSeguido) seguirEnCadena()
 }
 
 function bloquearNavegacion(si) {
@@ -1817,6 +1853,111 @@ setInterval(async () => {
     avisar(despues > antes ? 'Llegó una toma nueva desde el otro dispositivo.' : 'El proyecto se actualizó desde el otro dispositivo.', 'ok')
   } catch { /* sin conexión: se reintenta en el siguiente ciclo */ }
 }, 5000)
+
+/* ---------- Grabar todo seguido ---------- */
+// Con «Todo seguido» activo, al tocar Detener la toma se guarda sola y el siguiente tramo pendiente arranca
+// con su cuenta 3-2-1. Se corta al apagar el botón, si falla el guardado o cuando ya no quedan tramos.
+let modoSeguido = false
+function pintarSeguido() {
+  $('#seguido').setAttribute('aria-pressed', String(modoSeguido))
+  $('#seguido-texto').textContent = modoSeguido ? 'Seguido: activo' : 'Todo seguido'
+}
+$('#seguido').addEventListener('click', () => {
+  modoSeguido = !modoSeguido
+  pintarSeguido()
+  if (modoSeguido) {
+    avisar('Modo seguido: toca Detener al terminar cada tramo y el siguiente arranca solo.', 'ok')
+    if (!grabador && !tomaBlob) grabar()
+    else if (tomaBlob) seguirEnCadena()
+  }
+})
+async function seguirEnCadena() {
+  if (!modoSeguido || !tomaBlob) return
+  const anterior = tramo?.id
+  await guardarToma()
+  if (tomaBlob) { modoSeguido = false; pintarSeguido(); return }
+  // Si guardarToma se quedó en el mismo tramo, ya está todo grabado.
+  if (!tramo || tramo.id === anterior || grabacionDe(tramo.id)) {
+    modoSeguido = false
+    pintarSeguido()
+    return
+  }
+  await new Promise(r => setTimeout(r, 1200))
+  if (modoSeguido && !grabador && !tomaBlob) grabar()
+}
+
+/* ---------- Avisos al iPhone (Web Push) ---------- */
+// En iPhone solo funciona con el estudio instalado en la pantalla de inicio (iOS 16.4 o superior).
+const claveAvisos = texto => { const b = atob(texto.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((texto.length + 3) % 4)); return Uint8Array.from(b, c => c.charCodeAt(0)) }
+async function registroAvisos() {
+  if (!('serviceWorker' in navigator)) return null
+  try { return await navigator.serviceWorker.register('/sw.js', { scope: '/' }) } catch { return null }
+}
+async function pintarAvisos() {
+  const boton = $('#activar-avisos')
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    $('#avisos-texto').textContent = /iPhone|iPad/.test(navigator.userAgent) ? 'Avisos: instala el estudio en la pantalla de inicio' : 'Este navegador no admite avisos'
+    boton.disabled = !/iPhone|iPad/.test(navigator.userAgent)
+    return
+  }
+  const registro = await registroAvisos()
+  const actual = registro && await registro.pushManager.getSubscription()
+  $('#avisos-texto').textContent = actual && Notification.permission === 'granted' ? 'Avisos activos · enviar prueba' : 'Activar avisos en este dispositivo'
+}
+$('#activar-avisos').addEventListener('click', async () => {
+  if (!('PushManager' in window)) { avisar('En el iPhone: toca Compartir → «Agregar a pantalla de inicio», abre el estudio desde ese ícono y vuelve a tocar aquí.', 'error'); return }
+  try {
+    const permiso = await Notification.requestPermission()
+    if (permiso !== 'granted') { avisar('No diste permiso de avisos. Actívalo en Ajustes → Notificaciones → Estudio.', 'error'); return }
+    const registro = await registroAvisos()
+    if (!registro) throw new Error('No se pudo preparar los avisos.')
+    const { clave } = await api('/api/avisos')
+    const suscripcion = (await registro.pushManager.getSubscription()) || await registro.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: claveAvisos(clave) })
+    await api('/api/avisos/suscribir', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(suscripcion) })
+    const r = await api('/api/avisos/probar', { method: 'POST' })
+    avisar(r.enviados ? 'Avisos activos: te llegó uno de prueba.' : 'Suscrito, pero el aviso de prueba no salió. Revisa la conexión del PC.', r.enviados ? 'ok' : 'error')
+    pintarAvisos()
+  } catch (err) { avisar(err.message || 'No se pudieron activar los avisos.', 'error') }
+})
+pintarAvisos()
+
+/* ---------- Panel de resultados ---------- */
+let resultados = [], filtroResultados = 'todos'
+const numero = n => new Intl.NumberFormat('es-CO', { notation: n >= 10000 ? 'compact' : 'standard', maximumFractionDigits: 1 }).format(n)
+function pintarResultados() {
+  const lista = resultados.filter(v => filtroResultados === 'todos' || v.tipo === filtroResultados)
+  const publicos = lista.filter(v => v.privacidad === 'public')
+  const total = publicos.reduce((s, v) => s + v.vistas, 0)
+  const mejor = [...publicos].sort((a, b) => b.vistas - a.vistas)[0]
+  $('#resumen-resultados').innerHTML = `
+    <div><b>${numero(total)}</b><span>vistas totales</span></div>
+    <div><b>${publicos.length ? numero(Math.round(total / publicos.length)) : '0'}</b><span>promedio por video</span></div>
+    <div><b>${mejor ? numero(mejor.vistas) : '—'}</b><span>el mejor${mejor ? '' : ' (aún sin publicar)'}</span></div>`
+  const maximo = Math.max(1, ...lista.map(v => v.vistas))
+  $('#lista-resultados').innerHTML = lista.length ? lista
+    .sort((a, b) => String(b.publicado || '').localeCompare(String(a.publicado || '')))
+    .map(v => `<div class="resultado">
+      <div class="r-titulo" title="${escapar(v.titulo)}">${escapar(v.titulo)}</div>
+      <div class="r-vistas">${numero(v.vistas)}<small>vistas</small></div>
+      <div class="r-sub"><span class="etiqueta-tipo">${v.tipo === 'short' ? 'Short' : 'Video'}</span>${v.privacidad === 'public' ? '' : 'Programado · '}${v.publicado ? new Date(v.publicado).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'medium', timeStyle: 'short' }) : ''} · ${numero(v.meGusta)} me gusta · ${numero(v.comentarios)} comentarios</div>
+      <div class="r-barra" aria-hidden="true"><i style="width:${Math.round(v.vistas / maximo * 100)}%"></i></div>
+    </div>`).join('') : '<p class="etiqueta-chica">Todavía no hay videos de este tipo subidos por el estudio.</p>'
+}
+$('#ver-resultados').addEventListener('click', async () => {
+  $('#dialogo-resultados').showModal()
+  $('#lista-resultados').innerHTML = '<p class="etiqueta-chica">Consultando YouTube…</p>'
+  try {
+    const r = await api('/api/resultados')
+    if (!r.conectado) { $('#lista-resultados').innerHTML = '<p class="etiqueta-chica">Conecta YouTube desde el PC (Títulos y miniaturas) para ver los resultados.</p>'; return }
+    resultados = r.videos
+    pintarResultados()
+  } catch (err) { $('#lista-resultados').innerHTML = `<p class="etiqueta-chica">${escapar(err.message)}</p>` }
+})
+document.querySelectorAll('.filtros-resultados [data-filtro]').forEach(b => b.addEventListener('click', () => {
+  filtroResultados = b.dataset.filtro
+  document.querySelectorAll('.filtros-resultados [data-filtro]').forEach(x => x.setAttribute('aria-pressed', String(x === b)))
+  pintarResultados()
+}))
 </script>
 </body>
 </html>

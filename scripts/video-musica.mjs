@@ -165,7 +165,8 @@ export async function mezclarMusica({ video, id, ids, tramos, salida }) {
 export async function planMusica({ guion, manifiesto, duracion, semilla, fija, disponibles }) {
   const pistas = disponibles || await pistasDisponibles()
   if (guion?.tipo === 'reel') {
-    const id = fija || elegirPistas(1, pistas, semilla)[0]
+    // Una pista retirada de la biblioteca (p. ej. por reclamo de Content ID) no se usa aunque se haya elegido a mano.
+    const id = (fija && pistas.includes(fija) ? fija : null) || elegirPistas(1, pistas, semilla)[0]
     return id ? { ids: [id], tramos: [{ clave: 'todo', inicio: 0, fin: duracion }] } : null
   }
   const tramos = tramosDeManifiesto(manifiesto, duracion)

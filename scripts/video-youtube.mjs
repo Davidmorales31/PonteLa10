@@ -178,6 +178,31 @@ export async function leerVideo({ idVideo, acceso, canalId, transporte }) {
   return { id: video.id, titulo: String(video.snippet?.title || ''), privacidad: String(video.status?.privacyStatus || ''), snippet: video.snippet }
 }
 
+/**
+ * Estadísticas públicas de hasta 50 videos por llamada (vistas, me gusta, comentarios, estado y fecha).
+ * Con el permiso actual (youtube.force-ssl) no hay retención ni tiempo de visualización: eso exige YouTube Analytics.
+ */
+export async function estadisticasVideos({ ids, acceso, transporte }) {
+  const lista = [...new Set((ids || []).filter(id => /^[A-Za-z0-9_-]{11}$/.test(String(id))))]
+  const salida = []
+  for (let i = 0; i < lista.length; i += 50) {
+    const datos = await llamar(`${API}/videos?part=snippet,statistics,status,contentDetails&id=${lista.slice(i, i + 50).join(',')}`, { acceso, transporte })
+    for (const v of datos.items || []) {
+      salida.push({
+        id: v.id,
+        titulo: String(v.snippet?.title || ''),
+        publicado: v.status?.publishAt || v.snippet?.publishedAt || null,
+        privacidad: String(v.status?.privacyStatus || ''),
+        duracion: String(v.contentDetails?.duration || ''),
+        vistas: Number(v.statistics?.viewCount || 0),
+        meGusta: Number(v.statistics?.likeCount || 0),
+        comentarios: Number(v.statistics?.commentCount || 0)
+      })
+    }
+  }
+  return salida
+}
+
 export async function ponerMiniatura({ idVideo, imagen, tipo = 'image/jpeg', acceso, transporte }) {
   if (!Buffer.isBuffer(imagen) || imagen.length < 1000) throw error(422, 'La imagen está vacía.')
   if (imagen.length > LIMITE_MINIATURA) throw error(422, 'La miniatura pesa más de 2 MB: YouTube no la acepta.')

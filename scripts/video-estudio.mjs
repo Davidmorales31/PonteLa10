@@ -20,9 +20,10 @@ import { proponerHoras } from './video-horarios.mjs'
 import { anotarRegistro, decidirAccion, guardarAjustes, leerAjustes } from './video-autopiloto-reels.mjs'
 import { medirMiniatura, evaluarMiniatura } from './video-medir-miniatura.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
-import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, programarPublicacion, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
+import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadisticasVideos, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, programarPublicacion, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
 import { credencialesFacebook, subirYProgramarVideoFacebook } from './video-facebook-directo.mjs'
+import { SERVICE_WORKER, configuracionAvisos, guardarSuscripcion, notificar } from './video-estudio-avisos.mjs'
 import { PAGINA_INGRESO, auditar, clasificarPeticion, cookieSalida, cookieSesion, crearLimitador, crearSesion, esReenviada, hostsRemotos, leerConfiguracion, leerCookie, sesionValida, usuariosTailscale, verificarClave } from './video-estudio-acceso.mjs'
 
 const ejecutar = promisify(execFile)
@@ -410,6 +411,7 @@ function subirYProgramarVideo(nombre, guion) {
       const programada = await programarPublicacion({ idVideo: video.id, fecha: hora, acceso, canalId })
       await guardarEstudio(nombre, estudio => { estudio.youtube = { ...estudio.youtube, publicaEn: programada.publishAt } })
       await anotarRegistro(DIARIO, nombre, `Video largo programado en YouTube para ${programada.publishAt}.`)
+      void notificar({ titulo: 'Video largo programado', cuerpo: `${titulo} · ${new Date(programada.publishAt).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'short', timeStyle: 'short' })}`, url: '/#publicar' })
       // Facebook: el mismo video, directo a la página (sin Supabase, que limita a 50 MB), programado a la misma hora que YouTube.
       // Si falla, YouTube ya quedó programado. Instagram solo admite Reels (el largo se cuenta allí con los Reels recortados).
       try {
@@ -502,7 +504,8 @@ export async function pasoAutopiloto() {
         const r = await publicarReel({ proyecto: nombre, carpeta, reel, creado: lista.creado, modo: 'programar', fecha: hora, cliente: clienteRedes() })
         await guardarEstudio(nombre, e => { e.autopiloto = { ...e.autopiloto, reelProgramadoEn: new Date().toISOString() } })
         await anotarRegistro(DIARIO, nombre, `Programado para ${r.fecha}.`)
-      } catch (error) { await anotarRegistro(DIARIO, nombre, `No se pudo programar: ${error.message}`) } finally { publicando.delete(`${nombre}:${reel.id}`) }
+        void notificar({ titulo: 'Reel programado', cuerpo: `${reel.club || nombre} · ${new Date(r.fecha).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'short', timeStyle: 'short' })}`, url: '/#publicar' })
+      } catch (error) { await anotarRegistro(DIARIO, nombre, `No se pudo programar: ${error.message}`); void notificar({ titulo: 'No se pudo programar un Reel', cuerpo: `${nombre}: ${error.message}`.slice(0, 180), url: '/#publicar' }) } finally { publicando.delete(`${nombre}:${reel.id}`) }
       return
     }
   }
@@ -553,7 +556,7 @@ function renderizar(proyecto, estado) {
   proceso.stderr.on('data', anotar)
   proceso.on('error', error => { anotar(`\nNo se pudo iniciar el render: ${error.message}\n`) })
   proceso.on('close', async codigo => {
-    if (codigo !== 0) { terminarRender(estado, 'error'); ocupados.delete(proyecto); return }
+    if (codigo !== 0) { finRender(proyecto, estado, 'error'); ocupados.delete(proyecto); return }
     estado.fase = 'musica'
     // Con la voz ya renderizada se mezcla la música sola: una canción distinta por noticia en el video largo y una en
     // cada Reel, siempre audible bajo la voz. Nadie tiene que elegirla; `sinMusica` en estudio.json la apaga.
@@ -564,7 +567,7 @@ function renderizar(proyecto, estado) {
       const control = await vozPresente(carpeta, voz)
       if (!control.ok) {
         estado.registro += '\nEl video salió SIN tu voz (las tomas no quedaron dentro del render). Pulsa Renderizar otra vez; si se repite, avísale a Claude.\n'
-        terminarRender(estado, 'error')
+        finRender(proyecto, estado, 'error')
         ocupados.delete(proyecto)
         return
       }
@@ -584,8 +587,8 @@ function renderizar(proyecto, estado) {
         const reel = { id: String(guion.id || 'r1'), archivo: 'renders/final.mp4', duracion: manifiesto.duracion || 0, club: guion.club || '', descripcion: descripcionDeReel(guion, await atribucionesDe(pistasUsadas(estudio))), articulo: guion.articuloSlug || '' }
         await writeFile(join(carpeta, 'renders', 'reels', 'reels.json'), JSON.stringify({ creado: new Date().toISOString(), reels: [reel] }, null, 2))
       }
-      terminarRender(estado, 'listo')
-    } catch (error) { estado.registro += `\nNo se pudo mezclar la música: ${error.message}\n`; terminarRender(estado, 'error') }
+      finRender(proyecto, estado, 'listo')
+    } catch (error) { estado.registro += `\nNo se pudo mezclar la música: ${error.message}\n`; finRender(proyecto, estado, 'error') }
     ocupados.delete(proyecto)
   })
 }
@@ -633,6 +636,30 @@ const VERSION_INICIAL = huellaCodigo()
 const reiniciable = process.env.PONT3LA10_ESTUDIO_REINICIABLE === '1'
 const trabajando = () => ocupados.size > 0 || publicando.size > 0 || [...renders.values()].some(r => r.estado === 'renderizando') || [...trabajosReels.values()].some(r => r.estado === 'creando') || [...trabajosYoutube.values()].some(t => t.estado === 'subiendo')
 
+/** Panel de resultados: los videos largos y Shorts que el estudio subió, con sus estadísticas de YouTube. */
+async function resultadosYoutube() {
+  const nombres = existsSync(DIARIO) ? (await readdir(DIARIO)).filter(proyectoValido).sort().reverse().slice(0, 60) : []
+  const vinculados = []
+  for (const nombre of nombres) {
+    const estudio = (await leerJson(join(carpetaDe(nombre), 'estudio.json'))) || {}
+    if (estudio.youtube?.idVideo) vinculados.push({ id: estudio.youtube.idVideo, proyecto: nombre, tipo: 'largo' })
+    if (estudio.youtubeShort?.idVideo) vinculados.push({ id: estudio.youtubeShort.idVideo, proyecto: nombre, tipo: 'short' })
+  }
+  if (!vinculados.length) return { conectado: true, videos: [] }
+  let acceso
+  try { acceso = await accesoVigente() } catch { return { conectado: false, videos: [] } }
+  const estadisticas = new Map((await estadisticasVideos({ ids: vinculados.map(v => v.id), acceso })).map(e => [e.id, e]))
+  return { conectado: true, videos: vinculados.filter(v => estadisticas.has(v.id)).map(v => ({ ...v, ...estadisticas.get(v.id) })) }
+}
+
+// Fin de un render con aviso al iPhone (si hay dispositivos suscritos).
+function finRender(proyecto, estado, resultado) {
+  terminarRender(estado, resultado)
+  void notificar(resultado === 'listo'
+    ? { titulo: 'Render listo', cuerpo: `El video de ${proyecto} ya está renderizado.`, url: '/#publicar' }
+    : { titulo: 'El render falló', cuerpo: `Revisa el registro de ${proyecto} en el estudio.`, url: '/#publicar' })
+}
+
 const limitadorIngreso = crearLimitador()
 let configuracionAcceso = { valor: null, leida: 0 }
 async function configAcceso() {
@@ -649,6 +676,7 @@ const MANIFIESTO = JSON.stringify({ name: 'Estudio · Ponte la 10', short_name: 
 const ICONOS = { '/icono-192.png': 'app-redes-192.png', '/icono-512.png': 'app-redes-512.png' }
 async function atenderRecursosApp(req, res, url) {
   if (req.method !== 'GET') return false
+  if (url.pathname === '/sw.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache', 'service-worker-allowed': '/' }); res.end(SERVICE_WORKER); return true }
   if (url.pathname === '/manifest.webmanifest') { res.writeHead(200, { 'content-type': 'application/manifest+json', 'cache-control': 'max-age=86400' }); res.end(MANIFIESTO); return true }
   if (ICONOS[url.pathname]) { res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'max-age=86400' }); res.end(await readFile(join(RAIZ, 'public', 'brand', ICONOS[url.pathname]))); return true }
   return false
@@ -717,6 +745,19 @@ export function crearServidor() {
       if (req.method === 'GET' && url.pathname === '/') {
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'" })
         return res.end(await readFile(PAGINA))
+      }
+      if (url.pathname === '/api/resultados' && req.method === 'GET') return responder(res, 200, await resultadosYoutube())
+      if (url.pathname === '/api/avisos' && req.method === 'GET') {
+        const config = await configuracionAvisos()
+        return responder(res, 200, { clave: config.vapid.publica, suscritos: config.suscripciones.length })
+      }
+      if (url.pathname === '/api/avisos/suscribir' && req.method === 'POST') {
+        let suscripcion
+        try { suscripcion = JSON.parse((await leerCuerpo(req, 4096)).toString('utf8')) } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
+        return responder(res, 200, { suscritos: await guardarSuscripcion(suscripcion) })
+      }
+      if (url.pathname === '/api/avisos/probar' && req.method === 'POST') {
+        return responder(res, 200, await notificar({ titulo: 'Avisos activados', cuerpo: 'Así te llegarán los avisos del estudio.', url: '/' }))
       }
       if (url.pathname === '/api/autopiloto') {
         if (req.method === 'GET') return responder(res, 200, { ...(await leerAjustes(DIARIO)), redes: redesDisponibles() })
