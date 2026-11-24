@@ -22,6 +22,13 @@
   probó con notas del 23 de noviembre: 12 de Latinoamérica, 3 internacionales.
 - Pendiente: marca y nombre del canal, comando que excluya del internacional lo usado por Latam, afinar la lista de términos
   con una tanda real de notas.
+- **Gráficos PNG para animar (2026-11-24):** el responsable quiere que los motion graphics usen PNG hechos por Codex en vez
+  de dibujarlos con código. Catálogo `config/graficosCodex.json` (66 gráficos, 33 de prioridad 1), encargo generado
+  `docs/agents/prompts/encargo-graficos-codex.md` (`node scripts/graficos-codex.mjs --encargo`), revisión de la entrega
+  `--revisar` (tamaño, alfa real, magenta —choca con la llave del documental—, peso) y hoja `--contacto`. Carpeta de entrega:
+  `videos/pack-pont3la10/assets/graficos/<categoría>/<id>.png`. Siguiente paso, cuando lleguen las imágenes: muestra de los
+  motion graphics en los tres formatos (16:9 diario, 9:16 Reels, documental). Los gráficos son decoración: la regla de
+  fotos reales para las noticias no cambia.
 - **Auditoría de fuentes y estrategia (2026-11-24):** ver `docs/MEJORAS_VIDEO_Y_FUENTES_2026-11-24.md` (lista priorizada).
   Herramientas nuevas: `node scripts/fuentes-salud.mjs` (salud de los feeds; The Guardian da 403),
   `node scripts/tendencias-futbol-latam.mjs` (radar de la región) y los feeds verificados de `config/fuentesFutbolLatam.json`.
