@@ -1,0 +1,10 @@
+{
+  "name": "pack-pont3la10",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.9.66 preview",
+    "check": "npx --yes hyperframes@0.9.66 check",
+    "render": "npx --yes hyperframes@0.9.66 render"
+  }
+}

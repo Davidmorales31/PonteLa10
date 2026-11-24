@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <style>
+      :root { --azul: #08204a; --amarillo: #ffd800; --rojo: #e5202e; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #000; }
+      #root { position: relative; width: 1080px; height: 1920px; overflow: hidden; font-family: "Montserrat", sans-serif; }
+      .escena { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; overflow: hidden; }
+      .foto { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; }
+      .capa { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+      .pos { position: absolute; display: block; }
+      .centrado { text-align: center; left: 100px; width: 800px; }
+      .txt { position: absolute; font-weight: 900; color: #fff; }
+      .fuente { position: absolute; left: 100px; top: 1140px; padding: 8px 18px; background: var(--azul); color: #fff; font-size: 30px; font-weight: 700; border-left: 6px solid var(--amarillo); }
+
+      /* 1 · gancho */
+      #r1-grad { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; background: linear-gradient(180deg, rgba(8,32,74,0.15) 0%, rgba(8,32,74,0.55) 38%, rgba(8,32,74,0.92) 72%); }
+      #r1-rayos { left: 540px; top: 640px; width: 1500px; height: 1500px; margin-left: -750px; margin-top: -750px; }
+      #r1-kicker { top: 330px; font-size: 40px; letter-spacing: 0.16em; color: var(--amarillo); }
+      #r1-numero { top: 395px; height: 400px; font-size: 400px; line-height: 1; color: var(--amarillo); text-shadow: 0 8px 0 var(--azul), 0 0 40px rgba(8,32,74,0.8); letter-spacing: -0.03em; }
+      #r1-anos { top: 770px; height: 130px; font-size: 128px; line-height: 1; letter-spacing: 0.06em; text-shadow: 0 6px 24px rgba(8,32,74,0.9); }
+      #r1-frase { top: 940px; font-size: 104px; line-height: 1.02; text-shadow: 0 6px 24px rgba(8,32,74,0.9); }
+      #r1-frase span { color: var(--amarillo); }
+      #r1-rayo { left: 800px; top: 430px; width: 170px; height: 255px; }
+      #r1-destello { left: 540px; top: 640px; width: 900px; height: 900px; margin-left: -450px; margin-top: -450px; }
+
+      /* 2 · dato */
+      #r2-moneda { left: 540px; top: 490px; width: 360px; height: 360px; margin-left: -180px; margin-top: -180px; }
+      #r2-numero { top: 660px; height: 360px; font-size: 360px; line-height: 1; letter-spacing: -0.03em; }
+      #r2-rotulo { top: 1010px; height: 90px; font-size: 76px; color: var(--amarillo); letter-spacing: 0.06em; }
+      #r2-guante { left: 700px; top: 740px; width: 200px; height: 200px; }
+      #r2-flecha { left: 640px; top: 700px; width: 260px; height: 260px; }
+
+      /* 3 · lista */
+      #r3-titulo { top: 300px; font-size: 76px; line-height: 1.06; }
+      #r3-titulo span { color: var(--amarillo); }
+      #r3-subrayado { left: 100px; top: 440px; width: 800px; height: 100px; }
+      #r3-chincheta { left: 790px; top: 290px; width: 100px; height: 100px; }
+      .fila { position: absolute; left: 100px; width: 800px; height: 160px; }
+      .fila img { position: absolute; left: 0; top: 10px; width: 140px; height: 140px; object-fit: contain; }
+      .fila .t { position: absolute; left: 190px; top: 28px; font-size: 68px; font-weight: 900; color: #fff; letter-spacing: 0.02em; }
+      .fila .t span { color: var(--amarillo); }
+      .fila .l { position: absolute; left: 190px; top: 130px; width: 610px; height: 6px; background: var(--amarillo); }
+      #f1 { top: 600px; } #f2 { top: 765px; } #f3 { top: 930px; } #f4 { top: 1090px; }
+
+      /* 4 · antes y después */
+      .pola { position: absolute; width: 400px; height: 480px; }
+      .pola .ventana { position: absolute; left: 40px; top: 60px; width: 320px; height: 300px; overflow: hidden; }
+      .pola .ventana img { width: 100%; height: 100%; object-fit: cover; }
+      .pola .marco { position: absolute; left: 0; top: 0; width: 400px; height: 480px; }
+      .pola .nota { position: absolute; left: 0; top: 392px; width: 400px; text-align: center; color: var(--azul); font-size: 44px; font-weight: 900; letter-spacing: 0.08em; }
+      .pola .cinta { position: absolute; left: 100px; top: -24px; width: 200px; height: 75px; }
+      #p1 { left: 90px; top: 480px; } #p2 { left: 510px; top: 560px; }
+      #r4-flecha { left: 380px; top: 930px; width: 200px; height: 200px; }
+      #r4-titulo { top: 300px; font-size: 64px; color: #fff; }
+      #r4-titulo span { color: var(--amarillo); }
+
+      /* 5 · cita */
+      #r5-velo { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; background: var(--azul); }
+      #r5-comillas { left: 100px; top: 380px; width: 280px; height: 240px; }
+      #r5-cita { left: 100px; top: 640px; width: 800px; font-size: 70px; line-height: 1.1; }
+      #r5-autor { left: 100px; top: 1000px; width: 800px; font-size: 40px; color: var(--amarillo); font-weight: 800; line-height: 1.25; }
+      #r5-medio { left: 100px; top: 1100px; width: 800px; font-size: 34px; color: #c9d4ea; font-weight: 600; }
+      #r5-glitch { left: 0; top: 480px; width: 1080px; height: 1920px; }
+
+      /* 6 · cierre */
+      #r6-logo { left: 240px; top: 280px; width: 600px; }
+      #r6-texto { top: 500px; font-size: 92px; line-height: 1.06; }
+      #r6-texto span { color: var(--amarillo); }
+      #r6-campana { left: 540px; top: 730px; width: 280px; height: 327px; margin-left: -140px; }
+      #r6-pill { position: absolute; left: 150px; top: 1090px; width: 700px; height: 120px; border-radius: 60px; background: var(--rojo); color: #fff; font-size: 56px; font-weight: 900; letter-spacing: 0.04em; }
+      #r6-pill span { position: absolute; left: 0; top: 0; width: 700px; height: 120px; display: flex; align-items: center; justify-content: center; }
+      #r6-cursor { left: 680px; top: 1130px; width: 140px; height: 168px; }
+      #r6-corazon { left: 110px; top: 930px; width: 140px; height: 140px; }
+      #r6-pulgar { left: 750px; top: 930px; width: 140px; height: 140px; }
+      #r6-lema { top: 425px; font-size: 36px; color: var(--amarillo); font-weight: 700; }
+      .flash { position: absolute; left: 540px; top: 960px; width: 1600px; height: 1600px; margin-left: -800px; margin-top: -800px; z-index: 50; }
+    </style>
+  </head>
+  <body>
+    <!-- Muestra de motion graphics con PNG (Reels y Shorts 9:16). Texto entre y 290 y 1250 (zona segura de Instagram y Shorts).
+         Fotos de Wikimedia Commons con crédito; solo para revisión interna. -->
+    <div id="root" data-composition-id="main" data-start="0" data-duration="24.4" data-width="1080" data-height="1920">
+
+      <!-- 1 · Gancho (0–3,8) -->
+      <div id="r1" class="clip escena" data-start="0" data-duration="3.8" data-track-index="1" style="z-index: 1" data-layout-allow-overflow>
+        <img id="r1-foto" class="foto" src="assets/fotos/foto-4.jpg" alt="" style="object-position: 50% 12%" />
+        <div id="r1-grad"></div>
+        <img id="r1-rayos" class="pos" src="assets/graf/rayos-radiales-amarillo.png" alt="" />
+        <img id="r1-vineta" class="capa" src="assets/graf/vineta-9x16.png" alt="" />
+        <img id="r1-grano" class="capa" src="assets/graf/grano-9x16.png" alt="" />
+        <div id="r1-kicker" class="txt centrado">VOZINHA · CABO VERDE</div>
+        <div id="r1-numero" class="txt centrado">40</div>
+        <div id="r1-anos" class="txt centrado">AÑOS</div>
+        <div id="r1-frase" class="txt centrado">Y FRENÓ A<br /><span>ESPAÑA</span></div>
+        <img id="r1-rayo" class="pos" data-layout-allow-occlusion src="assets/graf/rayo-amarillo.png" alt="" />
+        <img id="r1-lineas" class="capa" src="assets/graf/lineas-velocidad-9x16.png" alt="" data-layout-allow-occlusion />
+        <img id="r1-destello" class="pos" src="assets/graf/destello-estrella.png" alt="" data-layout-allow-occlusion />
+      </div>
+
+      <!-- 2 · Dato (3,8–8,2) -->
+      <div id="r2" class="clip escena" data-start="3.8" data-duration="4.4" data-track-index="1" style="z-index: 1" data-layout-allow-overflow>
+        <img id="r2-fondo" class="capa" src="assets/graf/fondo-azul-textura-9x16.png" alt="" />
+        <img id="r2-lineas" class="capa" src="assets/graf/lineas-velocidad-9x16.png" alt="" data-layout-allow-occlusion />
+        <img id="r2-moneda" class="pos" src="assets/graf/guante-portero.png" alt="" />
+        <div id="r2-numero" class="txt centrado">0</div>
+        <div id="r2-rotulo" class="txt centrado">ATAJADAS</div>
+        <img id="r2-flecha" class="pos" src="assets/graf/flecha-amarilla-curva.png" alt="" data-layout-allow-occlusion />
+        <div class="fuente" id="r2-fuente">Según Al Jazeera</div>
+      </div>
+
+      <!-- 3 · ¿Dónde están ahora? (8,2–13,8) -->
+      <div id="r3" class="clip escena" data-start="8.2" data-duration="5.6" data-track-index="1" style="z-index: 1" data-layout-allow-overflow>
+        <img id="r3-fondo" class="capa" src="assets/graf/fondo-azul-textura-9x16.png" alt="" />
+        <img id="r3-chincheta" class="pos" src="assets/graf/chincheta-roja.png" alt="" />
+        <div id="r3-titulo" class="txt" style="left: 100px; width: 700px">¿DÓNDE ESTÁN <span>AHORA?</span></div>
+        <img id="r3-subrayado" class="pos" src="assets/graf/subrayado-pincel-amarillo.png" alt="" />
+        <div id="f1" class="fila"><img src="assets/graf/guante-portero.png" alt="" /><div class="t">EL <span>PORTERO</span></div><div class="l"></div></div>
+        <div id="f2" class="fila"><img src="assets/graf/tarjeta-amarilla.png" alt="" /><div class="t">EL <span>DEFENSA</span></div><div class="l"></div></div>
+        <div id="f3" class="fila"><img src="assets/graf/balon-generico.png" alt="" /><div class="t">EL <span>VOLANTE</span></div><div class="l"></div></div>
+        <div id="f4" class="fila"><img src="assets/graf/botin-futbol.png" alt="" /><div class="t">EL <span>DELANTERO</span></div><div class="l"></div></div>
+      </div>
+
+      <!-- 4 · Antes y después (13,8–18,2) -->
+      <div id="r4" class="clip escena" data-start="13.8" data-duration="4.4" data-track-index="1" style="z-index: 1" data-layout-allow-overflow>
+        <img id="r4-fondo" class="capa" src="assets/graf/fondo-azul-textura-9x16.png" alt="" />
+        <div id="r4-titulo" class="txt centrado">ASÍ CAMBIÓ <span>TODO</span></div>
+        <div id="p1" class="pola">
+          <div class="ventana"><img src="assets/fotos/foto-3.jpg" alt="" /></div>
+          <img class="marco" src="assets/graf/marco-polaroid.png" alt="" />
+          <img class="cinta" src="assets/graf/cinta-adhesiva-a.png" alt="" />
+          <div class="nota">ANTES</div>
+        </div>
+        <div id="p2" class="pola">
+          <div class="ventana"><img src="assets/fotos/foto-6.jpg" alt="" style="object-position: 50% 20%" /></div>
+          <img class="marco" src="assets/graf/marco-polaroid.png" alt="" />
+          <img class="cinta" src="assets/graf/cinta-adhesiva-b.png" alt="" />
+          <div class="nota">AHORA</div>
+        </div>
+        <img id="r4-flecha" class="pos" src="assets/graf/flecha-amarilla-curva.png" alt="" data-layout-allow-occlusion />
+        <div class="fuente" style="top: 1170px; left: 100px; width: 800px; font-size: 28px">Fotos: Nha Terra Nha Cretcheu y Cavilese / Wikimedia Commons</div>
+      </div>
+
+      <!-- 5 · Cita con glitch (18,2–21,4) -->
+      <div id="r5" class="clip escena" data-start="18.2" data-duration="3.2" data-track-index="1" style="z-index: 1" data-layout-allow-overflow>
+        <img id="r5-foto" class="foto" src="assets/fotos/foto-4.jpg" alt="" style="object-position: 50% 12%" />
+        <div id="r5-velo"></div>
+        <img id="r5-vineta" class="capa" src="assets/graf/vineta-9x16.png" alt="" />
+        <img id="r5-comillas" class="pos" src="assets/graf/comillas-amarillas.png" alt="" />
+        <div id="r5-cita" class="txt">Lloré porque crecí con mis abuelos y no pudieron estar</div>
+        <div id="r5-autor" class="txt">Vozinha, tras el partido contra España</div>
+        <div id="r5-medio" class="txt">Según Khaleej Times</div>
+        <img id="r5-glitch" class="pos" src="assets/graf/glitch-franjas.png" alt="" data-layout-allow-occlusion />
+      </div>
+
+      <!-- 6 · Cierre (21,4–24,4) -->
+      <div id="r6" class="clip escena" data-start="21.4" data-duration="3" data-track-index="1" style="z-index: 1" data-layout-allow-overflow>
+        <img id="r6-fondo" class="capa" src="assets/graf/fondo-azul-textura-9x16.png" alt="" />
+        <img id="r6-logo" class="pos" src="assets/logo-blanco.png" alt="" />
+        <div id="r6-texto" class="txt centrado">SIGUE A<br /><span>PONTE LA 10</span></div>
+        <img id="r6-campana" class="pos" src="assets/graf/campana-amarilla.png" alt="" />
+        <img id="r6-corazon" class="pos" src="assets/graf/corazon-rojo.png" alt="" />
+        <img id="r6-pulgar" class="pos" src="assets/graf/pulgar-arriba-amarillo.png" alt="" />
+        <div id="r6-pill"><span id="r6-a">SIGUE</span><span id="r6-b">SIGUIENDO ✓</span></div>
+        <div id="r6-lema" class="txt centrado">Una historia de fútbol cada viernes</div>
+        <img id="r6-cursor" class="pos" src="assets/graf/cursor-mano.png" alt="" />
+      </div>
+
+      <!-- Destellos en los cortes -->
+      <img id="f-1" class="clip flash" src="assets/graf/destello-estrella.png" alt="" data-start="3.6" data-duration="0.5" data-track-index="2" data-layout-allow-occlusion />
+      <img id="f-2" class="clip flash" src="assets/graf/destello-estrella.png" alt="" data-start="8.0" data-duration="0.5" data-track-index="2" data-layout-allow-occlusion />
+      <img id="f-3" class="clip flash" src="assets/graf/destello-estrella.png" alt="" data-start="13.6" data-duration="0.5" data-track-index="2" data-layout-allow-occlusion />
+      <img id="f-4" class="clip flash" src="assets/graf/destello-estrella.png" alt="" data-start="18.0" data-duration="0.5" data-track-index="2" data-layout-allow-occlusion />
+      <img id="f-5" class="clip flash" src="assets/graf/destello-estrella.png" alt="" data-start="21.2" data-duration="0.5" data-track-index="2" data-layout-allow-occlusion />
+
+      <!-- Sonidos -->
+      <audio id="a-golpe1" class="clip" src="assets/sonidos/golpe.mp3" data-start="0.25" data-duration="0.7" data-track-index="5" data-volume="0.7"></audio>
+      <audio id="a-w1" class="clip" src="assets/sonidos/whoosh-a.mp3" data-start="3.55" data-duration="0.575" data-track-index="6" data-volume="0.5"></audio>
+      <audio id="a-pop1" class="clip" src="assets/sonidos/pop.mp3" data-start="4.0" data-duration="0.72" data-track-index="5" data-volume="0.5"></audio>
+      <audio id="a-w2" class="clip" src="assets/sonidos/whoosh-a.mp3" data-start="7.95" data-duration="0.575" data-track-index="6" data-volume="0.5"></audio>
+      <audio id="a-pop2" class="clip" src="assets/sonidos/pop.mp3" data-start="9.0" data-duration="0.72" data-track-index="5" data-volume="0.45"></audio>
+      <audio id="a-pop3" class="clip" src="assets/sonidos/pop.mp3" data-start="9.7" data-duration="0.72" data-track-index="7" data-volume="0.45"></audio>
+      <audio id="a-pop4" class="clip" src="assets/sonidos/pop.mp3" data-start="10.4" data-duration="0.72" data-track-index="8" data-volume="0.45"></audio>
+      <audio id="a-pop5" class="clip" src="assets/sonidos/pop.mp3" data-start="11.1" data-duration="0.72" data-track-index="9" data-volume="0.45"></audio>
+      <audio id="a-w3" class="clip" src="assets/sonidos/whoosh-a.mp3" data-start="13.55" data-duration="0.575" data-track-index="6" data-volume="0.5"></audio>
+      <audio id="a-pop6" class="clip" src="assets/sonidos/pop.mp3" data-start="14.3" data-duration="0.72" data-track-index="5" data-volume="0.45"></audio>
+      <audio id="a-pop7" class="clip" src="assets/sonidos/pop.mp3" data-start="15.4" data-duration="0.72" data-track-index="7" data-volume="0.45"></audio>
+      <audio id="a-w4" class="clip" src="assets/sonidos/whoosh-a.mp3" data-start="17.95" data-duration="0.575" data-track-index="6" data-volume="0.5"></audio>
+      <audio id="a-golpe2" class="clip" src="assets/sonidos/golpe.mp3" data-start="18.3" data-duration="0.7" data-track-index="5" data-volume="0.5"></audio>
+      <audio id="a-w5" class="clip" src="assets/sonidos/whoosh-a.mp3" data-start="21.15" data-duration="0.575" data-track-index="6" data-volume="0.5"></audio>
+      <audio id="a-clic" class="clip" src="assets/sonidos/clic.mp3" data-start="22.85" data-duration="0.366" data-track-index="5" data-volume="0.7"></audio>
+      <audio id="a-pop8" class="clip" src="assets/sonidos/pop.mp3" data-start="23.15" data-duration="0.72" data-track-index="7" data-volume="0.5"></audio>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const T = gsap.timeline({ paused: true });
+
+      /* ── 1 · Gancho (0–3,8) ── */
+      T.fromTo("#r1-foto", { scale: 1.08 }, { scale: 1.2, duration: 3.8, ease: "none" }, 0);
+      T.fromTo("#r1-rayos", { rotation: 0, opacity: 0 }, { rotation: 40, duration: 3.8, ease: "none" }, 0);
+      T.to("#r1-rayos", { opacity: 0.85, duration: 0.3, ease: "power2.out" }, 0.1);
+      T.fromTo("#r1-kicker", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.3, ease: "power3.out" }, 0.15);
+      T.fromTo("#r1-numero", { scale: 2.4, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.28, ease: "power4.in" }, 0.25);
+      T.fromTo("#r1-anos", { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 0.5);
+      T.fromTo("#r1-frase", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "back.out(1.6)" }, 0.65);
+      T.fromTo("#r1-rayo", { scale: 0, rotation: -40, opacity: 0 }, { scale: 1, rotation: 8, opacity: 1, duration: 0.35, ease: "back.out(2.4)" }, 0.55);
+      T.fromTo("#r1-destello", { scale: 0, opacity: 1, rotation: 0 }, { scale: 1.2, opacity: 0, rotation: 40, duration: 0.8, ease: "power2.out" }, 0.28);
+      T.fromTo("#r1-lineas", { opacity: 0 }, { opacity: 0.9, duration: 0.15, yoyo: true, repeat: 1, ease: "none" }, 0.28);
+      T.to("#r1-numero", { x: 8, y: -5, duration: 0.05, yoyo: true, repeat: 5, ease: "none" }, 0.55);
+
+      /* ── 2 · Dato (3,8–8,2) ── */
+      T.fromTo("#r2-moneda", { scale: 0, rotation: -360 }, { scale: 1, rotation: 0, duration: 0.7, ease: "back.out(1.7)" }, 4.0);
+      T.to("#r2-moneda", { y: -18, duration: 1.0, yoyo: true, repeat: 3, ease: "sine.inOut" }, 4.8);
+      T.fromTo("#r2-numero", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.8)" }, 4.5);
+      const cuenta = { v: 0 };
+      T.to(cuenta, { v: 7, duration: 1.2, ease: "power1.out", onUpdate: () => { document.getElementById("r2-numero").textContent = String(Math.round(cuenta.v)); } }, 4.6);
+      T.fromTo("#r2-rotulo", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 5.4);
+      T.fromTo("#r2-flecha", { clipPath: "inset(100% 0 0 0)" }, { clipPath: "inset(0% 0 0 0)", duration: 0.5, ease: "power2.out" }, 6.2);
+      T.fromTo("#r2-fuente", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.35, ease: "power3.out" }, 6.6);
+      T.fromTo("#r2-lineas", { opacity: 0 }, { opacity: 0.8, duration: 0.2, yoyo: true, repeat: 1 }, 4.0);
+
+      /* ── 3 · Lista (8,2–13,8) ── */
+      T.fromTo("#r3-titulo", { opacity: 0, x: -60 }, { opacity: 1, x: 0, duration: 0.45, ease: "power3.out" }, 8.4);
+      T.fromTo("#r3-chincheta", { scale: 0, rotation: -40 }, { scale: 1, rotation: 12, duration: 0.45, ease: "back.out(2.5)" }, 8.7);
+      T.fromTo("#r3-subrayado", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "power3.out" }, 8.9);
+      ["#f1", "#f2", "#f3", "#f4"].forEach((id, i) => {
+        T.fromTo(id, { x: 700, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "back.out(1.4)" }, 9.0 + i * 0.7);
+        T.fromTo(id + " img", { rotation: -40, scale: 0.4 }, { rotation: 0, scale: 1, duration: 0.5, ease: "back.out(2)" }, 9.1 + i * 0.7);
+      });
+
+      /* ── 4 · Antes y después (13,8–18,2) ── */
+      T.fromTo("#r4-titulo", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 13.95);
+      T.fromTo("#p1", { y: -700, rotation: -18, opacity: 0 }, { y: 0, rotation: -6, opacity: 1, duration: 0.6, ease: "back.out(1.4)" }, 14.2);
+      T.fromTo("#p2", { y: 700, rotation: 18, opacity: 0 }, { y: 0, rotation: 5, opacity: 1, duration: 0.6, ease: "back.out(1.4)" }, 15.3);
+      T.fromTo("#r4-flecha", { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 0.5, ease: "power2.out" }, 15.0);
+      T.fromTo("#p1", { scale: 1 }, { scale: 1.04, duration: 3.5, ease: "none" }, 14.8);
+
+      /* ── 5 · Cita (18,2–21,4) ── */
+      T.fromTo("#r5-foto", { scale: 1.08 }, { scale: 1.16, duration: 3.2, ease: "none" }, 18.2);
+      T.fromTo("#r5-velo", { opacity: 0.4 }, { opacity: 0.78, duration: 0.4 }, 18.2);
+      T.fromTo("#r5-glitch", { opacity: 0, x: -30 }, { opacity: 1, x: 30, duration: 0.07, yoyo: true, repeat: 5, ease: "none" }, 18.25);
+      T.set("#r5-glitch", { opacity: 0 }, 18.75);
+      T.fromTo("#r5-comillas", { scale: 0, rotation: -25 }, { scale: 1, rotation: 0, duration: 0.5, ease: "back.out(2)" }, 18.45);
+      T.fromTo("#r5-cita", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 18.7);
+      T.fromTo("#r5-autor", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 19.5);
+      T.fromTo("#r5-medio", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 19.8);
+
+      /* ── 6 · Cierre (21,4–24,4) ── */
+      T.fromTo("#r6-logo", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 21.5);
+      T.fromTo("#r6-texto", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.45, ease: "back.out(1.6)" }, 21.7);
+      gsap.set("#r6-campana", { transformOrigin: "50% 6%" });
+      T.fromTo("#r6-campana", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.45, ease: "back.out(2)" }, 22.0);
+      T.fromTo("#r6-pill", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.4, ease: "power3.out" }, 22.2);
+      T.set("#r6-b", { opacity: 0 }, 0);
+      T.fromTo("#r6-cursor", { x: 300, y: 300, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.55, ease: "power2.out" }, 22.3);
+      T.to("#r6-cursor", { scale: 0.82, duration: 0.1, yoyo: true, repeat: 1, ease: "power2.inOut" }, 22.85);
+      T.to("#r6-pill", { backgroundColor: "#3a4a68", duration: 0.2 }, 22.95);
+      T.to("#r6-a", { opacity: 0, duration: 0.15 }, 22.95);
+      T.to("#r6-b", { opacity: 1, duration: 0.15 }, 23.0);
+      T.fromTo("#r6-campana", { rotation: 0 }, { rotation: 16, duration: 0.12, yoyo: true, repeat: 7, ease: "sine.inOut" }, 23.05);
+      T.fromTo("#r6-corazon", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2.5)" }, 23.15);
+      T.fromTo("#r6-pulgar", { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.4, ease: "back.out(2.5)" }, 23.4);
+      T.fromTo("#r6-lema", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 23.0);
+
+      /* ── Destellos en los cortes ── */
+      [3.6, 8.0, 13.6, 18.0, 21.2].forEach((t, i) => {
+        T.fromTo("#f-" + (i + 1), { scale: 0, opacity: 1, rotation: 0 }, { scale: 1.6, opacity: 0, rotation: 35, duration: 0.5, ease: "power2.out" }, t);
+      });
+
+      window.__timelines["main"] = T;
+    </script>
+  </body>
+</html>

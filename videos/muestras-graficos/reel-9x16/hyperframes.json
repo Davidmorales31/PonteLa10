@@ -1,0 +1,65 @@
+{
+  "$schema": "https://hyperframes.heygen.com/schema/hyperframes.json",
+  "registry": "https://raw.githubusercontent.com/heygen-com/hyperframes/main/registry",
+  "paths": {
+    "blocks": "compositions",
+    "components": "compositions/components",
+    "assets": "assets"
+  },
+  "media": {
+    "autoProxy": true
+  },
+  "authoringSkill": "hyperframes",
+  "registryItems": [
+    {
+      "name": "yt-lower-third",
+      "type": "hyperframes:block",
+      "target": "compositions/yt-lower-third.html"
+    },
+    {
+      "name": "lt-stack-bars",
+      "type": "hyperframes:block",
+      "target": "compositions/lt-stack-bars.html"
+    },
+    {
+      "name": "lower-third-bild",
+      "type": "hyperframes:block",
+      "target": "compositions/lower-third-bild.html"
+    },
+    {
+      "name": "news-ticker",
+      "type": "hyperframes:block",
+      "target": "compositions/news-ticker.html"
+    },
+    {
+      "name": "mk-progress-stat",
+      "type": "hyperframes:block",
+      "target": "compositions/mk-progress-stat.html"
+    },
+    {
+      "name": "logo-outro",
+      "type": "hyperframes:block",
+      "target": "compositions/logo-outro.html"
+    },
+    {
+      "name": "yt-logo-intro",
+      "type": "hyperframes:block",
+      "target": "compositions/yt-logo-intro.html"
+    },
+    {
+      "name": "whip-pan-cut",
+      "type": "hyperframes:component",
+      "target": "compositions/components/whip-pan-cut.html"
+    },
+    {
+      "name": "logo-sting",
+      "type": "hyperframes:component",
+      "target": "compositions/components/logo-sting.html"
+    },
+    {
+      "name": "count-up",
+      "type": "hyperframes:component",
+      "target": "compositions/components/count-up.html"
+    }
+  ]
+}
