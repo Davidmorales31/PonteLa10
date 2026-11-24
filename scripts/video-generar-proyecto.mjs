@@ -10,10 +10,11 @@ import { join, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFileSync } from 'node:child_process'
 import { edicionDe, nombreProyecto } from './video-edicion.mjs'
+import { SITIO_API } from './video-sitio.mjs'
 
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
 const PACK = join(RAIZ, 'videos', 'pack-pont3la10')
-const SITIO = 'https://www.pont3la10.com'
+const SITIO = SITIO_API
 
 export const DURACIONES = { intro: 4.1, cierre: 6, suscribete: 4.5, rotulo: 5, datoMini: 5, marcadorMini: 5, segundosPorEspacio: 5, minimoSegmento: 2 }
 export const PREFIJOS = {

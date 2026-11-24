@@ -13,7 +13,7 @@ Un archivo `guion.json` para el día (fecha de Bogotá) que pase `node scripts/v
 
 ## Antes de escribir
 
-1. Lista los artículos del día: `https://www.pont3la10.com/api/articulos?categoria=futbol-colombiano&limite=50`, filtrados por la fecha de Bogotá (UTC−5, no confíes en la variable TZ del shell).
+1. Lista los artículos del día: `https://www.pont3la10.com/api/articulos?categoria=futbol-colombiano&limite=50`, filtrados por la fecha de Bogotá (UTC−5, no confíes en la variable TZ del shell). **Si el sitio está caído (402)**, levanta el sitio local contra Supabase y usa su origen: ver «Bloqueo externo» en `docs/agents/ESTADO_ACTUAL.md` (`PONT3LA10_API_SITIO=http://127.0.0.1:3002`).
 2. Elige 8 a 12 historias (el video dura **mínimo 8 minutos**). Cubre muchos clubes, no solo la Selección: usa los artículos del día y, si faltan, los de la noche anterior que no salieron en el video de ayer. Orden de preferencia: la de mayor consecuencia deportiva, una primicia o dato nuevo, un «cómo queda» (tabla, cruces, cuadrangulares), después el resto. Una historia por club mientras sea posible. No repitas la del día anterior.
 3. Lee de cada artículo el cuerpo completo y sus fuentes (`sources`); el guion se apoya en ellas, no en el titular.
 4. Una historia sin foto real con crédito no entra al video.

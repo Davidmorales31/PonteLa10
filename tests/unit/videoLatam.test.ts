@@ -14,6 +14,7 @@ describe('edición latam: reparto de notas', () => {
     expect(entidad('Palmeiras avanza en la Copa Libertadores', config)).toBe('Copa Libertadores')
     expect(entidad('Argentina golea a Chile', config)).toBe('Argentina')
     expect(entidad('Luis Díaz marca otro gol: el colombiano no para', config)).toBe('Colombia')
+    expect(entidad('Julián Álvarez, dos asistencias en el Atlético ante Getafe', config)).toBe('Figura: julian alvarez')
     expect(entidad('El Real Madrid golea al Barcelona en la Champions League', config)).toBeNull()
     // «chile» no coincide dentro de otra palabra.
     expect(entidad('El picante del chilenismo', config)).toBeNull()

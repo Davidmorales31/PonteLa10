@@ -10,10 +10,11 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { atribucionesDe } from './video-musica.mjs'
 import { EDICIONES, edicionDe } from './video-edicion.mjs'
+import { SITIO_API, SITIO_PUBLICO } from './video-sitio.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
-const SITIO = 'https://www.pont3la10.com'
+const SITIO = SITIO_API
 export const LIMITES = { minimo: 20, maximo: 75, ideal: [35, 60], maximoReels: 5 }
 const redondear = valor => Math.round(valor * 100) / 100
 
@@ -109,7 +110,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 export function descripcionReel({ titular, resumen, slug, credito, musica, edicion = EDICIONES.colombia }) {
   const partes = [String(titular || '').trim()]
   if (resumen) partes.push(String(resumen).trim())
-  partes.push(`Nota completa: ${SITIO}/articulos/${slug}`)
+  partes.push(`Nota completa: ${SITIO_PUBLICO}/articulos/${slug}`)
   if (credito) partes.push(`Foto: ${credito}`)
   if (musica) partes.push(musica)
   partes.push(edicion.hashtags.join(' '))

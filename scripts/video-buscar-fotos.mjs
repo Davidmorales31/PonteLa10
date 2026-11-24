@@ -15,10 +15,11 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { generarProyecto } from './video-generar-proyecto.mjs'
 import { edicionDe } from './video-edicion.mjs'
+import { SITIO_API, SITIO_PUBLICO } from './video-sitio.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
-const SITIO = 'https://www.pont3la10.com'
+const SITIO = SITIO_API
 const AGENTE = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36 Pont3la10-estudio'
 const LIMITE_IMAGEN = 15 * 1024 * 1024
 const LIMITE_VIDEO = 120 * 1024 * 1024
@@ -232,7 +233,7 @@ async function candidatasDeNoticia(bloque, { recientes, registro, consultaRespal
     for (const otra of parecidas) {
       const detalle = await traer(`${SITIO}/api/articulos/${encodeURIComponent(otra.slug)}`, { tipo: 'json' }).catch(() => null)
       const descripcion = `${detalle?.portada?.textoAlternativo || ''} ${detalle?.portada?.pieDeFoto || ''}`
-      if (detalle?.portada?.url && detalle.portada.credito && mencionaAlgo(descripcion, delClub)) candidatas.push({ url: detalle.portada.url, credito: detalle.portada.credito, origen: `${SITIO}/articulos/${otra.slug}` })
+      if (detalle?.portada?.url && detalle.portada.credito && mencionaAlgo(descripcion, delClub)) candidatas.push({ url: detalle.portada.url, credito: detalle.portada.credito, origen: `${SITIO_PUBLICO}/articulos/${otra.slug}` })
     }
   }
   // 3) Wikimedia Commons: con el nombre del club si es un club; si la noticia es de la liga en general, estadios del país.

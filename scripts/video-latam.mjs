@@ -6,9 +6,10 @@
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { SITIO_API } from './video-sitio.mjs'
 
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
-const SITIO = 'https://www.pont3la10.com'
+const SITIO = SITIO_API
 
 const normalizar = texto => String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim()
 const contiene = (texto, termino) => {
@@ -25,6 +26,8 @@ export function entidadLatam(texto, config) {
   for (const c of config?.competiciones || []) if ((c.terminos || []).some(t => contiene(texto, t))) return c.nombre
   for (const club of config?.clubes || []) if (contiene(texto, club)) return club
   if ((config?.colombianosEnElExterior?.terminos || []).some(t => contiene(texto, t))) return 'Colombia'
+  const figura = (config?.figurasEnElExterior?.terminos || []).find(t => contiene(texto, t))
+  if (figura) return `Figura: ${figura}`
   return null
 }
 
@@ -73,7 +76,7 @@ async function main() {
   const [colombianas, mundiales] = await Promise.all([traer('futbol-colombiano'), traer('futbol-mundial')])
   const { latam, internacional } = repartirEdiciones({ colombianas: delDia(colombianas, fecha), mundiales: delDia(mundiales, fecha), config })
   if (process.argv.includes('--json')) { process.stdout.write(`${JSON.stringify({ fecha, latam, internacional }, null, 2)}\n`); return }
-  const fila = h => `  · [${h.pais}] ${h.titulo}  (${h.slug})`
+  const fila = h => `  · [${h.pais || '—'}] ${h.titulo}  (${h.slug})`
   process.stdout.write(`Fecha ${fecha}\n\nLatinoamérica (${latam.length}) — por país: ${JSON.stringify(conteoPorPais(latam))}\n${latam.map(fila).join('\n')}\n\nInternacional (${internacional.length})\n${internacional.map(fila).join('\n')}\n`)
 }
 

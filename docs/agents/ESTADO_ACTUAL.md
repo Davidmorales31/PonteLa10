@@ -11,8 +11,15 @@
   (no hay corrida editorial de Latinoamérica; Liga MX queda fuera hasta lanzar `mx.pont3la10.com`).
 - `config/horariosPublicacion.json` → `franjasPorEdicion`; `proponerHoras({ tipo: 'video', edicion })`. El estudio la usa al
   programar el video largo. Documental: viernes 18:30.
-- **Bloqueo externo:** `www.pont3la10.com` responde 402 `DEPLOYMENT_DISABLED` (Vercel) desde el 2026-11-24; sin sitio, el
-  video diario no puede leer artículos. Acción del responsable en Vercel. No probado con notas reales.
+- **Bloqueo externo:** `www.pont3la10.com` responde 402 `DEPLOYMENT_DISABLED` (Vercel, plan gratuito agotado) desde el
+  2026-11-24. **El video diario puede seguir sin el sitio**: `scripts/video-sitio.mjs` lee el origen de la API de
+  `PONT3LA10_API_SITIO` (sin la variable, el sitio público de siempre). Se levanta un Nuxt local que consulta Supabase directo
+  (probado el 2026-11-24 con artículos reales): terminal A
+  `$env:NUXT_PUBLIC_API_ORIGIN = ''; node node_modules/nuxt/bin/nuxt.mjs dev --host 127.0.0.1 --port 3002` y terminal B
+  `$env:PONT3LA10_API_SITIO = 'http://127.0.0.1:3002'; npm run video:estudio`. Sin ese origen vacío, el Nuxt local reenvía
+  la API al sitio caído (`NUXT_PUBLIC_API_ORIGIN` del `.env`). El puerto 3001 lo usa otro programa del responsable. Los
+  enlaces públicos de las descripciones (`/articulos/<slug>`) seguirán rotos mientras el sitio esté caído. El reparto latam se
+  probó con notas del 23 de noviembre: 12 de Latinoamérica, 3 internacionales.
 - Pendiente: marca y nombre del canal, comando que excluya del internacional lo usado por Latam, afinar la lista de términos
   con una tanda real de notas.
 

@@ -33,6 +33,16 @@
     "Liga de Quito", "Barcelona de Guayaquil", "Emelec", "Independiente del Valle",
     "Alianza Lima", "Universitario", "Sporting Cristal", "Olimpia", "Cerro Porteno"
   ],
+  "figurasEnElExterior": {
+    "nota": "Latinoamericanos que juegan en Europa o en otras ligas: sus notas son de Latinoamérica aunque la liga no lo sea. Lista corta y ampliable; se afinó con una tanda real de notas (2026-11-24).",
+    "terminos": [
+      "messi", "julian alvarez", "lautaro martinez", "enzo fernandez", "mac allister", "dibu martinez", "emiliano martinez", "cuti romero", "cristian romero", "dybala",
+      "vinicius", "rodrygo", "raphinha", "endrick", "neymar", "alisson", "ederson", "casemiro",
+      "federico valverde", "fede valverde", "darwin nunez", "luis suarez",
+      "moises caicedo", "piero hincapie",
+      "luis diaz", "james rodriguez", "jhon duran", "richard rios", "davinson sanchez", "daniel munoz"
+    ]
+  },
   "colombianosEnElExterior": {
     "nota": "Las notas de futbol-mundial sobre colombianos siguen siendo de esta edición (Colombia incluida).",
     "terminos": ["seleccion colombia", "colombiano", "colombiana", "colombianos", "colombianas", "cafeteros"]
