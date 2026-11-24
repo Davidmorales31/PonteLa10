@@ -22,6 +22,10 @@
   probó con notas del 23 de noviembre: 12 de Latinoamérica, 3 internacionales.
 - Pendiente: marca y nombre del canal, comando que excluya del internacional lo usado por Latam, afinar la lista de términos
   con una tanda real de notas.
+- **Estudio de competencia ampliado (2026-11-24):** `docs/ESTUDIO_COMPETENCIA_AMPLIADO_2026-11-24.md` (32 canales, ~1.200
+  videos, estrategias nuevas). Herramienta repetible `python scripts/competencia-medir.py` con la lista en
+  `config/competenciaYoutube.json` y la primera medición en `docs/datos/competencia-2026-11-24.json`. Corrige dos
+  recomendaciones anteriores: con la muestra grande, «en vivo» y «cómo queda» no tienen ventaja demostrada.
 - **Gráficos PNG para animar (2026-11-24):** el responsable quiere que los motion graphics usen PNG hechos por Codex en vez
   de dibujarlos con código. Catálogo `config/graficosCodex.json` (66 gráficos, 33 de prioridad 1), encargo generado
   `docs/agents/prompts/encargo-graficos-codex.md` (`node scripts/graficos-codex.mjs --encargo`), revisión de la entrega
