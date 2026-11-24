@@ -100,9 +100,58 @@ Cada una trae su evidencia y cómo se prueba. **Todas son hipótesis hasta medir
 **Descartado con evidencia:** compilaciones tipo Dosis de Fútbol (viven de metraje con derechos), resúmenes de partido (los
 ganan los medios con derechos) y publicar decenas de piezas al día (AS Colombia y Gol Caracol).
 
+## Shorts y Reels (medido después, el mismo día)
+
+Todo lo de arriba son videos largos: en la primera pasada se descartaron a propósito los de menos de 61 segundos, así que
+**las estrategias anteriores no cubrían Shorts ni Reels**. Se midieron después con `python scripts/competencia-medir.py --shorts`.
+
+**Muestra y límites:** 1.027 Shorts de 27 canales (3 no tienen pestaña de Shorts); los formatos y rasgos de título salen de
+los 823 Shorts de los 22 canales con mediana de Shorts mayor de 3.000. Solo hay **vistas y título**: la lista de Shorts no
+trae duración ni fecha, y pedirlos uno por uno hizo que YouTube pidiera «confirmar que no eres un bot» (no se intentó
+saltar). Sin duración, ritmo ni aperturas medidas, esos puntos se apoyan en `docs/REELS_PROPIOS.md`. Mismas advertencias de
+vistas acumuladas y de clasificación por palabras del título (casi dos tercios caen en «otros»).
+
+**Qué encontramos**
+
+1. **Los Shorts son otro juego, no un resumen del largo.** En el canal típico, la mediana de un Short es 0,6 de la de su
+   video largo, pero depende del canal: donde el largo es fuerte (Cracks 0,07; Memorias del Fútbol 0,13; Tomás Fernández
+   0,05) los Shorts rinden mucho menos; donde el largo es débil (POST UNITED 4,0; TNT Sports Argentina 6,2; Gol
+   Caracol 2,3), el Short es el que da el alcance. Dosis de Fútbol tiene mediana de 948 mil en Shorts.
+2. **Los éxitos se concentran todavía más:** los 3 mejores de 40 dan el 37 % de las vistas del canal típico (28 % en largos).
+3. **Formato** (relativo a la mediana de Shorts de su canal): gol y jugada 1,68 (53 Shorts; **necesita metraje con
+   derechos**); top y lista 2,00 (solo 6, poca prueba); curiosidad 1,16; fichaje 1,13; emoción 1,09; duelo o versus 1,06; dato
+   o récord 0,90; **pregunta en el título 0,84**; cita 0,75; polémica 0,70.
+4. **Título:** con un número rinde 1,15 frente a 0,97 (134 Shorts), el doble de efecto que en videos largos; mayúsculas y « | »
+   suben 7 %; «?» baja 5 %; emoji y el largo del título no cambian nada.
+5. **Los más destacados no son noticias, son mini-historias y curiosidades de leyendas:** «el defensa más temido de la
+   historia» (79 veces su mediana, 1,3 M), «el primer partido de Messi como falso 9» (63 veces, 2,5 M), «el gol que desafió a
+   la ciencia» (16 veces, 2,6 M), «¿por qué no dispararon?» (25 veces, 1 M), «así evolucionó el fútbol» (22 veces, 855 mil),
+   «¿dónde están todos los jugadores del Barça de Luis Enrique?» (17 veces, 469 mil). Fuera de eso solo sobresalen las
+   jugadas con derechos (TUDN, 32 veces). Los Shorts de noticias del día rinden poco: los de Cracks, 7 % de su largo.
+6. **Para la monetización, los Shorts no suman horas** (el tiempo visto en el feed de Shorts no cuenta); sirven para alcance
+   y suscriptores. La vía alterna de 10 millones de vistas en 90 días es irreal con medianas de 5 a 50 mil.
+
+**Estructuras nuevas para Shorts y Reels** (hoy hay 6 etiquetas editoriales, pero un solo esqueleto de gancho, desarrollo y
+cierre). Hipótesis a medir con retención propia:
+
+| Estructura | Esqueleto | Escenas del pack | Evidencia |
+| --- | --- | --- | --- |
+| **La leyenda en 45 s** | Gancho con un rasgo extremo y un nombre → origen → apogeo con un dato → giro o rareza → cierre que engancha con la primera frase (bucle). | `reel-gancho`, `reel-foto-punch`, `reel-dato` | Los de mayor relativo (16 a 79 veces). Sale gratis del documental: cada documental da 8 a 10. |
+| **¿Dónde están ahora?** | 4 a 6 nombres de un equipo o torneo famoso, foto y una línea de qué hacen hoy; cierra con pregunta hablada. | `reel-lista`, `reel-foto-tarjeta` | 17 veces su mediana (469 mil). |
+| **El dato que no cuadra** | Una cifra, la contradicción y la explicación en una frase; 25 a 35 s. | `reel-dato`, `reel-fuente` | Pedro el Ingeniero: 25 y 63 veces. |
+| **Antes y después / evolución** | Dos o tres épocas con fotos y una línea de cambio. | `reel-foto-dividida`, `reel-foto-paneo` | 22 veces (855 mil). |
+| **Versus con pregunta hablada** | Dos nombres, un criterio y la pregunta dicha en voz alta (no en el título). | `reel-versus`, `reel-pregunta` | Neutro (1,06); el «?» en el título baja. |
+| **Noticia de 25 a 35 s** | La de hoy, solo la más fuerte del día (las demás ya van en el video largo). | las actuales | Evidencia débil: el Short de noticias rinde poco. |
+
+**Reglas que salen de los datos:** número en el título (+15 %); la pregunta va **hablada y en pantalla**, no en el título;
+nada de jugadas ajenas (lo que más rinde, 1,68, es justo lo que no podemos usar); reutilizar la investigación del
+documental en vez de investigar desde cero. **Pendiente de medir:** duración y ritmo ideales y cómo abren los mejores;
+exige pedir videos uno por uno con pausas largas o la API oficial de YouTube con llave.
+
 ## Cómo se mide de aquí en adelante
 
-- Cada mes: `python scripts/competencia-medir.py` y comparar el resumen con el anterior (`docs/datos/`). Añadir a
+- Cada mes: `python scripts/competencia-medir.py` (largos) y `python scripts/competencia-medir.py --shorts`, y comparar el
+  resumen con el anterior (`docs/datos/`). Añadir a
   `config/competenciaYoutube.json` los canales nuevos que vayan apareciendo (México, Argentina, Brasil en español).
 - Propio: pedir el permiso de YouTube Analytics para medir retención, duración media y CTR de miniaturas por video, y
   registrar cada apuesta (ángulo, duración, título, resultado a 24 h, 72 h y 7 días).

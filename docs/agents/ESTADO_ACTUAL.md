@@ -25,7 +25,10 @@
 - **Estudio de competencia ampliado (2026-11-24):** `docs/ESTUDIO_COMPETENCIA_AMPLIADO_2026-11-24.md` (32 canales, ~1.200
   videos, estrategias nuevas). Herramienta repetible `python scripts/competencia-medir.py` con la lista en
   `config/competenciaYoutube.json` y la primera medición en `docs/datos/competencia-2026-11-24.json`. Corrige dos
-  recomendaciones anteriores: con la muestra grande, «en vivo» y «cómo queda» no tienen ventaja demostrada.
+  recomendaciones anteriores: con la muestra grande, «en vivo» y «cómo queda» no tienen ventaja demostrada. Incluye una
+  sección de **Shorts y Reels** (1.027 Shorts de 27 canales, `python scripts/competencia-medir.py --shorts`, datos en
+  `docs/datos/competencia-shorts-2026-11-24.json`) con seis estructuras nuevas; sin duración ni aperturas medidas porque
+  YouTube pidió verificación anti-bot al consultar video por video (no se intentó saltar).
 - **Gráficos PNG para animar (2026-11-24):** el responsable quiere que los motion graphics usen PNG hechos por Codex en vez
   de dibujarlos con código. Catálogo `config/graficosCodex.json` (66 gráficos, 33 de prioridad 1), encargo generado
   `docs/agents/prompts/encargo-graficos-codex.md` (`node scripts/graficos-codex.mjs --encargo`), revisión de la entrega
