@@ -1,0 +1,118 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #04122a; font-family: "Montserrat", sans-serif; }
+    #dmapa-svg { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; }
+    .dmapa-mar { fill: #04122a; }
+    .dmapa-tierra { fill: #163a78; stroke: #3d6cc4; stroke-linejoin: round; }
+    .dmapa-ruta { fill: none; stroke: #ffd800; stroke-linecap: round; }
+    .dmapa-vineta { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, rgba(4,18,42,0) 55%, rgba(4,18,42,0.85) 100%); }
+    #dmapa-marcas { position: absolute; inset: 0; }
+    .dmapa-marca { position: absolute; left: 0; top: 0; width: 0; height: 0; }
+    .dmapa-punto { position: absolute; left: -14px; top: -14px; width: 28px; height: 28px; border-radius: 50%; background: #ffd800; border: 5px solid #04122a; box-shadow: 0 0 0 3px #ffd800, 0 0 26px rgba(255,216,0,0.65); }
+    .dmapa-etiqueta { position: absolute; top: -30px; white-space: nowrap; padding: 6px 16px; background: rgba(4,18,42,0.86); border-left: 6px solid #ffd800; color: #ffffff; font-size: 40px; font-weight: 800; letter-spacing: 0.02em; }
+    .dmapa-der { left: 34px; }
+    .dmapa-izq { right: 34px; border-left: none; border-right: 6px solid #ffd800; }
+    #dmapa-titulo { position: absolute; left: 96px; top: 70px; padding: 10px 24px; background: #ffd800; color: #08204a; font-size: 34px; font-weight: 900; letter-spacing: 0.16em; }
+    #dmapa-credito { position: absolute; left: 96px; bottom: 50px; padding: 4px 10px; background: rgba(4,18,42,0.7); color: #9fb3d6; font-size: 22px; font-weight: 600; }
+    #dmapa-marca-logo { position: absolute; right: 96px; top: 60px; width: 190px; height: auto; opacity: 0.85; }
+  </style>
+  <div id="root" data-composition-id="doc-mapa" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"mapa","type":"string","label":"Mapa (JSON del generador: pasos, puntos, ruta)","default":"{}"},{"id":"titulo","type":"string","label":"Título","default":""},{"id":"duracion","type":"number","label":"Duración (s)","default":9,"min":3,"max":20,"step":0.1}]'>
+    <div id="dmapa-escena" class="clip" data-start="0" data-duration="9" data-layout-allow-occlusion data-layout-allow-overflow>
+      <svg id="dmapa-svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" data-layout-allow-occlusion>
+        <rect class="dmapa-mar" x="-100000" y="-100000" width="200000" height="200000" />
+        <path id="dmapa-tierra" class="dmapa-tierra" data-tierra d="" />
+        <g id="dmapa-rutas"></g>
+      </svg>
+      <div class="dmapa-vineta" data-layout-allow-occlusion></div>
+      <div id="dmapa-marcas" data-layout-allow-overflow></div>
+      <div id="dmapa-titulo" data-var-text="titulo"></div>
+      <div id="dmapa-credito" data-layout-ignore>Mapa: Natural Earth (dominio público)</div>
+      <img id="dmapa-marca-logo" src="assets/logo-blanco.png" alt="" />
+    </div>
+  </div>
+  <script>
+    // Mapa propio (costas de Natural Earth) con cámara que viaja de un lugar al siguiente. El generador
+    // (scripts/documental-mapa.mjs) proyecta los lugares y calcula cada encuadre; aquí solo se anima.
+    // Puntos y etiquetas son HTML de tamaño fijo en pantalla, colocados desde el encuadre en cada cuadro.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(3, Number(v.duracion ?? 9));
+    let mapa = {};
+    try { mapa = JSON.parse(v.mapa || "{}"); } catch (e) { mapa = {}; }
+    const pasos = Array.isArray(mapa.pasos) && mapa.pasos.length ? mapa.pasos : [{ vista: [0, 0, 1920, 1080], puntos: [] }];
+    const puntos = Array.isArray(mapa.puntos) ? mapa.puntos : [];
+    if (!String(v.titulo ?? "").trim()) document.querySelector("#dmapa-titulo").style.display = "none";
+    const svg = document.querySelector("#dmapa-svg");
+    const tierra = document.querySelector("#dmapa-tierra");
+    const rutas = document.querySelector("#dmapa-rutas");
+    const marcas = document.querySelector("#dmapa-marcas");
+    const NS = "http://www.w3.org/2000/svg";
+    const vista = { x: pasos[0].vista[0], y: pasos[0].vista[1], w: pasos[0].vista[2], h: pasos[0].vista[3] };
+    const elementos = puntos.map((p) => {
+      const marca = document.createElement("div");
+      marca.className = "dmapa-marca";
+      const punto = document.createElement("div");
+      punto.className = "dmapa-punto";
+      const etiqueta = document.createElement("div");
+      etiqueta.className = "dmapa-etiqueta " + (p.lado === "izq" ? "dmapa-izq" : "dmapa-der");
+      etiqueta.textContent = String(p.nombre || "");
+      marca.appendChild(punto);
+      marca.appendChild(etiqueta);
+      marcas.appendChild(marca);
+      return { marca, punto, etiqueta, p };
+    });
+    const segmentos = [];
+    if (mapa.ruta) {
+      for (let i = 1; i < puntos.length; i++) {
+        const a = puntos[i - 1], b = puntos[i];
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const cx = mx - dy * 0.18, cy = my + dx * 0.18;
+        const path = document.createElementNS(NS, "path");
+        path.setAttribute("d", "M" + a.x + " " + a.y + " Q" + cx + " " + cy + " " + b.x + " " + b.y);
+        path.setAttribute("class", "dmapa-ruta");
+        path.setAttribute("pathLength", "100");
+        path.setAttribute("stroke-dasharray", "100 120");
+        path.setAttribute("stroke-dashoffset", "110");
+        rutas.appendChild(path);
+        segmentos.push(path);
+      }
+    }
+    // Lo que depende del encuadre se recalcula en cada cuadro desde el estado (sin medir el DOM).
+    function aplicar() {
+      svg.setAttribute("viewBox", vista.x + " " + vista.y + " " + vista.w + " " + vista.h);
+      const escala = 1920 / vista.w;
+      tierra.style.strokeWidth = String(1.6 / escala);
+      segmentos.forEach((s) => { s.style.strokeWidth = String(6 / escala); });
+      elementos.forEach((e) => {
+        e.marca.style.transform = "translate(" + ((e.p.x - vista.x) * escala) + "px," + ((e.p.y - vista.y) * (1080 / vista.h)) + "px)";
+      });
+    }
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#dmapa-svg", { opacity: 0 }, { opacity: 1, duration: 0.5, ease: "power2.out" }, 0);
+    tl.fromTo("#dmapa-titulo", { opacity: 0, x: -24 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, 0.2);
+    elementos.forEach((e) => { tl.set([e.punto, e.etiqueta], { opacity: 0 }, 0); });
+    const tramo = (D - 0.9) / pasos.length;
+    pasos.forEach((paso, i) => {
+      const t0 = 0.35 + i * tramo;
+      const viaje = i === 0 ? 0 : Math.min(1.4, tramo * 0.55);
+      if (i > 0) {
+        tl.to(vista, { x: paso.vista[0], y: paso.vista[1], w: paso.vista[2], h: paso.vista[3], duration: viaje, ease: "power2.inOut" }, t0);
+        // Las etiquetas del paso anterior se van cuando la cámara se mueve.
+        (pasos[i - 1].puntos || []).forEach((k) => { if (elementos[k]) tl.to(elementos[k].etiqueta, { opacity: 0, duration: 0.3, ease: "power2.in" }, t0); });
+      }
+      (paso.puntos || []).forEach((k, j) => {
+        const e = elementos[k];
+        if (!e) return;
+        if (mapa.ruta && k > 0 && segmentos[k - 1]) tl.to(segmentos[k - 1], { attr: { "stroke-dashoffset": 0 }, duration: Math.max(0.4, viaje), ease: "power1.inOut" }, t0);
+        const llega = t0 + viaje + j * 0.25;
+        tl.fromTo(e.punto, { opacity: 0, scale: 0 }, { opacity: 1, scale: 1, duration: 0.35, ease: "back.out(2.6)" }, llega);
+        if (!paso.resumen) tl.fromTo(e.etiqueta, { opacity: 0, x: e.p.lado === "izq" ? 20 : -20 }, { opacity: 1, x: 0, duration: 0.4, ease: "expo.out" }, llega + 0.1);
+      });
+    });
+    tl.to(["#dmapa-marcas", "#dmapa-titulo"], { opacity: 0, duration: 0.35, ease: "power2.in" }, D - 0.4);
+    tl.eventCallback("onUpdate", aplicar);
+    aplicar();
+    window.__timelines["doc-mapa"] = tl;
+  </script>
+</template>

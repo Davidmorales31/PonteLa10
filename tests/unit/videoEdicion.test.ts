@@ -25,6 +25,19 @@ describe('ediciones del video diario', () => {
     expect(edicionDe(guion).categoria).toBe('futbol-mundial')
   })
 
+  it('la edición latam reúne varias categorías, tiene su carpeta y no depende de Colombia', () => {
+    const guion = { fecha: '2026-11-24', edicion: 'Latam' }
+    expect(nombreProyecto(guion)).toBe('2026-11-24-latam')
+    const e = edicionDe(guion) as Edicion & { categorias: string[], consultaRespaldo: string }
+    expect(e.kicker).toBe('NOTICIAS DEL FÚTBOL LATINOAMERICANO')
+    expect(e.categorias).toContain('futbol-colombiano')
+    expect(e.categorias.length).toBeGreaterThan(1)
+    expect(e.consultaRespaldo).not.toMatch(/Colombia/)
+    expect(e.hashtags).not.toContain('#LigaBetPlay')
+    expect(nombrePadre('2026-11-24-latam-reel-3')).toBe('2026-11-24-latam')
+    expect(descripcionYoutube({ guion: { edicion: 'latam', bloques: [] }, manifiesto: { segmentos: [] } })).toContain('#FutbolLatinoamericano')
+  })
+
   it('el estudio reconoce los Reels de la edición internacional como hijos de su video', () => {
     expect(nombrePadre('2026-11-21-internacional-reel-2')).toBe('2026-11-21-internacional')
   })

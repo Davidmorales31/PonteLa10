@@ -4,7 +4,7 @@ Pedido del responsable (2026-11-23): todos los viernes, un video tipo documental
 («la historia detrás de CR7») o un suceso histórico («la Mano de Dios»), elegido de un banco de temas que **prioriza a
 quien esté en tendencia esa semana** (si la semana pasada un portero fue noticia, el viernes va la historia de ese portero).
 
-Estado (2026-11-23): fases 1 y 2 hechas. Están el banco (`config/bancoDocumentales.json`, 32 temas), el selector (`scripts/documental-elegir.mjs`), la rúbrica (`scripts/documental-rubrica.mjs` + `config/documental.json`) y el skill `pont3la10-documental-guion`, con pruebas en `tests/unit/documental.test.ts`. Faltan las fases 3 a 7.
+Estado (2026-11-23): fases 1 y 2 hechas. Están el banco (`config/bancoDocumentales.json`, 32 temas), el selector (`scripts/documental-elegir.mjs`), la rúbrica (`scripts/documental-rubrica.mjs` + `config/documental.json`) y el skill `pont3la10-documental-guion`, con pruebas en `tests/unit/documental.test.ts`. Fase 3 hecha el mismo día: generador `scripts/documental-generar.mjs` (con `scripts/documental-mapa.mjs`, `config/lugaresDocumental.json` y las escenas `doc-*` del pack), conectado al botón «Armar» del estudio; pruebas en `tests/unit/documental-generar.test.ts`. Faltan las fases 4 a 7.
 
 ## 1. Diagnóstico: qué funciona en el formato (medido el 2026-11-23)
 

@@ -75,6 +75,19 @@ describe('rúbrica del documental', () => {
     expect(todo).toMatch(/La misma foto se usa 24 veces/)
   })
 
+  it('testimonios: 3 como máximo, de 12 s como mucho y con subtítulo', () => {
+    const g = guionValido()
+    const t = { tipo: 'testimonio', video: 'https://upload.wikimedia.org/e.webm', credito: 'X', licencia: 'Dominio público', desde: 10, hasta: 18, texto: 'Hola' }
+    g.actos[0].capitulos[0].visuales.push(t)
+    expect(evaluar(g, config, { banco }).errores).toEqual([])
+    for (const c of g.actos[1].capitulos) c.visuales.push({ ...t })
+    g.actos[2].capitulos[0].visuales.push({ ...t, hasta: 40, texto: '' })
+    const todo = evaluar(g, config, { banco }).errores.join(' | ')
+    expect(todo).toMatch(/máximo 3/)
+    expect(todo).toMatch(/sin URL https, crédito, licencia o subtítulo/)
+    expect(todo).toMatch(/entre 0 y 12 s/)
+  })
+
   it('una cita atribuida sí pasa', () => {
     expect(rubrica.citasSinAtribucion('Según el diario, «nunca voy a perder una final otra vez».', config.verbosDeAtribucion)).toEqual([])
   })

@@ -23,7 +23,9 @@ export const PREFIJOS = {
   'reel-gancho': 'rgan-', 'reel-foto-punch': 'rpun-', 'reel-foto-paneo': 'rpan-', 'reel-foto-tarjeta': 'rtar-', 'reel-foto-dividida': 'rdiv-',
   'reel-dato': 'rdat-', 'reel-cita': 'rcit-', 'reel-lista': 'rlis-', 'reel-marcador': 'rmar-', 'reel-versus': 'rvs-', 'reel-pregunta': 'rpre-',
   'reel-etiqueta': 'reti-', 'reel-fuente': 'rfue-', 'reel-alerta': 'ralr-', 'reel-progreso': 'rpro-', 'reel-cta': 'rcta-',
-  'reel-golpe': 'rgol-', 'reel-barrido': 'rbar-', 'reel-glitch': 'rgli-', 'reel-subtitulos': 'rsub-', 'reel-clip': 'rcli-'
+  'reel-golpe': 'rgol-', 'reel-barrido': 'rbar-', 'reel-glitch': 'rgli-', 'reel-subtitulos': 'rsub-', 'reel-clip': 'rcli-',
+  // Escenas del documental de los viernes (scripts/documental-generar.mjs).
+  'doc-acto': 'dacto-', 'doc-mapa': 'dmapa-', 'doc-linea': 'dlin-', 'doc-ficha': 'dfic-', 'doc-titular': 'dtit-', 'doc-cita': 'dcit-', 'doc-contador': 'dcon-', 'doc-clip': 'dclip-'
 }
 // Momento (s) del corte dentro de cada transición y del primer elemento que aterriza en cada superpuesto.
 const CORTE = { 'transicion-barrido': 0.5, 'transicion-flash': 0.3 }

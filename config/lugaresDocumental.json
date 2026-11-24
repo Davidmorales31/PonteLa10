@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "descripcion": "Coordenadas de los lugares que nombran los mapas del documental (visuales «mapa» de guion.json). «ancho» es cuántos grados de longitud muestra el encuadre cuando la cámara se acerca a ese lugar. Un lugar que falte aquí deja el mapa sin ese punto y el generador lo avisa.",
+  "lugares": {
+    "Cabo Verde": { "lat": 15.95, "lon": -24.0, "ancho": 22 },
+    "São Vicente": { "lat": 16.84, "lon": -24.95, "ancho": 2.2 },
+    "Mindelo": { "lat": 16.886, "lon": -24.988, "ancho": 0.8 },
+    "Luanda": { "lat": -8.839, "lon": 13.289, "ancho": 26 },
+    "Chisináu": { "lat": 47.0105, "lon": 28.8638, "ancho": 26 },
+    "Barcelos": { "lat": 41.5388, "lon": -8.6151, "ancho": 22 },
+    "Limasol": { "lat": 34.7071, "lon": 33.0226, "ancho": 24 },
+    "Trenčín": { "lat": 48.8945, "lon": 18.0444, "ancho": 22 },
+    "Chaves": { "lat": 41.74, "lon": -7.4706, "ancho": 18 },
+    "Santiago": { "lat": -33.4489, "lon": -70.6693, "ancho": 30 },
+    "Atlanta": { "lat": 33.749, "lon": -84.388, "ancho": 26 }
+  }
+}

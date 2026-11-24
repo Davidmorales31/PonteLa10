@@ -85,7 +85,7 @@ Juan le habla a su gente como un amigo que sabe de fútbol, no como un noticiero
 
 - Primera persona y hablándole al público: «les cuento», «miren esto», «ojo con este dato», «para mí», «la verdad», «imagínense», «vamos con…».
 - Opiniones sí, pero marcadas como opinión («yo creo que…», «para mí…») y separadas del dato con su fuente. Nunca opiniones sobre salud, vida privada o acusaciones.
-- Expresiones colombianas con naturalidad y sin exagerar; nada de groserías ni burlas a hinchadas o personas.
+- Expresiones colombianas con naturalidad y sin exagerar (en la edición **Latinoamérica**, español neutro latinoamericano: sin regionalismos que otro país no entienda); nada de groserías ni burlas a hinchadas o personas.
 - Reacciones breves que suenen reales («¡qué partidazo!», «esto se puso bueno») solo cuando el hecho lo justifica.
 - Transiciones conversadas entre bloques («y hablando de cuadrangulares…», «cambiemos de ciudad…»), siempre dentro de la `voz` de la noticia y distintas en cada una.
 - Frases cortas, una idea por frase; Juan lo lee en voz alta a 150–165 palabras por minuto.
@@ -140,6 +140,25 @@ encargo a Codex), con estas diferencias:
   el estudio muestra como hijos del video internacional).
 - Fotos y clips: las mismas reglas. En X, prefiere las cuentas oficiales de clubes, ligas y protagonistas; nunca
   canales con derechos (ESPN, DAZN, Movistar, beIN, Sky, TNT, Win Sports, DSports) ni jugadas de partidos.
+
+## Edición Latinoamérica (desde 2026-11-24)
+
+El video diario principal pasa a ser de **Latinoamérica, con Colombia incluida** (decisión del responsable). Colombia deja de
+ser el único foco y entra como un país más. Todo lo de este skill aplica igual, con estas diferencias:
+
+- El guion lleva `"edicion": "latam"`. El generador crea `videos/diario/<fecha>-latam/` (intro «NOTICIAS DEL FÚTBOL
+  LATINOAMERICANO», hashtags `#FutbolLatinoamericano #Libertadores #Pont3la10`). Los guiones sin campo siguen siendo de
+  Colombia, y esa edición se conserva para proyectos anteriores.
+- **No hay una corrida editorial de Latinoamérica**: las historias salen de lo que ya se publica. Ejecuta
+  `node scripts/video-latam.mjs` (o `--fecha AAAA-MM-DD`, o `--json`): trae las notas del día de `futbol-colombiano` (todas
+  son de la edición) y de `futbol-mundial` (solo las que nombran un país, torneo, club o colombiano de la región, según
+  `config/fuentesFutbolLatam.json`), y deja el resto para la edición internacional. Una nota nunca queda en los dos videos.
+- Si el video internacional del día ya existe, pásale al criterio lo que usó: lo que está en su `guion.json` (`articuloSlug`)
+  no se repite en el de Latinoamérica, y al revés. México vive en `mx.pont3la10.com` (sin lanzar): no entra todavía.
+- Variedad: Colombia puede ser lo más fuerte, pero no más de 4 historias de un mismo país (el comando las cuenta por país);
+  busca Argentina, Brasil, Chile, Uruguay, Ecuador… y los torneos de la región (Libertadores, Sudamericana, eliminatorias).
+- `club` es el club o la selección protagonista; no asumas que la liga es la colombiana en títulos, miniaturas ni tarjetas.
+- Fotos, clips, rumores y reglas de atribución: las mismas. Nunca canales con derechos ni jugadas de partidos.
 
 ## Entrega
 

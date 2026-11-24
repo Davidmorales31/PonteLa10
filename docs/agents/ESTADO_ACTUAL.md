@@ -1,5 +1,49 @@
 # Estado actual de Pont3la10
 
+## Video diario: edición Latinoamérica y horarios por edición (2026-11-24, rama feat/video-reels-horarios-mismo-dia, sin commit)
+
+- Decisión del responsable: el canal principal pasa a tener un video diario de **Latinoamérica (Colombia incluida)** y otro
+  **internacional**; los documentales de los viernes van en el **mismo canal**.
+- `scripts/video-edicion.mjs`: nueva edición `latam` (carpeta `<fecha>-latam`, hashtags propios, categorías `futbol-colombiano` +
+  `futbol-mundial`). Sin campo `edicion`, el guion sigue siendo el de Colombia. `video-buscar-fotos.mjs` ya no asume Colombia
+  (consulta de respaldo por edición, varias categorías, más medios de la región).
+- `scripts/video-latam.mjs` + `config/fuentesFutbolLatam.json`: reparten las notas del día entre `latam` e `internacional`
+  (no hay corrida editorial de Latinoamérica; Liga MX queda fuera hasta lanzar `mx.pont3la10.com`).
+- `config/horariosPublicacion.json` → `franjasPorEdicion`; `proponerHoras({ tipo: 'video', edicion })`. El estudio la usa al
+  programar el video largo. Documental: viernes 18:30.
+- **Bloqueo externo:** `www.pont3la10.com` responde 402 `DEPLOYMENT_DISABLED` (Vercel) desde el 2026-11-24; sin sitio, el
+  video diario no puede leer artículos. Acción del responsable en Vercel. No probado con notas reales.
+- Pendiente: marca y nombre del canal, comando que excluya del internacional lo usado por Latam, afinar la lista de términos
+  con una tanda real de notas.
+
+## Generador del documental de los viernes (2026-11-23, rama feat/video-reels-horarios-mismo-dia, sin commit)
+
+- `scripts/documental-generar.mjs` arma el documental 16:9 desde `guion.json` y las tomas de `estudio.json`:
+  tarjeta por acto y título tras la pregunta, voz continua por capítulo, fotos con paneo (máx. 3 usos), clips de
+  Commons con su `desde` y `duracionMaxima`, animaciones nuevas del pack (`doc-acto`, `doc-mapa`, `doc-linea`,
+  `doc-ficha`, `doc-titular` con sello, `doc-cita`, `doc-contador`), rótulo por capítulo, suscripción, cierre,
+  capítulos de YouTube reales (`descripcion.txt`, `descripcionDocumental`) y música por acto (`manifiesto.tramosMusica`,
+  que `planMusica` respeta). Stock de Pexels solo con `PEXELS_API_KEY`; sin ella esos espacios los cubren los clips y
+  fotos del capítulo. Mapas: `scripts/documental-mapa.mjs` + `config/lugaresDocumental.json` + costas Natural Earth
+  10 m (`videos/pack-pont3la10/assets/mapa/land-10m.json`, world-atlas 2.0.2, dominio público).
+- **Render híbrido** (obligatorio): HyperFrames extrae a imágenes todos los cuadros de video del proyecto aunque se
+  pida un tramo y falla con `PLAN_TOO_LARGE` (5,5 GB para 79 % de video). Por eso los clips son huecos magenta
+  (`doc-clip`) y `componerDocumental` arma la pista de clips con ffmpeg cuadro a cuadro y la compone con `colorkey`.
+  Todos los cortes van ajustados a cuadros (`aCuadro`). El estudio lo hace solo: «Armar» ya funciona para el
+  documental y «Renderizar» escribe `renders/graficos.mp4` y compone `renders/final-voz.mp4` antes de la música. El
+  piloto automático sigue sin tocar el documental (falta la franja del viernes).
+- Vozinha (`videos/diario/2026-11-27-documental-vozinha/`): armado, 23:19 sin voz grabada (duraciones estimadas), 14 %
+  fotos · 76 % video · 10 % animación. Guion (fuente y copia) ajustado: la entrevista de TeleSUR/ICL alterna con el
+  entrevistador, así que se clasificó por color segundo a segundo y los 7 `desde` pasan a ventanas donde solo sale
+  Vozinha, con `duracionMaxima`; el video del estadio de Atlanta es una obra con logos al final: queda solo el plano del
+  horizonte (c00, 33 s, 7 s) y c09 usa otra ventana de la entrevista (1027 s); el contador lleva fuente atribuida.
+  Rúbrica: APROBADO.
+- Medición: 90 s de gráficos = 445 s de HyperFrames + 158 s de composición (≈ 6,7× tiempo real). Render completo (23:19, sin voz): 34:37 de HyperFrames (71 % de cuadros reutilizados) + 33:51 de composición = ~68 min, ~2,9× tiempo real; `final-voz.mp4` 1920×1080 a 30 fps, 663 MB, revisado con hoja de cuadros (sin fugas de magenta).
+- Validado: lint de los archivos tocados, `tests/unit/documental-generar.test.ts` y `documental.test.ts` (27 pruebas),
+  `hyperframes check` sin errores. Typecheck: 6 errores previos en `tests/unit/documental.test.ts` y
+  `tests/unit/videoEstudioAcceso.test.ts` (no tocados aquí). Continuidad:
+  docs/agents/handoffs/2026-11-23-estudio-iphone-y-documental.md.
+
 ## Miniaturas internacional 2026-11-22
 
 - Entregadas tres JPG 1280×720 en videos/diario/2026-11-22-internacional/renders/miniaturas/, mediante image_gen con insumos locales. A Barça/Racing; B collage REMONTADA EN 15 MINUTOS (15 amarillo); C Racing/Dortmund. Todas pasan medidor oficial y lectura móvil. Originales intactos, sin publicación ni cambios de aplicación. Prompts guardados; fotomontaje generativo sin garantía de identidad exacta de píxeles.

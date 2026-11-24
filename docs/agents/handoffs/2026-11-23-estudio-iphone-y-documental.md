@@ -36,20 +36,14 @@ sin fusionar a `main`. Git, código y pruebas mandan sobre este resumen.
 
 ## Pendiente, en orden
 
-1. **Generador de documentales (fase 3 del plan).** Leer `guion.json` y las tomas grabadas y armar el video 16:9 con
-   HyperFrames:
-   - escenas nuevas: tarjeta de acto, mapa del recorrido, línea de tiempo, ficha, titular con sello «FALSO», cita y
-     contador de seguidores;
-   - fotos con paneo lento y clips de video de Commons con su `desde`;
-   - búsqueda de los `stock` en Pexels;
-   - música de la Biblioteca de audio de YouTube por acto;
-   - capítulos de YouTube en la descripción.
-
-   Medir el tiempo de render de unos 23 minutos.
+1. ~~Generador de documentales (fase 3).~~ **Hecho el 2026-11-23** (ver `ESTADO_ACTUAL.md`): `scripts/documental-generar.mjs`,
+   render híbrido HyperFrames + ffmpeg, «Armar» y «Renderizar» del estudio. Falta: **grabar la voz** de los 15 tramos y
+   volver a renderizar (las duraciones hoy son estimadas); revisar el render completo en el estudio.
 2. **`PEXELS_API_KEY`.** El responsable debe crear la cuenta gratuita y poner la llave en el `.env`; no abrir el `.env`.
    Sin llave, cubrir los `stock` con más tramos de la entrevista y de Mindelo.
-3. **Revisar los 7 momentos de la entrevista** (dominio público, TeleSUR e ICL; `desde` 120, 400, 700, 1100, 1400,
-   1650 y 1800 s): que se vea a Vozinha.
+3. ~~Revisar los momentos de la entrevista.~~ Hecho: la entrevista alterna con el entrevistador; los `desde` se movieron a
+   ventanas con solo Vozinha y llevan `duracionMaxima`. Revisar a ojo cualquier video nuevo con una hoja de cuadros
+   antes de usarlo (el del estadio de Atlanta resultó ser una obra con logos al final).
 4. **Publicación del viernes 27 a las 18:30.** YouTube y Facebook, con dos o tres títulos para la prueba A/B, miniatura
    «A LOS 40» y la franja del viernes en `config/horariosPublicacion.json`. Después, marcar `publicado` en el banco.
 5. **Tarea programada de los lunes** (`documental-elegir.mjs --actualizar --noticias`), con aviso para aprobar el tema.

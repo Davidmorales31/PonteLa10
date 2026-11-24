@@ -82,6 +82,7 @@ export function evaluarDocumental(guion, config, { banco = null } = {}) {
   const usosFoto = new Map()
   let totalVisuales = 0
   let totalFotos = 0
+  let totalTestimonios = 0
   for (const c of capitulos) {
     const n = contarPalabras(c.voz)
     if (!c.id || idsCapitulos.has(c.id)) errores.push(`Capítulo sin id o repetido (${c.id || 'sin id'}).`)
@@ -101,6 +102,12 @@ export function evaluarDocumental(guion, config, { banco = null } = {}) {
         totalFotos += 1
         usosFoto.set(v.imagen, (usosFoto.get(v.imagen) || 0) + 1)
         if (!esHttps(v.imagen) || !String(v.credito || '').trim()) errores.push(`Foto sin URL https o sin crédito en el capítulo ${c.id}.`)
+      } else if (v.tipo === 'testimonio') {
+        // La historia la cuenta el narrador: la persona solo habla en 2 o 3 citas cortas, con su voz y subtítulo.
+        totalTestimonios += 1
+        const largo = Number(v.hasta) - Number(v.desde)
+        if (!esHttps(v.video) || !String(v.credito || '').trim() || !String(v.licencia || '').trim() || !String(v.texto || '').trim()) errores.push(`Testimonio sin URL https, crédito, licencia o subtítulo ("texto") en el capítulo ${c.id}.`)
+        if (!(largo > 0) || largo > 12) errores.push(`El testimonio del capítulo ${c.id} debe durar entre 0 y 12 s ("desde" y "hasta").`)
       } else if (!MOVIMIENTO.includes(v.tipo)) {
         errores.push(`Visual desconocido «${v.tipo}» en el capítulo ${c.id}.`)
       }
@@ -116,6 +123,7 @@ export function evaluarDocumental(guion, config, { banco = null } = {}) {
     }
     for (const frase of citasSinAtribucion(c.voz, config.verbosDeAtribucion)) errores.push(`Cita sin atribución en ${c.id}: «${frase.slice(0, 70)}…». Di quién lo dijo y dónde.`)
   }
+  if (totalTestimonios > 3) errores.push(`Hay ${totalTestimonios} testimonios: máximo 3 (la historia la cuenta el narrador).`)
   if (totalVisuales && totalFotos / totalVisuales > config.visuales.maximaProporcionFotos) {
     errores.push(`Las fotos son ${Math.round(totalFotos / totalVisuales * 100)} % de los visuales: máximo ${Math.round(config.visuales.maximaProporcionFotos * 100)} %, el resto video o animación.`)
   }

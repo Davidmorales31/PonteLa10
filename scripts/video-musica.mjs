@@ -169,7 +169,10 @@ export async function planMusica({ guion, manifiesto, duracion, semilla, fija, d
     const id = (fija && pistas.includes(fija) ? fija : null) || elegirPistas(1, pistas, semilla)[0]
     return id ? { ids: [id], tramos: [{ clave: 'todo', inicio: 0, fin: duracion }] } : null
   }
-  const tramos = tramosDeManifiesto(manifiesto, duracion)
+  // El documental trae sus tramos (uno por acto, desde su tarjeta); el video diario los saca de los segmentos.
+  const tramos = Array.isArray(manifiesto?.tramosMusica) && manifiesto.tramosMusica.length
+    ? manifiesto.tramosMusica.map((tramo, i, lista) => ({ clave: tramo.clave, inicio: i === 0 ? 0 : Number(tramo.inicio), fin: i === lista.length - 1 ? duracion : Number(lista[i + 1].inicio) }))
+    : tramosDeManifiesto(manifiesto, duracion)
   const ids = elegirPistas(tramos.length, pistas, semilla)
   return ids.length ? { ids, tramos } : null
 }

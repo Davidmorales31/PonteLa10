@@ -35,11 +35,13 @@ const MEDIOS = {
   'as.com': 'AS', 'epimg.net': 'AS', 'dimayor.com.co': 'DIMAYOR', 'clarosports.com': 'Claro Sports', 'elcolombiano.com': 'El Colombiano',
   'semana.com': 'Semana', 'elespectador.com': 'El Espectador', 'antena2.com': 'Antena 2', 'bluradio.com': 'Blu Radio',
   'caracoltv.com': 'Caracol TV', 'noticiascaracol.com': 'Noticias Caracol', 'pulzo.com': 'Pulzo', 'fcf.com.co': 'FCF',
+  'tudn.com': 'TUDN', 'record.com.mx': 'Récord', 'mediotiempo.com': 'Mediotiempo', 'ole.com.ar': 'Olé', 'tycsports.com': 'TyC Sports',
+  'ge.globo.com': 'ge', 'lance.com.br': 'Lance', 'latercera.com': 'La Tercera', 'emol.com': 'Emol', 'redgol.cl': 'Redgol',
   'qhubo.com': 'Q’hubo', 'qhubomedellin.com': 'Q’hubo Medellín', 'qhubocali.com': 'Q’hubo Cali', 'vanguardia.com': 'Vanguardia',
   'elheraldo.co': 'El Heraldo', 'elpais.com.co': 'El País Cali', 'golcaracol.com': 'Gol Caracol', 'espn.com.co': 'ESPN'
 }
 const AMBIGUAS = new Set(['cali', 'medellin', 'bogota', 'santa', 'barranquilla', 'manizales'])
-const GENERICOS = new Set(['liga', 'betplay', 'torneo', 'copa', 'futbol', 'colombiano', 'colombia', 'deportivo', 'club', 'atletico', 'independiente', 'america', 'final', 'fecha', 'tabla', 'grupo', 'cuadrangulares', 'partido', 'para', 'como', 'cual', 'que', 'tras', 'ante', 'contra', 'sera', 'esta', 'este', 'todo', 'todos', 'nuevo', 'nueva', 'quien', 'donde', 'cuando', 'porque', 'precios', 'boleteria'])
+const GENERICOS = new Set(['liga', 'betplay', 'torneo', 'copa', 'futbol', 'colombiano', 'colombia', 'latinoamerica', 'latinoamericano', 'mexicano', 'mexico', 'argentino', 'argentina', 'brasileiro', 'brasil', 'libertadores', 'sudamericana', 'deportivo', 'club', 'atletico', 'independiente', 'america', 'final', 'fecha', 'tabla', 'grupo', 'cuadrangulares', 'partido', 'para', 'como', 'cual', 'que', 'tras', 'ante', 'contra', 'sera', 'esta', 'este', 'todo', 'todos', 'nuevo', 'nueva', 'quien', 'donde', 'cuando', 'porque', 'precios', 'boleteria'])
 
 // Solo URLs públicas http(s): nada de la red local.
 export function urlPublica(texto) {
@@ -186,7 +188,7 @@ async function candidatasCommons(consulta, cantidad = 2, { excluir = /femenin|wo
 }
 
 // Recolecta candidatas para una noticia, en orden de preferencia.
-async function candidatasDeNoticia(bloque, { recientes, registro }) {
+async function candidatasDeNoticia(bloque, { recientes, registro, consultaRespaldo = 'estadio fútbol Colombia hinchas' }) {
   const candidatas = []
   const videos = []
   const articulo = bloque.articuloSlug ? await traer(`${SITIO}/api/articulos/${encodeURIComponent(bloque.articuloSlug)}`, { tipo: 'json' }).catch(() => null) : null
@@ -236,7 +238,7 @@ async function candidatasDeNoticia(bloque, { recientes, registro }) {
   // 3) Wikimedia Commons: con el nombre del club si es un club; si la noticia es de la liga en general, estadios del país.
   const esClub = normalizar(bloque.club).split(/[^a-z0-9]+/).some(p => p.length > 3 && !GENERICOS.has(p))
   const sobreFemenino = /femenin/.test(normalizar(`${articulo?.titulo || ''} ${bloque.club || ''}`))
-  try { candidatas.push(...await candidatasCommons(esClub ? bloque.club : 'estadio fútbol Colombia hinchas', 2, { excluir: sobreFemenino ? null : undefined })) } catch (error) { registro(`  · Commons no respondió: ${error.message}`) }
+  try { candidatas.push(...await candidatasCommons(esClub ? bloque.club : consultaRespaldo, 2, { excluir: sobreFemenino ? null : undefined })) } catch (error) { registro(`  · Commons no respondió: ${error.message}`) }
   candidatas.videos = videos
   return candidatas
 }
@@ -261,7 +263,13 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
   const rutaEstudio = join(carpeta, 'estudio.json')
   const leerEstudio = async () => (existsSync(rutaEstudio) ? JSON.parse(await readFile(rutaEstudio, 'utf8')) : {})
   const manifiesto = existsSync(join(carpeta, 'manifiesto.json')) ? JSON.parse(await readFile(join(carpeta, 'manifiesto.json'), 'utf8')) : { fotos: [] }
-  const recientes = await traer(`${SITIO}/api/articulos?categoria=${edicionDe(guion).categoria}&limite=50`, { tipo: 'json' }).then(l => (Array.isArray(l) ? l : [])).catch(() => [])
+  const edicion = edicionDe(guion)
+  // Artículos recientes de todas las categorías de la edición (Latinoamérica reúne varias), sin repetir.
+  const recientes = []
+  for (const categoria of edicion.categorias || [edicion.categoria]) {
+    const lista = await traer(`${SITIO}/api/articulos?categoria=${categoria}&limite=50`, { tipo: 'json' }).then(l => (Array.isArray(l) ? l : [])).catch(() => [])
+    for (const a of lista) if (!recientes.some(r => r.slug === a.slug)) recientes.push(a)
+  }
   const carpetaFotos = join(carpeta, 'assets', 'fotos')
   await mkdir(carpetaFotos, { recursive: true })
   // Huellas de todo lo que ya está en el proyecto (portadas y fotos agregadas), para no repetir.
@@ -282,7 +290,7 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
     if (!faltan && !faltanVideos) { resumen.push({ bloque: bloque.id, club: bloque.club, agregadas: 0, videos: 0 }); continue }
     registro(`${bloque.id} · ${bloque.club || ''}: buscando ${faltan} foto(s) y ${faltanVideos} clip(s)…`)
     const nuevas = []
-    const candidatas = await candidatasDeNoticia(bloque, { recientes, registro })
+    const candidatas = await candidatasDeNoticia(bloque, { recientes, registro, consultaRespaldo: edicion.consultaRespaldo })
     for (const candidata of candidatas) {
       if (nuevas.length >= faltan) break
       const llave = llaveArchivo(candidata.url)

@@ -2,7 +2,7 @@
 // «Armar video» y render. Solo escucha en 127.0.0.1 y trabaja sobre videos/diario/<proyecto>/.
 // Uso: npm run video:estudio   (o node scripts/video-estudio.mjs) y abrir http://localhost:4810
 import http from 'node:http'
-import { createReadStream, existsSync, readdirSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { readFile, writeFile, readdir, stat, mkdir, rm, rename, copyFile } from 'node:fs/promises'
 import { join, resolve, extname, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -17,9 +17,11 @@ import { estadoDeRender, nuevoRender, terminarRender } from './video-estudio-ren
 import { hijosDe, listaDeReels, nombrePadre, raizDeFamilia } from './video-estudio-familia.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
 import { proponerHoras } from './video-horarios.mjs'
+import { edicionDe } from './video-edicion.mjs'
 import { anotarRegistro, decidirAccion, guardarAjustes, leerAjustes } from './video-autopiloto-reels.mjs'
 import { medirMiniatura, evaluarMiniatura } from './video-medir-miniatura.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
+import { componerDocumental, descripcionDocumental, generarDocumental } from './documental-generar.mjs'
 import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadisticasVideos, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, programarPublicacion, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
 import { credencialesFacebook, subirYProgramarVideoFacebook } from './video-facebook-directo.mjs'
@@ -240,7 +242,7 @@ async function detalleProyecto(proyecto) {
     guionReels: existsSync(join(carpeta, 'guion-reels.json')) ? ((await leerJson(join(carpeta, 'guion-reels.json')))?.reels?.length || 0) : 0,
     titulos: guion.titulos?.length ? guion.titulos : [guion.tituloVideo || guion.titulo].filter(Boolean),
     miniaturaTexto: guion.miniatura || null,
-    descripcionYoutube: guion.tipo === 'reel' ? descripcionDeReel(guion, await atribucionesDe(pistasUsadas(estudio))) : descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionesDe(pistasUsadas(estudio)) }),
+    descripcionYoutube: guion.tipo === 'reel' ? descripcionDeReel(guion, await atribucionesDe(pistasUsadas(estudio))) : guion.tipo === 'documental' ? descripcionDocumental({ guion, manifiesto, atribucionMusica: await atribucionesDe(pistasUsadas(estudio)) }) : descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionesDe(pistasUsadas(estudio)) }),
     miniaturas: await Promise.all(miniaturas.map(async n => {
       const { mtimeMs } = await stat(join(carpetaMiniaturas, n))
       return { nombre: n, url: `/archivos/${proyecto}/renders/miniaturas/${n}?v=${mtimeMs}`, medicion: await medicionDeMiniatura(join(carpetaMiniaturas, n), mtimeMs) }
@@ -406,7 +408,8 @@ function subirYProgramarVideo(nombre, guion) {
       if (miniatura) {
         try { await ponerMiniatura({ idVideo: video.id, imagen: await readFile(join(carpetaMiniaturas, miniatura)), acceso, canalId }); await anotarRegistro(DIARIO, nombre, `Miniatura puesta: ${miniatura}.`) } catch (error) { await anotarRegistro(DIARIO, nombre, `Sin miniatura personalizada: ${error.message}`) }
       } else await anotarRegistro(DIARIO, nombre, 'No hay miniaturas en el proyecto: YouTube elegirá un fotograma.')
-      const [hora] = proponerHoras({ tipo: 'video', cantidad: 1, ocupadas: await fechasProgramadas() })
+      // Cada video largo tiene sus franjas: Latinoamérica, internacional y el documental de los viernes no se pisan.
+      const [hora] = proponerHoras({ tipo: 'video', edicion: guion.tipo === 'documental' ? 'documental' : edicionDe(guion).id, cantidad: 1, ocupadas: await fechasProgramadas() })
       if (!hora) throw new Error('No hay franja libre en los próximos 14 días.')
       const programada = await programarPublicacion({ idVideo: video.id, fecha: hora, acceso, canalId })
       await guardarEstudio(nombre, estudio => { estudio.youtube = { ...estudio.youtube, publicaEn: programada.publishAt } })
@@ -459,7 +462,7 @@ export async function pasoAutopiloto() {
     const guion = await leerJson(join(carpeta, 'guion.json'))
     const manifiesto = await leerJson(join(carpeta, 'manifiesto.json'))
     if (!guion || !manifiesto || !existsSync(join(carpeta, 'estudio.json'))) continue
-    // El documental de los viernes todavía no lo arma el piloto: se graba aquí y se renderiza con su generador.
+    // El piloto no toca el documental de los viernes: se arma y renderiza desde el estudio y se publica en su franja.
     const tipo = guion.tipo === 'documental' ? null : guion.tipo === 'reel' ? 'reel' : (nombrePadre(nombre) ? null : 'video')
     if (!tipo) continue
     const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
@@ -518,7 +521,8 @@ async function armar(proyecto) {
   if (!guion) throw Object.assign(new Error('El proyecto no tiene guion.json: vuelve a generarlo con el script.'), { estado: 409 })
   // Un Reel con guion propio tiene su propio generador (vertical, subtítulos y cortes sincronizados con la voz).
   if (guion.tipo === 'reel') return generarReel({ guion, salida: carpeta })
-  if (guion.tipo === 'documental') throw Object.assign(new Error('El documental se graba aquí, pero todavía no se arma desde el estudio: el generador de documentales está en construcción.'), { estado: 409 })
+  // El documental de los viernes tiene su generador (tarjetas de acto, mapas, línea de tiempo, citas y clips de archivo).
+  if (guion.tipo === 'documental') return generarDocumental({ guion, salida: carpeta })
   return generarProyecto({ guion, salida: carpeta })
 }
 
@@ -552,13 +556,27 @@ const pistasUsadas = estudio => estudio.musicaPlan?.length ? estudio.musicaPlan 
 function renderizar(proyecto, estado) {
   const carpeta = carpetaDe(proyecto)
   estado.fase = 'renderizando'
-  const proceso = spawn('npx', ['hyperframes', 'render', '--output', 'renders/final-voz.mp4'], { cwd: carpeta, shell: true, windowsHide: true })
+  // El documental se renderiza en dos pasos (render híbrido): HyperFrames dibuja gráficos, fotos y voz con huecos
+  // magenta, y ffmpeg pone los clips de video debajo (componerDocumental). Así HyperFrames no extrae cuadros de video.
+  let documental = false
+  try { documental = JSON.parse(readFileSync(join(carpeta, 'guion.json'), 'utf8')).tipo === 'documental' } catch { /* sin guion: render normal */ }
+  const salidaRender = documental ? 'renders/graficos.mp4' : 'renders/final-voz.mp4'
+  const proceso = spawn('npx', ['hyperframes', 'render', '--output', salidaRender], { cwd: carpeta, shell: true, windowsHide: true })
   const anotar = parte => { estado.registro = (estado.registro + parte.toString()).slice(-20000) }
   proceso.stdout.on('data', anotar)
   proceso.stderr.on('data', anotar)
   proceso.on('error', error => { anotar(`\nNo se pudo iniciar el render: ${error.message}\n`) })
   proceso.on('close', async codigo => {
     if (codigo !== 0) { finRender(proyecto, estado, 'error'); ocupados.delete(proyecto); return }
+    if (documental) {
+      estado.fase = 'componiendo'
+      try { await componerDocumental({ carpeta, registro: texto => anotar(`\n${texto}\n`) }) } catch (error) {
+        anotar(`\nNo se pudieron componer los clips: ${error.message}\n`)
+        finRender(proyecto, estado, 'error')
+        ocupados.delete(proyecto)
+        return
+      }
+    }
     estado.fase = 'musica'
     // Con la voz ya renderizada se mezcla la música sola: una canción distinta por noticia en el video largo y una en
     // cada Reel, siempre audible bajo la voz. Nadie tiene que elegirla; `sinMusica` en estudio.json la apaga.

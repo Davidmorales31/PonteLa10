@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "descripcion": "Qué cuenta como «fútbol de Latinoamérica» para el video diario de la edición latam (scripts/video-latam.mjs). No es una corrida editorial nueva: el video se arma con lo que ya publican la corrida de Colombia (futbol-colombiano) y la internacional (futbol-mundial), y esta lista decide cuáles notas de futbol-mundial son de la región.",
+  "decision": "El responsable (2026-11-24) pidió un video diario de Latinoamérica con Colombia dentro y otro internacional. Colombia entra completa; Liga MX y la Selección Mexicana quedan fuera hasta que el sitio de México (mx.pont3la10.com) esté lanzado.",
+  "paises": [
+    { "nombre": "Argentina", "terminos": ["argentina", "seleccion argentina", "albiceleste"] },
+    { "nombre": "Brasil", "terminos": ["brasil", "brasileirao", "seleccao", "canarinha"] },
+    { "nombre": "Uruguay", "terminos": ["uruguay", "charrua"] },
+    { "nombre": "Chile", "terminos": ["chile", "la roja"] },
+    { "nombre": "Ecuador", "terminos": ["ecuador"] },
+    { "nombre": "Perú", "terminos": ["peru", "seleccion peruana"] },
+    { "nombre": "Paraguay", "terminos": ["paraguay"] },
+    { "nombre": "Bolivia", "terminos": ["bolivia"] },
+    { "nombre": "Venezuela", "terminos": ["venezuela", "vinotinto"] },
+    { "nombre": "Costa Rica", "terminos": ["costa rica"] },
+    { "nombre": "Panamá", "terminos": ["panama"] }
+  ],
+  "competiciones": [
+    { "nombre": "Copa Libertadores", "terminos": ["libertadores"] },
+    { "nombre": "Copa Sudamericana", "terminos": ["sudamericana"] },
+    { "nombre": "Eliminatorias Sudamericanas", "terminos": ["eliminatorias", "conmebol"] },
+    { "nombre": "Copa América", "terminos": ["copa america"] },
+    { "nombre": "Liga Profesional Argentina", "terminos": ["liga profesional argentina", "superliga argentina"] },
+    { "nombre": "Brasileirão", "terminos": ["brasileirao", "serie a de brasil", "campeonato brasileno"] },
+    { "nombre": "Primera División de Chile", "terminos": ["campeonato chileno", "primera division de chile"] },
+    { "nombre": "Liga de Ecuador", "terminos": ["liga pro ecuador", "liga de quito"] },
+    { "nombre": "Primera División de Uruguay", "terminos": ["campeonato uruguayo"] }
+  ],
+  "clubes": [
+    "Boca Juniors", "River Plate", "Racing Club", "Independiente", "San Lorenzo", "Estudiantes", "Velez",
+    "Flamengo", "Palmeiras", "Corinthians", "Sao Paulo", "Santos", "Gremio", "Internacional de Porto Alegre", "Atletico Mineiro", "Botafogo", "Fluminense",
+    "Penarol", "Nacional de Montevideo", "Colo-Colo", "Universidad de Chile", "Universidad Catolica",
+    "Liga de Quito", "Barcelona de Guayaquil", "Emelec", "Independiente del Valle",
+    "Alianza Lima", "Universitario", "Sporting Cristal", "Olimpia", "Cerro Porteno"
+  ],
+  "colombianosEnElExterior": {
+    "nota": "Las notas de futbol-mundial sobre colombianos siguen siendo de esta edición (Colombia incluida).",
+    "terminos": ["seleccion colombia", "colombiano", "colombiana", "colombianos", "colombianas", "cafeteros"]
+  },
+  "maximoHistoriasPorPais": 4
+}

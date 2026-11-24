@@ -27,6 +27,24 @@ Identidad: azul marino `#08204a`, amarillo `#ffd800`, Montserrat, logo blanco en
 | `transicion-barrido` | 1 s (superpuesta) | Cortinilla de bandas con el isotipo; el corte va en 0,5 s | — |
 | `transicion-flash` | 0,6 s (superpuesta) | Destello de cámara; el corte va en 0,3 s | — |
 
+### Escenas del documental de los viernes (`doc-*`)
+
+Las arma `scripts/documental-generar.mjs`. A diferencia del video diario, el documental sí lleva gráficos a pantalla
+completa (decisión del responsable, 2026-11-23: mitad fotos y mitad video o animación); los que admiten `fondo`
+ponen debajo una foto del capítulo desenfocada.
+
+| Escena | Duración | Uso | Variables |
+| --- | --- | --- | --- |
+| `doc-acto` | 3–4 s | Tarjeta de acto o de título: antetítulo, título grande, barra amarilla | `kicker`, `titulo`, `subtitulo`, `fondo`, `duracion` |
+| `doc-mapa` | 7–17 s | Mapa propio (costas de Natural Earth, `assets/mapa/land-10m.json`, paquete `world-atlas` 2.0.2, dominio público) con cámara que se acerca o viaja y dibuja la ruta | `mapa` (JSON del generador), `titulo`, `duracion`; el generador mete las costas en el `d` de `#dmapa-tierra` |
+| `doc-linea` | 5–10 s | Línea de tiempo con hasta 6 hitos alternados arriba y abajo | `hitos` (JSON), `titulo`, `fondo`, `duracion` |
+| `doc-ficha` | 4–7 s | Hasta 4 cifras grandes con su etiqueta; las cifras enteras pequeñas cuentan desde cero | `items` (JSON `[{valor, etiqueta}]`), `fondo`, `duracion` |
+| `doc-titular` | 5–7 s | Titular recreado con diseño propio (no imita a ningún medio); con `sello`, cae un sello rojo («FALSO») | `texto`, `etiqueta`, `sello`, `duracion` |
+| `doc-cita` | 4–10 s | Cita palabra por palabra con quién la dijo y según qué medio | `texto`, `autor`, `fondo`, `duracion` |
+| `doc-contador` | 6 s | Cifra que sube con barra y fuente debajo | `hasta`, `texto`, `fuente`, `fondo`, `duracion` |
+
+Los lugares de los mapas salen de `config/lugaresDocumental.json` (latitud, longitud y ancho del encuadre).
+
 La escena `galeria` dura `cantidad × segundosPorFoto`: el host le da ese espacio (`data-duration`) y sus variables con `data-variable-values`.
 
 ## Imágenes: de dónde salen y licencias

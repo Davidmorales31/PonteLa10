@@ -8,7 +8,7 @@ ese archivo, no inventan horarios.
 
 - **Franjas:** 7:30, 12:30, 16:30 y 19:30.
 - **Noticia del día:** sale en la primera franja libre de hoy; solo pasa a mañana si ya no queda ninguna.
-- **Video largo:** franjas propias, 12:30 y 18:30.
+- **Video largo:** franjas propias, 12:30 y 18:30. Desde 2026-11-24 cada edición tiene las suyas (`franjasPorEdicion` en `config/horariosPublicacion.json`): Latinoamérica 12:30 y 18:30, internacional 14:30 y 21:30, y el documental solo los viernes a las 18:30; Colombia (edición histórica) sigue con las del video largo. El estudio elige según el guion (`edicion` o `tipo: documental`). Son hipótesis hasta medir con datos propios.
 - **Separación** de al menos 2 horas entre publicaciones, **sin tope por día** (decisión del responsable: «lo que salga»), nunca
   entre las 23:00 y las 5:30, y siempre a más de 15 minutos desde ahora (la API de redes pide más de 10).
 - Las horas ya programadas cuentan: no se choca con ellas.
