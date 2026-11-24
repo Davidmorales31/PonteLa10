@@ -22,6 +22,10 @@
   probó con notas del 23 de noviembre: 12 de Latinoamérica, 3 internacionales.
 - Pendiente: marca y nombre del canal, comando que excluya del internacional lo usado por Latam, afinar la lista de términos
   con una tanda real de notas.
+- **Auditoría de fuentes y estrategia (2026-11-24):** ver `docs/MEJORAS_VIDEO_Y_FUENTES_2026-11-24.md` (lista priorizada).
+  Herramientas nuevas: `node scripts/fuentes-salud.mjs` (salud de los feeds; The Guardian da 403),
+  `node scripts/tendencias-futbol-latam.mjs` (radar de la región) y los feeds verificados de `config/fuentesFutbolLatam.json`.
+  Dato de plazo: YouTube duplica los umbrales de monetización para canales nuevos desde el 2027-02-01 (confirmar en Studio).
 
 ## Generador del documental de los viernes (2026-11-23, rama feat/video-reels-horarios-mismo-dia, sin commit)
 

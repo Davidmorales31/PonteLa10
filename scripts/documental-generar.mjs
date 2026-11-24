@@ -326,7 +326,7 @@ export function planificarDocumental(guion, { ppm = 160, estudio = {}, medio = (
     const toma = tomas.find(x => x.tipo !== 'video' && x.largo >= TIEMPOS.suscribete + 0.4)
     if (!toma) return false
     const inicio = aCuadro(toma.inicio + 0.2)
-    escenas.push({ escena: 'suscribete', inicio, duracion: TIEMPOS.suscribete, capa: 6, variables: { nombre: 'Pont3la10', lema: 'Una historia de fútbol cada viernes' } })
+    escenas.push({ escena: 'suscribete', inicio, duracion: TIEMPOS.suscribete, capa: 6, variables: { nombre: 'Ponte la 10', lema: 'Una historia de fútbol cada viernes' } })
     sonido('clic', inicio + 1.35, 0.7)
     sonido('clic', inicio + 2.4, 0.7)
     return true
@@ -385,7 +385,7 @@ export function planificarDocumental(guion, { ppm = 160, estudio = {}, medio = (
     })
     // Tras la pregunta inicial, el título del documental.
     if (a === 0) {
-      tarjeta(TIEMPOS.tarjetaTitulo, { kicker: 'UN DOCUMENTAL DE PONT3LA10', titulo: protagonista.toUpperCase(), subtitulo: '', fondo })
+      tarjeta(TIEMPOS.tarjetaTitulo, { kicker: 'UN DOCUMENTAL DE PONTE LA 10', titulo: protagonista.toUpperCase(), subtitulo: '', fondo })
       sonido('impacto', t - TIEMPOS.tarjetaTitulo + 0.1, 0.6, { duracion: 1.5, mediaStart: 1.07 })
     }
   })
@@ -453,7 +453,7 @@ export function descripcionDocumental({ guion, manifiesto, atribucionMusica = ''
   if (atribucionMusica) partes.push(atribucionMusica)
   if (guion?.preguntaFinal) partes.push(guion.preguntaFinal)
   const etiqueta = texto => `#${String(texto || '').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]/g, '')}`
-  partes.push(['Cada viernes, una historia de fútbol en Pont3la10.', [etiqueta(guion?.protagonista), '#Documental', '#Futbol', '#Pont3la10'].filter(h => h.length > 1).join(' ')].join('\n'))
+  partes.push(['Cada viernes, una historia de fútbol en Ponte la 10.', [etiqueta(guion?.protagonista), '#Documental', '#Futbol', '#PonteLa10'].filter(h => h.length > 1).join(' ')].join('\n'))
   return partes.join('\n\n').slice(0, 5000)
 }
 

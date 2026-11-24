@@ -47,5 +47,49 @@
     "nota": "Las notas de futbol-mundial sobre colombianos siguen siendo de esta edición (Colombia incluida).",
     "terminos": ["seleccion colombia", "colombiano", "colombiana", "colombianos", "colombianas", "cafeteros"]
   },
-  "maximoHistoriasPorPais": 4
+  "maximoHistoriasPorPais": 4,
+  "rss": {
+    "verificadoEn": "2026-11-24",
+    "nota": "Feeds que respondieron con notas del mismo día. Revisar con `node scripts/fuentes-salud.mjs`: los medios cambian o retiran sus RSS (en la misma prueba fallaron TyC Sports, Lance, La Tercera, Emol, Referí, El País Ovación, El Comercio, Depor y El Universo, y Marca y AS quedaron desactualizados).",
+    "feeds": [
+      { "nombre": "Olé · últimas", "pais": "Argentina", "url": "https://www.ole.com.ar/rss/ultimas-noticias/" },
+      { "nombre": "Olé · fútbol de primera", "pais": "Argentina", "url": "https://www.ole.com.ar/rss/futbol-primera/" },
+      { "nombre": "ESPN Argentina", "pais": "Argentina", "url": "https://www.espn.com.ar/espn/rss/news" },
+      { "nombre": "ge (Globo Esporte)", "pais": "Brasil", "url": "https://ge.globo.com/rss/ge/futebol/" },
+      { "nombre": "UOL Esporte", "pais": "Brasil", "url": "https://rss.uol.com.br/feed/esporte.xml" },
+      { "nombre": "Infobae · deportes", "pais": "Región", "url": "https://www.infobae.com/arc/outboundfeeds/rss/category/deportes/" },
+      { "nombre": "Infobae · América", "pais": "Región", "url": "https://www.infobae.com/arc/outboundfeeds/rss/category/america/" },
+      { "nombre": "CONMEBOL", "pais": "Región", "url": "https://www.conmebol.com/feed/" }
+    ]
+  },
+  "busquedasGoogleNews": {
+    "nota": "Para los países sin feed propio que funcione (Chile, Uruguay, Perú, Ecuador, Paraguay…) y para torneos: Google Noticias por búsqueda (RSS público, sin llave). El radar las usa con la ventana y el idioma de `tendencias`.",
+    "consultas": [
+      { "pais": "Región", "consulta": "Copa Libertadores" },
+      { "pais": "Región", "consulta": "Copa Sudamericana" },
+      { "pais": "Región", "consulta": "eliminatorias sudamericanas" },
+      { "pais": "Chile", "consulta": "fútbol chileno" },
+      { "pais": "Uruguay", "consulta": "fútbol uruguayo" },
+      { "pais": "Perú", "consulta": "fútbol peruano" },
+      { "pais": "Ecuador", "consulta": "fútbol ecuatoriano" },
+      { "pais": "Paraguay", "consulta": "fútbol paraguayo" },
+      { "pais": "Brasil", "consulta": "Brasileirao" },
+      { "pais": "Argentina", "consulta": "Liga Profesional Argentina" }
+    ]
+  },
+  "tendencias": {
+    "paises": ["CO", "AR", "BR", "CL", "UY", "EC", "PE"],
+    "idiomaNoticias": { "hl": "es-419", "gl": "CO", "ceid": "CO:es-419" },
+    "ventanaNoticias": "1d",
+    "nota": "Las señales sirven para elegir historias; no son métricas publicables. Solo se escribe «lo más buscado» si se cita la medición con fecha y ámbito."
+  },
+  "figurasRadar": [
+    "Lionel Messi", "Julián Álvarez", "Lautaro Martínez", "Enzo Fernández", "Vinícius Júnior", "Rodrygo", "Raphinha", "Endrick", "Neymar",
+    "Federico Valverde", "Darwin Núñez", "Moisés Caicedo", "Luis Díaz", "James Rodríguez", "Jhon Durán", "Richard Ríos"
+  ],
+  "clubesColombiaParaElRadar": ["Atlético Nacional", "Millonarios", "América de Cali", "Junior", "Independiente Santa Fe", "Deportivo Cali", "Selección Colombia"],
+  "excluir": {
+    "nota": "El radar de Latinoamérica descarta otros deportes que comparten nombres con clubes.",
+    "otrosDeportes": ["nba", "nfl", "mlb", "nhl", "baloncesto", "basquet", "basketball", "tenis", "formula 1", "ufc", "boxeo"]
+  }
 }
