@@ -363,12 +363,12 @@
       "url": "https://feeds.bbci.co.uk/sport/football/rss.xml"
     },
     {
-      "nombre": "The Guardian Football",
-      "url": "https://www.theguardian.com/football/rss"
-    },
-    {
       "nombre": "Sky Sports Football",
       "url": "https://www.skysports.com/rss/12040"
+    },
+    {
+      "nombre": "Mundo Deportivo (fútbol)",
+      "url": "https://www.mundodeportivo.com/rss/futbol"
     }
   ],
   "tendencias": {
@@ -416,5 +416,22 @@
       "pelicans",
       "lakers"
     ]
-  }
+  },
+  "rssDescartados": [
+    {
+      "nombre": "The Guardian Football",
+      "url": "https://www.theguardian.com/football/rss",
+      "motivo": "403 en la revisión del 2026-11-24 (node scripts/fuentes-salud.mjs); reintentar con otro agente de usuario o buscar la nota por Google Noticias."
+    },
+    {
+      "nombre": "Diario AS",
+      "url": "https://as.com/rss/tags/ultimas_noticias.xml",
+      "motivo": "Última nota de 2024: desactualizado."
+    },
+    {
+      "nombre": "Marca (primera división)",
+      "url": "https://e00-marca.uecdn.es/rss/futbol/primera-division.xml",
+      "motivo": "Última nota del 2026-11-07: desactualizado."
+    }
+  ]
 }

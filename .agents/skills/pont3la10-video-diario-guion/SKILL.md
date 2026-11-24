@@ -1,6 +1,6 @@
 ---
 name: pont3la10-video-diario-guion
-description: Escribe el guion del video diario de Pont3la10 (mínimo 8 min, 16:9, voz cercana) a partir de los artículos publicados hoy: gancho, bloques por noticia con fuente, tomas breves con cara, planos con foto acreditada, pregunta final y cierre. Lo valida con la rúbrica ejecutable antes de entregarlo.
+description: Escribe el guion del video diario de Pont3la10 (de 8 a 20 min, 16:9, voz cercana, cuatro estructuras) a partir de los artículos publicados hoy: gancho que ya es noticia, bloques directos de largo variado con fuente, preguntas al público, planos con foto acreditada, pregunta final y cierre. Lo valida con la rúbrica ejecutable antes de entregarlo.
 ---
 
 # Guion del video diario
@@ -13,20 +13,48 @@ Un archivo `guion.json` para el día (fecha de Bogotá) que pase `node scripts/v
 
 ## Antes de escribir
 
-1. Lista los artículos del día: `https://www.pont3la10.com/api/articulos?categoria=futbol-colombiano&limite=50`, filtrados por la fecha de Bogotá (UTC−5, no confíes en la variable TZ del shell).
-2. Elige 8 a 12 historias (el video dura **mínimo 8 minutos**). Cubre muchos clubes, no solo la Selección: usa los artículos del día y, si faltan, los de la noche anterior que no salieron en el video de ayer. Orden de preferencia: la de mayor consecuencia deportiva, una primicia o dato nuevo, un «cómo queda» (tabla, cruces, cuadrangulares), después el resto. Una historia por club mientras sea posible. No repitas la del día anterior.
+1. Lista los artículos del día: `https://www.pont3la10.com/api/articulos?categoria=futbol-colombiano&limite=50`, filtrados por la fecha de Bogotá (UTC−5, no confíes en la variable TZ del shell). **Si el sitio está caído (402)**, levanta el sitio local contra Supabase y usa su origen: ver «Bloqueo externo» en `docs/agents/ESTADO_ACTUAL.md` (`PONT3LA10_API_SITIO=http://127.0.0.1:3002`).
+2. Elige la **estructura del día** con `node scripts/video-estructura.mjs --fecha <fecha> --edicion <colombia|latam|internacional>` (sortea con pesos y no repite las dos últimas; ver «Estructuras» abajo). El video dura **mínimo 8 minutos y puede llegar a 20** (decisión de Juan, 2026-11-24). Elige las historias que pida esa estructura (en la directa, 8 a 16). Cubre muchos clubes, no solo la Selección: usa los artículos del día y, si faltan, los de la noche anterior que no salieron en el video de ayer. Orden de preferencia: la de mayor consecuencia deportiva, una primicia o dato nuevo, un «cómo queda» (tabla, cruces, cuadrangulares), después el resto. Una historia por club mientras sea posible. No repitas la del día anterior.
 3. Lee de cada artículo el cuerpo completo y sus fuentes (`sources`); el guion se apoya en ellas, no en el titular.
 4. Una historia sin foto real con crédito no entra al video.
 
-## Estructura (8–10 minutos: 450–600 s a 155 palabras por minuto, unas 1.250 palabras)
+## Estructuras (de 8 a 20 minutos: 480–1.200 s a 155 palabras por minuto)
+
+Hay **cuatro estructuras** para que el canal no parezca producción en serie (`config/videoDiario.json` → `estructuras`; la
+rúbrica valida la que declares en `"estructura"`). Todas son «directas»: sin intro animada, sin toma a cámara por noticia y
+con el gancho en el segundo 0. Hipótesis a medir con retención propia (`docs/ESTUDIO_COMPETENCIA_AMPLIADO_2026-11-24.md`).
+
+| `estructura` | Para qué | Reglas propias |
+|---|---|---|
+| `directa` | La de siempre: el día en 8 a 16 noticias | La tabla de abajo. |
+| `historia-a-fondo` | Una historia del día contada a fondo y las demás rápidas | 6 a 12 bloques; **un solo** bloque con `"fondo": true` de 450 a 900 palabras (3 a 6 min, un plano cada 12 s); los demás de 45 a 220 palabras. |
+| `top` | Top del día o de la semana en cuenta regresiva | 5 a 8 bloques de 90 a 260 palabras con `"puesto"` bajando de N a 1 (el 1 al final); `presentacion` de hasta 40 palabras que diga el criterio; el rótulo muestra «PUESTO N». |
+| `pregunta-del-dia` | Un «¿por qué?» o «¿qué pasó?» con datos | El `gancho` es la pregunta (lleva «?»); 4 a 8 bloques de 120 a 340 palabras; el **último** (y solo ese) lleva `"respuesta": true`. |
+
+Para las tres últimas no se exigen noticias de largo variado ni una pregunta cada 3 bloques; sí fuente nombrada, artículo,
+foto con crédito y la `preguntaFinal`.
+
+### Estructura «directa» (la de siempre)
+
+**Estructura directa (decisión de Juan, 2026-11-22).** Medido en los largos virales de Cracks y La Gambeta: la
+primera noticia arranca en el segundo 0, ninguna noticia tiene «intro» antes de contarla, cada una dura entre 20 y
+110 s y hay una pregunta al público cada ~1,5 min. Nuestros videos arrancaban la primera noticia en el segundo 27–30
+(intro + presentación) y todas duraban 44–50 s con una toma a cámara antes. Por eso:
 
 | Pieza | Reglas |
 |---|---|
-| `gancho` (cara) | La noticia más fuerte del día en ≤ 28 palabras, con cifra, cita o fuente. **Nunca** empieza con saludo («hola», «bienvenidos»…). |
-| `presentacion` | Saludo corto y cercano, invitación a suscribirse (en pantalla entra la animación de suscríbete justo aquí) y los 3 temas fuertes que vienen. |
-| `bloques` (8–12) | Cada uno cuenta una noticia en 80–160 palabras de voz, con este molde: dato duro → fuente nombrada («según Win Sports», «informó el club») → contexto en una o dos frases → qué implica. Un `caraBreve` (≤ 30 palabras) que Juan dice a cámara al abrir el bloque. |
+| `estructura` | `"directa"`. Si falta, el generador vuelve a la intro animada y la rúbrica no aprueba. |
+| `gancho` | Es la primera noticia ya contándose: el hecho más fuerte en ≤ 28 palabras, con cifra, cita o fuente. **Nunca** empieza con saludo («hola», «bienvenidos»…) ni anuncia lo que viene. Arranca en el segundo 0. |
+| `presentacion` | Opcional y de **≤ 15 palabras** (un saludo de una frase después del gancho). Sin lista de temas. |
+| `bloques` (8–16) | La noticia completa de una vez, **sin `caraBreve`** ni frase de entrada tipo «vamos con la siguiente noticia». Mezcla tres largos: **rápida** (45–85 palabras, ~20–30 s), **normal** (86–219) y **fuerte** (220–320, ~90–120 s, solo para la historia del día o la más polémica). Al menos una rápida y una fuerte, y nunca más de 2 seguidas del mismo largo. |
+| Conectores | Cada noticia arranca distinto («Por cierto…», «Ojo con esto…», «Y en Medellín…», «Cambiemos de liga…»): la rúbrica rechaza dos noticias con las mismas dos primeras palabras. |
+| Preguntas | Al menos una noticia de cada 3 termina con una pregunta al público («¿ustedes qué harían?»), dicha dentro de la `voz`. |
 | `preguntaFinal` | Una pregunta que invite a comentar sobre la historia más discutible del día. |
 | `cierre` (cara) | ≤ 45 palabras: recordatorio de suscripción y campana, y despedida personal. |
+
+Molde de cada noticia (no lo repitas igual en todas): dato duro → fuente nombrada («según Win Sports», «informó el
+club») → contexto → qué implica u opinión marcada. Varía el orden: a veces abre con la cita, a veces con la cifra, a
+veces con la pregunta.
 
 Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un plano o zoom por cada 8 segundos de bloque (un bloque de 45 s necesita 6). Cada plano usa una foto real del artículo con su `credito` exacto (el de `media_files.credit`). Nada de imágenes de partidos ni de video ajeno, ni ilustraciones, ni montajes con logos.
 
@@ -38,8 +66,8 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
   "tituloVideo": "(el primero de titulos)",
   "titulos": ["…", "…", "…"],
   "miniatura": { "texto": "2 a 5 palabras", "resaltar": "una de esas palabras" },
+  "estructura": "directa",
   "gancho": { "texto": "…", "fuente": "…" },
-  "presentacion": { "texto": "…" },
   "bloques": [
     {
       "id": "b1",
@@ -47,8 +75,7 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
       "club": "…",
       "fuente": "Win Sports",
       "rumor": false,
-      "caraBreve": "…",
-      "voz": "…",
+      "voz": "… (la noticia completa, sin entrada aparte)",
       "planos": [{ "imagen": "https://…", "credito": "Colprensa (vía X)", "movimiento": "zoom-in" }],
       "titular": "opcional: rótulo del bloque (si falta, se usa el titular de portada del artículo)",
       "marcador": { "local": "CHI", "visita": "COL", "golesLocal": "0", "golesVisita": "0", "estado": "FINAL" },
@@ -64,7 +91,7 @@ Cada bloque lleva `articuloSlug`, `fuente`, `rumor` (true/false) y `planos`: un 
 
 **Regla visual (decisión de Juan):** nunca gráficos a pantalla completa. Los planos son **solo fotos reales**; las cifras van en `dato` (tarjeta pequeña sobre la foto) y los resultados en `marcador` (marcador de esquina), ambos opcionales y solo con datos que estén en la fuente. **Las imágenes las consigue el agente, no Juan (decisión de Juan, 2026-11-18, criterio de licencia bajo):** por cada noticia busca de 4 a 6 fotos reales más de la misma noticia o de sus protagonistas en cualquier medio (sitios de noticias, cuentas oficiales de clubes, Wikimedia Commons) y añádelas como planos con su crédito («Fotógrafo (vía medio)» o el nombre del medio), o pon las URLs de las notas de otros medios sobre la noticia en `fuentesFotos` del bloque (páginas, no imágenes: el buscador saca su foto principal con el crédito del medio). Después revisa la hoja de contactos (`--hoja`) y quita con `--quitar` gráficos, logos, montajes y fotos de otro club. Después del generador, `scripts/video-buscar-fotos.mjs` completa lo que falte y, si aun así faltan, el video repite las fotos de la noticia: nunca queda un hueco. Siempre fotos reales: nunca imágenes generadas por IA, ilustraciones, gráficos, tablas ni montajes.
 
-**Regla de repetición (decisión de Juan, 2026-11-20):** ninguna foto ni clip aparece más de 3 veces en todo el video (intro, presentación, bloques y cierre). El generador lo hace cumplir: si a una noticia le faltan fotos, alarga sus planos en vez de repetir. Por eso cada noticia necesita de 3 a 6 fotos distintas: búscalas.
+**Regla de repetición (decisión de Juan, 2026-11-20):** ninguna foto ni clip aparece más de 3 veces en todo el video (gancho, bloques, pregunta y cierre). El generador lo hace cumplir: si a una noticia le faltan fotos, alarga sus planos en vez de repetir. Por eso cada noticia necesita de 3 a 6 fotos distintas: búscalas.
 
 **Fotos y clips de redes (decisión de Juan, 2026-11-20):** en `fuentesFotos` puedes poner, además de notas de otros medios, URLs de publicaciones de X (`https://x.com/<cuenta>/status/<id>`) de los clubes, los protagonistas, la Dimayor, la Federación o periodistas, siempre que sean de esa misma noticia. El buscador también lee las publicaciones que las notas traen incrustadas. De ahí salen fotos (las verticales entran con fondo desenfocado) y clips de video sin sonido (máximo 2 por noticia, recortados a 15 s) con crédito «@cuenta en X (vía Medio)». Nunca clips de partidos ni de canales con derechos de transmisión (Win Sports, ESPN, DSports, Caracol, RCN…): YouTube los reclama con Content ID. Prefiere clips de entrenamientos, llegadas, firmas, ruedas de prensa y celebraciones publicadas por el propio club o protagonista. Revisa en la hoja de contactos los marcados `[VIDEO]` y quita los que no sirvan.
 
@@ -74,9 +101,9 @@ Juan le habla a su gente como un amigo que sabe de fútbol, no como un noticiero
 
 - Primera persona y hablándole al público: «les cuento», «miren esto», «ojo con este dato», «para mí», «la verdad», «imagínense», «vamos con…».
 - Opiniones sí, pero marcadas como opinión («yo creo que…», «para mí…») y separadas del dato con su fuente. Nunca opiniones sobre salud, vida privada o acusaciones.
-- Expresiones colombianas con naturalidad y sin exagerar; nada de groserías ni burlas a hinchadas o personas.
+- Expresiones colombianas con naturalidad y sin exagerar (en la edición **Latinoamérica**, español neutro latinoamericano: sin regionalismos que otro país no entienda); nada de groserías ni burlas a hinchadas o personas.
 - Reacciones breves que suenen reales («¡qué partidazo!», «esto se puso bueno») solo cuando el hecho lo justifica.
-- Transiciones conversadas entre bloques («y hablando de cuadrangulares…», «cambiemos de ciudad…»).
+- Transiciones conversadas entre bloques («y hablando de cuadrangulares…», «cambiemos de ciudad…»), siempre dentro de la `voz` de la noticia y distintas en cada una.
 - Frases cortas, una idea por frase; Juan lo lee en voz alta a 150–165 palabras por minuto.
 - Números y siglas legibles en voz alta («tres a dos», «Dimayor»). Marcadores y fechas solo si están en la fuente.
 - Los rumores se cuentan como rumor («según X, sin confirmación oficial»). Si dos fuentes se contradicen, no afirmes el dato.
@@ -87,17 +114,18 @@ Juan le habla a su gente como un amigo que sabe de fútbol, no como un noticiero
 
 YouTube permite probar hasta 3 títulos y 3 miniaturas; gana el de más tiempo de visualización, no el de más clics. Escribe **3 títulos distintos** en `titulos` (el primero también va en `tituloVideo`):
 
-- **45–75 caracteres** (en la muestra de 389 títulos de canales de fútbol, los de 51–70 rinden 1,3 veces la mediana del canal). Lo clave (nombre propio y hecho) en los **primeros 40**, que es lo que se ve en el celular.
+- **Estilo obligatorio: clickbait de curiosidad según `pont3la10-titulos-clickbait`** («¡NO CREERÁS LO QUE PASÓ CON …!», «¡NADIE PUEDE CREER …!», «¡ESTO NADIE LO ESPERABA!»). Léelo antes de escribir los títulos; la rúbrica exige al menos 2 de 3 con gancho. Si esta lista choca con él en estilo, manda ese skill.
+- **45–85 caracteres** (en la muestra de 389 títulos de canales de fútbol, los de 51–70 rinden 1,3 veces la mediana del canal). Lo clave (nombre propio y hecho) en los **primeros 40**, que es lo que se ve en el celular.
 - Molde que más rinde: **reacción o gancho + nombre propio + hecho concreto** (cifra o dato si lo hay). Ejemplos de forma: «¡Once da el golpe! …», «Así fue la tapada de Vigouroux en el penal a Colombia», «La dolorosa lesión de … en …».
 - Un ángulo distinto por título: (1) el dato o la primicia, (2) la reacción o emoción, (3) la pregunta o la polémica.
-- Máximo 2 palabras en MAYÚSCULAS para énfasis, como mucho 1 emoji, una sola exclamación. Usa « | » solo si hay 3 o 4 historias de peso.
-- Nunca prometas lo que el video no cuenta: el título debe ser fiel al contenido (la prueba A/B premia la retención, no el clic).
+- MAYÚSCULAS en el gancho (hasta 6 palabras en total), como mucho 1 emoji. Usa « | » solo si hay 3 o 4 historias de peso.
+- El clickbait es fuerte, pero nunca inventa: la promesa del título se cumple en el video y los hechos salen del artículo.
 
 **Miniatura** (`miniatura`): 2 a 5 palabras en mayúsculas que **sumen** al título sin repetirlo (máx. 32 caracteres) y la palabra a resaltar en amarillo. Las miniaturas las diseña Codex desde el estudio («Títulos y miniaturas» → «Preparar encargo para Codex») con las fotos reales del día y la cara de Juan; nunca con imágenes generadas de personas o escenas. El diseño sigue `pont3la10-miniaturas-codex` (medidas de La Gambeta y Cracks): para que la receta de doble panel funcione, cada bloque lleva un `titular` corto y de 3 a 7 palabras que se pueda leer en la miniatura.
 
 ## Rúbrica (obligatoria)
 
-Ejecuta `node scripts/video-rubrica-guion.mjs guion.json` y corrige hasta **APROBADO** (puntaje ≥ 85 y sin fallos en los criterios obligatorios): duración total (450–600 s), gancho sin saludo, fuente atribuida en cada bloque, crédito en cada foto y rumores atribuidos. Informa el puntaje y los criterios que fallaron si no llegas a aprobar; no maquilles el JSON para que pase.
+Ejecuta `node scripts/video-rubrica-guion.mjs guion.json` y corrige hasta **APROBADO** (puntaje ≥ 85 y sin fallos en los criterios obligatorios): duración total (480–1.200 s), gancho sin saludo, fuente atribuida en cada bloque, crédito en cada foto, rumores atribuidos y estructura cumplida (sin `caraBreve`, presentación corta y las reglas propias de la `"estructura"` declarada). También puntúan el ritmo variado, las preguntas al público y los arranques distintos. Informa el puntaje y los criterios que fallaron si no llegas a aprobar; no maquilles el JSON para que pase.
 
 ## Armar el proyecto de video
 
@@ -107,7 +135,46 @@ Con el guion aprobado, ejecuta:
 node scripts/video-generar-proyecto.mjs guion.json
 ```
 
-Crea `videos/diario/<fecha>/` (no se versiona) con el proyecto de HyperFrames armado con el pack `videos/pack-pont3la10`: intro, huecos de toma a cámara con la frase de cada uno, galerías de fotos (un espacio cada ~7 s; los que no tienen foto quedan marcados), rótulo con el titular de portada, marcador y cifra pequeños, transiciones y efectos de sonido. También deja `teleprompter.txt` (con tiempos, CARA/VOZ) y `manifiesto.json`. Valida con `npx hyperframes check` desde esa carpeta. No renderices ni publiques: Juan abre el estudio local (`npm run video:estudio`, http://localhost:4810), graba su voz y su cara tramo por tramo, sube fotos con crédito a los espacios vacíos, pulsa «Armar video» y aprueba el render.
+Crea `videos/diario/<fecha>/` (no se versiona) con el proyecto de HyperFrames armado con el pack `videos/pack-pont3la10`: sin intro animada (el gancho empieza en el segundo 0), galerías de fotos (un espacio cada ~5 s; los que no tienen foto quedan marcados), rótulo con el titular de portada, marcador y cifra pequeños, transiciones y efectos de sonido. También deja `teleprompter.txt` (con tiempos, CARA/VOZ) y `manifiesto.json`. Valida con `npx hyperframes check` desde esa carpeta. No renderices ni publiques: Juan abre el estudio local (`npm run video:estudio`, http://localhost:4810), graba su voz tramo por tramo (la música se pone sola al renderizar: una canción distinta por noticia), sube fotos con crédito a los espacios vacíos, pulsa «Armar video» y aprueba el render.
+
+## Edición internacional (desde 2026-11-21)
+
+El mismo flujo sirve para un segundo video del día, solo de fútbol internacional (pedido del responsable). Todo lo
+de este skill aplica igual (estructura, rúbrica, voz cercana, títulos clickbait, fotos y clips, miniaturas por
+encargo a Codex), con estas diferencias:
+
+- El guion lleva `"edicion": "internacional"`. Sin ese campo, el guion es de la edición de Colombia y nada cambia.
+- Las historias salen de `https://www.pont3la10.com/api/articulos?categoria=futbol-mundial&limite=50`, filtradas por
+  la fecha de Bogotá (las escribe la corrida `pont3la10-futbol-internacional-run`). Variedad: muchas ligas y figuras,
+  no más de 3 historias de una misma liga.
+- `club` es el club o la selección protagonista (por ejemplo «Real Madrid», «Boca Juniors», «Selección de Brasil»).
+- El generador crea `videos/diario/<fecha>-internacional/` (intro «NOTICIAS DEL FÚTBOL INTERNACIONAL», hashtags
+  `#FutbolInternacional #Champions #Pont3la10` en la descripción) y el buscador de fotos usa la categoría Fútbol
+  mundial. Los comandos llevan el nombre del proyecto: `node scripts/video-buscar-fotos.mjs <fecha>-internacional`.
+- Los Reels van en `videos/diario/<fecha>-internacional/guion-reels.json` con `"edicion": "internacional"` y se
+  crean con `node scripts/video-generar-reel.mjs <fecha>-internacional` (proyectos `<fecha>-internacional-reel-N`, que
+  el estudio muestra como hijos del video internacional).
+- Fotos y clips: las mismas reglas. En X, prefiere las cuentas oficiales de clubes, ligas y protagonistas; nunca
+  canales con derechos (ESPN, DAZN, Movistar, beIN, Sky, TNT, Win Sports, DSports) ni jugadas de partidos.
+
+## Edición Latinoamérica (desde 2026-11-24)
+
+El video diario principal pasa a ser de **Latinoamérica, con Colombia incluida** (decisión del responsable). Colombia deja de
+ser el único foco y entra como un país más. Todo lo de este skill aplica igual, con estas diferencias:
+
+- El guion lleva `"edicion": "latam"`. El generador crea `videos/diario/<fecha>-latam/` (intro «NOTICIAS DEL FÚTBOL
+  LATINOAMERICANO», hashtags `#FutbolLatinoamericano #Libertadores #Pont3la10`). Los guiones sin campo siguen siendo de
+  Colombia, y esa edición se conserva para proyectos anteriores.
+- **No hay una corrida editorial de Latinoamérica**: las historias salen de lo que ya se publica. Ejecuta
+  `node scripts/video-latam.mjs` (o `--fecha AAAA-MM-DD`, o `--json`): trae las notas del día de `futbol-colombiano` (todas
+  son de la edición) y de `futbol-mundial` (solo las que nombran un país, torneo, club o colombiano de la región, según
+  `config/fuentesFutbolLatam.json`), y deja el resto para la edición internacional. Una nota nunca queda en los dos videos.
+- Si el video internacional del día ya existe, pásale al criterio lo que usó: lo que está en su `guion.json` (`articuloSlug`)
+  no se repite en el de Latinoamérica, y al revés. México vive en `mx.pont3la10.com` (sin lanzar): no entra todavía.
+- Variedad: Colombia puede ser lo más fuerte, pero no más de 4 historias de un mismo país (el comando las cuenta por país);
+  busca Argentina, Brasil, Chile, Uruguay, Ecuador… y los torneos de la región (Libertadores, Sudamericana, eliminatorias).
+- `club` es el club o la selección protagonista; no asumas que la liga es la colombiana en títulos, miniaturas ni tarjetas.
+- Fotos, clips, rumores y reglas de atribución: las mismas. Nunca canales con derechos ni jugadas de partidos.
 
 ## Entrega
 

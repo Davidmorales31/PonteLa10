@@ -124,6 +124,13 @@ describe('piloto automático de Reels', () => {
     expect(decidirAccion({ ...base, intentos: 2 })).toBeNull()
     expect(decidirAccion({ ...base, tieneFinal: true, publicacion: { estado: 'borrador' } })).toBeNull() // cancelado a mano: no se reprograma
     expect(decidirAccion({ ...base, tipo: 'short' })).toBeNull()
+    // Short de YouTube: solo tras programarlo el piloto, una vez, y nunca para un Reel programado a mano.
+    const programado = { ...base, tieneFinal: true, publicacion: { estado: 'programada' } }
+    expect(decidirAccion({ ...programado, programadoPorPiloto: true })).toBe('short')
+    expect(decidirAccion(programado)).toBeNull()
+    expect(decidirAccion({ ...programado, programadoPorPiloto: true, shortYoutubeId: 'yt1' })).toBeNull()
+    expect(decidirAccion({ ...programado, programadoPorPiloto: true, intentosShort: 2 })).toBeNull()
+    expect(decidirAccion({ ...programado, programadoPorPiloto: true, publicacion: { estado: 'borrador' } })).toBeNull() // cancelado a mano
     // Video largo: se sube solo si el piloto lo renderizó y no tiene video de YouTube vinculado.
     expect(decidirAccion({ ...base, tipo: 'video' })).toBe('render')
     expect(decidirAccion({ ...base, tipo: 'video', tieneFinal: true, renderizadoPorPiloto: true })).toBe('subir')

@@ -12,12 +12,12 @@ export const MAXIMO_INTENTOS_RENDER = 2
 const ARCHIVO = 'autopiloto-reels.json'
 
 /**
- * Qué toca hacer con un proyecto: 'render', 'programar' (Reel) o 'subir' (video largo), o null.
+ * Qué toca hacer con un proyecto: 'render', 'programar' (Reel), 'short' (el mismo Reel en YouTube) o 'subir' (video largo), o null.
  * Un Reel que ya tiene un estado de publicación (programado, publicado o cancelado a mano) no se vuelve a tocar:
  * lo que Juan cancela se queda cancelado. Un video largo solo se sube si el piloto fue quien lo renderizó
  * (`renderizadoPorPiloto`) y aún no tiene un video de YouTube vinculado: nunca toca videos viejos ni subidos a mano.
  */
-export function decidirAccion({ activo, tipo, tramos, grabados, ultimaTomaMs, ahora = Date.now(), tieneFinal, publicacion, ocupado, intentos = 0, youtubeId = null, renderizadoPorPiloto = false }) {
+export function decidirAccion({ activo, tipo, tramos, grabados, ultimaTomaMs, ahora = Date.now(), tieneFinal, publicacion, ocupado, intentos = 0, youtubeId = null, renderizadoPorPiloto = false, programadoPorPiloto = false, shortYoutubeId = null, intentosShort = 0 }) {
   if (!activo || !['reel', 'video'].includes(tipo) || ocupado) return null
   if (!tieneFinal) {
     if (!(tramos > 0) || grabados < tramos) return null
@@ -25,7 +25,11 @@ export function decidirAccion({ activo, tipo, tramos, grabados, ultimaTomaMs, ah
     return intentos < MAXIMO_INTENTOS_RENDER ? 'render' : null
   }
   if (tipo === 'video') return !youtubeId && renderizadoPorPiloto && intentos < MAXIMO_INTENTOS_RENDER ? 'subir' : null
-  return publicacion ? null : 'programar'
+  if (!publicacion) return 'programar'
+  // Short de YouTube del mismo Reel: solo si el piloto fue quien lo programó (un Reel programado a mano no se toca), sigue
+  // programado y aún no tiene Short. Sale a la misma hora que en Facebook e Instagram.
+  if (publicacion.estado === 'programada' && programadoPorPiloto && !shortYoutubeId && intentosShort < MAXIMO_INTENTOS_RENDER) return 'short'
+  return null
 }
 
 export async function leerAjustes(carpeta) {

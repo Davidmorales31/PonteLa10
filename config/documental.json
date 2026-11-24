@@ -1,0 +1,172 @@
+{
+  "version": 1,
+  "descripcion": "Parámetros del documental de los viernes (docs/PLAN_DOCUMENTAL_SEMANAL.md). Los usa scripts/documental-rubrica.mjs.",
+  "palabrasPorMinuto": 160,
+  "palabras": {
+    "minimo": 3300,
+    "maximo": 4800
+  },
+  "actos": [
+    "pregunta",
+    "origen",
+    "ascenso",
+    "crisis",
+    "resolucion",
+    "legado"
+  ],
+  "pregunta": {
+    "maximoPalabras": 130
+  },
+  "capitulos": {
+    "minimo": 10,
+    "maximo": 16,
+    "minimoPalabras": 100,
+    "maximoPalabras": 520
+  },
+  "fuentes": {
+    "minimo": 5,
+    "mediosDistintos": 3
+  },
+  "actosConPreguntaAlPublico": 4,
+  "cierre": {
+    "maximoPalabras": 80
+  },
+  "titulos": {
+    "minimo": 2,
+    "maximo": 3,
+    "maximoCaracteres": 100
+  },
+  "aperturasProhibidas": [
+    "hola",
+    "bienvenidos",
+    "bienvenidas",
+    "en este video",
+    "hoy les",
+    "hoy vamos",
+    "qué tal"
+  ],
+  "verbosDeAtribucion": [
+    "dijo",
+    "declaró",
+    "contó",
+    "según",
+    "afirmó",
+    "escribió",
+    "explicó",
+    "recordó",
+    "aseguró",
+    "confesó",
+    "admitió",
+    "reconoció",
+    "relató",
+    "señaló",
+    "publicó"
+  ],
+  "visuales": {
+    "maximaProporcionFotos": 0.5,
+    "maximoUsosMismaFoto": 3,
+    "movimientoPorCapitulo": 1,
+    "nota": "Decisión del responsable (2026-11-23): mitad fotos y mitad video o animación; nunca 20 minutos de las mismas fotos."
+  },
+  "formatos": {
+    "biografia": {
+      "descripcion": "La de siempre: seis actos, de 21 a 30 minutos. Para un jugador o un suceso grande.",
+      "kicker": "UN DOCUMENTAL DE PONTE LA 10"
+    },
+    "historia-corta": {
+      "descripcion": "«La Historia de [jugador]»: de 8 a 11 minutos y cinco actos. Para jugadores en ascenso o con un giro de identidad (nació en un país y juega por otro, regresó, casi lo deja).",
+      "kicker": "LA HISTORIA DE",
+      "actos": [
+        "pregunta",
+        "origen",
+        "ascenso",
+        "giro",
+        "legado"
+      ],
+      "palabras": {
+        "minimo": 1250,
+        "maximo": 1800
+      },
+      "capitulos": {
+        "minimo": 5,
+        "maximo": 9,
+        "minimoPalabras": 100,
+        "maximoPalabras": 420
+      },
+      "fuentes": {
+        "minimo": 3,
+        "mediosDistintos": 2
+      },
+      "actosConPreguntaAlPublico": 2
+    },
+    "epoca-club": {
+      "descripcion": "Una época de un club o un clásico («Era dorada de…», «¿Por qué X perdió su trono?»): de 18 a 30 minutos y seis actos.",
+      "kicker": "UN DOCUMENTAL DE PONTE LA 10",
+      "actos": [
+        "pregunta",
+        "origen",
+        "ascenso",
+        "apogeo",
+        "caida",
+        "legado"
+      ],
+      "palabras": {
+        "minimo": 2900,
+        "maximo": 4800
+      },
+      "capitulos": {
+        "minimo": 9,
+        "maximo": 16,
+        "minimoPalabras": 100,
+        "maximoPalabras": 520
+      },
+      "fuentes": {
+        "minimo": 5,
+        "mediosDistintos": 3
+      },
+      "actosConPreguntaAlPublico": 3
+    },
+    "explicador": {
+      "descripcion": "Un «¿por qué?» explicado con datos y gráficos (mapas, fichas, líneas de tiempo), sin jugadas ajenas: de 12 a 18 minutos y cinco actos.",
+      "kicker": "UN ANÁLISIS DE PONTE LA 10",
+      "actos": [
+        "pregunta",
+        "contexto",
+        "evidencia",
+        "explicacion",
+        "respuesta"
+      ],
+      "palabras": {
+        "minimo": 1900,
+        "maximo": 2900
+      },
+      "capitulos": {
+        "minimo": 6,
+        "maximo": 11,
+        "minimoPalabras": 100,
+        "maximoPalabras": 500
+      },
+      "fuentes": {
+        "minimo": 5,
+        "mediosDistintos": 3
+      },
+      "actosConPreguntaAlPublico": 2
+    }
+  },
+  "aperturaEstandar": {
+    "nota": "Los videos que más rinden abren en 40–50 s con un dato duro con fuente, algo que no cuadra y la promesa de explicarlo (docs/ESTUDIO_COMPETENCIA_AMPLIADO_2026-11-24.md). Son avisos, no errores.",
+    "segundos": 40,
+    "promesa": [
+      "vamos a",
+      "te voy a",
+      "les voy a",
+      "veremos",
+      "para entender",
+      "al final",
+      "descubrir",
+      "responder",
+      "explicar",
+      "contar"
+    ]
+  }
+}

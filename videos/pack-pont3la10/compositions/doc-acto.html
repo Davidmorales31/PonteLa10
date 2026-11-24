@@ -1,0 +1,46 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #061733; font-family: "Montserrat", sans-serif; }
+    .dacto-fondo { position: absolute; inset: 0; }
+    #dacto-img { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; object-fit: cover; filter: grayscale(0.35) brightness(0.42) blur(2px); }
+    .dacto-tinte { position: absolute; inset: 0; background: radial-gradient(ellipse at 30% 50%, rgba(8,32,74,0.35) 0%, rgba(6,23,51,0.92) 70%); }
+    .dacto-caja { position: absolute; left: 180px; top: 0; bottom: 0; width: 1560px; display: flex; flex-direction: column; justify-content: center; }
+    #dacto-barra { position: absolute; left: 140px; top: 380px; width: 10px; height: 320px; background: #ffd800; transform-origin: 50% 0%; }
+    #dacto-kicker { color: #ffd800; font-size: 40px; font-weight: 800; letter-spacing: 0.32em; }
+    #dacto-titulo { margin-top: 14px; color: #ffffff; font-size: 172px; font-weight: 900; line-height: 0.98; letter-spacing: -0.02em; }
+    #dacto-linea { margin-top: 34px; width: 520px; height: 4px; background: rgba(255,255,255,0.75); transform-origin: 0% 50%; }
+    #dacto-subtitulo { margin-top: 26px; color: #c9d4ea; font-size: 44px; font-weight: 600; max-width: 1400px; line-height: 1.2; }
+    #dacto-marca { position: absolute; right: 96px; bottom: 70px; width: 190px; height: auto; opacity: 0.85; }
+  </style>
+  <div id="root" data-composition-id="doc-acto" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"kicker","type":"string","label":"Antetítulo","default":"ACTO I"},{"id":"titulo","type":"string","label":"Título","default":"ORIGEN"},{"id":"subtitulo","type":"string","label":"Subtítulo","default":""},{"id":"fondo","type":"string","label":"Foto de fondo (opcional)","default":""},{"id":"duracion","type":"number","label":"Duración (s)","default":3,"min":2,"max":8,"step":0.1}]'>
+    <div id="dacto-escena" class="clip" data-start="0" data-duration="3" data-layout-allow-occlusion>
+      <div id="dacto-fondo" class="dacto-fondo" data-layout-allow-occlusion><img id="dacto-img" src="assets/vacio.png" data-var-src="fondo" alt="" /></div>
+      <div class="dacto-tinte" data-layout-allow-occlusion></div>
+      <div id="dacto-barra"></div>
+      <div id="dacto-caja" class="dacto-caja">
+        <div id="dacto-kicker" data-var-text="kicker">ACTO I</div>
+        <div id="dacto-titulo" data-var-text="titulo">ORIGEN</div>
+        <div id="dacto-linea"></div>
+        <div id="dacto-subtitulo" data-var-text="subtitulo"></div>
+      </div>
+      <img id="dacto-marca" src="assets/logo-blanco.png" alt="" />
+    </div>
+  </div>
+  <script>
+    // Tarjeta de acto (o de título): fondo oscuro con la foto apagada, barra amarilla y título grande.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(2, Number(v.duracion ?? 3));
+    if (!String(v.fondo ?? "").trim()) document.querySelector("#dacto-img").style.display = "none";
+    if (!String(v.subtitulo ?? "").trim()) document.querySelector("#dacto-subtitulo").style.display = "none";
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#dacto-fondo", { scale: 1.08 }, { scale: 1, duration: D, ease: "none" }, 0);
+    tl.fromTo("#dacto-barra", { scaleY: 0 }, { scaleY: 1, duration: 0.5, ease: "expo.out" }, 0.05);
+    tl.fromTo("#dacto-kicker", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.45, ease: "expo.out" }, 0.15);
+    tl.fromTo("#dacto-titulo", { opacity: 0, y: 40, filter: "blur(10px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "expo.out" }, 0.3);
+    tl.fromTo("#dacto-linea", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: "power3.out" }, 0.55);
+    tl.fromTo("#dacto-subtitulo", { opacity: 0 }, { opacity: 1, duration: 0.4, ease: "power2.out" }, 0.8);
+    tl.to(["#dacto-caja", "#dacto-barra"], { opacity: 0, duration: 0.35, ease: "power2.in" }, D - 0.4);
+    window.__timelines["doc-acto"] = tl;
+  </script>
+</template>

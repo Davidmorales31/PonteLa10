@@ -8,12 +8,13 @@ import { join, resolve, isAbsolute } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
-import { atribucionDe } from './video-musica.mjs'
+import { atribucionesDe } from './video-musica.mjs'
 import { EDICIONES, edicionDe } from './video-edicion.mjs'
+import { SITIO_API, SITIO_PUBLICO } from './video-sitio.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
-const SITIO = 'https://www.pont3la10.com'
+const SITIO = SITIO_API
 export const LIMITES = { minimo: 20, maximo: 75, ideal: [35, 60], maximoReels: 5 }
 const redondear = valor => Math.round(valor * 100) / 100
 
@@ -23,8 +24,9 @@ export function elegirBloques(manifiesto, guion, { max = LIMITES.maximoReels, fo
   const segmentos = manifiesto?.segmentos || []
   const candidatos = []
   for (const [orden, bloque] of (guion?.bloques || []).entries()) {
-    const cara = segmentos.find(s => s.id === `${bloque.id}-cara`)
     const voz = segmentos.find(s => s.id === `${bloque.id}-voz`)
+    // Con la estructura directa (2026-11-22) la noticia ya no tiene entrada a cámara: empieza en su voz.
+    const cara = segmentos.find(s => s.id === `${bloque.id}-cara`) || voz
     if (!cara || !voz) continue
     const duracion = redondear(voz.fin - cara.inicio)
     if (forzar.length) { if (forzar.includes(bloque.id)) candidatos.push({ bloque, orden, cara, voz, duracion, puntaje: 0 }); continue }
@@ -108,7 +110,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 export function descripcionReel({ titular, resumen, slug, credito, musica, edicion = EDICIONES.colombia }) {
   const partes = [String(titular || '').trim()]
   if (resumen) partes.push(String(resumen).trim())
-  partes.push(`Nota completa: ${SITIO}/articulos/${slug}`)
+  partes.push(`Nota completa: ${SITIO_PUBLICO}/articulos/${slug}`)
   if (credito) partes.push(`Foto: ${credito}`)
   if (musica) partes.push(musica)
   partes.push(edicion.hashtags.join(' '))
@@ -139,7 +141,7 @@ export async function crearReels({ carpeta, bloques = [], max = LIMITES.maximoRe
   await mkdir(trabajo, { recursive: true })
   const logo = join(carpeta, 'assets', 'logo-blanco.png')
   const estudio = existsSync(join(carpeta, 'estudio.json')) ? JSON.parse(await readFile(join(carpeta, 'estudio.json'), 'utf8')) : {}
-  const musica = await atribucionDe(estudio.musica)
+  const musica = await atribucionesDe(estudio.musicaPlan?.length ? estudio.musicaPlan : [estudio.musica].filter(Boolean))
   const resultado = []
   for (const [n, { bloque, cara, duracion }] of elegidos.entries()) {
     avisar(`Reel ${n + 1} de ${elegidos.length}: ${bloque.club || bloque.id}`)

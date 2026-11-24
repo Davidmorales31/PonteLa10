@@ -18,6 +18,7 @@
     "typecheck": "nuxt typecheck",
     "worker:ingestas": "node --env-file=.env workers/procesar_ingestas_durable.mjs",
     "video:estudio": "node scripts/video-estudio.mjs",
+    "video:estudio:clave": "node scripts/video-estudio-clave.mjs",
     "video:generar": "node scripts/video-generar-proyecto.mjs",
     "video:reels": "node scripts/video-reels.mjs",
     "video:musica": "node scripts/video-musica.mjs",

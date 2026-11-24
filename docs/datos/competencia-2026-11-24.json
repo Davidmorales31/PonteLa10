@@ -1,0 +1,387 @@
+{
+  "fecha": "2026-11-24",
+  "canales": [
+    {
+      "nombre": "Dieck Docs",
+      "tipo": "documental",
+      "videos": 40,
+      "medianaVistas": 3450000.0,
+      "maximoVistas": 15000000,
+      "medianaMinutos": 39.7,
+      "parteDeLos3Mejores": 0.22
+    },
+    {
+      "nombre": "Dosis de Fútbol",
+      "tipo": "compilaciones",
+      "videos": 40,
+      "medianaVistas": 1550000.0,
+      "maximoVistas": 7100000,
+      "medianaMinutos": 19.5,
+      "parteDeLos3Mejores": 0.25
+    },
+    {
+      "nombre": "Davoo Xeneize Plus",
+      "tipo": "opinión y reacción",
+      "videos": 40,
+      "medianaVistas": 646000.0,
+      "maximoVistas": 2000000,
+      "medianaMinutos": 24.9,
+      "parteDeLos3Mejores": 0.16
+    },
+    {
+      "nombre": "Cristian Nieto",
+      "tipo": "análisis",
+      "videos": 40,
+      "medianaVistas": 591500.0,
+      "maximoVistas": 4900000,
+      "medianaMinutos": 16.0,
+      "parteDeLos3Mejores": 0.29
+    },
+    {
+      "nombre": "Qué Gran Historia",
+      "tipo": "historias (no solo fútbol)",
+      "videos": 26,
+      "medianaVistas": 333000.0,
+      "maximoVistas": 18000000,
+      "medianaMinutos": 12.2,
+      "parteDeLos3Mejores": 0.74
+    },
+    {
+      "nombre": "EmmaHavokOscuro",
+      "tipo": "documental",
+      "videos": 40,
+      "medianaVistas": 267500.0,
+      "maximoVistas": 799000,
+      "medianaMinutos": 11.9,
+      "parteDeLos3Mejores": 0.2
+    },
+    {
+      "nombre": "Cracks",
+      "tipo": "noticias",
+      "videos": 40,
+      "medianaVistas": 236000.0,
+      "maximoVistas": 462000,
+      "medianaMinutos": 4.2,
+      "parteDeLos3Mejores": 0.13
+    },
+    {
+      "nombre": "Memorias del Fútbol",
+      "tipo": "documental",
+      "videos": 37,
+      "medianaVistas": 128000,
+      "maximoVistas": 1300000,
+      "medianaMinutos": 18.2,
+      "parteDeLos3Mejores": 0.36
+    },
+    {
+      "nombre": "La Gambeta",
+      "tipo": "noticias",
+      "videos": 40,
+      "medianaVistas": 81500.0,
+      "maximoVistas": 264000,
+      "medianaMinutos": 9.2,
+      "parteDeLos3Mejores": 0.17
+    },
+    {
+      "nombre": "ZEUZINK",
+      "tipo": "documental",
+      "videos": 14,
+      "medianaVistas": 64000.0,
+      "maximoVistas": 1900000,
+      "medianaMinutos": 14.4,
+      "parteDeLos3Mejores": 0.74
+    },
+    {
+      "nombre": "Más allá del gol",
+      "tipo": "análisis",
+      "videos": 40,
+      "medianaVistas": 54000.0,
+      "maximoVistas": 172000,
+      "medianaMinutos": 11.0,
+      "parteDeLos3Mejores": 0.19
+    },
+    {
+      "nombre": "Jugada Deportiva",
+      "tipo": "noticias",
+      "videos": 40,
+      "medianaVistas": 42500.0,
+      "maximoVistas": 304000,
+      "medianaMinutos": 8.2,
+      "parteDeLos3Mejores": 0.28
+    },
+    {
+      "nombre": "PEDRO EL INGENIERO",
+      "tipo": "análisis",
+      "videos": 37,
+      "medianaVistas": 42000,
+      "maximoVistas": 2300000,
+      "medianaMinutos": 13.9,
+      "parteDeLos3Mejores": 0.63
+    },
+    {
+      "nombre": "LasCronicasDeJoaqo",
+      "tipo": "noticias",
+      "videos": 40,
+      "medianaVistas": 40000.0,
+      "maximoVistas": 99000,
+      "medianaMinutos": 12.9,
+      "parteDeLos3Mejores": 0.15
+    },
+    {
+      "nombre": "Camilo MD",
+      "tipo": "noticias",
+      "videos": 33,
+      "medianaVistas": 37000,
+      "maximoVistas": 247000,
+      "medianaMinutos": 18.6,
+      "parteDeLos3Mejores": 0.33
+    },
+    {
+      "nombre": "ESPN Fans",
+      "tipo": "medio con derechos",
+      "videos": 40,
+      "medianaVistas": 36500.0,
+      "maximoVistas": 2100000,
+      "medianaMinutos": 13.0,
+      "parteDeLos3Mejores": 0.57
+    },
+    {
+      "nombre": "Leo Salinas - Fútbol",
+      "tipo": "historia de jugador",
+      "videos": 40,
+      "medianaVistas": 34500.0,
+      "maximoVistas": 384000,
+      "medianaMinutos": 8.3,
+      "parteDeLos3Mejores": 0.37
+    },
+    {
+      "nombre": "El jardín del gol",
+      "tipo": "noticias",
+      "videos": 40,
+      "medianaVistas": 29500.0,
+      "maximoVistas": 81000,
+      "medianaMinutos": 10.8,
+      "parteDeLos3Mejores": 0.18
+    },
+    {
+      "nombre": "RICCK FÚTBOL",
+      "tipo": "noticias",
+      "videos": 40,
+      "medianaVistas": 27500.0,
+      "maximoVistas": 153000,
+      "medianaMinutos": 10.7,
+      "parteDeLos3Mejores": 0.27
+    },
+    {
+      "nombre": "TUDN México",
+      "tipo": "medio con derechos",
+      "videos": 40,
+      "medianaVistas": 26000.0,
+      "maximoVistas": 972000,
+      "medianaMinutos": 8.8,
+      "parteDeLos3Mejores": 0.58
+    },
+    {
+      "nombre": "Tomás Fernández",
+      "tipo": "documental",
+      "videos": 40,
+      "medianaVistas": 25500.0,
+      "maximoVistas": 149000,
+      "medianaMinutos": 29.6,
+      "parteDeLos3Mejores": 0.26
+    },
+    {
+      "nombre": "Win Sports",
+      "tipo": "medio con derechos",
+      "videos": 31,
+      "medianaVistas": 17000,
+      "maximoVistas": 328000,
+      "medianaMinutos": 2.9,
+      "parteDeLos3Mejores": 0.53
+    },
+    {
+      "nombre": "ESPN Deportes",
+      "tipo": "medio con derechos",
+      "videos": 40,
+      "medianaVistas": 17000.0,
+      "maximoVistas": 184000,
+      "medianaMinutos": 13.5,
+      "parteDeLos3Mejores": 0.33
+    },
+    {
+      "nombre": "POST UNITED",
+      "tipo": "noticias",
+      "videos": 40,
+      "medianaVistas": 13000.0,
+      "maximoVistas": 53000,
+      "medianaMinutos": 8.3,
+      "parteDeLos3Mejores": 0.2
+    },
+    {
+      "nombre": "La Secta Deportiva",
+      "tipo": "noticias",
+      "videos": 34,
+      "medianaVistas": 10000.0,
+      "maximoVistas": 69000,
+      "medianaMinutos": 4.7,
+      "parteDeLos3Mejores": 0.29
+    },
+    {
+      "nombre": "MegaDeportes",
+      "tipo": "medio con derechos",
+      "videos": 40,
+      "medianaVistas": 6550.0,
+      "maximoVistas": 127000,
+      "medianaMinutos": 5.9,
+      "parteDeLos3Mejores": 0.45
+    },
+    {
+      "nombre": "TNT Sports Argentina",
+      "tipo": "medio con derechos",
+      "videos": 40,
+      "medianaVistas": 4800.0,
+      "maximoVistas": 583000,
+      "medianaMinutos": 6.5,
+      "parteDeLos3Mejores": 0.55
+    },
+    {
+      "nombre": "TNT Sports Chile",
+      "tipo": "medio con derechos",
+      "videos": 37,
+      "medianaVistas": 4100,
+      "maximoVistas": 314000,
+      "medianaMinutos": 6.0,
+      "parteDeLos3Mejores": 0.76
+    },
+    {
+      "nombre": "Gol Caracol",
+      "tipo": "medio con derechos",
+      "videos": 31,
+      "medianaVistas": 2700,
+      "maximoVistas": 83000,
+      "medianaMinutos": 3.0,
+      "parteDeLos3Mejores": 0.61
+    },
+    {
+      "nombre": "Claro Sports",
+      "tipo": "medio con derechos",
+      "videos": 36,
+      "medianaVistas": 2100.0,
+      "maximoVistas": 225000,
+      "medianaMinutos": 8.6,
+      "parteDeLos3Mejores": 0.8
+    },
+    {
+      "nombre": "La Pizarra Táctica",
+      "tipo": "análisis",
+      "videos": 40,
+      "medianaVistas": 1500.0,
+      "maximoVistas": 61000,
+      "medianaMinutos": 10.9,
+      "parteDeLos3Mejores": 0.49
+    },
+    {
+      "nombre": "AS Colombia",
+      "tipo": "noticias",
+      "videos": 40,
+      "medianaVistas": 601.5,
+      "maximoVistas": 6800,
+      "medianaMinutos": 13.2,
+      "parteDeLos3Mejores": 0.33
+    }
+  ],
+  "formatos": {
+    "análisis/táctico": {
+      "videos": 49,
+      "relativoMediana": 1.18,
+      "masDe2x": 0.24
+    },
+    "curiosidades/datos": {
+      "videos": 12,
+      "relativoMediana": 1.32,
+      "masDe2x": 0.33
+    },
+    "documental/historia": {
+      "videos": 84,
+      "relativoMediana": 0.98,
+      "masDe2x": 0.15
+    },
+    "en vivo/directo": {
+      "videos": 27,
+      "relativoMediana": 1.1,
+      "masDe2x": 0.33
+    },
+    "fichaje/mercado": {
+      "videos": 46,
+      "relativoMediana": 1.0,
+      "masDe2x": 0.17
+    },
+    "otros": {
+      "videos": 576,
+      "relativoMediana": 1.0,
+      "masDe2x": 0.19
+    },
+    "polémica/escándalo": {
+      "videos": 49,
+      "relativoMediana": 0.97,
+      "masDe2x": 0.18
+    },
+    "previa/pronóstico/dónde ver": {
+      "videos": 40,
+      "relativoMediana": 1.0,
+      "masDe2x": 0.23
+    },
+    "reacción/debate": {
+      "videos": 50,
+      "relativoMediana": 1.04,
+      "masDe2x": 0.1
+    },
+    "tabla/cómo queda": {
+      "videos": 84,
+      "relativoMediana": 0.99,
+      "masDe2x": 0.14
+    },
+    "top/ranking/lista": {
+      "videos": 20,
+      "relativoMediana": 1.04,
+      "masDe2x": 0.2
+    }
+  },
+  "rasgosDeTitulo": {
+    "con ?": {
+      "con": 0.97,
+      "sin": 1.0,
+      "videosCon": 190
+    },
+    "con |": {
+      "con": 1.01,
+      "sin": 0.98,
+      "videosCon": 514
+    },
+    "con MAYÚSCULAS": {
+      "con": 1.0,
+      "sin": 1.02,
+      "videosCon": 789
+    },
+    "con emoji": {
+      "con": 0.93,
+      "sin": 1.0,
+      "videosCon": 178
+    },
+    "con número": {
+      "con": 1.08,
+      "sin": 0.97,
+      "videosCon": 373
+    },
+    "título corto (<=45)": {
+      "con": 0.85,
+      "sin": 1.0,
+      "videosCon": 72
+    },
+    "título largo (>70)": {
+      "con": 1.0,
+      "sin": 0.98,
+      "videosCon": 679
+    }
+  }
+}

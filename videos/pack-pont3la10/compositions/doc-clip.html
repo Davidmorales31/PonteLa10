@@ -1,0 +1,32 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #ff00ff; font-family: "Montserrat", sans-serif; }
+    #dclip-cita { position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%); min-width: 1100px; max-width: 1500px; padding: 18px 34px 20px; background: #08204a; border-left: 8px solid #ffd800; color: #ffffff; text-align: left; }
+    #dclip-quien { font-size: 26px; font-weight: 800; letter-spacing: 3px; color: #ffd800; text-transform: uppercase; }
+    #dclip-subtitulo { margin-top: 6px; font-size: 44px; line-height: 1.25; font-weight: 600; }
+    #dclip-credito { position: absolute; right: 96px; bottom: 60px; padding: 8px 16px; background: #08204a; color: #ffffff; font-size: 28px; font-weight: 600; border-left: 5px solid #ffd800; }
+  </style>
+  <div id="root" data-composition-id="doc-clip" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"credito","type":"string","label":"Crédito","default":"Video: Autor / Wikimedia Commons (CC BY 3.0)"},{"id":"subtitulo","type":"string","label":"Subtítulo del testimonio","default":""},{"id":"quien","type":"string","label":"Quién habla","default":""},{"id":"duracion","type":"number","label":"Duración (s)","default":6,"min":1,"max":60,"step":0.1}]'>
+    <div id="dclip-escena" class="clip" data-start="0" data-duration="6" data-layout-allow-occlusion>
+      <div id="dclip-cita"><div id="dclip-quien" data-var-text="quien"></div><div id="dclip-subtitulo" data-var-text="subtitulo"></div></div>
+      <div id="dclip-credito" data-var-text="credito">Video: Autor / Wikimedia Commons (CC BY 3.0)</div>
+    </div>
+  </div>
+  <script>
+    // Hueco de un clip de video en el documental (render híbrido): el magenta puro es la llave que
+    // scripts/documental-generar.mjs (componerDocumental) reemplaza con el clip real usando ffmpeg. Así HyperFrames no
+    // extrae los cuadros de los videos. Todo lo que va encima (crédito) tiene bordes duros y opacidad completa, para que
+    // la llave no deje halos: sin fundidos ni desplazamientos.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    if (!String(v.credito ?? "").trim()) document.querySelector("#dclip-credito").style.display = "none";
+    // Testimonio: la persona habla con su voz real; el subtítulo va en una caja sólida (sin fundidos, por la llave).
+    if (!String(v.subtitulo ?? "").trim()) document.querySelector("#dclip-cita").style.display = "none";
+    if (!String(v.quien ?? "").trim()) document.querySelector("#dclip-quien").style.display = "none";
+    // La caja del testimonio tapa los subtítulos grabados del original: el crédito pasa a la esquina de arriba.
+    if (String(v.subtitulo ?? "").trim()) { const c = document.querySelector("#dclip-credito"); c.style.bottom = "auto"; c.style.top = "60px"; }
+    const tl = gsap.timeline({ paused: true });
+    tl.set("#dclip-credito", { opacity: 1 }, 0);
+    window.__timelines["doc-clip"] = tl;
+  </script>
+</template>

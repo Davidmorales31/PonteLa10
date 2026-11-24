@@ -1,0 +1,48 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #0b0f17; font-family: "Montserrat", sans-serif; }
+    .dtit-luz { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 45%, rgba(255,240,200,0.16) 0%, rgba(0,0,0,0) 60%); }
+    #dtit-hoja { position: absolute; left: 260px; top: 190px; width: 1400px; height: 700px; background: #efe8d8; box-shadow: 0 40px 90px rgba(0,0,0,0.6); transform: rotate(-1.4deg); padding: 46px 70px; }
+    .dtit-grano { position: absolute; inset: 0; background: repeating-linear-gradient(0deg, rgba(0,0,0,0.025) 0px, rgba(0,0,0,0.025) 2px, rgba(0,0,0,0) 2px, rgba(0,0,0,0) 5px); }
+    #dtit-cabecera { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 6px double #1c1c1c; padding-bottom: 14px; color: #1c1c1c; font-family: Georgia, "Times New Roman", serif; }
+    #dtit-etiqueta { font-size: 30px; font-weight: 700; letter-spacing: 0.22em; }
+    #dtit-marca { font-size: 28px; font-style: italic; }
+    #dtit-texto { margin-top: 70px; color: #111111; font-family: Georgia, "Times New Roman", serif; font-size: 112px; font-weight: 700; line-height: 1.04; letter-spacing: -0.01em; }
+    #dtit-filete { margin-top: 44px; width: 100%; height: 3px; background: #1c1c1c; transform-origin: 0% 50%; }
+    #dtit-sello { position: absolute; left: 50%; top: 50%; width: 760px; margin-left: -380px; margin-top: -120px; padding: 18px 0; border: 14px solid #d0161f; border-radius: 14px; color: #d0161f; font-size: 170px; font-weight: 900; letter-spacing: 0.08em; text-align: center; transform: rotate(-12deg); opacity: 0; mix-blend-mode: multiply; }
+  </style>
+  <div id="root" data-composition-id="doc-titular" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"texto","type":"string","label":"Titular","default":"¿ELECTRICISTA? · ¿CONDUCTOR DE BUS?"},{"id":"etiqueta","type":"string","label":"Cabecera","default":"LO QUE CIRCULÓ"},{"id":"sello","type":"string","label":"Sello (vacío = sin sello)","default":"FALSO"},{"id":"duracion","type":"number","label":"Duración (s)","default":6,"min":3,"max":12,"step":0.1}]'>
+    <div id="dtit-escena" class="clip" data-start="0" data-duration="6" data-layout-allow-occlusion data-layout-allow-overflow>
+      <div class="dtit-luz" data-layout-allow-occlusion></div>
+      <div id="dtit-hoja" data-layout-allow-overflow>
+        <div class="dtit-grano" data-layout-allow-occlusion></div>
+        <div id="dtit-cabecera"><div id="dtit-etiqueta" data-var-text="etiqueta">LO QUE CIRCULÓ</div><div id="dtit-marca">Archivo Ponte la 10 · recreación</div></div>
+        <div id="dtit-texto" data-var-text="texto">¿ELECTRICISTA? · ¿CONDUCTOR DE BUS?</div>
+        <div id="dtit-filete"></div>
+      </div>
+      <div id="dtit-sello" data-var-text="sello" data-layout-allow-overlap>FALSO</div>
+    </div>
+  </div>
+  <script>
+    // Titular de época recreado con diseño propio (no imita a ningún medio). Con «sello», un sello rojo cae encima.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(3, Number(v.duracion ?? 6));
+    const sello = String(v.sello ?? "").trim();
+    const texto = document.querySelector("#dtit-texto");
+    const largo = String(v.texto ?? "").length;
+    if (largo > 34) texto.style.fontSize = Math.max(72, Math.round(112 * 34 / largo)) + "px";
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#dtit-hoja", { opacity: 0, y: 60, rotation: -4, scale: 1.04 }, { opacity: 1, y: 0, rotation: -1.4, scale: 1, duration: 0.7, ease: "expo.out" }, 0.05);
+    tl.fromTo("#dtit-texto", { opacity: 0, clipPath: "inset(0 100% 0 0)" }, { opacity: 1, clipPath: "inset(0 0% 0 0)", duration: 0.9, ease: "power2.out" }, 0.45);
+    tl.fromTo("#dtit-filete", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: "power3.out" }, 1.0);
+    tl.fromTo("#dtit-hoja", { scale: 1 }, { scale: 1.05, duration: D, ease: "none" }, 0.75);
+    if (sello) {
+      const golpe = Math.min(D * 0.45, 2.4);
+      tl.fromTo("#dtit-sello", { opacity: 0, scale: 2.6 }, { opacity: 0.92, scale: 1, duration: 0.22, ease: "power4.in" }, golpe);
+      tl.fromTo("#dtit-hoja", { x: 0 }, { x: 14, duration: 0.05, yoyo: true, repeat: 3, ease: "none" }, golpe + 0.22);
+    } else document.querySelector("#dtit-sello").style.display = "none";
+    tl.to(["#dtit-hoja", "#dtit-sello"], { opacity: 0, duration: 0.35, ease: "power2.in" }, D - 0.4);
+    window.__timelines["doc-titular"] = tl;
+  </script>
+</template>

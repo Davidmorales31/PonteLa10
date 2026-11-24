@@ -25,6 +25,42 @@ const palabrasEnMayusculas = texto => (String(texto).match(/\b[A-ZÁÉÍÓÚÑ]{
 // Nombre propio: una palabra con mayúscula inicial que no abre la frase, o una sigla (DIM, VAR).
 const tieneNombrePropio = texto => String(texto).split(/\s+/).some((palabra, i) => (i > 0 && /^[¡¿"«(]?[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+/.test(palabra)) || /^[¡¿"«(]?[A-ZÁÉÍÓÚÑ]{2,}\b/.test(palabra))
 
+/**
+ * Revisa que el guion cumpla la estructura que declara (config.estructuras): ninguna lleva toma a cámara por noticia ni
+ * presentación larga; además cada una tiene su regla propia (bloque a fondo, puestos descendentes, pregunta y respuesta).
+ */
+export function revisarEstructura(guion, config) {
+  const nombre = guion?.estructura
+  const reglas = config.estructuras?.[nombre]
+  const bloques = Array.isArray(guion?.bloques) ? guion.bloques : []
+  if (!reglas) return [`falta o no es válida la "estructura" (${Object.keys(config.estructuras || {}).join(', ')})`]
+  const problemas = []
+  const conIntro = bloques.filter(bloque => String(bloque.caraBreve || '').trim()).map(bloque => bloque.id)
+  if (conIntro.length) problemas.push(`con caraBreve: ${conIntro.join(', ')}`)
+  const maximoPresentacion = reglas.presentacionMaximoPalabras ?? config.estructura?.presentacionMaximoPalabras ?? 15
+  const palabrasPresentacion = contarPalabras(guion?.presentacion?.texto)
+  if (palabrasPresentacion > maximoPresentacion) problemas.push(`presentación de ${palabrasPresentacion} palabras (máximo ${maximoPresentacion})`)
+  if (reglas.fondo) {
+    const fondos = bloques.filter(bloque => bloque.fondo)
+    if (fondos.length !== 1) problemas.push(`debe haber exactamente 1 bloque con "fondo": true (hay ${fondos.length})`)
+    for (const bloque of fondos) {
+      const palabras = contarPalabras(bloque.voz)
+      if (palabras < reglas.fondo.palabrasMinimas || palabras > reglas.fondo.palabrasMaximas) problemas.push(`el bloque a fondo ${bloque.id} tiene ${palabras} palabras (debe tener ${reglas.fondo.palabrasMinimas}–${reglas.fondo.palabrasMaximas})`)
+    }
+  }
+  if (reglas.puestos) {
+    const puestos = bloques.map(bloque => bloque.puesto)
+    const esperado = bloques.map((_, i) => bloques.length - i)
+    if (JSON.stringify(puestos) !== JSON.stringify(esperado)) problemas.push(`los puestos deben bajar de ${bloques.length} a 1 en orden (hay: ${puestos.join(', ') || 'ninguno'})`)
+  }
+  if (reglas.ganchoEsPregunta && !/\?/.test(guion?.gancho?.texto || '')) problemas.push('el gancho debe ser la pregunta del día (con signo de interrogación)')
+  if (reglas.respuestaFinal) {
+    const respuestas = bloques.map((bloque, i) => (bloque.respuesta ? i : -1)).filter(i => i >= 0)
+    if (respuestas.length !== 1 || respuestas[0] !== bloques.length - 1) problemas.push('el último bloque, y solo ese, debe llevar "respuesta": true')
+  }
+  return problemas
+}
+
 // Revisa los títulos A/B: cantidad, largo, distintos entre sí y con un nombre propio en los primeros caracteres.
 export function revisarTitulos(titulos, reglas) {
   const lista = Array.isArray(titulos) ? titulos.map(t => String(t || '').trim()) : []
@@ -37,6 +73,12 @@ export function revisarTitulos(titulos, reglas) {
     if (palabrasEnMayusculas(t) > reglas.maximoPalabrasEnMayusculas) problemas.push(`título ${i + 1}: demasiadas palabras en mayúsculas`)
     if ((t.match(EMOJI) || []).length > reglas.maximoEmojis) problemas.push(`título ${i + 1}: más de ${reglas.maximoEmojis} emoji`)
   })
+  // Estilo clickbait de curiosidad (skill titulos-fpc-clickbait): al menos N títulos abren con un gancho de misterio o sorpresa.
+  if (Array.isArray(reglas.ganchos) && reglas.minimoTitulosConGancho) {
+    const patrones = reglas.ganchos.map(g => new RegExp(g, 'i'))
+    const conGancho = lista.filter(t => patrones.some(p => p.test(t))).length
+    if (conGancho < reglas.minimoTitulosConGancho) problemas.push(`solo ${conGancho} título(s) con gancho de curiosidad (mínimo ${reglas.minimoTitulosConGancho}); ver skill pont3la10-titulos-clickbait`)
+  }
   return problemas
 }
 
@@ -53,7 +95,10 @@ export function revisarMiniatura(miniatura, titulos, reglas) {
 }
 
 export function evaluarGuion(guion, config) {
-  const { formato, gancho, bloques: cfgBloques, cierre, tituloVideo, atribucion, aprobacion } = config
+  const { formato, gancho, bloques: bloquesBase, cierre, tituloVideo, atribucion, aprobacion } = config
+  // Cada estructura puede ajustar el rango de bloques y de palabras (config.estructuras[...].bloques).
+  const reglasEstructura = config.estructuras?.[guion?.estructura] || {}
+  const cfgBloques = { ...bloquesBase, ...(reglasEstructura.bloques || {}) }
   const bloques = Array.isArray(guion?.bloques) ? guion.bloques : []
   const criterios = []
   const agregar = (id, titulo, peso, ok, detalle) => criterios.push({ id, titulo, peso, ok: Boolean(ok), detalle })
@@ -82,7 +127,7 @@ export function evaluarGuion(guion, config) {
     bloques.length >= cfgBloques.minimo && bloques.length <= cfgBloques.maximo,
     `${bloques.length} bloques (rango ${cfgBloques.minimo}–${cfgBloques.maximo})`)
 
-  const fueraDeLargo = bloques.filter(bloque => {
+  const fueraDeLargo = bloques.filter(bloque => !(reglasEstructura.fondo && bloque.fondo)).filter(bloque => {
     const palabras = contarPalabras(bloque.voz)
     return palabras < cfgBloques.palabrasMinimas || palabras > cfgBloques.palabrasMaximas
   }).map(bloque => bloque.id)
@@ -100,13 +145,40 @@ export function evaluarGuion(guion, config) {
   agregar('rumor_atribuido', 'Los rumores se cuentan como rumor', 10, !rumoresSueltos.length,
     rumoresSueltos.length ? `rumor sin marca de duda: ${rumoresSueltos.join(', ')}` : 'ok')
 
-  const sinCara = bloques.filter(bloque => !bloque.caraBreve || contarPalabras(bloque.caraBreve) > cfgBloques.caraBreveMaximoPalabras).map(bloque => bloque.id)
-  agregar('cara_por_noticia', 'Toma breve con tu cara en cada noticia', 5, bloques.length > 0 && !sinCara.length,
-    sinCara.length ? `falta o es larga (máx. ${cfgBloques.caraBreveMaximoPalabras} palabras): ${sinCara.join(', ')}` : 'ok')
+  // Estructura (la directa desde 2026-11-22; más estructuras desde 2026-11-24): la noticia se cuenta de una vez, sin «intro» a
+  // cámara ni presentación larga, y cumple la regla propia de su estructura.
+  const problemasEstructura = revisarEstructura(guion, config)
+  agregar('noticia_directa', `Estructura «${guion?.estructura || 'sin marcar'}» cumplida: sin intro a cámara ni presentación larga`, 10, bloques.length > 0 && !problemasEstructura.length,
+    problemasEstructura.length ? problemasEstructura.join('; ') : 'ok')
+
+  if (cfgBloques.tamanos && reglasEstructura.ritmoVariado !== false) {
+    const tamanoDe = palabras => (palabras <= cfgBloques.tamanos.rapida[1] ? 'rapida' : palabras >= cfgBloques.tamanos.fuerte[0] ? 'fuerte' : 'normal')
+    const tamanos = bloques.map(bloque => tamanoDe(contarPalabras(bloque.voz)))
+    let racha = 0
+    let rachaMaxima = 0
+    tamanos.forEach((tamano, i) => { racha = i && tamano === tamanos[i - 1] ? racha + 1 : 1; rachaMaxima = Math.max(rachaMaxima, racha) })
+    const limite = cfgBloques.maximoSeguidosMismoTamano ?? 2
+    const ok = tamanos.includes('rapida') && tamanos.includes('fuerte') && rachaMaxima <= limite
+    agregar('ritmo_variado', 'Noticias de largo variado (rápidas, normales y fuertes)', 10, bloques.length > 0 && ok,
+      `${tamanos.filter(t => t === 'rapida').length} rápidas, ${tamanos.filter(t => t === 'normal').length} normales, ${tamanos.filter(t => t === 'fuerte').length} fuertes; máximo ${rachaMaxima} seguidas del mismo largo (tope ${limite})`)
+  }
+
+  if (cfgBloques.bloquesPorPregunta && reglasEstructura.preguntasPublico !== false) {
+    const conPregunta = bloques.filter(bloque => /\?/.test(bloque.voz || '')).length
+    const minimo = Math.floor(bloques.length / cfgBloques.bloquesPorPregunta)
+    agregar('preguntas_publico', 'Preguntas al público a lo largo del video', 5, conPregunta >= minimo,
+      `${conPregunta} noticias con pregunta (mínimo ${minimo}, una cada ${cfgBloques.bloquesPorPregunta})`)
+  }
+
+  const entradas = bloques.map(bloque => texto(bloque.voz).replace(/[^\p{L}\s]/gu, '').split(/\s+/).filter(Boolean).slice(0, 2).join(' '))
+  const repetidas = [...new Set(entradas.filter((entrada, i) => entrada && entradas.indexOf(entrada) !== i))]
+  agregar('entradas_variadas', 'Ninguna noticia arranca igual que otra', 5, !repetidas.length,
+    repetidas.length ? `se repite el arranque: ${repetidas.join(', ')}` : 'ok')
 
   const pocosPlanos = bloques.filter(bloque => {
     const segundos = segundosPara(palabrasDeBloque(bloque), formato.palabrasPorMinuto)
-    return (bloque.planos?.length || 0) < Math.ceil(segundos / cfgBloques.segundosPorPlano)
+    const porPlano = bloque.fondo && reglasEstructura.fondo?.segundosPorPlano ? reglasEstructura.fondo.segundosPorPlano : cfgBloques.segundosPorPlano
+    return (bloque.planos?.length || 0) < Math.ceil(segundos / porPlano)
   }).map(bloque => bloque.id)
   agregar('cambio_visual', `Un plano o zoom cada ${cfgBloques.segundosPorPlano} s`, 10, bloques.length > 0 && !pocosPlanos.length,
     pocosPlanos.length ? `planos insuficientes: ${pocosPlanos.join(', ')}` : 'ok')

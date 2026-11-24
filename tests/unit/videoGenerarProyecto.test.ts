@@ -38,7 +38,7 @@ describe('generador del video diario', () => {
 
   it('reparte la voz en galerías de hasta 3 espacios y deja espacios vacíos sin foto', () => {
     const galerias = repartirGalerias(40, [{ url: 'a', credito: 'A' }], false)
-    expect(galerias.map(g => g.espacios.length)).toEqual([3, 3])
+    expect(galerias.map(g => g.espacios.length)).toEqual([3, 3, 2])
     expect(galerias.flatMap(g => g.espacios).filter(e => e.url).length).toBe(1)
     expect(galerias.reduce((s, g) => s + g.duracion, 0)).toBeCloseTo(40, 1)
     const repetidas = repartirGalerias(40, [{ url: 'a', credito: 'A' }], true)
@@ -82,6 +82,30 @@ describe('generador del video diario', () => {
     for (let i = 1; i < base.length; i++) expect(base[i].inicio).toBeCloseTo(base[i - 1].inicio + base[i - 1].duracion, 1)
     expect(plan.duracion).toBeCloseTo(base.at(-1)!.inicio + base.at(-1)!.duracion, 1)
     expect(plan.escenas.some(e => ['tarjeta-dato', 'marcador'].includes(e.escena))).toBe(false)
+  })
+
+  it('estructura directa: sin intro animada ni entrada a cámara por noticia; la primera imagen sale en el segundo 0', () => {
+    const directo = { ...guion, estructura: 'directa', presentacion: undefined, bloques: guion.bloques.map(b => ({ ...b, caraBreve: undefined })) }
+    const plan = planificar(directo, { ppm: 155 })
+    expect(plan.escenas.some(e => e.escena === 'intro')).toBe(false)
+    expect(plan.segmentos.map(s => s.id)).toEqual(['gancho', 'b1-voz', 'b2-voz', 'b3-voz', 'pregunta', 'cierre'])
+    expect(plan.segmentos[0].inicio).toBe(0)
+    const base = plan.escenas.filter(e => e.capa === 1).sort((a, b) => a.inicio - b.inicio)
+    expect(base[0].inicio).toBe(0)
+    for (let i = 1; i < base.length; i++) expect(base[i].inicio).toBeCloseTo(base[i - 1].inicio + base[i - 1].duracion, 1)
+  })
+
+  it('todas las estructuras directas arman el video sin intro, y el top rotula cada puesto', () => {
+    for (const estructura of ['historia-a-fondo', 'top', 'pregunta-del-dia']) {
+      const g = { ...guion, estructura, presentacion: undefined, bloques: guion.bloques.map((b, i) => ({ ...b, caraBreve: undefined, puesto: guion.bloques.length - i, ...(estructura === 'historia-a-fondo' && i === 1 ? { fondo: true, voz: palabras(600) } : {}) })) }
+      const plan = planificar(g, { ppm: 155 })
+      expect(plan.escenas.some(e => e.escena === 'intro'), estructura).toBe(false)
+      expect(plan.segmentos[0].inicio).toBe(0)
+      const base = plan.escenas.filter(e => e.capa === 1).sort((x, y) => x.inicio - y.inicio)
+      for (let i = 1; i < base.length; i++) expect(base[i].inicio).toBeCloseTo(base[i - 1].inicio + base[i - 1].duracion, 1)
+    }
+    const top = planificar({ ...guion, estructura: 'top', presentacion: undefined, bloques: guion.bloques.map((b, i) => ({ ...b, caraBreve: undefined, puesto: guion.bloques.length - i })) }, { ppm: 155 })
+    expect(top.escenas.filter(e => e.escena === 'rotulo' && String(e.variables?.etiqueta).startsWith('PUESTO')).map(e => e.variables?.etiqueta)).toEqual(['PUESTO 3', 'PUESTO 2', 'PUESTO 1'])
   })
 
   it('marca las tomas a cámara de apertura, cada noticia y cierre', () => {
@@ -172,5 +196,14 @@ describe('generador del video diario', () => {
     expect(new Set(ids).size).toBe(ids.length)
     expect(index).toContain('&#39;')
     expect(index).not.toContain('<b>')
+  })
+})
+
+describe('más clips que imágenes (2026-11-22)', () => {
+  it('intercala dos clips por cada foto y respeta lo que sobra', async () => {
+    const { intercalarClips } = await import('../../scripts/video-generar-proyecto.mjs') as { intercalarClips: (o: Array<{ tipo?: string, id: string }>) => Array<{ id: string }> }
+    const orden = intercalarClips([{ id: 'f1' }, { id: 'f2' }, { id: 'v1', tipo: 'video' }, { id: 'v2', tipo: 'video' }, { id: 'v3', tipo: 'video' }]).map(o => o.id)
+    expect(orden).toEqual(['v1', 'v2', 'f1', 'v3', 'f2'])
+    expect(intercalarClips([{ id: 'f1' }, { id: 'f2' }]).map(o => o.id)).toEqual(['f1', 'f2'])
   })
 })

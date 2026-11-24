@@ -2,9 +2,10 @@
   "version": 3,
   "descripcion": "Parámetros del video diario de Pont3la10. Salen del estudio docs/ESTUDIO_COMPETENCIA_VIDEO_DIARIO.md.",
   "formato": {
-    "duracionObjetivoSegundos": 480,
-    "duracionMinimaSegundos": 450,
-    "duracionMaximaSegundos": 600,
+    "duracionObjetivoSegundos": 720,
+    "duracionMinimaSegundos": 480,
+    "duracionMaximaSegundos": 1200,
+    "nota": "Decisión del responsable (2026-11-24): el video de noticias dura mínimo 8 minutos y puede llegar a 20.",
     "palabrasPorMinuto": 155,
     "relacionAspecto": "16:9"
   },
@@ -20,11 +21,53 @@
   },
   "bloques": {
     "minimo": 8,
-    "maximo": 12,
-    "palabrasMinimas": 80,
-    "palabrasMaximas": 160,
+    "maximo": 16,
+    "palabrasMinimas": 45,
+    "palabrasMaximas": 320,
     "caraBreveMaximoPalabras": 30,
-    "segundosPorPlano": 8
+    "segundosPorPlano": 8,
+    "descripcionRitmo": "Medido el 2026-11-22 en los largos virales de Cracks y La Gambeta: noticias de 20 a 110 s encadenadas sin intro, una pregunta al público cada ~1,5 min. Nuestros videos tenían todas las noticias de 44–50 s con una toma a cámara antes de cada una.",
+    "tamanos": {
+      "rapida": [45, 85],
+      "fuerte": [220, 320]
+    },
+    "maximoSeguidosMismoTamano": 2,
+    "bloquesPorPregunta": 3
+  },
+  "estructura": {
+    "porDefecto": "directa",
+    "presentacionMaximoPalabras": 15
+  },
+  "estructuras": {
+    "directa": {
+      "descripcion": "La de siempre: gancho con la noticia más fuerte y de 8 a 16 noticias encadenadas, de largo variado, con una pregunta al público cada 3."
+    },
+    "historia-a-fondo": {
+      "descripcion": "Una historia del día contada a fondo (de 3 a 6 minutos) y las demás rápidas. Un solo bloque lleva \"fondo\": true.",
+      "bloques": { "minimo": 6, "maximo": 12, "palabrasMaximas": 220 },
+      "fondo": { "palabrasMinimas": 450, "palabrasMaximas": 900, "segundosPorPlano": 12 },
+      "ritmoVariado": false
+    },
+    "top": {
+      "descripcion": "Top del día o de la semana en cuenta regresiva: de 5 a 8 puestos con \"puesto\" descendente, el 1 al final.",
+      "bloques": { "minimo": 5, "maximo": 8, "palabrasMinimas": 90, "palabrasMaximas": 260 },
+      "presentacionMaximoPalabras": 40,
+      "puestos": true,
+      "ritmoVariado": false,
+      "preguntasPublico": false
+    },
+    "pregunta-del-dia": {
+      "descripcion": "Un «¿por qué?» o «¿qué pasó?» con datos: el gancho es la pregunta y el último bloque, marcado \"respuesta\": true, la responde.",
+      "bloques": { "minimo": 4, "maximo": 8, "palabrasMinimas": 120, "palabrasMaximas": 340 },
+      "ganchoEsPregunta": true,
+      "respuestaFinal": true,
+      "ritmoVariado": false
+    }
+  },
+  "rotacion": {
+    "nota": "Hipótesis a medir con retención propia: pesos para sortear la estructura del día sin repetir las últimas dos (scripts/video-estructura.mjs).",
+    "pesos": { "directa": 4, "historia-a-fondo": 2, "top": 1, "pregunta-del-dia": 2 },
+    "noRepetirUltimas": 2
   },
   "cierre": {
     "maximoPalabras": 45,
@@ -73,7 +116,8 @@
       "bloques_con_fuente",
       "fotos_con_credito",
       "rumor_atribuido",
-      "duracion_total"
+      "duracion_total",
+      "noticia_directa"
     ]
   },
   "tono": {
@@ -101,10 +145,12 @@
   "titulos": {
     "cantidad": 3,
     "caracteresMinimos": 45,
-    "caracteresMaximos": 75,
+    "caracteresMaximos": 85,
     "claveEnLosPrimeros": 40,
-    "maximoPalabrasEnMayusculas": 2,
-    "maximoEmojis": 1
+    "maximoPalabrasEnMayusculas": 6,
+    "maximoEmojis": 1,
+    "minimoTitulosConGancho": 2,
+    "ganchos": ["no creer[aá]s", "nadie (puede|lo )", "nadie lo", "esto nadie", "se arm[oó]", "lo que pas[oó]", "no puede ser", "lo ten[ií]a todo", "se sacudi[oó]", "qu[eé] golpe"]
   },
   "miniatura": {
     "palabrasMinimas": 2,

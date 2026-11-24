@@ -15,14 +15,16 @@ import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { generarProyecto } from './video-generar-proyecto.mjs'
 import { edicionDe } from './video-edicion.mjs'
+import { SITIO_API, SITIO_PUBLICO } from './video-sitio.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
-const SITIO = 'https://www.pont3la10.com'
+const SITIO = SITIO_API
 const AGENTE = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36 Pont3la10-estudio'
 const LIMITE_IMAGEN = 15 * 1024 * 1024
 const LIMITE_VIDEO = 120 * 1024 * 1024
-const VIDEOS_POR_NOTICIA = 2
+// Más clips y menos imágenes fijas (2026-11-22): hasta 4 clips por noticia.
+const VIDEOS_POR_NOTICIA = 4
 const SEGUNDOS_MAXIMOS_CLIP = 15
 const ANCHO_MINIMO = 640
 // Dos fotos cuya huella visual difiere en 6 bits o menos (de 64) son la misma foto en otro tamaño o recorte.
@@ -34,11 +36,13 @@ const MEDIOS = {
   'as.com': 'AS', 'epimg.net': 'AS', 'dimayor.com.co': 'DIMAYOR', 'clarosports.com': 'Claro Sports', 'elcolombiano.com': 'El Colombiano',
   'semana.com': 'Semana', 'elespectador.com': 'El Espectador', 'antena2.com': 'Antena 2', 'bluradio.com': 'Blu Radio',
   'caracoltv.com': 'Caracol TV', 'noticiascaracol.com': 'Noticias Caracol', 'pulzo.com': 'Pulzo', 'fcf.com.co': 'FCF',
+  'tudn.com': 'TUDN', 'record.com.mx': 'Récord', 'mediotiempo.com': 'Mediotiempo', 'ole.com.ar': 'Olé', 'tycsports.com': 'TyC Sports',
+  'ge.globo.com': 'ge', 'lance.com.br': 'Lance', 'latercera.com': 'La Tercera', 'emol.com': 'Emol', 'redgol.cl': 'Redgol',
   'qhubo.com': 'Q’hubo', 'qhubomedellin.com': 'Q’hubo Medellín', 'qhubocali.com': 'Q’hubo Cali', 'vanguardia.com': 'Vanguardia',
   'elheraldo.co': 'El Heraldo', 'elpais.com.co': 'El País Cali', 'golcaracol.com': 'Gol Caracol', 'espn.com.co': 'ESPN'
 }
 const AMBIGUAS = new Set(['cali', 'medellin', 'bogota', 'santa', 'barranquilla', 'manizales'])
-const GENERICOS = new Set(['liga', 'betplay', 'torneo', 'copa', 'futbol', 'colombiano', 'colombia', 'deportivo', 'club', 'atletico', 'independiente', 'america', 'final', 'fecha', 'tabla', 'grupo', 'cuadrangulares', 'partido', 'para', 'como', 'cual', 'que', 'tras', 'ante', 'contra', 'sera', 'esta', 'este', 'todo', 'todos', 'nuevo', 'nueva', 'quien', 'donde', 'cuando', 'porque', 'precios', 'boleteria'])
+const GENERICOS = new Set(['liga', 'betplay', 'torneo', 'copa', 'futbol', 'colombiano', 'colombia', 'latinoamerica', 'latinoamericano', 'mexicano', 'mexico', 'argentino', 'argentina', 'brasileiro', 'brasil', 'libertadores', 'sudamericana', 'deportivo', 'club', 'atletico', 'independiente', 'america', 'final', 'fecha', 'tabla', 'grupo', 'cuadrangulares', 'partido', 'para', 'como', 'cual', 'que', 'tras', 'ante', 'contra', 'sera', 'esta', 'este', 'todo', 'todos', 'nuevo', 'nueva', 'quien', 'donde', 'cuando', 'porque', 'precios', 'boleteria'])
 
 // Solo URLs públicas http(s): nada de la red local.
 export function urlPublica(texto) {
@@ -185,7 +189,7 @@ async function candidatasCommons(consulta, cantidad = 2, { excluir = /femenin|wo
 }
 
 // Recolecta candidatas para una noticia, en orden de preferencia.
-async function candidatasDeNoticia(bloque, { recientes, registro }) {
+async function candidatasDeNoticia(bloque, { recientes, registro, consultaRespaldo = 'estadio fútbol Colombia hinchas' }) {
   const candidatas = []
   const videos = []
   const articulo = bloque.articuloSlug ? await traer(`${SITIO}/api/articulos/${encodeURIComponent(bloque.articuloSlug)}`, { tipo: 'json' }).catch(() => null) : null
@@ -229,13 +233,13 @@ async function candidatasDeNoticia(bloque, { recientes, registro }) {
     for (const otra of parecidas) {
       const detalle = await traer(`${SITIO}/api/articulos/${encodeURIComponent(otra.slug)}`, { tipo: 'json' }).catch(() => null)
       const descripcion = `${detalle?.portada?.textoAlternativo || ''} ${detalle?.portada?.pieDeFoto || ''}`
-      if (detalle?.portada?.url && detalle.portada.credito && mencionaAlgo(descripcion, delClub)) candidatas.push({ url: detalle.portada.url, credito: detalle.portada.credito, origen: `${SITIO}/articulos/${otra.slug}` })
+      if (detalle?.portada?.url && detalle.portada.credito && mencionaAlgo(descripcion, delClub)) candidatas.push({ url: detalle.portada.url, credito: detalle.portada.credito, origen: `${SITIO_PUBLICO}/articulos/${otra.slug}` })
     }
   }
   // 3) Wikimedia Commons: con el nombre del club si es un club; si la noticia es de la liga en general, estadios del país.
   const esClub = normalizar(bloque.club).split(/[^a-z0-9]+/).some(p => p.length > 3 && !GENERICOS.has(p))
   const sobreFemenino = /femenin/.test(normalizar(`${articulo?.titulo || ''} ${bloque.club || ''}`))
-  try { candidatas.push(...await candidatasCommons(esClub ? bloque.club : 'estadio fútbol Colombia hinchas', 2, { excluir: sobreFemenino ? null : undefined })) } catch (error) { registro(`  · Commons no respondió: ${error.message}`) }
+  try { candidatas.push(...await candidatasCommons(esClub ? bloque.club : consultaRespaldo, 2, { excluir: sobreFemenino ? null : undefined })) } catch (error) { registro(`  · Commons no respondió: ${error.message}`) }
   candidatas.videos = videos
   return candidatas
 }
@@ -260,7 +264,13 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
   const rutaEstudio = join(carpeta, 'estudio.json')
   const leerEstudio = async () => (existsSync(rutaEstudio) ? JSON.parse(await readFile(rutaEstudio, 'utf8')) : {})
   const manifiesto = existsSync(join(carpeta, 'manifiesto.json')) ? JSON.parse(await readFile(join(carpeta, 'manifiesto.json'), 'utf8')) : { fotos: [] }
-  const recientes = await traer(`${SITIO}/api/articulos?categoria=${edicionDe(guion).categoria}&limite=50`, { tipo: 'json' }).then(l => (Array.isArray(l) ? l : [])).catch(() => [])
+  const edicion = edicionDe(guion)
+  // Artículos recientes de todas las categorías de la edición (Latinoamérica reúne varias), sin repetir.
+  const recientes = []
+  for (const categoria of edicion.categorias || [edicion.categoria]) {
+    const lista = await traer(`${SITIO}/api/articulos?categoria=${categoria}&limite=50`, { tipo: 'json' }).then(l => (Array.isArray(l) ? l : [])).catch(() => [])
+    for (const a of lista) if (!recientes.some(r => r.slug === a.slug)) recientes.push(a)
+  }
   const carpetaFotos = join(carpeta, 'assets', 'fotos')
   await mkdir(carpetaFotos, { recursive: true })
   // Huellas de todo lo que ya está en el proyecto (portadas y fotos agregadas), para no repetir.
@@ -281,7 +291,7 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
     if (!faltan && !faltanVideos) { resumen.push({ bloque: bloque.id, club: bloque.club, agregadas: 0, videos: 0 }); continue }
     registro(`${bloque.id} · ${bloque.club || ''}: buscando ${faltan} foto(s) y ${faltanVideos} clip(s)…`)
     const nuevas = []
-    const candidatas = await candidatasDeNoticia(bloque, { recientes, registro })
+    const candidatas = await candidatasDeNoticia(bloque, { recientes, registro, consultaRespaldo: edicion.consultaRespaldo })
     for (const candidata of candidatas) {
       if (nuevas.length >= faltan) break
       const llave = llaveArchivo(candidata.url)
@@ -308,7 +318,7 @@ export async function buscarFotosProyecto({ carpeta, porNoticia = 10, armar = tr
         nuevas.push({ ruta: `assets/fotos/${nombre}.jpg`, credito: candidata.credito.slice(0, 120), auto: true, origen: candidata.origen, origenImagen: candidata.url })
       } catch { /* imagen dañada: se salta */ } finally { await rm(`${base}.descarga`, { force: true }) }
     }
-    // Clips de video de las publicaciones (máximo 2 por noticia): sin sonido, recortados a 15 s y con póster.
+    // Clips de video de las publicaciones (máximo 4 por noticia): sin sonido, recortados a 15 s y con póster.
     const carpetaVideos = join(carpeta, 'assets', 'videos')
     let clips = 0
     for (const video of candidatas.videos || []) {

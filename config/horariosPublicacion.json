@@ -13,12 +13,32 @@
     { "hora": "12:30", "motivo": "Mediodía de Colombia." },
     { "hora": "18:30", "motivo": "Tarde-noche, cuando más gente ve videos largos en casa." }
   ],
+  "franjasPorEdicion": {
+    "descripcion": "Cada video largo tiene sus franjas para que el de Latinoamérica, el internacional y el documental no se desplacen entre sí (separación mínima de 2 h con Reels y Shorts). Una edición sin entrada usa «franjasVideoLargo». Todas son hipótesis iniciales (ver «evidencia»).",
+    "latam": [
+      { "hora": "12:30", "motivo": "Mediodía de Colombia y la mayor parte de Latinoamérica (la edición principal conserva las franjas históricas del video largo)." },
+      { "hora": "18:30", "motivo": "Tarde-noche, cuando más gente ve videos largos en casa." }
+    ],
+    "internacional": [
+      { "hora": "14:30", "motivo": "Separada 2 h del video de Latinoamérica y de los Reels de las 12:30 y las 16:30." },
+      { "hora": "21:30", "motivo": "Noche, cuando juega Europa y 2 h después de la franja de 19:30 de los Reels." }
+    ],
+    "documental": {
+      "diasSemana": [5],
+      "franjas": [
+        { "hora": "18:30", "motivo": "Viernes por la tarde-noche (plan docs/PLAN_DOCUMENTAL_SEMANAL.md); si el diario de Latinoamérica coincide, el que se programe después pasa a su siguiente franja." }
+      ]
+    }
+  },
   "reglas": {
     "minutosMinimos": 15,
     "separacionMinimaHoras": 2,
     "prohibidoDesde": "23:00",
     "prohibidoHasta": "05:30",
     "noticiaDelDia": "Un Reel de una noticia de hoy sale en la primera franja libre del mismo día; solo pasa a mañana si ya no queda ninguna.",
+    "relleno": { "primera": "06:30", "ultima": "22:30", "separacionMinutos": 25, "motivo": "Si las franjas no alcanzan para todos los Reels de un video, se llena el mismo día (cada media hora) antes de pasar al siguiente; sin tope por día." },
+    "reelsDelVideo": "El video diario sale de noche; todos sus Reels salen el día siguiente (el mismo día), aunque sean muchos.",
+    "noticiasRedes": "Las publicaciones de redes de noticias salen el mismo día: primera hora libre a más de 12 min, una cada 15 min, nunca entre 23:00 y 5:30; solo pasan a la mañana siguiente si ya no queda día.",
     "findeSemana": "Mismas franjas: en fútbol el fin de semana hay partidos y mucho público; se compara con datos propios."
   },
   "evidencia": "Solo hay una fuente con horas para Colombia (SchedPilot); el resto son estudios globales de Buffer, Sprout, SocialPilot y Metricool que se contradicen en parte. Es una hipótesis inicial, no una verdad.",

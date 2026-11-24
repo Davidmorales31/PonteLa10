@@ -1,0 +1,343 @@
+{
+  "fecha": "2026-11-24",
+  "shorts": true,
+  "canales": [
+    {
+      "nombre": "Dosis de Fútbol",
+      "tipo": "compilaciones",
+      "shorts": 40,
+      "medianaVistasShorts": 947500.0,
+      "maximoVistas": 10000000,
+      "parteDeLos3Mejores": 0.37,
+      "shortsSobreLargos": 0.61
+    },
+    {
+      "nombre": "Cristian Nieto",
+      "tipo": "análisis",
+      "shorts": 29,
+      "medianaVistasShorts": 183000,
+      "maximoVistas": 2100000,
+      "parteDeLos3Mejores": 0.41,
+      "shortsSobreLargos": 0.31
+    },
+    {
+      "nombre": "EmmaHavokOscuro",
+      "tipo": "documental",
+      "shorts": 32,
+      "medianaVistasShorts": 161500.0,
+      "maximoVistas": 2600000,
+      "parteDeLos3Mejores": 0.49,
+      "shortsSobreLargos": 0.6
+    },
+    {
+      "nombre": "POST UNITED",
+      "tipo": "noticias",
+      "shorts": 40,
+      "medianaVistasShorts": 52000.0,
+      "maximoVistas": 481000,
+      "parteDeLos3Mejores": 0.35,
+      "shortsSobreLargos": 4.0
+    },
+    {
+      "nombre": "La Gambeta",
+      "tipo": "noticias",
+      "shorts": 40,
+      "medianaVistasShorts": 47000.0,
+      "maximoVistas": 592000,
+      "parteDeLos3Mejores": 0.37,
+      "shortsSobreLargos": 0.58
+    },
+    {
+      "nombre": "Jugada Deportiva",
+      "tipo": "noticias",
+      "shorts": 16,
+      "medianaVistasShorts": 43000.0,
+      "maximoVistas": 384000,
+      "parteDeLos3Mejores": 0.62,
+      "shortsSobreLargos": 1.01
+    },
+    {
+      "nombre": "PEDRO EL INGENIERO",
+      "tipo": "análisis",
+      "shorts": 40,
+      "medianaVistasShorts": 39500.0,
+      "maximoVistas": 2500000,
+      "parteDeLos3Mejores": 0.54,
+      "shortsSobreLargos": 0.94
+    },
+    {
+      "nombre": "LasCronicasDeJoaqo",
+      "tipo": "noticias",
+      "shorts": 40,
+      "medianaVistasShorts": 35500.0,
+      "maximoVistas": 314000,
+      "parteDeLos3Mejores": 0.33,
+      "shortsSobreLargos": 0.89
+    },
+    {
+      "nombre": "TNT Sports Argentina",
+      "tipo": "medio con derechos",
+      "shorts": 40,
+      "medianaVistasShorts": 29500.0,
+      "maximoVistas": 249000,
+      "parteDeLos3Mejores": 0.29,
+      "shortsSobreLargos": 6.15
+    },
+    {
+      "nombre": "Leo Salinas - Fútbol",
+      "tipo": "historia de jugador",
+      "shorts": 40,
+      "medianaVistasShorts": 28000.0,
+      "maximoVistas": 680000,
+      "parteDeLos3Mejores": 0.45,
+      "shortsSobreLargos": 0.81
+    },
+    {
+      "nombre": "ESPN Fans",
+      "tipo": "medio con derechos",
+      "shorts": 40,
+      "medianaVistasShorts": 24000.0,
+      "maximoVistas": 181000,
+      "parteDeLos3Mejores": 0.3,
+      "shortsSobreLargos": 0.66
+    },
+    {
+      "nombre": "Memorias del Fútbol",
+      "tipo": "documental",
+      "shorts": 40,
+      "medianaVistasShorts": 16500.0,
+      "maximoVistas": 1300000,
+      "parteDeLos3Mejores": 0.62,
+      "shortsSobreLargos": 0.13
+    },
+    {
+      "nombre": "Cracks",
+      "tipo": "noticias",
+      "shorts": 40,
+      "medianaVistasShorts": 16000.0,
+      "maximoVistas": 53000,
+      "parteDeLos3Mejores": 0.17,
+      "shortsSobreLargos": 0.07
+    },
+    {
+      "nombre": "Camilo MD",
+      "tipo": "noticias",
+      "shorts": 40,
+      "medianaVistasShorts": 14500.0,
+      "maximoVistas": 76000,
+      "parteDeLos3Mejores": 0.24,
+      "shortsSobreLargos": 0.39
+    },
+    {
+      "nombre": "ESPN Deportes",
+      "tipo": "medio con derechos",
+      "shorts": 40,
+      "medianaVistasShorts": 12000.0,
+      "maximoVistas": 205000,
+      "parteDeLos3Mejores": 0.4,
+      "shortsSobreLargos": 0.71
+    },
+    {
+      "nombre": "Dieck Docs",
+      "tipo": "documental",
+      "shorts": 40,
+      "medianaVistasShorts": 11500.0,
+      "maximoVistas": 95000,
+      "parteDeLos3Mejores": 0.27,
+      "shortsSobreLargos": 0.0
+    },
+    {
+      "nombre": "TNT Sports Chile",
+      "tipo": "medio con derechos",
+      "shorts": 40,
+      "medianaVistasShorts": 9850.0,
+      "maximoVistas": 93000,
+      "parteDeLos3Mejores": 0.29,
+      "shortsSobreLargos": 2.4
+    },
+    {
+      "nombre": "TUDN México",
+      "tipo": "medio con derechos",
+      "shorts": 40,
+      "medianaVistasShorts": 8250.0,
+      "maximoVistas": 266000,
+      "parteDeLos3Mejores": 0.49,
+      "shortsSobreLargos": 0.32
+    },
+    {
+      "nombre": "RICCK FÚTBOL",
+      "tipo": "noticias",
+      "shorts": 26,
+      "medianaVistasShorts": 7700.0,
+      "maximoVistas": 33000,
+      "parteDeLos3Mejores": 0.28,
+      "shortsSobreLargos": 0.28
+    },
+    {
+      "nombre": "Win Sports",
+      "tipo": "medio con derechos",
+      "shorts": 40,
+      "medianaVistasShorts": 7050.0,
+      "maximoVistas": 106000,
+      "parteDeLos3Mejores": 0.44,
+      "shortsSobreLargos": 0.41
+    },
+    {
+      "nombre": "Gol Caracol",
+      "tipo": "medio con derechos",
+      "shorts": 40,
+      "medianaVistasShorts": 6100.0,
+      "maximoVistas": 161000,
+      "parteDeLos3Mejores": 0.43,
+      "shortsSobreLargos": 2.26
+    },
+    {
+      "nombre": "MegaDeportes",
+      "tipo": "medio con derechos",
+      "shorts": 40,
+      "medianaVistasShorts": 5550.0,
+      "maximoVistas": 119000,
+      "parteDeLos3Mejores": 0.41,
+      "shortsSobreLargos": 0.85
+    },
+    {
+      "nombre": "Claro Sports",
+      "tipo": "medio con derechos",
+      "shorts": 40,
+      "medianaVistasShorts": 2200.0,
+      "maximoVistas": 67000,
+      "parteDeLos3Mejores": 0.43,
+      "shortsSobreLargos": 1.05
+    },
+    {
+      "nombre": "La Secta Deportiva",
+      "tipo": "noticias",
+      "shorts": 40,
+      "medianaVistasShorts": 2050.0,
+      "maximoVistas": 10000,
+      "parteDeLos3Mejores": 0.21,
+      "shortsSobreLargos": 0.2
+    },
+    {
+      "nombre": "Tomás Fernández",
+      "tipo": "documental",
+      "shorts": 40,
+      "medianaVistasShorts": 1300.0,
+      "maximoVistas": 67000,
+      "parteDeLos3Mejores": 0.66,
+      "shortsSobreLargos": 0.05
+    },
+    {
+      "nombre": "AS Colombia",
+      "tipo": "noticias",
+      "shorts": 40,
+      "medianaVistasShorts": 246.0,
+      "maximoVistas": 1500,
+      "parteDeLos3Mejores": 0.25,
+      "shortsSobreLargos": 0.41
+    },
+    {
+      "nombre": "La Pizarra Táctica",
+      "tipo": "análisis",
+      "shorts": 40,
+      "medianaVistasShorts": 11.5,
+      "maximoVistas": 119,
+      "parteDeLos3Mejores": 0.34,
+      "shortsSobreLargos": 0.01
+    }
+  ],
+  "formatos": {
+    "curiosidad/sabías": {
+      "shorts": 24,
+      "relativoMediana": 1.16,
+      "masDe3x": 0.08
+    },
+    "dicho/cita": {
+      "shorts": 17,
+      "relativoMediana": 0.75,
+      "masDe3x": 0.06
+    },
+    "emoción/humano": {
+      "shorts": 16,
+      "relativoMediana": 1.09,
+      "masDe3x": 0.19
+    },
+    "fichaje/mercado": {
+      "shorts": 18,
+      "relativoMediana": 1.13,
+      "masDe3x": 0.11
+    },
+    "gol/jugada": {
+      "shorts": 53,
+      "relativoMediana": 1.68,
+      "masDe3x": 0.34
+    },
+    "otros": {
+      "shorts": 549,
+      "relativoMediana": 1.0,
+      "masDe3x": 0.16
+    },
+    "polémica/escándalo": {
+      "shorts": 17,
+      "relativoMediana": 0.7,
+      "masDe3x": 0.18
+    },
+    "pregunta (¿por qué/cómo?)": {
+      "shorts": 66,
+      "relativoMediana": 0.84,
+      "masDe3x": 0.17
+    },
+    "récord/dato/cifra": {
+      "shorts": 22,
+      "relativoMediana": 0.9,
+      "masDe3x": 0.05
+    },
+    "top/lista": {
+      "shorts": 6,
+      "relativoMediana": 2.0,
+      "masDe3x": 0.17
+    },
+    "vs/duelo": {
+      "shorts": 72,
+      "relativoMediana": 1.06,
+      "masDe3x": 0.21
+    }
+  },
+  "rasgosDeTitulo": {
+    "con ?": {
+      "con": 0.97,
+      "sin": 1.02,
+      "shortsCon": 136
+    },
+    "con |": {
+      "con": 1.05,
+      "sin": 0.98,
+      "shortsCon": 174
+    },
+    "con MAYÚSCULAS": {
+      "con": 1.04,
+      "sin": 0.97,
+      "shortsCon": 372
+    },
+    "con emoji": {
+      "con": 1.0,
+      "sin": 1.0,
+      "shortsCon": 389
+    },
+    "con número": {
+      "con": 1.15,
+      "sin": 0.97,
+      "shortsCon": 134
+    },
+    "título corto (<=45)": {
+      "con": 1.02,
+      "sin": 0.98,
+      "shortsCon": 332
+    },
+    "título largo (>70)": {
+      "con": 1.01,
+      "sin": 1.0,
+      "shortsCon": 247
+    }
+  }
+}

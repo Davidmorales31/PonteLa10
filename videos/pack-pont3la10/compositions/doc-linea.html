@@ -1,0 +1,69 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #061733; font-family: "Montserrat", sans-serif; }
+    #dlin-fondo { position: absolute; inset: -40px; }
+    #dlin-img { position: absolute; left: 0; top: 0; width: 2000px; height: 1160px; object-fit: cover; filter: blur(12px) brightness(0.34) saturate(0.7); }
+    .dlin-tinte { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,23,51,0.75) 0%, rgba(6,23,51,0.92) 100%); }
+    #dlin-titulo { position: absolute; left: 150px; top: 120px; color: #ffd800; font-size: 40px; font-weight: 800; letter-spacing: 0.28em; }
+    #dlin-eje { position: absolute; left: 200px; right: 200px; top: 560px; height: 6px; background: rgba(255,255,255,0.85); transform-origin: 0% 50%; border-radius: 3px; }
+    #dlin-hitos { position: absolute; left: 200px; right: 200px; top: 0; bottom: 0; }
+    .dlin-hito { position: absolute; top: 0; width: 0; height: 100%; }
+    .dlin-punto { position: absolute; left: -20px; top: 543px; width: 40px; height: 40px; border-radius: 50%; background: #ffd800; border: 6px solid #061733; box-shadow: 0 0 0 4px #ffd800; }
+    .dlin-texto { position: absolute; left: -210px; width: 420px; text-align: center; color: #ffffff; font-size: 44px; font-weight: 800; line-height: 1.15; }
+    .dlin-arriba { bottom: 590px; }
+    .dlin-abajo { top: 620px; }
+    .dlin-num { display: block; margin-bottom: 8px; color: #ffd800; font-size: 30px; font-weight: 700; letter-spacing: 0.14em; }
+    #dlin-marca { position: absolute; right: 96px; top: 60px; width: 190px; height: auto; opacity: 0.85; }
+  </style>
+  <div id="root" data-composition-id="doc-linea" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"hitos","type":"string","label":"Hitos (JSON con textos)","default":"[\"Batuque FC\",\"CS Mindelense\",\"Progresso (Angola)\"]"},{"id":"titulo","type":"string","label":"Título","default":"LÍNEA DE TIEMPO"},{"id":"fondo","type":"string","label":"Foto de fondo (desenfocada)","default":""},{"id":"duracion","type":"number","label":"Duración (s)","default":7,"min":3,"max":14,"step":0.1}]'>
+    <div id="dlin-escena" class="clip" data-start="0" data-duration="7" data-layout-allow-occlusion data-layout-allow-overflow>
+      <div id="dlin-fondo" data-layout-allow-occlusion><img id="dlin-img" src="assets/vacio.png" data-var-src="fondo" alt="" /></div>
+      <div class="dlin-tinte" data-layout-allow-occlusion></div>
+      <div id="dlin-titulo" data-var-text="titulo">LÍNEA DE TIEMPO</div>
+      <div id="dlin-eje"></div>
+      <div id="dlin-hitos" data-layout-allow-overflow></div>
+      <img id="dlin-marca" src="assets/logo-blanco.png" alt="" />
+    </div>
+  </div>
+  <script>
+    // Línea de tiempo: el eje se dibuja de izquierda a derecha y cada hito aparece cuando la línea llega a él,
+    // alternando arriba y abajo para que los textos no choquen.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(3, Number(v.duracion ?? 7));
+    if (!String(v.fondo ?? "").trim()) document.querySelector("#dlin-img").style.display = "none";
+    let hitos = [];
+    try { hitos = JSON.parse(v.hitos || "[]"); } catch (e) { hitos = []; }
+    hitos = hitos.slice(0, 6);
+    const caja = document.querySelector("#dlin-hitos");
+    const ancho = 1520;
+    const recorrido = Math.min(D * 0.6, 1.2 + hitos.length * 0.8);
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#dlin-fondo", { scale: 1.0 }, { scale: 1.07, duration: D, ease: "none" }, 0);
+    tl.fromTo("#dlin-titulo", { opacity: 0, x: -30 }, { opacity: 1, x: 0, duration: 0.45, ease: "expo.out" }, 0.1);
+    tl.fromTo("#dlin-eje", { scaleX: 0 }, { scaleX: 1, duration: recorrido, ease: "none" }, 0.3);
+    hitos.forEach((texto, i) => {
+      const f = hitos.length === 1 ? 0.5 : (0.06 + 0.88 * i / (hitos.length - 1));
+      const hito = document.createElement("div");
+      hito.className = "dlin-hito";
+      hito.style.left = Math.round(f * ancho) + "px";
+      const punto = document.createElement("div");
+      punto.className = "dlin-punto";
+      const etiqueta = document.createElement("div");
+      etiqueta.className = "dlin-texto " + (i % 2 === 0 ? "dlin-arriba" : "dlin-abajo");
+      const num = document.createElement("span");
+      num.className = "dlin-num";
+      num.textContent = String(i + 1).padStart(2, "0");
+      etiqueta.appendChild(num);
+      etiqueta.appendChild(document.createTextNode(String(texto)));
+      hito.appendChild(punto);
+      hito.appendChild(etiqueta);
+      caja.appendChild(hito);
+      const llega = 0.3 + recorrido * f;
+      tl.fromTo(punto, { scale: 0 }, { scale: 1, duration: 0.35, ease: "back.out(2.4)" }, llega);
+      tl.fromTo(etiqueta, { opacity: 0, y: i % 2 === 0 ? 24 : -24 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, llega + 0.08);
+    });
+    tl.to(["#dlin-hitos", "#dlin-eje", "#dlin-titulo"], { opacity: 0, duration: 0.35, ease: "power2.in" }, D - 0.4);
+    window.__timelines["doc-linea"] = tl;
+  </script>
+</template>

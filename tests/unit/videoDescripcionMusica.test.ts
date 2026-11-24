@@ -9,7 +9,10 @@ const capitulos = descripcion.capitulos as unknown as (o: Record<string, unknown
 const creditosFotos = descripcion.creditosFotos as unknown as (g: unknown, e?: unknown) => string[]
 const descripcionYoutube = descripcion.descripcionYoutube as unknown as (o: Record<string, unknown>) => string
 const licenciaPermitida = musica.licenciaPermitida as unknown as (l: string) => boolean
-const filtroMezcla = musica.filtroMezcla as unknown as (o: { duracion: number, volumen?: number }) => string
+const filtroMezcla = musica.filtroMezcla as unknown as (o: { duracion: number, tramos?: Array<{ inicio: number, fin: number }> }) => string
+const tramosDeManifiesto = musica.tramosDeManifiesto as unknown as (m: unknown, d: number) => Array<{ clave: string, inicio: number, fin: number }>
+const elegirPistas = musica.elegirPistas as unknown as (n: number, d: string[], s: string) => string[]
+const planMusica = musica.planMusica as unknown as (o: Record<string, unknown>) => Promise<{ ids: string[], tramos: unknown[] } | null>
 const fotosDelEncargo = encargo.fotosDelEncargo as unknown as (g: unknown, e?: unknown) => Array<{ bloque: string, url: string, credito: string }>
 const textoEncargo = encargo.textoEncargo as unknown as (o: Record<string, unknown>) => string
 
@@ -63,12 +66,50 @@ describe('música', () => {
     for (const l of ['by-nc', 'by-sa', 'by-nd', 'by-nc-sa', '', 'sampling+']) expect(licenciaPermitida(l)).toBe(false)
   })
 
-  it('mezcla con la voz como llave (la música baja sola al hablar) y normaliza a -14 LUFS', () => {
-    const filtro = filtroMezcla({ duracion: 300, volumen: 0.3 })
-    expect(filtro).toContain('sidechaincompress=threshold=0.004:ratio=16:level_sc=3')
+  it('mezcla con la voz como llave, con ducking suave para que la música se siga oyendo, y normaliza a -14 LUFS', () => {
+    const filtro = filtroMezcla({ duracion: 300 })
+    expect(filtro).toContain('sidechaincompress=threshold=0.05:ratio=2.5')
+    expect(filtro).toContain(`loudnorm=I=${musica.NIVEL_CAMA}`)
     expect(filtro).toContain('afade=t=out:st=297.00:d=3')
     expect(filtro).toContain('loudnorm=I=-14')
-    expect(filtro).toContain('volume=0.3')
+  })
+
+  it('una pista por tramo, con fundido cruzado al cambiar de noticia', () => {
+    const filtro = filtroMezcla({ duracion: 100, tramos: [{ inicio: 0, fin: 40 }, { inicio: 40, fin: 100 }] })
+    expect(filtro).toContain('[1:a]atrim=0:40.75')
+    expect(filtro).toContain('[2:a]atrim=0:60.75')
+    expect(filtro).toContain('adelay=39250|39250')
+    expect(filtro).toContain('[m0][m1]amix=inputs=2')
+  })
+
+  it('reparte la música por noticia: la apertura va con la primera y el cierre corto con la última', () => {
+    const manifiesto = { segmentos: [
+      { id: 'gancho', inicio: 4 }, { id: 'presentacion', inicio: 10 }, { id: 'b1-cara', inicio: 25 }, { id: 'b1-voz', inicio: 30 },
+      { id: 'b2-voz', inicio: 80 }, { id: 'b3-voz', inicio: 150 }, { id: 'pregunta', inicio: 200 }, { id: 'cierre', inicio: 205 }
+    ] }
+    expect(tramosDeManifiesto(manifiesto, 207)).toEqual([
+      { clave: 'b1', inicio: 0, fin: 80 }, { clave: 'b2', inicio: 80, fin: 150 }, { clave: 'b3', inicio: 150, fin: 207 }
+    ])
+    expect(tramosDeManifiesto(manifiesto, 230).at(-1)).toEqual({ clave: 'cierre', inicio: 200, fin: 230 })
+  })
+
+  it('elige las pistas sola, sin repetir dos seguidas', () => {
+    const ids = elegirPistas(10, ['a', 'b', 'c', 'd'], '2026-11-22')
+    expect(ids).toHaveLength(10)
+    for (let i = 1; i < ids.length; i++) expect(ids[i]).not.toBe(ids[i - 1])
+    expect(new Set(elegirPistas(4, ['a', 'b', 'c', 'd'], 'x')).size).toBe(4)
+    expect(elegirPistas(3, [], 'x')).toEqual([])
+  })
+
+  it('el video largo no usa la pista elegida a mano; el Reel sí', async () => {
+    const manifiesto = { segmentos: [{ id: 'b1-voz', inicio: 0 }, { id: 'b2-voz', inicio: 50 }] }
+    const largo = await planMusica({ guion: {}, manifiesto, duracion: 100, semilla: 's', fija: 'z', disponibles: ['a', 'b'] })
+    expect(largo?.ids).toHaveLength(2)
+    expect(largo?.ids).not.toContain('z')
+    expect((await planMusica({ guion: { tipo: 'reel' }, manifiesto, duracion: 40, semilla: 's', fija: 'z', disponibles: ['a', 'z'] }))?.ids).toEqual(['z'])
+    // Una pista retirada de la biblioteca (reclamo de Content ID) no suena aunque se haya elegido a mano.
+    expect((await planMusica({ guion: { tipo: 'reel' }, manifiesto, duracion: 40, semilla: 's', fija: 'z', disponibles: ['a'] }))?.ids).toEqual(['a'])
+    expect(await planMusica({ guion: {}, manifiesto, duracion: 100, semilla: 's', disponibles: [] })).toBeNull()
   })
 })
 

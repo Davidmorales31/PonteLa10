@@ -1,0 +1,851 @@
+{
+  "version": 1,
+  "descripcion": "Banco de temas del documental de los viernes (docs/PLAN_DOCUMENTAL_SEMANAL.md). Lo lee scripts/documental-elegir.mjs. El ángulo es una pregunta candidata, no un dato: todo dato del guion sale de fuentes leídas. interesFondo (0-100) viene de las vistas medidas de documentales existentes (2026-11-23); null = sin medir.",
+  "reglas": {
+    "pesos": {
+      "tendencia": 0.5,
+      "interes": 0.3,
+      "hueco": 0.2
+    },
+    "diasSinRepetir": 365,
+    "bonoEfemerideDias": 10,
+    "bonoEfemeride": 15
+  },
+  "temas": [
+    {
+      "id": "cristiano-ronaldo",
+      "tipo": "futbolista",
+      "nombre": "Cristiano Ronaldo",
+      "alias": [
+        "cristiano",
+        "cr7",
+        "cristiano ronaldo"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Arrogancia o una disciplina que nadie más soportaría?",
+      "interesFondo": 100,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "lionel-messi",
+      "tipo": "futbolista",
+      "nombre": "Lionel Messi",
+      "alias": [
+        "messi",
+        "lionel messi",
+        "leo messi"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Cómo un niño al que le dijeron que no iba a crecer terminó siendo el más grande?",
+      "interesFondo": 95,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "diego-maradona",
+      "tipo": "futbolista",
+      "nombre": "Diego Maradona",
+      "alias": [
+        "maradona",
+        "diego maradona"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Por qué lo amaron tanto a pesar de todo?",
+      "interesFondo": 90,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "neymar",
+      "tipo": "futbolista",
+      "nombre": "Neymar",
+      "alias": [
+        "neymar",
+        "neymar jr"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Qué le faltó para ser el mejor del mundo?",
+      "interesFondo": 80,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "ronaldinho",
+      "tipo": "futbolista",
+      "nombre": "Ronaldinho",
+      "alias": [
+        "ronaldinho"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Por qué el jugador más feliz del mundo se apagó tan pronto?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "zinedine-zidane",
+      "tipo": "futbolista",
+      "nombre": "Zinedine Zidane",
+      "alias": [
+        "zidane",
+        "zinedine zidane"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Cómo el jugador más elegante terminó su carrera con un cabezazo?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "kylian-mbappe",
+      "tipo": "futbolista",
+      "nombre": "Kylian Mbappé",
+      "alias": [
+        "mbappe",
+        "mbappé",
+        "kylian mbappe"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Qué tuvo que dejar atrás para llegar al Real Madrid?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "erling-haaland",
+      "tipo": "futbolista",
+      "nombre": "Erling Haaland",
+      "alias": [
+        "haaland",
+        "erling haaland"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Es una máquina de goles o un proyecto que empezó de niño?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "pele",
+      "tipo": "futbolista",
+      "nombre": "Pelé",
+      "alias": [
+        "pele",
+        "pelé"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Cómo un niño de Brasil se volvió el primer rey del fútbol?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "ronaldo-nazario",
+      "tipo": "futbolista",
+      "nombre": "Ronaldo Nazário",
+      "alias": [
+        "ronaldo nazario",
+        "el fenomeno",
+        "ronaldo fenomeno"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Qué habría pasado sin las lesiones del Fenómeno?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "lamine-yamal",
+      "tipo": "futbolista",
+      "nombre": "Lamine Yamal",
+      "alias": [
+        "lamine yamal",
+        "yamal"
+      ],
+      "etiquetas": [
+        "mundial"
+      ],
+      "angulo": "¿Cómo llegó tan lejos tan joven?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "rene-higuita",
+      "tipo": "futbolista",
+      "nombre": "René Higuita",
+      "alias": [
+        "higuita",
+        "rene higuita",
+        "escorpion"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "portero"
+      ],
+      "angulo": "¿Locura o genio? El portero que cambió la forma de atajar",
+      "interesFondo": null,
+      "efemeride": "09-06",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "carlos-valderrama",
+      "tipo": "futbolista",
+      "nombre": "Carlos Valderrama",
+      "alias": [
+        "valderrama",
+        "el pibe",
+        "pibe valderrama"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Cómo el Pibe se volvió el símbolo de una generación?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "radamel-falcao",
+      "tipo": "futbolista",
+      "nombre": "Radamel Falcao",
+      "alias": [
+        "falcao",
+        "radamel falcao"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Qué pasó con el Tigre después de la lesión antes del Mundial 2014?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "james-rodriguez",
+      "tipo": "futbolista",
+      "nombre": "James Rodríguez",
+      "alias": [
+        "james",
+        "james rodriguez"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Del Mundial 2014 a dónde? La montaña rusa de James",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "luis-diaz",
+      "tipo": "futbolista",
+      "nombre": "Luis Díaz",
+      "alias": [
+        "luis diaz",
+        "lucho diaz"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Cómo un niño de Barrancas llegó a la élite de Europa?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "faustino-asprilla",
+      "tipo": "futbolista",
+      "nombre": "Faustino Asprilla",
+      "alias": [
+        "asprilla",
+        "tino asprilla"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "¿Por qué el Tino era tan impredecible dentro y fuera de la cancha?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "andres-escobar",
+      "tipo": "futbolista",
+      "nombre": "Andrés Escobar",
+      "alias": [
+        "andres escobar"
+      ],
+      "etiquetas": [
+        "colombiano"
+      ],
+      "angulo": "Un caballero del fútbol y el día que Colombia no olvida",
+      "interesFondo": null,
+      "efemeride": "07-02",
+      "sensible": true,
+      "publicado": null
+    },
+    {
+      "id": "oliver-kahn",
+      "tipo": "futbolista",
+      "nombre": "Oliver Kahn",
+      "alias": [
+        "kahn",
+        "oliver kahn"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Qué hacía tan temido al portero más intenso de su época?",
+      "interesFondo": 85,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "lev-yashin",
+      "tipo": "futbolista",
+      "nombre": "Lev Yashin",
+      "alias": [
+        "yashin",
+        "lev yashin"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Por qué el único portero con Balón de Oro sigue siendo el modelo?",
+      "interesFondo": 75,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "gianluigi-buffon",
+      "tipo": "futbolista",
+      "nombre": "Gianluigi Buffon",
+      "alias": [
+        "buffon",
+        "gianluigi buffon"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Cómo se juega casi 30 años al máximo nivel?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "iker-casillas",
+      "tipo": "futbolista",
+      "nombre": "Iker Casillas",
+      "alias": [
+        "casillas",
+        "iker casillas"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Cómo el santo de España vivió su caída en Madrid?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "jose-luis-chilavert",
+      "tipo": "futbolista",
+      "nombre": "José Luis Chilavert",
+      "alias": [
+        "chilavert"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Un portero goleador? La historia de Chilavert",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "emiliano-martinez",
+      "tipo": "futbolista",
+      "nombre": "Emiliano «Dibu» Martínez",
+      "alias": [
+        "dibu",
+        "dibu martinez",
+        "emiliano martinez"
+      ],
+      "etiquetas": [
+        "portero"
+      ],
+      "angulo": "¿Cómo un suplente eterno terminó atajando en una final del Mundial?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "la-mano-de-dios",
+      "tipo": "suceso",
+      "nombre": "La Mano de Dios (México 1986)",
+      "alias": [
+        "mano de dios",
+        "gol de la mano"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Trampa, genialidad o revancha? El gol más famoso de la historia",
+      "interesFondo": null,
+      "efemeride": "06-22",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "maracanazo",
+      "tipo": "suceso",
+      "nombre": "El Maracanazo (Brasil 1950)",
+      "alias": [
+        "maracanazo"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Cómo Uruguay silenció al Maracaná?",
+      "interesFondo": null,
+      "efemeride": "07-16",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "cabezazo-zidane",
+      "tipo": "suceso",
+      "nombre": "El cabezazo de Zidane (Berlín 2006)",
+      "alias": [
+        "cabezazo de zidane",
+        "zidane materazzi"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Qué pasó de verdad entre Zidane y Materazzi?",
+      "interesFondo": null,
+      "efemeride": "07-09",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "brasil-alemania-7-1",
+      "tipo": "suceso",
+      "nombre": "El 7-1 de Alemania a Brasil (2014)",
+      "alias": [
+        "7-1",
+        "mineirazo"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Cómo se derrumbó Brasil en su propio Mundial?",
+      "interesFondo": null,
+      "efemeride": "07-08",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "colombia-5-0-argentina",
+      "tipo": "suceso",
+      "nombre": "El 5-0 de Colombia a Argentina (1993)",
+      "alias": [
+        "5-0",
+        "cinco a cero"
+      ],
+      "etiquetas": [
+        "suceso",
+        "colombiano"
+      ],
+      "angulo": "La noche que Colombia goleó en Buenos Aires",
+      "interesFondo": null,
+      "efemeride": "09-05",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "estambul-2005",
+      "tipo": "suceso",
+      "nombre": "La final de Estambul (2005)",
+      "alias": [
+        "estambul 2005",
+        "milagro de estambul"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Cómo se remonta un 3-0 en una final de Champions?",
+      "interesFondo": null,
+      "efemeride": "05-25",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "calciopoli",
+      "tipo": "suceso",
+      "nombre": "El Calciopoli (2006)",
+      "alias": [
+        "calciopoli"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Cómo un escándalo mandó a la Juventus a la Serie B?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "superliga",
+      "tipo": "suceso",
+      "nombre": "La Superliga europea (2021)",
+      "alias": [
+        "superliga"
+      ],
+      "etiquetas": [
+        "suceso",
+        "mundial"
+      ],
+      "angulo": "¿Por qué la Superliga duró apenas unos días?",
+      "interesFondo": null,
+      "efemeride": "04-18",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "vozinha",
+      "tipo": "futbolista",
+      "nombre": "Vozinha (Josimar Évora Dias)",
+      "alias": [
+        "vozinha",
+        "josimar evora",
+        "josimar jose evora dias"
+      ],
+      "etiquetas": [
+        "portero",
+        "mundial"
+      ],
+      "angulo": "¿Cómo un portero de 40 años que casi nadie conocía frenó a España en su primer Mundial?",
+      "interesFondo": null,
+      "efemeride": "06-15",
+      "sensible": false,
+      "publicado": null
+    },
+    {
+      "id": "america-de-cali-era-dorada",
+      "tipo": "club",
+      "nombre": "La era dorada de América de Cali",
+      "alias": [
+        "america de cali",
+        "pentacampeon"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo América de Cali se volvió pentacampeón y llegó a varias finales de Copa Libertadores sin ganarla?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": true,
+      "publicado": null,
+      "nota": "Época con vínculos documentados con el narcotráfico: usar solo fuentes de primer nivel, sin morbo, y pedir la revisión expresa del responsable antes de aprobar el guion."
+    },
+    {
+      "id": "atletico-nacional-1989",
+      "tipo": "club",
+      "nombre": "Atlético Nacional, campeón de América 1989",
+      "alias": [
+        "atletico nacional",
+        "nacional 1989"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo un club de Medellín se convirtió en el primer campeón colombiano de la Copa Libertadores?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": true,
+      "publicado": null,
+      "nota": "Época con vínculos documentados con el narcotráfico: usar solo fuentes de primer nivel, sin morbo, y pedir la revisión expresa del responsable antes de aprobar el guion."
+    },
+    {
+      "id": "millonarios-ballet-azul",
+      "tipo": "club",
+      "nombre": "El Ballet Azul de Millonarios",
+      "alias": [
+        "ballet azul",
+        "millonarios"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Por qué el Millonarios de los años 50 fue llamado el Ballet Azul y qué dejó en el fútbol colombiano?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "once-caldas-2004",
+      "tipo": "club",
+      "nombre": "Once Caldas, campeón de América 2004",
+      "alias": [
+        "once caldas"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo un club de Manizales ganó la Copa Libertadores 2004 ante Boca Juniors?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "clasico-paisa",
+      "tipo": "clasico",
+      "nombre": "El clásico paisa: Nacional y Medellín",
+      "alias": [
+        "clasico paisa"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "clasico"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Por qué el Medellín perdió su trono frente al Nacional en el clásico de la ciudad?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "clasico-capitalino",
+      "tipo": "clasico",
+      "nombre": "El clásico capitalino: Millonarios y Santa Fe",
+      "alias": [
+        "clasico capitalino",
+        "millonarios santa fe"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "clasico"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Qué hizo del clásico capitalino el más antiguo de Bogotá y qué batallas lo marcaron?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "superclasico-boca-river",
+      "tipo": "clasico",
+      "nombre": "El Superclásico: Boca Juniors y River Plate",
+      "alias": [
+        "superclasico",
+        "boca river"
+      ],
+      "etiquetas": [
+        "argentino",
+        "clasico",
+        "mundial"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Por qué el Boca–River es el partido que paraliza a un país?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "colo-colo-1991",
+      "tipo": "club",
+      "nombre": "Colo-Colo, campeón de América 1991",
+      "alias": [
+        "colo colo",
+        "colo-colo"
+      ],
+      "etiquetas": [
+        "chileno",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo Colo-Colo se convirtió en el primer campeón chileno de la Copa Libertadores?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "penarol-primer-campeon",
+      "tipo": "club",
+      "nombre": "Peñarol, el primer campeón de América",
+      "alias": [
+        "penarol"
+      ],
+      "etiquetas": [
+        "uruguayo",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo Peñarol ganó la primera Copa Libertadores de la historia?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "cabo-verde-mundial-2026",
+      "tipo": "suceso",
+      "nombre": "Cabo Verde en su primer Mundial (2026)",
+      "alias": [
+        "cabo verde"
+      ],
+      "etiquetas": [
+        "mundial",
+        "mundial-2026"
+      ],
+      "formato": "historia-corta",
+      "angulo": "¿Cómo un archipiélago de África occidental llegó a su primer Mundial?",
+      "interesFondo": null,
+      "efemeride": "06-15",
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "julian-quinones",
+      "tipo": "futbolista",
+      "nombre": "Julián Quiñones",
+      "alias": [
+        "julian quinones",
+        "quinones"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "mexicano",
+        "identidad"
+      ],
+      "formato": "historia-corta",
+      "angulo": "¿Qué lo llevó a jugar por México si nació en Colombia?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "nico-paz",
+      "tipo": "futbolista",
+      "nombre": "Nico Paz",
+      "alias": [
+        "nico paz"
+      ],
+      "etiquetas": [
+        "argentino",
+        "identidad"
+      ],
+      "formato": "historia-corta",
+      "angulo": "¿Por qué un jugador formado en España eligió defender a Argentina?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "gilberto-mora",
+      "tipo": "futbolista",
+      "nombre": "Gilberto Mora",
+      "alias": [
+        "gilberto mora"
+      ],
+      "etiquetas": [
+        "mexicano",
+        "promesa"
+      ],
+      "formato": "historia-corta",
+      "angulo": "¿Quién es el adolescente mexicano que ya juega entre los grandes?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    }
+  ]
+}

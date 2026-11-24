@@ -35,6 +35,51 @@ function reelBueno(): Reel {
   }
 }
 
+describe('estructuras nuevas de Shorts y Reels', () => {
+  const estructura = (r: Reel) => (evaluarReel(r, config, atribucion) as unknown as { criterios: Array<{ id: string, ok: boolean, detalle: string }> }).criterios.find(c => c.id === 'estructura-formato')!
+  const beatsDe = (r: Reel) => r.beats as Array<{ visual: Record<string, unknown> }>
+
+  it('un Reel sin formato o con una etiqueta de siempre no cambia', () => {
+    expect(estructura(reelBueno()).ok).toBe(true)
+    for (const formato of ['bomba', 'dato', 'polemica', 'top', 'previa', 'emocion', 'noticia']) expect(estructura({ ...reelBueno(), formato }).ok, formato).toBe(true)
+  })
+
+  it('la leyenda en 45 s pide un dato y cerrar en bucle', () => {
+    expect(estructura({ ...reelBueno(), formato: 'leyenda' }).ok).toBe(true)
+    const sinBucle = { ...reelBueno(), formato: 'leyenda', cierre: { ...(reelBueno().cierre as object), bucle: false } }
+    expect(estructura(sinBucle).detalle).toContain('bucle')
+    const sinDato = { ...reelBueno(), formato: 'leyenda' }
+    beatsDe(sinDato)[0].visual = { tipo: 'punch', imagen: foto(1), credito: 'Colprensa' }
+    expect(estructura(sinDato).detalle).toContain('«dato»')
+  })
+
+  it('¿dónde están ahora? pide una lista y cerrar con una pregunta', () => {
+    expect(estructura({ ...reelBueno(), formato: 'donde-estan' }).detalle).toContain('pregunta')
+    const bien = { ...reelBueno(), formato: 'donde-estan', cierre: { texto: 'Sigue a Ponte la 10: ¿a quién extrañas más?', bucle: false } }
+    expect(estructura(bien).ok).toBe(true)
+    const sinLista = { ...bien }
+    beatsDe(sinLista)[1].visual = { tipo: 'punch', imagen: foto(1), credito: 'Colprensa' }
+    expect(estructura(sinLista).detalle).toContain('«lista»')
+  })
+
+  it('antes y después pide dos fotos divididas; el versus, un versus, una pregunta y un título sin «?»', () => {
+    expect(estructura({ ...reelBueno(), formato: 'antes-despues' }).detalle).toContain('«dividida»')
+    const versus = { ...reelBueno(), formato: 'versus', cierre: { texto: 'Sigue a Ponte la 10: ¿quién gana?', bucle: false }, titulo: '¿Quién gana el clásico del domingo en Bogotá?' }
+    const detalle = estructura(versus).detalle
+    expect(detalle).toContain('«versus»')
+    expect(detalle).toContain('título no lleva pregunta')
+    beatsDe(versus)[2].visual = { tipo: 'versus', nombres: ['Millonarios', 'Santa Fe'], imagen: foto(2), credito: 'Vanguardia' }
+    expect(estructura({ ...versus, titulo: 'Millonarios y Santa Fe: el clásico que define el domingo' }).ok).toBe(true)
+  })
+
+  it('un formato desconocido es un error obligatorio y ahora basta con 1 Reel por día', () => {
+    const r = evaluarReel({ ...reelBueno(), formato: 'inventado' }, config, atribucion)
+    expect(r.obligatoriosFallidos).toContain('estructura-formato')
+    expect(config.formato.reelsPorDia).toEqual({ minimo: 1, maximo: 5 })
+    expect(evaluarGuionReels({ reels: [reelBueno()] }, config, atribucion).problemas).toEqual([])
+  })
+})
+
 describe('rúbrica de Reels con guion propio', () => {
   it('aprueba un Reel con gancho concreto, fuente, créditos y un solo llamado a la acción', () => {
     const r = evaluarReel(reelBueno(), config, atribucion)
@@ -56,10 +101,14 @@ describe('rúbrica de Reels con guion propio', () => {
     expect(evaluarReel(dosCta, config, atribucion).obligatoriosFallidos).toContain('un-cta')
   })
 
-  it('exige entre 3 y 5 Reels con ids r1, r2…', () => {
-    expect(evaluarGuionReels({ reels: [reelBueno()] }, config, atribucion).problemas.join(' ')).toMatch(/hay 1 Reels/)
+  it('exige entre 1 y 5 Reels con ids r1, r2…', () => {
+    expect(evaluarGuionReels({ reels: [] }, config, atribucion).problemas.join(' ')).toMatch(/hay 0 Reels/)
+    const seis = ['r1', 'r2', 'r3', 'r4', 'r5', 'r6'].map(id => ({ ...reelBueno(), id }))
+    expect(evaluarGuionReels({ reels: seis }, config, atribucion).problemas.join(' ')).toMatch(/hay 6 Reels/)
     const tres = ['r1', 'r2', 'r3'].map(id => ({ ...reelBueno(), id }))
     expect(evaluarGuionReels({ reels: tres }, config, atribucion).aprobado).toBe(true)
+    const repetidos = [reelBueno(), reelBueno()]
+    expect(evaluarGuionReels({ reels: repetidos }, config, atribucion).problemas.join(' ')).toMatch(/ids/)
   })
 })
 
@@ -84,25 +133,40 @@ describe('generador de Reels con guion propio', () => {
     expect(alinearConGuion('algo totalmente distinto aquí', dichas, 1.6)).toBe(dichas)
   })
 
-  it('arma gancho en el cuadro 0, transiciones, capas, subtítulos y cierre', () => {
+  it('arma gancho en el cuadro 0, solo fotos o clips a pantalla completa, capas, subtítulos y cierre', () => {
     const plan = planificarReel({ ...reelBueno(), rumor: true }, { ppm: 170 })
     const gancho = plan.escenas.find(e => e.escena === 'reel-gancho')!
     expect(gancho.inicio).toBe(0)
     expect(gancho.variables).toMatchObject({ texto: 'SOLO LE QUEDAN 3', resaltar: '3', etiqueta: 'DEPORTIVO PASTO', foto: foto(1) })
     const nombres = plan.escenas.map(e => e.escena)
-    for (const escena of ['reel-dato', 'reel-lista', 'reel-foto-punch', 'reel-foto-tarjeta', 'reel-foto-paneo', 'reel-cta', 'reel-progreso', 'reel-etiqueta', 'reel-fuente', 'reel-subtitulos']) expect(nombres).toContain(escena)
+    for (const escena of ['reel-foto-punch', 'reel-foto-paneo', 'reel-cta', 'reel-fuente', 'reel-subtitulos']) expect(nombres).toContain(escena)
+    // Sin barra de progreso ni etiqueta fija del club (2026-11-22).
+    for (const retirada of ['reel-progreso', 'reel-etiqueta']) expect(nombres).not.toContain(retirada)
+    // Nada de gráficos a pantalla completa ni transiciones que tapen la imagen.
+    for (const prohibida of reels.ESCENAS_PROHIBIDAS as string[]) expect(nombres).not.toContain(prohibida)
     expect(plan.escenas.find(e => e.escena === 'reel-alerta')?.variables?.texto).toBe('RUMOR')
-    expect(nombres.filter(n => ['reel-golpe', 'reel-barrido', 'reel-glitch'].includes(n)).length).toBeGreaterThanOrEqual(6)
-    expect(nombres).toContain('reel-glitch')
+    // El dato del guion queda como palabra clave pequeña sobre una foto, no como pantalla aparte.
+    expect(plan.escenas.some(e => e.variables?.clave === '22 SALIDAS')).toBe(true)
+    // El cierre muestra una foto nítida, no un fondo azul.
+    expect(String(plan.escenas.find(e => e.escena === 'reel-cta')?.variables?.fondo)).toMatch(/foto-\d\.jpg$/)
     const visuales = plan.escenas.filter(e => e.escena.startsWith('reel-foto-'))
     expect(Math.max(...visuales.map(e => e.duracion))).toBeLessThanOrEqual(4.01)
-    expect(plan.sonidos.some(s => s.archivo === 'subida')).toBe(true)
     expect(plan.segmentos.map(s => s.id)).toEqual(['gancho', 'cuerpo-voz', 'cierre'])
     expect(plan.resumenFotos.filter(r => r.vacios)).toEqual([])
     const sub = plan.escenas.find(e => e.escena === 'reel-subtitulos')!
     expect(sub.subtitulos!.length).toBeGreaterThan(10)
     sub.subtitulos!.forEach((g, i, todos) => { if (todos[i + 1]) expect(g.fin).toBeLessThanOrEqual(todos[i + 1].inicio) })
     expect(Math.max(...sub.subtitulos!.map(g => g.palabras.length))).toBeLessThanOrEqual(3)
+  })
+
+  it('prioriza los clips de video del estudio sobre las fotos del beat', () => {
+    const estudio = { fotosExtra: { v3: [{ ruta: 'assets/fotos/a.jpg', credito: 'X' }, { ruta: 'assets/fotos/clip.mp4', credito: '@club', tipo: 'video', duracion: 12 }] } }
+    const plan = planificarReel(reelBueno(), { ppm: 170, estudio })
+    const clips = plan.escenas.filter(e => e.escena === 'reel-clip')
+    expect(clips[0].variables).toMatchObject({ video: 'assets/fotos/clip.mp4', credito: 'Video: @club' })
+    // En su propio beat el clip va primero, antes que la foto.
+    expect(clips.some(e => e.variables?.clave === 'SIN SUELDO')).toBe(true)
+    expect(clips.length).toBeLessThanOrEqual(3)
   })
 
   it('escribe el index vertical con los subtítulos en su pista y sin efectos encimados en una misma pista', () => {

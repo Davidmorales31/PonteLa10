@@ -1,0 +1,48 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; overflow: hidden; background: #061733; font-family: "Montserrat", sans-serif; }
+    #dcon-fondo { position: absolute; inset: -40px; }
+    #dcon-img { position: absolute; left: 0; top: 0; width: 2000px; height: 1160px; object-fit: cover; filter: blur(14px) brightness(0.34) saturate(0.7); }
+    .dcon-tinte { position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 50%, rgba(8,32,74,0.5) 0%, rgba(6,23,51,0.94) 75%); }
+    #dcon-caja { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    #dcon-numero { color: #ffd800; font-size: 230px; font-weight: 900; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+    #dcon-texto { margin-top: 26px; color: #ffffff; font-size: 56px; font-weight: 800; letter-spacing: 0.1em; }
+    #dcon-barra { margin-top: 40px; width: 900px; height: 14px; border-radius: 7px; background: rgba(255,255,255,0.15); overflow: hidden; }
+    #dcon-relleno { width: 100%; height: 100%; background: #ffd800; transform-origin: 0% 50%; }
+    #dcon-fuente { margin-top: 30px; color: #c9d4ea; font-size: 32px; font-weight: 600; }
+    #dcon-marca { position: absolute; right: 96px; top: 60px; width: 190px; height: auto; opacity: 0.85; }
+  </style>
+  <div id="root" data-composition-id="doc-contador" data-width="1920" data-height="1080"
+    data-composition-variables='[{"id":"hasta","type":"number","label":"Cifra final","default":30000000},{"id":"texto","type":"string","label":"Qué se cuenta","default":"SEGUIDORES EN INSTAGRAM"},{"id":"fuente","type":"string","label":"Fuente","default":""},{"id":"fondo","type":"string","label":"Foto de fondo (desenfocada)","default":""},{"id":"duracion","type":"number","label":"Duración (s)","default":6,"min":3,"max":12,"step":0.1}]'>
+    <div id="dcon-escena" class="clip" data-start="0" data-duration="6" data-layout-allow-occlusion>
+      <div id="dcon-fondo" data-layout-allow-occlusion><img id="dcon-img" src="assets/vacio.png" data-var-src="fondo" alt="" /></div>
+      <div class="dcon-tinte" data-layout-allow-occlusion></div>
+      <div id="dcon-caja">
+        <div id="dcon-numero">0</div>
+        <div id="dcon-texto" data-var-text="texto">SEGUIDORES EN INSTAGRAM</div>
+        <div id="dcon-barra"><div id="dcon-relleno"></div></div>
+        <div id="dcon-fuente" data-var-text="fuente"></div>
+      </div>
+      <img id="dcon-marca" src="assets/logo-blanco.png" alt="" />
+    </div>
+  </div>
+  <script>
+    // Contador: la cifra sube desde cero con una barra que se llena; la fuente queda debajo.
+    const v = (window.__hyperframes && window.__hyperframes.getVariables && window.__hyperframes.getVariables()) || {};
+    const D = Math.max(3, Number(v.duracion ?? 6));
+    const hasta = Math.max(0, Number(v.hasta ?? 30000000));
+    if (!String(v.fondo ?? "").trim()) document.querySelector("#dcon-img").style.display = "none";
+    if (!String(v.fuente ?? "").trim()) document.querySelector("#dcon-fuente").style.display = "none";
+    const numero = document.querySelector("#dcon-numero");
+    const c = { n: 0 };
+    const subida = Math.min(3, D * 0.55);
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#dcon-fondo", { scale: 1.0 }, { scale: 1.07, duration: D, ease: "none" }, 0);
+    tl.fromTo("#dcon-caja", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }, 0.1);
+    tl.fromTo(c, { n: 0 }, { n: hasta, duration: subida, ease: "power2.inOut", onUpdate: () => { numero.textContent = Math.round(c.n).toLocaleString("es-CO"); } }, 0.35);
+    tl.fromTo("#dcon-relleno", { scaleX: 0 }, { scaleX: 1, duration: subida, ease: "power2.inOut" }, 0.35);
+    tl.fromTo("#dcon-numero", { scale: 1 }, { scale: 1.06, duration: 0.18, yoyo: true, repeat: 1, ease: "power2.out" }, 0.35 + subida);
+    tl.to("#dcon-caja", { opacity: 0, duration: 0.35, ease: "power2.in" }, D - 0.4);
+    window.__timelines["doc-contador"] = tl;
+  </script>
+</template>

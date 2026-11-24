@@ -2,7 +2,7 @@
 // «Armar video» y render. Solo escucha en 127.0.0.1 y trabaja sobre videos/diario/<proyecto>/.
 // Uso: npm run video:estudio   (o node scripts/video-estudio.mjs) y abrir http://localhost:4810
 import http from 'node:http'
-import { createReadStream, existsSync, readdirSync, statSync } from 'node:fs'
+import { createReadStream, existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { readFile, writeFile, readdir, stat, mkdir, rm, rename, copyFile } from 'node:fs/promises'
 import { join, resolve, extname, sep } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
@@ -11,17 +11,22 @@ import { promisify } from 'node:util'
 import { randomBytes } from 'node:crypto'
 import { generarProyecto } from './video-generar-proyecto.mjs'
 import { generarReel, crearProyectosReels, descripcionDeReel } from './video-generar-reel.mjs'
-import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionDe } from './video-musica.mjs'
+import { mezclarMusica, leerBiblioteca, rutaPista, descargarPista, atribucionesDe, planMusica } from './video-musica.mjs'
 import { buscarFotosProyecto } from './video-buscar-fotos.mjs'
 import { estadoDeRender, nuevoRender, terminarRender } from './video-estudio-render.mjs'
 import { hijosDe, listaDeReels, nombrePadre, raizDeFamilia } from './video-estudio-familia.mjs'
 import { crearEncargo } from './video-encargo-miniaturas.mjs'
 import { proponerHoras } from './video-horarios.mjs'
+import { edicionDe } from './video-edicion.mjs'
 import { anotarRegistro, decidirAccion, guardarAjustes, leerAjustes } from './video-autopiloto-reels.mjs'
 import { medirMiniatura, evaluarMiniatura } from './video-medir-miniatura.mjs'
 import { descripcionYoutube } from './video-descripcion.mjs'
-import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, programarPublicacion, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
+import { componerDocumental, descripcionDocumental, generarDocumental } from './documental-generar.mjs'
+import { accesoVigente, completarConexion, crearDesafio, desconectar, dirYoutube, estadisticasVideos, estadoConexion, idVideoDe, leerCliente, leerToken, leerVideo, ponerMiniatura, ponerTitulo, programarPublicacion, subirVideo, tituloValido, urlAutorizacion } from './video-youtube.mjs'
 import { crearClienteRedes, publicarReel, cancelarProgramacionReel, refrescarEstados, leerEstadoPublicaciones, MODOS } from './video-publicar-reels.mjs'
+import { credencialesFacebook, subirYProgramarVideoFacebook } from './video-facebook-directo.mjs'
+import { SERVICE_WORKER, configuracionAvisos, guardarSuscripcion, notificar } from './video-estudio-avisos.mjs'
+import { PAGINA_INGRESO, auditar, clasificarPeticion, cookieSalida, cookieSesion, crearLimitador, crearSesion, esReenviada, hostsRemotos, leerConfiguracion, leerCookie, sesionValida, usuariosTailscale, verificarClave } from './video-estudio-acceso.mjs'
 
 const ejecutar = promisify(execFile)
 const RAIZ = fileURLToPath(new URL('..', import.meta.url))
@@ -82,7 +87,7 @@ async function iniciarConexionYoutube() {
   const { verificador, desafio } = crearDesafio()
   for (const [clave, pendiente] of conexionesYoutube) if (pendiente.expira < Date.now()) conexionesYoutube.delete(clave)
   conexionesYoutube.set(estado, { verificador, expira: Date.now() + 10 * 60_000 })
-  return { url: urlAutorizacion({ clientId: cliente.clientId, redirect: REDIRECT_YOUTUBE, estado, desafio }) }
+  return { url: urlAutorizacion({ clientId: cliente.clientId, redirect: REDIRECT_YOUTUBE, estado, desafio, analitica: process.env.PONT3LA10_YOUTUBE_ANALITICA === '1' }) }
 }
 
 const escaparHtml = texto => String(texto).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])
@@ -163,8 +168,15 @@ async function listarProyectos() {
     const grabaciones = estudio.grabaciones || {}
     const reels = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
     const final = join(carpeta, 'renders', 'final.mp4')
+    const carpetaMin = join(carpeta, 'renders', 'miniaturas')
+    const primeraMin = existsSync(carpetaMin) ? (await readdir(carpetaMin)).filter(n => /^miniatura-[a-z0-9-]{1,30}\.jpg$/.test(n)).sort()[0] : ''
+    const primeraFoto = ['foto-1.jpg', 'foto-2.jpg'].find(n => existsSync(join(carpeta, 'assets', 'fotos', n)))
     salida.push({
       nombre,
+      miniatura: primeraMin ? `/archivos/${nombre}/renders/miniaturas/${primeraMin}` : primeraFoto ? `/archivos/${nombre}/assets/fotos/${primeraFoto}` : '',
+      miniaturaPropia: Boolean(primeraMin),
+      subido: Boolean(estudio.youtube?.idVideo || estudio.youtubeShort?.idVideo),
+      archivado: Boolean(estudio.archivado),
       apodo: estudio.nombre || '',
       fecha: manifiesto.fecha,
       titulo: manifiesto.tituloVideo,
@@ -237,7 +249,7 @@ async function detalleProyecto(proyecto) {
     guionReels: existsSync(join(carpeta, 'guion-reels.json')) ? ((await leerJson(join(carpeta, 'guion-reels.json')))?.reels?.length || 0) : 0,
     titulos: guion.titulos?.length ? guion.titulos : [guion.tituloVideo || guion.titulo].filter(Boolean),
     miniaturaTexto: guion.miniatura || null,
-    descripcionYoutube: guion.tipo === 'reel' ? descripcionDeReel(guion, await atribucionDe(estudio.musica)) : descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionDe(estudio.musica) }),
+    descripcionYoutube: guion.tipo === 'reel' ? descripcionDeReel(guion, await atribucionesDe(pistasUsadas(estudio))) : guion.tipo === 'documental' ? descripcionDocumental({ guion, manifiesto, atribucionMusica: await atribucionesDe(pistasUsadas(estudio)) }) : descripcionYoutube({ guion, manifiesto, estudio, titulares: manifiesto.titulares || {}, atribucionMusica: await atribucionesDe(pistasUsadas(estudio)) }),
     miniaturas: await Promise.all(miniaturas.map(async n => {
       const { mtimeMs } = await stat(join(carpetaMiniaturas, n))
       return { nombre: n, url: `/archivos/${proyecto}/renders/miniaturas/${n}?v=${mtimeMs}`, medicion: await medicionDeMiniatura(join(carpetaMiniaturas, n), mtimeMs) }
@@ -376,7 +388,12 @@ const intentosAutopiloto = new Map()
 async function fechasProgramadas() {
   const nombres = existsSync(DIARIO) ? (await readdir(DIARIO)).filter(proyectoValido) : []
   const fechas = []
-  for (const nombre of nombres) for (const p of Object.values(await leerEstadoPublicaciones(carpetaDe(nombre)))) if (p?.estado === 'programada' && p.fecha) fechas.push(p.fecha)
+  for (const nombre of nombres) {
+    for (const p of Object.values(await leerEstadoPublicaciones(carpetaDe(nombre)))) if (p?.estado === 'programada' && p.fecha) fechas.push(p.fecha)
+    // El video largo programado en YouTube también ocupa su hora: así Reels, Shorts y largo no se pisan entre sí.
+    const largo = (await leerJson(join(carpetaDe(nombre), 'estudio.json')))?.youtube?.publicaEn
+    if (largo && Date.parse(largo) > Date.now()) fechas.push(largo)
+  }
   return fechas
 }
 const subiendoAutopiloto = new Set()
@@ -398,13 +415,46 @@ function subirYProgramarVideo(nombre, guion) {
       if (miniatura) {
         try { await ponerMiniatura({ idVideo: video.id, imagen: await readFile(join(carpetaMiniaturas, miniatura)), acceso, canalId }); await anotarRegistro(DIARIO, nombre, `Miniatura puesta: ${miniatura}.`) } catch (error) { await anotarRegistro(DIARIO, nombre, `Sin miniatura personalizada: ${error.message}`) }
       } else await anotarRegistro(DIARIO, nombre, 'No hay miniaturas en el proyecto: YouTube elegirá un fotograma.')
-      const [hora] = proponerHoras({ tipo: 'video', cantidad: 1, ocupadas: await fechasProgramadas() })
+      // Cada video largo tiene sus franjas: Latinoamérica, internacional y el documental de los viernes no se pisan.
+      const [hora] = proponerHoras({ tipo: 'video', edicion: guion.tipo === 'documental' ? 'documental' : edicionDe(guion).id, cantidad: 1, ocupadas: await fechasProgramadas() })
       if (!hora) throw new Error('No hay franja libre en los próximos 14 días.')
       const programada = await programarPublicacion({ idVideo: video.id, fecha: hora, acceso, canalId })
       await guardarEstudio(nombre, estudio => { estudio.youtube = { ...estudio.youtube, publicaEn: programada.publishAt } })
       await anotarRegistro(DIARIO, nombre, `Video largo programado en YouTube para ${programada.publishAt}.`)
+      void notificar({ titulo: 'Video largo programado', cuerpo: `${titulo} · ${new Date(programada.publishAt).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'short', timeStyle: 'short' })}`, url: '/#publicar' })
+      // Facebook: el mismo video, directo a la página (sin Supabase, que limita a 50 MB), programado a la misma hora que YouTube.
+      // Si falla, YouTube ya quedó programado. Instagram solo admite Reels (el largo se cuenta allí con los Reels recortados).
+      try {
+        cargarEntorno()
+        const fb = await subirYProgramarVideoFacebook({ ruta: join(carpeta, 'renders', 'final.mp4'), titulo, descripcion: (await detalleProyecto(nombre)).descripcionYoutube || titulo, fecha: programada.publishAt, credenciales: credencialesFacebook() })
+        await guardarEstudio(nombre, estudio => { estudio.facebookLargo = { videoId: fb.videoId, fecha: fb.fecha } })
+        await anotarRegistro(DIARIO, nombre, `Video largo programado en Facebook para ${fb.fecha}.`)
+      } catch (error) { await anotarRegistro(DIARIO, nombre, `Video largo en Facebook: ${error.message} (YouTube sí quedó programado).`) }
     } catch (error) {
       await anotarRegistro(DIARIO, nombre, `Video largo: ${error.message} (queda privado; revísalo en YouTube Studio).`)
+    } finally { subiendoAutopiloto.delete(nombre) }
+  })()
+}
+
+// Short de YouTube del Reel ya programado en Facebook e Instagram: se sube privado y se programa con `publishAt` a la misma hora.
+function subirYProgramarShort(nombre, guion, reel, fechaReel) {
+  subiendoAutopiloto.add(nombre)
+  void (async () => {
+    try {
+      const carpeta = carpetaDe(nombre)
+      const acceso = await accesoVigente()
+      const canalId = (await leerToken())?.canal?.id
+      const titulo = String(guion.titulo || reel.club || '').slice(0, 100)
+      const video = await subirVideo({ ruta: join(carpeta, reel.archivo), titulo, descripcion: String(reel.descripcion || '').slice(0, 5000).replace(/[<>]/g, ''), privacidad: 'private', acceso })
+      if (!video.id) throw new Error('YouTube no devolvió el ID del Short.')
+      await guardarEstudio(nombre, estudio => { estudio.youtubeShort = { idVideo: video.id, titulo: video.titulo } })
+      // Misma hora que Facebook e Instagram; si ya quedó a menos de 6 minutos, la primera que YouTube admite.
+      const fecha = Date.parse(fechaReel) > Date.now() + 6 * 60_000 ? fechaReel : new Date(Date.now() + 6 * 60_000).toISOString()
+      const programado = await programarPublicacion({ idVideo: video.id, fecha, acceso, canalId })
+      await guardarEstudio(nombre, estudio => { estudio.youtubeShort = { ...estudio.youtubeShort, publicaEn: programado.publishAt } })
+      await anotarRegistro(DIARIO, nombre, `Short programado en YouTube para ${programado.publishAt}.`)
+    } catch (error) {
+      await anotarRegistro(DIARIO, nombre, `Short de YouTube: ${error.message} (el Reel de Facebook e Instagram sigue programado).`)
     } finally { subiendoAutopiloto.delete(nombre) }
   })()
 }
@@ -419,7 +469,8 @@ export async function pasoAutopiloto() {
     const guion = await leerJson(join(carpeta, 'guion.json'))
     const manifiesto = await leerJson(join(carpeta, 'manifiesto.json'))
     if (!guion || !manifiesto || !existsSync(join(carpeta, 'estudio.json'))) continue
-    const tipo = guion.tipo === 'reel' ? 'reel' : (nombrePadre(nombre) ? null : 'video')
+    // El piloto no toca el documental de los viernes: se arma y renderiza desde el estudio y se publica en su franja.
+    const tipo = guion.tipo === 'documental' ? null : guion.tipo === 'reel' ? 'reel' : (nombrePadre(nombre) ? null : 'video')
     if (!tipo) continue
     const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
     const lista = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
@@ -431,7 +482,8 @@ export async function pasoAutopiloto() {
       publicacion: tipo === 'reel' && tieneFinal ? (await leerEstadoPublicaciones(carpeta))[reel.id] || null : null,
       ocupado: ocupados.size > 0 || subiendoAutopiloto.has(nombre) || trabajosYoutube.get(nombre)?.estado === 'subiendo' || (tipo === 'reel' && publicando.has(`${nombre}:${reel?.id}`)),
       intentos: intentosAutopiloto.get(tipo === 'video' && tieneFinal ? `${nombre}:subir` : nombre) || 0,
-      youtubeId: estudio.youtube?.idVideo || null, renderizadoPorPiloto: Boolean(estudio.autopiloto?.renderizadoEn)
+      youtubeId: estudio.youtube?.idVideo || null, renderizadoPorPiloto: Boolean(estudio.autopiloto?.renderizadoEn),
+      programadoPorPiloto: Boolean(estudio.autopiloto?.reelProgramadoEn), shortYoutubeId: estudio.youtubeShort?.idVideo || null, intentosShort: intentosAutopiloto.get(`${nombre}:short`) || 0
     })
     if (accion === 'render') {
       intentosAutopiloto.set(nombre, (intentosAutopiloto.get(nombre) || 0) + 1)
@@ -449,6 +501,11 @@ export async function pasoAutopiloto() {
       subirYProgramarVideo(nombre, guion)
       return
     }
+    if (accion === 'short') {
+      intentosAutopiloto.set(`${nombre}:short`, (intentosAutopiloto.get(`${nombre}:short`) || 0) + 1)
+      subirYProgramarShort(nombre, guion, reel, (await leerEstadoPublicaciones(carpeta))[reel.id]?.fecha)
+      return
+    }
     if (accion === 'programar') {
       if (!redesDisponibles()) { await anotarRegistro(DIARIO, nombre, 'Listo, pero falta la llave de redes: no se programó.'); intentosAutopiloto.set(nombre, 99); continue }
       const [hora] = proponerHoras({ ahora, cantidad: 1, ocupadas: await fechasProgramadas() })
@@ -456,8 +513,10 @@ export async function pasoAutopiloto() {
       publicando.add(`${nombre}:${reel.id}`)
       try {
         const r = await publicarReel({ proyecto: nombre, carpeta, reel, creado: lista.creado, modo: 'programar', fecha: hora, cliente: clienteRedes() })
+        await guardarEstudio(nombre, e => { e.autopiloto = { ...e.autopiloto, reelProgramadoEn: new Date().toISOString() } })
         await anotarRegistro(DIARIO, nombre, `Programado para ${r.fecha}.`)
-      } catch (error) { await anotarRegistro(DIARIO, nombre, `No se pudo programar: ${error.message}`) } finally { publicando.delete(`${nombre}:${reel.id}`) }
+        void notificar({ titulo: 'Reel programado', cuerpo: `${reel.club || nombre} · ${new Date(r.fecha).toLocaleString('es-CO', { timeZone: 'America/Bogota', dateStyle: 'short', timeStyle: 'short' })}`, url: '/#publicar' })
+      } catch (error) { await anotarRegistro(DIARIO, nombre, `No se pudo programar: ${error.message}`); void notificar({ titulo: 'No se pudo programar un Reel', cuerpo: `${nombre}: ${error.message}`.slice(0, 180), url: '/#publicar' }) } finally { publicando.delete(`${nombre}:${reel.id}`) }
       return
     }
   }
@@ -469,6 +528,8 @@ async function armar(proyecto) {
   if (!guion) throw Object.assign(new Error('El proyecto no tiene guion.json: vuelve a generarlo con el script.'), { estado: 409 })
   // Un Reel con guion propio tiene su propio generador (vertical, subtítulos y cortes sincronizados con la voz).
   if (guion.tipo === 'reel') return generarReel({ guion, salida: carpeta })
+  // El documental de los viernes tiene su generador (tarjetas de acto, mapas, línea de tiempo, citas y clips de archivo).
+  if (guion.tipo === 'documental') return generarDocumental({ guion, salida: carpeta })
   return generarProyecto({ guion, salida: carpeta })
 }
 
@@ -496,18 +557,36 @@ export async function vozPresente(carpeta, video) {
   return { ok: niveles.length === 0 || niveles.some(n => n > -35), medidos: niveles.length, niveles }
 }
 
+// Pistas que sonaron en el último render (o la elegida a mano, en proyectos anteriores al reparto automático).
+const pistasUsadas = estudio => estudio.musicaPlan?.length ? estudio.musicaPlan : [estudio.musica].filter(Boolean)
+
 function renderizar(proyecto, estado) {
   const carpeta = carpetaDe(proyecto)
   estado.fase = 'renderizando'
-  const proceso = spawn('npx', ['hyperframes', 'render', '--output', 'renders/final-voz.mp4'], { cwd: carpeta, shell: true, windowsHide: true })
+  // El documental se renderiza en dos pasos (render híbrido): HyperFrames dibuja gráficos, fotos y voz con huecos
+  // magenta, y ffmpeg pone los clips de video debajo (componerDocumental). Así HyperFrames no extrae cuadros de video.
+  let documental = false
+  try { documental = JSON.parse(readFileSync(join(carpeta, 'guion.json'), 'utf8')).tipo === 'documental' } catch { /* sin guion: render normal */ }
+  const salidaRender = documental ? 'renders/graficos.mp4' : 'renders/final-voz.mp4'
+  const proceso = spawn('npx', ['hyperframes', 'render', '--output', salidaRender], { cwd: carpeta, shell: true, windowsHide: true })
   const anotar = parte => { estado.registro = (estado.registro + parte.toString()).slice(-20000) }
   proceso.stdout.on('data', anotar)
   proceso.stderr.on('data', anotar)
   proceso.on('error', error => { anotar(`\nNo se pudo iniciar el render: ${error.message}\n`) })
   proceso.on('close', async codigo => {
-    if (codigo !== 0) { terminarRender(estado, 'error'); ocupados.delete(proyecto); return }
+    if (codigo !== 0) { finRender(proyecto, estado, 'error'); ocupados.delete(proyecto); return }
+    if (documental) {
+      estado.fase = 'componiendo'
+      try { await componerDocumental({ carpeta, registro: texto => anotar(`\n${texto}\n`) }) } catch (error) {
+        anotar(`\nNo se pudieron componer los clips: ${error.message}\n`)
+        finRender(proyecto, estado, 'error')
+        ocupados.delete(proyecto)
+        return
+      }
+    }
     estado.fase = 'musica'
-    // Con la voz ya renderizada se mezcla la música elegida (baja sola cuando hablas).
+    // Con la voz ya renderizada se mezcla la música sola: una canción distinta por noticia en el video largo y una en
+    // cada Reel, siempre audible bajo la voz. Nadie tiene que elegirla; `sinMusica` en estudio.json la apaga.
     try {
       const estudio = (await leerJson(join(carpeta, 'estudio.json'))) || {}
       const voz = join(carpeta, 'renders', 'final-voz.mp4')
@@ -515,21 +594,28 @@ function renderizar(proyecto, estado) {
       const control = await vozPresente(carpeta, voz)
       if (!control.ok) {
         estado.registro += '\nEl video salió SIN tu voz (las tomas no quedaron dentro del render). Pulsa Renderizar otra vez; si se repite, avísale a Claude.\n'
-        terminarRender(estado, 'error')
+        finRender(proyecto, estado, 'error')
         ocupados.delete(proyecto)
         return
       }
-      if (estudio.musica) { estado.registro += '\nMezclando la música…\n'; await mezclarMusica({ video: voz, id: estudio.musica, salida: final }) } else await copyFile(voz, final)
-      // Un Reel con guion propio queda listo para publicarse desde «Ver Reels» (Facebook e Instagram).
       const guion = (await leerJson(join(carpeta, 'guion.json'))) || {}
+      const manifiestoMusica = (await leerJson(join(carpeta, 'manifiesto.json'))) || {}
+      const plan = estudio.sinMusica ? null : await planMusica({ guion, manifiesto: manifiestoMusica, duracion: await duracionDe(voz), semilla: proyecto, fija: estudio.musica })
+      if (plan) {
+        estado.registro += `\nMezclando la música (${plan.ids.length === 1 ? '1 canción' : `${plan.ids.length} canciones, una por noticia`})…\n`
+        await mezclarMusica({ video: voz, ids: plan.ids, tramos: plan.tramos, salida: final })
+      } else await copyFile(voz, final)
+      estudio.musicaPlan = plan?.ids || []
+      await guardarEstudio(proyecto, actual => { actual.musicaPlan = estudio.musicaPlan })
+      // Un Reel con guion propio queda listo para publicarse desde «Ver Reels» (Facebook e Instagram).
       if (guion.tipo === 'reel') {
         await mkdir(join(carpeta, 'renders', 'reels'), { recursive: true })
         const manifiesto = (await leerJson(join(carpeta, 'manifiesto.json'))) || {}
-        const reel = { id: String(guion.id || 'r1'), archivo: 'renders/final.mp4', duracion: manifiesto.duracion || 0, club: guion.club || '', descripcion: descripcionDeReel(guion, await atribucionDe(estudio.musica)), articulo: guion.articuloSlug || '' }
+        const reel = { id: String(guion.id || 'r1'), archivo: 'renders/final.mp4', duracion: manifiesto.duracion || 0, club: guion.club || '', descripcion: descripcionDeReel(guion, await atribucionesDe(pistasUsadas(estudio))), articulo: guion.articuloSlug || '' }
         await writeFile(join(carpeta, 'renders', 'reels', 'reels.json'), JSON.stringify({ creado: new Date().toISOString(), reels: [reel] }, null, 2))
       }
-      terminarRender(estado, 'listo')
-    } catch (error) { estado.registro += `\nNo se pudo mezclar la música: ${error.message}\n`; terminarRender(estado, 'error') }
+      finRender(proyecto, estado, 'listo')
+    } catch (error) { estado.registro += `\nNo se pudo mezclar la música: ${error.message}\n`; finRender(proyecto, estado, 'error') }
     ocupados.delete(proyecto)
   })
 }
@@ -577,17 +663,128 @@ const VERSION_INICIAL = huellaCodigo()
 const reiniciable = process.env.PONT3LA10_ESTUDIO_REINICIABLE === '1'
 const trabajando = () => ocupados.size > 0 || publicando.size > 0 || [...renders.values()].some(r => r.estado === 'renderizando') || [...trabajosReels.values()].some(r => r.estado === 'creando') || [...trabajosYoutube.values()].some(t => t.estado === 'subiendo')
 
+/** Panel de resultados: los videos largos y Shorts que el estudio subió, con sus estadísticas de YouTube. */
+async function resultadosYoutube() {
+  const nombres = existsSync(DIARIO) ? (await readdir(DIARIO)).filter(proyectoValido).sort().reverse().slice(0, 60) : []
+  const vinculados = []
+  for (const nombre of nombres) {
+    const estudio = (await leerJson(join(carpetaDe(nombre), 'estudio.json'))) || {}
+    if (estudio.youtube?.idVideo) vinculados.push({ id: estudio.youtube.idVideo, proyecto: nombre, tipo: 'largo' })
+    if (estudio.youtubeShort?.idVideo) vinculados.push({ id: estudio.youtubeShort.idVideo, proyecto: nombre, tipo: 'short' })
+  }
+  if (!vinculados.length) return { conectado: true, videos: [] }
+  let acceso
+  try { acceso = await accesoVigente() } catch { return { conectado: false, videos: [] } }
+  const estadisticas = new Map((await estadisticasVideos({ ids: vinculados.map(v => v.id), acceso })).map(e => [e.id, e]))
+  return { conectado: true, videos: vinculados.filter(v => estadisticas.has(v.id)).map(v => ({ ...v, ...estadisticas.get(v.id) })) }
+}
+
+// Fin de un render con aviso al iPhone (si hay dispositivos suscritos).
+function finRender(proyecto, estado, resultado) {
+  terminarRender(estado, resultado)
+  void notificar(resultado === 'listo'
+    ? { titulo: 'Render listo', cuerpo: `El video de ${proyecto} ya está renderizado.`, url: '/#publicar' }
+    : { titulo: 'El render falló', cuerpo: `Revisa el registro de ${proyecto} en el estudio.`, url: '/#publicar' })
+}
+
+const limitadorIngreso = crearLimitador()
+let configuracionAcceso = { valor: null, leida: 0 }
+async function configAcceso() {
+  if (Date.now() - configuracionAcceso.leida > 5_000) configuracionAcceso = { valor: await leerConfiguracion(), leida: Date.now() }
+  return configuracionAcceso.valor
+}
+
+/**
+ * Atiende lo propio del acceso remoto. Devuelve true si ya respondió (ingreso, salida, sin sesión o ruta vetada);
+ * false si la petición tiene sesión válida y sigue al resto del estudio.
+ */
+// PWA: manifiesto e íconos para instalar el estudio en la pantalla de inicio del iPhone (no llevan datos privados).
+const MANIFIESTO = JSON.stringify({ name: 'Estudio · Ponte la 10', short_name: 'Estudio', start_url: '/', scope: '/', display: 'standalone', background_color: '#0e0f11', theme_color: '#0e0f11', icons: [{ src: '/icono-192.png', sizes: '192x192', type: 'image/png' }, { src: '/icono-512.png', sizes: '512x512', type: 'image/png' }] })
+const ICONOS = { '/icono-192.png': 'app-redes-192.png', '/icono-512.png': 'app-redes-512.png' }
+async function atenderRecursosApp(req, res, url) {
+  if (req.method !== 'GET') return false
+  if (url.pathname === '/sw.js') { res.writeHead(200, { 'content-type': 'text/javascript; charset=utf-8', 'cache-control': 'no-cache', 'service-worker-allowed': '/' }); res.end(SERVICE_WORKER); return true }
+  if (url.pathname === '/manifest.webmanifest') { res.writeHead(200, { 'content-type': 'application/manifest+json', 'cache-control': 'max-age=86400' }); res.end(MANIFIESTO); return true }
+  if (ICONOS[url.pathname]) { res.writeHead(200, { 'content-type': 'image/png', 'cache-control': 'max-age=86400' }); res.end(await readFile(join(RAIZ, 'public', 'brand', ICONOS[url.pathname]))); return true }
+  return false
+}
+
+async function atenderAccesoRemoto(req, res, url) {
+  const quien = String(req.headers['tailscale-user-login'] || '').slice(0, 120)
+  const config = await configAcceso()
+  if (req.method === 'GET' && url.pathname === '/ingresar') {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; form-action 'self'" })
+    res.end(PAGINA_INGRESO)
+    return true
+  }
+  if (req.method === 'POST' && url.pathname === '/api/acceso/ingresar') {
+    if (!config?.hash || !config?.secreto) { responder(res, 503, { error: 'Falta configurar la clave en el PC: npm run video:estudio:clave' }); return true }
+    if (limitadorIngreso.bloqueado()) { await auditar({ evento: 'ingreso-bloqueado', quien }); responder(res, 429, { error: 'Demasiados intentos. Espera 15 minutos.' }); return true }
+    let clave
+    try { clave = String(JSON.parse((await leerCuerpo(req, 1024)).toString('utf8') || '{}').clave || '') } catch { responder(res, 400, { error: 'Solicitud no válida.' }); return true }
+    if (!verificarClave(clave, config.hash)) {
+      limitadorIngreso.fallo()
+      await auditar({ evento: 'ingreso-fallido', quien })
+      responder(res, 401, { error: 'Clave incorrecta.' })
+      return true
+    }
+    limitadorIngreso.exito()
+    await auditar({ evento: 'ingreso', quien })
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'set-cookie': cookieSesion(crearSesion(config.secreto)) })
+    res.end(JSON.stringify({ ok: true }))
+    return true
+  }
+  if (req.method === 'POST' && url.pathname === '/api/acceso/salir') {
+    await auditar({ evento: 'salida', quien })
+    res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', 'set-cookie': cookieSalida() })
+    res.end(JSON.stringify({ ok: true }))
+    return true
+  }
+  if (!config?.secreto || !sesionValida(leerCookie(req.headers.cookie), config.secreto)) {
+    if (req.method === 'GET' && url.pathname === '/') { res.writeHead(302, { location: '/ingresar', 'cache-control': 'no-store' }); res.end(); return true }
+    responder(res, 401, { error: 'Inicia sesión en el estudio.' })
+    return true
+  }
+  // La conexión con YouTube solo se hace frente al PC (el retorno de Google apunta a 127.0.0.1).
+  if (url.pathname.startsWith('/oauth/')) { responder(res, 403, { error: 'Conecta YouTube desde el PC.' }); return true }
+  if (req.method !== 'GET' && req.method !== 'HEAD') await auditar({ evento: 'accion', metodo: req.method, ruta: url.pathname.slice(0, 200), quien })
+  return false
+}
+
 export function crearServidor() {
   return http.createServer(async (req, res) => {
     try {
-      if (!peticionPermitida({ host: req.headers.host, origin: req.headers.origin, metodo: req.method })) return responder(res, 403, { error: 'Solo se permite el estudio local.' })
-      const url = new URL(req.url, `http://${req.headers.host}`)
+      const config = await configAcceso()
+      const acceso = clasificarPeticion({
+        host: req.headers.host, origin: req.headers.origin, metodo: req.method,
+        reenviada: esReenviada(req.headers), hostReenviado: req.headers['x-forwarded-host'], usuarioTs: req.headers['tailscale-user-login']
+      }, { puerto: PUERTO, remotos: hostsRemotos(process.env, config), usuarios: usuariosTailscale() })
+      if (!acceso.permitido) return responder(res, 403, { error: 'Solo se permite el estudio local.' })
+      const url = new URL(req.url, 'http://estudio.local')
       const partes = url.pathname.split('/').filter(Boolean).map(decodeURIComponent)
       res.setHeader('x-content-type-options', 'nosniff')
+      res.setHeader('x-frame-options', 'DENY')
+      res.setHeader('referrer-policy', 'no-referrer')
+      // Acceso remoto (iPhone por Tailscale): clave propia, sesión firmada y auditoría. En el PC no cambia nada.
+      if (await atenderRecursosApp(req, res, url)) return
+      if (acceso.remota && await atenderAccesoRemoto(req, res, url)) return
 
       if (req.method === 'GET' && url.pathname === '/') {
         res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'content-security-policy': "default-src 'self'; img-src 'self' blob: data:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'" })
         return res.end(await readFile(PAGINA))
+      }
+      if (url.pathname === '/api/resultados' && req.method === 'GET') return responder(res, 200, await resultadosYoutube())
+      if (url.pathname === '/api/avisos' && req.method === 'GET') {
+        const config = await configuracionAvisos()
+        return responder(res, 200, { clave: config.vapid.publica, suscritos: config.suscripciones.length })
+      }
+      if (url.pathname === '/api/avisos/suscribir' && req.method === 'POST') {
+        let suscripcion
+        try { suscripcion = JSON.parse((await leerCuerpo(req, 4096)).toString('utf8')) } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
+        return responder(res, 200, { suscritos: await guardarSuscripcion(suscripcion) })
+      }
+      if (url.pathname === '/api/avisos/probar' && req.method === 'POST') {
+        return responder(res, 200, await notificar({ titulo: 'Avisos activados', cuerpo: 'Así te llegarán los avisos del estudio.', url: '/' }))
       }
       if (url.pathname === '/api/autopiloto') {
         if (req.method === 'GET') return responder(res, 200, { ...(await leerAjustes(DIARIO)), redes: redesDisponibles() })
@@ -659,13 +856,19 @@ export function crearServidor() {
           return responder(res, 200, { agregadas: r.agregadas, vacios: r.vacios, resumen: r.resumen })
         } finally { ocupados.delete(proyecto) }
       }
-      if ((accion === 'nombre' || accion === 'sin-camara') && req.method === 'POST') {
+      if ((accion === 'nombre' || accion === 'sin-camara' || accion === 'archivar') && req.method === 'POST') {
         let datos = {}
         try { datos = JSON.parse((await leerCuerpo(req, 2048)).toString('utf8') || '{}') } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
         if (accion === 'nombre') {
           if (!nombreValido(datos.nombre)) return responder(res, 422, { error: 'El nombre debe tener máximo 60 caracteres.' })
           await guardarEstudio(proyecto, estudio => { estudio.nombre = datos.nombre.trim() })
           return responder(res, 200, { nombre: datos.nombre.trim() })
+        }
+        if (accion === 'archivar') {
+          // Archivar solo oculta el proyecto de la lista; no borra ninguna carpeta ni archivo.
+          if (typeof datos.archivado !== 'boolean') return responder(res, 422, { error: 'Indica si se archiva o se restaura.' })
+          await guardarEstudio(proyecto, estudio => { if (datos.archivado) estudio.archivado = true; else delete estudio.archivado })
+          return responder(res, 200, { archivado: datos.archivado })
         }
         if (typeof datos.activo !== 'boolean') return responder(res, 422, { error: 'Indica si el proyecto va sin cámara.' })
         if (ocupados.has(proyecto)) return responder(res, 409, { error: 'El proyecto está ocupado: espera a que termine.' })

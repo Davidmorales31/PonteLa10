@@ -1,0 +1,805 @@
+{
+  "tipo": "documental",
+  "tema": "vozinha",
+  "protagonista": "Vozinha",
+  "fecha": "2026-11-27",
+  "preguntaCentral": "¿Cómo un portero de 40 años, que casi nadie conocía fuera de Cabo Verde, frenó a España en el primer Mundial de su país?",
+  "revisionSensible": false,
+  "titulos": [
+    "A los 40 años FRENÓ a España | Vozinha | Documental",
+    "Lo creían ELECTRICISTA… y paró a España | Vozinha | Documental",
+    "El ABUELO que se volvió héroe del Mundial | Vozinha"
+  ],
+  "miniatura": {
+    "texto": "A LOS 40",
+    "foto": "bandera (AFP vía Al Jazeera)"
+  },
+  "actos": [
+    {
+      "id": "pregunta",
+      "titulo": "La pregunta",
+      "capitulos": [
+        {
+          "id": "c00",
+          "titulo": "Atlanta, 15 de junio",
+          "fuentes": [
+            "f1",
+            "f2"
+          ],
+          "visuales": [
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/b/b3/Mercedes-Benz_Stadium_Drone_Fly-Over.webm",
+              "credito": "Atlanta Falcons / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 33,
+              "nota": "Horizonte de Atlanta con el estadio en obra (el resto del video es construcción y logos de los productores)",
+              "duracionMaxima": 7
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://www.aljazeera.com/wp-content/uploads/2026/06/afp_6a3064fdc478-1781556477.jpg?resize=1920%2C1440",
+              "credito": "AFP (vía Al Jazeera)"
+            },
+            {
+              "tipo": "ficha",
+              "texto": "0-0 · 7 ATAJADAS · 40 AÑOS"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Mercedes-Benz_Stadium%2C_December_2024.jpg",
+              "credito": "BullDawg2021 / Wikimedia Commons (CC BY 4.0)",
+              "nota": "Estadio de Atlanta por fuera"
+            }
+          ],
+          "voz": "Atlanta, 15 de junio de 2026. España, la campeona de Europa, ataca sin parar. Enfrente está Cabo Verde, un país de islas en medio del Atlántico que juega el primer Mundial de su historia. Y en el arco hay un hombre de 40 años al que casi nadie fuera de su país conocía. Siete atajadas después, según Al Jazeera, el partido termina cero a cero y ese portero rompe a llorar con la bandera sobre los hombros. ¿Cómo un portero de 40 años, que casi nadie conocía fuera de Cabo Verde, frenó a España en el primer Mundial de su país? Para entenderlo, vamos a contar la historia de Vozinha."
+        }
+      ]
+    },
+    {
+      "id": "origen",
+      "titulo": "Origen",
+      "capitulos": [
+        {
+          "id": "c01",
+          "titulo": "Mindelo y los abuelos",
+          "fuentes": [
+            "f2",
+            "f1",
+            "f7"
+          ],
+          "visuales": [
+            {
+              "tipo": "mapa",
+              "lugares": [
+                "Cabo Verde",
+                "São Vicente",
+                "Mindelo"
+              ]
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/3/39/-44m_Sisu_in_Mindelo%2C_Cape_Verde_-_Sailing_Sisu_Leopard_45_Catamaran_World_Circumnavigating_Atlantic.webm",
+              "credito": "Sailing Sisu / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 20,
+              "nota": "Bahía de Mindelo"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Panorama_Hafen_Mindelo_Sao_Vicente.JPG/1920px-Panorama_Hafen_Mindelo_Sao_Vicente.JPG",
+              "credito": "Herbert wie / Wikimedia Commons (CC BY-SA 4.0)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/b/b6/12-16-2013_Jours_08_Mindelo%2C_au_hasard_de_ses_march%C3%A9s_couverts.webm",
+              "credito": "Papdi Zoltan Silvester / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 15,
+              "nota": "Mercados de Mindelo"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "kids playing street football dusk"
+            },
+            {
+              "tipo": "testimonio",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/8/83/Exclusive_interview_for_teleSUR-_Vozinha%27s_mom.webm",
+              "desde": 92.3,
+              "hasta": 101,
+              "credito": "teleSUR English / Wikimedia Commons",
+              "licencia": "Dominio público",
+              "quien": "Ana, mamá de Vozinha",
+              "texto": "Desde pequeño siempre le encantó el fútbol. Iba a la escuela con la pelota en los pies, jugando en la tierra.",
+              "original": "Crioulo; traducción a partir de los subtítulos en inglés de teleSUR"
+            }
+          ],
+          "voz": "Para entender a Vozinha hay que viajar a Mindelo, en la isla de São Vicente, una de las islas que forman Cabo Verde, frente a la costa de África occidental. Ahí nació Josimar José Évora Dias el 3 de junio de 1986. Su papá era militar y su mamá trabajaba, así que el niño pasó la mayor parte de su infancia en casa de sus abuelos, según contó Al Jazeera en su perfil del jugador. Y esa casa lo marcó para siempre, como vamos a ver. En la calle, Josimar jugaba con niños mucho más grandes que él. Era bueno con los pies, competitivo y rebelde, y no soportaba perder. El problema es que era pequeño. Tan pequeño que, cuando intentaba hacerse un lugar como futbolista en la isla, los entrenadores lo pasaban por alto, según relató el diario Khaleej Times a partir de sus entrevistas. Imagina ser el niño que siempre llega primero a la cancha y siempre se queda por fuera de la lista. Eso cambió tarde. Ya al final de la adolescencia pegó el estirón y empezaron a llegar las oportunidades. Hoy mide 1,89 metros, según su ficha publicada por Bolavip, y cuesta imaginarlo como el niño bajito que nadie elegía. Pero ese niño nunca se fue del todo: la terquedad de aquellos partidos en la calle es la misma que años después iba a sostenerlo en los momentos más duros de su carrera. Mindelo es un puerto, una ciudad de música, de carnaval y de gente que se va a trabajar lejos y vuelve. Y esa idea, la de irse lejos para volver convertido en otra cosa, también es la historia de Vozinha. ¿A ustedes también les dijeron alguna vez que eran muy pequeños para algo?"
+        },
+        {
+          "id": "c02",
+          "titulo": "Valdano, Josimar, Vozinha",
+          "fuentes": [
+            "f1",
+            "f7"
+          ],
+          "visuales": [
+            {
+              "tipo": "titular",
+              "texto": "VALDANO → JOSIMAR → VOZINHA"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Vozinha_Cape_Verde_Goalkeeper.jpg",
+              "credito": "Nha Terra Nha Cretcheu / Wikimedia Commons (CC BY 4.0)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/8/89/Carnaval_Mindelo_2015.webm",
+              "credito": "Lionel Scheepmans / Wikimedia Commons",
+              "licencia": "CC BY-SA 4.0",
+              "desde": 60,
+              "nota": "Calles de Mindelo"
+            },
+            {
+              "tipo": "cita",
+              "texto": "Se burlaban diciendo que me iba a quejar con mis abuelos",
+              "autor": "Vozinha a FIFA.com (2024), según Khaleej Times"
+            }
+          ],
+          "voz": "Ahora, el nombre. Porque Vozinha tiene no uno, sino tres nombres, y cada uno cuenta algo de su familia. El primero que eligió su papá fue Valdano, en homenaje a Jorge Valdano, el delantero argentino que jugó en el Real Madrid. Pero cuando fueron a registrarlo, no lo dejaron ponerle ese nombre, según contó Khaleej Times. Así que el papá buscó otro ídolo: Josimar, el lateral derecho brasileño que salió de la nada para deslumbrar en el Mundial de 1986. El mismo año en que nació el niño. Ese fue su nombre de registro. Josimar José Évora Dias. Y el tercer nombre, el que hoy conoce medio planeta, se lo dio la calle. En criollo de Cabo Verde, Vozinha quiere decir abuelita. Él mismo explicó el origen en una entrevista con FIFA.com en 2024. Contó que los demás niños de su barrio eran mucho mayores, que lo pateaban en cada jugada y que, cuando no podía devolver los golpes, se iba para la casa furioso, con la cara roja de rabia. Y los otros se burlaban diciendo que se iba a quejar con sus abuelos. De esa burla salió el apodo. Vozinha. Es curioso: un nombre que nació para burlarse de él terminó escrito en la espalda de un portero mundialista, en la camiseta amarilla de Cabo Verde, frente a la selección de España. Y no es casualidad que el apodo hable de los abuelos. Esa casa, la de las personas que lo criaron, es la clave emocional de toda esta historia. Guárdenlo, porque al final del documental vamos a volver ahí. Dos nombres de futbolistas famosos y un apodo de barrio. Si lo piensas, es el resumen perfecto de su vida: soñado en grande y construido desde abajo. ¿Ustedes tienen un apodo que nació de una burla y terminaron queriendo?"
+        }
+      ]
+    },
+    {
+      "id": "ascenso",
+      "titulo": "Ascenso",
+      "capitulos": [
+        {
+          "id": "c03",
+          "titulo": "Profesional a los 25",
+          "fuentes": [
+            "f2",
+            "f1"
+          ],
+          "visuales": [
+            {
+              "tipo": "linea-tiempo",
+              "hitos": [
+                "Batuque FC",
+                "CS Mindelense",
+                "Progresso (Angola)"
+              ]
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/b/b6/12-16-2013_Jours_08_Mindelo%2C_au_hasard_de_ses_march%C3%A9s_couverts.webm",
+              "credito": "Papdi Zoltan Silvester / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 70,
+              "nota": "Mercados de Mindelo"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "desde": 259,
+              "nota": "Vozinha hablando a cámara: no rellena (solo testimonios)",
+              "duracionMaxima": 106,
+              "entrevista": true
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "young goalkeeper training alone empty stadium"
+            }
+          ],
+          "voz": "Los primeros pasos fueron en casa. Vozinha empezó en el Batuque FC y después pasó al CS Mindelense, dos clubes de su isla, según la reseña de Al Jazeera. Fútbol caboverdiano, de canchas modestas y sueldos todavía más modestos. Y aquí viene un dato que cambia la forma de mirar todo lo que pasó después: Vozinha no fue profesional sino hasta los 25 años. Lo dijo él mismo después del partido contra España, cuando recordó que tenía 40 años pero que no se volvió profesional hasta los 25. Hay medios que hablan de 26, pero nosotros nos quedamos con su palabra. Piénsalo un segundo. A los 25, muchos porteros de élite ya llevan años en primera división. Algunos ya jugaron en su selección y hasta en un Mundial. Vozinha, a esa edad, apenas estaba firmando su primer contrato de verdad. Y para firmarlo tuvo que hacer lo que hacen miles de caboverdianos: irse. Su primer club profesional fue el Progresso de Angola, según Khaleej Times. Dejar la isla, la familia, los abuelos, el mar de Mindelo, para atajar en Luanda, en otro país y en otra liga. Esa decisión lo define. Porque no se fue a un gran club europeo con un contrato millonario. Se fue a donde había un arco libre y alguien dispuesto a pagarle por defenderlo. Y desde ahí empezó una carrera que muchos llamarían de segunda fila, pero que tenía algo que no se ve en los resúmenes: años de oficio, de entrenar todos los días sin que nadie lo estuviera mirando. Eso no sale en la televisión. Pero sale en un partido como el de Atlanta. ¿Cuántos de ustedes habrían seguido intentando a los 25, cuando los demás ya estaban llegando?"
+        },
+        {
+          "id": "c04",
+          "titulo": "El portero nómada",
+          "fuentes": [
+            "f2",
+            "f7"
+          ],
+          "visuales": [
+            {
+              "tipo": "mapa",
+              "recorrido": [
+                "Mindelo",
+                "Luanda",
+                "Chisináu",
+                "Barcelos",
+                "Limasol",
+                "Trenčín",
+                "Chaves",
+                "Santiago"
+              ]
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/c/c1/Taxistas_e_mototaxistas_em_Luanda_lamentam_aumento_do_combust%C3%ADvel_%281080p%29.webm",
+              "credito": "Agência Lusa / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 30,
+              "nota": "Calles de Luanda"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "Chisinau city street winter"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "Limassol seafront Cyprus"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "Trencin castle Slovakia"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/5/52/Arch_of_Triumph%2C_Chisinau%2C_Republic_of_Moldova_%2851160304626_cropped%29.jpg",
+              "credito": "Photobank MD / Wikimedia Commons (CC0)",
+              "nota": "Chisináu"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/d/d3/Trencin_Castle_030.jpg",
+              "credito": "Ingo Mehling / Wikimedia Commons (CC BY-SA 4.0)",
+              "nota": "Castillo de Trenčín"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/a/a8/Limassol_sea.jpg",
+              "credito": "Tsiapinis / Wikimedia Commons (Dominio público)",
+              "nota": "Limasol de noche"
+            }
+          ],
+          "voz": "En Angola pasó algo que parece un detalle y no lo es. Cuando llegó al Progresso, ya había otro portero que se llamaba Josimar. Vozinha contó a la FIFA que no estaba dispuesto a ponerse Josimar II en la camiseta, y que si en Cabo Verde todo el mundo lo conocía como Vozinha, así se iba a llamar. Así que el apodo de la burla se volvió su nombre de trabajo, el que lo acompañó en todo lo que vino después. Y lo que vino después fue un mapa. Según Al Jazeera, Vozinha pasó por el Progresso de Angola, el Zimbru de Chisináu en Moldavia, el Gil Vicente de Portugal, el AEL de Limasol en Chipre, el Trenčín de Eslovaquia y finalmente el Chaves, en la segunda división portuguesa, donde jugó dos temporadas después de salir de Eslovaquia, según su ficha en Bolavip. África, Europa del este, el Mediterráneo, Europa central y otra vez Portugal. Climas distintos, idiomas distintos, vestuarios distintos. Ninguno de esos clubes es Real Madrid ni Bayern. Pero cada uno le dio partidos, y para un portero los partidos son todo: cada centro, cada mano a mano, cada error que cuesta un punto se guarda en algún lado. Hay jugadores que se quiebran con tanta mudanza. Vozinha hizo lo contrario: se volvió un portero que no se asusta de nada, porque ya había empezado de cero muchas veces. Mientras tanto, en Cabo Verde, el nombre de Vozinha ya significaba algo. Porque había un lugar donde nunca dejó de ser importante: la selección. Y ahí es donde esta historia empieza a acercarse al Mundial."
+        },
+        {
+          "id": "c05",
+          "titulo": "Los Tiburones Azules",
+          "fuentes": [
+            "f1",
+            "f2",
+            "f7",
+            "f4"
+          ],
+          "visuales": [
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Vozinha_Cape_Verde_Goalkeeper.jpg",
+              "credito": "Nha Terra Nha Cretcheu / Wikimedia Commons (CC BY 4.0)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "desde": 397,
+              "nota": "Vozinha hablando a cámara: no rellena (solo testimonios)",
+              "duracionMaxima": 265,
+              "entrevista": true
+            },
+            {
+              "tipo": "ficha",
+              "texto": "DEBUT 2012 · 4 COPAS AFRICANAS · VICECAPITÁN"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "african national team fans celebrating drums"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/0/04/Santiago_cabo_verde_4k.webm",
+              "credito": "Vasco Marques / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 0,
+              "duracionMaxima": 20,
+              "nota": "Paisaje de la isla de Santiago, Cabo Verde"
+            },
+            {
+              "tipo": "testimonio",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "desde": 764.2,
+              "hasta": 775.7,
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "quien": "Vozinha",
+              "texto": "Siempre lo hice con amor. Amo a mi país, amo representar a mi selección, y cuando entro a la cancha por Cabo Verde trato de dejarlo todo.",
+              "original": "eu sempre fiz com amor, e eu amo o meu país, eu amo representar a minha seleção… quando entro em campo por Cabo Verde, tento sempre deixar tudo em campo"
+            }
+          ],
+          "voz": "Vozinha debutó con la selección de Cabo Verde en 2012, según Khaleej Times y Bolavip. Desde entonces se volvió una de las caras de los Tiburones Azules, como les dicen. El dato que mejor explica su peso lo dio Khaleej Times: solo el capitán, Ryan Mendes, tiene más partidos con la selección que él. Y los dos son los únicos que estuvieron en todos los grandes torneos a los que Cabo Verde ha clasificado: cuatro Copas Africanas de Naciones y, ahora, el Mundial. A eso se suma Stopira, el otro veterano del grupo, que se había retirado y al que convencieron de volver por lo que significaba para el camerino. Mendes, Stopira y Vozinha: tres hombres que llevaban más de una década juntos, descritos por el diario como el corazón emocional del equipo. Vozinha, además, es el vicecapitán, según la ficha publicada por Bolavip. Y hay que entender la escala de lo que lograron. Cabo Verde es un país de unas pocas islas en medio del océano. Al Jazeera lo describió como la tercera nación más pequeña en clasificar a un Mundial. No es una potencia, no tiene una liga fuerte y muchos de sus jugadores, como Vozinha, se formaron yéndose lejos. Por eso clasificar al Mundial de 2026 fue algo histórico. La primera vez. Un país entero celebrando una clasificación que parecía imposible. Pero antes de esa fiesta hubo un momento en el que Vozinha estuvo a punto de no estar. Un momento que casi cambia esta historia por completo. ¿Ustedes sabían que una selección tan pequeña podía llegar tan lejos?"
+        }
+      ]
+    },
+    {
+      "id": "crisis",
+      "titulo": "Crisis",
+      "capitulos": [
+        {
+          "id": "c06",
+          "titulo": "Casi lo deja",
+          "fuentes": [
+            "f1"
+          ],
+          "visuales": [
+            {
+              "tipo": "stock",
+              "busqueda": "lonely man sitting empty stadium stands"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "desde": 671,
+              "nota": "Vozinha hablando a cámara: no rellena (solo testimonios)",
+              "duracionMaxima": 105,
+              "entrevista": true
+            },
+            {
+              "tipo": "titular",
+              "texto": "FUERA DE LA SELECCIÓN"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Vozinha_Fifa_World_Cup_2026_Saudia_Arabia_vs_Cabo_Verde.jpg",
+              "credito": "Petsbikes / Wikimedia Commons (CC BY 4.0)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Cabo_Verde_inspira-se_em_Hollywood_e_homenageia_%E2%80%9Cincontorn%C3%A1veis%E2%80%9D_da_Cultura_%281080p%29.webm",
+              "credito": "Agência Lusa / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 122,
+              "duracionMaxima": 22,
+              "nota": "Calles de Mindelo (tramo sin entrevistados, revisado)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Cabo_Verde_inspira-se_em_Hollywood_e_homenageia_%E2%80%9Cincontorn%C3%A1veis%E2%80%9D_da_Cultura_%281080p%29.webm",
+              "credito": "Agência Lusa / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 46,
+              "duracionMaxima": 17,
+              "nota": "Rua de Lisboa, Mindelo (tramo sin entrevistados, revisado)"
+            }
+          ],
+          "voz": "Aquí viene la parte que casi nadie contó. Vozinha estuvo afuera de la selección durante la eliminatoria más reciente de la Copa Africana. El técnico eligió a Bruno Varela, un portero más joven, según Khaleej Times. Y a Cabo Verde le fue mal: terminó último de su grupo y no fue a la Copa Africana que se jugó en Marruecos a finales de 2025. Para un portero que llevaba más de diez años siendo el número uno, eso duele. Duele en el orgullo y duele en la cabeza, porque a cierta edad cada exclusión parece una despedida. Vozinha pensó en irse. Le contó a Goalkeeper.com que fue un momento muy duro y que estaba pensando en dejar la selección. Lo que lo frenó no fue un técnico ni un dirigente. Fueron sus compañeros. Según él mismo contó, todos le hablaron y lo animaron a quedarse por el Mundial, y se quedó porque ese era su sueño, el sueño de todos. Detente en eso un segundo. El portero que meses después iba a frenar a España estuvo a una decisión de no estar en ese partido. Y lo que lo sostuvo fue un grupo de gente que creyó que todavía lo necesitaba. Hay una lección enorme ahí, y no es solo de fútbol: a veces el que está a punto de rendirse no necesita un discurso, necesita que alguien le diga que sigue siendo importante. Vozinha se quedó. Volvió al arco. Y el resto ya lo vimos en Atlanta. Pero esa noche, cuando terminó el partido, las lágrimas no fueron por el resultado. Fueron por otra cosa. ¿Y tú, alguna vez estuviste a punto de dejar algo que después te salió bien?"
+        },
+        {
+          "id": "c07",
+          "titulo": "Las lágrimas",
+          "fuentes": [
+            "f1",
+            "f2"
+          ],
+          "visuales": [
+            {
+              "tipo": "foto",
+              "imagen": "https://www.aljazeera.com/wp-content/uploads/2026/06/afp_6a3064fdc478-1781556477.jpg?resize=1920%2C1440",
+              "credito": "AFP (vía Al Jazeera)"
+            },
+            {
+              "tipo": "cita",
+              "texto": "Lloré porque crecí con mis abuelos y no pudieron estar",
+              "autor": "Vozinha, tras el partido contra España, según Khaleej Times"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/8/89/Carnaval_Mindelo_2015.webm",
+              "credito": "Lionel Scheepmans / Wikimedia Commons",
+              "licencia": "CC BY-SA 4.0",
+              "desde": 200,
+              "nota": "Calles de Mindelo"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "elderly couple hands holding close up"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://www.aljazeera.com/wp-content/uploads/2026/07/2026-07-23T101735Z_1547515330_UP1EM6F1EH4AX_RTRMADP_3_SOCCER-WORLDCUP-2026-PHOTOS-1785047330.jpg?resize=1920%2C1440",
+              "credito": "Brett Davis / Reuters (vía Al Jazeera)"
+            },
+            {
+              "tipo": "testimonio",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "desde": 1174.7,
+              "hasta": 1186,
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "quien": "Vozinha",
+              "texto": "En estos momentos me gustaría que mis abuelos estuvieran vivos. Ellos, además de mis padres, lo dieron todo para que yo sea el Vozinha que soy hoy.",
+              "original": "nesse momento gostaria que os meus avós fossem vivos, porque foram as pessoas também, tirando os meus pais, que deram tudo para eu ser o Vozinha que sou hoje"
+            }
+          ],
+          "voz": "Cuando sonó el pitazo final contra España, Vozinha se quebró. Lloró en la cancha y seguía con los ojos rojos cuando Stopira, el veterano que había vuelto del retiro, lo envolvió en un abrazo enorme, según la crónica de Khaleej Times. Después, frente a los periodistas, explicó por qué. Vozinha dijo que lloró porque creció con sus abuelos y ellos no pudieron estar ahí, porque ya habían muerto. Y en la versión que recogió Al Jazeera agregó que sus abuelos lo hicieron todo por él y por su vida. Ahí se entiende el apodo. El niño al que se burlaban diciendo que se iba a quejar con los abuelos llegó a un Mundial, y lo primero que sintió al lograr la hazaña fue la ausencia de esos abuelos. Pero había otra ausencia. Su mamá tampoco estaba. Vozinha contó que ella no pudo viajar por un problema con la visa y por el dinero que había que pagar, y que no lo lograron a tiempo. Imagínate: tu hijo juega el partido más importante de su vida, frente a millones de personas, y tú no puedes estar en el estadio por un trámite y por una suma de dinero que no alcanzaste a reunir. Esa frase dio la vuelta al mundo. Y lo que pasó después con su mamá también lo vamos a contar, porque tiene final feliz. Pero por ahora quédate con la imagen: un portero de 40 años, con la bandera de su país, llorando por las personas que lo criaron. Ese no es el llanto de alguien que se volvió famoso. Es el de alguien que se acordó de dónde venía. ¿Ustedes cómo habrían reaccionado en su lugar?"
+        },
+        {
+          "id": "c08",
+          "titulo": "El mito del electricista",
+          "fuentes": [
+            "f4"
+          ],
+          "visuales": [
+            {
+              "tipo": "titular",
+              "texto": "¿ELECTRICISTA? · ¿CONDUCTOR DE BUS?",
+              "sello": "FALSO"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "smartphone scrolling viral news social media"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "desde": 1109,
+              "nota": "Vozinha hablando a cámara: no rellena (solo testimonios)",
+              "duracionMaxima": 97,
+              "entrevista": true
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/e/e0/Vozinha_Cape_Verde_Goalkeeper.jpg",
+              "credito": "Nha Terra Nha Cretcheu / Wikimedia Commons (CC BY 4.0)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Cabo_Verde_inspira-se_em_Hollywood_e_homenageia_%E2%80%9Cincontorn%C3%A1veis%E2%80%9D_da_Cultura_%281080p%29.webm",
+              "credito": "Agência Lusa / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 0,
+              "duracionMaxima": 35,
+              "nota": "Rua de Lisboa, Mindelo (tramo sin entrevistados, revisado)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Cabo_Verde_inspira-se_em_Hollywood_e_homenageia_%E2%80%9Cincontorn%C3%A1veis%E2%80%9D_da_Cultura_%281080p%29.webm",
+              "credito": "Agência Lusa / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 70,
+              "duracionMaxima": 15,
+              "nota": "Calles de Mindelo (tramo sin entrevistados, revisado)"
+            }
+          ],
+          "voz": "Cuando alguien se vuelve viral, internet se encarga de inventarle una historia. Y a Vozinha le inventaron una muy linda, pero falsa. En las redes empezó a circular que era un portero aficionado que trabajaba como electricista o como conductor de bus, y que había llegado al Mundial casi por accidente. Sonaba perfecto para un video emotivo. El problema es que no era verdad. Según TV Azteca, la Federación de Fútbol de Cabo Verde fue contundente al aclarar que Vozinha es un futbolista profesional con una trayectoria de más de dos décadas. Y los directivos del Mindelense, el club donde empezó, confirmaron que desde 2015 se dedica exclusivamente al fútbol profesional. Ya lo vimos en este documental: Angola, Moldavia, Portugal, Chipre, Eslovaquia. No es un electricista que tuvo suerte. Es un profesional que pasó veinte años construyendo su oficio lejos de los reflectores. Y, si lo piensas, la historia real es mejor que la inventada. Porque la del electricista dice que el talento cae del cielo. La verdadera dice algo más útil: que hubo años de trabajo que nadie vio, en ligas que casi nadie mira, para que una noche en Atlanta todo saliera bien. Por eso en este canal preferimos contar la versión que se puede comprobar, aunque tenga menos drama. Y ojo, porque esto pasa todo el tiempo con los jugadores que se vuelven tendencia. Antes de compartir la historia increíble, vale la pena preguntarse quién la dijo y si alguien la confirmó. ¿Ustedes se creyeron lo del electricista?"
+        }
+      ]
+    },
+    {
+      "id": "resolucion",
+      "titulo": "Resolución",
+      "capitulos": [
+        {
+          "id": "c09",
+          "titulo": "Atlanta: el 0-0",
+          "fuentes": [
+            "f2",
+            "f1"
+          ],
+          "visuales": [
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "desde": 1027,
+              "duracionMaxima": 68,
+              "nota": "Vozinha hablando a cámara: no rellena (solo testimonios)",
+              "entrevista": true
+            },
+            {
+              "tipo": "ficha",
+              "texto": "7 ATAJADAS · FIGURA DEL PARTIDO"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://www.aljazeera.com/wp-content/uploads/2026/06/afp_6a3064fdc478-1781556477.jpg?resize=1920%2C1440",
+              "credito": "AFP (vía Al Jazeera)"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "goalkeeper diving save slow motion night"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Vozinha_Fifa_World_Cup_2026_Saudia_Arabia_vs_Cabo_Verde.jpg",
+              "credito": "Petsbikes / Wikimedia Commons (CC BY 4.0)"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/9/90/Mercedes-Benz_Stadium_Interior_in_2024.jpg",
+              "credito": "BullDawg2021 / Wikimedia Commons (CC BY 4.0)",
+              "nota": "Estadio de Atlanta por dentro"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/f/f3/Mercedes_Benz_Stadium_field_view.jpg",
+              "credito": "BullDawg2021 / Wikimedia Commons (CC BY 4.0)",
+              "nota": "Estadio de Atlanta desde la cancha"
+            }
+          ],
+          "voz": "Volvamos a esa noche. Atlanta, partido del grupo H del Mundial 2026. España, campeona de Europa, contra Cabo Verde, el debutante. Lo esperable era una goleada. Durante buena parte del partido, Cabo Verde estuvo encerrado en su propio campo, según Al Jazeera. Pero cada vez que España rompía la defensa, aparecía Vozinha. Hacia el final del primer tiempo hizo una serie de atajadas para negarle el gol a Ferran Torres, a Pedri y a Aymeric Laporte. Terminó con siete atajadas y fue elegido el jugador del partido, según Khaleej Times. Y el mismo diario destacó algo que no aparece en las estadísticas: la calma. Cuando los compañeros entraban en pánico, era Vozinha el que los bajaba a tierra. Eso es experiencia. Eso es lo que dejan veinte años de arcos distintos. Hay otro dato que lo hace todavía más grande. Vozinha había cumplido 40 años un par de semanas antes del torneo. Eso lo convirtió en el segundo jugador más veterano en debutar en un Mundial y en el más veterano en jugar con una selección que se estrenaba en el torneo, según Khaleej Times. Cero a cero. Un resultado que el diario describió como una de las grandes sorpresas en la historia de los Mundiales. Y no solo lo notaron los periodistas. Paul Pogba escribió en redes que el portero de Cabo Verde era otra cosa. Esa noche, un hombre que casi nadie conocía fuera de su país se volvió el tema de conversación del Mundial. Y eso era apenas el comienzo. ¿Ustedes vieron ese partido en vivo?"
+        },
+        {
+          "id": "c10",
+          "titulo": "Un Mundial histórico",
+          "fuentes": [
+            "f3",
+            "f7"
+          ],
+          "visuales": [
+            {
+              "tipo": "linea-tiempo",
+              "hitos": [
+                "0-0 a España",
+                "3 vallas invictas",
+                "Fase eliminatoria",
+                "Once ideal de los aficionados"
+              ]
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://www.aljazeera.com/wp-content/uploads/2026/07/2026-07-23T101735Z_1547515330_UP1EM6F1EH4AX_RTRMADP_3_SOCCER-WORLDCUP-2026-PHOTOS-1785047330.jpg?resize=1920%2C1440",
+              "credito": "Brett Davis / Reuters (vía Al Jazeera)"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "airplane landing airport family reunion hug"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "desde": 1549,
+              "nota": "Vozinha hablando a cámara: no rellena (solo testimonios)",
+              "duracionMaxima": 114,
+              "entrevista": true
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/b/bb/Mercedes-Benz_Stadium%2C_December_2024.jpg",
+              "credito": "BullDawg2021 / Wikimedia Commons (CC BY 4.0)",
+              "nota": "Estadio de Atlanta por fuera"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Carnaval_j%C3%A1_mexe_foli%C3%B5es_do_Mindelo_com_1.200_para_desfilar_na_abertura.webm",
+              "credito": "Agência Lusa / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 140,
+              "duracionMaxima": 41,
+              "nota": "Ensayo de carnaval en Mindelo (tramo sin entrevistados, revisado)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Carnaval_j%C3%A1_mexe_foli%C3%B5es_do_Mindelo_com_1.200_para_desfilar_na_abertura.webm",
+              "credito": "Agência Lusa / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 0,
+              "duracionMaxima": 43,
+              "nota": "Ensayo de carnaval en Mindelo (tramo sin entrevistados, revisado)"
+            }
+          ],
+          "voz": "Lo de España no fue un golpe de suerte. Según la nota de las agencias publicada por Al Jazeera, Vozinha mantuvo tres veces su arco en cero durante la fase de grupos y ayudó a Cabo Verde a clasificar a la fase de eliminación directa. En su primer Mundial. También se volvió uno de los jugadores más comentados del torneo por una serie de atajadas notables contra selecciones grandes, incluida Argentina, la campeona defensora. Y al final del torneo, los aficionados lo votaron en el equipo ideal de la FIFA. Ahora sí, el final feliz que prometimos. ¿Se acuerdan de su mamá, Ana Cândida Évora, la que no pudo viajar por la visa? Su historia se volvió noticia en Estados Unidos. Según Al Jazeera, a ella finalmente le dieron la visa con todos los costos de viaje perdonados, después de las gestiones de Hakeem Jeffries, el líder de los demócratas en la Cámara de Representantes de Estados Unidos. Y según Bolavip, ella pudo viajar y ver jugar a su hijo en el Mundial. Piénsalo: la mamá que no alcanzó a llegar al partido de su vida terminó en las tribunas gracias a que su hijo, llorando, contó la verdad frente a las cámaras. A veces lo más poderoso que puede hacer un deportista no es una atajada, es una frase honesta. Vozinha no pidió nada. Solo dijo por qué lloraba. Y eso movió a gente que ni siquiera sabía dónde quedaba Cabo Verde. ¿Ustedes creen que el fútbol todavía tiene este tipo de historias?"
+        },
+        {
+          "id": "c11",
+          "titulo": "Millones de seguidores",
+          "fuentes": [
+            "f1",
+            "f2",
+            "f3",
+            "f7"
+          ],
+          "visuales": [
+            {
+              "tipo": "contador",
+              "texto": "SEGUIDORES EN INSTAGRAM",
+              "hasta": 30000000,
+              "fuente": "Cifra de julio de 2026, según Al Jazeera"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "phone notifications social media likes"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "desde": 896,
+              "nota": "Vozinha hablando a cámara: no rellena (solo testimonios)",
+              "duracionMaxima": 115,
+              "entrevista": true
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/7/74/Vozinha_Fifa_World_Cup_2026_Saudia_Arabia_vs_Cabo_Verde.jpg",
+              "credito": "Petsbikes / Wikimedia Commons (CC BY 4.0)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Carnaval_j%C3%A1_mexe_foli%C3%B5es_do_Mindelo_com_1.200_para_desfilar_na_abertura.webm",
+              "credito": "Agência Lusa / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 80,
+              "duracionMaxima": 15,
+              "nota": "Tambores en Mindelo (tramo sin entrevistados, revisado)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/9/9e/Carnaval_j%C3%A1_mexe_foli%C3%B5es_do_Mindelo_com_1.200_para_desfilar_na_abertura.webm",
+              "credito": "Agência Lusa / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 112,
+              "duracionMaxima": 11,
+              "nota": "Tambores en Mindelo (tramo sin entrevistados, revisado)"
+            }
+          ],
+          "voz": "Después de esa noche, el teléfono de Vozinha no paró. Su cuenta de Instagram explotó. Y aquí hay que ser honestos con los números, porque no todos los medios dicen lo mismo. Khaleej Times habló de unos 50.000 seguidores antes del partido y más de 5 millones poco después. Al Jazeera, en cambio, habló de medio millón antes y casi 5 millones a las pocas horas. Bolavip publicó que llegó a 17,6 millones en cuestión de días. Y en julio, Al Jazeera contó que ya rondaba los 30 millones, con un empujón del influencer brasileño Casimiro. Lo que sí está claro es la escala: pasó de ser un portero conocido en su país a tener una audiencia enorme en todo el mundo. Pero lo más interesante no son los números, es lo que él dijo sobre ese momento. Vozinha dijo que en la vida se trabaja para tener momentos como ese. Recordó que tenía 40 años y que no fue profesional hasta los 25, y que aquello era una recompensa por todo el camino. Y después dijo algo que vale la pena escuchar despacio: que al Vozinha de 18 años le diría que estuviera muy orgulloso de sí mismo, porque trabajó mucho, y que aunque de niño nunca soñó con algo así, después de ese partido podía decirle a su versión joven que todo valió la pena. Fíjate que no habla de fama ni de dinero. Habla del muchacho bajito al que nadie elegía. ¿Qué le dirían ustedes a su versión de 18 años?"
+        }
+      ]
+    },
+    {
+      "id": "legado",
+      "titulo": "Legado",
+      "capitulos": [
+        {
+          "id": "c12",
+          "titulo": "Colo-Colo",
+          "fuentes": [
+            "f3",
+            "f6",
+            "f5"
+          ],
+          "visuales": [
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Vozinha_en_Colo-Colo.jpg/1920px-Vozinha_en_Colo-Colo.jpg",
+              "credito": "Cavilese / Wikimedia Commons (CC BY-SA 4.0)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/f/f5/Visiting_fans_-_Colo-Colo.webm",
+              "credito": "John Seb Barber / Wikimedia Commons",
+              "licencia": "CC BY 2.0",
+              "desde": 0,
+              "nota": "Hinchada de Colo-Colo"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "Santiago de Chile skyline Andes"
+            },
+            {
+              "tipo": "stock",
+              "busqueda": "football stadium night rain floodlights"
+            },
+            {
+              "tipo": "ficha",
+              "texto": "180 MINUTOS SIN RECIBIR GOLES"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/f/f4/Estadio_Monumental_%2827424275476%29.jpg",
+              "credito": "Ministerio Secretaría General de Gobierno / Wikimedia Commons (CC BY-SA 2.0)",
+              "nota": "Estadio Monumental de Colo-Colo"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Colo_Colo_-_Universidad_de_Concepci%C3%B3n%2C_29-11-2015_-_Estadio_Monumental_03.JPG",
+              "credito": "Carlos yo / Wikimedia Commons (CC BY-SA 4.0)",
+              "nota": "Partido en el Monumental"
+            }
+          ],
+          "voz": "Después del Mundial, la vida de Vozinha cambió de continente otra vez. Ya se había despedido del Chaves antes del verano, y en julio llegó la noticia: según Al Jazeera, el presidente de Colo-Colo, Aníbal Mosa, anunció un acuerdo con el portero y dijo que iba a ser presentado en el Estadio Monumental. Mosa reconoció que el fichaje también tenía un atractivo de marketing, pero dijo que su Mundial demostraba que se lo había ganado. Colo-Colo es el club más ganador de Chile y el único del país campeón de la Copa Libertadores, según la misma nota. Vozinha llegó a Chile el 2 de agosto. Según la agencia EFE, debutó 24 días después en la Copa Chile, en una noche de lluvia y frío en el Estadio Nacional, con unos 20.000 hinchas y con Iván Zamorano en las tribunas. Colo-Colo ganó 3-0 a Unión Española y él no recibió goles. Al terminar dijo que estaba muy feliz por su primer partido, que fue una sensación muy buena después de mucho tiempo sin jugar. Su debut en la liga fue un 0-0 contra Huachipato en Concepción, según T13. Ahí tuvo un susto: en un centro largo, la pelota se le soltó de las manos y el rival remató, pero Arturo Vidal despejó y la jugada fue anulada por fuera de lugar. Medios de España reaccionaron al error, aunque cerró el partido con 180 minutos sin recibir goles con su nuevo club. Así es la fama: hasta un balón que se te suelta se vuelve noticia internacional. ¿Ustedes creen que le irá bien en Chile?"
+        },
+        {
+          "id": "c13",
+          "titulo": "La respuesta",
+          "fuentes": [
+            "f1",
+            "f2",
+            "f4"
+          ],
+          "visuales": [
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/3/39/-44m_Sisu_in_Mindelo%2C_Cape_Verde_-_Sailing_Sisu_Leopard_45_Catamaran_World_Circumnavigating_Atlantic.webm",
+              "credito": "Sailing Sisu / Wikimedia Commons",
+              "licencia": "CC BY 3.0",
+              "desde": 120,
+              "nota": "Bahía de Mindelo"
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Panorama_Hafen_Mindelo_Sao_Vicente.JPG/1920px-Panorama_Hafen_Mindelo_Sao_Vicente.JPG",
+              "credito": "Herbert wie / Wikimedia Commons (CC BY-SA 4.0)"
+            },
+            {
+              "tipo": "video",
+              "video": "https://upload.wikimedia.org/wikipedia/commons/6/6d/EXCLUSIVO-_ANDR%C3%89_VIEIRA_ENTREVISTA_V%C3%93ZINHA_%2C_GOLEIRO_DE_CABO_VERDE_-_TELESUR_E_ICL_NOT%C3%8DCIAS.webm",
+              "credito": "Instituto Conhecimento Liberta (TeleSUR e ICL Notícias)",
+              "licencia": "Dominio público",
+              "desde": 1691,
+              "nota": "Vozinha hablando a cámara: no rellena (solo testimonios)",
+              "duracionMaxima": 87,
+              "entrevista": true
+            },
+            {
+              "tipo": "foto",
+              "imagen": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Vozinha_en_Colo-Colo.jpg/1920px-Vozinha_en_Colo-Colo.jpg",
+              "credito": "Cavilese / Wikimedia Commons (CC BY-SA 4.0)"
+            },
+            {
+              "tipo": "cita",
+              "texto": "Todo valió la pena",
+              "autor": "Vozinha, tras el partido contra España, según Khaleej Times"
+            }
+          ],
+          "voz": "Al principio de este documental nos hicimos una pregunta: ¿cómo un portero de 40 años, que casi nadie conocía fuera de Cabo Verde, frenó a España en el primer Mundial de su país? Ahora tenemos la respuesta, y no es una sola. Primero, el oficio. Vozinha no apareció de la nada. Llevaba más de veinte años atajando, en Cabo Verde, en Angola, en Moldavia, en Portugal, en Chipre y en Eslovaquia, como confirmaron su federación y su club. La calma que mostró frente a Pedri o Ferran Torres se construyó en cientos de partidos que nadie televisaba. Segundo, la paciencia. Un niño al que los entrenadores no elegían por bajito, que se volvió profesional a los 25 y que esperó toda una carrera por una sola noche. Tercero, la gente. Los abuelos que lo criaron en Mindelo y le dejaron hasta el apodo. Y los compañeros que, cuando quiso dejar la selección, le dijeron que se quedara por el Mundial. Sin ellos, Vozinha no habría estado en el arco esa noche. Esa es la historia que no cabe en un video viral de treinta segundos. La de un portero que frenó a España en el primer Mundial de Cabo Verde porque llevaba toda la vida preparándose para ese momento sin saber que iba a llegar. Y quizá esa es la lección: que el momento puede llegar tarde, a los 40, cuando ya nadie lo espera. Lo importante es estar listo. Y tú, ¿qué portero de tu país merece una historia así?"
+        }
+      ]
+    }
+  ],
+  "preguntaFinal": "¿Qué portero de tu país merece que contemos su historia el próximo viernes? Déjalo en los comentarios.",
+  "cierre": "Si esta historia te llegó, suscríbete y activa la campana: cada viernes contamos una historia de fútbol que vale la pena conocer. Y si eres de Cabo Verde, cuéntanos cómo vivieron ese cero a cero. Nos vemos el próximo viernes.",
+  "fuentes": [
+    {
+      "id": "f1",
+      "url": "https://www.khaleejtimes.com/sports/fifa-world-cup/meet-vozinha-cape-verde-hero-goalkeeper-mother-visa",
+      "titulo": "Meet Vozinha, 40-year-old Cape Verde hero who almost quit before Fifa World Cup",
+      "medio": "Khaleej Times"
+    },
+    {
+      "id": "f2",
+      "url": "https://www.aljazeera.com/sports/2026/6/16/who-is-vozinha-cape-verdes-viral-goalkeeper-at-the-world-cup",
+      "titulo": "Who is Vozinha, Cape Verde’s viral goalkeeper at the World Cup?",
+      "medio": "Al Jazeera"
+    },
+    {
+      "id": "f3",
+      "url": "https://www.aljazeera.com/sports/2026/7/26/cape-verde-world-cup-star-vozinha-agrees-deal-with-chiles-colo-colo",
+      "titulo": "Cape Verde World Cup star Vozinha agrees deal with Chile’s Colo Colo",
+      "medio": "Al Jazeera (AFP, Reuters, AP)"
+    },
+    {
+      "id": "f4",
+      "url": "https://www.tvazteca.com/aztecadeportes/falso-esto-que-se-sabe-del-portero-de-cabo-verde-no-es-como-lo-cuentan/",
+      "titulo": "FALSO: esto que se sabe del portero de Cabo Verde no es como lo cuentan",
+      "medio": "TV Azteca"
+    },
+    {
+      "id": "f5",
+      "url": "https://www.t13.cl/noticia/deportes13/se-le-solto-las-manos-medios-internacionales-reaccionan-error-vozinha-colo-colo-7-9-2026",
+      "titulo": "Medios internacionales reaccionan al error de Vozinha en Colo-Colo",
+      "medio": "T13"
+    },
+    {
+      "id": "f6",
+      "url": "https://www.laestrella.com.pa/deportes/vozinha-debuta-con-triunfo-en-colo-colo-mantiene-el-arco-en-cero-ante-union-espanola-DF25207260",
+      "titulo": "Vozinha debuta con triunfo en Colo Colo: mantiene el arco en cero ante Unión Española",
+      "medio": "EFE (vía La Estrella de Panamá)"
+    },
+    {
+      "id": "f7",
+      "url": "https://bolavip.com/en/world-cup/vozinha-profile",
+      "titulo": "Vozinha profile",
+      "medio": "Bolavip"
+    }
+  ],
+  "omitidos": [
+    "Seguidores en Instagram antes del partido: los medios no coinciden (50.000 según Khaleej Times y Bolavip; 500.000 según Al Jazeera). Se cuentan las cifras atribuidas a cada medio.",
+    "Edad del primer contrato profesional: algunos medios dicen 26; se usa lo que dijo el propio jugador (25).",
+    "Rival del grupo de la eliminatoria mundialista: no confirmado en una fuente leída completa; no se menciona."
+  ]
+}

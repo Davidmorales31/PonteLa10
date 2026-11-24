@@ -172,10 +172,18 @@ export function rankearTemas({ trends = [], noticias = [], config, maximo = 40 }
   return filas.sort((a, b) => b.puntaje - a.puntaje || b.trafico - a.trafico).slice(0, maximo)
 }
 
-async function traer(url) {
-  const r = await fetch(url, { headers: { 'user-agent': AGENTE }, signal: AbortSignal.timeout(20_000) })
-  if (!r.ok) throw new Error(`HTTP ${r.status}`)
-  return r.text()
+async function traer(url, intentos = 2) {
+  for (let intento = 1; ; intento++) {
+    try {
+      const r = await fetch(url, { headers: { 'user-agent': AGENTE }, signal: AbortSignal.timeout(20_000) })
+      if (!r.ok) throw new Error(`HTTP ${r.status}`)
+      return await r.text()
+    } catch (error) {
+      // Un tropiezo de red (conexión caída, tiempo agotado) se reintenta una vez; un HTTP de error no.
+      if (intento >= intentos || /^HTTP /.test(error.message)) throw error
+      await new Promise(resolver => setTimeout(resolver, 1500))
+    }
+  }
 }
 
 export async function recogerTendencias({ config, conNoticias = true, registro = () => {} }) {

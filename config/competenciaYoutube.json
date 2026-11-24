@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "descripcion": "Canales de YouTube que se miden para el estudio de competencia (scripts/competencia-medir.py). Solo metadatos públicos: vistas, duración y títulos de los últimos 40 videos; nada se descarga. Agrega un canal con su canal_id (empieza por UC).",
+  "videosPorCanal": 40,
+  "canales": [
+    {
+      "nombre": "Dieck Docs",
+      "canal_id": "UCGWh7JC2whurOf1rLrlaHIQ",
+      "tipo": "documental"
+    },
+    {
+      "nombre": "EmmaHavokOscuro",
+      "canal_id": "UCXEZrUc8zI1khA7Eri3GAwA",
+      "tipo": "documental"
+    },
+    {
+      "nombre": "Memorias del Fútbol",
+      "canal_id": "UCWNv6vx6WOTN91XGT5OHVXg",
+      "tipo": "documental"
+    },
+    {
+      "nombre": "ZEUZINK",
+      "canal_id": "UCzplrUDVpn1NGlRCbJqAuMA",
+      "tipo": "documental"
+    },
+    {
+      "nombre": "Qué Gran Historia",
+      "canal_id": "UCRXNgTwRcP-pFpbiwDbDFlw",
+      "tipo": "historias (no solo fútbol)"
+    },
+    {
+      "nombre": "Davoo Xeneize Plus",
+      "canal_id": "UC0nvWiBrtyoZ0iBmYGRjJ6g",
+      "tipo": "opinión y reacción"
+    },
+    {
+      "nombre": "Leo Salinas - Fútbol",
+      "canal_id": "UCV-dQYSIS7EhlMO6dvZD7Iw",
+      "tipo": "historia de jugador"
+    },
+    {
+      "nombre": "Dosis de Fútbol",
+      "canal_id": "UCOqJ8rYkFX9P6ecffs_S1Kw",
+      "tipo": "compilaciones"
+    },
+    {
+      "nombre": "Cristian Nieto",
+      "canal_id": "UCok0AVCtwX07166E4339Qxw",
+      "tipo": "análisis"
+    },
+    {
+      "nombre": "ESPN Fans",
+      "canal_id": "UCFmMw7yTuLTCuMhpZD5dVsg",
+      "tipo": "medio con derechos"
+    },
+    {
+      "nombre": "PEDRO EL INGENIERO",
+      "canal_id": "UCAzFk83n3iyBGlparNEykCg",
+      "tipo": "análisis"
+    },
+    {
+      "nombre": "La Pizarra Táctica",
+      "canal_id": "UCgOXozUodlPZXe7NK3dGdRg",
+      "tipo": "análisis"
+    },
+    {
+      "nombre": "Más allá del gol",
+      "canal_id": "UCmKABlS_JMR-UfIio2GEwkQ",
+      "tipo": "análisis"
+    },
+    {
+      "nombre": "POST UNITED",
+      "canal_id": "UCrhu_g7xvgsetoN0yNOr3fQ",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "LasCronicasDeJoaqo",
+      "canal_id": "UCRYL9m12GUiXKYzEin_K2Nw",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "TUDN México",
+      "canal_id": "UCTIyEyDNHPrwVFPhpi5dm0A",
+      "tipo": "medio con derechos"
+    },
+    {
+      "nombre": "TNT Sports Argentina",
+      "canal_id": "UCI5RY8G0ar-hLIaUJvx58Lw",
+      "tipo": "medio con derechos"
+    },
+    {
+      "nombre": "TNT Sports Chile",
+      "canal_id": "UChCovZlgNh2x6Z57MJ5fhFw",
+      "tipo": "medio con derechos"
+    },
+    {
+      "nombre": "La Secta Deportiva",
+      "canal_id": "UCBPasXWxj1DYJLqZktw_UWg",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "Win Sports",
+      "canal_id": "UCZjpA3YBPXvJv3pg4SPEjfw",
+      "tipo": "medio con derechos"
+    },
+    {
+      "nombre": "Gol Caracol",
+      "canal_id": "UCXXOzmyYvDtaijm5i303Tng",
+      "tipo": "medio con derechos"
+    },
+    {
+      "nombre": "RICCK FÚTBOL",
+      "canal_id": "UCES-qoaf1Uu-oxzpdyUnx0g",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "AS Colombia",
+      "canal_id": "UC_t09V_GbLgCG3fBc7lAelg",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "ESPN Deportes",
+      "canal_id": "UC08mnbiC4FykqpHqbEWgFcg",
+      "tipo": "medio con derechos"
+    },
+    {
+      "nombre": "Claro Sports",
+      "canal_id": "UCqfCJBfrFSO4tZM1LNZTBFQ",
+      "tipo": "medio con derechos"
+    },
+    {
+      "nombre": "Tomás Fernández",
+      "canal_id": "UCLTV8NUXGkoPHuZTZAkq5Rw",
+      "tipo": "documental"
+    },
+    {
+      "nombre": "El jardín del gol",
+      "canal_id": "UCnRnvFiqls2v8mItKxv6Tfw",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "Cracks",
+      "canal_id": "UCv1xjGi8KibuoOK8StRFCWg",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "La Gambeta",
+      "canal_id": "UCHle8xt_YqgwVqnimyoapyA",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "Jugada Deportiva",
+      "canal_id": "UCKCWW87yTJCYY_zr7xenNjg",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "Camilo MD",
+      "canal_id": "UCMfu09A5IOpBGdb9EAZvEkw",
+      "tipo": "noticias"
+    },
+    {
+      "nombre": "MegaDeportes",
+      "canal_id": "UCS2q6U7sWalPEgdLKx5YzQA",
+      "tipo": "medio con derechos"
+    }
+  ]
+}
