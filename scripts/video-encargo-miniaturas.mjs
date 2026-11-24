@@ -21,6 +21,7 @@ export function esTomaConVideo(archivo) {
 export function fotosDelEncargo(guion, estudio = {}) {
   const fotos = []
   const vistas = new Set()
+  if (!(guion?.bloques || []).length && (guion?.actos || []).length) return fotosDelDocumental(guion)
   for (const bloque of guion?.bloques || []) {
     const planos = [...(bloque.planos || []).filter(p => p?.imagen).map(p => ({ url: p.imagen, credito: p.credito || '' })), ...((estudio.fotosExtra || {})[bloque.id] || []).map(f => ({ url: f.ruta, credito: f.credito || '' }))]
     const primera = planos.find(p => !vistas.has(p.url))
@@ -30,6 +31,23 @@ export function fotosDelEncargo(guion, estudio = {}) {
     if (fotos.length >= 3) break
   }
   return fotos
+}
+
+/** Documental: las fotos salen de los visuales de los capítulos (no hay «bloques»); primero las del protagonista. */
+export function fotosDelDocumental(guion, maximo = 3) {
+  const nombre = String(guion.protagonista || '').toLowerCase().split(/\s+/)[0]
+  const todas = []
+  const vistas = new Set()
+  for (const acto of guion.actos || []) {
+    for (const cap of acto.capitulos || []) {
+      for (const v of cap.visuales || []) {
+        if (v?.tipo !== 'foto' || !v.imagen || vistas.has(v.imagen)) continue
+        vistas.add(v.imagen)
+        todas.push({ bloque: cap.id, club: acto.titulo || '', titular: cap.titulo || '', url: v.imagen, credito: v.credito || '', propia: !!nombre && decodeURIComponent(v.imagen).toLowerCase().includes(nombre) })
+      }
+    }
+  }
+  return [...todas.filter(f => f.propia), ...todas.filter(f => !f.propia)].slice(0, maximo)
 }
 
 export function textoEncargo({ guion, fotos, conCara, carpeta }) {
@@ -91,7 +109,11 @@ export async function crearEncargo(carpeta) {
     const local = String(foto.url).startsWith('assets/') ? join(carpeta, foto.url) : null
     const salida = join(insumos, `foto-${i + 1}.jpg`)
     if (local && existsSync(local)) await copyFile(local, salida)
-    else {
+    else if (!(guion.bloques || []).length) {
+      const mapa = existsSync(join(carpeta, 'assets', 'fotos', 'fotos.json')) ? JSON.parse(await readFile(join(carpeta, 'assets', 'fotos', 'fotos.json'), 'utf8')) : {}
+      const ruta = mapa[foto.url] && join(carpeta, mapa[foto.url])
+      if (ruta && existsSync(ruta)) await copyFile(ruta, salida)
+    } else {
       const indice = [...new Set((guion.bloques || []).flatMap(b => (b.planos || []).map(p => p?.imagen).filter(Boolean)))].indexOf(foto.url)
       const descargada = join(carpeta, 'assets', 'fotos', `foto-${indice + 1}.jpg`)
       if (indice >= 0 && existsSync(descargada)) await copyFile(descargada, salida)

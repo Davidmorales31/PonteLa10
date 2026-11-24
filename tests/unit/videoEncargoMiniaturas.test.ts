@@ -24,3 +24,17 @@ describe('encargo de miniaturas para Codex', () => {
     expect(r.texto).toContain('GOLAZO')
   })
 })
+
+describe('encargo de miniaturas de un documental', () => {
+  it('toma las fotos de los capítulos (sin bloques), primero las del protagonista y con crédito', () => {
+    const fotosDelEncargo = encargo.fotosDelEncargo as (g: unknown) => Array<{ url: string, credito: string }>
+    const foto = (imagen: string, credito: string) => ({ tipo: 'foto', imagen, credito })
+    const guion = {
+      tipo: 'documental', protagonista: 'Vozinha',
+      actos: [{ id: 'a', titulo: 'Origen', capitulos: [{ id: 'c1', titulo: 'Uno', visuales: [foto('https://x/estadio.jpg', 'A'), foto('https://x/Vozinha_1.jpg', 'B'), foto('https://x/estadio.jpg', 'A'), { tipo: 'ficha', texto: 'X' }] }] }]
+    }
+    const fotos = fotosDelEncargo(guion)
+    expect(fotos.map(f => f.url)).toEqual(['https://x/Vozinha_1.jpg', 'https://x/estadio.jpg'])
+    expect(fotos[0].credito).toBe('B')
+  })
+})
