@@ -1,6 +1,6 @@
 ---
 name: pont3la10-reels-guion
-description: Escribe los guiones de Reels y Shorts propios de Ponte la 10 (3 a 5 por día, 25–55 s, 9:16) a partir de las noticias del video diario: gancho de 3 capas, beats encadenados sobre fotos o clips a pantalla completa (sin gráficos a pantalla completa), re-gancho, un solo llamado a la acción y bucle. Lo valida con la rúbrica ejecutable y crea los proyectos del estudio.
+description: Escribe los guiones de Reels y Shorts propios de Ponte la 10 (1 a 5 por día, 25–55 s, 9:16) a partir de las noticias del video diario: gancho de 3 capas, beats encadenados sobre fotos o clips a pantalla completa (sin gráficos a pantalla completa), re-gancho, un solo llamado a la acción y bucle. Lo valida con la rúbrica ejecutable y crea los proyectos del estudio.
 ---
 
 # Guiones de Reels y Shorts propios
@@ -14,13 +14,40 @@ Investigación y reglas de fondo: `docs/REELS_PROPIOS.md`. Números: `config/ree
 luego los proyectos del estudio con `node scripts/video-generar-reel.mjs <fecha>`. Juan graba la voz de cada Reel (gancho,
 desarrollo y cierre) en el estudio; el resto lo arma código. No publiques nada.
 
-## Elegir las historias (3 a 5)
+## Elegir las historias (1 a 5)
+
+Desde 2026-11-24 un día puede llevar de **1 a 5** Reels (antes 3 a 5). Los Shorts que más rinden en la competencia no son
+noticias del día sino **mini-historias y curiosidades de leyendas** (`docs/ESTUDIO_COMPETENCIA_AMPLIADO_2026-11-24.md`), y los
+de noticias del día rinden poco: pon como mucho 1 o 2 noticias fuertes y completa con el **banco de leyendas** (sección de abajo).
 
 1. Parte del `guion.json` del video del día (mismas historias, ya verificadas) y de sus artículos.
 2. Elige las que funcionan solas en 30 s: una cifra fuerte, un nombre famoso, un giro, una polémica sana, una previa.
    Una historia por Reel, clubes distintos, la más fuerte primero.
 3. Formatos (varíalos en el día): `bomba` (el hecho en el gancho), `dato` (la cifra manda), `polemica` (pregunta al
    final), `top` (3 cosas contadas en la voz), `previa` (versus y hora), `emocion` (el partidazo). Todos van sobre fotos o clips.
+   **Estructuras nuevas**, cada una con su regla en la rúbrica (`estructura-formato`, obligatoria):
+
+   | `formato` | Esqueleto | La rúbrica exige |
+   | --- | --- | --- |
+   | `leyenda` | Gancho con un rasgo extremo y un nombre → origen → apogeo con un dato → giro o rareza → cierre que engancha con la primera frase | 35 s o más, 4 a 7 beats, un beat con visual `dato`, `cierre.bucle: true` |
+   | `donde-estan` | ¿Dónde están ahora? 4 a 6 nombres de un equipo o torneo famoso, foto y una línea cada uno | 30 s o más, 5 a 8 beats, un beat con visual `lista`, el cierre deja una pregunta |
+   | `dato-no-cuadra` | Una cifra, la contradicción y la explicación en una frase | máximo 38 s, un beat con visual `dato` |
+   | `antes-despues` | Dos o tres épocas con fotos y una línea de cambio | un beat con visual `dividida` |
+   | `versus` | Dos nombres, un criterio y la pregunta dicha en voz alta | un beat `versus`, cierre con pregunta y **título sin «?»** |
+
+   Regla de títulos medida en 823 Shorts: con un **número** rinden más (1,15 frente a 0,97); la **pregunta va hablada y en pantalla, no en el título** (0,84).
+
+## Banco de leyendas: Shorts desde un documental
+
+Cada documental ya trae la investigación, las fuentes y las fotos acreditadas: de él salen de 8 a 10 Shorts sin investigar de nuevo.
+
+1. `node scripts/documental-shorts.mjs videos/documentales/<carpeta>/guion.json` crea `material-shorts.json` junto al guion: hechos
+   con número y su fuente (cada uno con acto y capítulo), citas, fichas, hitos, fotos con crédito y **estructuras propuestas**
+   (leyenda, dato-no-cuadra, antes-despues, citas). No escribe los Shorts: te da el material ordenado.
+2. Escribe los Shorts con ese material: cada dato sale de un hecho del archivo y nombra su fuente en la voz («según Al Jazeera»);
+   las fotos son las del archivo (con su `credito`); nunca imágenes de la transmisión de partidos ni entrevistas ajenas.
+3. El archivo va en `videos/diario/<proyecto del documental>/guion-reels.json` (por ejemplo `2026-11-27-documental-vozinha`) y se valida y
+   se crea igual que los demás (`video-rubrica-reels.mjs` y `video-generar-reel.mjs <proyecto>`). Salen en los días siguientes al documental.
 
 ## Molde de cada Reel (25–55 s a 170 palabras por minuto ≈ 70–150 palabras)
 

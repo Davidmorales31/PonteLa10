@@ -109,6 +109,16 @@ describe('planificarDocumental', () => {
   })
 })
 
+describe('formatos del documental en el generador', () => {
+  it('la tarjeta del título cambia de antetítulo según el formato', () => {
+    const kicker = (formato?: string) => planificar({ ...guion, formato }, { medio, mapa }).escenas.find(e => e.escena === 'doc-acto' && String(e.variables?.kicker).match(/DOCUMENTAL|HISTORIA|AN[AÁ]LISIS/))?.variables?.kicker
+    expect(kicker()).toBe('UN DOCUMENTAL DE PONTE LA 10')
+    expect(kicker('historia-corta')).toBe('LA HISTORIA DE')
+    expect(kicker('explicador')).toBe('UN ANÁLISIS DE PONTE LA 10')
+    expect(kicker('epoca-club')).toBe('UN DOCUMENTAL DE PONTE LA 10')
+  })
+})
+
 describe('render híbrido', () => {
   const plan = planificar(guion, { medio, mapa }) as Plan & { clipsBase: { inicio: number, duracion: number, archivo: string, mediaInicio: number }[] }
 

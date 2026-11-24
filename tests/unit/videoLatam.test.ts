@@ -1,7 +1,10 @@
-import { readFileSync } from 'node:fs'
-import { describe, expect, it } from 'vitest'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { afterAll, describe, expect, it } from 'vitest'
 import * as latam from '../../scripts/video-latam.mjs'
 import * as edicion from '../../scripts/video-edicion.mjs'
+import * as selector from '../../scripts/documental-elegir.mjs'
 
 type Nota = { slug: string, titulo: string, publicadoEn?: string, resumen?: string }
 const config = JSON.parse(readFileSync('config/fuentesFutbolLatam.json', 'utf8'))
@@ -52,5 +55,45 @@ describe('edición latam: reparto de notas', () => {
   it('la edición latam consulta las categorías de las que salen sus notas', () => {
     const e = (edicion.edicionDe as (g: unknown) => { categorias: string[] })({ edicion: 'latam' })
     expect(e.categorias).toEqual(['futbol-colombiano', 'futbol-mundial'])
+  })
+})
+
+describe('un artículo no se repite entre el video de Latinoamérica y el internacional', () => {
+  const carpeta = mkdtempSync(join(tmpdir(), 'latam-'))
+  afterAll(() => rmSync(carpeta, { recursive: true, force: true }))
+  const guion = (nombre: string, slugs: string[]) => {
+    mkdirSync(join(carpeta, nombre), { recursive: true })
+    writeFileSync(join(carpeta, nombre, 'guion.json'), JSON.stringify({ bloques: slugs.map(articuloSlug => ({ articuloSlug })) }))
+  }
+  const usadas = latam.slugsUsados as (o: { fecha: string, carpeta: string }) => Promise<{ latam: Set<string>, internacional: Set<string> }>
+  const sinRepetir = latam.sinRepetirEntreVideos as (r: unknown, u: unknown) => { latam: { slug: string }[], internacional: { slug: string }[] }
+
+  it('lee lo que usó cada video del día (Colombia y Latinoamérica juntos, internacional aparte)', async () => {
+    guion('2026-11-24', ['a', 'b'])
+    guion('2026-11-24-latam', ['c'])
+    guion('2026-11-24-internacional', ['x', 'y'])
+    guion('2026-11-23', ['z'])
+    const u = await usadas({ fecha: '2026-11-24', carpeta })
+    expect([...u.latam].sort()).toEqual(['a', 'b', 'c'])
+    expect([...u.internacional].sort()).toEqual(['x', 'y'])
+    expect((await usadas({ fecha: '2026-11-25', carpeta })).latam.size).toBe(0)
+  })
+
+  it('quita de cada lista lo que ya usó el video de la otra edición', () => {
+    const reparto = { latam: [{ slug: 'a' }, { slug: 'x' }], internacional: [{ slug: 'y' }, { slug: 'a' }, { slug: 'k' }] }
+    const r = sinRepetir(reparto, { latam: new Set(['a']), internacional: new Set(['x', 'y']) })
+    expect(r.latam.map(n => n.slug)).toEqual(['a'])
+    expect(r.internacional.map(n => n.slug)).toEqual(['y', 'k'])
+  })
+})
+
+describe('el selector de documentales lee también las tendencias de Latinoamérica', () => {
+  const carpeta = mkdtempSync(join(tmpdir(), 'tendencias-'))
+  afterAll(() => rmSync(carpeta, { recursive: true, force: true }))
+  it('incluye las fotos AAAA-MM-DD.json y AAAA-MM-DD-latam.json de los últimos 7 días y nada más', async () => {
+    for (const n of ['2026-11-23.json', '2026-11-23-latam.json', '2026-11-22-latam.json', '2026-10-01-latam.json', 'notas.json', '2026-11-23-otra.json']) writeFileSync(join(carpeta, n), JSON.stringify({ temas: [{ tema: n }] }))
+    const leer = selector.leerFotosSemana as (hoy: string, dir: string) => Promise<{ temas: { tema: string }[] }[]>
+    const fotos = await leer('2026-11-24', carpeta)
+    expect(fotos.map(f => f.temas[0].tema).sort()).toEqual(['2026-11-22-latam.json', '2026-11-23-latam.json', '2026-11-23.json'])
   })
 })

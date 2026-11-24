@@ -8,7 +8,7 @@
     "duracionMinimaSegundos": 22,
     "duracionObjetivoSegundos": 40,
     "duracionMaximaSegundos": 58,
-    "reelsPorDia": { "minimo": 3, "maximo": 5 }
+    "reelsPorDia": { "minimo": 1, "maximo": 5 }
   },
   "zonaSegura": {
     "arriba": 168,
@@ -41,8 +41,32 @@
     "debeTraerUna": ["sígue", "síguenos", "comenta", "comenten", "guarda", "compárte", "comparte", "nota completa", "pont3la10", "ponte la 10"]
   },
   "titulo": { "caracteresMinimos": 25, "caracteresMaximos": 70 },
+  "formatos": {
+    "nota": "Hasta 2026-11-24 había 6 etiquetas con un solo esqueleto. Las estructuras nuevas (leyenda, donde-estan, dato-no-cuadra, antes-despues, versus) salen de docs/ESTUDIO_COMPETENCIA_AMPLIADO_2026-11-24.md: los Shorts que más rinden son mini-historias y curiosidades de leyendas, no noticias del día. Cada una exige lo suyo; las etiquetas viejas no cambian.",
+    "bomba": {}, "dato": {}, "polemica": {}, "top": {}, "previa": {}, "emocion": {}, "noticia": {},
+    "leyenda": {
+      "descripcion": "La leyenda en 45 s: gancho con un rasgo extremo y un nombre, origen, apogeo con un dato, giro o rareza y cierre en bucle.",
+      "duracionMinimaSegundos": 35, "beats": { "minimo": 4, "maximo": 7 }, "requiereTipos": ["dato"], "cierreBucle": true
+    },
+    "donde-estan": {
+      "descripcion": "¿Dónde están ahora? 4 a 6 nombres de un equipo o torneo famoso, con foto y una línea cada uno; cierra con pregunta.",
+      "duracionMinimaSegundos": 30, "beats": { "minimo": 5, "maximo": 8 }, "requiereTipos": ["lista"], "cierrePregunta": true
+    },
+    "dato-no-cuadra": {
+      "descripcion": "El dato que no cuadra: una cifra, la contradicción y la explicación en una frase.",
+      "duracionMaximaSegundos": 38, "requiereTipos": ["dato"]
+    },
+    "antes-despues": {
+      "descripcion": "Antes y después (o evolución): dos o tres épocas con fotos y una línea de cambio.",
+      "requiereTipos": ["dividida"]
+    },
+    "versus": {
+      "descripcion": "Versus: dos nombres, un criterio y la pregunta dicha en voz alta; el título no lleva pregunta (rinden menos).",
+      "requiereTipos": ["versus"], "cierrePregunta": true, "tituloSinPregunta": true
+    }
+  },
   "aprobacion": {
     "puntajeMinimo": 85,
-    "criteriosObligatorios": ["duracion", "gancho-sin-saludo", "gancho-concreto", "pantalla-gancho", "fuente", "creditos", "rumor", "un-cta"]
+    "criteriosObligatorios": ["duracion", "gancho-sin-saludo", "gancho-concreto", "pantalla-gancho", "fuente", "creditos", "rumor", "un-cta", "estructura-formato"]
   }
 }

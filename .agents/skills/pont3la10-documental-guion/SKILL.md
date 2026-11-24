@@ -17,7 +17,7 @@ verificación (fuentes, rumores, salud y vida privada, fotos con crédito) son l
    bono por efeméride cercana. Lo ideal es que `--actualizar` corra una vez al día para tener la semana completa.
 2. Si en «En tendencia y fuera del banco» aparece una figura con hecho verificable (por ejemplo, un portero que fue
    noticia toda la semana), agrégala al banco con alias, ángulo y etiquetas **antes** de elegir, y vuelve a correr.
-3. Propón al responsable el primero más dos suplentes, con su pregunta central. **Él aprueba el tema.** Los temas
+3. Cada tema del banco sugiere su **formato** (campo `formato`; ver sección 3). Propón al responsable el primero más dos suplentes, con su pregunta central y su formato. **Él aprueba el tema.** Los temas
    `sensible: true` (muertes, violencia, salud) necesitan su aprobación expresa del enfoque.
 
 ## 2. Investigar (martes)
@@ -33,9 +33,25 @@ verificación (fuentes, rumores, salud y vida privada, fotos con crédito) son l
 - **Imágenes de transmisiones:** no se usan, porque dan reclamos de Content ID y le quitan la monetización a todo el
   video.
 
-## 3. Estructura (medida en los documentales que funcionan)
+## 3. Formatos y estructura (medida en los documentales que funcionan)
 
-Entre 3.300 y 4.800 palabras a 160 palabras por minuto (21–30 min), en **6 actos en este orden** y de **10 a 16
+Hay **cuatro formatos**, que se declaran con `"formato"` en el guion (si falta, es `biografia`). La rúbrica valida el largo,
+los actos y los capítulos de cada uno (`config/documental.json` → `formatos`). Todos abren con `pregunta` y terminan
+volviendo a la pregunta central con sus palabras.
+
+| `formato` | Largo | Actos, en orden | Capítulos | Para qué |
+|---|---|---|---|---|
+| `biografia` | 21–30 min (3.300–4.800 palabras) | pregunta, origen, ascenso, crisis, resolucion, legado | 10–16 | Un jugador o un suceso grande (la de siempre). |
+| `historia-corta` | 8–11 min (1.250–1.800) | pregunta, origen, ascenso, giro, legado | 5–9 | «La Historia de [jugador]»: ascenso o giro de identidad (nació en un país y juega por otro, regresó, casi lo deja). Salen 2 por semana si funciona. |
+| `epoca-club` | 18–30 min (2.900–4.800) | pregunta, origen, ascenso, apogeo, caida, legado | 9–16 | Época de un club o clásico («Era dorada de…», «¿Por qué X perdió su trono?»). |
+| `explicador` | 12–18 min (1.900–2.900) | pregunta, contexto, evidencia, explicacion, respuesta | 6–11 | Un «¿por qué?» con datos, mapas, fichas y líneas de tiempo; sin jugadas ajenas ni análisis sin dato. |
+
+**Apertura estándar (en los cuatro):** en los primeros ~40 s, un **dato con número y su fuente**, lo que no cuadra y la
+**promesa** de qué se va a explicar. Es el patrón de los videos que más rinden en la competencia (aviso de la rúbrica, no error).
+
+Lo que sigue describe la `biografia`; en los otros formatos cambian los actos y el largo de la tabla de arriba.
+
+**Biografía:** entre 3.300 y 4.800 palabras a 160 palabras por minuto (21–30 min), en **6 actos en este orden** y de **10 a 16
 capítulos** de 100–520 palabras (cada capítulo se graba de una vez).
 
 | Acto (`id`) | ~Tiempo | Qué hace |
@@ -67,10 +83,16 @@ La miniatura lleva la cara del protagonista y 1–4 palabras del conflicto.
 - `linea-tiempo`, `mapa`, `ficha` y `titular`: titular de época recreado con diseño propio.
 - `cita`: texto atribuido.
 - `clip-oficial`: solo de cuentas oficiales, con `credito`.
+- `video`: clip con `video` (URL https de Commons u otra fuente libre), `desde`, `duracionMaxima`, `credito` y `licencia`. Si es alguien
+  hablando a cámara (una entrevista), márcalo `"entrevista": true`: **no rellena tiempo**, la historia la cuenta el narrador.
+- `testimonio` (máximo 3 por documental, de hasta 12 s): `video`, `desde`, `hasta`, `credito`, `licencia`, `quien` y `texto` (el
+  subtítulo en español). Suena la voz real de la persona y el narrador calla.
+- `stock`: `busqueda` (Pixabay o Pexels, si hay llave).
 
 ```json
 {
   "tipo": "documental",
+  "formato": "biografia",
   "tema": "<id del banco>",
   "protagonista": "Nombre",
   "preguntaCentral": "¿…?",
@@ -95,7 +117,7 @@ La miniatura lleva la cara del protagonista y 1–4 palabras del conflicto.
 `node scripts/documental-rubrica.mjs videos/documentales/<carpeta>/guion.json` debe dar **APROBADO**. La rúbrica
 revisa:
 
-- largo, orden de los actos y apertura sin saludo;
+- largo, orden de los actos (los de su `formato`) y apertura sin saludo; avisa si la apertura no trae un dato con número, su fuente y la promesa;
 - capítulos con fuentes que existan;
 - citas atribuidas;
 - fotos con crédito;

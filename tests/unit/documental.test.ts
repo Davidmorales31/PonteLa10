@@ -5,7 +5,7 @@ import * as selector from '../../scripts/documental-elegir.mjs'
 
 const config = JSON.parse(readFileSync('config/documental.json', 'utf8'))
 const banco = JSON.parse(readFileSync('config/bancoDocumentales.json', 'utf8'))
-const evaluar = rubrica.evaluarDocumental as (g: unknown, c: unknown, o?: unknown) => { estado: string, errores: string[], metricas: { palabras: number }, capitulosYoutube: string[] }
+const evaluar = rubrica.evaluarDocumental as (g: unknown, c: unknown, o?: unknown) => { estado: string, formato: string, errores: string[], avisos: string[], metricas: { palabras: number }, capitulosYoutube: string[] }
 
 const relleno = (n: number, semilla: string) => Array.from({ length: n }, (_, i) => `${semilla}${i % 7}`).join(' ')
 const foto = { tipo: 'foto', imagen: 'https://upload.wikimedia.org/x.jpg', credito: 'Wikimedia Commons' }
@@ -130,5 +130,84 @@ describe('selector del tema', () => {
   it('reconoce el alias como palabra completa', () => {
     expect(selector.mencionaAlias('El Dibu ataja', ['dibu'])).toBe(true)
     expect(selector.mencionaAlias('Dibujo animado', ['dibu'])).toBe(false)
+  })
+})
+
+describe('formatos del documental', () => {
+  const conPregunta = '¿Ustedes qué creen de esto?'
+  function guionDeFormato(formato: string, actos: string[], capitulosPorActo: number[], palabras: number) {
+    const base = guionValido()
+    let k = 1
+    const cap = (extra = '') => ({ id: `c${String(k++).padStart(2, '0')}`, titulo: `Capítulo ${k}`, voz: `${relleno(palabras, 'dato')} ${extra}`.trim(), fuentes: ['f1'], visuales: [fotoUnica(), video] })
+    return {
+      ...base, formato,
+      actos: actos.map((id, i) => i === 0 ? base.actos[0] : { id, titulo: id, capitulos: Array.from({ length: capitulosPorActo[i] }, (_, j) => cap(i === actos.length - 1 ? 'Al final, ¿arrogancia o disciplina? Ustedes ya tienen la respuesta, ¿qué piensan?' : j === 0 ? conPregunta : '')) })
+    }
+  }
+  const formatos: Array<[string, string[], number[], number]> = [
+    ['historia-corta', ['pregunta', 'origen', 'ascenso', 'giro', 'legado'], [1, 2, 2, 1, 1], 250],
+    ['epoca-club', ['pregunta', 'origen', 'ascenso', 'apogeo', 'caida', 'legado'], [1, 2, 2, 2, 2, 1], 380],
+    ['explicador', ['pregunta', 'contexto', 'evidencia', 'explicacion', 'respuesta'], [1, 2, 2, 2, 1], 300]
+  ]
+
+  it.each(formatos)('%s: un guion bien armado se aprueba con su propio largo y sus actos', (formato, actos, capitulos, palabras) => {
+    const r = evaluar(guionDeFormato(formato, actos, capitulos, palabras), config, { banco })
+    expect(r.errores).toEqual([])
+    expect(r.estado).toBe('APROBADO')
+    expect(r.formato).toBe(formato)
+  })
+
+  it('cada formato rechaza lo que no es suyo: largo, actos y formato desconocido', () => {
+    const corta = guionDeFormato('historia-corta', formatos[0][1], formatos[0][2], 250)
+    // Un guion de 8 a 11 minutos no sirve como biografía de 21 a 30.
+    expect(evaluar({ ...corta, formato: undefined }, config, { banco }).errores.join('\n')).toMatch(/Largo: /)
+    // Los actos de la época de club no sirven para la historia corta.
+    expect(evaluar({ ...corta, actos: guionDeFormato('epoca-club', formatos[1][1], formatos[1][2], 380).actos }, config, { banco }).errores.join('\n')).toMatch(/Los actos deben ser, en orden: pregunta, origen, ascenso, giro, legado/)
+    expect(evaluar({ ...corta, formato: 'inventado' }, config, { banco }).errores.join('\n')).toMatch(/Formato desconocido «inventado»/)
+    // El largo de la historia corta se mide en minutos propios.
+    const larga = guionDeFormato('historia-corta', formatos[0][1], formatos[0][2], 500)
+    expect(evaluar(larga, config, { banco }).errores.join('\n')).toMatch(/entre 1250 y 1800 \(unos 8–11 min\)/)
+  })
+
+  it('la apertura estándar avisa si falta el dato con número, la fuente o la promesa', () => {
+    const g = guionValido()
+    g.actos[0].capitulos[0].voz = 'Lo odian o lo aman. ¿Arrogancia o disciplina que nadie soportaría?'
+    const avisos = evaluar(g, config, { banco }).avisos.join('\n')
+    expect(avisos).toContain('dato con número')
+    expect(avisos).toContain('nombrar la fuente')
+    expect(avisos).toContain('promesa')
+    g.actos[0].capitulos[0].voz = 'Según la FIFA, en 2022 corrió 7 kilómetros. ¿Arrogancia o disciplina que nadie soportaría? Vamos a explicarlo.'
+    expect(evaluar(g, config, { banco }).avisos.filter(a => a.startsWith('Apertura'))).toEqual([])
+  })
+})
+
+describe('banco de temas ampliado', () => {
+  const temas = banco.temas as Array<{ id: string, alias: string[], formato?: string, tipo: string, sensible: boolean, angulo: string }>
+  const formatosValidos = Object.keys(config.formatos)
+
+  it('tiene ids únicos, alias, formato válido y ángulo en forma de pregunta', () => {
+    expect(new Set(temas.map(t => t.id)).size).toBe(temas.length)
+    for (const t of temas) {
+      expect(t.alias.length, t.id).toBeGreaterThan(0)
+      expect(t.angulo, t.id).toBeTruthy()
+      if (t.formato) {
+        expect(formatosValidos, t.id).toContain(t.formato)
+        expect(t.angulo, t.id).toMatch(/\?/)
+      }
+    }
+  })
+
+  it('suma épocas, clubes, clásicos e historias cortas; las épocas ligadas al narcotráfico exigen revisión expresa', () => {
+    const porFormato = (f: string) => temas.filter(t => t.formato === f).length
+    expect(porFormato('epoca-club')).toBeGreaterThanOrEqual(8)
+    expect(porFormato('historia-corta')).toBeGreaterThanOrEqual(3)
+    expect(temas.filter(t => t.tipo === 'clasico').length).toBeGreaterThanOrEqual(3)
+    for (const id of ['america-de-cali-era-dorada', 'atletico-nacional-1989']) expect(temas.find(t => t.id === id)?.sensible, id).toBe(true)
+  })
+
+  it('el selector propone el formato de cada tema', () => {
+    const ranking = selector.puntuarTemas(banco, [], { hoy: '2026-11-23' }) as Array<{ id: string, formato: string }>
+    expect(ranking.find(t => t.id === 'colo-colo-1991')?.formato).toBe('epoca-club')
+    expect(ranking.find(t => t.id === 'cristiano-ronaldo')?.formato).toBe('biografia')
   })
 })

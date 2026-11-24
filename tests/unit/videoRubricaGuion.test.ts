@@ -181,3 +181,56 @@ describe('rúbrica del guion del video diario', () => {
     expect(resultado.puntaje).toBeLessThan(50)
   })
 })
+
+describe('estructuras del video de noticias (8 a 20 minutos)', () => {
+  const aperturas = ['Según Win Sports,', 'Ojo, según Win Sports,', 'Miren, según Win Sports,', 'Les cuento que según Win Sports', 'Y ahora, según Win Sports,', 'Por cierto, según Win Sports,', 'Atención, según Win Sports,', 'Fíjense, según Win Sports,']
+  const bloquesDe = (palabras: number[], extra: (i: number) => Partial<Bloque> = () => ({})) => palabras.map((n, i) => bloque(`b${i + 1}`, {
+    voz: `${aperturas[i % aperturas.length]} les cuento que ${relleno(n)}${i % 3 === 0 ? ' ¿Ustedes qué creen?' : ''}`,
+    planos: Array.from({ length: 40 }, (_, k) => ({ imagen: `https://x/b${i}-${k}.jpg`, credito: 'Colprensa (vía Win Sports)', movimiento: 'zoom-in' })),
+    ...extra(i)
+  }))
+  const aprobado = (g: unknown) => evaluar(g, config).criterios.filter(c => !c.ok).map(c => `${c.id}: ${c.detalle}`)
+
+  it('el video de noticias puede durar de 8 a 20 minutos', () => {
+    expect(config.formato.duracionMinimaSegundos).toBe(480)
+    expect(config.formato.duracionMaximaSegundos).toBe(1200)
+    const corto = evaluar({ ...guionBase(), bloques: bloquesDe([60, 60, 60, 60, 60, 60, 60, 60]) }, config).criterios.find(c => c.id === 'duracion_total')
+    expect(corto?.ok).toBe(false)
+  })
+
+  it('historia a fondo: un solo bloque largo y los demás rápidos', () => {
+    const g = { ...guionBase(), estructura: 'historia-a-fondo', bloques: bloquesDe([140, 600, 130, 150, 120, 140, 130], i => ({ fondo: i === 1 })) }
+    expect(aprobado(g)).toEqual([])
+    const dos = { ...g, bloques: bloquesDe([140, 600, 130, 600, 120, 140, 130], i => ({ fondo: i === 1 || i === 3 })) }
+    expect(evaluar(dos, config).criterios.find(c => c.id === 'noticia_directa')?.detalle).toContain('exactamente 1 bloque')
+    const corta = { ...g, bloques: bloquesDe([140, 300, 130, 150, 120, 140, 130], i => ({ fondo: i === 1 })) }
+    expect(evaluar(corta, config).criterios.find(c => c.id === 'noticia_directa')?.detalle).toContain('450')
+  })
+
+  it('top: puestos que bajan de N a 1 y presentación de hasta 40 palabras', () => {
+    const palabras = [200, 190, 210, 200, 220, 190, 200, 240]
+    const g = { ...guionBase(), estructura: 'top', presentacion: { texto: `Hoy va el top de ocho historias del día, ${relleno(10)}` }, bloques: bloquesDe(palabras, i => ({ puesto: 8 - i })) }
+    expect(aprobado(g)).toEqual([])
+    const desordenado = { ...g, bloques: bloquesDe(palabras, i => ({ puesto: [3, 8, 7, 6, 5, 4, 2, 1][i] })) }
+    expect(evaluar(desordenado, config).criterios.find(c => c.id === 'noticia_directa')?.detalle).toContain('puestos')
+    const larga = { ...g, presentacion: { texto: relleno(60) } }
+    expect(evaluar(larga, config).criterios.find(c => c.id === 'noticia_directa')?.detalle).toContain('presentación')
+  })
+
+  it('pregunta del día: el gancho es la pregunta y el último bloque la responde', () => {
+    const palabras = [250, 260, 240, 250, 270, 260]
+    const g = { ...guionBase(), estructura: 'pregunta-del-dia', gancho: { texto: '¿Por qué Nacional cayó 3-0, según Win Sports?', fuente: 'Win Sports' }, bloques: bloquesDe(palabras, i => ({ respuesta: i === palabras.length - 1 })) }
+    expect(aprobado(g)).toEqual([])
+    const sinPregunta = { ...g, gancho: { texto: 'Nacional cayó 3-0, según Win Sports.', fuente: 'Win Sports' } }
+    expect(evaluar(sinPregunta, config).criterios.find(c => c.id === 'noticia_directa')?.detalle).toContain('pregunta del día')
+    const respuestaPrimero = { ...g, bloques: bloquesDe(palabras, i => ({ respuesta: i === 0 })) }
+    expect(evaluar(respuestaPrimero, config).criterios.find(c => c.id === 'noticia_directa')?.detalle).toContain('último bloque')
+  })
+
+  it('una estructura desconocida o sin marcar no se aprueba', () => {
+    expect(evaluar({ ...guionBase(), estructura: 'inventada' }, config).criterios.find(c => c.id === 'noticia_directa')?.ok).toBe(false)
+    const sinMarca = guionBase()
+    delete sinMarca.estructura
+    expect(evaluar(sinMarca, config).criterios.find(c => c.id === 'noticia_directa')?.detalle).toContain('estructura')
+  })
+})

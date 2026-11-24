@@ -40,9 +40,28 @@ export function capitulosYoutube(guion, ppm) {
   return lineas
 }
 
-export function evaluarDocumental(guion, config, { banco = null } = {}) {
+/**
+ * Configuración efectiva de un formato (config.formatos[nombre] sobre la base: actos, largo, capítulos, fuentes…).
+ * Devuelve null si el formato no existe.
+ */
+export function aplicarFormato(config, nombre = 'biografia') {
+  const f = config.formatos?.[nombre]
+  if (!f) return nombre === 'biografia' ? config : null
+  const mezcla = (a, b) => ({ ...(a || {}), ...(b || {}) })
+  return {
+    ...config, ...f,
+    palabras: mezcla(config.palabras, f.palabras), capitulos: mezcla(config.capitulos, f.capitulos),
+    fuentes: mezcla(config.fuentes, f.fuentes), pregunta: mezcla(config.pregunta, f.pregunta), cierre: mezcla(config.cierre, f.cierre)
+  }
+}
+
+export function evaluarDocumental(guion, configBase, { banco = null } = {}) {
   const errores = []
   const avisos = []
+  const formato = guion?.formato || 'biografia'
+  const efectiva = aplicarFormato(configBase, formato)
+  if (!efectiva) errores.push(`Formato desconocido «${formato}»: usa ${Object.keys(configBase.formatos || { biografia: 1 }).join(', ')}.`)
+  const config = efectiva || configBase
   const actos = Array.isArray(guion?.actos) ? guion.actos : []
   const capitulos = actos.flatMap(a => (a.capitulos || []).map(c => ({ ...c, acto: a.id })))
   const textoTotal = [...capitulos.map(c => c.voz), guion?.preguntaFinal, guion?.cierre].join(' ')
@@ -53,7 +72,7 @@ export function evaluarDocumental(guion, config, { banco = null } = {}) {
   if (!String(guion?.protagonista || '').trim()) errores.push('Falta "protagonista" (la persona o el suceso).')
   if (!String(guion?.preguntaCentral || '').includes('?')) errores.push('Falta "preguntaCentral": la pregunta que el documental responde.')
   if (palabras < config.palabras.minimo || palabras > config.palabras.maximo) {
-    errores.push(`Largo: ${palabras} palabras (~${minutos.toFixed(1)} min). Debe estar entre ${config.palabras.minimo} y ${config.palabras.maximo} (unos 21–30 min).`)
+    errores.push(`Largo: ${palabras} palabras (~${minutos.toFixed(1)} min). Debe estar entre ${config.palabras.minimo} y ${config.palabras.maximo} (unos ${Math.round(config.palabras.minimo / config.palabrasPorMinuto)}–${Math.round(config.palabras.maximo / config.palabrasPorMinuto)} min).`)
   }
 
   // Actos en el orden de la estructura medida.
@@ -69,6 +88,14 @@ export function evaluarDocumental(guion, config, { banco = null } = {}) {
     const inicio = sinTildes(textoPregunta).trim()
     const prohibida = config.aperturasProhibidas.find(p => inicio.startsWith(sinTildes(p)))
     if (prohibida) errores.push(`La apertura no puede empezar con «${prohibida}»: arranca con la escena o la paradoja.`)
+    // Apertura estándar (avisos): en los primeros segundos, un dato con número y fuente, y la promesa de explicarlo.
+    const estandar = config.aperturaEstandar
+    if (estandar) {
+      const primeras = textoPregunta.split(/\s+/).slice(0, Math.round(estandar.segundos * config.palabrasPorMinuto / 60)).join(' ')
+      if (!/\d/.test(primeras)) avisos.push(`Apertura: en los primeros ${estandar.segundos} s falta un dato con número.`)
+      if (!config.verbosDeAtribucion.some(v => sinTildes(primeras).includes(sinTildes(v)))) avisos.push(`Apertura: en los primeros ${estandar.segundos} s falta nombrar la fuente del dato («según…»).`)
+      if (!estandar.promesa.some(p => sinTildes(primeras).includes(sinTildes(p)))) avisos.push(`Apertura: en los primeros ${estandar.segundos} s falta la promesa de lo que se va a explicar.`)
+    }
   }
 
   // Capítulos: cantidad, largo, fuentes y visuales.
@@ -141,8 +168,8 @@ export function evaluarDocumental(guion, config, { banco = null } = {}) {
   if (actosConPregunta < config.actosConPreguntaAlPublico) errores.push(`Solo ${actosConPregunta} actos hablan al público con una pregunta: mínimo ${config.actosConPreguntaAlPublico}.`)
   if (!String(guion?.preguntaFinal || '').includes('?')) errores.push('Falta "preguntaFinal" para invitar a comentar.')
   if (contarPalabras(guion?.cierre) > config.cierre.maximoPalabras || !String(guion?.cierre || '').trim()) errores.push(`El cierre debe existir y tener máximo ${config.cierre.maximoPalabras} palabras.`)
-  const legado = actos.find(a => a.id === 'legado')
-  const textoFinal = [(legado?.capitulos || []).map(c => c.voz).join(' '), guion?.preguntaFinal, guion?.cierre].join(' ')
+  const ultimoActo = actos.at(-1)
+  const textoFinal = [(ultimoActo?.capitulos || []).map(c => c.voz).join(' '), guion?.preguntaFinal, guion?.cierre].join(' ')
   const comunes = [...palabrasClave(guion?.preguntaCentral)].filter(p => palabrasClave(textoFinal).has(p))
   if (comunes.length < 2) errores.push('El final no vuelve a la pregunta central: retómala con sus palabras y respóndela.')
 
@@ -168,6 +195,7 @@ export function evaluarDocumental(guion, config, { banco = null } = {}) {
 
   return {
     estado: errores.length ? 'RECHAZADO' : 'APROBADO',
+    formato,
     errores,
     avisos,
     metricas: { palabras, minutos: Number(minutos.toFixed(1)), capitulos: capitulos.length, fuentes: fuentes.length, actosConPregunta },

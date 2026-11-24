@@ -27,6 +27,8 @@ const PNG_VACIO = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkY
 
 export const TIEMPOS = { tarjetaActo: 3, tarjetaTitulo: 4, cierre: 6, suscribete: 4.5, rotulo: 5, toma: 6.5, minimoToma: 1.5, minimoAnimacion: 3 }
 export const MAXIMO_USOS_FOTO = 3
+// Antetítulo de la tarjeta del título según el formato del guion (config/documental.json → formatos).
+export const KICKERS = { biografia: 'UN DOCUMENTAL DE PONTE LA 10', 'epoca-club': 'UN DOCUMENTAL DE PONTE LA 10', 'historia-corta': 'LA HISTORIA DE', explicador: 'UN ANÁLISIS DE PONTE LA 10' }
 export const MAXIMO_TESTIMONIOS = 3
 export const TESTIMONIO_MAXIMO_SEGUNDOS = 12
 export const PRESTAMO_MAXIMO_CLIP = 15
@@ -385,7 +387,7 @@ export function planificarDocumental(guion, { ppm = 160, estudio = {}, medio = (
     })
     // Tras la pregunta inicial, el título del documental.
     if (a === 0) {
-      tarjeta(TIEMPOS.tarjetaTitulo, { kicker: 'UN DOCUMENTAL DE PONTE LA 10', titulo: protagonista.toUpperCase(), subtitulo: '', fondo })
+      tarjeta(TIEMPOS.tarjetaTitulo, { kicker: KICKERS[guion?.formato] || KICKERS.biografia, titulo: protagonista.toUpperCase(), subtitulo: '', fondo })
       sonido('impacto', t - TIEMPOS.tarjetaTitulo + 0.1, 0.6, { duracion: 1.5, mediaStart: 1.07 })
     }
   })

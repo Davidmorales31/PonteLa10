@@ -88,6 +88,8 @@ function fotosDeBloque(bloque) {
 }
 
 // Regla de Juan (2026-11-20): ninguna imagen (ni clip) aparece más de 3 veces en todo el video.
+// Estructuras sin intro animada ni toma a cámara por noticia (config/videoDiario.json → estructuras).
+export const ESTRUCTURAS_DIRECTAS = ['directa', 'historia-a-fondo', 'top', 'pregunta-del-dia']
 export const MAXIMO_USOS_FOTO = 3
 const COMPARTIDAS = MAXIMO_USOS_FOTO - 1
 
@@ -242,7 +244,7 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
 
   // Estructura directa (2026-11-22, medida contra los largos virales de Cracks y La Gambeta: la primera noticia
   // arranca en el segundo 0): sin intro animada, el video abre con el gancho, que ya es el hecho más fuerte.
-  const directa = guion?.estructura === 'directa'
+  const directa = ESTRUCTURAS_DIRECTAS.includes(guion?.estructura)
   if (!directa) {
     // Intro con la foto principal del día (guiones con la estructura anterior).
     escenas.push({ escena: 'intro', inicio: 0, duracion: DURACIONES.intro, capa: 1, variables: { fondo: portada ? rutaFoto(portada.url) : '', kicker: edicionDe(guion).kicker, fecha: fechaLarga(guion?.fecha) } })
@@ -271,7 +273,7 @@ export function planificar(guion, { ppm = 155, repetirFotos = false, titulares =
     const { inicio, duracion } = voz(`${bloque.id}-voz`, bloque.voz, `Noticia ${i + 1} · voz`, bloque.id, fotosPorBloque[i], bloque.id)
     const titular = bloque.titular || titulares[bloque.articuloSlug] || ''
     if (titular) {
-      escenas.push({ escena: 'rotulo', inicio: redondear(inicio + 0.3), duracion: DURACIONES.rotulo, capa: 5, variables: { etiqueta: String(bloque.club || '').toUpperCase(), titular, fuente: bloque.fuente ? `Según ${bloque.fuente}` : '' } })
+      escenas.push({ escena: 'rotulo', inicio: redondear(inicio + 0.3), duracion: DURACIONES.rotulo, capa: 5, variables: { etiqueta: bloque.puesto ? `PUESTO ${bloque.puesto}` : String(bloque.club || '').toUpperCase(), titular, fuente: bloque.fuente ? `Según ${bloque.fuente}` : '' } })
       sonido('pop', inicio + 0.4, 0.55)
     }
     if (bloque.marcador) {

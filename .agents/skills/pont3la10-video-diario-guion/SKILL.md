@@ -1,6 +1,6 @@
 ---
 name: pont3la10-video-diario-guion
-description: Escribe el guion del video diario de Pont3la10 (mínimo 8 min, 16:9, voz cercana) a partir de los artículos publicados hoy: gancho que ya es noticia, bloques directos de largo variado con fuente, preguntas al público, planos con foto acreditada, pregunta final y cierre. Lo valida con la rúbrica ejecutable antes de entregarlo.
+description: Escribe el guion del video diario de Pont3la10 (de 8 a 20 min, 16:9, voz cercana, cuatro estructuras) a partir de los artículos publicados hoy: gancho que ya es noticia, bloques directos de largo variado con fuente, preguntas al público, planos con foto acreditada, pregunta final y cierre. Lo valida con la rúbrica ejecutable antes de entregarlo.
 ---
 
 # Guion del video diario
@@ -14,11 +14,27 @@ Un archivo `guion.json` para el día (fecha de Bogotá) que pase `node scripts/v
 ## Antes de escribir
 
 1. Lista los artículos del día: `https://www.pont3la10.com/api/articulos?categoria=futbol-colombiano&limite=50`, filtrados por la fecha de Bogotá (UTC−5, no confíes en la variable TZ del shell). **Si el sitio está caído (402)**, levanta el sitio local contra Supabase y usa su origen: ver «Bloqueo externo» en `docs/agents/ESTADO_ACTUAL.md` (`PONT3LA10_API_SITIO=http://127.0.0.1:3002`).
-2. Elige 8 a 12 historias (el video dura **mínimo 8 minutos**). Cubre muchos clubes, no solo la Selección: usa los artículos del día y, si faltan, los de la noche anterior que no salieron en el video de ayer. Orden de preferencia: la de mayor consecuencia deportiva, una primicia o dato nuevo, un «cómo queda» (tabla, cruces, cuadrangulares), después el resto. Una historia por club mientras sea posible. No repitas la del día anterior.
+2. Elige la **estructura del día** con `node scripts/video-estructura.mjs --fecha <fecha> --edicion <colombia|latam|internacional>` (sortea con pesos y no repite las dos últimas; ver «Estructuras» abajo). El video dura **mínimo 8 minutos y puede llegar a 20** (decisión de Juan, 2026-11-24). Elige las historias que pida esa estructura (en la directa, 8 a 16). Cubre muchos clubes, no solo la Selección: usa los artículos del día y, si faltan, los de la noche anterior que no salieron en el video de ayer. Orden de preferencia: la de mayor consecuencia deportiva, una primicia o dato nuevo, un «cómo queda» (tabla, cruces, cuadrangulares), después el resto. Una historia por club mientras sea posible. No repitas la del día anterior.
 3. Lee de cada artículo el cuerpo completo y sus fuentes (`sources`); el guion se apoya en ellas, no en el titular.
 4. Una historia sin foto real con crédito no entra al video.
 
-## Estructura (8–10 minutos: 450–600 s a 155 palabras por minuto, unas 1.250 palabras)
+## Estructuras (de 8 a 20 minutos: 480–1.200 s a 155 palabras por minuto)
+
+Hay **cuatro estructuras** para que el canal no parezca producción en serie (`config/videoDiario.json` → `estructuras`; la
+rúbrica valida la que declares en `"estructura"`). Todas son «directas»: sin intro animada, sin toma a cámara por noticia y
+con el gancho en el segundo 0. Hipótesis a medir con retención propia (`docs/ESTUDIO_COMPETENCIA_AMPLIADO_2026-11-24.md`).
+
+| `estructura` | Para qué | Reglas propias |
+|---|---|---|
+| `directa` | La de siempre: el día en 8 a 16 noticias | La tabla de abajo. |
+| `historia-a-fondo` | Una historia del día contada a fondo y las demás rápidas | 6 a 12 bloques; **un solo** bloque con `"fondo": true` de 450 a 900 palabras (3 a 6 min, un plano cada 12 s); los demás de 45 a 220 palabras. |
+| `top` | Top del día o de la semana en cuenta regresiva | 5 a 8 bloques de 90 a 260 palabras con `"puesto"` bajando de N a 1 (el 1 al final); `presentacion` de hasta 40 palabras que diga el criterio; el rótulo muestra «PUESTO N». |
+| `pregunta-del-dia` | Un «¿por qué?» o «¿qué pasó?» con datos | El `gancho` es la pregunta (lleva «?»); 4 a 8 bloques de 120 a 340 palabras; el **último** (y solo ese) lleva `"respuesta": true`. |
+
+Para las tres últimas no se exigen noticias de largo variado ni una pregunta cada 3 bloques; sí fuente nombrada, artículo,
+foto con crédito y la `preguntaFinal`.
+
+### Estructura «directa» (la de siempre)
 
 **Estructura directa (decisión de Juan, 2026-11-22).** Medido en los largos virales de Cracks y La Gambeta: la
 primera noticia arranca en el segundo 0, ninguna noticia tiene «intro» antes de contarla, cada una dura entre 20 y
@@ -27,10 +43,10 @@ primera noticia arranca en el segundo 0, ninguna noticia tiene «intro» antes d
 
 | Pieza | Reglas |
 |---|---|
-| `estructura` | Siempre `"directa"`. Sin ella el generador vuelve a la intro animada y la rúbrica no aprueba. |
+| `estructura` | `"directa"`. Si falta, el generador vuelve a la intro animada y la rúbrica no aprueba. |
 | `gancho` | Es la primera noticia ya contándose: el hecho más fuerte en ≤ 28 palabras, con cifra, cita o fuente. **Nunca** empieza con saludo («hola», «bienvenidos»…) ni anuncia lo que viene. Arranca en el segundo 0. |
 | `presentacion` | Opcional y de **≤ 15 palabras** (un saludo de una frase después del gancho). Sin lista de temas. |
-| `bloques` (8–12) | La noticia completa de una vez, **sin `caraBreve`** ni frase de entrada tipo «vamos con la siguiente noticia». Mezcla tres largos: **rápida** (45–85 palabras, ~20–30 s), **normal** (86–219) y **fuerte** (220–320, ~90–120 s, solo para la historia del día o la más polémica). Al menos una rápida y una fuerte, y nunca más de 2 seguidas del mismo largo. |
+| `bloques` (8–16) | La noticia completa de una vez, **sin `caraBreve`** ni frase de entrada tipo «vamos con la siguiente noticia». Mezcla tres largos: **rápida** (45–85 palabras, ~20–30 s), **normal** (86–219) y **fuerte** (220–320, ~90–120 s, solo para la historia del día o la más polémica). Al menos una rápida y una fuerte, y nunca más de 2 seguidas del mismo largo. |
 | Conectores | Cada noticia arranca distinto («Por cierto…», «Ojo con esto…», «Y en Medellín…», «Cambiemos de liga…»): la rúbrica rechaza dos noticias con las mismas dos primeras palabras. |
 | Preguntas | Al menos una noticia de cada 3 termina con una pregunta al público («¿ustedes qué harían?»), dicha dentro de la `voz`. |
 | `preguntaFinal` | Una pregunta que invite a comentar sobre la historia más discutible del día. |
@@ -109,7 +125,7 @@ YouTube permite probar hasta 3 títulos y 3 miniaturas; gana el de más tiempo d
 
 ## Rúbrica (obligatoria)
 
-Ejecuta `node scripts/video-rubrica-guion.mjs guion.json` y corrige hasta **APROBADO** (puntaje ≥ 85 y sin fallos en los criterios obligatorios): duración total (450–600 s), gancho sin saludo, fuente atribuida en cada bloque, crédito en cada foto, rumores atribuidos y noticia directa (sin `caraBreve`, presentación ≤ 15 palabras y `"estructura": "directa"`). También puntúan el ritmo variado, las preguntas al público y los arranques distintos. Informa el puntaje y los criterios que fallaron si no llegas a aprobar; no maquilles el JSON para que pase.
+Ejecuta `node scripts/video-rubrica-guion.mjs guion.json` y corrige hasta **APROBADO** (puntaje ≥ 85 y sin fallos en los criterios obligatorios): duración total (480–1.200 s), gancho sin saludo, fuente atribuida en cada bloque, crédito en cada foto, rumores atribuidos y estructura cumplida (sin `caraBreve`, presentación corta y las reglas propias de la `"estructura"` declarada). También puntúan el ritmo variado, las preguntas al público y los arranques distintos. Informa el puntaje y los criterios que fallaron si no llegas a aprobar; no maquilles el JSON para que pase.
 
 ## Armar el proyecto de video
 

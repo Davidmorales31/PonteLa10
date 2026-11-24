@@ -4,7 +4,8 @@
 //
 // Uso:
 //   node scripts/documental-elegir.mjs [--actualizar] [--noticias] [--hoy AAAA-MM-DD] [--salida archivo.json] [--top 5]
-//     --actualizar  corre el radar de tendencias de hoy y guarda la foto en videos/documentales/tendencias/<fecha>.json
+//     --actualizar  corre el radar de tendencias de hoy (internacional y Latinoamérica) y guarda las fotos en
+//                   videos/documentales/tendencias/<fecha>.json y <fecha>-latam.json (--sin-latam omite la segunda)
 //     --noticias    además cuenta las notas de los últimos 7 días de cada tema en Bing Noticias (red)
 // Solo propone: la elección la aprueba el responsable. No escribe en el banco.
 import { execFile } from 'node:child_process'
@@ -77,7 +78,7 @@ export function puntuarTemas(banco, fotos, { hoy, notas = {} } = {}) {
     if (Number.isFinite(tema.interesFondo)) razones.push(`interés de fondo medido ${tema.interesFondo}/100`)
     if (bono) razones.push(`efeméride en ${dias} día(s)`)
     if (tema.sensible) razones.push('tema sensible: requiere fuentes de primer nivel y aprobación expresa')
-    salida.push({ id: tema.id, nombre: tema.nombre, tipo: tema.tipo, angulo: tema.angulo, total, tendencia, interes, hueco, bono, sensible: tema.sensible, razones })
+    salida.push({ id: tema.id, nombre: tema.nombre, tipo: tema.tipo, formato: tema.formato || 'biografia', angulo: tema.angulo, total, tendencia, interes, hueco, bono, sensible: tema.sensible, razones })
   }
   return salida.sort((a, b) => b.total - a.total || b.tendencia - a.tendencia)
 }
@@ -103,7 +104,8 @@ export async function leerFotosSemana(hoy, dir = DIR_TENDENCIAS) {
   if (!existsSync(dir)) return []
   const limite = Date.parse(`${hoy}T00:00:00Z`) - 7 * DIA
   const fotos = []
-  for (const nombre of (await readdir(dir)).filter(n => /^\d{4}-\d{2}-\d{2}\.json$/.test(n))) {
+  // Una foto por día del radar internacional (AAAA-MM-DD.json) y otra del radar de Latinoamérica (AAAA-MM-DD-latam.json).
+  for (const nombre of (await readdir(dir)).filter(n => /^\d{4}-\d{2}-\d{2}(-latam)?\.json$/.test(n))) {
     if (Date.parse(`${nombre.slice(0, 10)}T00:00:00Z`) < limite) continue
     try { fotos.push(JSON.parse(await readFile(join(dir, nombre), 'utf8'))) } catch { /* foto dañada: se ignora */ }
   }
@@ -136,8 +138,15 @@ async function main() {
   if (args.includes('--actualizar')) {
     await mkdir(DIR_TENDENCIAS, { recursive: true })
     const destino = join(DIR_TENDENCIAS, `${hoy}.json`)
-    await ejecutar(process.execPath, [join(RAIZ, 'scripts', 'tendencias-futbol-internacional.mjs'), '--salida', destino], { cwd: RAIZ, maxBuffer: 20 * 1024 * 1024 })
-    process.stdout.write(`Tendencias de hoy guardadas en ${destino}\n`)
+    const correr = (script, salida, extra = []) => ejecutar(process.execPath, [join(RAIZ, 'scripts', script), '--salida', salida, ...extra], { cwd: RAIZ, maxBuffer: 20 * 1024 * 1024 })
+    // El radar de Latinoamérica tarda unos minutos (muchas consultas); corren a la vez. Si falla, el internacional sigue valiendo.
+    const destinoLatam = join(DIR_TENDENCIAS, `${hoy}-latam.json`)
+    const [internacional, latam] = await Promise.allSettled([
+      correr('tendencias-futbol-internacional.mjs', destino),
+      args.includes('--sin-latam') ? Promise.resolve() : correr('tendencias-futbol-latam.mjs', destinoLatam, ['--con-enlaces', '0'])
+    ])
+    if (internacional.status === 'rejected') throw internacional.reason
+    process.stdout.write(`Tendencias de hoy guardadas en ${destino}${args.includes('--sin-latam') ? '' : latam.status === 'fulfilled' ? ` y ${destinoLatam}` : ` (Latinoamérica falló: ${String(latam.reason?.message || '').split('\n')[0]})`}\n`)
   }
   const fotos = await leerFotosSemana(hoy)
   const notas = {}

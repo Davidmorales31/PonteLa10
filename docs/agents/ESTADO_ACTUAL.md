@@ -22,6 +22,12 @@
   probó con notas del 23 de noviembre: 12 de Latinoamérica, 3 internacionales.
 - Pendiente: marca y nombre del canal, comando que excluya del internacional lo usado por Latam, afinar la lista de términos
   con una tanda real de notas.
+- **Estructuras y formatos desarrollados (2026-11-24, sin commit):** lista completa y estado en
+  `docs/ESTRATEGIA_CANAL_2026-11-24.md` sección 0. Noticias de 8 a 20 min con 4 estructuras y rotación
+  (`video-estructura.mjs`); documental con 4 formatos y apertura estándar; 13 temas nuevos en el banco; 5 estructuras de Shorts y
+  `documental-shorts.mjs` (banco de leyendas); `video-metricas.mjs` con permiso opcional de Analytics (probado solo con respuestas
+  simuladas, falta conectar con `PONT3LA10_YOUTUBE_ANALITICA=1`); sin repetir notas entre los dos videos del día; «Ponte la 10» en
+  la suscripción y el titular. Ninguna estructura nueva se ha usado aún en un video real.
 - **Estudio de competencia ampliado (2026-11-24):** `docs/ESTUDIO_COMPETENCIA_AMPLIADO_2026-11-24.md` (32 canales, ~1.200
   videos, estrategias nuevas). Herramienta repetible `python scripts/competencia-medir.py` con la lista en
   `config/competenciaYoutube.json` y la primera medición en `docs/datos/competencia-2026-11-24.json`. Corrige dos

@@ -13,6 +13,10 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 
 export const ALCANCE = 'https://www.googleapis.com/auth/youtube.force-ssl'
+// Permiso opcional para leer retención y tiempo de visualización (YouTube Analytics). Solo se pide si activas
+// PONT3LA10_YOUTUBE_ANALITICA=1 antes de conectar; sin él, la conexión es exactamente la de siempre.
+export const ALCANCE_ANALITICA = 'https://www.googleapis.com/auth/yt-analytics.readonly'
+const API_ANALITICA = 'https://youtubeanalytics.googleapis.com/v2'
 const URL_AUTORIZACION = 'https://accounts.google.com/o/oauth2/v2/auth'
 const URL_TOKEN = 'https://oauth2.googleapis.com/token'
 const URL_REVOCAR = 'https://oauth2.googleapis.com/revoke'
@@ -53,9 +57,9 @@ export function crearDesafio() {
   return { verificador, desafio: base64Url(createHash('sha256').update(verificador).digest()) }
 }
 
-export function urlAutorizacion({ clientId, redirect, estado, desafio }) {
+export function urlAutorizacion({ clientId, redirect, estado, desafio, analitica = false }) {
   const parametros = new URLSearchParams({
-    client_id: clientId, redirect_uri: redirect, response_type: 'code', scope: ALCANCE,
+    client_id: clientId, redirect_uri: redirect, response_type: 'code', scope: analitica ? `${ALCANCE} ${ALCANCE_ANALITICA}` : ALCANCE,
     access_type: 'offline', prompt: 'consent', state: estado,
     code_challenge: desafio, code_challenge_method: 'S256'
   })
@@ -88,7 +92,7 @@ async function guardarToken(dir, token) {
 export async function estadoConexion(dir = dirYoutube()) {
   const cliente = await leerCliente(dir)
   const token = await leerToken(dir)
-  return { dir, configurado: Boolean(cliente), conectado: Boolean(cliente && token?.refresh_token), canal: token?.canal || null }
+  return { dir, configurado: Boolean(cliente), conectado: Boolean(cliente && token?.refresh_token), canal: token?.canal || null, analitica: String(token?.scope || '').split(' ').includes(ALCANCE_ANALITICA) }
 }
 
 async function pedirToken(cuerpo, transporte) {
@@ -108,7 +112,7 @@ export async function canjearCodigo({ cliente, codigo, verificador, redirect, tr
   }, transporte)
   if (!String(datos.scope || '').split(' ').includes(ALCANCE)) throw error(403, 'Faltó el permiso para gestionar el video en YouTube: vuelve a conectar y acéptalo.')
   if (!datos.refresh_token) throw error(502, 'Google no entregó una conexión duradera: revoca el acceso previo y vuelve a conectar.')
-  return { access_token: datos.access_token, refresh_token: datos.refresh_token, expira: Date.now() + Number(datos.expires_in || 3600) * 1000 }
+  return { access_token: datos.access_token, refresh_token: datos.refresh_token, expira: Date.now() + Number(datos.expires_in || 3600) * 1000, scope: String(datos.scope || '') }
 }
 
 /** Token de acceso vigente (lo renueva con el refresh token cuando vence). */
@@ -201,6 +205,31 @@ export async function estadisticasVideos({ ids, acceso, transporte }) {
     }
   }
   return salida
+}
+
+/** Filas de un reporte de YouTube Analytics como objetos { video, views, … } (columnHeaders + rows). */
+export function filasDeReporte(datos) {
+  const columnas = (datos?.columnHeaders || []).map(c => c.name)
+  return (datos?.rows || []).map(fila => Object.fromEntries(columnas.map((nombre, i) => [nombre, fila[i]])))
+}
+
+/**
+ * Métricas de YouTube Analytics por video del canal conectado entre dos fechas (AAAA-MM-DD): vistas, minutos vistos, duración
+ * media, porcentaje medio visto y suscriptores ganados. Exige el permiso opcional yt-analytics.readonly y la API de YouTube
+ * Analytics activada en el proyecto de Google Cloud.
+ */
+export async function analiticaVideos({ acceso, transporte, desde, hasta, maximo = 50 }) {
+  if (![desde, hasta].every(f => /^\d{4}-\d{2}-\d{2}$/.test(String(f)))) throw error(400, 'Las fechas van como AAAA-MM-DD.')
+  const parametros = new URLSearchParams({
+    ids: 'channel==MINE', startDate: desde, endDate: hasta, dimensions: 'video', sort: '-views', maxResults: String(Math.min(200, Math.max(1, maximo))),
+    metrics: 'views,estimatedMinutesWatched,averageViewDuration,averageViewPercentage,subscribersGained'
+  })
+  try {
+    return filasDeReporte(await llamar(`${API_ANALITICA}/reports?${parametros}`, { acceso, transporte }))
+  } catch (falla) {
+    if (/no permitió la acción/.test(falla.message)) throw error(403, 'YouTube no dio acceso a Analytics: conecta con PONT3LA10_YOUTUBE_ANALITICA=1 y activa «YouTube Analytics API» en Google Cloud (ver docs/ESTUDIO_YOUTUBE.md).')
+    throw falla
+  }
 }
 
 export async function ponerMiniatura({ idVideo, imagen, tipo = 'image/jpeg', acceso, transporte }) {

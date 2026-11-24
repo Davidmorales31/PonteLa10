@@ -584,6 +584,268 @@
       "efemeride": "06-15",
       "sensible": false,
       "publicado": null
+    },
+    {
+      "id": "america-de-cali-era-dorada",
+      "tipo": "club",
+      "nombre": "La era dorada de América de Cali",
+      "alias": [
+        "america de cali",
+        "pentacampeon"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo América de Cali se volvió pentacampeón y llegó a varias finales de Copa Libertadores sin ganarla?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": true,
+      "publicado": null,
+      "nota": "Época con vínculos documentados con el narcotráfico: usar solo fuentes de primer nivel, sin morbo, y pedir la revisión expresa del responsable antes de aprobar el guion."
+    },
+    {
+      "id": "atletico-nacional-1989",
+      "tipo": "club",
+      "nombre": "Atlético Nacional, campeón de América 1989",
+      "alias": [
+        "atletico nacional",
+        "nacional 1989"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo un club de Medellín se convirtió en el primer campeón colombiano de la Copa Libertadores?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": true,
+      "publicado": null,
+      "nota": "Época con vínculos documentados con el narcotráfico: usar solo fuentes de primer nivel, sin morbo, y pedir la revisión expresa del responsable antes de aprobar el guion."
+    },
+    {
+      "id": "millonarios-ballet-azul",
+      "tipo": "club",
+      "nombre": "El Ballet Azul de Millonarios",
+      "alias": [
+        "ballet azul",
+        "millonarios"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Por qué el Millonarios de los años 50 fue llamado el Ballet Azul y qué dejó en el fútbol colombiano?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "once-caldas-2004",
+      "tipo": "club",
+      "nombre": "Once Caldas, campeón de América 2004",
+      "alias": [
+        "once caldas"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo un club de Manizales ganó la Copa Libertadores 2004 ante Boca Juniors?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "clasico-paisa",
+      "tipo": "clasico",
+      "nombre": "El clásico paisa: Nacional y Medellín",
+      "alias": [
+        "clasico paisa"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "clasico"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Por qué el Medellín perdió su trono frente al Nacional en el clásico de la ciudad?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "clasico-capitalino",
+      "tipo": "clasico",
+      "nombre": "El clásico capitalino: Millonarios y Santa Fe",
+      "alias": [
+        "clasico capitalino",
+        "millonarios santa fe"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "clasico"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Qué hizo del clásico capitalino el más antiguo de Bogotá y qué batallas lo marcaron?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "superclasico-boca-river",
+      "tipo": "clasico",
+      "nombre": "El Superclásico: Boca Juniors y River Plate",
+      "alias": [
+        "superclasico",
+        "boca river"
+      ],
+      "etiquetas": [
+        "argentino",
+        "clasico",
+        "mundial"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Por qué el Boca–River es el partido que paraliza a un país?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "colo-colo-1991",
+      "tipo": "club",
+      "nombre": "Colo-Colo, campeón de América 1991",
+      "alias": [
+        "colo colo",
+        "colo-colo"
+      ],
+      "etiquetas": [
+        "chileno",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo Colo-Colo se convirtió en el primer campeón chileno de la Copa Libertadores?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "penarol-primer-campeon",
+      "tipo": "club",
+      "nombre": "Peñarol, el primer campeón de América",
+      "alias": [
+        "penarol"
+      ],
+      "etiquetas": [
+        "uruguayo",
+        "club",
+        "epoca"
+      ],
+      "formato": "epoca-club",
+      "angulo": "¿Cómo Peñarol ganó la primera Copa Libertadores de la historia?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "cabo-verde-mundial-2026",
+      "tipo": "suceso",
+      "nombre": "Cabo Verde en su primer Mundial (2026)",
+      "alias": [
+        "cabo verde"
+      ],
+      "etiquetas": [
+        "mundial",
+        "mundial-2026"
+      ],
+      "formato": "historia-corta",
+      "angulo": "¿Cómo un archipiélago de África occidental llegó a su primer Mundial?",
+      "interesFondo": null,
+      "efemeride": "06-15",
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "julian-quinones",
+      "tipo": "futbolista",
+      "nombre": "Julián Quiñones",
+      "alias": [
+        "julian quinones",
+        "quinones"
+      ],
+      "etiquetas": [
+        "colombiano",
+        "mexicano",
+        "identidad"
+      ],
+      "formato": "historia-corta",
+      "angulo": "¿Qué lo llevó a jugar por México si nació en Colombia?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "nico-paz",
+      "tipo": "futbolista",
+      "nombre": "Nico Paz",
+      "alias": [
+        "nico paz"
+      ],
+      "etiquetas": [
+        "argentino",
+        "identidad"
+      ],
+      "formato": "historia-corta",
+      "angulo": "¿Por qué un jugador formado en España eligió defender a Argentina?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
+    },
+    {
+      "id": "gilberto-mora",
+      "tipo": "futbolista",
+      "nombre": "Gilberto Mora",
+      "alias": [
+        "gilberto mora"
+      ],
+      "etiquetas": [
+        "mexicano",
+        "promesa"
+      ],
+      "formato": "historia-corta",
+      "angulo": "¿Quién es el adolescente mexicano que ya juega entre los grandes?",
+      "interesFondo": null,
+      "efemeride": null,
+      "sensible": false,
+      "publicado": null,
+      "nota": "Sugerido por el estudio de competencia (2026-11-24): todos los datos se verifican en fuentes leídas antes de escribir."
     }
   ]
 }

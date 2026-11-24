@@ -36,6 +36,24 @@ Nada de esto se pega en el chat ni se guarda en el repositorio.
    Si ya subiste el video a mano, pega su enlace y pulsa **Vincular video**.
 4. En YouTube Studio crea la prueba **Probar y comparar** con los títulos y miniaturas restantes y publícalo.
 
+## Métricas propias: retención y tiempo de visualización (opcional)
+
+Con el permiso de siempre solo se leen vistas, me gusta y comentarios. Para ver **retención, porcentaje medio visto, minutos
+vistos y suscriptores ganados por video** hay que añadir el permiso de solo lectura de YouTube Analytics. Es opcional: sin él, nada
+cambia. Pasos (los haces tú, una vez):
+
+1. En Google Cloud, en el mismo proyecto: **APIs y servicios → Biblioteca → «YouTube Analytics API» → Habilitar**.
+2. En la pantalla de consentimiento OAuth, añade el alcance `https://www.googleapis.com/auth/yt-analytics.readonly`.
+3. Abre el estudio con la variable `PONT3LA10_YOUTUBE_ANALITICA=1` (en PowerShell: `$env:PONT3LA10_YOUTUBE_ANALITICA = '1'; npm run video:estudio`),
+   pulsa **Desconectar** y luego **Conectar con YouTube**, y acepta el permiso nuevo.
+4. `node scripts/video-metricas.mjs --dias 28` imprime el informe: rendimiento por estructura (noticias directa, historia a fondo,
+   top, pregunta del día; documental por formato; Shorts por formato), qué videos pasan 3 veces la mediana del canal (sacar un
+   segundo ángulo en 7 días) y cuáles quedan por debajo de la mitad (cambiar estructura o título). `--salida informe.md` lo guarda.
+
+El «registro de apuestas» sale solo: cada proyecto del estudio con su video subido (`estudio.json` → `youtube.idVideo`) se cruza con su
+estructura (`guion.json`). Con menos de 5 videos no decide nada. Probado con respuestas simuladas; la primera lectura real de tu canal
+está pendiente de que conectes el permiso.
+
 ## Límites y cuota
 - Cuota gratuita: 10.000 unidades al día (se renueva a medianoche, hora del Pacífico). Subir un video cuesta unas 1.600;
   una miniatura, unas 50; cambiar el título, unas 50; leer un video, 1. Alcanza para unos 5 videos al día.

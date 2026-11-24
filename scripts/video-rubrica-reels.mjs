@@ -36,7 +36,15 @@ export function imagenesDe(reel) {
 }
 
 export function evaluarReel(reel, config, atribucion) {
-  const { formato, gancho, beats: cfgBeats, rehook, cierre, titulo, aprobacion } = config
+  const { gancho, rehook, cierre, titulo, aprobacion } = config
+  // Cada formato puede ajustar la duración y los beats y exigir lo suyo (config.formatos[...]).
+  const reglasFormato = config.formatos?.[reel?.formato] || {}
+  const formato = {
+    ...config.formato,
+    ...(reglasFormato.duracionMinimaSegundos ? { duracionMinimaSegundos: reglasFormato.duracionMinimaSegundos } : {}),
+    ...(reglasFormato.duracionMaximaSegundos ? { duracionMaximaSegundos: reglasFormato.duracionMaximaSegundos } : {})
+  }
+  const cfgBeats = { ...config.beats, ...(reglasFormato.beats || {}) }
   const criterios = []
   const agregar = (id, nombre, peso, ok, detalle) => criterios.push({ id, titulo: nombre, peso, ok: Boolean(ok), detalle })
   const beats = Array.isArray(reel?.beats) ? reel.beats : []
@@ -113,6 +121,17 @@ export function evaluarReel(reel, config, atribucion) {
   const club = String(reel?.club || '').split(/\s+/).filter(p => p.length > 3)
   agregar('palabra-clave', 'El club o protagonista se dice en el gancho (YouTube indexa lo hablado)', 3,
     !club.length || club.some(p => sinTildes(`${voz} ${pantalla}`).includes(sinTildes(p))), club.length ? reel.club : 'sin club')
+
+  // Estructura del formato: el formato debe existir y cumplir lo que pide (tipo de visual, bucle, pregunta, título sin «?»).
+  if (config.formatos) {
+    const problemasFormato = []
+    if (reel?.formato && !config.formatos[reel.formato]) problemasFormato.push(`formato «${reel.formato}» desconocido (${Object.keys(config.formatos).filter(n => n !== 'nota').join(', ')})`)
+    for (const tipo of reglasFormato.requiereTipos || []) if (!tipos.includes(tipo)) problemasFormato.push(`falta un beat con visual «${tipo}»`)
+    if (reglasFormato.cierreBucle && reel?.cierre?.bucle !== true) problemasFormato.push('el cierre debe enganchar con el inicio ("bucle": true)')
+    if (reglasFormato.cierrePregunta && !/\?/.test(`${textoCierre} ${beats.at(-1)?.texto || ''}`)) problemasFormato.push('el cierre o el último beat debe dejar una pregunta dicha en voz alta')
+    if (reglasFormato.tituloSinPregunta && /[?¿]/.test(String(reel?.titulo || ''))) problemasFormato.push('el título no lleva pregunta (la pregunta va hablada y en pantalla)')
+    agregar('estructura-formato', `Cumple lo que pide el formato «${reel?.formato || 'sin formato'}»`, 8, !problemasFormato.length, problemasFormato.length ? problemasFormato.join('; ') : 'ok')
+  }
 
   const pesoTotal = criterios.reduce((s, c) => s + c.peso, 0)
   const logrado = criterios.filter(c => c.ok).reduce((s, c) => s + c.peso, 0)

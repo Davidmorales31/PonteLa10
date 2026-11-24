@@ -52,6 +52,31 @@ export function repartirEdiciones({ colombianas = [], mundiales = [], config, us
   return { latam, internacional }
 }
 
+/**
+ * Slugs de los artículos que ya usó cada video del día: `latam` (la carpeta de la fecha, que es la edición de Colombia, y
+ * `<fecha>-latam`) e `internacional` (`<fecha>-internacional`). Una nota que ya está en uno no se repite en el otro.
+ */
+export async function slugsUsados({ fecha, carpeta = join(RAIZ, 'videos', 'diario') }) {
+  const leer = async nombre => {
+    try {
+      const guion = JSON.parse(await readFile(join(carpeta, nombre, 'guion.json'), 'utf8'))
+      return (guion.bloques || []).map(b => b.articuloSlug).filter(Boolean)
+    } catch { return [] }
+  }
+  return {
+    latam: new Set([...await leer(fecha), ...await leer(`${fecha}-latam`)]),
+    internacional: new Set(await leer(`${fecha}-internacional`))
+  }
+}
+
+/** Quita de cada lista lo que ya usó el video de la otra edición. */
+export function sinRepetirEntreVideos(reparto, usados) {
+  return {
+    latam: reparto.latam.filter(n => !usados.internacional.has(n.slug)),
+    internacional: reparto.internacional.filter(n => !usados.latam.has(n.slug))
+  }
+}
+
 /** Cuántas notas hay por país (para respetar «máximo de historias por país» al elegir). */
 export function conteoPorPais(historias) {
   const cuenta = {}
@@ -74,7 +99,7 @@ async function main() {
   const fecha = valor('--fecha') || fechaBogota()
   const config = JSON.parse(await readFile(join(RAIZ, 'config', 'fuentesFutbolLatam.json'), 'utf8'))
   const [colombianas, mundiales] = await Promise.all([traer('futbol-colombiano'), traer('futbol-mundial')])
-  const { latam, internacional } = repartirEdiciones({ colombianas: delDia(colombianas, fecha), mundiales: delDia(mundiales, fecha), config })
+  const { latam, internacional } = sinRepetirEntreVideos(repartirEdiciones({ colombianas: delDia(colombianas, fecha), mundiales: delDia(mundiales, fecha), config }), await slugsUsados({ fecha }))
   if (process.argv.includes('--json')) { process.stdout.write(`${JSON.stringify({ fecha, latam, internacional }, null, 2)}\n`); return }
   const fila = h => `  · [${h.pais || '—'}] ${h.titulo}  (${h.slug})`
   process.stdout.write(`Fecha ${fecha}\n\nLatinoamérica (${latam.length}) — por país: ${JSON.stringify(conteoPorPais(latam))}\n${latam.map(fila).join('\n')}\n\nInternacional (${internacional.length})\n${internacional.map(fila).join('\n')}\n`)

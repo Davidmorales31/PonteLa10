@@ -87,7 +87,7 @@ async function iniciarConexionYoutube() {
   const { verificador, desafio } = crearDesafio()
   for (const [clave, pendiente] of conexionesYoutube) if (pendiente.expira < Date.now()) conexionesYoutube.delete(clave)
   conexionesYoutube.set(estado, { verificador, expira: Date.now() + 10 * 60_000 })
-  return { url: urlAutorizacion({ clientId: cliente.clientId, redirect: REDIRECT_YOUTUBE, estado, desafio }) }
+  return { url: urlAutorizacion({ clientId: cliente.clientId, redirect: REDIRECT_YOUTUBE, estado, desafio, analitica: process.env.PONT3LA10_YOUTUBE_ANALITICA === '1' }) }
 }
 
 const escaparHtml = texto => String(texto).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c])

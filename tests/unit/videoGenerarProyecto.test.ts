@@ -95,6 +95,19 @@ describe('generador del video diario', () => {
     for (let i = 1; i < base.length; i++) expect(base[i].inicio).toBeCloseTo(base[i - 1].inicio + base[i - 1].duracion, 1)
   })
 
+  it('todas las estructuras directas arman el video sin intro, y el top rotula cada puesto', () => {
+    for (const estructura of ['historia-a-fondo', 'top', 'pregunta-del-dia']) {
+      const g = { ...guion, estructura, presentacion: undefined, bloques: guion.bloques.map((b, i) => ({ ...b, caraBreve: undefined, puesto: guion.bloques.length - i, ...(estructura === 'historia-a-fondo' && i === 1 ? { fondo: true, voz: palabras(600) } : {}) })) }
+      const plan = planificar(g, { ppm: 155 })
+      expect(plan.escenas.some(e => e.escena === 'intro'), estructura).toBe(false)
+      expect(plan.segmentos[0].inicio).toBe(0)
+      const base = plan.escenas.filter(e => e.capa === 1).sort((x, y) => x.inicio - y.inicio)
+      for (let i = 1; i < base.length; i++) expect(base[i].inicio).toBeCloseTo(base[i - 1].inicio + base[i - 1].duracion, 1)
+    }
+    const top = planificar({ ...guion, estructura: 'top', presentacion: undefined, bloques: guion.bloques.map((b, i) => ({ ...b, caraBreve: undefined, puesto: guion.bloques.length - i })) }, { ppm: 155 })
+    expect(top.escenas.filter(e => e.escena === 'rotulo' && String(e.variables?.etiqueta).startsWith('PUESTO')).map(e => e.variables?.etiqueta)).toEqual(['PUESTO 3', 'PUESTO 2', 'PUESTO 1'])
+  })
+
   it('marca las tomas a cámara de apertura, cada noticia y cierre', () => {
     const plan = planificar(guion, { ppm: 155 })
     const caras = plan.segmentos.filter(s => s.tipo === 'cara').map(s => s.etiqueta)
