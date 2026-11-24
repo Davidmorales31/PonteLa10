@@ -168,8 +168,15 @@ async function listarProyectos() {
     const grabaciones = estudio.grabaciones || {}
     const reels = await leerJson(join(carpeta, 'renders', 'reels', 'reels.json'))
     const final = join(carpeta, 'renders', 'final.mp4')
+    const carpetaMin = join(carpeta, 'renders', 'miniaturas')
+    const primeraMin = existsSync(carpetaMin) ? (await readdir(carpetaMin)).filter(n => /^miniatura-[a-z0-9-]{1,30}\.jpg$/.test(n)).sort()[0] : ''
+    const primeraFoto = ['foto-1.jpg', 'foto-2.jpg'].find(n => existsSync(join(carpeta, 'assets', 'fotos', n)))
     salida.push({
       nombre,
+      miniatura: primeraMin ? `/archivos/${nombre}/renders/miniaturas/${primeraMin}` : primeraFoto ? `/archivos/${nombre}/assets/fotos/${primeraFoto}` : '',
+      miniaturaPropia: Boolean(primeraMin),
+      subido: Boolean(estudio.youtube?.idVideo || estudio.youtubeShort?.idVideo),
+      archivado: Boolean(estudio.archivado),
       apodo: estudio.nombre || '',
       fecha: manifiesto.fecha,
       titulo: manifiesto.tituloVideo,
@@ -849,13 +856,19 @@ export function crearServidor() {
           return responder(res, 200, { agregadas: r.agregadas, vacios: r.vacios, resumen: r.resumen })
         } finally { ocupados.delete(proyecto) }
       }
-      if ((accion === 'nombre' || accion === 'sin-camara') && req.method === 'POST') {
+      if ((accion === 'nombre' || accion === 'sin-camara' || accion === 'archivar') && req.method === 'POST') {
         let datos = {}
         try { datos = JSON.parse((await leerCuerpo(req, 2048)).toString('utf8') || '{}') } catch { return responder(res, 400, { error: 'Solicitud no válida.' }) }
         if (accion === 'nombre') {
           if (!nombreValido(datos.nombre)) return responder(res, 422, { error: 'El nombre debe tener máximo 60 caracteres.' })
           await guardarEstudio(proyecto, estudio => { estudio.nombre = datos.nombre.trim() })
           return responder(res, 200, { nombre: datos.nombre.trim() })
+        }
+        if (accion === 'archivar') {
+          // Archivar solo oculta el proyecto de la lista; no borra ninguna carpeta ni archivo.
+          if (typeof datos.archivado !== 'boolean') return responder(res, 422, { error: 'Indica si se archiva o se restaura.' })
+          await guardarEstudio(proyecto, estudio => { if (datos.archivado) estudio.archivado = true; else delete estudio.archivado })
+          return responder(res, 200, { archivado: datos.archivado })
         }
         if (typeof datos.activo !== 'boolean') return responder(res, 422, { error: 'Indica si el proyecto va sin cámara.' })
         if (ocupados.has(proyecto)) return responder(res, 409, { error: 'El proyecto está ocupado: espera a que termine.' })
